@@ -1,0 +1,16 @@
+config.ini
+webcall/webcall
+tls.*
+tmp.*
+rtcsig*
+*.db
+*.pdf
+_old
+_nginx
+stats.ini
+calllog/
+accessToken.txt
+webcall/callee/custom.js
+webcall/user/custom.js
+webcall/button/custom.js
+
