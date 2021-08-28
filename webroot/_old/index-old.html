@@ -1,0 +1,231 @@
+<html>
+<head>
+<title>WebCall Main</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=350, initial-scale=1">
+<meta property="og:title" content="WebCall - A permanent WebRTC phone">
+<meta name="twitter:title" content="WebCall - A permanent WebRTC phone">
+<style>
+::-webkit-scrollbar { display:none; }
+html {
+	width:100%; height:100%; margin:0; padding:0; height:810px;
+	background-image:linear-gradient(#003, #25c);
+	color:#ddd;
+	scrollbar-width:none;
+}
+body {
+	width:100%; height:100%; margin:0; padding:0;
+	font-family:Lucida Sans Unicode, Lucida Grande, Arial, Verdana, Helvetica, Geneva, sans-serif;
+	font-size:1.2em;
+	color:#fff;
+}
+.container {
+	margin-left:20px;
+	width:600px;
+	max-width:90%;
+}
+nav {
+	width:400px;
+}
+ul {
+	list-style-type: none;
+	margin:0; padding:0;
+}
+li {
+	margin-bottom:0.1em;
+}
+ul li a, ul li span a:link, ul li span a:visited, ul li span a:active {
+    text-decoration:none;
+    outline:none;
+    user-select:none;
+    color:#ccc;
+	font-weight:bold;
+	font-size:1.4em;
+}
+.alink {
+	display:grid; grid-template-columns: 3fr 22fr; list-style-type:none;
+	text-decoration:none; height:74px;
+	background-color:#0000;
+	transition: background-color 400ms, color 800ms;
+	border-radius:7px;
+}
+.alink:hover {
+	background-color:#fff3;
+    color:#fff;
+}
+.alinkimg {
+	height:100%; display:flex; align-items:center;
+}
+.alinkinfo {
+	padding:5px;
+}
+.alinktitle {
+	margin-top:6px;
+}
+.alinksub {
+	font-weight:normal;
+	font-size:0.6em;
+    color:#ccc;
+}
+.subline {
+	float:left;
+	line-height:2.2em;
+    white-space:nowrap;
+    user-select:none;
+    width:290px;
+}
+
+form {
+	margin-top:18px;
+	font-size:1.1em;
+}
+.formtext {
+	border-radius:3px;
+	border:none;
+	width:100%;
+	font-size:1.0em;
+	color:#000;
+	padding:4px 4px; box-sizing:border-box;
+	outline:none;
+	background:#48d;
+	box-shadow:none; /* removes red border in FF */
+}
+.formtext:focus {
+	background:#0fc;
+	color:#000;
+}
+input[type=submit] {
+	font-size:0.8em;
+	background:#48f;
+	border:none;
+	color:white;
+	padding:8px;
+	text-decoration:none;
+	cursor:pointer;
+}
+input[type=submit]:focus {
+	background:#2cc;
+}
+
+a, a:link, a:visited, a:active {
+    color:#bbb;
+    font-weight:600;
+    text-decoration:none;
+    outline:none;
+}
+a:hover {
+    color:#fff;
+    text-decoration:none;
+    outline:none;
+}
+</style>
+<script src="main.js"></script>
+</head>
+
+<body>
+<img src="phone.svg"
+	style="position:absolute;right:0;top:2vh;width:440px;max-height:80vh;padding:2%;opacity:0.1;z-index:-1;">
+
+<div class="container">
+<br>
+
+<nav id="nav">
+<ul>
+<li>
+	<a href="/callee/register" class="alink">
+		<img src="phone.svg" class="alinkimg"
+			 style="width:80%; opacity:0.75;">
+		<div class="alinkinfo">
+			<div class="alinktitle">WebCall HQ</div>
+			<!--div class="alinksub">A private phone number</div-->
+			<div class="alinksub">A private phone number to receive calls</div>
+		</div>
+	</a>
+</li>
+
+<li>
+	<a href="/user/duo" class="alink">
+		<img src="speech_bubble4.svg" class="alinkimg"
+			 style="width:85%;">
+		<div class="alinkinfo">
+			<div class="alinktitle">WebCall Duo</div>
+			<div class="alinksub">One-time two-party quick connect</div>
+		</div>
+	</a>
+</li>
+
+<li>
+	<a href="/user/random" class="alink">
+		<img src="speech_bubble4.svg" class="alinkimg"
+			 style="width:85%;">
+		<div class="alinkinfo">
+			<div class="alinktitle">WebCall Roulette
+			</div>
+			<div class="alinksub">
+				<span>Une expérience surprise</span>
+				<span id="randomWaiting" style="color:#ff0;display:none;">=== Caller waiting ===</span>
+			</div>
+		</div>
+	</a>
+</li>
+
+<li>
+	<a href="info" class="alink">
+		<img src="info.svg" class="alinkimg"
+			 style="width:65%; margin-left:5%;">
+		<div class="alinkinfo">
+			<div class="alinktitle">About WebCall</div>
+			<div class="alinksub">How to use</div>
+		</div>
+	</a>
+</li>
+
+<li>
+	<a href="news" class="alink">
+		<img src="info.svg" class="alinkimg"
+			 style="width:65%; margin-left:5%;">
+		<div class="alinkinfo">
+			<div class="alinktitle">WebCall News</div>
+			<div class="alinksub">Latest Development</div>
+		</div>
+	</a>
+</li>
+
+<!--
+<li id="answie" style="display:none">
+	<a href="/user/Answie" class="alink">
+		<img src="Speaker_Icon.svg" class="alinkimg"
+			 style="width:75%; opacity:0.7;">
+		<div class="alinkinfo">
+			<div class="alinktitle">Soundcheck</div>
+			<div class="alinksub">Spoken words demonstration</div>
+		</div>
+	</a>
+</li>
+
+<li id="timur" style="display:none">
+	<a href="/user/Timur" class="alink">
+		<img src="speech_bubble4.svg" class="alinkimg"
+			 style="width:74%;">
+		<div class="alinkinfo">
+			<div class="alinktitle">Call Timur</div>
+			<div class="alinksub">Hi there</div>
+		</div>
+	</a>
+</li>
+-->
+</ul>
+</nav>
+
+<div style="max-width:100%; margin-top:150px;">
+<form action="javascript:;" onsubmit="submitFormDone(this)" id="user-comment">
+	<label for="comment" style="display:inline-block; font-size:0.9em; color:#ddd; margin-bottom:6px;">Found an issue? Please let us know:</label><br>
+	<textarea autocomplete="comment" id="comment" type="text" class="formtext" cols="40" rows="4" required></textarea>
+	<input type="submit" name="Submit" id="submit" value="SEND" style="width:100px; margin-top:10px;">
+</form>
+</div>
+
+<div id="footer" style="font-size:0.8em; margin-top:40px; margin-bottom:15px; width:440px; font-weight:600; color:#ccc;">
+	<a href="mailto:timur@timur.mobi" style="margin-right:5px">contact</a>&#xb7;
+	<a href="/privacy" style="margin-right:5px">privacy</a>&#xb7; (C)&nbsp;2021 timur mobi
+</div>

@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="minimum-scale=1.0, width=device-width, maximum-scale=1, user-scalable=yes">
+<link rel="stylesheet" type="text/css" href="main.css">
+<title>Sample Page</title>
+</head>
+
+<body>
+<header class="main-header  header-market-DE lang-DE" id="primary-header" style="padding-bottom: 0px;">
+<div class="site-branding">
+<a href="" class="logo-link"><img alt="Pizza House" src="pizza-house.png" style="opacity:0.5;"></a>
+</div>
+<div class="site-tagline">
+<a href="" >
+	<span>Pizza Bestellung</span>
+</a>
+</div>
+
+<div class="auth-nav">
+<a href="" class="js-account-menu-top">DE</a>
+<ul class="ph-top-menu-nav-dropdown-menu ph-account-menu dropdown-menu" id="ph-account-menu">
+	<li></li>
+	<li><a href="" data-lang="de" class="language-option">Deutsch</a></li>
+	<li></li>
+	<li><a href="" data-lang="en" class="inactive language-option">English</a></li>
+</ul>
+</div>
+
+<div class="auth-nav">
+<a href="" >Login</a>
+</div>
+
+<div class="auth-nav career-link">
+<a href="" target="_blank" rel="noopener noreferrer">Cookies</a>
+</div>
+
+</header>
+
+<header class="navigation" role="banner">
+
+<div class="navigation-wrapper">
+<nav role="navigation" class="navigation-menu-container">
+	<ul class="navigation-menu col-md-12">
+		<li class="nav-link menu-button-desktop"><a class="nav-menu active-tab" href="">MENÜ</a>
+
+			</li>
+		<li class="nav-link menu-button-mobile"><a class="nav-menu active-tab" href="">MENÜ</a>
+
+			</li>
+
+		<li class="nav-link"><a class="nav-promotions" href="">DEALS</a></li>
+	</ul>
+</nav>
+
+<div class="user-delivery" style="margin-bottom: 1em; height: 0px;">
+</div>
+</div>
+</header>
+<div class="user-delivery user-delivery-sm" style="margin-bottom: 1em; height: 0px;">
+
+
+</div>
+
+<div id="blocker" class="blockUI blockOverlay" style="z-index: 1000; border: medium none; margin: 0px; padding: 0px; width: 100%; height: 100%; top: 0px; left: 0px; background-color: rgba(255, 255, 255, 0.9); cursor: wait; position: fixed; display: none;" >
+<div class="loading">
+<img alt="lädt..." src="pizza-house.png" style="opacity:0.6;">
+<span>lädt...</span>
+</div>
+</div>
+
+<main id="main" class="market-DE lang-DE">
+
+<div class="main-container" role="tabpanel">
+<div class="container product-list"></div>
+
+<article id="ph-main-content" class="ph-main-content">
+<section>
+</section>
+
+		<div class="container">
+			<div class="side-nav-container    ph-pizza-submenu-scroller category-menu" style="visibility: visible;">
+
+<ul class="side-nav    ph-pizza-submenu category-list" id="ph-pizza-submenu-list">
+<li class="nav-link ph-pizza-submenu active" data-category-slug="offers">
+
+	<div id="wcdiv" style="display:none">
+	<iframe src="/button/answie8?readyText=Klick hier um zu bestellen<br>- Telefon Hotline -&connectingText=Verbindungsaufbau...&busyText=Zur Zeit sind leider alle Leitungen besetzt. Versuche es bitte in ein paar Minuten nochmal.&connectedText=Verbindung hergestellt.<br>Was möchtest Du bestellen?" id="wcbutton" scrolling="no" frameborder="no" width="100%" height="86px"></iframe>
+	<script>
+	extMessage = function(e) {
+		var data = e.data.split(':');
+		var action = data[0];
+		var actionArg = data[1];
+		console.log("parent extMessage action",action,actionArg);
+		if(action == "activeNotification") {
+			document.getElementById('wcdiv').style.display = "block";
+		}
+	}
+	window.addEventListener('message', extMessage, false);
+	window.onload = function() {
+		console.log("parent onload reqActiveNotification:1");
+		document.getElementById('wcbutton')
+			.contentWindow.postMessage("reqActiveNotification:0","https://timur.mobi");
+	}
+	</script>
+	</div>
+
+</li>
+<li class="nav-link ph-pizza-submenu active" data-category-slug="offers"><a href="" class="js-is-promo-category">DEALS</a></li>
+<li class="nav-link ph-pizza-submenu" data-category-slug="pizza"><a href="" class="">PIZZA</a></li>
+<li class="nav-link ph-pizza-submenu" data-category-slug="appetizers"><a href="" class="">VORSPEISEN</a></li>
+<li class="nav-link ph-pizza-submenu" data-category-slug="salads"><a href="" class="">SALATE</a></li>
+<li class="nav-link ph-pizza-submenu" data-category-slug="pasta"><a href="" class="">PASTA</a></li>
+</ul>
+</div>
+<script id="category-menu-tpl" type="x-tmpl-mustache">
+<ul class="side-nav    ph-pizza-submenu category-list" id="ph-pizza-submenu-list">
+{{#categories}}
+<li class="nav-link ph-pizza-submenu" data-category-slug="{{category_slug}}"><a href="" class="{{#isPromoCategory}}js-is-promo-category{{/isPromoCategory}}">{{category_name}}</a></li>
+{{/categories}}
+</ul>
+</script>
+
+			<script id="ph-products-last-order-block-tpl" type="x-tmpl-mustache">
+{{#order}}
+<div class="panel">
+<header class="panel__header">
+	<h4>{{date}}</h4>
+</header>
+<div class="panel__body">
+	<div class="accordion">
+		<div class="accordion__body">
+			{{#products}}
+			<h5>{{name}}</h5>
+			<hr />
+			{{/products}}
+		</div>
+		<div class="accordion__controller"> <a href="" class="btn btn--link"><span class="accordion_label_more">mehr</span><span class="accordion_label_less">weniger</span> <i class="carret"></i></a> </div>
+	</div>
+	<p><button class="btn btn--primary btn--block" >Bestellung wiederholen</button></p>
+	<p><a class="btn btn--block" href="">Meine Bestellungen</a></p>
+</div>
+</div>
+{{/order}}
+</script>
+<script id="ph-products-favourites-block-tpl" type="x-tmpl-mustache">
+<div class="panel panel-favourite">
+<header class="panel__header">
+	<h4>{{name}}</h4>
+</header>
+<div class="panel__body">
+	{{{ desc }}}
+	<p style="margin-top: 10px;"><a href="#"
+		class="btn btn-primary btn-block     js-add-to-basket
+		{{#combo}} comboConfigure {{/combo}}
+		{{#pizza}}
+			 {{#halfAndHalfPizza}} half-and-half-pizza-configurator{{/halfAndHalfPizza}}
+			 {{^halfAndHalfPizza}}
+				 {{^upsellId}} pizzaAddDefault js-change-ingredients{{/upsellId}}
+				 {{^combo}} js-add-pizza-to-basket{{/combo}}
+			 {{/halfAndHalfPizza}}
+		 {{/pizza}}
+	   "
+	   id="ph-add-to-basket-{{id}}"
+	   data-id="{{ id }}"
+	>[[#{button.label.add}]] <span style="display: inline-block;">({{price_lead}} [[${currency}]])</span></a></p>
+</div>
+</div>
+{{/favourites}} -->
+</script>
+
+			<div id="ph-pizza-pizzamenu-pizza-delivery" class="middle-content row ph-pizzamenu ph-pizza-pizzamenu-pizza-delivery ph-pizza-menu-special-row no-top-margin" style="display: block;"><div class="menu-container mena-variant">
+
+<div class="menu-grid menu-grid-box menu-grid--2-across productWrapper is-hidden ALL" style="display: none;">
+</div>
+
+</div><div class="menu-container mena-variant">
+<h3 class="collapse menu-grid-header collapse--in">DEALS<a href=""><i class="carret black"></i></a></h3>
+<div class="menu-grid menu-grid-box menu-grid--2-across productWrapper offers show" style="display: block;">
+<div class="menu-item-block      search-row searchable product-row" data-id="67001162" data-obj-num="6700116">
+	<a onclick="storageClass.setItem(&#39;showAddressForm&#39;, true);" class="menu-item js-menu-preview" data-modal-open="start-delivery-modal" style="height: auto;">
+		<div class="ph-order-on-preview">
+			<button class="btn btn--primary">Bestellen</button>
+		</div>
+		<div class="menu-item__content">
+			<h5>Tomato Roast
+			</h5>
+
+			<p class="menu-item__description">Drei Tomato Roast Pizzen Deiner Wahl&nbsp;                                        </p>
+		</div>
+		<div class="menu-item__image">
+			<img src="pizza_PNG44068-282.png" alt="Tomato Roast" style="opacity:0.8;">
+			<!-- image (c) pngimg.com -->
+		</div>
+	</a>
+
+</div>
+<div class="menu-item-block      search-row searchable product-row" data-id="67001152" data-obj-num="6700115">
+	<a onclick="storageClass.setItem(&#39;showAddressForm&#39;, true);" class="menu-item js-menu-preview" data-modal-open="start-delivery-modal" style="height: auto;">
+		<div class="ph-order-on-preview">
+			<button class="btn btn--primary">Bestellen</button>
+		</div>
+		<div class="menu-item__content">
+			<h5>3 Große Crisp Pizza
+			</h5>
+
+			<p class="menu-item__description">Drei große Crisp Pizzen Deiner Wahl&nbsp;                                        </p>
+		</div>
+		<div class="menu-item__image">
+			<img src="pizza_PNG44371-282.png" alt="3 Große Crisp Pizza" style="opacity:0.8;">
+			<!-- image (c) pngimg.com -->
+		</div>
+	</a>
+
+</div>
+<div class="menu-item-block      search-row searchable product-row" data-id="67001142" data-obj-num="6700114">
+	<a onclick="storageClass.setItem(&#39;showAddressForm&#39;, true);" class="menu-item js-menu-preview" data-modal-open="start-delivery-modal" style="height: auto;">
+		<div class="ph-order-on-preview">
+			<button class="btn btn--primary">Bestellen</button>
+		</div>
+		<div class="menu-item__content">
+			<h5>3 kleine Crisp Pizza
+			</h5>
+
+			<p class="menu-item__description">Drei kleine Crisp Pizzen Deiner Wahl                                        </p>
+		</div>
+		<div class="menu-item__image">
+			<img src="pizza_PNG44371-282.png" alt="3 kleine Crisp Pizza" style="opacity:0.8;">
+			<!-- image (c) pngimg.com -->
+		</div>
+	</a>
+
+</div>
+<div class="menu-item-block      search-row searchable product-row" data-id="67001332" data-obj-num="6700133">
+	<a onclick="storageClass.setItem(&#39;showAddressForm&#39;, true);" class="menu-item js-menu-preview" data-modal-open="start-delivery-modal" style="height: auto;">
+		<div class="ph-order-on-preview">
+			<button class="btn btn--primary">Bestellen</button>
+		</div>
+		<div class="menu-item__content">
+			<h5>2 Cheezy Toast
+			</h5>
+
+			<p class="menu-item__description">Zwei Cheezy Toast Pizzen Deiner Wahl                                        </p>
+		</div>
+		<div class="menu-item__image">
+			<img src="pizza_PNG44072-282b.png" alt="2 Cheezy Toast">
+			<!-- image (c) pngimg.com -->
+		</div>
+	</a>
+
+</div>
+</div>
+</div>
+
+
+</div>
+	<div class="side-nav-container    ph-pizza-submenu-scroller category-menu sticky" style="top: 60px; width: 233px; left: 820px; position: fixed; bottom: auto; margin-bottom: 0px; display: none;">
+
+<ul class="side-nav    ph-pizza-submenu category-list" id="ph-pizza-submenu-list">
+<li class="nav-link ph-pizza-submenu active" data-category-slug="offers"><a href="" class="js-is-promo-category">DEALS</a></li>
+<li class="nav-link ph-pizza-submenu" data-category-slug="pizza"><a href="" class="">PIZZA</a></li>
+<li class="nav-link ph-pizza-submenu" data-category-slug="deals"><a href="" class="">DEALS</a></li>
+<li class="nav-link ph-pizza-submenu" data-category-slug="appetizers"><a href="" class="">VORSPEISEN</a></li>
+<li class="nav-link ph-pizza-submenu" data-category-slug="salads"><a href="" class="">SALATE</a></li>
+<li class="nav-link ph-pizza-submenu" data-category-slug="pasta"><a href="" class="">PASTA</a></li>
+</ul>
+</div></article>
+	<div id="ph-cart" style="display: none;"></div>
+	<div id="ph-edit-details" style="display: none;">
+		<div id="ph-edit-nav" class="ph-back-to-menu-add-fa"></div>
+		<div id="ph-edit-content"></div>
+	</div>
+<div style="margin-bottom:16px;"> </div>
+<input class="feedback-state info modal-state" id="start-delivery-modal" type="checkbox">
+</div>
+
+<div class="feedback feedback--info address-info">
+<input class="feedback-state info modal-state" id="feedbackAddress" type="checkbox">
+<div class="feedback-fade-screen">
+	<div class="feedback__inner">
+		<button type="button" class="btn btn--close btn--rounded ph-icon-close" data-modal-close="feedbackAddress"><span class="sr-only">Close</span></button>
+		<p class="feedback__intro"></p>
+		<h2>Adresse außerhalb des Lieferbereichs</h2>
+		<div class="modal-message">
+			<span>Lieferung zu der angegebenen Adresse nicht möglich oder das Restaurant akzeptiert momentan keine Bestellungen.</span><br>
+			<span>Möchtest du deine Bestellung selbstabholen?</span>
+		</div>
+		<p class="more-roomy-above">
+			<a href="" class="btn btn--default" data-modal-close="feedbackAddress">Nein</a>
+			<a class="btn btn--primary btn--default" onclick="addressClass.startOrderTakeaway();">Ja</a>
+		</p>
+	</div>
+</div>
+</div>
+</div>
+	<script type="text/javascript" charset="utf-8">
+	/*<![CDATA[*/
+		//mainClass.loadMenu();
+	/*]]>*/
+	</script>
+</div>
+
+</main>
+<footer class="main-footer" role="contentinfo">
+
+	<div>
+<a id="mobile-footer-more">Mehr <i class="carret"></i></a>
+<a id="mobile-footer-less">Weniger <i class="carret"></i></a>
+
+<div class="footer-links market-DE">
+<ul class="footer-links__list footer-links__list--xs">
+	<li class="ph-footer-navigation-header">Unser Auftrag</li>
+	<li><a href="">Pizza House in Zahlen</a></li>
+	<li><a href="">Qualität &amp; Sicherheit</a></li>
+	<li class="ph-footer-navigation-header">INFORMATIONEN</li>
+
+	<li><a href="">Datenschutzerklärung</a></li>
+	<li><a href="">Cookie Nutzung</a></li>
+	<li><a href="">Nährwerte und Allergene</a></li>
+	<li><a href="">Franchise</a></li>
+	<li><a href="">FAQ</a></li>
+	<li><a href="">Label.cookies.policy</a></li>
+
+	<li><a href="">Gästebefragung</a></li>
+	<li><a href="">Impressum</a></li>
+
+
+	<li class="ph-footer-navigation-header">SPRACHE</li>
+	<li><a href="" data-lang="de" class="language-option">Deutsch</a></li>
+	<li><a href="" data-lang="en" class="inactive language-option">English</a></li>
+</ul>
+
+<ul class="footer-links__list footer-links__list--sm">
+	<li class="ph-footer-navigation-header">UNSER AUFTRAG</li>
+	<li><a href="">Pizza House in Zahlen</a></li>
+	<li><a href="">Qualität &amp; Sicherheit</a></li>
+	<li><a href="">Nährwerte</a></li>
+</ul>
+
+<ul class="footer-links__list footer-links__list--sm">
+	<li class="ph-footer-navigation-header">INFORMATIONEN</li>
+
+	<li><a href="">Datenschutzerklärung</a></li>
+	<li><a href="">Cookie Nutzung</a></li>
+</ul>
+
+<ul class="footer-links__list footer-links__list--sm last-column-de">
+	<li class="ph-footer-navigation-header">&nbsp;</li>
+	<li><a href="">Images (c)pngimg.com</a></li>
+</ul>
+
+</div>
+</div>
+
+</footer>
+</body></html>

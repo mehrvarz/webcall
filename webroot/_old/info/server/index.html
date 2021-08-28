@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1">
+<title>WebCall Server</title>
+<meta property="og:title" content="WebCall Audiophile Telephony">
+<meta name="twitter:title" content="WebCall Audiophile Telephony">
+<style>
+::-webkit-scrollbar {
+	width: 11px;
+	background: #004;
+}
+::-webkit-scrollbar-thumb {
+	background: #777;
+}
+html {
+	width:100%; height:100%; min-height:2500px;
+	font-family:Sans-Serif;
+	font-size:1.2em;
+	font-weight:300;
+	background-image: linear-gradient(#004, #36f);
+	color:#fff;
+	letter-spacing:.05em;
+	scrollbar-width: 11px;
+	scrollbar-color: #777 #004;
+}
+h1 {
+	font-size:1.6em;
+	font-weight:600;
+	margin-top:20px;
+	margin-bottom:30px;
+}
+h2 {
+	font-size:1.4em;
+	font-weight:600;
+	margin-top:56px;
+}
+h3 {
+	font-size:1.07em;
+	font-weight:600;
+	margin-top:30px;
+}
+b {
+	font-weight:600;
+}
+a, a:link, a:visited, a:active {
+    color:#fff;
+    font-weight:600;
+    text-decoration:none;
+}
+a:hover {
+    color:#fff;
+    text-decoration:underline;
+    outline:none;
+}
+td {
+	text-align: right;
+	height: 32px;
+}
+</style>
+</head>
+
+<body>
+<img src="server_PNG35.png"
+   style="position:absolute;right:0%;top:6vh;width:270px;padding:2%;opacity:0.5;z-index:-1;">
+<img src="server_PNG13.png"
+   style="position:absolute;right:0%;top:160vh;width:320px;padding:2%;opacity:0.3;z-index:-1;">
+
+<div style="margin-top:3vh;padding:1.5em;font-size:1.1em;line-height:1.3em;max-width:680px;">
+
+<h1>WebCall Server</h1>
+<br>
+
+<h3>Telecom in a Box</h3>
+
+A single WebCall server can host up to 2M simultaneous callees* and serve up to 40M calls per day.
+<br><br><br>
+
+<h3>Hardware</h3>
+<table style="width:100%; max-width:640px;">
+<tr>
+<td style="width:14%">callees</td>
+<td style="width:13%">ram</td>
+<td style="width:13%">cores</td>
+<td style="width:22%">nic</td>
+<td style="width:19%">calls/24h</td>
+<td style="width:20%">calls/min</td>
+<td style="width:8%"> </td>
+</tr>
+<tr><td>70K</td><td>2G</td><td>4</td><td>1 Gbps</td><td>570K</td><td>400</td><td style="font-size:0.9em;">(RPi3B+)</td></tr>
+<tr><td>250K</td><td>8G</td><td>8</td><td>1 Gbps</td><td>5M</td><td>3500</td><td></td></tr>
+<tr><td>500K</td><td>16G</td><td>16</td><td>1 Gbps</td><td>10M</td><td>7000</td><td></td></tr>
+<tr><td>1M</td><td>32G</td><td>32</td><td>10 Gbps</td><td>20M</td><td>14000</td><td></td></tr>
+<tr><td>2M</td><td>64G</td><td>64</td><td>10 Gbps</td><td>40M</td><td>28000</td><td></td></tr>
+</table>
+<br>
+<div style="font-size:0.75em;margin-left:30px; margin-right:10%;">
+*Callees are long-term connected users, awaiting incoming call.
+Callers dialing in are supported in addition to the given number of callees.
+</div>
+<br><br>
+
+<!--
+IP Traffic
+<br><br>
+Browser clients are generating a well predictble amount of IP traffic. 
+A single user staying connected for 24h and doing 20 phone calls  
+will generate roughly 3MB of traffic.
+(1 call = 70KB; 20 calls 1.4MB + 1.6MB pings = 3MB)
+1M users staying connected 24h and doing 20 phone calls 
+will generate about 3TB of traffic per day.
+<br><br><br><br>
+-->
+
+<h3>WebCall Cluster</h3>
+
+WebCall Server is fully clusterable.
+Eight boxes (6x&nbsp;WebCall + LB + DB) are able to host up to 12M simultaneous callees and serve up to 240M calls per 24h.
+<br><br>
+NGINX* can be used for load balancing HTTPS.
+WebCall server takes care of load balancing WSS.
+<br><br><br><br>
+
+
+<h3>Distributed WebCall</h3>
+WebCall users can be hosted in multiple locations.
+Users will be able to call each other from and to any location:
+<br><br>
+<img src="callers.png" style="width:100%; margin-left:-10px; min-width:400px; max-width:640px;">
+<br><br>
+Whether such locations are hosted by the same party, or by separate organisations, doesn't really matter.
+The total number of callee slots can simply be added up. So for example, if each of these locations supports 12M callees, the total number of callee slots available will be 36M.
+Users will be able to call each other, no matter where they are connected to.
+<br><br><br><br><br>
+
+
+More:
+<br><br>
+<a href="..">WebCall Client Core Info</a>
+<br><br>
+<a href="../../callbutton">WebCall Buttons for Websites</a>
+<br><br>
+<a href="../..">WebCall Main Page</a><br>
+<br><br><br><br><br>
+
+<div id="footer" style="font-size:0.8em; margin-top:40px; margin-bottom:10px; width:440px; font-weight:600; color:#ccc;">
+	<a href="mailto:timur@timur.mobi" style="margin-right:5px">contact</a>&#xb7;
+	<a href="/privacy" style="margin-right:5px">privacy</a>&#xb7; (C)&nbsp;2021 timur mobi
+</div>
+
