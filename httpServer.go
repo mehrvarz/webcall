@@ -29,7 +29,7 @@ func httpServer() {
 
 	if htmlPath != "" {
 		webroot := curdir + "/" + htmlPath
-		fmt.Printf("httpServer htmlPath=%s webroot=%s\n", htmlPath, webroot)
+		fmt.Printf("httpServer htmlPath=%s fullPath=%s\n", htmlPath, webroot)
 		http.Handle("/", http.FileServer(http.Dir(webroot)))
 	}
 

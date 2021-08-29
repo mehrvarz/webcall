@@ -33,7 +33,7 @@ func readIniBoolean(configIni *ini.File, cfgKeyword string, currentVal bool, def
 		}
 	}
 	if currentVal != newVal {
-		fmt.Printf("cfg bool %s: %s=%v\n", configFileName, cfgKeyword, newVal)
+		fmt.Printf("cfg %s bool %s=%v\n", configFileName, cfgKeyword, newVal)
 	}
 	currentVal = newVal
 	return currentVal
@@ -50,11 +50,8 @@ func readIniInt(configIni *ini.File, cfgKeyword string, currentVal int, defaultV
 			newVal = int(i64) * factor
 		}
 	}
-//	if newVal != currentVal && !strings.HasSuffix(cfgKeyword, "Key") {
-//		fmt.Printf("cfg int  %s: %s=%d (%d)\n", configFileName, cfgKeyword, int(i64), currentVal/factor)
-//	}
 	if newVal != currentVal {
-		fmt.Printf("cfg int  %s: %s=%d\n", configFileName, cfgKeyword, newVal)
+		fmt.Printf("cfg %s int  %s=%d\n", configFileName, cfgKeyword, newVal)
 	}
 	currentVal = newVal
 	return currentVal
@@ -68,7 +65,7 @@ func readIniString(configIni *ini.File, cfgKeyword string, currentVal string, de
 	}
 	// we don't log entries ending in 'Key'
 	if newVal!=currentVal && !strings.HasSuffix(cfgKeyword, "Key") {
-		fmt.Printf("cfg str  %s: %s=(%v)\n", configFileName, cfgKeyword, newVal)
+		fmt.Printf("cfg %s str  %s=(%v)\n", configFileName, cfgKeyword, newVal)
 	}
 	currentVal = newVal
 	return currentVal
