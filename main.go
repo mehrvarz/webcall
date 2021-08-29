@@ -175,6 +175,7 @@ func main() {
 	//fmt.Printf("dbName=%s dbCallsName=%s dbContactsName=%s dbNotifName=%s dbHashedPwName=%s\n",
 	//	dbMainName, dbCallsName, dbContactsName, dbNotifName)
 
+	var err error
 	if rtcdb=="" {
 		kvMain,err = skv.DbOpen(dbMainName,dbPath)
 	} else {
