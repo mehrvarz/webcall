@@ -166,7 +166,7 @@ func main() {
 
 	fmt.Printf("--------------- webcall startup ---------------\n")
 	readConfig(true)
-	outboundIP,err := rkv.GetOutboundIP()
+	//outboundIP,err := rkv.GetOutboundIP()
 	//fmt.Printf("hostname=%s httpPort=%d httpsPort=%d outboundIP=%s\n",
 	//	hostname, httpPort, httpsPort, outboundIP)
 	//fmt.Printf("wsPort=%d wsUrl=%s\n", wsPort, wsUrl)
