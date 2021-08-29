@@ -38,7 +38,6 @@ const freeAccountBlockSecs = 7*24*60*60; // 7 days
 const randomCallerWaitSecsConst = 1800
 const randomCallerCallSecsConst = 600
 
-
 var dbMainName = "rtcsig.db"
 var	kvMain skv.KV
 const dbRegisteredIDs = "activeIDs" // internal name was changed active -> registered
@@ -74,8 +73,7 @@ var dbHashedPwName = "rtchashedpw.db"
 var	dbHashedPw skv.KV
 const dbHashedPwBucket = "hashedpwbucket"
 
-// main server; httpPort=8067 httpsPort=0/8068 wsPort=8071 wssPort=0/8443 turnPort=3739 dbName="rtcsig.db"
-var hostname = "" //192.168.3.209
+var hostname = ""
 var httpPort = 8067
 var httpsPort = 0 //8068
 var httpToHttps = false
@@ -84,12 +82,12 @@ var wssPort = 0 //8443
 var htmlPath = "webroot"
 var insecureSkipVerify = false
 var runTurn = false
-var turnIP = "" //"66.228.46.43"
+var turnIP = ""
 var turnPort = 3739
 var turnDebugLevel = 3
 var pprofPort = 0 //8980
-var rtcdb = "" //"127.0.0.1" // will use port :8061 if no port is provided
-var dbPath = "db/" // will only be used if rtcdb is empty
+var rtcdb = ""
+var dbPath = "db/"
 
 // twitter key for @WebCall user
 var twitterKey = ""
@@ -169,11 +167,11 @@ func main() {
 	fmt.Printf("--------------- webcall startup ---------------\n")
 	readConfig(true)
 	outboundIP,err := rkv.GetOutboundIP()
-	fmt.Printf("hostname=%s httpPort=%d httpsPort=%d outboundIP=%s\n",
-		hostname, httpPort, httpsPort, outboundIP)
-	fmt.Printf("wsPort=%d wsUrl=%s\n", wsPort, wsUrl)
-	fmt.Printf("wssPort=%d wssUrl=%s\n", wssPort, wssUrl)
-	fmt.Printf("runTurn=%v turnIP=%s\n", runTurn, turnIP)
+	//fmt.Printf("hostname=%s httpPort=%d httpsPort=%d outboundIP=%s\n",
+	//	hostname, httpPort, httpsPort, outboundIP)
+	//fmt.Printf("wsPort=%d wsUrl=%s\n", wsPort, wsUrl)
+	//fmt.Printf("wssPort=%d wssUrl=%s\n", wssPort, wssUrl)
+	//fmt.Printf("runTurn=%v turnIP=%s\n", runTurn, turnIP)
 	//fmt.Printf("dbName=%s dbCallsName=%s dbContactsName=%s dbNotifName=%s dbHashedPwName=%s\n",
 	//	dbMainName, dbCallsName, dbContactsName, dbNotifName)
 
@@ -433,7 +431,6 @@ func main() {
 	os.Exit(0)
 }
 
-// various utility functions
 func getStats() string {
 	// get number of total clients + number of active calls + number of active p2p/p2p-calls
 	var numberOfOnlineCallees int64

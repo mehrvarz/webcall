@@ -356,20 +356,6 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		return true
 	}
 
-/*
-	if urlPath=="/help" {
-		fmt.Fprintf(w, "Commands:\n"+
-			"/dumpuser\n"+
-			"/dumponline\n"+
-			"/dumpregistered\n"+
-			"/dumpblocked\n"+
-			"/makeregistered?id=...&days=nnn&minutes=nnn&pw=...\n"+
-			"/deluserid?id=...&time=nnn\n"+
-			"/delregisteredid...&time=nnn\n"+
-			"/delblockedid...&time=nnn\n")
-		return true
-	}
-*/
 	return false
 }
 

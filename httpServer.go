@@ -473,12 +473,6 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-// not being used anymore
-//	if strings.HasPrefix(r.URL.Path,"/isonline/") {
-//		httpIsOnline(w, r, urlID, urlPath, remoteAddr)
-//		return
-//	}
-
 	fmt.Printf("# (%s) unhandled apicall by id=(%s) rip=%s\n",urlPath,urlID,remoteAddrWithPort)
 	return
 }
@@ -524,7 +518,6 @@ func getNewWsClientID() uint64 {
 		if(intID < uint64(10000000000)) {
 			continue;
 		}
-
 		_,ok := wsClientMap[intID]
 		if ok {
 			// already used

@@ -392,7 +392,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			}
 			hub = nil
 		} else {
-			// this happens bc exitFunc is being called twice for the same callee
+			// this may happen if exitFunc is being called twice for the same callee
 			//fmt.Printf("# exitFunc hub==nil wsClientMap[wsClientID=%d] user=%d/%d (%s)\n",
 			//	wsClientID, len(hubMap), lenGlobalHubMap, comment)
 		}
@@ -406,7 +406,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		wsClientMutex.Lock()
 		delete(wsClientMap, wsClientID)
 		wsClientMutex.Unlock()
-		// end of exitFunc
 	}
 
 	hub.exitFunc = exitFunc

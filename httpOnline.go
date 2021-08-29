@@ -263,26 +263,26 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 			}
 
 // TODO temporarily outremarked
-//				if remoteAddr!="127.0.0.1" { //&& !strings.HasPrefix(remoteAddr,"37.201.") {
-//					// check if the requesting IP-addr has a valid account
-//					// this is supposed to prevent the same IP to register many different accounts
-//					var foundIp byte = 0
-//					err := kvMain.SearchIp(dbRegisteredIDs, remoteAddr, &foundIp)
-//					if err!=nil {
-//						// error (ErrDisconnect, ErrTimeout) we should NOT register now
-//						fmt.Printf("# /register fail db=%s bucket=%s rip=%s err=%v\n",
-//							dbMainName, dbRegisteredIDs, remoteAddr, err)
-//						fmt.Fprintf(w,"error cannot register")
-//						return
-//					} else if foundIp!=0 {
-//						// the requesting IP-addr has a valid account already
-//						fmt.Printf("# /register fail rip=%s has valid account already\n",
-//							remoteAddr)
-//						fmt.Fprintf(w,"already registered")
-//						return
-//					}
-//					// the requesting IP-addr has no valid account, try to register it
+//			if remoteAddr!="127.0.0.1" {
+//				// check if the requesting IP-addr has a valid account
+//				// this is supposed to prevent the same IP to register many different accounts
+//				var foundIp byte = 0
+//				err := kvMain.SearchIp(dbRegisteredIDs, remoteAddr, &foundIp)
+//				if err!=nil {
+//					// error (ErrDisconnect, ErrTimeout) we should NOT register now
+//					fmt.Printf("# /register fail db=%s bucket=%s rip=%s err=%v\n",
+//						dbMainName, dbRegisteredIDs, remoteAddr, err)
+//					fmt.Fprintf(w,"error cannot register")
+//					return
+//				} else if foundIp!=0 {
+//					// the requesting IP-addr has a valid account already
+//					fmt.Printf("# /register fail rip=%s has valid account already\n",
+//						remoteAddr)
+//					fmt.Fprintf(w,"already registered")
+//					return
 //				}
+//				// the requesting IP-addr has no valid account, try to register it
+//			}
 
 			unixTime := startRequestTime.Unix()
 			dbUserKey := fmt.Sprintf("%s_%d",registerID, unixTime)
@@ -313,63 +313,6 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 	}
 	return
 }
-
-/*********
-func httpIsOnline(w http.ResponseWriter, r *http.Request, urlID string, urlPath string, remoteAddr string) {
-	checkIDArray := r.URL.Path[10:] // skip "/isonline/"
-	responseString := ""
-	tok := strings.Split(checkIDArray,",")
-	for idx := range tok {
-		id := strings.ToLower(tok[idx])
-		ejectOn1stFound := true
-		if strings.Index(multiCallees,"|"+id+"|")>=0 {
-			// there may be multiple logins from id if listed under config.ini "multiCallees"
-			ejectOn1stFound = false
-		}
-		occupy := false
-		reportHiddenCallee := false
-		globalID := ""
-		clients := 0
-
-		if rtcdb == "" {
-			// note: globalID in this case is of course NOT "global"
-			var locHub *Hub
-			globalID, locHub, _ = GetOnlineCallee(id, ejectOn1stFound, reportHiddenCallee,
-				remoteAddr, occupy, "/isonline")
-			if globalID!="" && locHub!=nil && locHub.CallerClient!=nil {
-				clients = 2
-			}
-		} else {
-			// if urlID lives on another server, globHub will contain that servers wsUrl/wssUrl
-			// below we must distinguish between locHub and globHub as they are different structs
-			var globHub *rkv.Hub
-			var err error
-			globalID, globHub, err = rkv.GetOnlineCallee(id, ejectOn1stFound, reportHiddenCallee,
-				remoteAddr, occupy, "/isonline")
-			if err != nil {
-				// error
-			} else if globHub!=nil && globHub.ClientIpAddr!="" {
-				clients = 2
-			}
-		}
-		if responseString!="" {
-			responseString += ","
-		}
-		if globalID == "" {
-			responseString += "unknown"
-		} else {
-			if clients<2 {
-				responseString += fmt.Sprintf(":%d", port) // ???
-			} else {
-				responseString += "busy"
-			}
-		}
-	}
-	fmt.Printf("* isonline '%s' response='%s'\n", checkIDArray, responseString)
-	fmt.Fprintf(w,responseString)
-	return
-}
-********/
 
 /******
 	if urlPath=="/dial" {
