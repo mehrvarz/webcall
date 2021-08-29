@@ -11,6 +11,7 @@ import (
 	"math/rand"
 	"path/filepath"
 	"crypto/tls"
+	"github.com/mehrvarz/webcall/skv"
 )
 
 func httpServer() {
@@ -361,12 +362,6 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-// not being used anymore
-//	if strings.HasPrefix(r.URL.Path,"/isonline/") {
-//		httpIsOnline(w, r, urlID, urlPath, remoteAddr)
-//		return
-//	}
-
 	if urlPath=="/mode" {
 		if maintenanceMode {
 			fmt.Printf("/mode maintenance rip=%s\n",remoteAddr)
@@ -430,11 +425,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-/* TODO
-	// admin specific API's - only for webcall standalone operation - and only accessible from localhost
 	if rtcdb=="" && remoteAddr=="127.0.0.1" {
-		fmt.Printf("%s from localhost\n",urlPath)
-
 		printFunc := func(w http.ResponseWriter, format string, a ...interface{}) {
 			// printFunc writes to the console AND to the localhost http client
 			fmt.Printf(format, a...)
@@ -442,42 +433,52 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if urlPath=="/dumponline" {
-			// TODO show the list of callee-IDs that are online (and their ports)
+			// show the list of callee-IDs that are online (and their ports)
+			fmt.Printf("hubinfo rip=%s\n",remoteAddr)
 			hubMapMutex.RLock()
+			defer hubMapMutex.RUnlock()
 			for calleeID := range hubMap {
 				// TODO would be good to print the r.UserAgent() / cli.userAgent
 				// leider habe ich kein mapping von calleeID zu client
-				fmt.Fprintf(w,"online %s\n", calleeID)
+				printFunc(w,"online %s\n", calleeID)
 			}
-			hubMapMutex.RUnlock()
-			fmt.Fprintf(w,"\n")
+			printFunc(w,"\n")
 			return
 		}
 
-		if urlPath=="/stats" {
-			printFunc(w, getStats()+"\n")
+		if urlPath=="/hubinfo" {
+			// show all hubs with the connected client
+			// TODO the printed order may change every time bc go map is unordered
+			printFunc(w,"hubinfo rip=%s\n",remoteAddr)
+
+			for calleeID,hub := range hubMap {
+				hub.HubMutex.RLock()
+				defer hub.HubMutex.RUnlock()
+				if hub.ClientIpAddr!="" {
+					printFunc(w,"calleeID=%v connected client=%v\n",calleeID,hub.ClientIpAddr)
+				} else {
+					printFunc(w,"calleeID=%v idle\n",calleeID)
+				}
+			}
+			return
+		}
+
+//		if urlPath=="/stats" {
+//			printFunc(w, getStats()+"\n")
+//			return
+//		}
+
+		if httpAdmin(kvMain.(skv.SKV), w, r, urlPath, urlID, remoteAddr) {
 			return
 		}
 	}
-*/
 
-/* TODO move this to rtcdb? (but keep providing a local variant?)
-	if urlPath=="/hubinfo" {
-		// show all hubs with all clients inside
-		// TODO do we want to keep offering this for everyone?
-		// TODO the printed order may change every time bc this is how go maps work
-		fmt.Printf("hubinfo requested from rip=%s\n",remoteAddr)
-		data,err := rkv.PrintHubInfo()
-		if err!=nil {
-			fmt.Printf("# /hubinfo PrintHubInfo() err=%v\n",err)
-		} else {
-			fmt.Fprintf(w,data)
-		}
-		return
-	}
-*/
+// not being used anymore
+//	if strings.HasPrefix(r.URL.Path,"/isonline/") {
+//		httpIsOnline(w, r, urlID, urlPath, remoteAddr)
+//		return
+//	}
 
-	// everything else (incl "/") will be ignored
 	fmt.Printf("# (%s) unhandled apicall by id=(%s) rip=%s\n",urlPath,urlID,remoteAddrWithPort)
 	return
 }

@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"sync"
+	"github.com/mehrvarz/webcall/skv"
 	"github.com/mehrvarz/webcall/rkv"
 	"github.com/mehrvarz/webcall/twitter"
 	"github.com/mrjones/oauth"
@@ -42,15 +43,15 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		addContact(urlID, callerId, callerName, "/notifyCallee")
 	}
 
-	var dbEntry rkv.DbEntry
-	err := db.Get(dbRegisteredIDs, urlID, &dbEntry)
+	var dbEntry skv.DbEntry
+	err := kvMain.Get(dbRegisteredIDs, urlID, &dbEntry)
 	if err != nil {
 		fmt.Printf("# notifyCallee (%s) failed on dbRegisteredIDs\n", urlID)
 		return
 	}
 	dbUserKey := fmt.Sprintf("%s_%d", urlID, dbEntry.StartTime)
-	var dbUser rkv.DbUser
-	err = db.Get(dbUserBucket, dbUserKey, &dbUser)
+	var dbUser skv.DbUser
+	err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 	if err != nil {
 		fmt.Printf("# notifyCallee (%s) failed on dbUserBucket\n", urlID)
 		return
@@ -177,8 +178,8 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 							urlID, dbUser.Email2[:maxlen], tweet.IdStr)
 						// in 1hr we want to delete this tweet via tweet.Id
 						// so we store tweet.Id dbSentNotifTweets
-						notifTweet := rkv.NotifTweet{time.Now().Unix(), msg}
-						err = dbNotif.Put(dbSentNotifTweets, tweet.IdStr, notifTweet, false)
+						notifTweet := skv.NotifTweet{time.Now().Unix(), msg}
+						err = kvNotif.Put(dbSentNotifTweets, tweet.IdStr, notifTweet, false)
 						if err != nil {
 							fmt.Printf("# notifyCallee (%s) failed to store dbSentNotifTweets\n",
 								tweet.IdStr)
@@ -193,7 +194,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 			fmt.Printf("# notifyCallee (%s) no notification sent - store as missed call\n", urlID)
 			caller := CallerInfo{remoteAddrWithPort, callerName, time.Now().Unix(), callerId}
 			var missedCallsSlice []CallerInfo
-			err := dbCalls.Get(dbMissedCalls, urlID, &missedCallsSlice)
+			err := kvCalls.Get(dbMissedCalls, urlID, &missedCallsSlice)
 			if err != nil {
 				//fmt.Printf("# notifyCallee (%s) failed to read dbMissedCalls %v\n", urlID, err)
 			}
@@ -202,7 +203,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 				missedCallsSlice = missedCallsSlice[1:]
 			}
 			missedCallsSlice = append(missedCallsSlice, caller)
-			err = dbCalls.Put(dbMissedCalls, urlID, missedCallsSlice, false)
+			err = kvCalls.Put(dbMissedCalls, urlID, missedCallsSlice, false)
 			if err != nil {
 				fmt.Printf("# notifyCallee (%s) failed to store dbMissedCalls %v\n", urlID, err)
 			}
@@ -223,12 +224,12 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	waitingCaller := CallerInfo{remoteAddrWithPort, callerName, time.Now().Unix(), callerId}
 
 	var waitingCallerSlice []CallerInfo
-	err = dbCalls.Get(dbWaitingCaller, urlID, &waitingCallerSlice)
+	err = kvCalls.Get(dbWaitingCaller, urlID, &waitingCallerSlice)
 	if err != nil {
 		//fmt.Printf("# notifyCallee (%s) failed to read dbWaitingCaller\n",urlID)
 	}
 	waitingCallerSlice = append(waitingCallerSlice, waitingCaller)
-	err = dbCalls.Put(dbWaitingCaller, urlID, waitingCallerSlice, false)
+	err = kvCalls.Put(dbWaitingCaller, urlID, waitingCallerSlice, false)
 	if err != nil {
 		fmt.Printf("# notifyCallee (%s) failed to store dbWaitingCaller\n", urlID)
 	}
@@ -370,7 +371,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		if waitingCallerSlice[idx].AddrPort == remoteAddrWithPort {
 			fmt.Printf("notifyCallee (%s) remove caller from waitingCallerSlice + store\n", urlID)
 			waitingCallerSlice = append(waitingCallerSlice[:idx], waitingCallerSlice[idx+1:]...)
-			err = dbCalls.Put(dbWaitingCaller, urlID, waitingCallerSlice, false)
+			err = kvCalls.Put(dbWaitingCaller, urlID, waitingCallerSlice, false)
 			if err != nil {
 				fmt.Printf("# notifyCallee (%s) failed to store dbWaitingCaller\n", urlID)
 			}
@@ -378,7 +379,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 			if callerGaveUp {
 				// store missed call
 				fmt.Printf("notifyCallee (%s) store missed call\n", urlID)
-				err = dbCalls.Get(dbMissedCalls, urlID, &missedCallsSlice)
+				err = kvCalls.Get(dbMissedCalls, urlID, &missedCallsSlice)
 				if err != nil {
 					fmt.Printf("# notifyCallee (%s) failed to read dbMissedCalls %v\n", urlID, err)
 				}
@@ -387,7 +388,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 					missedCallsSlice = missedCallsSlice[1:]
 				}
 				missedCallsSlice = append(missedCallsSlice, waitingCaller)
-				err = dbCalls.Put(dbMissedCalls, urlID, missedCallsSlice, false)
+				err = kvCalls.Put(dbMissedCalls, urlID, missedCallsSlice, false)
 				if err != nil {
 					fmt.Printf("# notifyCallee (%s) failed to store dbMissedCalls %v\n", urlID, err)
 				}
@@ -415,15 +416,15 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 		return
 	}
 
-	var dbEntry rkv.DbEntry
-	var dbUser rkv.DbUser
-	err := db.Get(dbRegisteredIDs,urlID,&dbEntry)
+	var dbEntry skv.DbEntry
+	var dbUser skv.DbUser
+	err := kvMain.Get(dbRegisteredIDs,urlID,&dbEntry)
 	if err!=nil {
 		fmt.Printf("# /canbenotified (%s) failed on dbRegisteredIDs rip=%s\n",urlID,remoteAddr)
 		return
 	}
 	dbUserKey := fmt.Sprintf("%s_%d",urlID, dbEntry.StartTime)
-	err = db.Get(dbUserBucket, dbUserKey, &dbUser)
+	err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 	if err!=nil {
 		fmt.Printf("# /canbenotified (%s) failed on dbUserBucket rip=%s\n",urlID,remoteAddr)
 		return
@@ -469,7 +470,7 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 		fmt.Printf("# /canbenotified (%s) has no push channel rip=%s\n",urlID,remoteAddr)
 		// store missed call
 		var missedCallsSlice []CallerInfo
-		err := dbCalls.Get(dbMissedCalls,urlID,&missedCallsSlice)
+		err := kvCalls.Get(dbMissedCalls,urlID,&missedCallsSlice)
 		if err!=nil {
 			fmt.Printf("# /canbenotified (%s) failed to read dbMissedCalls err=%v rip=%s\n",
 				urlID, err, remoteAddr)
@@ -479,7 +480,7 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 			missedCallsSlice = missedCallsSlice[1:]
 		}
 		missedCallsSlice = append(missedCallsSlice, caller)
-		err = dbCalls.Put(dbMissedCalls, urlID, missedCallsSlice, true) // skipConfirm
+		err = kvCalls.Put(dbMissedCalls, urlID, missedCallsSlice, true) // skipConfirm
 		if err!=nil {
 			fmt.Printf("# /canbenotified (%s) failed to store dbMissedCalls err=%v rip=%s\n",
 				urlID, err, remoteAddr)
@@ -509,7 +510,7 @@ func addContact(calleeID string, callerID string, callerName string, comment str
 	}
 
 	callerInfoMap := make(map[string]string) // callerID -> name
-	err := dbContacts.Get(dbContactsBucket,calleeID,&callerInfoMap)
+	err := kvContacts.Get(dbContactsBucket,calleeID,&callerInfoMap)
 	if err!=nil {
 		//fmt.Printf("# addContact get key=%s err=%v (ignored)\n", calleeID, err)
 		//can be ignored: return err // key not found (empty)
@@ -521,7 +522,7 @@ func addContact(calleeID string, callerID string, callerName string, comment str
 		return nil
 	}
 	callerInfoMap[callerID] = callerName
-	err = dbContacts.Put(dbContactsBucket, calleeID, callerInfoMap, true)
+	err = kvContacts.Put(dbContactsBucket, calleeID, callerInfoMap, true)
 	if err!=nil {
 		fmt.Printf("# addContact store key=%s err=%v\n", calleeID, err)
 		return err

@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"sync"
 	"runtime"
+	"github.com/mehrvarz/webcall/skv"
 	"github.com/mehrvarz/webcall/rkv"
 )
 
@@ -100,8 +101,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	// no time lost until here
 	//fmt.Printf("/login pw given urlID=(%s) rip=%s id=%d rt=%v\n",
 	//	urlID, remoteAddr, myRequestCount, time.Since(startRequestTime)) // rt=23.184µs
-	var dbEntry rkv.DbEntry
-	var dbUser rkv.DbUser
+	var dbEntry skv.DbEntry
+	var dbUser skv.DbUser
 	var wsClientID uint64
 	var lenGlobalHubMap int64
 	serviceSecs := 0
@@ -118,10 +119,10 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			return
 		}
 
-		err := db.Get(dbRegisteredIDs, urlID, &dbEntry) // costly A 40ms
+		err := kvMain.Get(dbRegisteredIDs, urlID, &dbEntry) // costly A 40ms
 		if err != nil {
 			fmt.Printf("# /login error db=%s bucket=%s key=%s get registeredID err=%v\n",
-				dbName, dbRegisteredIDs, urlID, err)
+				dbMainName, dbRegisteredIDs, urlID, err)
 			if strings.Index(err.Error(), "disconnect") >= 0 {
 				// TODO admin email notif (but not a 1000 times)
 				fmt.Fprintf(w, "error")
@@ -155,10 +156,10 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		// ConnectedToPeerSecs (PermittedConnectedToPeerSecs)
 		// now-StartTime (DurationSecs)
 		dbUserKey := fmt.Sprintf("%s_%d", urlID, dbEntry.StartTime)
-		err = db.Get(dbUserBucket, dbUserKey, &dbUser) // costly B 35ms
+		err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser) // costly B 35ms
 		if err != nil {
 			fmt.Printf("# /login error db=%s bucket=%s get key=%v err=%v\n",
-				dbName, dbUserBucket, dbUserKey, err)
+				dbMainName, dbUserBucket, dbUserKey, err)
 			fmt.Fprintf(w, "error")
 			return
 		}
@@ -361,14 +362,14 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			// 2. so that noone else can pay-subscribe this id but the same guy with the same ip?
 			// 3. so that non-paying subscriber don't get to keep the same ID
 			if rtcdb != "" {
-				err := db.Put(dbBlockedIDs, urlID,
-					rkv.DbEntry{dbEntry.StartTime, freeAccountBlockSecs, remoteAddr, ""}, true) // skipConfirm
+				err := kvMain.Put(dbBlockedIDs, urlID,
+					skv.DbEntry{dbEntry.StartTime, freeAccountBlockSecs, remoteAddr, ""}, true) // skipConfirm
 				if err != nil {
 					fmt.Printf("# exitFunc error db=%s bucket=%s block key=%s err=%v\n",
-						dbName, dbBlockedIDs, urlID, err)
+						dbMainName, dbBlockedIDs, urlID, err)
 				} else {
 					//fmt.Printf("exitFunc db=%s bucket=%s now blocked key=%s\n",
-					//	dbName, dbBlockedIDs, urlID)
+					//	dbMainName, dbBlockedIDs, urlID)
 				}
 			}
 		}

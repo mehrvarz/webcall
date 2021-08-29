@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/mehrvarz/webcall/skv"
 	"github.com/mehrvarz/webcall/rkv"
 )
 
@@ -119,7 +120,7 @@ func (h *Hub) processTimeValues() bool {
 	timeNow := time.Now()
 
 	// we need dbEntry.DurationSecs
-	var dbEntry rkv.DbEntry
+	var dbEntry skv.DbEntry
 // TODO h.calleeID = "answie7!3766090173" does not work here
 // instead of the global ID we need to use the local ID (or cut off the '!')
 	calleeId := h.calleeID
@@ -129,7 +130,7 @@ func (h *Hub) processTimeValues() bool {
 			calleeId = calleeId[:idxExclam]
 		}
 	}
-	err := db.Get(dbRegisteredIDs,calleeId,&dbEntry)
+	err := kvMain.Get(dbRegisteredIDs,calleeId,&dbEntry)
 	if err!=nil {
 		fmt.Printf("# processTimeValues (%s) failed on dbRegisteredIDs\n",calleeId)
 		// TODO an dieser stelle extrem doof
@@ -137,7 +138,7 @@ func (h *Hub) processTimeValues() bool {
 	}
 
 	var userKey string
-	var dbUser rkv.DbUser
+	var dbUser skv.DbUser
 	dbUserLoaded := false
 	serviceSecs := 0
 	if h.registrationStartTime>0 {
@@ -147,10 +148,10 @@ func (h *Hub) processTimeValues() bool {
 		userKey = fmt.Sprintf("%s_%d",calleeId, h.registrationStartTime)
 		//fmt.Printf("processTimeValues (%s) h.registrationStartTime=%d >0 userKey=(%s) get...\n",
 		//	calleeId, h.registrationStartTime, userKey)
-		err := db.Get(dbUserBucket, userKey, &dbUser)
+		err := kvMain.Get(dbUserBucket, userKey, &dbUser)
 		if err!=nil {
 			fmt.Printf("# hub processTimeValues error db=%s bucket=%s getX key=%v err=%v\n",
-				dbName, dbUserBucket, userKey, err)
+				dbMainName, dbUserBucket, userKey, err)
 			// TODO an dieser stelle extrem doof
 		} else {
 			dbUserLoaded = true
@@ -274,12 +275,13 @@ func (h *Hub) processTimeValues() bool {
 		// TODO UserAgent3 string
 
 		//fmt.Printf("hub processTimeValues store counter for key=(%v)\n",userKey)
-		err := db.Put(dbUserBucket, userKey, dbUser, false)
+		err := kvMain.Put(dbUserBucket, userKey, dbUser, false)
 		if err!=nil {
 			fmt.Printf("# hub processTimeValues error db=%s bucket=%s put key=%v err=%v\n",
-				dbName, dbUserBucket, userKey, err)
+				dbMainName, dbUserBucket, userKey, err)
 		} else {
-			//fmt.Printf("hub processTimeValues db=%s bucket=%s put key=%v OK\n", dbName, dbUserBucket, userKey)
+			//fmt.Printf("hub processTimeValues db=%s bucket=%s put key=%v OK\n",
+			//	dbMainName, dbUserBucket, userKey)
 		}
 	}
 	return deliveredServiceData

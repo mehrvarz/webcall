@@ -1,39 +1,5 @@
-package rkv
+package skv
 
-type Command struct {
-	MsgId int64
-	KvStoreId int64
-	Cmd string
-	Arg string // filename for Open(), otherwise always bucketName
-	Key string
-	Value []byte
-	Bool1 bool
-	Bool2 bool
-	Bool3 bool
-}
-
-type Response struct {
-	MsgId int64
-	KvStoreId int64 // only used for Open()
-	Err string
-	Data []byte // only used by Get, GetX
-	Str1 string
-	Int1 int64
-	Int2 int64
-}
-
-type Hub struct {
-	IsCalleeHidden bool
-	IsUnHiddenForCallerAddr string
-	ConnectedCallerIp string
-	ClientIpAddr string
-	ServerIpAddr string // GetOutboundIP() of rtcsig cli, set by rkv.go StoreCalleeInHubMap()
-	WsUrl string
-	WssUrl string
-	WsClientID uint64 // needed for /online; unique only for the server at WsUrl/WssUrl
-}
-
-/*
 type DbEntry struct { // ~40 bytes
 	StartTime int64   // 8 bytes
 	DurationSecs int  // 4 bytes "ServiceSecs" contract duration
@@ -78,4 +44,4 @@ type DbUser struct {
 	Flt2 float64 // currently not used
 	Flt3 float64 // currently not used
 }
-*/
+

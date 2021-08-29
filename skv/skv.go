@@ -23,8 +23,20 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-type SKV struct { // implements interface rkv.KV
-	KvStore rkv.KVStore // Db + Dbr
+type KV interface {
+	CreateBucket(bucketName string) error
+	Get(bucketName string, key string, value interface{}) error
+	Put(bucketName string, key string, value interface{}, waitConfirm bool) error
+	Delete(bucketName string, key string) error
+	Close() error
+	SearchIp(bucketName string, ip string, value *byte) error
+}
+
+type SKV struct { // implements interface KV
+	Db *bolt.DB
+	Name string
+	Host string	// ip of remote rtcsig-server
+	Opencount int
 }
 
 var (
@@ -39,7 +51,7 @@ var (
 // Because of BoltDB restrictions, only one process may open the file at a
 // time. Attempts to open the file from another process will fail with a
 // timeout error.
-func DbOpen(path string, dbPath string) (rkv.KV, error) {
+func DbOpen(path string, dbPath string) (SKV, error) {
 	if MyOutBoundIpAddr == "" {
 		MyOutBoundIpAddr,_ = rkv.GetOutboundIP()
 	}
@@ -51,19 +63,19 @@ func DbOpen(path string, dbPath string) (rkv.KV, error) {
 	}
 	db, err := bolt.Open(dbPath+path, 0640, opts)
 	if err != nil {
-		return nil, err
+		return SKV{}, err
 	}
 	err = db.Update(func(tx *bolt.Tx) error {
 		return nil
 	})
 	if err != nil {
-		return nil, err
+		return SKV{}, err
 	}
-	return SKV{KvStore:rkv.KVStore{Db: db}}, nil
+	return SKV{Db: db}, nil
 }
 
 func (kvs SKV) CreateBucket(bucketName string) error {
-	err := kvs.KvStore.Db.Update(func(tx *bolt.Tx) error {
+	err := kvs.Db.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists([]byte(bucketName))
 		return err
 	})
@@ -89,7 +101,7 @@ func (kvs SKV) Put(bucketName string, key string, value interface{}, waitConfirm
 	if err := gob.NewEncoder(&buf).Encode(value); err != nil {
 		return err
 	}
-	return kvs.KvStore.Db.Update(func(tx *bolt.Tx) error {
+	return kvs.Db.Update(func(tx *bolt.Tx) error {
 		return tx.Bucket([]byte(bucketName)).Put([]byte(key), buf.Bytes())
 	})
 }
@@ -116,7 +128,7 @@ func (kvs SKV) Put(bucketName string, key string, value interface{}, waitConfirm
 //      fmt.Println("entry is present")
 //  }
 func (kvs SKV) Get(bucketName string, key string, value interface{}) error {
-	return kvs.KvStore.Db.View(func(tx *bolt.Tx) error {
+	return kvs.Db.View(func(tx *bolt.Tx) error {
 		c := tx.Bucket([]byte(bucketName)).Cursor()
 		if k, v := c.Seek([]byte(key)); k == nil || string(k) != key {
 			return rkv.ErrNotFound
@@ -132,7 +144,7 @@ func (kvs SKV) Get(bucketName string, key string, value interface{}) error {
 // Delete the entry with the given key. If no such key is present in the store,
 // it returns ErrNotFound.
 func (kvs SKV) Delete(bucketName string, key string) error {
-	return kvs.KvStore.Db.Update(func(tx *bolt.Tx) error {
+	return kvs.Db.Update(func(tx *bolt.Tx) error {
 		c := tx.Bucket([]byte(bucketName)).Cursor()
 		if k, _ := c.Seek([]byte(key)); k == nil || string(k) != key {
 			return rkv.ErrNotFound
@@ -144,18 +156,18 @@ func (kvs SKV) Delete(bucketName string, key string) error {
 
 // Close closes the key-value store file.
 func (kvs SKV) Close() error {
-	return kvs.KvStore.Db.Close()
+	return kvs.Db.Close()
 }
 
-// tm: added functionality
+// SearchIp() is added functionality (tm)
 func (kvs SKV) SearchIp(bucketName string, ip string, value *byte) error {
 	*value = 0
-	err := kvs.KvStore.Db.Update(func(tx *bolt.Tx) error {
+	err := kvs.Db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucketName))
 		c := b.Cursor()
 		for k, v := c.First(); k != nil; k, v = c.Next() {
 			d := gob.NewDecoder(bytes.NewReader(v))
-			var dbEntry rkv.DbEntry
+			var dbEntry DbEntry
 			d.Decode(&dbEntry)
 			if dbEntry.Ip==ip {
 				*value = 1
@@ -166,29 +178,4 @@ func (kvs SKV) SearchIp(bucketName string, ip string, value *byte) error {
 	})
 	return err
 }
-
-/*
-func (kvs SKV) Dumpuser(bucketName string) error {
-	err := kvs.KvStore.Db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(bucketName))
-		c := b.Cursor()
-		for k, v := c.First(); k != nil; k, v = c.Next() {
-			var dbUser rkv.DbUser
-			d := gob.NewDecoder(bytes.NewReader(v))
-			d.Decode(&dbUser)
-
-			fmt.Printf("user %20s %d calls=%d p2p=%d/%d talk=%d(%d) %s,%s,%s %d,%d,%d\n",
-				k,
-				dbUser.PremiumLevel,
-				dbUser.CallCounter, //dbUser.PermittedCalls,
-				dbUser.LocalP2pCounter, dbUser.RemoteP2pCounter,
-				dbUser.ConnectedToPeerSecs, dbUser.PermittedConnectedToPeerSecs,
-				dbUser.Ip1, dbUser.Ip2, dbUser.Ip3,
-				dbUser.Int1, dbUser.Int2, dbUser.Int3)
-		}
-		return nil
-	})
-	return err
-}
-*/
 

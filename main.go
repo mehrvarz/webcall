@@ -13,9 +13,9 @@ import (
 	"strconv"
 	"bufio"
 	"runtime"
+	"gopkg.in/ini.v1"
 	"github.com/mehrvarz/webcall/skv"
 	"github.com/mehrvarz/webcall/rkv"
-	"gopkg.in/ini.v1"
 	"github.com/lesismal/nbio/nbhttp"
 	"github.com/lesismal/llib/std/crypto/tls"
 	//"github.com/lesismal/nbio/taskpool"
@@ -38,9 +38,9 @@ const freeAccountBlockSecs = 7*24*60*60; // 7 days
 const randomCallerWaitSecsConst = 1800
 const randomCallerCallSecsConst = 600
 
-var	db rkv.KV = nil
 
-var dbName = "rtcsig.db"
+var dbMainName = "rtcsig.db"
+var	kvMain skv.KV
 const dbRegisteredIDs = "activeIDs" // internal name was changed active -> registered
 const dbBlockedIDs = "blockedIDs"
 const dbUserBucket = "userData2"
@@ -52,16 +52,16 @@ type CallerInfo struct { // for incoming calls
 	CallerID string // the caller's calleeID for calling back
 }
 var dbCallsName = "rtccalls.db"
-var	dbCalls rkv.KV = nil
+var	kvCalls skv.KV
 const dbWaitingCaller = "waitingCallers"
 const dbMissedCalls = "missedCalls"
 
 var dbContactsName = "rtccontacts.db"
-var	dbContacts rkv.KV = nil
+var	kvContacts skv.KV
 const dbContactsBucket = "contacts" // calleeID -> map[callerID]name
 
 var dbNotifName = "rtcnotif.db"
-var	dbNotif rkv.KV = nil
+var	kvNotif skv.KV
 const dbSentNotifTweets = "sentNotifTweets"
 
 type PwIdCombo struct {
@@ -71,7 +71,7 @@ type PwIdCombo struct {
 	Expiration int64
 }
 var dbHashedPwName = "rtchashedpw.db"
-var	dbHashedPw rkv.KV = nil
+var	dbHashedPw skv.KV
 const dbHashedPwBucket = "hashedpwbucket"
 
 // main server; httpPort=8067 httpsPort=0/8068 wsPort=8071 wssPort=0/8443 turnPort=3739 dbName="rtcsig.db"
@@ -147,8 +147,8 @@ var svrs *nbhttp.Server
 
 type wsClientDataType struct {
 	hub *Hub
-	dbEntry rkv.DbEntry
-	dbUser rkv.DbUser
+	dbEntry skv.DbEntry
+	dbUser skv.DbUser
 	calleeID string
 }
 var wsClientMap map[uint64]wsClientDataType
@@ -175,71 +175,71 @@ func main() {
 	fmt.Printf("wssPort=%d wssUrl=%s\n", wssPort, wssUrl)
 	fmt.Printf("runTurn=%v turnIP=%s\n", runTurn, turnIP)
 	//fmt.Printf("dbName=%s dbCallsName=%s dbContactsName=%s dbNotifName=%s dbHashedPwName=%s\n",
-	//	dbName, dbCallsName, dbContactsName, dbNotifName)
+	//	dbMainName, dbCallsName, dbContactsName, dbNotifName)
 
 	if rtcdb=="" {
-		db,err = skv.DbOpen(dbName,dbPath)
+		kvMain,err = skv.DbOpen(dbMainName,dbPath)
 	} else {
-		db,err = rkv.DbOpen(dbName,rtcdb)
+		kvMain,err = rkv.DbOpen(dbMainName,rtcdb)
 	}
 	if err!=nil {
-		fmt.Printf("# error dbName %s open %v\n",dbName,err)
+		fmt.Printf("# error dbName %s open %v\n",dbMainName,err)
 		return
 	}
-	err = db.CreateBucket(dbRegisteredIDs)
+	err = kvMain.CreateBucket(dbRegisteredIDs)
 	if err!=nil {
-		fmt.Printf("# error db %s create '%s' bucket err=%v\n",dbName,dbRegisteredIDs,err)
-		db.Close()
+		fmt.Printf("# error dbName %s create '%s' bucket err=%v\n",dbMainName,dbRegisteredIDs,err)
+		kvMain.Close()
 		return
 	}
-	err = db.CreateBucket(dbBlockedIDs)
+	err = kvMain.CreateBucket(dbBlockedIDs)
 	if err!=nil {
-		fmt.Printf("# error db %s create '%s' bucket err=%v\n",dbName,dbBlockedIDs,err)
-		db.Close()
+		fmt.Printf("# error dbName %s create '%s' bucket err=%v\n",dbMainName,dbBlockedIDs,err)
+		kvMain.Close()
 		return
 	}
-	err = db.CreateBucket(dbUserBucket)
+	err = kvMain.CreateBucket(dbUserBucket)
 	if err!=nil {
-		fmt.Printf("# error db %s create '%s' bucket err=%v\n",dbName,dbUserBucket,err)
-		db.Close()
+		fmt.Printf("# error dbName %s create '%s' bucket err=%v\n",dbMainName,dbUserBucket,err)
+		kvMain.Close()
 		return
 	}
 
 	if rtcdb=="" {
-		dbCalls,err = skv.DbOpen(dbCallsName,dbPath)
+		kvCalls,err = skv.DbOpen(dbCallsName,dbPath)
 	} else {
-		dbCalls,err = rkv.DbOpen(dbCallsName,rtcdb)
+		kvCalls,err = rkv.DbOpen(dbCallsName,rtcdb)
 	}
 	if err!=nil {
 		fmt.Printf("# error dbCallsName %s open %v\n",dbCallsName,err)
 		return
 	}
-	err = dbCalls.CreateBucket(dbWaitingCaller)
+	err = kvCalls.CreateBucket(dbWaitingCaller)
 	if err!=nil {
 		fmt.Printf("# error db %s create '%s' bucket err=%v\n",dbCallsName,dbWaitingCaller,err)
-		dbCalls.Close()
+		kvCalls.Close()
 		return
 	}
-	err = dbCalls.CreateBucket(dbMissedCalls)
+	err = kvCalls.CreateBucket(dbMissedCalls)
 	if err!=nil {
 		fmt.Printf("# error db %s create '%s' bucket err=%v\n",dbCallsName,dbMissedCalls,err)
-		dbCalls.Close()
+		kvCalls.Close()
 		return
 	}
 
 	if rtcdb=="" {
-		dbNotif,err = skv.DbOpen(dbNotifName,dbPath)
+		kvNotif,err = skv.DbOpen(dbNotifName,dbPath)
 	} else {
-		dbNotif,err = rkv.DbOpen(dbNotifName,rtcdb)
+		kvNotif,err = rkv.DbOpen(dbNotifName,rtcdb)
 	}
 	if err!=nil {
 		fmt.Printf("# error dbNotifName %s open %v\n",dbNotifName,err)
 		return
 	}
-	err = dbNotif.CreateBucket(dbSentNotifTweets)
+	err = kvNotif.CreateBucket(dbSentNotifTweets)
 	if err!=nil {
 		fmt.Printf("# error db %s create '%s' bucket err=%v\n",dbNotifName,dbSentNotifTweets,err)
-		dbNotif.Close()
+		kvNotif.Close()
 		return
 	}
 
@@ -260,18 +260,18 @@ func main() {
 	}
 
 	if rtcdb=="" {
-		dbContacts,err = skv.DbOpen(dbContactsName,dbPath)
+		kvContacts,err = skv.DbOpen(dbContactsName,dbPath)
 	} else {
-		dbContacts,err = rkv.DbOpen(dbContactsName,rtcdb)
+		kvContacts,err = rkv.DbOpen(dbContactsName,rtcdb)
 	}
 	if err!=nil {
 		fmt.Printf("# error dbContactsName %s open %v\n",dbContactsName,err)
 		return
 	}
-	err = dbContacts.CreateBucket(dbContactsBucket)
+	err = kvContacts.CreateBucket(dbContactsBucket)
 	if err!=nil {
 		fmt.Printf("# error db %s create '%s' bucket err=%v\n",dbContactsName,dbContactsBucket,err)
-		dbContacts.Close()
+		kvContacts.Close()
 		return
 	}
 
@@ -297,7 +297,6 @@ func main() {
 		defer svr.Stop()
 	}
 	if wssPort>0 {
-		//var tlsConfig *tls.Config
 		cer, err := tls.LoadX509KeyPair("tls.pem", "tls.key")
 		if err != nil {
 			fmt.Printf("# tls.LoadX509KeyPair err=(%v)\n", err)
@@ -394,34 +393,34 @@ func main() {
 	// wait a bit for shutdownStarted to take effect; then close all db's
 	time.Sleep(2 * time.Second)
 
-	fmt.Printf("dbContacts.Close...\n")
-	err = dbContacts.Close()
+	fmt.Printf("kvContacts.Close...\n")
+	err = kvContacts.Close()
 	if err!=nil {
-		fmt.Printf("# error db %s close err=%v\n",dbContactsName,err)
+		fmt.Printf("# error dbName %s close err=%v\n",dbContactsName,err)
 	}
 
 	fmt.Printf("dbHashedPw.Close...\n")
 	err = dbHashedPw.Close()
 	if err!=nil {
-		fmt.Printf("# error db %s close err=%v\n",dbHashedPwName,err)
+		fmt.Printf("# error dbName %s close err=%v\n",dbHashedPwName,err)
 	}
 
-	fmt.Printf("dbNotif.Close...\n")
-	err = dbNotif.Close()
+	fmt.Printf("kvNotif.Close...\n")
+	err = kvNotif.Close()
 	if err!=nil {
-		fmt.Printf("# error db %s close err=%v\n",dbNotifName,err)
+		fmt.Printf("# error dbName %s close err=%v\n",dbNotifName,err)
 	}
 
-	fmt.Printf("dbCalls.Close...\n")
-	err = dbCalls.Close()
+	fmt.Printf("kvCalls.Close...\n")
+	err = kvCalls.Close()
 	if err!=nil {
-		fmt.Printf("# error db %s close err=%v\n",dbCallsName,err)
+		fmt.Printf("# error dbName %s close err=%v\n",dbCallsName,err)
 	}
 
 	fmt.Printf("db.Close...\n")
-	err = db.Close()
+	err = kvMain.Close()
 	if err!=nil {
-		fmt.Printf("# error db %s close err=%v\n",dbName,err)
+		fmt.Printf("# error dbName %s close err=%v\n",dbMainName,err)
 	}
 
 	if rtcdb!="" {

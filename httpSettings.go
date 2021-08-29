@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"encoding/json"
 	"io"
-	"github.com/mehrvarz/webcall/rkv"
+	"github.com/mehrvarz/webcall/skv"
 )
 
 func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calleeID string, cookie *http.Cookie, remoteAddr string) {
@@ -24,16 +24,16 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		return
 	}
 
-	var dbEntry rkv.DbEntry
-	err := db.Get(dbRegisteredIDs,calleeID,&dbEntry)
+	var dbEntry skv.DbEntry
+	err := kvMain.Get(dbRegisteredIDs,calleeID,&dbEntry)
 	if err!=nil {
 		fmt.Printf("# /getsettings (%s) fail on dbRegisteredIDs rip=%s\n", calleeID, remoteAddr)
 		return
 	}
 
 	dbUserKey := fmt.Sprintf("%s_%d",calleeID, dbEntry.StartTime)
-	var dbUser rkv.DbUser
-	err = db.Get(dbUserBucket, dbUserKey, &dbUser)
+	var dbUser skv.DbUser
+	err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 	if err!=nil {
 		fmt.Printf("# /getsettings (%s) fail on dbUserBucket rip=%s\n", calleeID, remoteAddr)
 		return
@@ -96,16 +96,16 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		return
 	}
 
-	var dbEntry rkv.DbEntry
-	err = db.Get(dbRegisteredIDs,calleeID,&dbEntry)
+	var dbEntry skv.DbEntry
+	err = kvMain.Get(dbRegisteredIDs,calleeID,&dbEntry)
 	if err!=nil {
 		fmt.Printf("# /setsettings (%s) failed on dbRegisteredIDs rip=%s\n", calleeID, remoteAddr)
 		return
 	}
 
 	dbUserKey := fmt.Sprintf("%s_%d",calleeID, dbEntry.StartTime)
-	var dbUser rkv.DbUser
-	err = db.Get(dbUserBucket, dbUserKey, &dbUser)
+	var dbUser skv.DbUser
+	err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 	if err!=nil {
 		fmt.Printf("# /setsettings (%s) failed on dbUserBucket rip=%s\n", calleeID, remoteAddr)
 		return
@@ -208,13 +208,13 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 	}
 
 	// store data
-	err = db.Put(dbUserBucket, dbUserKey, dbUser, false)
+	err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
 	if err!=nil {
 		fmt.Printf("# /setsettings error db=%s bucket=%s put key=%s err=%v\n",
-			dbName,dbUserBucket,calleeID,err)
+			dbMainName,dbUserBucket,calleeID,err)
 	} else {
 		fmt.Printf("/setsettings db=%s bucket=%s put key=%s\n",
-			dbName,dbUserBucket,calleeID)
+			dbMainName,dbUserBucket,calleeID)
 	}
 	return
 }
@@ -229,7 +229,7 @@ func httpGetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 		return
 	}
 	var callerInfoMap map[string]string // callerID -> name
-	err := dbContacts.Get(dbContactsBucket,calleeID,&callerInfoMap)
+	err := kvContacts.Get(dbContactsBucket,calleeID,&callerInfoMap)
 	if err!=nil {
 		fmt.Printf("# /getcontacts db get calleeID=%s err=%v\n", calleeID, err)
 		return
@@ -271,7 +271,7 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 	}
 
 	var callerInfoMap map[string]string // callerID -> name
-	err := dbContacts.Get(dbContactsBucket,calleeID,&callerInfoMap)
+	err := kvContacts.Get(dbContactsBucket,calleeID,&callerInfoMap)
 	if err!=nil {
 		fmt.Printf("# /setcontact db get calleeID=%s err=%v\n", calleeID, err)
 		return
@@ -284,7 +284,7 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 	}
 
 	callerInfoMap[contactID] = name
-	err = dbContacts.Put(dbContactsBucket, calleeID, callerInfoMap, false)
+	err = kvContacts.Put(dbContactsBucket, calleeID, callerInfoMap, false)
 	if err!=nil {
 		fmt.Printf("# /setcontact store calleeID=%s err=%v\n", calleeID, err)
 		return
@@ -315,7 +315,7 @@ func httpDeleteContact(w http.ResponseWriter, r *http.Request, urlID string, cal
 	}
 
 	var callerInfoMap map[string]string // callerID -> name
-	err := dbContacts.Get(dbContactsBucket,calleeID,&callerInfoMap)
+	err := kvContacts.Get(dbContactsBucket,calleeID,&callerInfoMap)
 	if err!=nil {
 		fmt.Printf("# /deletecontact db get calleeID=%s err=%v\n", calleeID, err)
 		return
@@ -327,7 +327,7 @@ func httpDeleteContact(w http.ResponseWriter, r *http.Request, urlID string, cal
 		return
 	}
 	delete(callerInfoMap,contactID)
-	err = dbContacts.Put(dbContactsBucket, calleeID, callerInfoMap, false)
+	err = kvContacts.Put(dbContactsBucket, calleeID, callerInfoMap, false)
 	if err!=nil {
 		fmt.Printf("# /deletecontact store calleeID=%s err=%v\n", calleeID, err)
 		return

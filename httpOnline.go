@@ -6,6 +6,7 @@ import (
 	"time"
 	"fmt"
 	"io"
+	"github.com/mehrvarz/webcall/skv"
 	"github.com/mehrvarz/webcall/rkv"
 )
 
@@ -166,14 +167,14 @@ func httpAvail(w http.ResponseWriter, r *http.Request, urlID string, urlPath str
 		// this is NOT the case if it is listed as registered or blocked
 		fmt.Printf("/avail check id=%s for rip=%s\n",checkID,remoteAddr)
 
-		var dbEntryRegistered rkv.DbEntry
-		var dbEntryBlocked rkv.DbEntry
+		var dbEntryRegistered skv.DbEntry
+		var dbEntryBlocked skv.DbEntry
 		// checkID is blocked in dbBlockedIDs
-		err := db.Get(dbBlockedIDs,checkID,&dbEntryBlocked)
+		err := kvMain.Get(dbBlockedIDs,checkID,&dbEntryBlocked)
 		if err!=nil {
 			// id is not listed in dbBlockedIDs
 			fmt.Printf("/avail check id=%s not found in dbBlockedIDs\n",checkID)
-			err = db.Get(dbRegisteredIDs,checkID,&dbEntryRegistered)
+			err = kvMain.Get(dbRegisteredIDs,checkID,&dbEntryRegistered)
 			if err!=nil {
 				// id is not listed in dbRegisteredIDs
 				//fmt.Printf("avail check id=%s not found in dbRegisteredIDs\n",checkID)
@@ -251,12 +252,12 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 			// this can be a fake request
 			// we need to verify if registerID is in use
 			//fmt.Printf("avail check id=%s not found in dbBlockedIDs\n",checkID)
-			var dbEntryRegistered rkv.DbEntry
-			err := db.Get(dbRegisteredIDs,registerID,&dbEntryRegistered)
+			var dbEntryRegistered skv.DbEntry
+			err := kvMain.Get(dbRegisteredIDs,registerID,&dbEntryRegistered)
 			if err==nil {
 				// registerID is already registered
 				fmt.Printf("/register fail db=%s bucket=%s get id=%s already registered\n",
-					dbName, dbRegisteredIDs, registerID)
+					dbMainName, dbRegisteredIDs, registerID)
 				fmt.Fprintf(w, "was already registered")
 				return
 			}
@@ -266,11 +267,11 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 //					// check if the requesting IP-addr has a valid account
 //					// this is supposed to prevent the same IP to register many different accounts
 //					var foundIp byte = 0
-//					err := db.SearchIp(dbRegisteredIDs, remoteAddr, &foundIp)
+//					err := kvMain.SearchIp(dbRegisteredIDs, remoteAddr, &foundIp)
 //					if err!=nil {
 //						// error (ErrDisconnect, ErrTimeout) we should NOT register now
 //						fmt.Printf("# /register fail db=%s bucket=%s rip=%s err=%v\n",
-//							dbName, dbRegisteredIDs, remoteAddr, err)
+//							dbMainName, dbRegisteredIDs, remoteAddr, err)
 //						fmt.Fprintf(w,"error cannot register")
 //						return
 //					} else if foundIp!=0 {
@@ -285,25 +286,25 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 
 			unixTime := startRequestTime.Unix()
 			dbUserKey := fmt.Sprintf("%s_%d",registerID, unixTime)
-			dbUser := rkv.DbUser{PremiumLevel:1,
+			dbUser := skv.DbUser{PremiumLevel:1,
 				PermittedConnectedToPeerSecs:freeAccountTalkSecs, Ip1:remoteAddr,
 				UserAgent:r.UserAgent(), PrevId:""}
-			err = db.Put(dbUserBucket, dbUserKey, dbUser, false)
+			err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
 			if err!=nil {
 				fmt.Printf("# /register error db=%s bucket=%s put key=%s err=%v\n",
-					dbName, dbUserBucket, registerID, err)
+					dbMainName, dbUserBucket, registerID, err)
 				fmt.Fprintf(w,"cannot register user")
 			} else {
-				err = db.Put(dbRegisteredIDs, registerID,
-						rkv.DbEntry{unixTime, freeAccountServiceSecs, remoteAddr, pw}, false)
+				err = kvMain.Put(dbRegisteredIDs, registerID,
+						skv.DbEntry{unixTime, freeAccountServiceSecs, remoteAddr, pw}, false)
 				if err!=nil {
 					fmt.Printf("# /register error db=%s bucket=%s put key=%s err=%v\n",
-						dbName,dbRegisteredIDs,registerID,err)
+						dbMainName,dbRegisteredIDs,registerID,err)
 					fmt.Fprintf(w,"cannot register ID")
-					// TODO this is bad! got to role back db.Put((dbUser...) from above
+					// TODO this is bad! got to role back kvMain.Put((dbUser...) from above
 				} else {
 					fmt.Printf("/register db=%s bucket=%s stored ID=%s OK\n",
-						dbName, dbRegisteredIDs, registerID)
+						dbMainName, dbRegisteredIDs, registerID)
 					// registerID is now available for use for 24h
 					fmt.Fprintf(w, "OK")
 				}
@@ -384,11 +385,11 @@ func httpIsOnline(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 			// store the caller (calleeID) (ideally with name) as a new contact for the callee (urlID)
 			// TODO maybe the callee (urlID) does not want this caller (calleeID) in it's contact list?
 			var dbEntry skv.DbEntry
-			err := db.Get(dbRegisteredIDs,calleeID,&dbEntry)
+			err := kv.Get(dbRegisteredIDs,calleeID,&dbEntry)
 			if err==nil {
 				dbUserKey := fmt.Sprintf("%s_%d",calleeID, dbEntry.StartTime)
 				var dbUser skv.DbUser
-				err = db.Get(dbUserBucket, dbUserKey, &dbUser)
+				err = kv.Get(dbUserBucket, dbUserKey, &dbUser)
 				if err==nil && dbUser.Name!="" {
 					calleeName = dbUser.Name
 				}
@@ -498,16 +499,16 @@ func httpIsOnline(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 								//fmt.Printf("/dial clientIdFromCookie=(%s)\n",clientIdFromCookie)
 
 								var dbEntry skv.DbEntry
-								err := db.Get(dbRegisteredIDs,clientIdFromCookie,&dbEntry)
+								err := kvMain.Get(dbRegisteredIDs,clientIdFromCookie,&dbEntry)
 								if err!=nil {
-								    fmt.Printf("# /dial db.Get clientIdFromCookie (%s) err=%v rip=%s\n",
+								    fmt.Printf("# /dial kvMain.Get clientIdFromCookie (%s) err=%v rip=%s\n",
 								        clientIdFromCookie, err, remoteAddr)
 								} else {
 									dbUserKey := fmt.Sprintf("%s_%d",clientIdFromCookie, dbEntry.StartTime)
 								    var dbUser skv.DbUser
-								    err = db.Get(dbUserBucket, dbUserKey, &dbUser)
+								    err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 								    if err!=nil {
-								        fmt.Printf("# /dial err db.Get dbUserKey (%v) err=%v rip=%s\n",
+								        fmt.Printf("# /dial err kvMain.Get dbUserKey (%v) err=%v rip=%s\n",
 											dbUserKey, err, remoteAddr)
 								    } else if dbUser.Name=="" {
 										//fmt.Printf("# /dial err dbUser.Name is empty\n")

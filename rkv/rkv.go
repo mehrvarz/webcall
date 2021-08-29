@@ -11,26 +11,20 @@ import (
 	"net/http"
 	"strings"
 	"os"
-	bolt "go.etcd.io/bbolt"
 	"github.com/fasthttp/websocket"
 )
 
-type KV interface {
+type KV interface { // same as in skv
 	CreateBucket(bucketName string) error
 	Get(bucketName string, key string, value interface{}) error
 	Put(bucketName string, key string, value interface{}, waitConfirm bool) error
 	Delete(bucketName string, key string) error
 	Close() error
 	SearchIp(bucketName string, ip string, value *byte) error
-	//Dumpuser(bucketName string) error
 }
 
-type KVStore struct {
-	Db *bolt.DB
-	Dbr int64
-}
 type RKV struct { // implements interface KV
-	KvStore KVStore
+	Dbr int64
 }
 
 var (
@@ -52,14 +46,14 @@ var (
 	ErrDisconnect = errors.New("rkv disconnect")
 )
 
-func DbOpen(path string, rtcdb string) (KV, error) {
+func DbOpen(path string, rtcdb string) (RKV, error) {
 	fmt.Printf("rkv.Open(%s)...\n", path)
 	if connection==nil {
 		var err error
 		connection,err = contact(rtcdb)
 		if err!=nil {
 			fmt.Printf("# rkv.Open() contact err=%v\n", err)
-			return nil, err
+			return RKV{}, err
 		}
 
 		// use of myipaddr:
@@ -91,16 +85,16 @@ func DbOpen(path string, rtcdb string) (KV, error) {
 		receivedResponseLock.Unlock()
 		if resp.Err != "" {
 			fmt.Printf("rkv.Open(%s) rerr=%s\n",path,resp.Err)
-			return nil,errors.New(resp.Err)
+			return RKV{},errors.New(resp.Err)
 		}
 		fmt.Printf("rkv.Open(%s) now using id %d\n",path,resp.KvStoreId)
-		return RKV{KvStore:KVStore{Dbr:resp.KvStoreId}}, nil
+		return RKV{Dbr:resp.KvStoreId}, nil
 	case <-closeChan:
 		//fmt.Printf("# rkv.Open() connection closed\n")
-		return nil,ErrDisconnect
+		return RKV{},ErrDisconnect
 	case <-time.After(wsSendTimeoutDuration):
 		//fmt.Printf("# rkv.Open() timeout\n")
-		return nil, ErrTimeout
+		return RKV{}, ErrTimeout
 	}
 }
 
@@ -206,7 +200,7 @@ func (c RKV) CreateBucket(bucketName string) error {
 	idChanMap[myId] = myChan
 	idChanLock.Unlock()
 
-	send(Command{MsgId:myId, KvStoreId:c.KvStore.Dbr, Cmd:"CreateBucket", Arg:bucketName})
+	send(Command{MsgId:myId, KvStoreId:c.Dbr, Cmd:"CreateBucket", Arg:bucketName})
 
 	// wait for remote response
 	//fmt.Printf("rkv.CreateBucket waiting for remote reply...\n")
@@ -254,7 +248,7 @@ func (c RKV) Put(bucketName string, key string, value interface{}, skipConfirm b
 		idChanMap[myId] = myChan
 		idChanLock.Unlock()
 	}
-	send(Command{MsgId:myId, KvStoreId:c.KvStore.Dbr, Cmd:"Put", Arg:bucketName, Key:key, Value:buf.Bytes()})
+	send(Command{MsgId:myId, KvStoreId:c.Dbr, Cmd:"Put", Arg:bucketName, Key:key, Value:buf.Bytes()})
 	if skipConfirm {
 		return nil
 	}
@@ -292,7 +286,7 @@ func (c RKV) Get(bucketName string, key string, value interface{}) error {
 	idChanMap[myId] = myChan
 	idChanLock.Unlock()
 
-	send(Command{MsgId:myId, KvStoreId:c.KvStore.Dbr, Cmd:"Get", Arg:bucketName, Key:key})
+	send(Command{MsgId:myId, KvStoreId:c.Dbr, Cmd:"Get", Arg:bucketName, Key:key})
 
 	// wait for remote response
 	//fmt.Printf("rkv.Get bucketName=%s key=%s waiting for remote reply %d...\n",bucketName,key,myId)
@@ -331,7 +325,7 @@ func (c RKV) Delete(bucketName string, key string) error {
 	idChanMap[myId] = myChan
 	idChanLock.Unlock()
 
-	send(Command{MsgId:myId, KvStoreId:c.KvStore.Dbr, Cmd:"Delete", Arg:bucketName, Key:key})
+	send(Command{MsgId:myId, KvStoreId:c.Dbr, Cmd:"Delete", Arg:bucketName, Key:key})
 
 	// wait for remote response
 	//fmt.Printf("rkv.Delete waiting for remote reply...\n")
@@ -372,7 +366,7 @@ func (c RKV) Close() error {
 		return nil
 	}
 
-	send(Command{MsgId:myId, KvStoreId:c.KvStore.Dbr, Cmd:"Close"})
+	send(Command{MsgId:myId, KvStoreId:c.Dbr, Cmd:"Close"})
 
 	// wait for remote response
 	//fmt.Printf("rkv.Close waiting for remote reply...\n")
@@ -408,7 +402,7 @@ func (c RKV) SearchIp(bucketName string, ip string, value *byte) error {
 	idChanMap[myId] = myChan
 	idChanLock.Unlock()
 
-	send(Command{MsgId:myId, KvStoreId:c.KvStore.Dbr, Cmd:"SearchIp", Arg:bucketName, Key:ip})
+	send(Command{MsgId:myId, KvStoreId:c.Dbr, Cmd:"SearchIp", Arg:bucketName, Key:ip})
 
 	// wait for remote response
 	//fmt.Printf("rkv.SearchIp waiting for remote reply...\n")

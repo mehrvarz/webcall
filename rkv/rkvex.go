@@ -52,7 +52,6 @@ func GetOnlineCallee(calleeID string, ejectOn1stFound bool, reportHiddenCallee b
 	}
 }
 
-// this used to be called StoreIdInHubMap
 func StoreCalleeInHubMap(id string, hub *Hub, multiCallees string, skipConfirm bool) (string,int64,error) {
 	var myId int64 = 0
 	var myChan chan bool

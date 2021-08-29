@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"strconv"
 
+	"github.com/mehrvarz/webcall/skv"
 	"github.com/mehrvarz/webcall/rkv"
 
 	"net/http"
@@ -342,7 +343,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 		//fmt.Printf("%s c.PremiumLevel=%d\n",c.connType,c.PremiumLevel)
 		if c.PremiumLevel>=1 {
 			var waitingCallerSlice []CallerInfo
-			err := dbCalls.Get(dbWaitingCaller,c.calleeID,&waitingCallerSlice)
+			err := kvCalls.Get(dbWaitingCaller,c.calleeID,&waitingCallerSlice)
 			if err!=nil {
 				// we can ignore this
 				//fmt.Printf("# serveWs (id=%s) failed to read dbWaitingCaller err=%v\n", urlID, err)
@@ -362,14 +363,14 @@ func (c *WsClient) receiveProcess(message []byte) {
 			if countOutdated>0 {
 				fmt.Printf("# %s (id=%s) deleted %d outdated from waitingCallerSlice\n",
 					c.connType, c.calleeID, countOutdated)
-				err = dbCalls.Put(dbWaitingCaller, c.calleeID, waitingCallerSlice, true) // skipConfirm
+				err = kvCalls.Put(dbWaitingCaller, c.calleeID, waitingCallerSlice, true) // skipConfirm
 				if err!=nil {
 					fmt.Printf("# %s (id=%s) failed to store dbWaitingCaller\n",c.connType,c.calleeID)
 				}
 			}
 
 			var missedCallsSlice []CallerInfo
-			err = dbCalls.Get(dbMissedCalls,c.calleeID,&missedCallsSlice)
+			err = kvCalls.Get(dbMissedCalls,c.calleeID,&missedCallsSlice)
 			if err!=nil {
 				// we can ignore this
 				//fmt.Printf("# %s (id=%s) failed to read dbMissedCalls %v\n",
@@ -440,12 +441,12 @@ func (c *WsClient) receiveProcess(message []byte) {
 		}
 
 		// store dbUser after set/clear isHiddenCallee in dbUser.Int2&1
-		var dbUser rkv.DbUser
+		var dbUser skv.DbUser
 		userKey := fmt.Sprintf("%s_%d",c.hub.calleeID,c.hub.registrationStartTime)
-		err = db.Get(dbUserBucket, userKey, &dbUser)
+		err = kvMain.Get(dbUserBucket, userKey, &dbUser)
 		if err!=nil {
 			fmt.Printf("# serveWs calleeHidden db=%s bucket=%s getX key=%v err=%v\n",
-				dbName, dbUserBucket, userKey, err)
+				dbMainName, dbUserBucket, userKey, err)
 		} else {
 			if c.isHiddenCallee {
 				dbUser.Int2 |= 1
@@ -454,20 +455,20 @@ func (c *WsClient) receiveProcess(message []byte) {
 			}
 			fmt.Printf("%s calleeHidden store dbUser calleeID=%s isHiddenCallee=%v (%d)\n",
 				c.connType, c.hub.calleeID, c.isHiddenCallee, dbUser.Int2)
-			err := db.Put(dbUserBucket, userKey, dbUser, true) // skipConfirm
+			err := kvMain.Put(dbUserBucket, userKey, dbUser, true) // skipConfirm
 			if err!=nil {
 				fmt.Printf("# serveWs calleeHidden db=%s bucket=%s put key=%v err=%v\n",
-					dbName, dbUserBucket, userKey, err)
+					dbMainName, dbUserBucket, userKey, err)
 			} else {
 				fmt.Printf("%s calleeHidden db=%s bucket=%s put key=%v OK\n",
-					c.connType, dbName, dbUserBucket, userKey)
+					c.connType, dbMainName, dbUserBucket, userKey)
 
 				// this is for verification only
 				//var dbUser2 DbUser
-				//err := db.Get(dbUserBucket, userKey, &dbUser2)
+				//err := kvMain.Get(dbUserBucket, userKey, &dbUser2)
 				//if err!=nil {
 				//	fmt.Printf("# serveWs calleeHidden verify db=%s bucket=%s getX key=%v err=%v\n",
-				//		dbName, dbUserBucket, userKey, err)
+				//		dbMainName, dbUserBucket, userKey, err)
 				//} else {
 				//	fmt.Printf("serveWs calleeHidden verify userKey=%v isHiddenCallee=%v (%d %v)\n",
 				//		userKey, c.isHiddenCallee, dbUser2.Int2, dbUser2.PremiumLevel)
@@ -495,7 +496,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 		// remove this call from dbMissedCalls for c.hub.calleeID
 		// first: load dbMissedCalls for c.hub.calleeID
 		var callsWhileInAbsence []CallerInfo
-		err := dbCalls.Get(dbMissedCalls,c.hub.calleeID,&callsWhileInAbsence)
+		err := kvCalls.Get(dbMissedCalls,c.hub.calleeID,&callsWhileInAbsence)
 		if err!=nil {
 			fmt.Printf("# serveWs deleteCallWhileInAbsence (%s) failed to read dbMissedCalls\n",c.hub.calleeID)
 		}
@@ -510,7 +511,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 					//fmt.Printf("serveWs deleteCallWhileInAbsence idx=%d\n",idx)
 					callsWhileInAbsence = append(callsWhileInAbsence[:idx], callsWhileInAbsence[idx+1:]...)
 					// store modified dbMissedCalls for c.hub.calleeID
-					err = dbCalls.Put(dbMissedCalls, c.hub.calleeID, callsWhileInAbsence, false)
+					err = kvCalls.Put(dbMissedCalls, c.hub.calleeID, callsWhileInAbsence, false)
 					if err!=nil {
 						fmt.Printf("# serveWs deleteCallWhileInAbsence (%s) fail store dbMissedCalls\n",
 							c.hub.calleeID)

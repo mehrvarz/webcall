@@ -168,10 +168,9 @@ func DeleteFromHubMap(id string) (int64,error) {
 	return int64(len(hubMap)),nil
 }
 
-// TODO do we want to keep offering this for everyone?
+/* TODO do we want to keep offering this for everyone?
 func PrintHubInfo() (string,error) {
 	data := ""
-/*
 	globalHubMapLock.RLock()
 	defer globalHubMapLock.RUnlock()
 //	fmt.Fprintf(w, "<html><div>number of hubs %d</div>",len(globalHubMap))
@@ -185,9 +184,9 @@ func PrintHubInfo() (string,error) {
 		//		cli.IsCallee, cli.IsOnline, cli.IsHiddenCallee, cli.RemoteAddr, cli.UserAgent)
 		//}
 	}
-*/
 	return data, nil
 }
+*/
 
 func GetRandomCalleeID() (string,error) {
 	hubMapMutex.RLock()
