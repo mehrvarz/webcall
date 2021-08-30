@@ -28,51 +28,49 @@ import (
 //	"github.com/tdewolff/minify/v2/js"
 )
 
-var version = flag.Bool("version", false, "show version")
-var	builddate string
-
-const configFileName = "config.ini"
-const freeAccountTalkSecsConst = 3*60*60; // 3 hrs
-const freeAccountServiceSecsConst = 3*24*60*60; // 3 days
-const freeAccountBlockSecs = 7*24*60*60; // 7 days
-const randomCallerWaitSecsConst = 1800
-const randomCallerCallSecsConst = 600
-
-var dbMainName = "rtcsig.db"
 var	kvMain skv.KV
+const dbMainName = "rtcsig.db"
 const dbRegisteredIDs = "activeIDs" // internal name was changed active -> registered
 const dbBlockedIDs = "blockedIDs"
 const dbUserBucket = "userData2"
 
+var	kvCalls skv.KV
+const dbCallsName = "rtccalls.db"
+const dbWaitingCaller = "waitingCallers"
+const dbMissedCalls = "missedCalls"
 type CallerInfo struct { // for incoming calls
 	AddrPort string // x.x.x.x:nnnn
 	CallerName string
 	CallTime int64
 	CallerID string // the caller's calleeID for calling back
 }
-var dbCallsName = "rtccalls.db"
-var	kvCalls skv.KV
-const dbWaitingCaller = "waitingCallers"
-const dbMissedCalls = "missedCalls"
 
-var dbContactsName = "rtccontacts.db"
 var	kvContacts skv.KV
+const dbContactsName = "rtccontacts.db"
 const dbContactsBucket = "contacts" // calleeID -> map[callerID]name
 
-var dbNotifName = "rtcnotif.db"
 var	kvNotif skv.KV
+const dbNotifName = "rtcnotif.db"
 const dbSentNotifTweets = "sentNotifTweets"
 
+var	kvHashedPw skv.KV
+const dbHashedPwName = "rtchashedpw.db"
+const dbHashedPwBucket = "hashedpwbucket"
 type PwIdCombo struct {
 	Pw string
 	CalleeId string
 	Created int64
 	Expiration int64
 }
-var dbHashedPwName = "rtchashedpw.db"
-var	dbHashedPw skv.KV
-const dbHashedPwBucket = "hashedpwbucket"
 
+var version = flag.Bool("version", false, "show version")
+var	builddate string
+const configFileName = "config.ini"
+const freeAccountTalkSecsConst = 3*60*60; // 3 hrs
+const freeAccountServiceSecsConst = 3*24*60*60; // 3 days
+const freeAccountBlockSecs = 7*24*60*60; // 7 days
+const randomCallerWaitSecsConst = 1800
+const randomCallerCallSecsConst = 600
 var hostname = ""
 var httpPort = 8067
 var httpsPort = 0 //8068
@@ -129,15 +127,12 @@ var logevents = ""
 var logeventMap map[string]bool
 var logeventMutex sync.RWMutex
 var calllog = ""
-
 var httpRequestCountMutex sync.RWMutex
 var httpRequestCount = 0
 var httpResponseCount = 0
 var httpResponseTime time.Duration
-
 //var minifyerEnabled = false
 //var minifyerObj *minify.M
-
 var wsAddr string
 var wssAddr string
 var svr *nbhttp.Server
@@ -160,20 +155,11 @@ func main() {
 		return
 	}
 
+	fmt.Printf("--------------- webcall startup ---------------\n")
 	hubMap = make(map[string]*Hub) // calleeID -> *Hub
 	waitingCallerChanMap = make(map[string]chan int)
 	wsClientMap = make(map[uint64]wsClientDataType) // wsClientID -> wsClientData
-
-	fmt.Printf("--------------- webcall startup ---------------\n")
 	readConfig(true)
-	//outboundIP,err := rkv.GetOutboundIP()
-	//fmt.Printf("hostname=%s httpPort=%d httpsPort=%d outboundIP=%s\n",
-	//	hostname, httpPort, httpsPort, outboundIP)
-	//fmt.Printf("wsPort=%d wsUrl=%s\n", wsPort, wsUrl)
-	//fmt.Printf("wssPort=%d wssUrl=%s\n", wssPort, wssUrl)
-	//fmt.Printf("runTurn=%v turnIP=%s\n", runTurn, turnIP)
-	//fmt.Printf("dbName=%s dbCallsName=%s dbContactsName=%s dbNotifName=%s dbHashedPwName=%s\n",
-	//	dbMainName, dbCallsName, dbContactsName, dbNotifName)
 
 	var err error
 	if rtcdb=="" {
@@ -203,7 +189,6 @@ func main() {
 		kvMain.Close()
 		return
 	}
-
 	if rtcdb=="" {
 		kvCalls,err = skv.DbOpen(dbCallsName,dbPath)
 	} else {
@@ -225,7 +210,6 @@ func main() {
 		kvCalls.Close()
 		return
 	}
-
 	if rtcdb=="" {
 		kvNotif,err = skv.DbOpen(dbNotifName,dbPath)
 	} else {
@@ -241,23 +225,21 @@ func main() {
 		kvNotif.Close()
 		return
 	}
-
 	if rtcdb=="" {
-		dbHashedPw,err = skv.DbOpen(dbHashedPwName,dbPath)
+		kvHashedPw,err = skv.DbOpen(dbHashedPwName,dbPath)
 	} else {
-		dbHashedPw,err = rkv.DbOpen(dbHashedPwName,rtcdb)
+		kvHashedPw,err = rkv.DbOpen(dbHashedPwName,rtcdb)
 	}
 	if err!=nil {
 		fmt.Printf("# error dbHashedPwName %s open %v\n",dbHashedPwName,err)
 		return
 	}
-	err = dbHashedPw.CreateBucket(dbHashedPwBucket)
+	err = kvHashedPw.CreateBucket(dbHashedPwBucket)
 	if err!=nil {
 		fmt.Printf("# error db %s create '%s' bucket err=%v\n",dbHashedPwName,dbHashedPwBucket,err)
-		dbHashedPw.Close()
+		kvHashedPw.Close()
 		return
 	}
-
 	if rtcdb=="" {
 		kvContacts,err = skv.DbOpen(dbContactsName,dbPath)
 	} else {
@@ -304,7 +286,6 @@ func main() {
 		tlsConfig := &tls.Config{
 			Certificates: []tls.Certificate{cer},
 			InsecureSkipVerify: insecureSkipVerify,
-
 			// Causes servers to use Go's default ciphersuite preferences,
 			// which are tuned to avoid attacks. Does nothing on clients.
 			PreferServerCipherSuites: true,
@@ -313,7 +294,6 @@ func main() {
 				tls.CurveP256,
 				tls.X25519,
 			},
-
 			MinVersion: tls.VersionTLS12,
 			CipherSuites: []uint16{
 				tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
@@ -322,10 +302,6 @@ func main() {
 				tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
 				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
 				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-				// Best disabled, as they don't provide Forward Secrecy,
-				// but might be necessary for some clients
-				// tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
-				// tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
 			},
 		}
 		tlsConfig.BuildNameToCertificate()
@@ -341,7 +317,6 @@ func main() {
 			ReleaseWebsocketPayload: true,	// TODO make configurable?
 			NPoller: runtime.NumCPU() * 4,	// TODO make configurable? user workers?
 		}, mux, nil, tlsConfig)
-
 		err = svrs.Start()
 		if err != nil {
 			fmt.Printf("# nbio.Start wssPort failed: %v\n", err)
@@ -351,21 +326,11 @@ func main() {
 	}
 
 	go httpServer()
-
 	go runTurnServer()
-
-	// periodically log stats
-	go ticker30sec()
-
-	// periodically call readConfig()
-	go ticker10sec()
-
-	// periodically check for remainingTalkSecs underruns
-	go ticker2sec()
-
-	// TODO make udpHealthPort configurable
-	//go udpHealthService(8111)
-
+	go ticker30sec() // periodically log stats
+	go ticker10sec() // periodically call readConfig()
+	go ticker2sec()  // periodically check for remainingTalkSecs underruns
+	//go udpHealthService(8111) // TODO make udpHealthPort configurable
 	if pprofPort>0 {
 		go func() {
 			addr := fmt.Sprintf(":%d",pprofPort)
@@ -384,12 +349,10 @@ func main() {
 	//////////////// shutdown //////////////////
 	fmt.Printf("received os.Interrupt/SIGTERM signal: shutting down...\n")
 	// shutdownStarted.Set(true) will end all timer routines
-	// but it will not end our ListenAndServe() servers; this is why we use os.Exit() below
+	// but it will not end our ListenAndServe() servers; this is why we call os.Exit() below
 	shutdownStarted.Set(true)
-
 	writeStatsFile()
-
-	// wait a bit for shutdownStarted to take effect; then close all db's
+	// wait for shutdownStarted to take effect; then close all db's
 	time.Sleep(2 * time.Second)
 
 	fmt.Printf("kvContacts.Close...\n")
@@ -397,38 +360,32 @@ func main() {
 	if err!=nil {
 		fmt.Printf("# error dbName %s close err=%v\n",dbContactsName,err)
 	}
-
-	fmt.Printf("dbHashedPw.Close...\n")
-	err = dbHashedPw.Close()
+	fmt.Printf("kvHashedPw.Close...\n")
+	err = kvHashedPw.Close()
 	if err!=nil {
 		fmt.Printf("# error dbName %s close err=%v\n",dbHashedPwName,err)
 	}
-
 	fmt.Printf("kvNotif.Close...\n")
 	err = kvNotif.Close()
 	if err!=nil {
 		fmt.Printf("# error dbName %s close err=%v\n",dbNotifName,err)
 	}
-
 	fmt.Printf("kvCalls.Close...\n")
 	err = kvCalls.Close()
 	if err!=nil {
 		fmt.Printf("# error dbName %s close err=%v\n",dbCallsName,err)
 	}
-
 	fmt.Printf("db.Close...\n")
 	err = kvMain.Close()
 	if err!=nil {
 		fmt.Printf("# error dbName %s close err=%v\n",dbMainName,err)
 	}
-
 	if rtcdb!="" {
 		err = rkv.Exit()
 		if err!=nil {
 			fmt.Printf("# error rkv.Exit err=%v\n",err)
 		}
 	}
-
 	os.Exit(0)
 }
 
@@ -511,137 +468,136 @@ func readConfig(init bool) {
 	if err != nil {
 		configIni = nil
 		//fmt.Printf("# ini file '%s' NOT found, err=%v\n", configFileName, err)
-	} else {
-		readConfigLock.Lock()
-
-		if init {
-			hostname = readIniString(configIni, "hostname", hostname, "")
-			httpPort = readIniInt(configIni, "httpPort", httpPort, 8067, 1)
-			httpsPort = readIniInt(configIni, "httpsPort", httpsPort, 0, 1)
-			httpToHttps = readIniBoolean(configIni, "httpToHttps", httpToHttps, false)
-			wsPort = readIniInt(configIni, "wsPort", wsPort, 8071, 1)
-			wssPort = readIniInt(configIni, "wssPort", wssPort, 0, 1)
-			htmlPath = readIniString(configIni, "htmlPath", htmlPath, "webroot")
-			insecureSkipVerify = readIniBoolean(configIni, "insecureSkipVerify", insecureSkipVerify, false)
-			runTurn = readIniBoolean(configIni, "runTurn", runTurn, false)
-			turnIP = readIniString(configIni, "turnIP", turnIP, "")
-			turnPort = readIniInt(configIni, "turnPort", turnPort, 3739, 1)
-			pprofPort = readIniInt(configIni, "pprofPort", pprofPort, 0, 1) //8980
-
-			rtcdb = readIniString(configIni, "rtcdb", rtcdb, "")
-			if rtcdb!="" && strings.Index(rtcdb, ":") < 0 {
-				rtcdb = rtcdb + ":8061"
-			}
-
-			dbPath = readIniString(configIni, "dbPath", dbPath, "db/")
-
-			twitterKey = readIniString(configIni, "twitterKey", twitterKey, "")
-			twitterSecret = readIniString(configIni, "twitterKey", twitterKey, "")
-
-			vapidPublicKey = readIniString(configIni, "vapidPublicKey", vapidPublicKey, "")
-			vapidPrivateKey = readIniString(configIni, "vapidPrivateKey", vapidPrivateKey, "")
-		}
-
-		maintenanceMode = readIniBoolean(configIni, "maintenanceMode", maintenanceMode, false)
-		allowNewAccounts = readIniBoolean(configIni, "allowNewAccounts", allowNewAccounts, true)
-
-		freeAccountTalkSecs = readIniInt(configIni, "freeAccountTalkHours",
-			freeAccountTalkSecs, freeAccountTalkSecsConst, 60*60)
-		freeAccountServiceSecs = readIniInt(configIni, "freeAccountServiceDays",
-			freeAccountServiceSecs, freeAccountServiceSecsConst, 24*60*60)
-
-		randomCallerWaitSecs = readIniInt(configIni, "randomCallerWaitSecs",
-			randomCallerWaitSecs, randomCallerWaitSecsConst, 1)
-		randomCallerCallSecs = readIniInt(configIni, "randomCallerCallSecs",
-			randomCallerCallSecs, randomCallerCallSecsConst, 1)
-
-		multiCallees = readIniString(configIni, "multiCallees", multiCallees, "")
-
-		logevents = readIniString(configIni, "logevents", logevents, "")
-		logeventSlice := strings.Split(logevents, ",")
-
-		logeventMutex.Lock()
-		logeventMap = make(map[string]bool)
-		for _, s := range logeventSlice {
-			logeventMap[strings.TrimSpace(s)] = true
-		}
-		logeventMutex.Unlock()
-
-		// if *noPersist is true (used for benching), we don't write dbHashedPw
-		//*noPersist = readIniBoolean(configIni, "nopersist", *noPersist, false)
-
-		disconnectCalleesWhenPeerConnected = readIniBoolean(configIni,
-			"disconnectCalleesWhenPeerConnected", disconnectCalleesWhenPeerConnected, false)
-
-		disconnectCallersWhenPeerConnected = readIniBoolean(configIni,
-			"disconnectCallersWhenPeerConnected", disconnectCallersWhenPeerConnected, true)
-
-		calleeClientVersion = readIniString(configIni, "calleeClientVersion", calleeClientVersion, "")
-
-		wsUrl = readIniString(configIni, "wsUrl", wsUrl, "")
-		wssUrl = readIniString(configIni, "wssUrl", wssUrl, "")
-
-		turnDebugLevel = readIniInt(configIni, "turnDebugLevel", turnDebugLevel, 3, 1)
-		adminEmail = readIniString(configIni, "adminEmail", adminEmail, "")
-		calllog = readIniString(configIni, "calllog", calllog, "")
-
-		readConfigLock.Unlock()
+		return
 	}
+
+	readConfigLock.Lock()
+	if init {
+		hostname = readIniString(configIni, "hostname", hostname, "")
+		httpPort = readIniInt(configIni, "httpPort", httpPort, 8067, 1)
+		httpsPort = readIniInt(configIni, "httpsPort", httpsPort, 0, 1)
+		httpToHttps = readIniBoolean(configIni, "httpToHttps", httpToHttps, false)
+		wsPort = readIniInt(configIni, "wsPort", wsPort, 8071, 1)
+		wssPort = readIniInt(configIni, "wssPort", wssPort, 0, 1)
+		htmlPath = readIniString(configIni, "htmlPath", htmlPath, "webroot")
+		insecureSkipVerify = readIniBoolean(configIni, "insecureSkipVerify", insecureSkipVerify, false)
+		runTurn = readIniBoolean(configIni, "runTurn", runTurn, false)
+		turnIP = readIniString(configIni, "turnIP", turnIP, "")
+		turnPort = readIniInt(configIni, "turnPort", turnPort, 3739, 1)
+		pprofPort = readIniInt(configIni, "pprofPort", pprofPort, 0, 1) //8980
+
+		rtcdb = readIniString(configIni, "rtcdb", rtcdb, "")
+		if rtcdb!="" && strings.Index(rtcdb, ":") < 0 {
+			rtcdb = rtcdb + ":8061"
+		}
+
+		dbPath = readIniString(configIni, "dbPath", dbPath, "db/")
+
+		twitterKey = readIniString(configIni, "twitterKey", twitterKey, "")
+		twitterSecret = readIniString(configIni, "twitterKey", twitterKey, "")
+
+		vapidPublicKey = readIniString(configIni, "vapidPublicKey", vapidPublicKey, "")
+		vapidPrivateKey = readIniString(configIni, "vapidPrivateKey", vapidPrivateKey, "")
+	}
+
+	maintenanceMode = readIniBoolean(configIni, "maintenanceMode", maintenanceMode, false)
+	allowNewAccounts = readIniBoolean(configIni, "allowNewAccounts", allowNewAccounts, true)
+
+	freeAccountTalkSecs = readIniInt(configIni, "freeAccountTalkHours",
+		freeAccountTalkSecs, freeAccountTalkSecsConst, 60*60)
+	freeAccountServiceSecs = readIniInt(configIni, "freeAccountServiceDays",
+		freeAccountServiceSecs, freeAccountServiceSecsConst, 24*60*60)
+
+	randomCallerWaitSecs = readIniInt(configIni, "randomCallerWaitSecs",
+		randomCallerWaitSecs, randomCallerWaitSecsConst, 1)
+	randomCallerCallSecs = readIniInt(configIni, "randomCallerCallSecs",
+		randomCallerCallSecs, randomCallerCallSecsConst, 1)
+
+	multiCallees = readIniString(configIni, "multiCallees", multiCallees, "")
+
+	logevents = readIniString(configIni, "logevents", logevents, "")
+	logeventSlice := strings.Split(logevents, ",")
+
+	logeventMutex.Lock()
+	logeventMap = make(map[string]bool)
+	for _, s := range logeventSlice {
+		logeventMap[strings.TrimSpace(s)] = true
+	}
+	logeventMutex.Unlock()
+
+	// if *noPersist is true (used for benching), we don't write dbHashedPw
+	//*noPersist = readIniBoolean(configIni, "nopersist", *noPersist, false)
+
+	disconnectCalleesWhenPeerConnected = readIniBoolean(configIni,
+		"disconnectCalleesWhenPeerConnected", disconnectCalleesWhenPeerConnected, false)
+	disconnectCallersWhenPeerConnected = readIniBoolean(configIni,
+		"disconnectCallersWhenPeerConnected", disconnectCallersWhenPeerConnected, true)
+	calleeClientVersion = readIniString(configIni, "calleeClientVersion", calleeClientVersion, "")
+
+	wsUrl = readIniString(configIni, "wsUrl", wsUrl, "")
+	wssUrl = readIniString(configIni, "wssUrl", wssUrl, "")
+
+	turnDebugLevel = readIniInt(configIni, "turnDebugLevel", turnDebugLevel, 3, 1)
+	adminEmail = readIniString(configIni, "adminEmail", adminEmail, "")
+	calllog = readIniString(configIni, "calllog", calllog, "")
+
+	readConfigLock.Unlock()
 }
 
 func readStatsFile() {
 	statsIni, err := ini.Load(statsFileName)
 	if err != nil {
 		//fmt.Printf("# cannot read ini file '%s', err=%v\n", statsFileName, err)
-	} else {
-		iniKeyword := "numberOfCallsToday"
-		iniValue,ok := readIniEntry(statsIni,iniKeyword)
-		if ok {
-			if iniValue=="" {
-				numberOfCallsToday = 0
+		return
+	}
+
+	iniKeyword := "numberOfCallsToday"
+	iniValue,ok := readIniEntry(statsIni,iniKeyword)
+	if ok {
+		if iniValue=="" {
+			numberOfCallsToday = 0
+		} else {
+			i64, err := strconv.ParseInt(iniValue, 10, 64)
+			if err!=nil {
+				fmt.Printf("# stats val %s: %s=%v err=%v\n",
+					statsFileName, iniKeyword, iniValue, err)
 			} else {
-				i64, err := strconv.ParseInt(iniValue, 10, 64)
-				if err!=nil {
-					fmt.Printf("# stats val %s: %s=%v err=%v\n",
-						statsFileName, iniKeyword, iniValue, err)
-				} else {
-					//fmt.Printf("stats val %s: %s (%v) %v\n", statsFileName, iniKeyword, iniValue, i64)
-					numberOfCallsToday = int(i64)
-				}
+				//fmt.Printf("stats val %s: %s (%v) %v\n", statsFileName, iniKeyword, iniValue, i64)
+				numberOfCallsToday = int(i64)
 			}
 		}
+	}
 
-		iniKeyword = "numberOfCallSecondsToday"
-		iniValue,ok = readIniEntry(statsIni,iniKeyword)
-		if ok {
-			if iniValue=="" {
-				numberOfCallsToday = 0
+	iniKeyword = "numberOfCallSecondsToday"
+	iniValue,ok = readIniEntry(statsIni,iniKeyword)
+	if ok {
+		if iniValue=="" {
+			numberOfCallsToday = 0
+		} else {
+			i64, err := strconv.ParseInt(iniValue, 10, 64)
+			if err!=nil {
+				fmt.Printf("# stats val %s: %s=%v err=%v\n",
+					statsFileName, iniKeyword, iniValue, err)
 			} else {
-				i64, err := strconv.ParseInt(iniValue, 10, 64)
-				if err!=nil {
-					fmt.Printf("# stats val %s: %s=%v err=%v\n",
-						statsFileName, iniKeyword, iniValue, err)
-				} else {
-					//fmt.Printf("stats val %s: %s (%v) %v\n", statsFileName, iniKeyword, iniValue, i64)
-					numberOfCallSecondsToday = int(i64)
-				}
+				//fmt.Printf("stats val %s: %s (%v) %v\n", statsFileName, iniKeyword, iniValue, i64)
+				numberOfCallSecondsToday = int(i64)
 			}
 		}
+	}
 
-		iniKeyword = "lastCurrentDayOfMonth"
-		iniValue,ok = readIniEntry(statsIni,iniKeyword)
-		if ok {
-			if iniValue=="" {
-				lastCurrentDayOfMonth = 0
+	iniKeyword = "lastCurrentDayOfMonth"
+	iniValue,ok = readIniEntry(statsIni,iniKeyword)
+	if ok {
+		if iniValue=="" {
+			lastCurrentDayOfMonth = 0
+		} else {
+			i64, err := strconv.ParseInt(iniValue, 10, 64)
+			if err!=nil {
+				fmt.Printf("# stats val %s: %s=%v err=%v\n",
+					statsFileName, iniKeyword, iniValue, err)
 			} else {
-				i64, err := strconv.ParseInt(iniValue, 10, 64)
-				if err!=nil {
-					fmt.Printf("# stats val %s: %s=%v err=%v\n",
-						statsFileName, iniKeyword, iniValue, err)
-				} else {
-					//fmt.Printf("stats val %s: %s (%v) %v\n", statsFileName, iniKeyword, iniValue, i64)
-					lastCurrentDayOfMonth = int(i64)
-				}
+				//fmt.Printf("stats val %s: %s (%v) %v\n", statsFileName, iniKeyword, iniValue, i64)
+				lastCurrentDayOfMonth = int(i64)
 			}
 		}
 	}

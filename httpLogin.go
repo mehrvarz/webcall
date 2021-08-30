@@ -268,7 +268,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			pwIdCombo.Expiration = expiration.Unix()
 
 			skipConfirm := true // low cost
-			err = dbHashedPw.Put(dbHashedPwBucket, cookieValue, pwIdCombo, skipConfirm)
+			err = kvHashedPw.Put(dbHashedPwBucket, cookieValue, pwIdCombo, skipConfirm)
 			if err != nil {
 				fmt.Printf("# /login persist PwIdCombo error db=%s bucket=%s cookie=%s err=%v\n",
 					dbHashedPwName, dbHashedPwBucket, cookieValue, err)

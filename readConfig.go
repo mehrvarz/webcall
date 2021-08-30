@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-
 	"gopkg.in/ini.v1" // https://pkg.go.dev/gopkg.in/go-ini/ini.v1
 )
 
@@ -33,7 +32,7 @@ func readIniBoolean(configIni *ini.File, cfgKeyword string, currentVal bool, def
 		}
 	}
 	if currentVal != newVal {
-		fmt.Printf("cfg %s bool %s=%v\n", configFileName, cfgKeyword, newVal)
+		fmt.Printf("%s bool %s=%v\n", configFileName, cfgKeyword, newVal)
 	}
 	currentVal = newVal
 	return currentVal
@@ -45,13 +44,13 @@ func readIniInt(configIni *ini.File, cfgKeyword string, currentVal int, defaultV
 	if ok && cfgValue!="" {
 		i64, err := strconv.ParseInt(cfgValue, 10, 64)
 		if err != nil {
-			fmt.Printf("# cfg int %s: %s=%v err=%v\n", configFileName, cfgKeyword, cfgValue, err)
+			fmt.Printf("# %s int  %s=%v err=%v\n", configFileName, cfgKeyword, cfgValue, err)
 		} else {
 			newVal = int(i64) * factor
 		}
 	}
 	if newVal != currentVal {
-		fmt.Printf("cfg %s int  %s=%d\n", configFileName, cfgKeyword, newVal)
+		fmt.Printf("%s int  %s=%d\n", configFileName, cfgKeyword, newVal)
 	}
 	currentVal = newVal
 	return currentVal
@@ -63,9 +62,9 @@ func readIniString(configIni *ini.File, cfgKeyword string, currentVal string, de
 	if ok && cfgValue != "" {
 		newVal = cfgValue
 	}
-	// we don't log entries ending in 'Key'
+	// don't log entries ending in 'Key'
 	if newVal!=currentVal && !strings.HasSuffix(cfgKeyword, "Key") {
-		fmt.Printf("cfg %s str  %s=(%v)\n", configFileName, cfgKeyword, newVal)
+		fmt.Printf("%s str  %s=(%v)\n", configFileName, cfgKeyword, newVal)
 	}
 	currentVal = newVal
 	return currentVal

@@ -9,10 +9,8 @@ import (
 	"encoding/json"
 	"math/rand"
 	"strconv"
-
 	"github.com/mehrvarz/webcall/skv"
 	"github.com/mehrvarz/webcall/rkv"
-
 	"net/http"
 	"github.com/lesismal/nbio/nbhttp/websocket"
 )
@@ -22,9 +20,6 @@ const (
 	writeWait = 20 * time.Second // see: "<-pingTicker.C"
 
 	// Time allowed to read the next pong message from the peer.
-		// if we have a high number of ws-connections and the pongWait is small.
-		// we will run into "readPump error: read tcp ...: i/o timeout"
-		// this happens for instance with 12400 connections and pongWait = 400s
 	pongWait = 60 //* time.Second	// see: c.conn.SetReadDeadline(time.Now().Add(pongWait))
 
 	// Send pings to peer with this period. Must be less than pongWait.

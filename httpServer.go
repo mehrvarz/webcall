@@ -277,11 +277,11 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				//fmt.Printf("cookie avail(%s) req=(%s) ref=(%s) callee=(%s)\n", 
 				//	cookie.Value[:maxlen], r.URL.Path, referer, calleeID)
 
-				// calleeIdFromCookie == calleeID (this is good) - now get PW from dbHashedPw
-				err = dbHashedPw.Get(dbHashedPwBucket,cookie.Value,&pwIdCombo)
+				// calleeIdFromCookie == calleeID (this is good) - now get PW from kvHashedPw
+				err = kvHashedPw.Get(dbHashedPwBucket,cookie.Value,&pwIdCombo)
 				if err!=nil {
 					// TODO: caller.js is triggering this
-					fmt.Printf("# dbHashedPw.Get %v err=%v\n", r.URL, err)
+					fmt.Printf("# kvHashedPw.Get %v err=%v\n", r.URL, err)
 					cookie = nil
 				} else {
 					if calleeID!="" && pwIdCombo.CalleeId != calleeID {
@@ -404,7 +404,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 
 		cookie, err := r.Cookie(cookieName)
 		if err == nil {
-			err = dbHashedPw.Delete(dbHashedPwBucket, cookie.Value)
+			err = kvHashedPw.Delete(dbHashedPwBucket, cookie.Value)
 			if err==nil {
 				fmt.Printf("/logout dbHashedPw.Delete OK db=%s bucket=%s key=%s\n",
 					dbHashedPwName, dbHashedPwBucket, cookie.Value)
