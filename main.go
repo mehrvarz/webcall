@@ -65,6 +65,7 @@ type PwIdCombo struct {
 
 var version = flag.Bool("version", false, "show version")
 var	builddate string
+var	codetag string
 const configFileName = "config.ini"
 const freeAccountTalkSecsConst = 3*60*60; // 3 hrs
 const freeAccountServiceSecsConst = 3*24*60*60; // 3 days
@@ -151,6 +152,7 @@ var wsClientMutex sync.RWMutex
 func main() {
 	flag.Parse()
 	if *version {
+		fmt.Printf("version %s\n",codetag)
 		fmt.Printf("builddate %s\n",builddate)
 		return
 	}
