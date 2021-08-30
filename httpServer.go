@@ -361,7 +361,6 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		httpNewId(w, r, urlID, calleeID, remoteAddr)
 		return
 	}
-
 	if urlPath=="/mode" {
 		if maintenanceMode {
 			fmt.Printf("/mode maintenance rip=%s\n",remoteAddr)
@@ -411,7 +410,6 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				fmt.Fprintf(w,"ok")
 			}
 		}
-
 		expiration := time.Now().Add(-1 * time.Hour)
 		fmt.Printf("clear cookie cookieName=(%s) cookieValue=(%s)\n",cookieName,"")
 		cookieObj := http.Cookie{Name:cookieName, Value:"",
@@ -422,6 +420,10 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		cookie = &cookieObj
 		http.SetCookie(w, cookie)
 		cookie = nil
+		return
+	}
+	if urlPath=="/version" {
+		fmt.Fprintf(w, "version %s\nbuilddate %s\n",codetag,builddate)
 		return
 	}
 
