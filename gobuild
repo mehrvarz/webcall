@@ -1,6 +1,6 @@
 export BUILDDATE=`date --rfc-3339=date`
 echo "builddate $BUILDDATE"
 export VERSIONTAG=`git tag`
-echo "version ${VERSIONTAG##*$'\n'}"
+echo "version ${VERSIONTAG##*$'\n'}" # last line of git tag
 go build -ldflags "-s -w -X main.builddate=$BUILDDATE -X main.codetag=${VERSIONTAG##*$'\n'}"
 

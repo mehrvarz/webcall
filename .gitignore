@@ -5,7 +5,7 @@ tmp.*
 webcall*
 *.db
 *.pdf
-_old
+_old*
 _nginx
 stats.ini
 calllog/
