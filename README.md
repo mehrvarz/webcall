@@ -2,6 +2,10 @@
 
 [https://timur.mobi/webcall](https://timur.mobi/webcall)
 
+# Install
+
+[https://timur.mobi/webcall/install](https://timur.mobi/webcall/install)
+
 # License
 
 AGPL3.0 - see [LICENSE](LICENSE)
