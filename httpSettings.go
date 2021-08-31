@@ -1,3 +1,4 @@
+// Copyright 2021 timur.mobi. All rights reserved.
 package main
 
 import (

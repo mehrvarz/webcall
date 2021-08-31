@@ -1,3 +1,4 @@
+// Copyright 2021 timur.mobi. All rights reserved.
 package main
 
 import (
@@ -18,19 +19,12 @@ import (
 	"github.com/mehrvarz/webcall/rkv"
 	"github.com/lesismal/nbio/nbhttp"
 	"github.com/lesismal/llib/std/crypto/tls"
-	//"github.com/lesismal/nbio/taskpool"
-	//"github.com/lesismal/nbio/nbhttp/websocket"
 	_ "net/http/pprof"
-// TODO do we want to use minify for html,css,js?
-//	"github.com/tdewolff/minify/v2"
-//	"github.com/tdewolff/minify/v2/css"
-//	"github.com/tdewolff/minify/v2/html"
-//	"github.com/tdewolff/minify/v2/js"
 )
 
 var	kvMain skv.KV
 const dbMainName = "rtcsig.db"
-const dbRegisteredIDs = "activeIDs" // internal name was changed active -> registered
+const dbRegisteredIDs = "activeIDs" // internal name changed active -> registered
 const dbBlockedIDs = "blockedIDs"
 const dbUserBucket = "userData2"
 
@@ -132,8 +126,6 @@ var httpRequestCountMutex sync.RWMutex
 var httpRequestCount = 0
 var httpResponseCount = 0
 var httpResponseTime time.Duration
-//var minifyerEnabled = false
-//var minifyerObj *minify.M
 var wsAddr string
 var wssAddr string
 var svr *nbhttp.Server
