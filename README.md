@@ -18,7 +18,7 @@ AGPL3.0 - see [LICENSE](LICENSE)
 
 # 3rd party code (embedded/modified)
 
-- RapidLoop/skv
-- ChimeraCoder/Twitter
-- sdputils.js/prefercodec.js
+- RapidLoop: skv
+- ChimeraCoder: Twitter
+- AppRTC's sdputils.js: prefercodec.js
 

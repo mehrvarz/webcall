@@ -1,4 +1,4 @@
-// WebCall caller client (c)2021 timur.mobi
+// WebCall Copyright 2021 timur.mobi. All rights reserved.
 'use strict';
 const audioSelect = document.querySelector("select#audioSource");
 const dialButton = document.querySelector('button#callButton');

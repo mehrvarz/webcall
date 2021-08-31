@@ -1,4 +1,4 @@
-// WebCall callee client (c)2021 timur.mobi
+// WebCall Copyright 2021 timur.mobi. All rights reserved.
 'use strict';
 const audioSourceSelect = document.querySelector("select#audioSource");
 const remoteAudio = document.querySelector('audio#remoteAudio');
