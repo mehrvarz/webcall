@@ -277,7 +277,7 @@ func main() {
 		cer, err := tls.LoadX509KeyPair("tls.pem", "tls.key")
 		if err != nil {
 			fmt.Printf("# tls.LoadX509KeyPair err=(%v)\n", err)
-			return
+			os.Exit(-1)
 		}
 		tlsConfig := &tls.Config{
 			Certificates: []tls.Certificate{cer},

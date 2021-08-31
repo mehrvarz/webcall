@@ -41,7 +41,7 @@ func httpServer() {
 			cer, err := tls.LoadX509KeyPair("tls.pem","tls.key")
 			if err != nil {
 				fmt.Printf("# httpServer tls.LoadX509KeyPair err=(%v)\n", err)
-				return
+				os.Exit(-1)
 			}
 			tlsConfig := &tls.Config{
 				Certificates: []tls.Certificate{cer},
