@@ -1,10 +1,9 @@
-echo 'const apiPath = "/rtcsig";' > webcall/user/custom.js
-echo 'const gentle = true;' >> webcall/user/custom.js
-echo 'const singlebutton = false;' >> webcall/user/custom.js
-echo 'const apiPath = "/rtcsig";' > webcall/callee/custom.js
-echo 'const gentle = true;' >> webcall/callee/custom.js
-echo 'const apiPath = "/rtcsig";' > webcall/button/custom.js
-echo 'const gentle = true;' >> webcall/button/custom.js
-echo 'const singlebutton = true;' >> webcall/button/custom.js
-mkdir db
+echo 'const apiPath = "/rtcsig";' > webroot/user/custom.js
+echo 'const gentle = true;' >> webroot/user/custom.js
+echo 'const singlebutton = false;' >> webroot/user/custom.js
+echo 'const apiPath = "/rtcsig";' > webroot/callee/custom.js
+echo 'const gentle = true;' >> webroot/callee/custom.js
+echo 'const apiPath = "/rtcsig";' > webroot/button/custom.js
+echo 'const gentle = true;' >> webroot/button/custom.js
+echo 'const singlebutton = true;' >> webroot/button/custom.js
 
