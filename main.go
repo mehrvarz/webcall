@@ -144,7 +144,9 @@ var wsClientMutex sync.RWMutex
 func main() {
 	flag.Parse()
 	if *version {
-		fmt.Printf("version %s\n",codetag)
+		if codetag!="" {
+			fmt.Printf("version %s\n",codetag)
+		}
 		fmt.Printf("builddate %s\n",builddate)
 		return
 	}
