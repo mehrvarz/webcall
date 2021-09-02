@@ -2,8 +2,8 @@ package main
 
 import (
 	"time"
-	"strings"
 	"fmt"
+	//"strings"
 )
 
 
@@ -83,7 +83,7 @@ func ticker2sec() {
 			break
 		}
 		timeNow := time.Now()
-		unixTime := timeNow.Unix()
+		//unixTime := timeNow.Unix()
 		//fmt.Printf("ticker2sec %v %v\n",timeNow,unixTime)
 
 		// detect new day
@@ -97,7 +97,8 @@ func ticker2sec() {
 			writeStatsFile()
 		}
 
-		// interrupt calls with hub.doExit() if remainingTalkSecs is running < 0
+/*
+		// interrupt calls if remainingTalkSecs is running < 0
 		hubMapMutex.RLock()
 		idx:=0
 		for _,hub := range hubMap {
@@ -158,7 +159,7 @@ func ticker2sec() {
 					// but only if it is not full p2p and only after 20 secs due to:
 					// "failed to handle CreatePermission-request from ...: no such user exists"
 					// in order to not have to wait 20s, we send "cancel|c" to kill the p2p right away
-					hub.doExit()
+					hub.doUnregister(hub..CalleeClient,"ticker2sec")
 					// hub.lastCallStartTime will be cleared by processTimeValues()
 					// so we will not do another cancelFunc
 				}
@@ -167,6 +168,22 @@ func ticker2sec() {
 			idx++
 		}
 		hubMapMutex.RUnlock()
+*/
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

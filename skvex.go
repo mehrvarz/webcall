@@ -1,28 +1,13 @@
+// WebCall Copyright 2021 timur.mobi. All rights reserved.
 package main
 
 import (
 	"strings"
 	"fmt"
 	"math/rand"
-
-	//"github.com/mehrvarz/webcall/skv"
+	"github.com/mehrvarz/webcall/skv"
 	"github.com/mehrvarz/webcall/rkv"
 )
-
-/*
-GetOnlineCallee(calleeID string, ejectOn1stFound bool, reportHiddenCallee bool, callerIpAddr string, 
-	occupy bool, comment string) (string,*Hub,error)
-//StoreCalleeInHubMap(key string, hub *Hub, multiCallees string, skipConfirm bool) (string,int64,error)
-StoreCallerIpInHubMap(calleeId string, callerIp string, skipConfirm bool) error
-SearchCallerIpInHubMap(ip string) (bool,error)
-DeleteFromHubMap(id string) (int64,error)
-PrintHubInfo() (string,error)
-GetRandomCalleeID() (string,error)
-GetOnlineCalleeCount(countCallers bool) (int64,int64,error)
-SetCalleeHiddenState(calleeId string, hidden bool) (error)
-SetUnHiddenForCaller(calleeId string, callerIp string) (error)
-*/
-
 
 // GetOnlineCallee(ID) can tell us (with optional ejectOn1stFound yes/no):
 // "is calleeID online?", "is calleeID hidden online?", "is calleeID hidden online for my callerIpAddr?"
@@ -81,6 +66,46 @@ func GetOnlineCallee(calleeID string, ejectOn1stFound bool, reportHiddenCallee b
 	return "", nil, nil
 }
 
+func StoreCallerIpInHubMap(calleeId string, callerIp string, skipConfirm bool) error {
+	fmt.Printf("skv.StoreCallerIpInHubMap calleeId=%s callerIp=%s\n", calleeId, callerIp)
+	var err error = nil
+	hubMapMutex.Lock()
+	defer hubMapMutex.Unlock()
+	hub := hubMap[calleeId]
+	if hub==nil {
+		err = rkv.ErrNotFound
+	} else {
+		hub.ConnectedCallerIp = callerIp
+		hubMap[calleeId] = hub
+	}
+	return err
+}
+
+func SearchCallerIpInHubMap(ip string) (bool,string,error) {
+	fmt.Printf("skv.SearchCallerIpInHubMap ip=%s\n",ip)
+	foundIp := false
+	foundCalleeId := ""
+	hubMapMutex.RLock()
+	defer hubMapMutex.RUnlock()
+	for id := range hubMap {
+		hub := hubMap[id]
+		if strings.HasPrefix(hub.ConnectedCallerIp,ip) {
+			foundIp = true
+			foundCalleeId = hub.calleeID
+			break
+		}
+	}
+	return foundIp,foundCalleeId,nil
+}
+
+func DeleteFromHubMap(id string) (int64,error) {
+	hubMapMutex.Lock()
+	defer hubMapMutex.Unlock()
+	delete(hubMap,id)
+	//fmt.Printf("exitFunc delete(globalHubMap,%s) done %d\n",releasedCalleeID,len(globalHubMap))
+	return int64(len(hubMap)),nil
+}
+
 /*
 func StoreCalleeInHubMap(key string, hub *Hub, multiCallees string, skipConfirm bool) (string,int64,error) {
 	//fmt.Printf("StoreCalleeInHubMap start key=%s\n",key)
@@ -111,21 +136,6 @@ func StoreCalleeInHubMap(key string, hub *Hub, multiCallees string, skipConfirm 
 }
 */
 
-func StoreCallerIpInHubMap(calleeId string, callerIp string, skipConfirm bool) error {
-	fmt.Printf("skv.StoreCallerIpInHubMap calleeId=%s callerIp=%s\n", calleeId, callerIp)
-	var err error = nil
-	hubMapMutex.Lock()
-	defer hubMapMutex.Unlock()
-	hub := hubMap[calleeId]
-	if hub==nil {
-		err = rkv.ErrNotFound
-	} else {
-		hub.ConnectedCallerIp = callerIp
-		hubMap[calleeId] = hub
-	}
-	return err
-}
-
 /*
 func GetCallerIpInHubMap(calleeId string) (string,error) {
 	fmt.Printf("skv.GetCallerIpInHubMap calleeId=%s\n", calleeId)
@@ -140,51 +150,6 @@ func GetCallerIpInHubMap(calleeId string) (string,error) {
 		callerIp = hub.ConnectedCallerIp
 	}
 	return callerIp,err
-}
-*/
-
-func SearchCallerIpInHubMap(ip string) (bool,string,error) {
-	fmt.Printf("skv.SearchCallerIpInHubMap ip=%s\n",ip)
-	foundIp := false
-	foundCalleeId := ""
-	hubMapMutex.RLock()
-	defer hubMapMutex.RUnlock()
-	for id := range hubMap {
-		hub := hubMap[id]
-		if strings.HasPrefix(hub.ConnectedCallerIp,ip) {
-			foundIp = true
-			foundCalleeId = hub.calleeID
-			break
-		}
-	}
-	return foundIp,foundCalleeId,nil
-}
-
-func DeleteFromHubMap(id string) (int64,error) {
-	hubMapMutex.Lock()
-	defer hubMapMutex.Unlock()
-	delete(hubMap,id)
-	//fmt.Printf("exitFunc delete(globalHubMap,%s) done %d\n",releasedCalleeID,len(globalHubMap))
-	return int64(len(hubMap)),nil
-}
-
-/* TODO do we want to keep offering this for everyone?
-func PrintHubInfo() (string,error) {
-	data := ""
-	globalHubMapLock.RLock()
-	defer globalHubMapLock.RUnlock()
-//	fmt.Fprintf(w, "<html><div>number of hubs %d</div>",len(globalHubMap))
-	// TODO the printed order may change every time bc this is how go maps work
-	// TODO return a dump of the complete globalHubMap
-	for id,hub := range globalHubMap {
-		fmt.Printf("<div>calleeId=%s server=%s client=%s</div>", id, hub.ServerIpAddr, hub.ConnectedCallerId)
-		//hub.ClientsLock.RLock()
-		//for cli := range hub.Clients {
-		//	fmt.Printf("<div>callee=%v online=%v hidden=%v remoteAddr=%v ua=%s</div>",
-		//		cli.IsCallee, cli.IsOnline, cli.IsHiddenCallee, cli.RemoteAddr, cli.UserAgent)
-		//}
-	}
-	return data, nil
 }
 */
 
@@ -205,24 +170,20 @@ func GetRandomCalleeID() (string,error) {
 			continue;
 		}
 
-/* TODO
-		var dbEntry DbEntry
-		//fmt.Printf("getRandomCalleeID %v check dbRegisteredIDs\n",newCalleeId)
-		err := db.Get(dbRegisteredIDs,newCalleeId,&dbEntry)
-		//fmt.Printf("getRandomCalleeID %v check dbRegisteredIDs err=%v\n",newCalleeId,err)
+		var dbEntry skv.DbEntry
+		err := kvMain.Get(dbRegisteredIDs,newCalleeId,&dbEntry)
 		if err==nil {
 			// found in dbRegisteredIDs
-			fmt.Printf("getRandomCalleeID %v already exists in dbRegisteredIDs\n",newCalleeId)
+			fmt.Printf("# getRandomCalleeID %v already exists in dbRegisteredIDs\n",newCalleeId)
 			continue;
-		} else {
-			err := db.Get(dbBlockedIDs,newCalleeId,&dbEntry)
-			if err==nil {
-				// found in dbBlockedIDs
-				fmt.Printf("getRandomCalleeID %v already exists in dbBlockedIDs\n",newCalleeId)
-				continue;
-			}
 		}
-*/
+		err = kvMain.Get(dbBlockedIDs,newCalleeId,&dbEntry)
+		if err==nil {
+			// found in dbBlockedIDs
+			fmt.Printf("# getRandomCalleeID %v already exists in dbBlockedIDs\n",newCalleeId)
+			continue;
+		}
+
 		// not found anywhere - newCalleeID is accepted!
 		//fmt.Printf("getRandomCalleeID %v is free\n",newCalleeId)
 		return newCalleeId, nil

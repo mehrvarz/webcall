@@ -1,11 +1,11 @@
-// Copyright 2021 timur.mobi. All rights reserved.
+// WebCall Copyright 2021 timur.mobi. All rights reserved.
 package rkv
 
 type Command struct {
 	MsgId int64
 	KvStoreId int64
 	Cmd string
-	Arg string // filename for Open(), otherwise always bucketName
+	Arg string
 	Key string
 	Value []byte
 	Bool1 bool
@@ -15,9 +15,9 @@ type Command struct {
 
 type Response struct {
 	MsgId int64
-	KvStoreId int64 // only used for Open()
+	KvStoreId int64
 	Err string
-	Data []byte // only used by Get, GetX
+	Data []byte
 	Str1 string
 	Int1 int64
 	Int2 int64

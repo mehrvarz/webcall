@@ -1,4 +1,4 @@
-// Copyright 2021 timur.mobi. All rights reserved.
+// WebCall Copyright 2021 timur.mobi. All rights reserved.
 package main
 
 import (
@@ -34,14 +34,12 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 				var dbUser skv.DbUser
 				d := gob.NewDecoder(bytes.NewReader(v))
 				d.Decode(&dbUser)
-				printFunc(w, "user %20s %d calls=%d p2p=%d/%d talk=%d(%d) %s,%s,%s %d,%d,%d\n",
+				printFunc(w, "user %20s %d calls=%d p2p=%d/%d talk=%d(%d)\n",
 					k,
 					dbUser.PremiumLevel,
 					dbUser.CallCounter, //dbUser.PermittedCalls,
 					dbUser.LocalP2pCounter, dbUser.RemoteP2pCounter,
-					dbUser.ConnectedToPeerSecs, dbUser.PermittedConnectedToPeerSecs,
-					dbUser.Ip1, dbUser.Ip2, dbUser.Ip3,
-					dbUser.Int1, dbUser.Int2, dbUser.Int3)
+					dbUser.ConnectedToPeerSecs, dbUser.PermittedConnectedToPeerSecs)
 			}
 			return nil
 		})
@@ -283,7 +281,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		unixTime := time.Now().Unix()
 		dbUserKey := fmt.Sprintf("%s_%d",urlID, unixTime)
 		dbUser := skv.DbUser{PremiumLevel:premiumLevel,
-			PermittedConnectedToPeerSecs:urlTMinutes*60, Ip1:remoteAddr, UserAgent:"", PrevId:""}
+			PermittedConnectedToPeerSecs:urlTMinutes*60, Ip1:remoteAddr}
 		err = kv.Put(dbUserBucket, dbUserKey, dbUser, false)
 		if err!=nil {
 			printFunc(w,"# /makeregistered error db=%s bucket=%s put key=%s err=%v\n",

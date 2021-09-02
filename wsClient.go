@@ -1,3 +1,4 @@
+// WebCall Copyright 2021 timur.mobi. All rights reserved.
 package main
 
 import (
@@ -5,13 +6,13 @@ import (
 	"time"
 	"strings"
 	"fmt"
+	"strconv"
 	"errors"
 	"encoding/json"
 	"math/rand"
-	"strconv"
+	"net/http"
 	"github.com/mehrvarz/webcall/skv"
 	"github.com/mehrvarz/webcall/rkv"
-	"net/http"
 	"github.com/lesismal/nbio/nbhttp/websocket"
 )
 
@@ -26,7 +27,6 @@ const (
 	pingPeriod = (pongWait * 9) / 10 // =54 see: time.NewTicker(pingPeriod)
 )
 
-//var ErrNoWsClientID = errors.New("No wsClientID")
 var ErrWriteNotConnected = errors.New("Write not connected")
 
 type WsClient struct {
@@ -84,17 +84,16 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			// not valid
 			fmt.Printf("# serveWs upgrade error wsCliID=%d rip=%s url=%s\n",
 				wsClientID64, remoteAddr, r.URL.String())
-			return //ErrNoWsClientID
+			return
 		}
 		var ok bool 
 		wsClientMutex.RLock()
 		wsClientData,ok = wsClientMap[wsClientID64]
 		wsClientMutex.RUnlock()
 		if !ok {
-			// HAHA: an attack!
 			fmt.Printf("# serveWs upgrade error wsCliID=%d does not exist rip=%s url=%s\n",
 				wsClientID64, remoteAddr, r.URL.String())
-			return //ErrNoWsClientID
+			return
 		}
 	}
 
@@ -121,8 +120,6 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	}
 	wsConn := conn.(*websocket.Conn)
 	//wsConn.EnableWriteCompression(true)
-
-	// TODO this is a zero deadline
 	wsConn.SetReadDeadline(time.Time{})
 
 	client := &WsClient{wsConn:wsConn}
@@ -144,8 +141,6 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		}
 	})
 	wsConn.OnClose(func(c *websocket.Conn, err error) {
-		// these are not realy errors; in most cases I get no err
-		// sometimes I get err=EOF; and in some cases I get err=broken pipe
 		client.isOnline.Set(false) // prevent doUnregister() from closing this already closed connection
 		if logWantedFor("wsclose") {
 			hub.HubMutex.RLock()
@@ -211,7 +206,6 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		} else {
 			hub.setDeadline(hub.durationSecs1)
 		}
-
 	} else {
 		// caller client (2nd client)
 		if logWantedFor("wsclient") {
@@ -220,40 +214,17 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		}
 
 		hub.CallerClient = client
-		// must tell the global hub that this caller has connected
-		// we use hub.calleeID, which is the global calleeId (and not client.calleeID which is the local calleeID)
-		// must use caller RemoteAddr with port, so we use wsConn.RemoteAddr().String()
-// NEW:
 		hub.ConnectedCallerIp = wsConn.RemoteAddr().String()
-		//hubMapMutex.Lock()
-		//hubMap[hub.calleeID] = hub
-		//hubMapMutex.Unlock()
-		//err := StoreCallerIpInHubMap(hub.calleeID,wsConn.RemoteAddr().String(), false)
-		//if err!=nil {
-		//	fmt.Printf("# %s StoreCallerIpInHubMap err=%v\n", client.connType, err)
-		//}
 		if rtcdb!="" {
 			err := rkv.StoreCallerIpInHubMap(hub.calleeID,wsConn.RemoteAddr().String(), false)
 			if err!=nil {
 				fmt.Printf("# %s rkv.StoreCallerIpInHubMap err=%v\n", client.connType, err)
-			} else {
-				// remeber: when this caller disconnects from callee, we must clear globhub.ConnectedCallerIp
 			}
 		}
-
-		/*
-		countCallees,countCallers,err := skv.GetOnlineCalleeCount(true)
-		if err!=nil {
-			fmt.Printf("# %s GetOnlineCalleeCount err=%v\n", client.connType, err)
-		} else {
-			// TODO we should also show a caller counter
-			fmt.Printf("%s new caller onlineCalleeCount=%d/%d\n", client.connType, countCallees, countCallers)
-		}
-		*/
 	}
 	hub.HubMutex.Unlock()
 
-	// we want to send a ping in pingPeriod (in 54 see)
+	// send a ping every pingPeriod secs
 	client.setPingDeadline(pingPeriod,"start")
 }
 
@@ -273,7 +244,7 @@ func (c *WsClient) receive(data []byte) error {
 
 func (c *WsClient) receiveProcess(message []byte) {
 	// check message integrity
-	// NOTE: cmd's can not be longer than 32 chars (f.i. "12345#deleteCallWhileInAbsence" has 30)
+	// cmd's can not be longer than 32 chars (f.i. "12345#deleteCallWhileInAbsence" has 30)
 	checkLen := 32
 	if len(message) < checkLen {
 		checkLen = len(message)
@@ -301,7 +272,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 
 	cmd := tok[0]
 	payload := tok[1]
-	max := len(payload); if max>20 { max = 20 }
+	//max := len(payload); if max>20 { max = 20 }
 	//fmt.Printf("%s receive (%s)(%s) led=%d\n",c.connType,cmd,payload[:max],len(payload))
 
 	if cmd=="init" {
@@ -421,7 +392,6 @@ func (c *WsClient) receiveProcess(message []byte) {
 		}
 
 		// forward state of c.isHiddenCallee to globalHubMap
-// NEW:
 		c.hub.HubMutex.Lock()
 		c.hub.IsCalleeHidden = c.isHiddenCallee
 		c.hub.HubMutex.Unlock()
@@ -595,7 +565,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 		tok := strings.Split(payload, " ")
 		if len(tok)>=3 {
 			// callee Connected p2p/p2p port=10001 id=3949620073
-// TODO must make sure this "log" parsing will not crash on malformed payload
+			// TODO make sure this "log" parsing will not crash on malformed payload
 			if strings.TrimSpace(tok[1])=="Connected" || strings.TrimSpace(tok[1])=="Incoming" ||
 					strings.TrimSpace(tok[1])=="ConForce" { // test-caller-client command to fake p2p-connect
 				tok2 := strings.Split(strings.TrimSpace(tok[2]), "/")
@@ -666,11 +636,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 
 	if len(payload)>0 {
 		//fmt.Printf("serveWs %s payload len=%d\n",cmd,len(message))
-		// TODO schade, dass man der message nicht ansieht, vom wem sie kommt
-		//      wenn man das sähe, könnte man in hub.run() dafür sorgen, dass sie nicht an
-		//      den sender zurück gebroadcastet wird
-		// TODO can we trust the content of message enough to broadcast it to everyone?
-
+		// TODO can we trust the content of message
 		if c.isCallee {
 			c.hub.CallerClient.Write(message)
 		} else {
@@ -722,7 +688,6 @@ func (c *WsClient) peerConHasEnded() {
 
 		// clear the callerIp from globhub.ConnectedCallerIp
 		// so this callee can be called again
-// NEW:
 		c.hub.HubMutex.Lock()
 		c.hub.ConnectedCallerIp = ""
 		if c.hub.lastCallStartTime>0 {
@@ -748,120 +713,6 @@ func (c *WsClient) peerConHasEnded() {
 	}
 }
 
-/*
-func (c *WsClient) setPingDeadline(secs int, comment string) {
-	// setPingDeadline(0,"...") clears the deadline
-	if c.pingTimer!=nil {
-		// if existing ping timer has just started, we do not replace it
-		lastTimerRunningMS := time.Now().Sub(c.pingStart).Milliseconds()
-		if lastTimerRunningMS < 3000 && secs>0 {
-			//if logWantedFor("ping") {
-			//	fmt.Printf("setPingDeadline not replacing old timer (secs=%d)(running only %dms) (%s)\n",
-			//		secs, lastTimerRunningMS, comment)
-			//}
-			return
-		}
-
-		if c.pingTimer != nil {
-			if !c.pingDont.Get() {
-				if logWantedFor("ping") {
-					fmt.Printf("setPingDeadline clear old timer (secs=%d)(running %dms)(%s)\n",
-						secs,lastTimerRunningMS,comment)
-				}
-				c.pingDont.Set(true)
-				c.pingCanceled <- true // trigger 'this ping was aborted' branch
-				if secs>0 {
-					time.Sleep(100 * time.Millisecond)
-				}
-			} else {
-				if logWantedFor("ping") {
-					fmt.Printf("setPingDeadline is already clear (secs=%d)(running %dms)(%s)\n",
-						secs,lastTimerRunningMS,comment)
-				}
-			}
-		}
-	}
-
-	if(secs>0 && c.isOnline.Get() && !c.pingDont.Get()) {
-		c.pingMs = secs*1000 + rand.Intn(3000)
-		if logWantedFor("ping") {
-			fmt.Printf("setPingDeadline create new timer %dms (%s)\n", c.pingMs, comment)
-		}
-		c.pingTimer = time.NewTimer(time.Duration(c.pingMs) * time.Millisecond)
-		c.pingStart = time.Now()
-
-		go func() {
-			if c==nil {
-				fmt.Printf("# setPingDeadline client is nil (%s) \n", comment)
-				return
-			}
-			if c.pingTimer==nil {
-				return
-			}
-
-			select {
-			case <-c.pingCanceled:
-				if c.pingTimer!= nil {
-					if logWantedFor("ping") {
-						fmt.Printf("setPingDeadline <-c.pingCanceled Stop old timer (%s)\n", comment)
-					}
-					c.pingTimer.Stop()
-					c.pingTimer = nil
-				} else {
-					if logWantedFor("ping") {
-						fmt.Printf("setPingDeadline <-c.pingCanceled old timer was stopped (%s)\n",comment)
-					}
-				}
-				return
-			case <-c.pingTimer.C:
-				if logWantedFor("ping") {
-					fmt.Printf("setPingDeadline <-c.pingTimer.C (%s)\n",comment)
-				}
-			}
-
-			c.pingTimer = nil
-
-			if c.pingDont.Get() {
-				// this ping was aborted
-				if logWantedFor("ping") {
-					fmt.Printf("setPingDeadline pingDont - abort (secs=%d %v) (%s)\n",
-						secs,c.pingStart.Format("2006-01-02 15:04:05"), comment)
-				}
-				return
-			}
-
-			if !c.isOnline.Get() {
-				// client is disconnected, just do nothing
-				//if logWantedFor("showAllWsErr") {
-				//	fmt.Printf("# setPingDeadline client has gone offline - abort (%s)\n", comment)
-				//}
-			} else if c.hub==nil {
-				fmt.Printf("# setPingDeadline client.hub is nil - abort (%s)\n", comment)
-			} else {
-				if logWantedFor("ping") {
-					fmt.Printf("setPingDeadline timer reached; send ping (%s)%v (secs=%d) (%s)\n",
-						c.hub.calleeID, c.isCallee, secs, comment)
-				}
-
-				c.wsConn.SetWriteDeadline(time.Now().Add(writeWait))
-				err := c.wsConn.WriteMessage(websocket.PingMessage, nil)
-				if err != nil {
-					if strings.Index(err.Error(),"broken pipe")<0 && strings.Index(err.Error(),"EOF")<0 {
-						fmt.Printf("# setPingDeadline ping sent err=%v (%s)\n", err, comment)
-					}
-					// sometimes getting "write: broken pipe"
-					// TODO hangup (unregister?) on error
-					// TODO count these errors (either total or per minute)
-					return
-				}
-
-				// setup next ping in pingPeriod (in 54 see)
-				c.setPingDeadline(pingPeriod,"restart")
-			}
-		}()
-	}
-}
-*/
 func (c *WsClient) setPingDeadline(secs int, comment string) {
 	if logWantedFor("ping") {
 		fmt.Printf("ping set secs %d (%s)\n",secs,comment)

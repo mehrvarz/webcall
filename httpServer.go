@@ -1,4 +1,4 @@
-// Copyright 2021 timur.mobi. All rights reserved.
+// WebCall Copyright 2021 timur.mobi. All rights reserved.
 package main
 
 import (
@@ -301,10 +301,6 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		}
-
-//		if cookie!=nil {
-//			// calleeName = ?  getSettings
-//		}
 	}
 
 	urlPath := r.URL.Path

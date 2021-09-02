@@ -1,4 +1,4 @@
-// Copyright 2021 timur.mobi. All rights reserved.
+// WebCall Copyright 2021 timur.mobi. All rights reserved.
 package rkv
 
 import (
@@ -75,7 +75,6 @@ func DbOpen(path string, rtcdb string) (RKV, error) {
 
 	send(Command{MsgId:myId, Cmd:"Open", Arg:path, Key:myipaddr})
 
-	// wait for remote response
 	//fmt.Printf("rkv.Open() waiting for remote reply (myId=%d)...\n",myId)
 	select {
 	case <-myChan:
@@ -203,7 +202,6 @@ func (c RKV) CreateBucket(bucketName string) error {
 
 	send(Command{MsgId:myId, KvStoreId:c.Dbr, Cmd:"CreateBucket", Arg:bucketName})
 
-	// wait for remote response
 	//fmt.Printf("rkv.CreateBucket waiting for remote reply...\n")
 	select {
 	case <-myChan:
@@ -254,7 +252,6 @@ func (c RKV) Put(bucketName string, key string, value interface{}, skipConfirm b
 		return nil
 	}
 
-	// wait for remote response
 	//fmt.Printf("rkv.Put waiting for remote reply...\n")
 	select {
 	case <-myChan:
@@ -289,7 +286,6 @@ func (c RKV) Get(bucketName string, key string, value interface{}) error {
 
 	send(Command{MsgId:myId, KvStoreId:c.Dbr, Cmd:"Get", Arg:bucketName, Key:key})
 
-	// wait for remote response
 	//fmt.Printf("rkv.Get bucketName=%s key=%s waiting for remote reply %d...\n",bucketName,key,myId)
 	select {
 	case <-myChan:
@@ -328,7 +324,6 @@ func (c RKV) Delete(bucketName string, key string) error {
 
 	send(Command{MsgId:myId, KvStoreId:c.Dbr, Cmd:"Delete", Arg:bucketName, Key:key})
 
-	// wait for remote response
 	//fmt.Printf("rkv.Delete waiting for remote reply...\n")
 	select {
 	case <-myChan:
@@ -369,7 +364,6 @@ func (c RKV) Close() error {
 
 	send(Command{MsgId:myId, KvStoreId:c.Dbr, Cmd:"Close"})
 
-	// wait for remote response
 	//fmt.Printf("rkv.Close waiting for remote reply...\n")
 	select {
 	case <-myChan:
@@ -405,7 +399,6 @@ func (c RKV) SearchIp(bucketName string, ip string, value *byte) error {
 
 	send(Command{MsgId:myId, KvStoreId:c.Dbr, Cmd:"SearchIp", Arg:bucketName, Key:ip})
 
-	// wait for remote response
 	//fmt.Printf("rkv.SearchIp waiting for remote reply...\n")
 	select {
 	case <-myChan:

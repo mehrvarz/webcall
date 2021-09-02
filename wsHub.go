@@ -1,3 +1,4 @@
+// WebCall Copyright 2021 timur.mobi. All rights reserved.
 package main
 
 import (
@@ -6,14 +7,12 @@ import (
 	"sync"
 	"os"
 	"strings"
-
 	"github.com/mehrvarz/webcall/skv"
 	"github.com/mehrvarz/webcall/rkv"
 )
 
-
 type Hub struct {
-	HubMutex sync.RWMutex	// TODO maybe I am not using this in all the places it is needed
+	HubMutex sync.RWMutex
 
 	WsClientID uint64 // set by the callee; will be handed over to the caller at /online
 	calleeHostStr string // set by the callee; will be handed over to the caller at /online
@@ -39,7 +38,6 @@ type Hub struct {
 	PermittedConnectedToPeerSecs int
 	ServiceDurationSecs int
 	ServiceStartTime int64
-
 	IsCalleeHidden bool
 	IsUnHiddenForCallerAddr string
 	ConnectedCallerIp string
@@ -47,7 +45,6 @@ type Hub struct {
 	ServerIpAddr string // GetOutboundIP() set by rkv.go StoreCalleeInHubMap()
 	WsUrl string
 	WssUrl string
-
 	exitFunc func(*WsClient, string) // to cleanup the hub being killed
 }
 
@@ -70,7 +67,6 @@ func newHub(calleeID string, durationSecs1 int, durationSecs2 int, startTime int
 	}
 }
 
-// TODO not sure if the goroutine will be ended
 func (h *Hub) setDeadline(secs int) {
 	if h.timer!=nil {
 		if logWantedFor("calldur") {
@@ -88,6 +84,7 @@ func (h *Hub) setDeadline(secs int) {
 		}
 		h.timer = time.NewTimer(time.Duration(secs) * time.Second)
 		h.dontCancel = false
+		// TODO not sure if the goroutine will be ended
 		go func() {
 			timeStart := time.Now()
 			<-h.timer.C
@@ -97,7 +94,7 @@ func (h *Hub) setDeadline(secs int) {
 			} else {
 				fmt.Printf("setDeadline reached; do cancel (secs=%d %v)\n",
 					secs,timeStart.Format("2006-01-02 15:04:05"))
-				h.doExit()
+				h.doUnregister(h.CalleeClient,"setDeadline")
 			}
 		}()
 	}
@@ -121,8 +118,8 @@ func (h *Hub) processTimeValues() bool {
 
 	// we need dbEntry.DurationSecs
 	var dbEntry skv.DbEntry
-// TODO h.calleeID = "answie7!3766090173" does not work here
-// instead of the global ID we need to use the local ID (or cut off the '!')
+	// TODO h.calleeID = "answie7!3766090173" does not work here
+	// instead of the global ID we need to use the local ID (or cut off the '!')
 	calleeId := h.calleeID
 	if strings.HasPrefix(calleeId,"answie") {
 		idxExclam := strings.Index(calleeId,"!")
@@ -133,7 +130,6 @@ func (h *Hub) processTimeValues() bool {
 	err := kvMain.Get(dbRegisteredIDs,calleeId,&dbEntry)
 	if err!=nil {
 		fmt.Printf("# processTimeValues (%s) failed on dbRegisteredIDs\n",calleeId)
-		// TODO an dieser stelle extrem doof
 		return false
 	}
 
@@ -152,7 +148,6 @@ func (h *Hub) processTimeValues() bool {
 		if err!=nil {
 			fmt.Printf("# hub processTimeValues error db=%s bucket=%s getX key=%v err=%v\n",
 				dbMainName, dbUserBucket, userKey, err)
-			// TODO an dieser stelle extrem doof
 		} else {
 			dbUserLoaded = true
 		}
@@ -170,7 +165,7 @@ func (h *Hub) processTimeValues() bool {
 			numberOfCallSecondsToday += secs
 			numberOfCallsTodayMutex.Unlock()
 
-/*
+			/*
 			// update the total call seconds (DurationSecs), but only if connection was NOT pure p2p
 			if !h.LocalP2p || !h.RemoteP2p {
 				if dbUser.PremiumLevel>0 {
@@ -184,7 +179,7 @@ func (h *Hub) processTimeValues() bool {
 			} else {
 				fmt.Printf("hub processTimeValues p2p = not adding: %ds id=%s ip=%s\n",secs,calleeId,remoteAddr)
 			}
-*/
+			*/
 			//fmt.Printf("hub processTimeValues adding ConnectedToPeerSecs: %ds id=%s\n", secs, calleeId)
 			dbUser.ConnectedToPeerSecs += secs
 
@@ -243,14 +238,6 @@ func (h *Hub) processTimeValues() bool {
 		h.lastCallStartTime = 0
 	}
 	if dbUserLoaded {
-		/* this is already stored on event in client.go
-		fmt.Printf("hub processTimeValues store dbUser isHiddenCallee=%v\n",h.CalleeClient.isHiddenCallee)
-		if h.CalleeClient.isHiddenCallee {
-			dbUser.Int2 |= 1
-		} else {
-			dbUser.Int2 &= 1
-		}
-		*/
 		if h.LocalP2p {
 			dbUser.LocalP2pCounter++
 			h.LocalP2p = false
@@ -260,6 +247,7 @@ func (h *Hub) processTimeValues() bool {
 			h.RemoteP2p = false
 		}
 		if h.CalleeIp!="" {
+			/*
 			if dbUser.Ip1!=h.CalleeIp && dbUser.Ip2!=h.CalleeIp && dbUser.Ip3!=h.CalleeIp {
 				if dbUser.Ip1=="" {
 					dbUser.Ip1 = h.CalleeIp
@@ -269,10 +257,9 @@ func (h *Hub) processTimeValues() bool {
 					dbUser.Ip3 = h.CalleeIp
 				}
 			}
+			*/
 			h.CalleeIp=""
 		}
-		// TODO UserAgent2 string
-		// TODO UserAgent3 string
 
 		//fmt.Printf("hub processTimeValues store counter for key=(%v)\n",userKey)
 		err := kvMain.Put(dbUserBucket, userKey, dbUser, false)
@@ -287,37 +274,8 @@ func (h *Hub) processTimeValues() bool {
 	return deliveredServiceData
 }
 
-// doExit() is used by setDeadline and 2s-ticker
-// disconnects both clients and calls exitFunc to deactivate hub + wsClientID
-func (h *Hub) doExit() {
-	fmt.Printf("hub exit via deadline or 2s-ticker (%s)\n",h.calleeID)
-/*
-	if(h.processTimeValues()) {
-		// let serviceData be delivered before kill()
-		fmt.Printf("hub exit via deadline/cancelFunc delay kill\n")
-		time.Sleep(200 * time.Millisecond)
-	}
-	if h==nil {
-		fmt.Printf("# hub exit but h==nil (%s)\n",h.calleeID)
-	} else {
-		fmt.Printf("hub exit (%s)\n",h.calleeID)
-		if h.CallerClient != nil {
-			h.CallerClient.Close("hub exit")
-		}
-		if h.CalleeClient != nil {
-			h.CalleeClient.Close("hub exit")
-		}
-		// TODO does this clean up everything?
-		fmt.Printf("hub exit -> exitFunc\n")
-		h.exitFunc(h.CalleeClient)
-	}
-*/
-	// we can achieve the same thing if we call doUnregister() with the callee client
-	h.doUnregister(h.CalleeClient,"doExit")
-}
-
 // doUnregister() is used by /login, OnClose() and cmd "stop"
-// disconnects the client; and if client==callee then call exitFunc to deactivate hub + wsClientID
+// disconnects the client; and if client==callee calls exitFunc to deactivate hub + wsClientID
 func (h *Hub) doUnregister(client *WsClient, comment string) {
 	if client.isCallee && !client.storeOnCloseDone {
 		if logWantedFor("hub") {

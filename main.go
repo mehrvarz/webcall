@@ -1,4 +1,4 @@
-// Copyright 2021 timur.mobi. All rights reserved.
+// WebCall Copyright 2021 timur.mobi. All rights reserved.
 package main
 
 import (
@@ -61,6 +61,7 @@ var version = flag.Bool("version", false, "show version")
 var	builddate string
 var	codetag string
 const configFileName = "config.ini"
+const statsFileName = "stats.ini"
 const freeAccountTalkSecsConst = 3*60*60; // 3 hrs
 const freeAccountServiceSecsConst = 3*24*60*60; // 3 days
 const freeAccountBlockSecs = 7*24*60*60; // 7 days
@@ -77,6 +78,7 @@ var insecureSkipVerify = false
 var runTurn = false
 var turnIP = ""
 var turnPort = 3739
+var turnRealm = ""
 var turnDebugLevel = 3
 var pprofPort = 0 //8980
 var rtcdb = ""
@@ -480,6 +482,7 @@ func readConfig(init bool) {
 		runTurn = readIniBoolean(configIni, "runTurn", runTurn, false)
 		turnIP = readIniString(configIni, "turnIP", turnIP, "")
 		turnPort = readIniInt(configIni, "turnPort", turnPort, 3739, 1)
+		turnRealm = readIniString(configIni, "turnRealm", turnRealm, "")
 		pprofPort = readIniInt(configIni, "pprofPort", pprofPort, 0, 1) //8980
 
 		rtcdb = readIniString(configIni, "rtcdb", rtcdb, "")

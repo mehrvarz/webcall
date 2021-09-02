@@ -1,3 +1,4 @@
+// WebCall Copyright 2021 timur.mobi. All rights reserved.
 package main
 
 import (
@@ -35,7 +36,9 @@ func runTurnServer() {
 		return
 	}
 
-	ourRealm := "timur.mobi" // TODO make configurable
+	readConfigLock.RLock()
+	ourRealm := turnRealm
+	readConfigLock.RUnlock()
 	loggerFactory := logging.NewDefaultLoggerFactory()
 	loggerFactory.DefaultLogLevel = logging.LogLevel(turnDebugLevel) // 3=info 4=LogLevelDebug
 
@@ -44,7 +47,6 @@ func runTurnServer() {
 		AuthHandler: func(username string, realm string, srcAddr net.Addr) ([]byte, bool) {
 			// AuthHandler callback is called everytime a caller tries to authenticate with the TURN server
 			// - username is the "iceServers" username from Javascript
-			// - realm should be == ourRealm
 			// - srcAddr is ip:port of caller (we receive 2 calls: same caller ip, but two different ports)
 			// note that for a relay connection to become available for both sides,
 			// only ONE side needs to successfully authenticate

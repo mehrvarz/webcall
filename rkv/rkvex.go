@@ -1,4 +1,4 @@
-// Copyright 2021 timur.mobi. All rights reserved.
+// WebCall Copyright 2021 timur.mobi. All rights reserved.
 package rkv
 
 import (
@@ -401,34 +401,6 @@ func SetUnHiddenForCaller(calleeId string, callerIp string) (error) {
 		return ErrTimeout
 	}
 }
-
-func PrintHubInfo() (string,error) {
-	// TODO do we want to keep offering this for everyone?
-	data := ""
-/*
-	globalHubMapLock.RLock()
-	defer globalHubMapLock.RUnlock()
-//	fmt.Fprintf(w, "<html><div>number of hubs %d</div>",len(globalHubMap))
-	// TODO the printed order may change every time bc this is how go maps work
-	// TODO return a dump of the complete globalHubMap
-	for id,hub := range globalHubMap {
-		fmt.Printf("<div>calleeId=%s server=%s client=%s</div>", id, hub.ServerIpAddr, hub.ConnectedCallerId)
-//		hub.ClientsLock.RLock()
-//		for cli := range hub.Clients {
-//			fmt.Printf("<div>callee=%v online=%v hidden=%v remoteAddr=%v ua=%s</div>",
-//				cli.IsCallee, cli.IsOnline, cli.IsHiddenCallee, cli.RemoteAddr, cli.UserAgent)
-//		}
-	}
-*/
-	return data,nil
-}
-
-/*
-func (c RKV) Dumpuser(bucketName string) error {
-	send(Command{MsgId:0, KvStoreId:c.KvStore.Dbr, Arg:bucketName, Cmd:"Dumpuser"})
-	return nil
-}
-*/
 
 // Get preferred outbound ip of this machine
 func GetOutboundIP() (string,error) {

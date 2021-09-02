@@ -1,3 +1,4 @@
+// WebCall Copyright 2021 timur.mobi. All rights reserved.
 package main
 
 import (
@@ -6,8 +7,6 @@ import (
 	"strings"
 	"gopkg.in/ini.v1" // https://pkg.go.dev/gopkg.in/go-ini/ini.v1
 )
-
-const statsFileName = "stats.ini"
 
 func readIniEntry(configIni *ini.File, keyword string) (string,bool) {
 	if !configIni.Section("").HasKey(keyword) {
