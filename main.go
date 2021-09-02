@@ -67,7 +67,7 @@ const freeAccountServiceSecsConst = 3*24*60*60; // 3 days
 const freeAccountBlockSecs = 7*24*60*60; // 7 days
 const randomCallerWaitSecsConst = 1800
 const randomCallerCallSecsConst = 600
-var hostname = ""
+var hostname = "127.0.0.1"
 var httpPort = 8067
 var httpsPort = 0 //8068
 var httpToHttps = false
@@ -471,7 +471,7 @@ func readConfig(init bool) {
 
 	readConfigLock.Lock()
 	if init {
-		hostname = readIniString(configIni, "hostname", hostname, "")
+		hostname = readIniString(configIni, "hostname", hostname, "127.0.0.1")
 		httpPort = readIniInt(configIni, "httpPort", httpPort, 8067, 1)
 		httpsPort = readIniInt(configIni, "httpsPort", httpsPort, 0, 1)
 		httpToHttps = readIniBoolean(configIni, "httpToHttps", httpToHttps, false)
