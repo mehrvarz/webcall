@@ -159,7 +159,6 @@ func GetRandomCalleeID() (string,error) {
 
 	newCalleeId := ""
 	for {
-		// use alphanum only for paying subscribers
 		intID := uint64(rand.Int63n(int64(99999999999)))
 		if(intID<uint64(10000000000)) {
 			continue;
