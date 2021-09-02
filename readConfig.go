@@ -35,7 +35,7 @@ func readIniBoolean(configIni *ini.File, cfgKeyword string, currentVal bool, def
 	}
 	if currentVal != newVal {
 		isDefault:=""; if newVal==defaultValue { isDefault="*" }
-		fmt.Printf("%s bool %s=%v %s\n", configFileName, cfgKeyword, newVal, isDefault)
+		fmt.Printf("%s bool %s=%v%s\n", configFileName, cfgKeyword, newVal, isDefault)
 	}
 	currentVal = newVal
 	return currentVal
@@ -54,7 +54,7 @@ func readIniInt(configIni *ini.File, cfgKeyword string, currentVal int, defaultV
 	}
 	if newVal != currentVal {
 		isDefault:=""; if newVal==defaultValue { isDefault="*" }
-		fmt.Printf("%s int  %s=%d %s\n", configFileName, cfgKeyword, newVal, isDefault)
+		fmt.Printf("%s int  %s=%d%s\n", configFileName, cfgKeyword, newVal, isDefault)
 	}
 	currentVal = newVal
 	return currentVal
@@ -69,7 +69,7 @@ func readIniString(configIni *ini.File, cfgKeyword string, currentVal string, de
 	// don't log entries ending in 'Key'
 	if newVal!=currentVal && !strings.HasSuffix(cfgKeyword, "Key") {
 		isDefault:=""; if newVal==defaultValue { isDefault="*" }
-		fmt.Printf("%s str  %s=(%v) %s\n", configFileName, cfgKeyword, newVal, isDefault)
+		fmt.Printf("%s str  %s=(%v)%s\n", configFileName, cfgKeyword, newVal, isDefault)
 	}
 	currentVal = newVal
 	return currentVal
