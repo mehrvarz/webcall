@@ -97,8 +97,8 @@ var wssUrl = ""
 var	shutdownStarted rkv.AtomBool
 var maintenanceMode = false
 var allowNewAccounts = true
-var disconnectCalleesWhenPeerConnected = false
-var disconnectCallersWhenPeerConnected = true
+var disconnectCalleeWhenPeerConnected = false
+var disconnectCallerWhenPeerConnected = true
 var calleeClientVersion = ""
 
 var hubMap map[string]*Hub
@@ -505,10 +505,10 @@ func readConfig(init bool) {
 	}
 	logeventMutex.Unlock()
 
-	disconnectCalleesWhenPeerConnected = readIniBoolean(configIni,
-		"disconnectCalleesWhenPeerConnected", disconnectCalleesWhenPeerConnected, false)
-	disconnectCallersWhenPeerConnected = readIniBoolean(configIni,
-		"disconnectCallersWhenPeerConnected", disconnectCallersWhenPeerConnected, true)
+	disconnectCalleeWhenPeerConnected = readIniBoolean(configIni,
+		"disconnectCalleeWhenPeerConnected", disconnectCalleeWhenPeerConnected, false)
+	disconnectCallerWhenPeerConnected = readIniBoolean(configIni,
+		"disconnectCallerWhenPeerConnected", disconnectCallerWhenPeerConnected, true)
 	calleeClientVersion = readIniString(configIni, "calleeClientVersion", calleeClientVersion, "")
 
 	maxRingSecs = readIniInt(configIni, "maxRingSecs", maxRingSecs, 300, 1)

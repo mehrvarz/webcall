@@ -409,11 +409,13 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 	//fmt.Printf("/login run hub id=%s durationSecs=%d/%d id=%d rt=%v\n",
 	//	urlID,maxRingSecs,maxTalkSecsIfNoP2p, myRequestCount, time.Since(startRequestTime)) // rt=44ms, 113ms
+/*
 	myHubMutex.RLock()
 	if hub.maxRingSecs != 0 {
 		hub.setDeadline(hub.maxRingSecs,"login")
 	}
 	myHubMutex.RUnlock()
+*/
 
 	wsAddr := fmt.Sprintf("ws://%s:%d/ws", hostname, wsPort)
 	readConfigLock.RLock()

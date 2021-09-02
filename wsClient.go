@@ -187,12 +187,6 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		}
 		//fmt.Printf("%s talkSecs=%d startTime=%d serviceSecs=%d\n",
 		//	client.connType, hub.ConnectedToPeerSecs, hub.ServiceStartTime, hub.ServiceDurationSecs)
-
-		if hub.maxRingSecs<=0 {
-			hub.setDeadline(0,"serveWs ringsecs") // unlimited ringtime
-		} else {
-			hub.setDeadline(hub.maxRingSecs,"serveWs ringsecs") // limited ringtime
-		}
 	} else {
 		// caller client (2nd client)
 		if logWantedFor("wsclient") {
@@ -360,6 +354,11 @@ func (c *WsClient) receiveProcess(message []byte) {
 		c.hub.CallerClient.Write([]byte("ua|"+c.hub.CalleeClient.userAgent))
 		//fmt.Printf("%s send caller ua to callee (%s)\n",c.connType,c.hub.CallerClient.userAgent)
 		c.hub.CalleeClient.Write([]byte("ua|"+c.hub.CallerClient.userAgent))
+
+		if c.hub.maxRingSecs>0 {
+			// if after c.hub.maxRingSecs the callee has NOT picked up the call, callee will be disconnected
+			c.hub.setDeadline(c.hub.maxRingSecs,"serveWs ringsecs")
+		}
 		return
 
 	} else if cmd=="rtcConnect" {
@@ -495,39 +494,28 @@ func (c *WsClient) receiveProcess(message []byte) {
 		//	c.connType, c.isOnline.Get(), c.isConnectedToPeer.Get())
 		c.hub.lastCallStartTime = time.Now().Unix()
 
-		// switching from the 1st deadline (offline/ringing duration) 
-		// to the 2nd deadline (online duration / talk time)
-		if c.hub.LocalP2p && c.hub.RemoteP2p {
-			// unlimited talk time
-			c.hub.setDeadline(0,"pickup")
-			//fmt.Printf("skip setDeadline maxTalkSecsIfNoP2p %v %v\n", c.hub.LocalP2p, c.hub.RemoteP2p)
-		} else {
-			fmt.Printf("%s setDeadline maxTalkSecsIfNoP2p %v %v\n",
-				c.connType, c.hub.LocalP2p, c.hub.RemoteP2p)
-			c.hub.setDeadline(c.hub.maxTalkSecsIfNoP2p,"pickup")
-			// deliver max talktime; but it must arrive after "pickup"
-			go func(duration int) {
-				time.Sleep(200 * time.Millisecond)
-				c.hub.doBroadcast([]byte("sessionDuration|"+fmt.Sprintf("%d",duration)))
-			}(c.hub.maxTalkSecsIfNoP2p)
-		}
-
 		// deliver "pickup" to the caller
 		if logWantedFor("wscall") {
 			fmt.Printf("%s forward pickup to caller %s\n", c.connType, c.hub.calleeID)
 		}
 		c.hub.CallerClient.Write(message)
 
-		// callee has become peer connected
-		readConfigLock.RLock()
-		if disconnectCalleesWhenPeerConnected {
-			readConfigLock.RUnlock()
-			time.Sleep(20 * time.Millisecond)
-			fmt.Printf("%s disconnectCalleesWhenPeerConnected %s\n",
-				c.connType, c.hub.calleeID)
-			c.hub.doUnregister(c,"disconnectCalleesWhenPeerConnected")
+		// switching from maxRingSecs deadline to maxTalkSecsIfNoP2p deadline
+		if c.hub.LocalP2p && c.hub.RemoteP2p {
+			// full p2p con: remove maxRingSecs deadline and do NOT replace it with any talktimr deadline
+			//fmt.Printf("skip setDeadline maxTalkSecsIfNoP2p %v %v\n", c.hub.LocalP2p, c.hub.RemoteP2p)
+			c.hub.setDeadline(0,"pickup")
 		} else {
-			readConfigLock.RUnlock()
+			// relayed con: clear maxRingSecs deadline and replace it with maxTalkSecsIfNoP2p deadline
+			//fmt.Printf("%s setDeadline maxTalkSecsIfNoP2p %v %v\n", c.connType, c.hub.LocalP2p, c.hub.RemoteP2p)
+			c.hub.setDeadline(c.hub.maxTalkSecsIfNoP2p,"pickup")
+
+			// deliver max talktime to both clients
+//			go func(duration int) {
+//				time.Sleep(200 * time.Millisecond)
+//				c.hub.doBroadcast([]byte("sessionDuration|"+fmt.Sprintf("%d",duration)))
+//			}(c.hub.maxTalkSecsIfNoP2p)
+			c.hub.doBroadcast([]byte("sessionDuration|"+fmt.Sprintf("%d",c.hub.maxTalkSecsIfNoP2p)))
 		}
 		return
 
@@ -569,13 +557,31 @@ func (c *WsClient) receiveProcess(message []byte) {
 						c.hub.CalleeClient.isConnectedToPeer.Set(true)
 
 						if strings.TrimSpace(tok[1])=="ConForce" {
-							// caller sends this msg to callee, bc the test-clients do not really connect p2p
+							// test-caller sends this msg to callee, bc test-clients do not really connect p2p
 							c.hub.CalleeClient.Write([]byte("callerConnect|"))
 
 						} else if strings.TrimSpace(tok[1])=="Connected" {
-							// this is the caller reporting peerCon
+							// caller is reporting peerCon: both peers are now directly connected
 							readConfigLock.RLock()
-							if disconnectCallersWhenPeerConnected {
+							myDisconnectCalleeWhenPeerConnected := disconnectCalleeWhenPeerConnected
+							myDisconnectCallerWhenPeerConnected := disconnectCallerWhenPeerConnected
+							readConfigLock.RUnlock()
+							if myDisconnectCalleeWhenPeerConnected || myDisconnectCalleeWhenPeerConnected {
+								time.Sleep(20 * time.Millisecond)
+							}
+							if myDisconnectCalleeWhenPeerConnected {
+								fmt.Printf("%s disconnectCalleeWhenPeerConnected %s\n", c.connType, c.hub.calleeID)
+								//c.hub.doUnregister(c,"disconnectCalleeWhenPeerConnected")
+								c.hub.CalleeClient.Close("disconnectCalleeWhenPeerConnected")
+							}
+							if myDisconnectCallerWhenPeerConnected {
+								fmt.Printf("%s disconnectCallerWhenPeerConnected %s\n", c.connType, c.hub.calleeID)
+								//c.hub.doUnregister(c.hub.CallerClient,"disconnectCallerWhenPeerConnected")
+								c.hub.CallerClient.Close("disconnectCallerWhenPeerConnected")
+							}
+/*
+							readConfigLock.RLock()
+							if disconnectCallerWhenPeerConnected {
 								if logWantedFor("wscall") {
 									fmt.Printf("%s caller %s peer con -> ws-disconnect\n",
 										c.connType, c.hub.calleeID)
@@ -583,6 +589,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 								c.hub.doUnregister(c,"force caller discon")
 							}
 							readConfigLock.RUnlock()
+*/
 						}
 					}
 				}
