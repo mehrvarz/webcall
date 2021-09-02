@@ -161,7 +161,7 @@ func GetRandomCalleeID() (string,error) {
 	for {
 		// use alphanum only for paying subscribers
 		intID := uint64(rand.Int63n(int64(99999999999)))
-		if(intID<uint64(1000000000)) {
+		if(intID<uint64(10000000000)) {
 			continue;
 		}
 		newCalleeId = fmt.Sprintf("%d",intID)
