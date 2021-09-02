@@ -25,8 +25,7 @@ func GetOnlineCallee(calleeID string, ejectOn1stFound bool, reportHiddenCallee b
 
 	send(Command{MsgId:myId, Cmd:"GetOnlineCallee",
 		Arg:calleeID, Bool1:ejectOn1stFound, Bool2:reportHiddenCallee, Key:callerIpAddr, Bool3:occupy})
-	// wait for remote response
-	//fmt.Printf("rkv.SearchIp() waiting for remote reply...\n")
+	//fmt.Printf("rkv.GetOnlineCallee() waiting for remote reply...\n")
 	select {
 	case <-myChan:
 		//fmt.Printf("rkv.GetOnlineCallee received data\n")
@@ -81,7 +80,6 @@ func StoreCalleeInHubMap(id string, hub *Hub, multiCallees string, skipConfirm b
 		return id,0,nil
 	}
 
-	// wait for remote response
 	//fmt.Printf("rkv.StoreCalleeInHubMap() waiting for remote reply...\n")
 	select {
 	case <-myChan:
@@ -124,7 +122,6 @@ func StoreCallerIpInHubMap(calleeId string, callerIp string, skipConfirm bool) e
 		return nil
 	}
 
-	// wait for remote response
 	//fmt.Printf("rkv.StoreCallerIpInHubMap() waiting for remote reply...\n")
 	select {
 	case <-myChan:
@@ -161,7 +158,6 @@ func GetCallerIpInHubMap(calleeId string) (string,error) {
 
 	send(Command{MsgId:myId, Cmd:"GetCallerIpInHubMap", Arg:calleeId})
 
-	// wait for remote response
 	//fmt.Printf("rkv.GetCallerIpInHubMap() waiting for remote reply...\n")
 	select {
 	case <-myChan:
@@ -198,7 +194,6 @@ func SearchCallerIpInHubMap(ip string) (bool,string,error) {
 
 	send(Command{MsgId:myId, Cmd:"SearchCallerIpInHubMap", Arg:ip})
 
-	// wait for remote response
 	//fmt.Printf("rkv.SearchCallerIpInHubMap() waiting for remote reply...\n")
 	select {
 	case <-myChan:
@@ -237,7 +232,6 @@ func DeleteFromHubMap(id string) (int64,error) {
 
 	send(Command{MsgId:myId, Cmd:"DeleteFromHubMap", Arg:id})
 
-	// wait for remote response
 	//fmt.Printf("rkv.DeleteFromHubMap waiting for remote reply...\n")
 	select {
 	case <-myChan:
@@ -272,7 +266,6 @@ func GetRandomCalleeID() (string,error) {
 
 	send(Command{MsgId:myId, Cmd:"GetRandomCalleeID"})
 
-	// wait for remote response
 	//fmt.Printf("rkv.GetRandomCalleeID waiting for remote reply...\n")
 	select {
 	case <-myChan:
@@ -307,7 +300,6 @@ func GetOnlineCalleeCount(countCallers bool) (int64,int64,error) {
 	idChanLock.Unlock()
 
 	send(Command{MsgId:myId, Cmd:"GetOnlineCalleeCount", Bool1:countCallers})
-	// wait for remote response
 	//fmt.Printf("rkv.GetOnlineCalleeCount waiting for remote reply...\n")
 	select {
 	case <-myChan:
@@ -320,7 +312,6 @@ func GetOnlineCalleeCount(countCallers bool) (int64,int64,error) {
 			//fmt.Printf("rkv.GetRandomCalleeID rerr=%v\n",resp.Err)
 			return 0,0,errors.New(resp.Err)
 		}
-		// outremarked bc it happens too often
 		//fmt.Printf("rkv.GetOnlineCalleeCount %d no rerr\n",resp.Int1)
 		return resp.Int1,resp.Int2,nil
 	case <-closeChan:
@@ -343,7 +334,6 @@ func SetCalleeHiddenState(calleeId string, hidden bool) (error) {
 
 	send(Command{MsgId:myId, Cmd:"SetCalleeHiddenState", Arg:calleeId, Bool1:hidden})
 
-	// wait for remote response
 	//fmt.Printf("rkv.SetCalleeHiddenState waiting for remote reply...\n")
 	select {
 	case <-myChan:
@@ -378,7 +368,6 @@ func SetUnHiddenForCaller(calleeId string, callerIp string) (error) {
 
 	send(Command{MsgId:myId, Cmd:"SetUnHiddenForCaller", Arg:calleeId, Key:callerIp})
 
-	// wait for remote response
 	//fmt.Printf("rkv.SetUnHiddenForCaller() waiting for remote reply...\n")
 	select {
 	case <-myChan:

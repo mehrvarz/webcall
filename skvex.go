@@ -189,7 +189,7 @@ func GetRandomCalleeID() (string,error) {
 	}
 }
 
-// return the number of callees and callers currently online
+// return the number of callees (and callers) currently online
 func GetOnlineCalleeCount(countCallers bool) (int64,int64,error) {
 	hubMapMutex.RLock()
 	defer hubMapMutex.RUnlock()

@@ -1011,13 +1011,6 @@ function connectSignaling(message,openedFunc) {
 	}
 	if(!gentle) console.log('connectSignaling: open ws connection',calleeID);
 	let tryingToOpenWebSocket = true;
-/*
-	if(window.location.href.startsWith("https:")) {
-		wsConn = new WebSocket("wss://" + wsAddr);
-	} else {
-		wsConn = new WebSocket("ws://" + wsAddr);
-	}
-*/
     var wsUrl = wsAddr;
 	wsConn = new WebSocket(wsUrl);
 	wsConn.onopen = function () {
@@ -1529,6 +1522,12 @@ function dial() {
 					// play never ending dialTone; until interrupted by pickup or hangup
 					if(playDialSounds) {
 						var playDialToneAfterDialingSound = function() {
+							// abort if wsCon lost
+							if(wsConn==null) {
+								console.log('abort DialSounds on wsConn==null');
+								hangupWithBusySound(false,"Hang up");
+								return;
+							}
 							if(!gentle) console.log('dialToneAfterDialingSound.play()');
 							dialToneAfterDialingSound.play().catch(function(error) { });
 							dialToneAfterDialingSound.onended = playDialToneAfterDialingSound;

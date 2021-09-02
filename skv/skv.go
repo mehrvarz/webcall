@@ -29,14 +29,14 @@ type KV interface {
 	Put(bucketName string, key string, value interface{}, waitConfirm bool) error
 	Delete(bucketName string, key string) error
 	Close() error
-	SearchIp(bucketName string, ip string, value *byte) error
+	//SearchIp(bucketName string, ip string, value *byte) error
 }
 
-type SKV struct { // implements interface KV
+type SKV struct {
 	Db *bolt.DB
-	Name string
-	Host string	// ip of remote rtcsig-server
-	Opencount int
+    Name string
+	Host string
+    Opencount int
 }
 
 var (
@@ -159,8 +159,9 @@ func (kvs SKV) Close() error {
 	return kvs.Db.Close()
 }
 
+/*
 // SearchIp() is added functionality (tm)
-func (kvs SKV) SearchIp(bucketName string, ip string, value *byte) error {
+func (kvs SKV) SearchIp1(bucketName string, ip string, value *byte) error {
 	*value = 0
 	err := kvs.Db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucketName))
@@ -178,4 +179,5 @@ func (kvs SKV) SearchIp(bucketName string, ip string, value *byte) error {
 	})
 	return err
 }
+*/
 

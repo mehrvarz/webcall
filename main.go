@@ -62,27 +62,24 @@ var	builddate string
 var	codetag string
 const configFileName = "config.ini"
 const statsFileName = "stats.ini"
-const freeAccountTalkSecsConst = 3*60*60; // 3 hrs
-const freeAccountServiceSecsConst = 3*24*60*60; // 3 days
-const freeAccountBlockSecs = 7*24*60*60; // 7 days
-const randomCallerWaitSecsConst = 1800
-const randomCallerCallSecsConst = 600
-var hostname = "127.0.0.1"
-var httpPort = 8067
-var httpsPort = 0 //8068
+var hostname = ""
+var httpPort = 0
+var httpsPort = 0
 var httpToHttps = false
-var wsPort = 8071
-var wssPort = 0 //8443
-var htmlPath = "webroot"
+var wsPort = 0
+var wssPort = 0
+var htmlPath = ""
 var insecureSkipVerify = false
 var runTurn = false
 var turnIP = ""
-var turnPort = 3739
+var turnPort = 0
 var turnRealm = ""
-var turnDebugLevel = 3
-var pprofPort = 0 //8980
+var turnDebugLevel = 0
+var pprofPort = 0
 var rtcdb = ""
-var dbPath = "db/"
+var dbPath = ""
+var maxRingSecs = 0
+var maxTalkSecsIfNoP2p = 0
 
 // twitter key for @WebCall user
 var twitterKey = ""
@@ -103,8 +100,6 @@ var allowNewAccounts = true
 var disconnectCalleesWhenPeerConnected = false
 var disconnectCallersWhenPeerConnected = true
 var calleeClientVersion = ""
-var freeAccountTalkSecs = freeAccountTalkSecsConst
-var freeAccountServiceSecs = freeAccountServiceSecsConst
 
 var hubMap map[string]*Hub
 var hubMapMutex sync.RWMutex
@@ -117,8 +112,6 @@ var numberOfCallSecondsToday = 0
 var numberOfCallsTodayMutex sync.RWMutex
 
 var lastCurrentDayOfMonth = 0 // will be set by timer.go
-var randomCallerWaitSecs = randomCallerWaitSecsConst
-var randomCallerCallSecs = randomCallerCallSecsConst
 var multiCallees = ""
 var logevents = ""
 var logeventMap map[string]bool
@@ -141,7 +134,6 @@ type wsClientDataType struct {
 }
 var wsClientMap map[uint64]wsClientDataType
 var wsClientMutex sync.RWMutex
-
 
 func main() {
 	flag.Parse()
@@ -428,8 +420,8 @@ func getStats() string {
 		"gor:%d",
 		numberOfOnlineCallees, numberOfOnlineCallers, numberOfActivePureP2pCalls,
 		numberOfGlobalCallees, numberOfGlobalCallers,
-		numberOfCallsToday,				// from hub.processTimeValues() TODO only for this server instance
-		numberOfCallSecondsToday,		// from hub.processTimeValues() TODO only for this server instance
+		numberOfCallsToday,			// from hub.processTimeValues() only for this server instance
+		numberOfCallSecondsToday,	// from hub.processTimeValues() only for this server instance
 		runtime.NumGoroutine())
 	numberOfCallsTodayMutex.RUnlock()
 	return retStr
@@ -502,16 +494,6 @@ func readConfig(init bool) {
 	maintenanceMode = readIniBoolean(configIni, "maintenanceMode", maintenanceMode, false)
 	allowNewAccounts = readIniBoolean(configIni, "allowNewAccounts", allowNewAccounts, true)
 
-	freeAccountTalkSecs = readIniInt(configIni, "freeAccountTalkHours",
-		freeAccountTalkSecs, freeAccountTalkSecsConst, 60*60)
-	freeAccountServiceSecs = readIniInt(configIni, "freeAccountServiceDays",
-		freeAccountServiceSecs, freeAccountServiceSecsConst, 24*60*60)
-
-	randomCallerWaitSecs = readIniInt(configIni, "randomCallerWaitSecs",
-		randomCallerWaitSecs, randomCallerWaitSecsConst, 1)
-	randomCallerCallSecs = readIniInt(configIni, "randomCallerCallSecs",
-		randomCallerCallSecs, randomCallerCallSecsConst, 1)
-
 	multiCallees = readIniString(configIni, "multiCallees", multiCallees, "")
 
 	logevents = readIniString(configIni, "logevents", logevents, "")
@@ -524,14 +506,14 @@ func readConfig(init bool) {
 	}
 	logeventMutex.Unlock()
 
-	// if *noPersist is true (used for benching), we don't write dbHashedPw
-	//*noPersist = readIniBoolean(configIni, "nopersist", *noPersist, false)
-
 	disconnectCalleesWhenPeerConnected = readIniBoolean(configIni,
 		"disconnectCalleesWhenPeerConnected", disconnectCalleesWhenPeerConnected, false)
 	disconnectCallersWhenPeerConnected = readIniBoolean(configIni,
 		"disconnectCallersWhenPeerConnected", disconnectCallersWhenPeerConnected, true)
 	calleeClientVersion = readIniString(configIni, "calleeClientVersion", calleeClientVersion, "")
+
+	maxRingSecs = readIniInt(configIni, "maxRingSecs", maxRingSecs, 300, 1)
+	maxTalkSecsIfNoP2p = readIniInt(configIni, "maxTalkSecsIfNoP2p", maxTalkSecsIfNoP2p, 600, 1)
 
 	wsUrl = readIniString(configIni, "wsUrl", wsUrl, "")
 	wssUrl = readIniString(configIni, "wssUrl", wssUrl, "")

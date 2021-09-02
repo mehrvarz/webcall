@@ -44,7 +44,6 @@ type WsClient struct {
 	storeOnCloseDone bool
 	connType string
 	PremiumLevel int
-
 	pingStart time.Time
 	pingDone chan struct{}
 }
@@ -159,10 +158,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	hub.HubMutex.Lock()
 	client.hub = hub
 	client.isOnline.Set(true)
-
-	// client.RemoteAddr will be used to set c.hub.CalleeIp
 	client.RemoteAddr = remoteAddr
-
 	client.userAgent = r.UserAgent()
 	client.authenticationShown = false // being used to make sure 'TURN auth SUCCESS' is only shown 1x per client
 	client.calleeID = wsClientData.calleeID // this is the local ID
@@ -181,30 +177,21 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		hub.WsClientID = wsClientID64
 		hub.calleeHostStr = calleeHostStr
 		hub.CalleeClient = client
-
-		if strings.HasPrefix(hub.calleeID,"random") {
-			hub.ConnectedToPeerSecs = 0
-			hub.PermittedConnectedToPeerSecs = hub.durationSecs2 // randomCallerCallSecs config.ini
-			hub.ServiceStartTime = time.Now().Unix()
-			hub.ServiceDurationSecs = hub.durationSecs2 // like randomCallerCallSecs config.ini
-		} else {
+		hub.ServiceStartTime = time.Now().Unix()
+		hub.ConnectedToPeerSecs = 0
+		if !strings.HasPrefix(hub.calleeID,"random") {
 			// get values related to talk- and service-time for this callee from the db
 			// so that 1s-ticker can calculate the live remaining time
-			hub.ServiceDurationSecs = wsClientData.dbEntry.DurationSecs // race
 			hub.ServiceStartTime = wsClientData.dbEntry.StartTime // race
-
 			hub.ConnectedToPeerSecs = wsClientData.dbUser.ConnectedToPeerSecs
-			hub.PermittedConnectedToPeerSecs = wsClientData.dbUser.PermittedConnectedToPeerSecs
-
-			//fmt.Printf("%s talkSecs=%d max=%d startTime=%d serviceSecs=%d\n", client.connType,
-			//	hub.ConnectedToPeerSecs, hub.PermittedConnectedToPeerSecs,
-			//	hub.ServiceStartTime, hub.ServiceDurationSecs)
 		}
+		//fmt.Printf("%s talkSecs=%d startTime=%d serviceSecs=%d\n",
+		//	client.connType, hub.ConnectedToPeerSecs, hub.ServiceStartTime, hub.ServiceDurationSecs)
 
-		if hub.durationSecs1<=0 {
-			hub.setDeadline(0) // not limited timewise
+		if hub.maxRingSecs<=0 {
+			hub.setDeadline(0,"serveWs ringsecs") // unlimited ringtime
 		} else {
-			hub.setDeadline(hub.durationSecs1)
+			hub.setDeadline(hub.maxRingSecs,"serveWs ringsecs") // limited ringtime
 		}
 	} else {
 		// caller client (2nd client)
@@ -285,7 +272,6 @@ func (c *WsClient) receiveProcess(message []byte) {
 		}
 
 		c.hub.HubMutex.Lock()
-		c.hub.CalleeIp = c.RemoteAddr
 		c.hub.CalleeLogin.Set(true)
 		c.hub.HubMutex.Unlock()
 
@@ -370,7 +356,9 @@ func (c *WsClient) receiveProcess(message []byte) {
 		c.hub.CalleeClient.Write(message)
 
 		// exchange each others useragent
+		//fmt.Printf("%s send callee ua to caller (%s)\n",c.connType,c.hub.CalleeClient.userAgent)
 		c.hub.CallerClient.Write([]byte("ua|"+c.hub.CalleeClient.userAgent))
+		//fmt.Printf("%s send caller ua to callee (%s)\n",c.connType,c.hub.CallerClient.userAgent)
 		c.hub.CalleeClient.Write([]byte("ua|"+c.hub.CallerClient.userAgent))
 		return
 
@@ -507,25 +495,23 @@ func (c *WsClient) receiveProcess(message []byte) {
 		//	c.connType, c.isOnline.Get(), c.isConnectedToPeer.Get())
 		c.hub.lastCallStartTime = time.Now().Unix()
 
-		// switching from the 1st deadline (offline duration) to the 2nd deadline (online duration)
-		if c.hub.durationSecs2<=0 { //|| (hub.LocalP2p && hub.RemoteP2p) {
-			// no talk timeout
-			c.hub.setDeadline(0)
+		// switching from the 1st deadline (offline/ringing duration) 
+		// to the 2nd deadline (online duration / talk time)
+		if c.hub.LocalP2p && c.hub.RemoteP2p {
+			// unlimited talk time
+			c.hub.setDeadline(0,"pickup")
+			//fmt.Printf("skip setDeadline maxTalkSecsIfNoP2p %v %v\n", c.hub.LocalP2p, c.hub.RemoteP2p)
 		} else {
-			if c.hub.LocalP2p && c.hub.RemoteP2p {
-				// no limit to length/duration of call
-				//fmt.Printf("skip setDeadline durationSecs2 on p2p %v %v\n", c.hub.LocalP2p, c.hub.RemoteP2p)
-			} else {
-				fmt.Printf("%s setDeadline durationSecs2 no p2p %v %v\n",
-					c.connType, c.hub.LocalP2p, c.hub.RemoteP2p)
-				c.hub.setDeadline(c.hub.durationSecs2)
-				// we must broadcast the max sessionDuration; but it must arrive after the "pickup"
-				go func(duration int) {
-					time.Sleep(200 * time.Millisecond)
-					c.hub.doBroadcast([]byte("sessionDuration|"+fmt.Sprintf("%d",duration)))
-				}(c.hub.durationSecs2)
-			}
+			fmt.Printf("%s setDeadline maxTalkSecsIfNoP2p %v %v\n",
+				c.connType, c.hub.LocalP2p, c.hub.RemoteP2p)
+			c.hub.setDeadline(c.hub.maxTalkSecsIfNoP2p,"pickup")
+			// deliver max talktime; but it must arrive after "pickup"
+			go func(duration int) {
+				time.Sleep(200 * time.Millisecond)
+				c.hub.doBroadcast([]byte("sessionDuration|"+fmt.Sprintf("%d",duration)))
+			}(c.hub.maxTalkSecsIfNoP2p)
 		}
+
 		// deliver "pickup" to the caller
 		if logWantedFor("wscall") {
 			fmt.Printf("%s forward pickup to caller %s\n", c.connType, c.hub.calleeID)

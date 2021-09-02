@@ -15,16 +15,16 @@ import (
 	"github.com/fasthttp/websocket"
 )
 
-type KV interface { // same as in skv
+type KV interface {
 	CreateBucket(bucketName string) error
 	Get(bucketName string, key string, value interface{}) error
 	Put(bucketName string, key string, value interface{}, waitConfirm bool) error
 	Delete(bucketName string, key string) error
 	Close() error
-	SearchIp(bucketName string, ip string, value *byte) error
+	//SearchIp(bucketName string, ip string, value *byte) error
 }
 
-type RKV struct { // implements interface KV
+type RKV struct {
 	Dbr int64
 }
 
@@ -386,7 +386,7 @@ func (c RKV) Close() error {
 		return ErrTimeout
 	}
 }
-
+/*
 func (c RKV) SearchIp(bucketName string, ip string, value *byte) error {
 	// search for rkv.DbEntry.Ip as needed for /register
 	//fmt.Printf("rkv.SearchIp()\n")
@@ -427,7 +427,7 @@ func (c RKV) SearchIp(bucketName string, ip string, value *byte) error {
 		return ErrTimeout
 	}
 }
-
+*/
 func Exit() error {
 	if !connectionClosed.Get() {
 		// connectionClosed.Set(true) prevents double close(closeChan) panic

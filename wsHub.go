@@ -19,7 +19,6 @@ type Hub struct {
 
 	CalleeClient *WsClient
 	calleeID string	// calleeID=="random" will change on "pickup"  this is the global id (unlike client.calleeID)
-	CalleeIp string // this is the remote client ip
 	CalleeLogin rkv.AtomBool // connected to signaling server
 
 	CallerClient *WsClient
@@ -27,16 +26,14 @@ type Hub struct {
 	callerNickname string // nickname of the caller (may not be avail)
 
 	registrationStartTime int64 // this is the callees registration starttime; may be 0 for testuser
-	durationSecs1 int // max wait secs till caller arrives
-	durationSecs2 int // max talk time
+	maxRingSecs int //durationSecs1 int // max wait secs till caller arrives
+	maxTalkSecsIfNoP2p int // durationSecs2
 	timer *time.Timer // expires when durationSecs ends; terminates session
 	dontCancel bool // set to prevent timer from calling cancelFunc()
 	lastCallStartTime int64
 	LocalP2p bool
 	RemoteP2p bool
 	ConnectedToPeerSecs int
-	PermittedConnectedToPeerSecs int
-	ServiceDurationSecs int
 	ServiceStartTime int64
 	IsCalleeHidden bool
 	IsUnHiddenForCallerAddr string
@@ -48,29 +45,23 @@ type Hub struct {
 	exitFunc func(*WsClient, string) // to cleanup the hub being killed
 }
 
-func newHub(calleeID string, durationSecs1 int, durationSecs2 int, startTime int64,
-		exitFunc func(*WsClient,string)) *Hub {
+func newHub(calleeID string, maxRingSecs int, maxTalkSecsIfNoP2p int, startTime int64) *Hub {
 	//fmt.Printf("newHub ID=%s startTime=%d\n", calleeID, startTime)
 	return &Hub{
-		registrationStartTime: startTime,
-		calleeID:      calleeID,
-		durationSecs1: durationSecs1,
-		durationSecs2: durationSecs2,
-		timer:         nil,
-		dontCancel:    false,
-		lastCallStartTime: 0,
-		LocalP2p:      false,
-		RemoteP2p:     false,
-		CalleeIp:      "",
-		CalleeClient:  nil,
-		exitFunc:      exitFunc,
+		registrationStartTime:  startTime,
+		calleeID:               calleeID,
+		maxRingSecs:            maxRingSecs,
+		maxTalkSecsIfNoP2p:     maxTalkSecsIfNoP2p,
+		dontCancel:             false,
+		LocalP2p:               false,
+		RemoteP2p:              false,
 	}
 }
 
-func (h *Hub) setDeadline(secs int) {
+func (h *Hub) setDeadline(secs int, comment string) {
 	if h.timer!=nil {
 		if logWantedFor("calldur") {
-			fmt.Printf("setDeadline clear old timer\n")
+			fmt.Printf("setDeadline clear old timer; new secs=%d (%s)\n",secs,comment)
 		}
 		h.dontCancel = true
 		h.timer.Stop()
@@ -80,21 +71,30 @@ func (h *Hub) setDeadline(secs int) {
 
 	if(secs>0) {
 		if logWantedFor("calldur") {
-			fmt.Printf("setDeadline create %ds\n",secs)
+			fmt.Printf("setDeadline create %ds (%s)\n",secs,comment)
 		}
 		h.timer = time.NewTimer(time.Duration(secs) * time.Second)
 		h.dontCancel = false
-		// TODO not sure if the goroutine will be ended
 		go func() {
 			timeStart := time.Now()
 			<-h.timer.C
+			// timer has ended
 			if h.dontCancel {
-				fmt.Printf("setDeadline reached; don't cancel (secs=%d %v)\n",
+				// timer was aborted
+				fmt.Printf("setDeadline reached; cancel; no disconnect caller (secs=%d %v)\n",
 					secs,timeStart.Format("2006-01-02 15:04:05"))
 			} else {
-				fmt.Printf("setDeadline reached; do cancel (secs=%d %v)\n",
+				// timer valid: we need to disconnect the clients
+				fmt.Printf("setDeadline reached; disconnect caller (secs=%d %v)\n",
 					secs,timeStart.Format("2006-01-02 15:04:05"))
-				h.doUnregister(h.CalleeClient,"setDeadline")
+				if h.CallerClient!=nil {
+					// if there is a caller (for instance during ringing), we only disconnect this caller
+					h.CallerClient.Close("setDeadline "+comment)
+					h.CallerClient.isConnectedToPeer.Set(false)
+				} else {
+					// otherwise we disconnect this callee
+					h.doUnregister(h.CalleeClient,"setDeadline "+comment)
+				}
 			}
 		}()
 	}
@@ -136,11 +136,11 @@ func (h *Hub) processTimeValues() bool {
 	var userKey string
 	var dbUser skv.DbUser
 	dbUserLoaded := false
-	serviceSecs := 0
+	inServiceSecs := 0
 	if h.registrationStartTime>0 {
 		// h.registrationStartTime: the callees registration starttime
-		// serviceSecs: the age of the callee service time
-		serviceSecs = int(timeNow.Unix() - h.registrationStartTime)
+		// inServiceSecs: the age of the callee service time
+		inServiceSecs = int(timeNow.Unix() - h.registrationStartTime)
 		userKey = fmt.Sprintf("%s_%d",calleeId, h.registrationStartTime)
 		//fmt.Printf("processTimeValues (%s) h.registrationStartTime=%d >0 userKey=(%s) get...\n",
 		//	calleeId, h.registrationStartTime, userKey)
@@ -165,35 +165,16 @@ func (h *Hub) processTimeValues() bool {
 			numberOfCallSecondsToday += secs
 			numberOfCallsTodayMutex.Unlock()
 
-			/*
-			// update the total call seconds (DurationSecs), but only if connection was NOT pure p2p
-			if !h.LocalP2p || !h.RemoteP2p {
-				if dbUser.PremiumLevel>0 {
-					fmt.Printf("hub processTimeValues relayed, adding ConnectedToPeerSecs: %ds id=%s ip=%s\n",
-						secs, calleeId, remoteAddr)
-					dbUser.ConnectedToPeerSecs += secs
-				} else {
-					fmt.Printf("hub processTimeValues relayed but no paying dbUser: %ds id=%s ip=%s\n",
-						secs, calleeId, remoteAddr)
-				}
-			} else {
-				fmt.Printf("hub processTimeValues p2p = not adding: %ds id=%s ip=%s\n",secs,calleeId,remoteAddr)
-			}
-			*/
 			//fmt.Printf("hub processTimeValues adding ConnectedToPeerSecs: %ds id=%s\n", secs, calleeId)
 			dbUser.ConnectedToPeerSecs += secs
 
 			if dbUserLoaded {
 				dbUser.CallCounter++
-				// send "serviceData" msg to callee
-				serviceDataString := fmt.Sprintf("%d|%d|%d|%d",
-					dbUser.ConnectedToPeerSecs,
-					dbUser.PermittedConnectedToPeerSecs,
-					serviceSecs,
-					dbEntry.DurationSecs)
-				//fmt.Printf("hub processTimeValues client serviceData (%s)\n",serviceDataString)
-
 				if h.CalleeClient != nil {
+					// send post call "serviceData" msg to callee
+					serviceDataString := fmt.Sprintf("%d|%d",
+						dbUser.ConnectedToPeerSecs, inServiceSecs)
+					//fmt.Printf("hub processTimeValues client serviceData (%s)\n",serviceDataString)
 					h.CalleeClient.Write([]byte("serviceData|"+serviceDataString))
 					deliveredServiceData = true
 				}
@@ -222,11 +203,10 @@ func (h *Hub) processTimeValues() bool {
 						remoteAddr = h.CallerClient.RemoteAddr
 					}
 
-					logline := fmt.Sprintf("%s talkSecs:%d sum:%d max:%d servSecs:%d max:%d ip:%s\n",
+					logline := fmt.Sprintf("%s talkSecs:%d sum:%d servSecs:%d ip:%s\n",
 						curDateTime,
-						secs, dbUser.ConnectedToPeerSecs, dbUser.PermittedConnectedToPeerSecs,
-						serviceSecs, dbEntry.DurationSecs,
-						remoteAddr)
+						secs, dbUser.ConnectedToPeerSecs,
+						inServiceSecs, remoteAddr)
 
 					if _, err := fo.Write([]byte(logline)); err != nil {
 						fmt.Printf("# hub processTimeValues failed to write (%s) err=%v\n",filename,err)
@@ -246,20 +226,6 @@ func (h *Hub) processTimeValues() bool {
 			dbUser.RemoteP2pCounter++
 			h.RemoteP2p = false
 		}
-		if h.CalleeIp!="" {
-			/*
-			if dbUser.Ip1!=h.CalleeIp && dbUser.Ip2!=h.CalleeIp && dbUser.Ip3!=h.CalleeIp {
-				if dbUser.Ip1=="" {
-					dbUser.Ip1 = h.CalleeIp
-				} else if dbUser.Ip2=="" {
-					dbUser.Ip2 = h.CalleeIp
-				} else if dbUser.Ip3=="" {
-					dbUser.Ip3 = h.CalleeIp
-				}
-			}
-			*/
-			h.CalleeIp=""
-		}
 
 		//fmt.Printf("hub processTimeValues store counter for key=(%v)\n",userKey)
 		err := kvMain.Put(dbUserBucket, userKey, dbUser, false)
@@ -274,8 +240,8 @@ func (h *Hub) processTimeValues() bool {
 	return deliveredServiceData
 }
 
-// doUnregister() is used by /login, OnClose() and cmd "stop"
-// disconnects the client; and if client==callee calls exitFunc to deactivate hub + wsClientID
+// doUnregister() disconnects the client; and if client==callee calls exitFunc to deactivate hub + wsClientID
+// is used by /login, OnClose() and cmd "stop"
 func (h *Hub) doUnregister(client *WsClient, comment string) {
 	if client.isCallee && !client.storeOnCloseDone {
 		if logWantedFor("hub") {
@@ -283,7 +249,7 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 				client.hub.calleeID, client.isCallee, comment)
 		}
 		h.HubMutex.Lock()
-		h.setDeadline(-1)
+		h.setDeadline(-1,"doUnregister "+comment)
 		if h.lastCallStartTime>0 {
 			// store info about the call into dbUserBucket
 			if h.processTimeValues() {
@@ -318,6 +284,10 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 	client.isConnectedToPeer.Set(false)
 
 	if client.isCallee {
+		if h.CallerClient!=nil {
+			h.CallerClient.Close("unregister "+comment)
+			h.CallerClient.isConnectedToPeer.Set(false)
+		}
 		h.exitFunc(client,comment) // remove callee from local and global hubMap + del wsClientID from wsClientMap
 	} else {
 		client.peerConHasEnded() // flag caller as being not peer-connected + clear callerIp in global HubMap

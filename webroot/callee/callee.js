@@ -64,7 +64,6 @@ var callerName = "";
 var onnegotiationneededAllowed = false;
 var lastResult;
 var lastUserActionDate = 0;
-var sessionDuration = 0;
 var calleeID = "";
 var calleeName = "";
 var wsSecret = "";
@@ -393,14 +392,14 @@ function login(retryFlag) {
 				talkSecs = parseInt(parts[1], 10);
 			}
 			if(parts.length>=3) {
-				maxTalkSecs = parseInt(parts[2], 10);
+				maxTalkSecs = parseInt(parts[2], 10); // 0 = nocheck
 			}
 			if(parts.length>=4) {
 				serviceSecs = parseInt(parts[3], 10);
 			}
-			if(parts.length>=5) {
-				maxServiceSecs = parseInt(parts[4], 10);
-			}
+//			if(parts.length>=5) {
+//				maxServiceSecs = parseInt(parts[4], 10); // 0 = nocheck
+//			}
 			if(parts.length>=6) {
 				let calleeLevel = parseInt(parts[5], 10);
 				if(calleeLevel>0) {
@@ -583,6 +582,7 @@ function processRemainingTime() {
 		}
 		console.log(remainingTalkTime);
 	}
+/*
 	if(maxServiceSecs>0) {
 		remainingServiceSecs = maxServiceSecs - serviceSecs;
 		if(remainingServiceSecs<0) {
@@ -608,6 +608,7 @@ function processRemainingTime() {
 		}
 		console.log(remainingServiceTime);
 	}
+*/
 	// data will be shown in showOnlineReadyMsg()
 }
 
@@ -785,10 +786,10 @@ function wsHeartbeat() {
 let wsAutoReconnecting = false;
 function delayedWsAutoReconnect(reconPauseSecs) {
 	// delayedWsAutoReconnect can only succeed if a previous login attemt was successful
-	if((remainingTalkSecs<=0 || remainingServiceSecs<=0) && !calleeID.startsWith("answie")) {
+	if((remainingTalkSecs<0 || remainingServiceSecs<0) && !calleeID.startsWith("answie")) {
 		offlineAction();
 		wsAutoReconnecting = false;
-		console.log('give up reconnecting',	remainingTalkSecs,remainingServiceSecs);
+		console.log('give up reconnecting',	remainingTalkSecs, remainingServiceSecs);
 		let mainLink = window.location.href;
 		let idx = mainLink.indexOf("user/callee");
 		if(idx>0) {
@@ -816,11 +817,11 @@ function delayedWsAutoReconnect(reconPauseSecs) {
 			console.log('delayedWsAutoReconnect aborted on !wsAutoReconnecting');
 			wsAutoReconnecting = false;
 			offlineAction();
-		} else if(remainingTalkSecs<=0 && !calleeID.startsWith("answie")) {
+		} else if(remainingTalkSecs<0 && !calleeID.startsWith("answie")) {
 			console.log('delayedWsAutoReconnect aborted on no talk time');
 			wsAutoReconnecting = false;
 			offlineAction();
-		} else if(remainingServiceSecs<=0 && !calleeID.startsWith("answie")) {
+		} else if(remainingServiceSecs<0 && !calleeID.startsWith("answie")) {
 			console.log('delayedWsAutoReconnect aborted on no service time');
 			wsAutoReconnecting = false;
 			offlineAction();
@@ -922,6 +923,7 @@ function connectSignaling(message) {
 	wsConn.onclose = function(evt) {
 		console.log("wsConn.onclose",calleeID,wsUrl);
 		wsConn=null;
+		buttonBlinking=false;
 		onnegotiationneededAllowed = false;
 		stopAllAudioEffects("wsConn.onclose");
 		if(calleeID.startsWith("random") || calleeID.startsWith("!")) {
@@ -1136,32 +1138,23 @@ function connectSignaling(message) {
 					console.log('cmd sessionId curVers/newVers',version,payload);
 					showOnlineReadyMsg(payload);
 
-				} else if(cmd=="sessionDuration") {
-					sessionDuration = parseInt(payload,10);
-					//console.log('sessionDuration',localCandidateType,remoteCandidateType);
+				} else if(cmd=="sessionDuration") { // in call
 					if(localCandidateType!="relay" && remoteCandidateType!="relay") {
 						// do not show the timer
 					} else if(mediaConnect) {
-						if(!timerStartDate) {
-							if(sessionDuration>0) {
-								if(!gentle) console.log('sessionDuration',sessionDuration);
-								startTimer(sessionDuration);
-							}
+						var sessionDuration = parseInt(payload,10); // maxTalkSecsIfNoP2p
+						if(sessionDuration>0 && !timerStartDate) {
+							console.log('sessionDuration',sessionDuration);
+							startTimer(sessionDuration);
 						}
 					}
 
-				} else if(cmd=="serviceData") {
+				} else if(cmd=="serviceData") { // post call
 					//console.log('serviceData (%s) tok.length=%d',messages[i],tok.length);
 					if(tok.length>=2) {
-						talkSecs = parseInt(payload, 10);
+						talkSecs = parseInt(tok[1], 10);
 						if(tok.length>=3) {
-							maxTalkSecs = parseInt(tok[2], 10);
-						}
-						if(tok.length>=4) {
-							serviceSecs = parseInt(tok[3], 10);
-						}
-						if(tok.length>=5) {
-							maxServiceSecs = parseInt(tok[4], 10);
+							serviceSecs = parseInt(tok[2], 10);
 						}
 					}
 					processRemainingTime();
@@ -1416,12 +1409,15 @@ function wsSend(message) {
 				console.log('wsSend ws state',wsConn.readyState);
 			}
 		}
-		if(calleeID.startsWith("random") || calleeID.startsWith("!") || calleeID.startsWith("answie") ||
-				(remainingServiceSecs>0 && remainingTalkSecs>0)) {
+		if(remainingTalkSecs>=0 || calleeID.startsWith("random") ||
+				calleeID.startsWith("!") || calleeID.startsWith("answie")) {
 			if(!gentle) console.log('wsSend connectSignaling',message);
 			connectSignaling(message);
 		} else {
-			if(!gentle) console.warn('wsSend no connectSignaling',message);
+			if(!gentle) console.warn('wsSend no connectSignaling',
+				message,calleeID,remainingServiceSecs,remainingTalkSecs);
+			wsAutoReconnecting = false;
+			offlineAction();
 		}
 	} else {
 		wsConn.send(message);
@@ -1650,7 +1646,7 @@ function goOnline() {
 				} else {
 					answerButton.style.background = "#04c";
 					buttonBgHighlighted = false;
-					if(!buttonBlinking) {
+					if(!buttonBlinking || wsConn==null) {
 						console.log("buttonBlinking stop");
 						answerButton.style.background = "#04c";
 						return;

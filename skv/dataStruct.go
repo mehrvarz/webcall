@@ -3,7 +3,6 @@ package skv
 
 type DbEntry struct { // ~40 bytes
 	StartTime int64   // 8 bytes
-	DurationSecs int  // 4 bytes "ServiceSecs" contract duration
 	Ip string         // ~16 bytes
 	Password string   // ~10 bytes
 }
@@ -19,7 +18,6 @@ type DbUser struct {
 	UserAgent string
 	CallCounter int // incremented by wsHub processTimeValues()
 	ConnectedToPeerSecs int // incremented by wsHub processTimeValues()
-	PermittedConnectedToPeerSecs int // for relayed connections, not for p2p peer.connections
 	LocalP2pCounter int // incremented by wsHub processTimeValues()
 	RemoteP2pCounter int // incremented by wsHub processTimeValues()
 	PremiumLevel int // if > 0 enables hamburger menu

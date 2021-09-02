@@ -249,7 +249,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		// cookie avail: may be a callee
 		// may also be a client sending the cookie of a previous callee instance
 
-		// TODO we should only show this if a callee is making use of the pw
+		// we should only show this if a callee is making use of the pw
 		//maxlen:=20; if len(cookie.Value)<20 { maxlen=len(cookie.Value) }
 		//fmt.Printf("cookie avail(%s) req=(%s) ref=(%s) callee=(%s)\n", 
 		//	cookie.Value[:maxlen], r.URL.Path, referer, calleeID)
@@ -281,7 +281,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				// calleeIdFromCookie == calleeID (this is good) - now get PW from kvHashedPw
 				err = kvHashedPw.Get(dbHashedPwBucket,cookie.Value,&pwIdCombo)
 				if err!=nil {
-					// TODO: caller.js is triggering this
+					// caller.js is triggering this
 					fmt.Printf("# kvHashedPw.Get %v err=%v\n", r.URL, err)
 					cookie = nil
 				} else {

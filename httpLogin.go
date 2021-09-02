@@ -153,9 +153,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		//fmt.Printf("/login pw accepted urlID=(%s) rip=%s id=%d rt=%v\n",
 		//	urlID, remoteAddr, myRequestCount, time.Since(startRequestTime)) // rt=40ms
 
-		// in addition to the port we also want to deliver
-		// ConnectedToPeerSecs (PermittedConnectedToPeerSecs)
-		// now-StartTime (DurationSecs)
 		dbUserKey := fmt.Sprintf("%s_%d", urlID, dbEntry.StartTime)
 		err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser) // costly B 35ms
 		if err != nil {
@@ -166,21 +163,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		}
 		//fmt.Printf("/login dbUserKey=%v dbUser.Int=%d (hidden) id=%d rt=%v\n",
 		//	dbUserKey, dbUser.Int2, myRequestCount, time.Since(startRequestTime)) // rt=75ms
-
-		if dbUser.ConnectedToPeerSecs >= dbUser.PermittedConnectedToPeerSecs {
-			fmt.Printf("# /login error no talk time (%d >= %d)\n",
-				dbUser.ConnectedToPeerSecs, dbUser.PermittedConnectedToPeerSecs)
-			fmt.Fprintf(w, "noservice")
-			return
-		}
-
-		serviceSecs = int(startRequestTime.Unix() - dbEntry.StartTime)
-		if serviceSecs >= dbEntry.DurationSecs {
-			fmt.Printf("# /login error no service time (%d >= %d)\n",
-				serviceSecs, dbEntry.DurationSecs)
-			fmt.Fprintf(w, "noservice")
-			return
-		}
 
 		// create a new unique wsClientID
 		wsClientMutex.Lock()
@@ -303,19 +285,13 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		}
 	}
 
-	durationSecs1 := 0 // 0=unlimited
-	durationSecs2 := 0 // 0=unlimited
-	if strings.HasPrefix(urlID, "answie") {
-		//durationSecs1 = 60
-		durationSecs2 = 300
-	} else if strings.HasPrefix(urlID, "random") || strings.HasPrefix(urlID, "!") {
-		durationSecs1 = randomCallerWaitSecs
-		durationSecs2 = randomCallerCallSecs
-	}
-
+	readConfigLock.RLock()
+	myMaxRingSecs := maxRingSecs // 0=unlimited
+	myMaxTalkSecsIfNoP2p := maxTalkSecsIfNoP2p // 0=unlimited
+	readConfigLock.RUnlock()
 	var myHubMutex sync.RWMutex
-	hub := newHub(globalID, durationSecs1, durationSecs2,
-		dbEntry.StartTime, nil) // no cpu cost
+	hub := newHub(globalID, myMaxRingSecs, myMaxTalkSecsIfNoP2p, dbEntry.StartTime)
+/*
 	if hub == nil {
 		fmt.Printf("# /login create newhub fail id=%s/%s\n", urlID, globalID)
 		if globalID != "" {
@@ -335,9 +311,9 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		fmt.Fprintf(w, "noservice")
 		return
 	}
-
+*/
 	//fmt.Printf("/login newHub urlID=%s duration %d/%d id=%d rt=%v\n",
-	//	urlID, durationSecs1, durationSecs2, myRequestCount, time.Since(startRequestTime))
+	//	urlID, maxRingSecs, maxTalkSecsIfNoP2p, myRequestCount, time.Since(startRequestTime))
 	exitFunc := func(calleeClient *WsClient, comment string) {
 		// exitFunc: callee is logging out: release hub and port of this session
 
@@ -364,7 +340,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			// 3. so that non-paying subscriber don't get to keep the same ID
 			if rtcdb != "" {
 				err := kvMain.Put(dbBlockedIDs, urlID,
-					skv.DbEntry{dbEntry.StartTime, freeAccountBlockSecs, remoteAddr, ""}, true) // skipConfirm
+					skv.DbEntry{dbEntry.StartTime, /*freeAccountBlockSecs,*/ remoteAddr, ""}, true) // skipConfirm
 				if err != nil {
 					fmt.Printf("# exitFunc error db=%s bucket=%s block key=%s err=%v\n",
 						dbMainName, dbBlockedIDs, urlID, err)
@@ -432,10 +408,10 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	hubMapMutex.Unlock()
 
 	//fmt.Printf("/login run hub id=%s durationSecs=%d/%d id=%d rt=%v\n",
-	//	urlID,durationSecs1,durationSecs2, myRequestCount, time.Since(startRequestTime)) // rt=44ms, 113ms
+	//	urlID,maxRingSecs,maxTalkSecsIfNoP2p, myRequestCount, time.Since(startRequestTime)) // rt=44ms, 113ms
 	myHubMutex.RLock()
-	if hub.durationSecs1 != 0 {
-		hub.setDeadline(hub.durationSecs1)
+	if hub.maxRingSecs != 0 {
+		hub.setDeadline(hub.maxRingSecs,"login")
 	}
 	myHubMutex.RUnlock()
 
@@ -473,9 +449,9 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	responseString := fmt.Sprintf("%s|%d|%d|%d|%d|%d|%v",
 		wsAddr,
 		dbUser.ConnectedToPeerSecs,
-		dbUser.PermittedConnectedToPeerSecs,
+		0,
 		serviceSecs, //remainingServiceSecs,
-		dbEntry.DurationSecs,
+		0,
 		dbUser.PremiumLevel,
 		dbUser.Int2&1 != 0) // isHiddenCallee
 	fmt.Fprintf(w, responseString)

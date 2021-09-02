@@ -266,7 +266,7 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 // TODO temporarily outremarked
 //			if remoteAddr!="127.0.0.1" {
 //				// check if the requesting IP-addr has a valid account
-//				// this is supposed to prevent the same IP to register many different accounts
+//				// prevent the same IP from registering multiple accounts
 //				var foundIp byte = 0
 //				err := kvMain.SearchIp(dbRegisteredIDs, remoteAddr, &foundIp)
 //				if err!=nil {
@@ -287,8 +287,7 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 
 			unixTime := startRequestTime.Unix()
 			dbUserKey := fmt.Sprintf("%s_%d",registerID, unixTime)
-			dbUser := skv.DbUser{PremiumLevel:1, PermittedConnectedToPeerSecs:freeAccountTalkSecs, 
-				Ip1:remoteAddr, UserAgent:r.UserAgent()}
+			dbUser := skv.DbUser{PremiumLevel:1, Ip1:remoteAddr, UserAgent:r.UserAgent()}
 			err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
 			if err!=nil {
 				fmt.Printf("# /register error db=%s bucket=%s put key=%s err=%v\n",
@@ -296,7 +295,7 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 				fmt.Fprintf(w,"cannot register user")
 			} else {
 				err = kvMain.Put(dbRegisteredIDs, registerID,
-						skv.DbEntry{unixTime, freeAccountServiceSecs, remoteAddr, pw}, false)
+						skv.DbEntry{unixTime, /*freeAccountServiceSecs,*/ remoteAddr, pw}, false)
 				if err!=nil {
 					fmt.Printf("# /register error db=%s bucket=%s put key=%s err=%v\n",
 						dbMainName,dbRegisteredIDs,registerID,err)
