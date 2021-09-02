@@ -457,8 +457,7 @@ func readConfig(init bool) {
 	configIni, err := ini.Load(configFileName)
 	if err != nil {
 		configIni = nil
-		//fmt.Printf("# ini file '%s' NOT found, err=%v\n", configFileName, err)
-		return
+		// ignore the error and use default values for everything
 	}
 
 	readConfigLock.Lock()
