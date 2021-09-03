@@ -173,16 +173,15 @@ func GetRandomCalleeID() (string,error) {
 		err := kvMain.Get(dbRegisteredIDs,newCalleeId,&dbEntry)
 		if err==nil {
 			// found in dbRegisteredIDs
-			fmt.Printf("# getRandomCalleeID %v already exists in dbRegisteredIDs\n",newCalleeId)
+			fmt.Printf("# getRandomCalleeID %v exists already in dbRegisteredIDs\n",newCalleeId)
 			continue;
 		}
 		err = kvMain.Get(dbBlockedIDs,newCalleeId,&dbEntry)
 		if err==nil {
 			// found in dbBlockedIDs
-			fmt.Printf("# getRandomCalleeID %v already exists in dbBlockedIDs\n",newCalleeId)
+			fmt.Printf("# getRandomCalleeID %v exists already in dbBlockedIDs\n",newCalleeId)
 			continue;
 		}
-
 		// not found anywhere - newCalleeID is accepted!
 		//fmt.Printf("getRandomCalleeID %v is free\n",newCalleeId)
 		return newCalleeId, nil

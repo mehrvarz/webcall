@@ -334,13 +334,14 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				remoteAddr = remoteAddr2
 			}
 			*/
+
 			// mark calleeID as busy for a while
 			// 1. so that nobody calls the next guy trying to call the prev guy
 			// 2. so that noone else can pay-subscribe this id but the same guy with the same ip?
 			// 3. so that non-paying subscriber don't get to keep the same ID
 			if rtcdb != "" {
 				err := kvMain.Put(dbBlockedIDs, urlID,
-					skv.DbEntry{dbEntry.StartTime, /*freeAccountBlockSecs,*/ remoteAddr, ""}, true) // skipConfirm
+					skv.DbEntry{dbEntry.StartTime, remoteAddr, ""}, true) // skipConfirm
 				if err != nil {
 					fmt.Printf("# exitFunc error db=%s bucket=%s block key=%s err=%v\n",
 						dbMainName, dbBlockedIDs, urlID, err)

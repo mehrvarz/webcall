@@ -90,26 +90,16 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		bucketName := dbBlockedIDs
 		fmt.Printf("/dumpblocked dbName=%s bucketName=%s\n", dbMainName, bucketName)
 		db := kv.Db
-//		timeNow := time.Now()
 		err := db.Update(func(tx *bolt.Tx) error {
 			b := tx.Bucket([]byte(bucketName))
 			c := b.Cursor()
-			for k, v := c.First(); k != nil; k, v = c.Next() {
+			for id, v := c.First(); id != nil; id, v = c.Next() {
 				var dbEntry skv.DbEntry
 				d := gob.NewDecoder(bytes.NewReader(v))
 				d.Decode(&dbEntry)
 				starttime := time.Unix(dbEntry.StartTime,0)
-//				age := timeNow.Sub(starttime)
-//				printFunc(w,"blocked id=%s start=%d=%s lifeSecs=%d remainSecs=%d rip=%s\n",
-//					k, // is id
-//					dbEntry.StartTime, starttime.Format("2006-01-02 15:04:05"),
-//					dbEntry.DurationSecs,
-//					dbEntry.DurationSecs - int(age.Seconds()),
-//					dbEntry.Ip)
 				printFunc(w,"blocked id=%s start=%d=%s rip=%s\n",
-					k, // is id
-					dbEntry.StartTime, starttime.Format("2006-01-02 15:04:05"),
-					dbEntry.Ip)
+					id, dbEntry.StartTime, starttime.Format("2006-01-02 15:04:05"), dbEntry.Ip)
 			}
 			return nil
 		})
@@ -183,8 +173,9 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 	}
 
 	if urlPath=="/delblockedid" {
+		bucketName := dbBlockedIDs
 		var dbEntry skv.DbEntry
-		err := kv.Get(dbBlockedIDs,urlID,&dbEntry)
+		err := kv.Get(bucketName,urlID,&dbEntry)
 		if err!=nil {
 			printFunc(w,"# /delblockedid urlID not found\n")
 			return true
@@ -204,7 +195,6 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 			return true
 		}
 
-		bucketName := dbBlockedIDs
 		fmt.Printf("/delblockedid dbName=%s bucketName=%s\n", dbMainName, bucketName)
 
 		err = kv.Delete(bucketName, urlID)

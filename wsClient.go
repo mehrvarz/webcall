@@ -21,7 +21,7 @@ const (
 	writeWait = 20 * time.Second // see: "<-pingTicker.C"
 
 	// Time allowed to read the next pong message from the peer.
-	pongWait = 60 //* time.Second	// see: c.conn.SetReadDeadline(time.Now().Add(pongWait))
+	pongWait = 60 // see: c.conn.SetReadDeadline(time.Now().Add(pongWait))
 
 	// Send pings to peer with this period. Must be less than pongWait.
 	pingPeriod = (pongWait * 9) / 10 // =54 see: time.NewTicker(pingPeriod)
@@ -40,8 +40,8 @@ type WsClient struct {
 	unHiddenForCaller string
 	RemoteAddr string // without port
 	userAgent string
-	calleeID string // local ID
-	storeOnCloseDone bool
+	calleeID string
+	clearOnCloseDone bool
 	connType string
 	PremiumLevel int
 	pingStart time.Time
@@ -283,7 +283,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 		if c.Write([]byte("sessionId|"+calleeClientVersionTmp)) != nil {
 			return
 		}
-		c.storeOnCloseDone = false
+		c.clearOnCloseDone = false
 
 		// send list of waitingCaller and missedCalls to premium callee client
 		//fmt.Printf("%s c.PremiumLevel=%d\n",c.connType,c.PremiumLevel)
@@ -291,7 +291,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 			var waitingCallerSlice []CallerInfo
 			err := kvCalls.Get(dbWaitingCaller,c.calleeID,&waitingCallerSlice)
 			if err!=nil {
-				// we can ignore this
+				// can be ignored
 				//fmt.Printf("# serveWs (id=%s) failed to read dbWaitingCaller err=%v\n", urlID, err)
 			}
 
@@ -511,10 +511,6 @@ func (c *WsClient) receiveProcess(message []byte) {
 			c.hub.setDeadline(c.hub.maxTalkSecsIfNoP2p,"pickup")
 
 			// deliver max talktime to both clients
-//			go func(duration int) {
-//				time.Sleep(200 * time.Millisecond)
-//				c.hub.doBroadcast([]byte("sessionDuration|"+fmt.Sprintf("%d",duration)))
-//			}(c.hub.maxTalkSecsIfNoP2p)
 			c.hub.doBroadcast([]byte("sessionDuration|"+fmt.Sprintf("%d",c.hub.maxTalkSecsIfNoP2p)))
 		}
 		return
@@ -563,33 +559,22 @@ func (c *WsClient) receiveProcess(message []byte) {
 						} else if strings.TrimSpace(tok[1])=="Connected" {
 							// caller is reporting peerCon: both peers are now directly connected
 							readConfigLock.RLock()
-							myDisconnectCalleeWhenPeerConnected := disconnectCalleeWhenPeerConnected
-							myDisconnectCallerWhenPeerConnected := disconnectCallerWhenPeerConnected
+							myDisconCalleeOnPeerConnected := disconCalleeOnPeerConnected
+							myDisconCallerOnPeerConnected := disconCallerOnPeerConnected
 							readConfigLock.RUnlock()
-							if myDisconnectCalleeWhenPeerConnected || myDisconnectCalleeWhenPeerConnected {
+							if myDisconCalleeOnPeerConnected || myDisconCallerOnPeerConnected {
 								time.Sleep(20 * time.Millisecond)
 							}
-							if myDisconnectCalleeWhenPeerConnected {
-								fmt.Printf("%s disconnectCalleeWhenPeerConnected %s\n", c.connType, c.hub.calleeID)
-								//c.hub.doUnregister(c,"disconnectCalleeWhenPeerConnected")
-								c.hub.CalleeClient.Close("disconnectCalleeWhenPeerConnected")
+							if myDisconCalleeOnPeerConnected {
+								fmt.Printf("%s disconCalleeOnPeerConnected %s\n", c.connType, c.hub.calleeID)
+								//c.hub.doUnregister(c,"disconCalleeOnPeerConnected")
+								c.hub.CalleeClient.Close("disconCalleeOnPeerConnected")
 							}
-							if myDisconnectCallerWhenPeerConnected {
-								fmt.Printf("%s disconnectCallerWhenPeerConnected %s\n", c.connType, c.hub.calleeID)
-								//c.hub.doUnregister(c.hub.CallerClient,"disconnectCallerWhenPeerConnected")
-								c.hub.CallerClient.Close("disconnectCallerWhenPeerConnected")
+							if myDisconCallerOnPeerConnected {
+								fmt.Printf("%s disconCallerOnPeerConnected %s\n", c.connType, c.hub.calleeID)
+								//c.hub.doUnregister(c.hub.CallerClient,"disconCallerOnPeerConnected")
+								c.hub.CallerClient.Close("disconCallerOnPeerConnected")
 							}
-/*
-							readConfigLock.RLock()
-							if disconnectCallerWhenPeerConnected {
-								if logWantedFor("wscall") {
-									fmt.Printf("%s caller %s peer con -> ws-disconnect\n",
-										c.connType, c.hub.calleeID)
-								}
-								c.hub.doUnregister(c,"force caller discon")
-							}
-							readConfigLock.RUnlock()
-*/
 						}
 					}
 				}

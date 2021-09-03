@@ -97,8 +97,8 @@ var wssUrl = ""
 var	shutdownStarted rkv.AtomBool
 var maintenanceMode = false
 var allowNewAccounts = true
-var disconnectCalleeWhenPeerConnected = false
-var disconnectCallerWhenPeerConnected = true
+var disconCalleeOnPeerConnected = false
+var disconCallerOnPeerConnected = true
 var calleeClientVersion = ""
 
 var hubMap map[string]*Hub
@@ -116,7 +116,6 @@ var multiCallees = ""
 var logevents = ""
 var logeventMap map[string]bool
 var logeventMutex sync.RWMutex
-var calllog = ""
 var httpRequestCountMutex sync.RWMutex
 var httpRequestCount = 0
 var httpResponseCount = 0
@@ -483,6 +482,9 @@ func readConfig(init bool) {
 
 		dbPath = readIniString(configIni, "dbPath", dbPath, "db/")
 
+		wsUrl = readIniString(configIni, "wsUrl", wsUrl, "")
+		wssUrl = readIniString(configIni, "wssUrl", wssUrl, "")
+
 		twitterKey = readIniString(configIni, "twitterKey", twitterKey, "")
 		twitterSecret = readIniString(configIni, "twitterKey", twitterKey, "")
 
@@ -497,7 +499,6 @@ func readConfig(init bool) {
 
 	logevents = readIniString(configIni, "logevents", logevents, "")
 	logeventSlice := strings.Split(logevents, ",")
-
 	logeventMutex.Lock()
 	logeventMap = make(map[string]bool)
 	for _, s := range logeventSlice {
@@ -505,21 +506,17 @@ func readConfig(init bool) {
 	}
 	logeventMutex.Unlock()
 
-	disconnectCalleeWhenPeerConnected = readIniBoolean(configIni,
-		"disconnectCalleeWhenPeerConnected", disconnectCalleeWhenPeerConnected, false)
-	disconnectCallerWhenPeerConnected = readIniBoolean(configIni,
-		"disconnectCallerWhenPeerConnected", disconnectCallerWhenPeerConnected, true)
+	disconCalleeOnPeerConnected = readIniBoolean(configIni,
+		"disconCalleeOnPeerConnected", disconCalleeOnPeerConnected, false)
+	disconCallerOnPeerConnected = readIniBoolean(configIni,
+		"disconCallerOnPeerConnected", disconCallerOnPeerConnected, true)
 	calleeClientVersion = readIniString(configIni, "calleeClientVersion", calleeClientVersion, "")
 
 	maxRingSecs = readIniInt(configIni, "maxRingSecs", maxRingSecs, 300, 1)
 	maxTalkSecsIfNoP2p = readIniInt(configIni, "maxTalkSecsIfNoP2p", maxTalkSecsIfNoP2p, 600, 1)
 
-	wsUrl = readIniString(configIni, "wsUrl", wsUrl, "")
-	wssUrl = readIniString(configIni, "wssUrl", wssUrl, "")
-
 	turnDebugLevel = readIniInt(configIni, "turnDebugLevel", turnDebugLevel, 3, 1)
 	adminEmail = readIniString(configIni, "adminEmail", adminEmail, "")
-	calllog = readIniString(configIni, "calllog", calllog, "")
 
 	readConfigLock.Unlock()
 }

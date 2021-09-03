@@ -167,15 +167,14 @@ func httpAvail(w http.ResponseWriter, r *http.Request, urlID string, urlPath str
 		// checks if ID is free to be registered for a new calle
 		// this is NOT the case if it is listed as registered or blocked
 		fmt.Printf("/avail check id=%s for rip=%s\n",checkID,remoteAddr)
-
-		var dbEntryRegistered skv.DbEntry
 		var dbEntryBlocked skv.DbEntry
 		// checkID is blocked in dbBlockedIDs
 		err := kvMain.Get(dbBlockedIDs,checkID,&dbEntryBlocked)
 		if err!=nil {
 			// id is not listed in dbBlockedIDs
 			fmt.Printf("/avail check id=%s not found in dbBlockedIDs\n",checkID)
-			err = kvMain.Get(dbRegisteredIDs,checkID,&dbEntryRegistered)
+			var dbEntryRegistered skv.DbEntry
+			err := kvMain.Get(dbRegisteredIDs,checkID,&dbEntryRegistered)
 			if err!=nil {
 				// id is not listed in dbRegisteredIDs
 				//fmt.Printf("avail check id=%s not found in dbRegisteredIDs\n",checkID)
@@ -192,10 +191,9 @@ func httpAvail(w http.ResponseWriter, r *http.Request, urlID string, urlPath str
 			fmt.Fprintf(w, "true")
 			return
 		}
-
 		fmt.Printf("/avail check id=%s for rip=%s is negative\n",checkID,remoteAddr)
-		fmt.Fprintf(w, "false")
 	}
+	fmt.Fprintf(w, "false")
 	return
 }
 
@@ -252,7 +250,6 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 
 			// this can be a fake request
 			// we need to verify if registerID is in use
-			//fmt.Printf("avail check id=%s not found in dbBlockedIDs\n",checkID)
 			var dbEntryRegistered skv.DbEntry
 			err := kvMain.Get(dbRegisteredIDs,registerID,&dbEntryRegistered)
 			if err==nil {
