@@ -134,6 +134,9 @@ type wsClientDataType struct {
 var wsClientMap map[uint64]wsClientDataType
 var wsClientMutex sync.RWMutex
 
+var timeLocationString = ""
+var timeLocation *time.Location = nil
+
 func main() {
 	flag.Parse()
 	if *version {
@@ -379,7 +382,6 @@ func main() {
 }
 
 func getStats() string {
-	// get number of total clients + number of active calls + number of active p2p/p2p-calls
 	var numberOfOnlineCallees int64
 	var numberOfOnlineCallers int64
 	numberOfActivePureP2pCalls := 0
@@ -397,48 +399,30 @@ func getStats() string {
 	}
 	hubMapMutex.RUnlock()
 
-	// this will show the total # of callees on all server instances
-	var numberOfGlobalCallees int64
-	var numberOfGlobalCallers int64
-	if rtcdb=="" {
-		numberOfGlobalCallees,numberOfGlobalCallers,_ = GetOnlineCalleeCount(true)
-	} else {
-		var err error
-		numberOfGlobalCallees,numberOfGlobalCallers,err = rkv.GetOnlineCalleeCount(true)
-		if err!=nil {
-			fmt.Printf("# getStats GetOnlineCalleeCount err=%v\n", err)
-		}
-	}
-
 	numberOfCallsTodayMutex.RLock()
-	retStr := fmt.Sprintf("stats "+
-		"loc:%d/%d/p%d "+
-		"glob:%d/%d "+
-		"callsToday:%d "+
-		"callSecs:%d "+
+	retStr := fmt.Sprintf("stats callees:%d callers:%d p2p:%d "+
+		"callsToday:%d callSecs:%d "+
 		"gor:%d",
 		numberOfOnlineCallees, numberOfOnlineCallers, numberOfActivePureP2pCalls,
-		numberOfGlobalCallees, numberOfGlobalCallers,
-		numberOfCallsToday,			// from hub.processTimeValues() only for this server instance
-		numberOfCallSecondsToday,	// from hub.processTimeValues() only for this server instance
+		numberOfCallsToday, numberOfCallSecondsToday, // feed by hub.processTimeValues()
 		runtime.NumGoroutine())
 	numberOfCallsTodayMutex.RUnlock()
 	return retStr
 }
 
-var locationGermanyForTime *time.Location = nil
 func operationalNow() time.Time {
-	if locationGermanyForTime == nil {
-		// use german time
-		loc, err := time.LoadLocation("Europe/Berlin")
-		if err != nil {
-			panic(err)
+	if timeLocationString!="" {
+		// useful if your server is hosted in another country than you are
+		if timeLocation == nil {
+			loc, err := time.LoadLocation(timeLocationString)
+			if err != nil {
+				panic(err)
+			}
+			timeLocation = loc
 		}
-		locationGermanyForTime = loc
+		return time.Now().In(timeLocation)
 	}
-
-	// get the actual real time
-	return time.Now().In(locationGermanyForTime)
+	return time.Now()
 }
 
 func logWantedFor(topic string) bool {
@@ -490,6 +474,8 @@ func readConfig(init bool) {
 
 		vapidPublicKey = readIniString(configIni, "vapidPublicKey", vapidPublicKey, "")
 		vapidPrivateKey = readIniString(configIni, "vapidPrivateKey", vapidPrivateKey, "")
+
+		timeLocationString = readIniString(configIni, "timeLocation", timeLocationString, "")
 	}
 
 	maintenanceMode = readIniBoolean(configIni, "maintenanceMode", maintenanceMode, false)

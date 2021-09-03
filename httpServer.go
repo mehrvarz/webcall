@@ -281,23 +281,22 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				// calleeIdFromCookie == calleeID (this is good) - now get PW from kvHashedPw
 				err = kvHashedPw.Get(dbHashedPwBucket,cookie.Value,&pwIdCombo)
 				if err!=nil {
-					// caller.js is triggering this
-					fmt.Printf("# kvHashedPw.Get %v err=%v\n", r.URL, err)
+					// callee is using an unknown cookie
+					fmt.Printf("# kvHashedPw.Get %v unknown cookie err=%v\n", r.URL, err)
+					cookie = nil
+				} else if calleeID!="" && pwIdCombo.CalleeId != calleeID {
+					// callee is using wrong cookie
+					fmt.Printf("# cookie available for id=(%s) != calleeID=(%s) clear cookie\n",
+						pwIdCombo.CalleeId, calleeID)
+					cookie = nil
+				} else if pwIdCombo.Pw=="" {
+					fmt.Printf("# cookie available, pw empty, pwIdCombo=(%v) ID=%s clear cookie\n",
+						pwIdCombo, calleeID)
 					cookie = nil
 				} else {
-					if calleeID!="" && pwIdCombo.CalleeId != calleeID {
-						fmt.Printf("# cookie available for id=(%s) != calleeID=(%s) clear cookie\n",
-							pwIdCombo.CalleeId, calleeID)
-						cookie = nil
-					} else if pwIdCombo.Pw=="" {
-						fmt.Printf("# cookie available, pw empty, pwIdCombo=(%v) ID=%s clear cookie\n",
-							pwIdCombo, calleeID)
-						cookie = nil
-					} else {
-						//fmt.Printf("cookie available for id=(%s) (%s)(%s) reqPath=%s ref=%s rip=%s\n",
-						//	pwIdCombo.CalleeId, calleeID, urlID, r.URL.Path, referer, remoteAddrWithPort)
-						pw = pwIdCombo.Pw
-					}
+					//fmt.Printf("cookie available for id=(%s) (%s)(%s) reqPath=%s ref=%s rip=%s\n",
+					//	pwIdCombo.CalleeId, calleeID, urlID, r.URL.Path, referer, remoteAddrWithPort)
+					pw = pwIdCombo.Pw
 				}
 			}
 		}
