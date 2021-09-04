@@ -36,7 +36,6 @@ type Hub struct {
 	IsUnHiddenForCallerAddr string
 	ConnectedCallerIp string
 	ClientIpAddr string
-	ServerIpAddr string // GetOutboundIP()
 	WsUrl string
 	WssUrl string
 	exitFunc func(*WsClient, string)

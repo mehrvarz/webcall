@@ -120,7 +120,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			return
 		}
 
-		err := kvMain.Get(dbRegisteredIDs, urlID, &dbEntry) // costly A 40ms
+		err := kvMain.Get(dbRegisteredIDs, urlID, &dbEntry)
 		if err != nil {
 			fmt.Printf("# /login error db=%s bucket=%s key=%s get registeredID err=%v\n",
 				dbMainName, dbRegisteredIDs, urlID, err)
@@ -154,7 +154,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		//	urlID, remoteAddr, myRequestCount, time.Since(startRequestTime)) // rt=40ms
 
 		dbUserKey := fmt.Sprintf("%s_%d", urlID, dbEntry.StartTime)
-		err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser) // costly B 35ms
+		err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 		if err != nil {
 			fmt.Printf("# /login error db=%s bucket=%s get key=%v err=%v\n",
 				dbMainName, dbUserBucket, dbUserKey, err)
@@ -171,13 +171,9 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		//fmt.Printf("/login set wsClientMap[%d] for ID=(%s)\n", wsClientID, globalID)
 		// hub.WsClientID and hub.ConnectedCallerIp will be set by wsclient.go
 
-		if rtcdb != "" {
-			// NOTE: globalID will be globaly unique and will differ from urlID ("answie" -> "answie!94874")
-			//       globalID will be stored in hub.calleeID
-			//       urlID    will be stored in client.calleeID
-			// NOTE: skvHub.ServerIpAddr will be set automatically by rkv.StoreCalleeInHubMap()
-			// NOTE: skvHub.ClientIpAddr will be uploaded via StoreCalleeInHubMap() and used as global hub
-			// NOTE: ClientIpAddr in the global hub will be used for turn auth (via SearchIpInHubMap)
+		if rtcdb == "" {
+			globalID,_,_ = StoreCalleeInHubMap(urlID, nil, multiCallees, false)
+		} else {
 			var rkvHub rkv.Hub
 			rkvHub.ClientIpAddr = remoteAddrWithPort //remoteAddr
 
@@ -199,19 +195,15 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			readConfigLock.RUnlock()
 
 			globalID, lenGlobalHubMap, err =
-				rkv.StoreCalleeInHubMap(urlID, &rkvHub, myMultiCallees, false) // costly C 37ms
+				rkv.StoreCalleeInHubMap(urlID, &rkvHub, myMultiCallees, false)
 			if err != nil || globalID == "" {
 				fmt.Printf("# /login id=(%s) rkv.StoreCalleeInHubMap(%s) err=%v\n", globalID, urlID, err)
 				fmt.Fprintf(w, "noservice")
 				return
 			}
-		} else {
-			globalID = urlID
 		}
-
-		//fmt.Printf("/login globalID=(%s) rip=%s id=%d rt=%v\n",
-		//	globalID, remoteAddr, myRequestCount, time.Since(startRequestTime))	// rt=44ms, 112ms
-		// no cost between here and /login run hub
+		//fmt.Printf("/login globalID=(%s) urlID=(%s) rip=%s id=%d rt=%v\n",
+		//	globalID, urlID, remoteAddr, myRequestCount, time.Since(startRequestTime))
 
 		if cookie == nil && !nocookie {
 			// create new cookie with name=webcallid value=urlID
@@ -239,7 +231,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				SameSite: http.SameSiteStrictMode,
 				Expires:  expiration}
 			cookie = &cookieObj
-			http.SetCookie(w, cookie) // no cost
+			http.SetCookie(w, cookie)
 			if logWantedFor("cookie") {
 				fmt.Printf("/login cookie (%v) created id=%d rt=%v\n",
 					cookieValue, myRequestCount, time.Since(startRequestTime)) // rt=44ms, 112ms
@@ -250,7 +242,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			pwIdCombo.Created = time.Now().Unix()
 			pwIdCombo.Expiration = expiration.Unix()
 
-			skipConfirm := true // low cost
+			skipConfirm := true
 			err = kvHashedPw.Put(dbHashedPwBucket, cookieValue, pwIdCombo, skipConfirm)
 			if err != nil {
 				fmt.Printf("# /login persist PwIdCombo error db=%s bucket=%s cookie=%s err=%v\n",
@@ -291,29 +283,9 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	readConfigLock.RUnlock()
 	var myHubMutex sync.RWMutex
 	hub := newHub(globalID, myMaxRingSecs, myMaxTalkSecsIfNoP2p, dbEntry.StartTime)
-/*
-	if hub == nil {
-		fmt.Printf("# /login create newhub fail id=%s/%s\n", urlID, globalID)
-		if globalID != "" {
-			hubMapMutex.Lock()
-			delete(hubMap, globalID)
-			hubMapMutex.Unlock()
-
-			if rtcdb != "" {
-				count, err := rkv.DeleteFromHubMap(globalID)
-				if err != nil {
-					fmt.Printf("# /login DeleteFromHubMap id=%s err=%v\n", globalID, err)
-				} else {
-					lenGlobalHubMap = count
-				}
-			}
-		}
-		fmt.Fprintf(w, "noservice")
-		return
-	}
-*/
 	//fmt.Printf("/login newHub urlID=%s duration %d/%d id=%d rt=%v\n",
 	//	urlID, maxRingSecs, maxTalkSecsIfNoP2p, myRequestCount, time.Since(startRequestTime))
+
 	exitFunc := func(calleeClient *WsClient, comment string) {
 		// exitFunc: callee is logging out: release hub and port of this session
 
@@ -395,13 +367,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	wsClientMutex.Unlock()
 
 	//fmt.Printf("/login newHub store in local hubMap with globalID=%s\n", globalID)
-	// NOTE: urlID as key would not be unique (answie/answie!1030569238)
-	// TODO why do we not use StoreCalleeInHubMap() ?
-	//		globalID, lenGlobalHubMap, err = StoreCalleeInHubMap(urlID, &hub, myMultiCallees, false)
-	// TODO do we need to set hub.ServerIpAddr ?
-	//		if hub.ServerIpAddr == "" {
-	//			hub.ServerIpAddr = skv.MyOutBoundIpAddr
-	//		}
 	hubMapMutex.Lock()
 	myHubMutex.RLock()
 	hubMap[globalID] = hub
@@ -410,13 +375,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 	//fmt.Printf("/login run hub id=%s durationSecs=%d/%d id=%d rt=%v\n",
 	//	urlID,maxRingSecs,maxTalkSecsIfNoP2p, myRequestCount, time.Since(startRequestTime)) // rt=44ms, 113ms
-/*
-	myHubMutex.RLock()
-	if hub.maxRingSecs != 0 {
-		hub.setDeadline(hub.maxRingSecs,"login")
-	}
-	myHubMutex.RUnlock()
-*/
 
 	wsAddr := fmt.Sprintf("ws://%s:%d/ws", hostname, wsPort)
 	readConfigLock.RLock()

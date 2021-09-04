@@ -57,8 +57,8 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		return
 	}
 	if globalID == "" {
-		// no error: no such callee (urlID) is currently avaliable
-		//fmt.Printf("/online GetOnlineCallee(%s) cur not avail rip=%s\n", urlID, remoteAddr)
+		// callee urlID is currently NOT online (this is not an error)
+		fmt.Printf("/online callee %s is cur NOT online rip=%s\n", urlID, remoteAddr)
 		fmt.Fprintf(w, "notavail")
 		return
 	}

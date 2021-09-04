@@ -106,27 +106,25 @@ func DeleteFromHubMap(id string) (int64,error) {
 	return int64(len(hubMap)),nil
 }
 
-/*
 func StoreCalleeInHubMap(key string, hub *Hub, multiCallees string, skipConfirm bool) (string,int64,error) {
 	//fmt.Printf("StoreCalleeInHubMap start key=%s\n",key)
-	if hub.ServerIpAddr == "" {
-		hub.ServerIpAddr = skv.MyOutBoundIpAddr
-	}
-
+	//if hub!=nil && hub.ServerIpAddr == "" {
+	//	hub.ServerIpAddr = skv.MyOutBoundIpAddr
+	//}
 	hubMapMutex.Lock()
 	defer hubMapMutex.Unlock()
 
 	if strings.Index(multiCallees,"|"+key+"|")>=0 {
-		newKey := key
+		newKey := ""
 		idx := 0
 		for {
+			newKey = fmt.Sprintf("%s!%d",key,idx)
 			_,ok := hubMap[newKey]
 			//fmt.Printf("StoreCalleeInHubMap try key=%s ok=%v idx=%d\n",newKey,ok,idx)
 			if !ok {
 				break
 			}
 			idx++
-			newKey = fmt.Sprintf("%s--%d",key,idx)
 		}
 		key = newKey
 	}
@@ -134,7 +132,6 @@ func StoreCalleeInHubMap(key string, hub *Hub, multiCallees string, skipConfirm 
 	hubMap[key] = hub
 	return key, int64(len(hubMap)), nil
 }
-*/
 
 /*
 func GetCallerIpInHubMap(calleeId string) (string,error) {
