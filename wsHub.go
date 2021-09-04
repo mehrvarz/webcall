@@ -77,8 +77,8 @@ func (h *Hub) setDeadline(secs int, comment string) {
 			// timer has ended
 			if h.dontCancel {
 				// timer was aborted
-				fmt.Printf("setDeadline reached; cancel; no disconnect caller (secs=%d %v)\n",
-					secs,timeStart.Format("2006-01-02 15:04:05"))
+				//fmt.Printf("setDeadline reached; cancel; no disconnect caller (secs=%d %v)\n",
+				//	secs,timeStart.Format("2006-01-02 15:04:05"))
 			} else {
 				// timer valid: we need to disconnect the clients
 				fmt.Printf("setDeadline reached; disconnect caller (secs=%d %v)\n",
@@ -87,9 +87,11 @@ func (h *Hub) setDeadline(secs int, comment string) {
 					// if there is a caller (for instance during ringing), we only disconnect this caller
 					h.CallerClient.Close("setDeadline "+comment)
 					h.CallerClient.isConnectedToPeer.Set(false)
-				} else {
+				} else if h.CalleeClient!=nil {
 					// otherwise we disconnect this callee
-					h.doUnregister(h.CalleeClient,"setDeadline "+comment)
+					//h.doUnregister(h.CalleeClient,"setDeadline "+comment)
+					h.doBroadcast([]byte("cancel|deadline"))
+					h.CalleeClient.peerConHasEnded("deadline")
 				}
 			}
 		}()
@@ -153,7 +155,7 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 		h.exitFunc(client,comment)
 	} else {
 		// clear caller peer-connection flag and callerIp in HubMap
-		client.peerConHasEnded()
+		client.peerConHasEnded("unregister "+comment)
 	}
 
 	if logWantedFor("hub") {

@@ -365,7 +365,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 		return
 
 	} else if cmd=="cancel" {
-		c.peerConHasEnded()
+		c.peerConHasEnded("cancel")
 		return
 
 	} else if cmd=="calleeHidden" {
@@ -648,9 +648,10 @@ func (c *WsClient) Write(b []byte) error {
 	return nil
 }
 
-func (c *WsClient) peerConHasEnded() {
-	// the peerConnection has ended either bc the callee has unregistered
-	// or bc the callee has sent cmd "cancel|..."
+func (c *WsClient) peerConHasEnded(comment string) {
+	// the peerConnection has ended, either bc one side has sent cmd "cancel|..."
+	// or bc one side has unregistered
+	c.hub.setDeadline(0,comment)
 	if c.isConnectedToPeer.Get() {
 		fmt.Printf("%s peerConHasEnded %s rip=%s\n", c.connType, c.hub.calleeID, c.RemoteAddr)
 		c.isConnectedToPeer.Set(false)
@@ -673,6 +674,7 @@ func (c *WsClient) peerConHasEnded() {
 			c.hub.lastCallStartTime = 0
 		}
 		c.hub.HubMutex.Unlock()
+
 		if rtcdb!="" {
 			err := rkv.StoreCallerIpInHubMap(c.hub.calleeID,"", false)
 			if err!=nil {
