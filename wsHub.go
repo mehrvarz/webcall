@@ -26,7 +26,7 @@ type Hub struct {
 	maxRingSecs int //durationSecs1 int // max wait secs till caller arrives
 	maxTalkSecsIfNoP2p int // durationSecs2
 	timer *time.Timer // expires when durationSecs ends; terminates session
-	dontCancel bool // set to prevent timer from calling cancelFunc()
+	dontCancel bool // set to prevent timer from calling cancelFunc() // TODO atomic?
 	lastCallStartTime int64
 	LocalP2p bool
 	RemoteP2p bool

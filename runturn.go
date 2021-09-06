@@ -9,6 +9,7 @@ import (
 	"time"
 	"sync"
 	"github.com/mehrvarz/webcall/rkv"
+	//"github.com/pion/turn/v2" // https://github.com/pion/turn/issues/206#issuecomment-907091251
 	"github.com/mehrvarz/turn/v2"
 	"github.com/pion/logging"
 )
@@ -21,7 +22,7 @@ var recentTurnCallerIps map[string]TurnCaller
 var recentTurnCallerIpMutex sync.RWMutex
 
 func runTurnServer() {
-	if !runTurn {
+	if turnPort<=0 {
 		return
 	}
 
