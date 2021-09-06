@@ -70,7 +70,6 @@ var wsPort = 0
 var wssPort = 0
 var htmlPath = ""
 var insecureSkipVerify = false
-var runTurn = false
 var turnIP = ""
 var turnPort = 0
 var turnRealm = ""
@@ -453,11 +452,10 @@ func readConfig(init bool) {
 		wssPort = readIniInt(configIni, "wssPort", wssPort, 0, 1)
 		htmlPath = readIniString(configIni, "htmlPath", htmlPath, "webroot")
 		insecureSkipVerify = readIniBoolean(configIni, "insecureSkipVerify", insecureSkipVerify, false)
-		runTurn = readIniBoolean(configIni, "runTurn", runTurn, false)
 		turnIP = readIniString(configIni, "turnIP", turnIP, "")
-		turnPort = readIniInt(configIni, "turnPort", turnPort, 3739, 1)
+		turnPort = readIniInt(configIni, "turnPort", turnPort, 0, 1) // 3739
 		turnRealm = readIniString(configIni, "turnRealm", turnRealm, "")
-		pprofPort = readIniInt(configIni, "pprofPort", pprofPort, 0, 1) //8980
+		pprofPort = readIniInt(configIni, "pprofPort", pprofPort, 0, 1) // 8980
 
 		rtcdb = readIniString(configIni, "rtcdb", rtcdb, "")
 		if rtcdb!="" && strings.Index(rtcdb, ":") < 0 {
