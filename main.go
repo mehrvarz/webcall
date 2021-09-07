@@ -318,6 +318,7 @@ func main() {
 
 	go httpServer()
 	go runTurnServer()
+	go ticker3min()
 	go ticker30sec() // periodically log stats
 	go ticker10sec() // periodically call readConfig()
 	go ticker2sec()  // periodically check for remainingTalkSecs underruns
