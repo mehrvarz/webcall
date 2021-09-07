@@ -24,8 +24,7 @@ func ticker3min() {
 		readConfigLock.RLock()
 		myrtcdb := rtcdb
 		readConfigLock.RUnlock()
-
-		if myrtcdb!="" {
+		if myrtcdb=="" {
 			// delete all twitter notification tweets that are older than 1h
 			readConfigLock.RLock()
 			mytwitterKey := twitterKey
@@ -90,12 +89,20 @@ func ticker3min() {
 			// call backupScript
 			readConfigLock.RLock()
 			mybackupScript := backupScript
+			mybackupPauseMinutes := backupPauseMinutes
 			readConfigLock.RUnlock()
-			if mybackupScript!="" {
+			if mybackupScript!="" && mybackupPauseMinutes>0 {
 				timeNow := time.Now()
-				if timeNow.Sub(lastBackupTime) >= time.Duration(backupPauseMinutes) * time.Minute {
-					if _, err := os.Stat(backupScript); err == nil {
-						if callBackupScript(backupScript) == nil {
+				diff := timeNow.Sub(lastBackupTime)
+				if diff < time.Duration(mybackupPauseMinutes) * time.Minute {
+					fmt.Printf("ticker3min next bckupTime not yet reached (%d < %d)\n",
+						diff/time.Minute, mybackupPauseMinutes)
+				} else {
+					_,err := os.Stat(mybackupScript)
+					if err!=nil {
+						fmt.Printf("# ticker3min file %s err=%v\n",mybackupScript,err)
+					} else {
+						if callBackupScript(mybackupScript) == nil {
 							lastBackupTime = timeNow
 						}
 					}
@@ -109,7 +116,7 @@ func callBackupScript(scriptName string) error {
 	skv.DbMutex.Lock()
 	defer skv.DbMutex.Unlock()
 
-	fmt.Printf("callBackupScript sync db's %s\n",scriptName)
+	fmt.Printf("callBackupScript sync db's (%s)\n",scriptName)
 
 	kv := kvMain.(skv.SKV)
 	if err := kv.Db.Sync(); err != nil {
