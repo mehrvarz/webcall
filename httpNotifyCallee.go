@@ -542,7 +542,7 @@ func webpushSend(subscription string, msg string, urlID string) (error,int) {
 	// Send Notification
 	readConfigLock.RLock()
 	httpResponse, err := webpush.SendNotification([]byte(msg), s, &webpush.Options{
-		Subscriber:      adminEmail, //"admin@timur.mobi", // Do not use "mailto:"
+		Subscriber:      adminEmail, // Do not use "mailto:"
 		VAPIDPublicKey:  vapidPublicKey,
 		VAPIDPrivateKey: vapidPrivateKey,
 		TTL:             60,

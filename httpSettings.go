@@ -50,6 +50,7 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		"webPushUA1": dbUser.Str2ua,
 		"webPushSubscription2": dbUser.Str3,
 		"webPushUA2": dbUser.Str3ua,
+		"vapidPublicKey": vapidPublicKey,
 	})
 	if err != nil {
 		fmt.Printf("# /getsettings (%s) fail on json.Marshal rip=%s\n", calleeID, remoteAddr)

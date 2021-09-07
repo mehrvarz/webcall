@@ -10,6 +10,7 @@ const webpush1uaElement = document.getElementById("webpush1ua");
 const webpush2uaElement = document.getElementById("webpush2ua");
 var calleeID = "";
 var calleeLink = "";
+var vapidPublicKey = ""
 
 window.onload = function() {
 	let id = getUrlParams("id");
@@ -53,6 +54,10 @@ function prepareSettings(xhrresponse) {
 
 	// json parse xhrresponse
 	serverSettings = JSON.parse(xhrresponse);
+	if(typeof serverSettings.vapidPublicKey!=="undefined") {
+		//console.log('serverSettings.vapidPublicKey',serverSettings.vapidPublicKey);
+		vapidPublicKey = serverSettings.vapidPublicKey
+	}
 	if(typeof serverSettings.nickname!=="undefined") {
 		console.log('serverSettings.nickname',serverSettings.nickname);
 		document.getElementById("nickname").value = serverSettings.nickname;
@@ -161,10 +166,6 @@ function webPushSubscribe(deviceNumber) {
 		alert("WebPush fail: no pushManager support");
 		return
 	}
-
-	// NOTE this is a copy of the same string in main.go
-	const vapidPublicKey =
-		"BJDZysuv3-r2bYv-M3VDjs8WuntcLANVlwqHvhTdDLHbxnrGE_b2nN9IBNEKqtxQ6UJMZdxt3AoEq3I5ZD4yuWs";
 
 /*
 	console.log("webPushSubscribe device=%d -> serviceWorker.register...",deviceNumber);
@@ -320,8 +321,6 @@ function webPushSubscribe(deviceNumber) {
 			deliverSubscription(subscription);
 		})
 		.catch(function(err) {
-			// NOTE: old FF mobile (v68) gets err:
-			// "invalidStateError: a subscription with a different application server key already exists"
 			gotResponse = 2;
 			console.log("	",err);
 			alert("webPushSubscribe subscribe error\n"+err);
