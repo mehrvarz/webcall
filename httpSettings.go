@@ -42,6 +42,7 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 
 	calleeName := dbUser.Name
 	var reqBody []byte
+	readConfigLock.RLock() // for vapidPublicKey
 	reqBody, err = json.Marshal(map[string]string{
 		"nickname": calleeName,
 		"twname": dbUser.Email2, // twitter handle (starting with @)
@@ -52,6 +53,7 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		"webPushUA2": dbUser.Str3ua,
 		"vapidPublicKey": vapidPublicKey,
 	})
+	readConfigLock.RUnlock()
 	if err != nil {
 		fmt.Printf("# /getsettings (%s) fail on json.Marshal rip=%s\n", calleeID, remoteAddr)
 		return
