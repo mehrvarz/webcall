@@ -71,7 +71,7 @@ func httpServer() {
 				Addr: addrPort,
 				ReadHeaderTimeout: 2 * time.Second,
 				ReadTimeout: 3 * time.Second,
-				WriteTimeout: 10 * time.Second,	// includes the header read and the first byte wait
+				WriteTimeout: 20 * time.Second,	// includes the header read and the first byte wait
 				IdleTimeout: 30 * time.Second,
 				//IdleConnTimeout: 60 * time.Second,
 				//MaxIdleConns: 100, // TODO
@@ -116,7 +116,7 @@ func httpServer() {
 				Addr: addrPort,
 				ReadHeaderTimeout: 2 * time.Second,
 				ReadTimeout: 3 * time.Second,
-				WriteTimeout: 10 * time.Second,	// from end of req header read to the end of the response write
+				WriteTimeout: 20 * time.Second,	// from end of req header read to the end of the response write
 				IdleTimeout: 30 * time.Second,
 				//IdleConnTimeout: 60 * time.Second,
 				//MaxIdleConns: 100, // TODO
@@ -461,11 +461,6 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-//		if urlPath=="/stats" {
-//			printFunc(w, getStats()+"\n")
-//			return
-//		}
-
 		if httpAdmin(kvMain.(skv.SKV), w, r, urlPath, urlID, remoteAddr) {
 			return
 		}
@@ -476,9 +471,6 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func waitingCallerToCallee(calleeID string, waitingCallerSlice []CallerInfo, missedCalls []CallerInfo, hubclient *WsClient) {
-//	if dbUser.PremiumLevel==0 {
-//		return
-//	}
 	// TODO before we send the waitingCallerSlice, we should remove all elements that are older than 10min
 	if waitingCallerSlice!=nil {
 		//fmt.Printf("notifyCallee json.Marshal(waitingCallerSlice)...\n")

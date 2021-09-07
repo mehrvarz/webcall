@@ -465,7 +465,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			myHubMutex.RLock()
 			if hub != nil && !hub.CalleeLogin.Get() {
 				myHubMutex.RUnlock()
-				fmt.Printf("/login ws-connect timeout %ds removing %s/%s rip=%s\n",
+				fmt.Printf("# /login ws-connect timeout %ds removing %s/%s rip=%s\n",
 					waitedFor, urlID, globalID, remoteAddr)
 				if globalID != "" {
 					hubMapMutex.Lock()

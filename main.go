@@ -390,15 +390,17 @@ func getStats() string {
 	numberOfActivePureP2pCalls := 0
 	hubMapMutex.RLock()
 	for _,hub := range hubMap {
-		numberOfOnlineCallees++
-		hub.HubMutex.RLock()
-		if hub.lastCallStartTime>0 && hub.CallerClient!=nil {
-			numberOfOnlineCallers++
-			if hub.LocalP2p && hub.RemoteP2p {
-				numberOfActivePureP2pCalls++
+		if hub!=nil {
+			numberOfOnlineCallees++
+			hub.HubMutex.RLock()
+			if hub.lastCallStartTime>0 && hub.CallerClient!=nil {
+				numberOfOnlineCallers++
+				if hub.LocalP2p && hub.RemoteP2p {
+					numberOfActivePureP2pCalls++
+				}
 			}
+			hub.HubMutex.RUnlock()
 		}
-		hub.HubMutex.RUnlock()
 	}
 	hubMapMutex.RUnlock()
 
