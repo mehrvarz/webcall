@@ -21,84 +21,88 @@ func ticker3min() {
 			break
 		}
 
-		// delete all twitter notification tweets that are older than 1h
 		readConfigLock.RLock()
-		mytwitterKey := twitterKey
-		mytwitterSecret := twitterSecret
+		myrtcdb := rtcdb
 		readConfigLock.RUnlock()
-		if mytwitterKey!="" && mytwitterSecret!="" {
-			kv := kvNotif.(skv.SKV)
-			kv.Db.Update(func(tx *bolt.Tx) error {
-				unixNow := time.Now().Unix()
-				//fmt.Printf("ticker3min release outdated entries from db=%s bucket=%s\n",
-				//	dbNotifName, dbSentNotifTweets)
-				b := tx.Bucket([]byte(dbSentNotifTweets))
-				if b==nil {
-					fmt.Printf("# ticker3min bucket=(%s) no tx\n",dbSentNotifTweets)
-					return nil
-				}
-				c := b.Cursor()
-				deleteCount := 0
-				for k, v := c.First(); k != nil; k, v = c.Next() {
-					idStr := string(k)
-					d := gob.NewDecoder(bytes.NewReader(v))
-					var notifTweet skv.NotifTweet
-					d.Decode(&notifTweet)
-					ageSecs := unixNow - notifTweet.TweetTime
-					if ageSecs >= 60*60 {
-						fmt.Printf("ticker3min outdated ID=%s ageSecs=%d > 1h (%s) deleting\n",
-							idStr, ageSecs, notifTweet.Comment)
 
-						twitterClientLock.Lock()
-						if twitterClient==nil {
-							twitterAuth()
-						}
-						if twitterClient==nil {
-							fmt.Printf("# ticker3min failed on no twitterClient\n")
+		if myrtcdb!="" {
+			// delete all twitter notification tweets that are older than 1h
+			readConfigLock.RLock()
+			mytwitterKey := twitterKey
+			mytwitterSecret := twitterSecret
+			readConfigLock.RUnlock()
+			if mytwitterKey!="" && mytwitterSecret!="" {
+				kv := kvNotif.(skv.SKV)
+				kv.Db.Update(func(tx *bolt.Tx) error {
+					unixNow := time.Now().Unix()
+					//fmt.Printf("ticker3min release outdated entries from db=%s bucket=%s\n",
+					//	dbNotifName, dbSentNotifTweets)
+					b := tx.Bucket([]byte(dbSentNotifTweets))
+					if b==nil {
+						fmt.Printf("# ticker3min bucket=(%s) no tx\n",dbSentNotifTweets)
+						return nil
+					}
+					c := b.Cursor()
+					deleteCount := 0
+					for k, v := c.First(); k != nil; k, v = c.Next() {
+						idStr := string(k)
+						d := gob.NewDecoder(bytes.NewReader(v))
+						var notifTweet skv.NotifTweet
+						d.Decode(&notifTweet)
+						ageSecs := unixNow - notifTweet.TweetTime
+						if ageSecs >= 60*60 {
+							fmt.Printf("ticker3min outdated ID=%s ageSecs=%d > 1h (%s) deleting\n",
+								idStr, ageSecs, notifTweet.Comment)
+
+							twitterClientLock.Lock()
+							if twitterClient==nil {
+								twitterAuth()
+							}
+							if twitterClient==nil {
+								fmt.Printf("# ticker3min failed on no twitterClient\n")
+								twitterClientLock.Unlock()
+								break
+							}
+							respdata,err := twitterClient.DeleteTweet(idStr)
 							twitterClientLock.Unlock()
-							break
-						}
-						respdata,err := twitterClient.DeleteTweet(idStr)
-						twitterClientLock.Unlock()
-						if err!=nil {
-							fmt.Printf("# ticker3min DeleteTweet %s err=%v (%s)\n", idStr, err, respdata)
-						} else {
-							fmt.Printf("ticker3min DeleteTweet %s OK\n", idStr)
-							err := c.Delete()
 							if err!=nil {
-								fmt.Printf("# ticker3min error db=%s bucket=%s delete id=%s err=%v\n",
-									dbMainName, dbSentNotifTweets, idStr, err)
+								fmt.Printf("# ticker3min DeleteTweet %s err=%v (%s)\n", idStr, err, respdata)
 							} else {
-								deleteCount++
+								fmt.Printf("ticker3min DeleteTweet %s OK\n", idStr)
+								err := c.Delete()
+								if err!=nil {
+									fmt.Printf("# ticker3min error db=%s bucket=%s delete id=%s err=%v\n",
+										dbMainName, dbSentNotifTweets, idStr, err)
+								} else {
+									deleteCount++
+								}
 							}
 						}
 					}
-				}
-				if deleteCount>0 {
-					fmt.Printf("ticker3min db=%s bucket=%s deleted %d entries\n",
-						dbNotifName, dbSentNotifTweets, deleteCount)
-				}
-				return nil
-			})
-		}
+					if deleteCount>0 {
+						fmt.Printf("ticker3min db=%s bucket=%s deleted %d entries\n",
+							dbNotifName, dbSentNotifTweets, deleteCount)
+					}
+					return nil
+				})
+			}
 
-		// call backupScript
-		readConfigLock.RLock()
-		myrtcdb := rtcdb
-		mybackupScript := backupScript
-		readConfigLock.RUnlock()
-		if mybackupScript!="" && myrtcdb=="" {
-			timeNow := time.Now()
-			if timeNow.Sub(lastBackupTime) >= time.Duration(backupPauseMinutes) * time.Minute {
-				if _, err := os.Stat(backupScript); err == nil {
-					if callBackupScript(backupScript) == nil {
-						lastBackupTime = timeNow
+			// call backupScript
+			readConfigLock.RLock()
+			mybackupScript := backupScript
+			readConfigLock.RUnlock()
+			if mybackupScript!="" {
+				timeNow := time.Now()
+				if timeNow.Sub(lastBackupTime) >= time.Duration(backupPauseMinutes) * time.Minute {
+					if _, err := os.Stat(backupScript); err == nil {
+						if callBackupScript(backupScript) == nil {
+							lastBackupTime = timeNow
+						}
 					}
 				}
 			}
 		}
 	}
-	//fmt.Printf("threeMinTicker ending\n")
 }
 
 func callBackupScript(scriptName string) error {
