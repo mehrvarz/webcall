@@ -95,8 +95,8 @@ func ticker3min() {
 				timeNow := time.Now()
 				diff := timeNow.Sub(lastBackupTime)
 				if diff < time.Duration(mybackupPauseMinutes) * time.Minute {
-					fmt.Printf("ticker3min next bckupTime not yet reached (%d < %d)\n",
-						diff/time.Minute, mybackupPauseMinutes)
+					//fmt.Printf("ticker3min next bckupTime not yet reached (%d < %d)\n",
+					//	diff/time.Minute, mybackupPauseMinutes)
 				} else {
 					_,err := os.Stat(mybackupScript)
 					if err!=nil {

@@ -507,7 +507,7 @@ func readConfig(init bool) {
 	adminEmail = readIniString(configIni, "adminEmail", adminEmail, "")
 
 	backupScript = readIniString(configIni, "backupScript", backupScript, "")
-	backupPauseMinutes = readIniInt(configIni, "backupPauseMinutes", backupPauseMinutes, 60, 1)
+	backupPauseMinutes = readIniInt(configIni, "backupPauseMinutes", backupPauseMinutes, 180, 1)
 
 	readConfigLock.Unlock()
 }
