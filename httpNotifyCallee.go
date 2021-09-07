@@ -565,7 +565,15 @@ func twitterAuth() {
 	if twitterAuthFailedCount>3 {
 		return
 	}
-	twitterClient = twitter.NewDesktopClient(twitterKey, twitterSecret)
+	readConfigLock.RLock()
+	mytwitterKey := twitterKey
+	mytwitterSecret := twitterSecret
+	readConfigLock.RUnlock()
+	if mytwitterKey=="" || mytwitterSecret=="" {
+		return
+	}
+
+	twitterClient = twitter.NewDesktopClient(mytwitterKey, mytwitterSecret)
 	basepath := "."
 	accessTokenFile := basepath+"/accessToken.txt"
 	b, err := ioutil.ReadFile(accessTokenFile)

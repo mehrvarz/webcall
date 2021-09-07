@@ -136,6 +136,9 @@ var wsClientMutex sync.RWMutex
 var timeLocationString = ""
 var timeLocation *time.Location = nil
 
+var	backupScript = ""
+var	backupPauseMinutes = 0
+
 func main() {
 	flag.Parse()
 	if *version {
@@ -502,6 +505,9 @@ func readConfig(init bool) {
 
 	turnDebugLevel = readIniInt(configIni, "turnDebugLevel", turnDebugLevel, 3, 1)
 	adminEmail = readIniString(configIni, "adminEmail", adminEmail, "")
+
+	backupScript = readIniString(configIni, "backupScript", backupScript, "")
+	backupPauseMinutes = readIniInt(configIni, "backupPauseMinutes", backupPauseMinutes, 60, 1)
 
 	readConfigLock.Unlock()
 }

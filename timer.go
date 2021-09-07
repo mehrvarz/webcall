@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"bytes"
 	"encoding/gob"
+	"os"
+	"os/exec"
 	"github.com/mehrvarz/webcall/skv"
 	bolt "go.etcd.io/bbolt"
 )
@@ -12,36 +14,20 @@ import (
 func ticker3min() {
 	threeMinTicker := time.NewTicker(180*time.Second)
 	defer threeMinTicker.Stop()
+	lastBackupTime := time.Now()
 	for {
 		<-threeMinTicker.C
 		if shutdownStarted.Get() {
 			break
 		}
 
-/*
-		if backupScript!="" {
-			if timeNow.Sub(lastBackupTime) >= time.Duration(betweenBackupsMinutes) * time.Minute {
-				if _, err := os.Stat(backupScript); err == nil {
-					if callBackupScript(backupScript) == nil {
-						lastBackupTime = timeNow
-					}
-				}
-			}
-		}
-*/
+		// delete all twitter notification tweets that are older than 1h
 		readConfigLock.RLock()
-		myrtcdb := rtcdb
+		mytwitterKey := twitterKey
+		mytwitterSecret := twitterSecret
 		readConfigLock.RUnlock()
-		if myrtcdb=="" {
-			// delete all notification tweets that are older than 1h
-			var kv skv.SKV
-			var err error
-			fmt.Printf("ticker3min open file=(%s)\n",dbNotifName)
-			kv,err = skv.DbOpen(dbNotifName,dbPath)
-			if err!=nil || kv.Db==nil {
-				fmt.Printf("# ticker3min fail to open db=(%s) err=%v\n",dbNotifName,err)
-				continue
-			}
+		if mytwitterKey!="" && mytwitterSecret!="" {
+			kv := kvNotif.(skv.SKV)
 			kv.Db.Update(func(tx *bolt.Tx) error {
 				unixNow := time.Now().Unix()
 				//fmt.Printf("ticker3min release outdated entries from db=%s bucket=%s\n",
@@ -94,11 +80,64 @@ func ticker3min() {
 				}
 				return nil
 			})
-			kv.Db.Close()
+		}
+
+		// call backupScript
+		readConfigLock.RLock()
+		myrtcdb := rtcdb
+		mybackupScript := backupScript
+		readConfigLock.RUnlock()
+		if mybackupScript!="" && myrtcdb=="" {
+			timeNow := time.Now()
+			if timeNow.Sub(lastBackupTime) >= time.Duration(backupPauseMinutes) * time.Minute {
+				if _, err := os.Stat(backupScript); err == nil {
+					if callBackupScript(backupScript) == nil {
+						lastBackupTime = timeNow
+					}
+				}
+			}
 		}
 	}
 	//fmt.Printf("threeMinTicker ending\n")
 }
+
+func callBackupScript(scriptName string) error {
+	skv.DbMutex.Lock()
+	defer skv.DbMutex.Unlock()
+
+	fmt.Printf("callBackupScript sync db's %s\n",scriptName)
+
+	kv := kvMain.(skv.SKV)
+	if err := kv.Db.Sync(); err != nil {
+		fmt.Printf("# callBackupScript kvMain sync error: %s\n", err)
+	}
+	kv = kvCalls.(skv.SKV)
+	if err := kv.Db.Sync(); err != nil {
+		fmt.Printf("# callBackupScript kvCalls sync error: %s\n", err)
+	}
+	kv = kvContacts.(skv.SKV)
+	if err := kv.Db.Sync(); err != nil {
+		fmt.Printf("# callBackupScript kvContacts sync error: %s\n", err)
+	}
+	kv = kvNotif.(skv.SKV)
+	if err := kv.Db.Sync(); err != nil {
+		fmt.Printf("# callBackupScript kvNotif sync error: %s\n", err)
+	}
+	kv = kvHashedPw.(skv.SKV)
+	if err := kv.Db.Sync(); err != nil {
+		fmt.Printf("# callBackupScript kvHashedPw sync error: %s\n", err)
+	}
+
+	fmt.Printf("callBackupScript exec (%s)...\n",scriptName)
+	cmd, err := exec.Command("/bin/sh", scriptName).Output()
+	if err != nil {
+		fmt.Printf("# callBackupScript %s err=%s log=(%s)", scriptName, err, string(cmd))
+		return err
+	}
+	fmt.Printf("callBackupScript %s done log=(%s)\n",scriptName,string(cmd))
+	return nil
+}
+
 
 // ticker30sec: logs stats, cleanup recentTurnCallerIps
 func ticker30sec() {
@@ -158,9 +197,9 @@ func ticker2sec() {
 		if shutdownStarted.Get() {
 			break
 		}
-		timeNow := time.Now()
 
 		// detect new day
+		timeNow := time.Now()
 		if timeNow.Day() != lastCurrentDayOfMonth {
 			fmt.Printf("we have a new day\n")
 			lastCurrentDayOfMonth = timeNow.Day()
