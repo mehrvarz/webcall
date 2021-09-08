@@ -130,29 +130,20 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				return
 			}
 			if strings.Index(err.Error(), "timeout") < 0 {
-				// not disconnect and not timeout: delay response to make pw-guessing more difficult
+				// delay response to slow down pw-guessing
 				time.Sleep(3000 * time.Millisecond)
 			}
 			fmt.Fprintf(w, "notregistered")
 			return
 		}
 
-		//fmt.Printf("/login pw=%s dbEntry.Password=%s\n",pw,dbEntry.Password)
 		if pw != dbEntry.Password {
-			// we need to log the pw here, so we can see what is the issue
-			fmt.Fprintf(os.Stderr, "# /login fail id=%s pw %s(%d) != %s(%d)\n",
-				urlID, pw, len(pw), dbEntry.Password, len(dbEntry.Password))
+			fmt.Fprintf(os.Stderr, "# /login fail id=%s wrong password\n", urlID)
 			// must delay to make guessing more difficult
 			time.Sleep(3000 * time.Millisecond)
 			fmt.Fprintf(w, "error")
 			return
 		}
-
-		// don't log successful pw
-		//fmt.Printf("/login pw accepted %s==%s\n", pw, dbEntry.Password)
-		//fmt.Printf("/login pw accepted urlID=(%s) rip=%s id=%d rt=%v\n",
-		//	urlID, remoteAddr, myRequestCount, time.Since(startRequestTime)) // rt=40ms
-
 		dbUserKey := fmt.Sprintf("%s_%d", urlID, dbEntry.StartTime)
 		err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 		if err != nil {
