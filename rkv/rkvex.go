@@ -145,43 +145,6 @@ func StoreCallerIpInHubMap(calleeId string, callerIp string, skipConfirm bool) e
 	}
 }
 
-/*
-func GetCallerIpInHubMap(calleeId string) (string,error) {
-	var myId int64 = 0
-	var myChan chan bool
-	idChanLock.Lock()
-	msgCounter++
-	myId = msgCounter
-	myChan = make(chan bool)
-	idChanMap[myId] = myChan
-	idChanLock.Unlock()
-
-	send(Command{MsgId:myId, Cmd:"GetCallerIpInHubMap", Arg:calleeId})
-
-	//fmt.Printf("rkv.GetCallerIpInHubMap() waiting for remote reply...\n")
-	select {
-	case <-myChan:
-		//fmt.Printf("rkv.GetCallerIpInHubMap() received data\n")
-		receivedResponseLock.Lock()
-		resp := receivedResponseMap[myId]
-		delete(receivedResponseMap,myId)
-		receivedResponseLock.Unlock()
-		if resp.Err != "" {
-			//fmt.Printf("# rkv.GetCallerIpInHubMap id=%s ip=%s rerr=%v\n", calleeId, callerIp, resp.Err)
-			return "",errors.New(resp.Err)
-		}
-		//fmt.Printf("rkv.GetCallerIpInHubMap id=%s ip=%s no rerr\n", calleeId, callerIp, resp.Str1)
-		return resp.Str1,nil
-	case <-closeChan:
-		//fmt.Printf("# rkv.GetCallerIpInHubMap connection closed\n")
-		return "",ErrDisconnect
-	case <-time.After(wsSendTimeoutDuration):
-		//fmt.Printf("# rkv.GetCallerIpInHubMap timeout\n")
-		return "",ErrTimeout
-	}
-}
-*/
-
 func SearchCallerIpInHubMap(ip string) (bool,string,error) {
 	// search for globalHubMap[].ClientIpAddr == ip as required for pion auth
 	//fmt.Printf("rkv.SearchCallerIpInHubMap ip=%s\n",ip)

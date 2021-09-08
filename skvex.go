@@ -133,23 +133,6 @@ func StoreCalleeInHubMap(key string, hub *Hub, multiCallees string, skipConfirm 
 	return key, int64(len(hubMap)), nil
 }
 
-/*
-func GetCallerIpInHubMap(calleeId string) (string,error) {
-	fmt.Printf("skv.GetCallerIpInHubMap calleeId=%s\n", calleeId)
-	var err error = nil
-	callerIp := ""
-	hubMapMutex.RLock()
-	defer hubMapMutex.RUnlock()
-	hub := hubMap[calleeId]
-	if hub==nil {
-		err = rkv.ErrNotFound
-	} else {
-		callerIp = hub.ConnectedCallerIp
-	}
-	return callerIp,err
-}
-*/
-
 func GetRandomCalleeID() (string,error) {
 	hubMapMutex.RLock()
 	defer hubMapMutex.RUnlock()
