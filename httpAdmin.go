@@ -55,7 +55,6 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		bucketName := dbRegisteredIDs
 		fmt.Printf("/dumpregistered dbName=%s bucketName=%s\n", dbMainName, bucketName)
 		db := kv.Db
-//		timeNow := time.Now()
 		err := db.Update(func(tx *bolt.Tx) error {
 			b := tx.Bucket([]byte(bucketName))
 			c := b.Cursor()
@@ -63,13 +62,6 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 				var dbEntry skv.DbEntry
 				d := gob.NewDecoder(bytes.NewReader(v))
 				d.Decode(&dbEntry)
-//				age := timeNow.Sub(time.Unix(dbEntry.StartTime,0))
-//				printFunc(w,"registered id=%s %d=%s lifeSecs=%d remainSecs=%d rip=%s\n",
-//					k, // ID
-//					dbEntry.StartTime, time.Unix(dbEntry.StartTime,0).Format("2006-01-02 15:04:05"),
-//					dbEntry.DurationSecs,
-//					dbEntry.DurationSecs - int(age.Seconds()),
-//					dbEntry.Ip)
 				printFunc(w,"registered id=%s %d=%s rip=%s\n",
 					k, // ID
 					dbEntry.StartTime, time.Unix(dbEntry.StartTime,0).Format("2006-01-02 15:04:05"),
@@ -238,21 +230,6 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 				urlSMinutes = int(urlSMinutesI64)
 			}
 		}
-/*
-		// talk minutes (optional, default 60min)
-		urlTMinutes := 3600
-		url_arg_array, ok = r.URL.Query()["tmin"]
-		if !ok || len(url_arg_array[0]) < 1 {
-			// ignore
-		} else {
-			urlTMinutesI64, err := strconv.ParseInt(url_arg_array[0], 10, 64)
-			if err!=nil {
-				// ignore
-			} else {
-				urlTMinutes = int(urlTMinutesI64)
-			}
-		}
-*/
 		if (urlSDays<=0 && urlSMinutes<=0) /*|| urlTMinutes<0*/ {
 			printFunc(w,"# /makeregistered error both 'sdays' and 'smin' or 'tmin' <0\n")
 			return true
@@ -284,7 +261,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 				dbMainName,dbUserBucket,urlID,err)
 		} else {
 			err = kv.Put(dbRegisteredIDs, urlID,
-				skv.DbEntry{unixTime, /*urlSDays*24*60*60 + urlSMinutes*60,*/ remoteAddr, urlPw}, false)
+				skv.DbEntry{unixTime, remoteAddr, urlPw}, false)
 			if err!=nil {
 				printFunc(w,"# /makeregistered error db=%s bucket=%s put key=%s err=%v\n",
 					dbMainName,dbRegisteredIDs,urlID,err)
