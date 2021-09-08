@@ -153,7 +153,7 @@ window.onload = function() {
 
 			// we need to know if calleeID is online asap (will switch to callee-online-layout if it is)
 			dialAfterCalleeOnline = false;
-			checkCalleeOnline(false);
+			checkCalleeOnline();
 
 			if(dialButton!=null) {
 				if(!calleeID.startsWith("random") && !calleeID.startsWith("!")) {
@@ -196,7 +196,7 @@ window.onload = function() {
 
 					// -> checkCalleeOnline -> ajax -> calleeOnlineAction -> gotStream -> connectSignaling
 					dialAfterCalleeOnline = true;
-					checkCalleeOnline(true);
+					checkCalleeOnline();
 				};
 			}
 			if(hangupButton!=null) {
@@ -268,11 +268,8 @@ function getUrlParams(param) {
 	}
 }
 
-function checkCalleeOnline(occupy) {
+function checkCalleeOnline() {
 	let api = apiPath+"/online?id="+calleeID;
-	//if(occupy) {
-	//	api = apiPath+"/dial?id="+calleeID;
-	//}
 	if(!gentle) console.log('checkCalleeOnline api',api);
 	xhrTimeout = 30*1000;
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
@@ -284,7 +281,8 @@ function checkCalleeOnline(occupy) {
 }
 
 function calleeOnlineStatus(onlineStatus) {
-	if(rtcConnect || dialing) { // TODO check if this is still required/meaningful
+	if(rtcConnect || dialing) {
+		// TODO check if this is still required/meaningful
 		return;
 	}
 	if(!gentle) console.log('calleeOnlineStatus',onlineStatus);
@@ -321,7 +319,7 @@ function calleeOnlineStatus(onlineStatus) {
 			setTimeout(function() {
 				//console.log('singlebutton back to singleButtonReadyText');
 				dialButton.innerHTML = "<b>W E B C A L L</b><br>"+singleButtonReadyText;
-				// TODO this is a long time
+				// this is a long pause
 			},9000);
 		},700);
 		return;
@@ -399,7 +397,6 @@ function calleeOnlineAction(from) {
 				getStream().then(() => navigator.mediaDevices.enumerateDevices()).then(gotDevices);
 				// also -> gotStream -> connectSignalling
 			}
-
 		} else {
 			// no autodial after we detected callee is online
 			getStream().then(() => navigator.mediaDevices.enumerateDevices()).then(gotDevices);
@@ -515,7 +512,7 @@ function calleeOfflineAction() {
 			showStatus(msg,-1);
 		}, // xhr error
 			errorAction
-			// TODO errorAction will switch back; if we don't want this we should handle err like in notifyConnect()
+		// TODO errorAction will switch back; if we don't want this we should handle err like in notifyConnect()
 		);
 	}
 
@@ -696,7 +693,7 @@ function getStream() {
 			console.log("getStream -> dialAfterCalleeOnline");
 			//dialAfterCalleeOnline = true;
 			//checkCalleeOnline();
-			gotStream(); // fake it
+			gotStream(); // pretend
 		}
 		return
 	}
@@ -891,7 +888,6 @@ function getStatsCandidateTypes(results,eventString1,eventString2) {
 	var url = (window.location != window.parent.location)
 		    ? document.referrer : document.location.href;
 	let msg = eventString1+" "+rtcLink;
-//	wsSend("log|caller "+msg+" "+url);
 	wsSend("log|caller "+msg);
 
 	if(eventString2!="") {
@@ -958,18 +954,12 @@ function getStatsPostCall(results) {
 	let durationRtcSecs = Math.floor((durationRtcMS+500)/1000);
 	//if(!gentle) console.log("getStatsPostCall durationMS",statsPostCallDurationMS,durationSecs,durationRtcSecs);
 
-	//let bytesReceivedPerSec = Math.floor(bytesReceived*100000/statsPostCallDurationMS)/100;
-	//if(!gentle) console.log("getStatsPostCall bytesReceived",bytesReceived,bytesReceivedPerSec);
-
 	let bitsReceivedPerSec = 0;
 	if(statsPostCallDurationMS>0) {
 		bitsReceivedPerSec = Math.floor(bytesReceived*8000/statsPostCallDurationMS);
 	}
 	if(isNaN(bitsReceivedPerSec)) { bitsReceivedPerSec = 0; }
 	//if(!gentle) console.log("getStatsPostCall bitsReceivedPerSec",bitsReceivedPerSec);
-
-	//let bytesSentPerSec = Math.floor(bytesSent*100000/durationRtcMS)/100;
-	//if(!gentle) console.log("getStatsPostCall bytesSent",bytesSent,bytesSentPerSec);
 
 	let bitsSentPerSec = 0;
 	if(durationRtcMS>0) {
@@ -1562,7 +1552,7 @@ function dial() {
 		localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
 			'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
 		console.log('got localDescription');
-/*
+		/*
 		if(singlebutton) {
 			// switch from dialButton to hangupButton "Connecting..."
 			dialButton.style.display = "none";
@@ -1574,7 +1564,7 @@ function dial() {
 			hangupButton.disabled = false;
 			audioSelect.disabled = true;
 		}
-*/
+		*/
 		if(playDialSounds) {
 			dtmfDialingSound.play().catch(function(error) {
 				console.warn('ex dtmfDialingSound.play',error) });
@@ -1705,11 +1695,11 @@ function hangup(mustDisconnectCallee,message) {
 		hangupButton.style.display = "none";
 		hangupButton.innerHTML = "Hang up";
 		hangupButton.style.boxShadow = "";
-		// 2500ms is about the time it takes for the busy tone to end
 		// TODO a transition would be nice
 		setTimeout(function() {
 			dialButton.innerHTML = "<b>W E B C A L L</b><br>"+singleButtonReadyText;
 			dialButton.style.display = "inline-block";
+		// 2500ms is about the time it takes for the busy tone to end
 		},2500);
 	} else {
 		hangupButton.disabled = true;
@@ -1784,25 +1774,11 @@ function hangup(mustDisconnectCallee,message) {
 			});
 		}
 	}
-
 	if(wsConn!=null) {
 		wsConn.close();
 		wsConn=null;
 	}
-
 	console.log('hangup end',calleeID);
-/*
-	if(!singlebutton) {
-		if(calleeID.startsWith("random") || calleeID.startsWith("answie") || calleeID.startsWith("!")) {
-			setTimeout(function() {
-				console.log('hangup location.replace /webcall');
-				//window.location.reload(); //replace("/webcall");
-				window.location = window.location.href + "../..";
-			},1500);
-			return;
-		}
-	}
-*/
 }
 
 function hangupWithBusySound(mustDisconnectCallee,message) {
