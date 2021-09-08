@@ -29,19 +29,18 @@ function isAvailAction() {
 		showStatus("Registration of new callee ID's is not possible at this time. Please try again later. Thank you.<br><br><a href='..'>Back</a>",-1);
 		return;
 	}
-	showStatus("This is your personal WebCall callee ID: <b>"+myCalleeID+"</b><br><br>Your callee ID acts like a phone number. With it you can receive phone calls from anyone on the Web. Enter a password so only you can use it." /*+
-	"<br><br>Try out WebCall for 90 days with 30 hours of free talk time and any number of calls. <a href='/webcall/info/' target='_blank'>More info.</a>"*/,-1);
+	showStatus("This is your personal WebCall callee ID: <b>"+myCalleeID+"</b><br><br>Your callee ID acts like a phone number. With it you can receive phone calls from anyone on the Web. Enter a password so only you can use it.",-1);
 	// show form and clear pw input field
 	document.getElementById("pw").value = "";
 	document.getElementById("username").value = myCalleeID;
 	form.style.display = "block";
-//	if(!window.frameElement || window.frameElement.nodeName != "IFRAME") {
+	//if(!window.frameElement || window.frameElement.nodeName != "IFRAME") {
 		// do this only if NOT running in iframe mode
 		setTimeout(function() {
 			console.log('formPw.focus');
 			formPw.focus();
 		},400);
-//	}
+	//}
 	// pw confirmation will take place in submitForm()
 }
 
@@ -145,3 +144,4 @@ function clearForm() {
 	document.getElementById("pw").value = "";
 	formPw.focus();
 }
+

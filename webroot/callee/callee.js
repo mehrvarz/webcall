@@ -39,12 +39,9 @@ var wsAddr = "";
 var talkSecs = 0;
 var maxTalkSecs = 0;
 var serviceSecs = 0;
-var maxServiceSecs = 0;
 var calleeType = false;
 var remainingTalkSecs = 0;
 var remainingServiceSecs = 0;
-var	remainingTalkTime = "";
-var	remainingServiceTime = "";
 var wsConn = null;
 var lastWsConn = null;
 var localDescription = null;
@@ -111,7 +108,7 @@ window.onload = function() {
 	}
 
 	if(calleeID=="") {
-		// TODO not really sure about this; it might be better to just let the user know about the wrong URL
+		// TODO not really sure about this; it might be better to just tell the user about the wrong URL
 		window.location.replace("register");
 		return;
 	}
@@ -225,16 +222,6 @@ window.onload = function() {
 
 			calleeID = calleeID.toLowerCase();
 			console.log('onload calleeID lowercase (%s)',calleeID);
-			/*
-			if(calleeID.startsWith("answie")) {
-				if(calleeID=="answie") {
-					autoPlaybackFile = "austerlitz.wav";
-				} else if(calleeID=="answie2") {
-					autoPlaybackFile = "austerlitz-omnibus.wav";
-				}
-				console.log('onload autoPlaybackFile=(%s) calleeID=(%s)',autoPlaybackFile,calleeID);
-			}
-			*/
 			if(mode==1) {
 				console.log('onload pw-entry not required with cookie');
 				// we have a cockie, so no manual pw-entry is needed
@@ -397,9 +384,6 @@ function login(retryFlag) {
 			if(parts.length>=4) {
 				serviceSecs = parseInt(parts[3], 10);
 			}
-//			if(parts.length>=5) {
-//				maxServiceSecs = parseInt(parts[4], 10); // 0 = nocheck
-//			}
 			if(parts.length>=6) {
 				let calleeLevel = parseInt(parts[5], 10);
 				if(calleeLevel>0) {
@@ -463,7 +447,6 @@ function login(retryFlag) {
 				//autoanswerCheckbox.disabled = true;
 			}
 			if(!gentle) console.log('isHiddenCheckbox.checked',isHiddenCheckbox.checked);
-			processRemainingTime();
 			wsSend("init|!"); // -> connectSignaling()
 			return;
 		}
@@ -484,7 +467,7 @@ function login(retryFlag) {
 		} else if(loginStatus=="busy") {
 			if(calleeID.startsWith("random") || calleeID.startsWith("!")) {
 				// become caller
-				window.location.replace("/user/"+calleeID);	// TODO added leading slash
+				window.location.replace("/user/"+calleeID);
 				return;
 			}
 			showStatus("User is busy<br><a href='"+mainLink+"'>Main page</a>",-1);
@@ -497,7 +480,7 @@ function login(retryFlag) {
 			enablePasswordForm();
 		} else {
 			// loginStatus "fatal" = "already logged in" or "db.GetX err"
-			// no use offering pw entry again at this time
+			// no use offering pw entry again at this point
 			goOffline();
 			showStatus(	"Login failed. Already logged in from another device?<br>"+
 						"<br>Try <a onclick='window.location.reload(false)'>Reload</a>"+
@@ -508,7 +491,7 @@ function login(retryFlag) {
 	}, function(errString,err) {
 		console.log('xhr error',errString);
 		if(calleeID.startsWith("random") || calleeID.startsWith("!")) {
-			// go to main page // TODO is this correct?
+			// go to main page // TODO best solution?
 			window.location.replace("");
 			return;
 		}
@@ -532,7 +515,6 @@ function login(retryFlag) {
 				let delay = autoReconnectDelay + Math.floor(Math.random() * 10) - 5;
 				console.log('reconnecting to signaling server in %ds...', delay);
 				showStatus("Reconnecting to signaling server...",-1);
-				//notificationSound.play().catch(function(error) { });
 				missedCallsElement.style.display = "none";
 				missedCallsTitleElement.style.display = "none";
 				delayedWsAutoReconnect(delay);
@@ -541,75 +523,11 @@ function login(retryFlag) {
 			talkSecs=0;
 			maxTalkSecs=0;
 			serviceSecs=0;
-			maxServiceSecs=0;
 			remainingTalkSecs=0;
 			remainingServiceSecs=0;
 			offlineAction();
 		}
 	}, "pw="+wsSecret);
-}
-
-function processRemainingTime() {
-	remainingTalkTime = "";
-	remainingServiceTime = "";
-	if(calleeID.startsWith("random") || calleeID.startsWith("answie") || calleeID.startsWith("!")) {
-		return;
-	}
-	if(!gentle) console.log('processRemainingTime',talkSecs,maxTalkSecs,serviceSecs,maxServiceSecs);
-	if(maxTalkSecs>0) {
-		remainingTalkSecs = maxTalkSecs - talkSecs;
-		if(remainingTalkSecs<0) {
-			remainingTalkSecs = 0;
-		}
-		let remainingTalkM = Math.floor(remainingTalkSecs/60);
-		let remainingTalkS = remainingTalkSecs - Math.floor(remainingTalkSecs/60)*60;
-		let remainingTalkH = Math.floor(remainingTalkM / 60);
-		if(remainingTalkH>0) {
-			remainingTalkM -= remainingTalkH*60;
-			if(remainingTalkH>48) {
-				let remainingTalkD = Math.floor(remainingTalkH / 24);
-				remainingTalkH = remainingTalkH - remainingTalkD*24;
-				remainingTalkTime = "Remaining talk time "+remainingTalkH+"d "+remainingTalkH+"h."
-			} else {
-				remainingTalkTime = "Remaining talk time "+remainingTalkH+"h "+remainingTalkM+"m.";
-			}
-		} else {
-			if(remainingTalkS==0) {
-				remainingTalkTime = "Remaining talk time "+remainingTalkM+"m.";
-			} else {
-				remainingTalkTime = "Remaining talk time "+remainingTalkM+"m "+remainingTalkS+"s.";
-			}
-		}
-		console.log(remainingTalkTime);
-	}
-/*
-	if(maxServiceSecs>0) {
-		remainingServiceSecs = maxServiceSecs - serviceSecs;
-		if(remainingServiceSecs<0) {
-			remainingServiceSecs = 0;
-		}
-		let remainingServiceH = Math.floor(remainingServiceSecs/3600);
-		let remainingServiceM = Math.floor((remainingServiceSecs -
-								Math.floor(remainingServiceSecs/3600)*3600)/60)
-		let remainingServiceD = Math.floor(remainingServiceH/24);
-		if(remainingServiceD>0) {
-			remainingServiceH -= remainingServiceD*24;
-			if(remainingServiceH==0) {
-				remainingServiceTime = "Remaining service time "+remainingServiceD+"d.";
-			} else {
-				remainingServiceTime = "Remaining service time "+remainingServiceD+"d "+remainingServiceH+"h.";
-			}
-		} else {
-			if(remainingServiceM==0) {
-				remainingServiceTime = "Remaining service time "+remainingServiceH+"h.";
-			} else {
-				remainingServiceTime = "Remaining service time "+remainingServiceH+"h "+remainingServiceM+"m.";
-			}
-		}
-		console.log(remainingServiceTime);
-	}
-*/
-	// data will be shown in showOnlineReadyMsg()
 }
 
 function offlineAction() {
@@ -649,7 +567,6 @@ function getStream() {
 	if(localStream) {
 		localStream.getTracks().forEach(track => { track.stop(); });
 	}
-
 	let supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
 	if(!gentle) console.log('getStream supportedConstraints',supportedConstraints);
 
@@ -687,8 +604,8 @@ function gotDevices(deviceInfos) {
 			console.log('gotDevices (%s) (%s)', deviceInfoLabel, audioSourceSelect.length);
 			option.text = deviceInfoLabel || `Microphone ${audioSourceSelect.length + 1}`;
 			audioSourceSelect.appendChild(option);
-		} else if (deviceInfo.kind === 'videoinput') {
 		/*
+		} else if (deviceInfo.kind === 'videoinput') {
 		} else if (deviceInfo.kind === "audiooutput") {
 			// looks like FF doesn't report these
 			if(audioSinkSelect!=null) {
@@ -764,25 +681,6 @@ function showStatus(msg,timeoutMs) {
 	}
 }
 
-/*
-const wsHeartbeatPauseSecs=60;
-let wsHeartbeatRunning=false;
-function wsHeartbeat() {
-	if(wsConn==null || wsConn.readyState!=1) {
-		wsHeartbeatRunning=false;
-		return
-	}
-	if(mediaConnect) {
-		wsHeartbeatRunning=false;
-		return
-	}
-	wsHeartbeatRunning=true;
-	if(!gentle) console.log('send wsHeartbeat');
-	wsSend("heartbeat|"); // like ping
-	setTimeout(wsHeartbeat, wsHeartbeatPauseSecs*1000);
-}
-*/
-
 let wsAutoReconnecting = false;
 function delayedWsAutoReconnect(reconPauseSecs) {
 	// delayedWsAutoReconnect can only succeed if a previous login attemt was successful
@@ -840,11 +738,6 @@ function showOnlineReadyMsg(sessionIdPayload) {
 
 	if(calleeID.startsWith("random")) {
 		showStatus( "You will be connected to the next available caller. Max wait time 30 minutes. Max talk time 15 min (if relayed). Note: Using a laptop or a webcam microphone often leads to poor audio on the other side. A headset eliminates the risk of feedback noises, echos and sound cancellation effects.",-1);
-	/*
-	} else if(calleeID.startsWith("answie")) {
-		autoanswerCheckbox.checked = true;
-		showStatus( "Answie will play back the file "+autoPlaybackFile+" "+bitrate,-1);
-	*/
 	} else if(calleeID.startsWith("!")) {
 		let callerURL = window.location.href;
 		callerURL = callerURL.replace("/callee/","/user/");
@@ -856,14 +749,6 @@ function showOnlineReadyMsg(sessionIdPayload) {
 		var calleeLink = window.location.href;
 		calleeLink = calleeLink.replace("callee/","user/");
 		let msg = "";
-		/*
-		if(remainingTalkTime!="") {
-			msg += remainingTalkTime+"<br>";
-		}
-		if(remainingServiceTime!="") {
-			msg += remainingServiceTime+"<br>";
-		}
-		*/
 		msg += "You will receive calls made by this link:<br>"+
 			"<a target='_blank' href='"+calleeLink+"'>"+calleeLink+"</a><br>";
 		if(sessionIdPayload!="" && sessionIdPayload > version) {
@@ -978,7 +863,7 @@ function connectSignaling(message) {
 					// "Uncaught SyntaxError: Unexpected end of JSON input"
 					callerDescription = JSON.parse(payload);
 					console.log('cmd callerDescription (incoming call)');
-//					postCallStatsElement.style.display = "none";
+					//postCallStatsElement.style.display = "none";
 					peerCon.setRemoteDescription(callerDescription).then(() => {
 						console.log('callerDescription createAnswer');
 						peerCon.createAnswer().then((desc) => {
@@ -1157,7 +1042,6 @@ function connectSignaling(message) {
 							serviceSecs = parseInt(tok[2], 10);
 						}
 					}
-					processRemainingTime();
 
 				} else if(cmd=="calleeInfo") {
 					// TODO this is text-info to be shown
@@ -1268,8 +1152,6 @@ function showCallsWhileInAbsence() {
 		// don't execute if client is disconnected 
 		return;
 	}
-	//var missedCallsElement = document.getElementById('missedCalls');
-	//var missedCallsTitleElement = document.getElementById('missedCallsTitle');
 	if(missedCallsElement!=null) {
 		if(callsWhileInAbsenceSlice==null || callsWhileInAbsenceSlice.length<=0) {
 			if(!gentle) console.log('showWaitingCallers fkt callsWhileInAbsenceSlice == null');
@@ -1332,12 +1214,8 @@ function showCallsWhileInAbsence() {
 					// caller.js will try to get nickname from server (using cookie)
 					callerLink = callerLink+"?callerId="+calleeID+"&name="+calleeName;
 
-					// open caller in new tab
-					//callerLink = "<a target='_blank' href='"+callerLink+"'>"+callerID+"</a>";
-
-					// instead: open caller in iframe
+					// open caller in iframe
 					callerLink = "<a onclick='iframeWindowOpen(\""+callerLink+"\")'>"+callerID+"</a>";
-
 					//console.log('callerLink',callerLink);
 				}
 			}
@@ -1550,7 +1428,7 @@ function goOnline() {
 			}
 			if(!gentle)
 				console.log('peerCon.ontrack onunmute set remoteAudio.srcObject',streams[0]);
-//			remoteAudio.srcObject = streams[0];
+			//remoteAudio.srcObject = streams[0];
 			remoteStream = streams[0];
 		};
 	};
@@ -1684,47 +1562,6 @@ function goOnline() {
 				goOfflineButton.style.display = "none";
 				answerButton.style.display = "inline-block";
 				rejectButton.style.display = "inline-block";
-				/*
-				if(autoanswerCheckbox.checked || calleeID.startsWith("random") || calleeID.startsWith("answie")) {
-					if(calleeID.startsWith("answie") && !autoPlaybackAudioSource) {
-						console.warn("autoPlaybackAudioSource not set");
-						return;
-					}
-
-					setTimeout(function() {
-						console.log("auto-answer call");
-						buttonBlinking = false;
-						if(calleeID.startsWith("answie")) {
-							pickup2();
-							// maybe useful later
-							//var gainNode = audioContext.createGain();
-							//gainNode.gain.value = 1.0;
-							//autoPlaybackAudioSource.connect(gainNode);
-							//gainNode.connect(audioStreamDest);
-
-							setTimeout(function() {
-								console.log("autoPlayback",autoPlaybackFile);
-								autoPlaybackAudioSource.start(0);
-								autoPlaybackAudioSourceStarted = true;
-								autoPlaybackAudioSource.onended = function() {
-									if(autoPlaybackAudioSource) {
-										autoPlaybackAudioSource.disconnect();
-										if(autoPlaybackAudioSourceStarted) {
-											console.log("autoPlayback stop",autoPlaybackFile);
-											autoPlaybackAudioSource.stop();
-											autoPlaybackAudioSourceStarted = false;
-										}
-										autoPlaybackAudioSource = null;
-									}
-									hangup();
-								};
-							},500);
-						} else {
-							pickup();
-						}
-					},1000);
-				}
-				*/
 				if(autoanswerCheckbox.checked) {
 					setTimeout(function() {
 						console.log("auto-answer call");
@@ -1746,68 +1583,6 @@ function goOnline() {
 			},400);
 		}
 	}
-	/*
-	if(calleeID.startsWith("answie")) {
-		if(audioContext==null) {
-			console.log('goOnline create new AudioContext');
-			try {
-				// The AudioContext was not allowed to start.
-				// It must be resumed (or created) after a user gesture on the page.
-				audioContext = new AudioContext();
-			}
-			catch(e) {
-				console.log('goOnline Web Audio API not supported');
-				return;
-			}
-			console.log('goOnline got AudioContext');
-		}
-
-		// did we load autoPlaybackFile already?
-		// yes, if autoPlaybackAudioBuffer is set
-		// in that case we only need to create a new autoPlaybackAudioSource
-		let audioSourceFromAudioBufferFunc = function() {
-			console.log('goOnline create autoPlaybackAudioSource');
-			autoPlaybackAudioSource = audioContext.createBufferSource();
-			autoPlaybackAudioSource.buffer = autoPlaybackAudioBuffer;
-			audioStreamDest = audioContext.createMediaStreamDestination();
-			autoPlaybackAudioSource.connect(audioStreamDest);
-			peerCon.addStream(audioStreamDest.stream);
-		};
-		if(autoPlaybackAudioBuffer) {
-			audioSourceFromAudioBufferFunc();
-		} else {
-			console.log('goOnline load autoPlaybackFile (%s)',autoPlaybackFile);
-			autoPlaybackAudioSource = null;
-			var xhr = new XMLHttpRequest();
-			xhr.responseType = 'arraybuffer';
-			xhr.onload = function() {
-				console.log('goOnline load autoPlaybackFile decodeAudioData...',
-					xhr.readyState, xhr.status);
-				let waitDecodeDuration = 9000;
-				let receivedError = false;
-				setTimeout(function() {
-					if(!autoPlaybackAudioSource && !receivedError) {
-						console.warn("goOnline decodeAudioData not finished after %dms",waitDecodeDuration);
-					}
-				},waitDecodeDuration);
-				audioContext.decodeAudioData(xhr.response, function(buffer) {
-					// FF sometimes does not call this; as a result autoPlaybackAudioSource will stay null
-					console.log('goOnline decodeAudioData done',buffer.length);
-					autoPlaybackAudioBuffer = buffer;
-					audioSourceFromAudioBufferFunc();
-				}, err => {
-					// "DOMException: The buffer passed to decodeAudioData contains an unknown content type."
-					// most likely this means that the autoPlaybackFile is missing - or empty
-					receivedError = true;
-					console.log('onError (%s) err=',autoPlaybackFile,err);
-				});
-			};
-			xhr.open('GET', autoPlaybackFile, true);
-			xhr.send();
-			console.log('goOnline load autoPlaybackFile requested');
-		}
-	}
-	*/
 	if(!dataChannel) {
 		if(!gentle) console.log('goOnline have no dataChannel');
 		createDataChannel();
@@ -1818,10 +1593,6 @@ function goOnline() {
 	} else {
 		if(!gentle) console.log('goOnline have wsConn send init');
 		wsSend("init|!");
-//		if(!wsHeartbeatRunning) {
-//			// restart wsHeartbeat
-//			setTimeout(wsHeartbeat, wsHeartbeatPauseSecs*1000);
-//		}
 	}
 }
 
@@ -1984,25 +1755,16 @@ function getStatsPostCall(results) {
 	});
 	let durationSecs = Math.floor((statsPostCallDurationMS+500)/1000);
 	//if(!gentle) console.log("getStatsPostCall durationMS",statsPostCallDurationMS,durationSecs);
-
-	//let bytesReceivedPerSec = Math.floor(bytesReceived*100000/statsPostCallDurationMS)/100;
-	//if(!gentle) console.log("getStatsPostCall bytesReceived",bytesReceived,bytesReceivedPerSec);
-
 	let bitsReceivedPerSec = 0;
 	if(statsPostCallDurationMS>0) {
 		bitsReceivedPerSec = Math.floor(bytesReceived*8000/statsPostCallDurationMS);
 	}
 	//if(!gentle) console.log("getStatsPostCall bitsReceivedPerSec",bitsReceivedPerSec);
-
-	//let bytesSentPerSec = Math.floor(bytesSent*100000/durationRtcMS)/100;
-	//if(!gentle) console.log("getStatsPostCall bytesSent",bytesSent,bytesSentPerSec);
-
 	let bitsSentPerSec = 0;
 	if(durationRtcMS>0) {
 		bitsSentPerSec = Math.floor(bytesSent*8000/durationRtcMS);
 	}
 	//if(!gentle) console.log("getStatsPostCall bitsSentPerSec",bitsSentPerSec);
-
 	statsPostCallString =
 		"call duration: "+durationSecs+"s\n"+
 		"sent bytes: "+bytesSent+"\n"+
@@ -2025,8 +1787,6 @@ function showStatsPostCall() {
 	if(myStatsPostCallString=="") {
 		myStatsPostCallString = "No call stats available";
 	}
-	myStatsPostCallString += "<br><br>"+remainingServiceTime;
-	myStatsPostCallString += "<br>"+remainingTalkTime;
 	return myStatsPostCallString;
 }
 
@@ -2181,7 +1941,7 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 				getStatsPostCall(results);
 				if(statsPostCallString!="" && statsPostCallDurationMS>0) {
 					// enable info.svg button onclick -> showStatsPostCall()
-//					postCallStatsElement.style.display = "inline-block";
+					//postCallStatsElement.style.display = "inline-block";
 				}
 				peerConCloseFunc();
 			}, err => {
@@ -2204,7 +1964,7 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 	rejectButton.style.display = "none";
 
 	if(calleeID.startsWith("random") || calleeID.startsWith("!")) {
-		// go to main page // TODO is this correct?
+		// go to main page // TODO best solution?
 		window.location.replace("");
 		return
 	}
@@ -2244,7 +2004,7 @@ function goOffline() {
 	stopAllAudioEffects("goOffline");
 	waitingCallerSlice = null;
 
-//	menuElement.style.display = "none";
+	//menuElement.style.display = "none";
 	isHiddenlabel.style.display = "none";
 	autoanswerlabel.style.display = "none";
 	var waitingCallersLine = document.getElementById('waitingCallers');
@@ -2269,10 +2029,6 @@ function goOffline() {
 		window.location.replace("");
 		return;
 	}
-	// keep client connection alive, if possible
-	//	if(localStream) {
-	//		localStream.getTracks().forEach(track => track.stop());
-	//	}
 
 	if(wsConn!=null) {
 		// callee going offline
@@ -2301,10 +2057,7 @@ function onIceCandidate(event) {
 	} else if(wsConn==null || wsConn.readyState!=1) {
 		console.warn('onIce wsConn==null || readyState!=1', calleeCandidate.address);
 	} else {
-//		if(!gentle) console.log('onIce calleeCandidate for signaling', calleeCandidate.address);
 		if(!gentle) console.log('onIce calleeCandidate for signaling', calleeCandidate);
-//onIce calleeCandidate for signaling RTCIceCandidate {candidate: "candidate:169636353 1 udp 2122260223 192.168.3.209…887 typ host generation 0 ufrag 7onN network-id 1", sdpMid: "0", sdpMLineIndex: 0, foundation: "169636353", component: "rtp", …}
-
 		wsSend("calleeCandidate|"+JSON.stringify(calleeCandidate));
 	}
 }

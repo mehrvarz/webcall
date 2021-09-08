@@ -167,17 +167,15 @@ function webPushSubscribe(deviceNumber) {
 		return
 	}
 
-/*
+	/*
 	console.log("webPushSubscribe device=%d -> serviceWorker.register...",deviceNumber);
 	let ret = navigator.serviceWorker.register('service-worker.js');
-//	let ret = navigator.serviceWorker.register('https://timur.mobi/callee/settings/service-worker.js');
-
 	// get access to the registration (and registration.pushManager) object.
 	console.log("webPushSubscribe serviceWorker.ready...");
 	navigator.serviceWorker.ready
 	.then(function(registration) {
 		console.log("webPushSubscribe serviceWorker.register =",ret);
-*/
+	*/
 		let registration = parent.pushRegistration
 		console.log("webPushSubscribe registration =",registration);
 		console.log("webPushSubscribe pushManager.getSubscription()");
@@ -213,19 +211,19 @@ function webPushSubscribe(deviceNumber) {
 				}
 			}
 		}).catch(err => {
-// after pushManager.getSubscription()
-// fennec shows: Uncaught (in promise) DOMException: Error retrieving push subscription.
-// FF 90 Nightly: does the same, but it takes a little while
-// this means that GCM is not enabled on Android
+			// after pushManager.getSubscription()
+			// fennec shows: Uncaught (in promise) DOMException: Error retrieving push subscription.
+			// FF 90 Nightly: does the same, but it takes a little while
+			// this means that GCM is not enabled on Android
 			console.log("webPushSubscribe getSubscription err",err);
 			alert("webPushSubscribe getSubscription error\n"+err);
 		});
-/*
+	/*
 	}).catch(err => {
 		console.log("webPushSubscribe getSubscription err",err);
 		alert("webPushSubscribe getSubscription error\n"+err);
 	});
-*/
+	*/
 
 	let deliverSubscription = function(subscr) {
 		// subscr will be used for webpush.SendNotification()
