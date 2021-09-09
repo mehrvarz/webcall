@@ -270,7 +270,8 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 					r.URL.Path, referer, cookieName, calleeID, urlID, err)
 			}
 			if calleeID!="" && calleeID != calleeIdFromCookie {
-				fmt.Printf("# calleeIdFromCookie=(%s) != calleeID=(%s) clear cookie\n",
+				// client has logged in with a different user-ID than previously (this is no error)
+				fmt.Printf("calleeIdFromCookie=(%s) != calleeID=(%s) clear cookie\n",
 					calleeIdFromCookie, calleeID)
 				cookie = nil
 			} else {
