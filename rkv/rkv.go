@@ -21,7 +21,6 @@ type KV interface {
 	Put(bucketName string, key string, value interface{}, waitConfirm bool) error
 	Delete(bucketName string, key string) error
 	Close() error
-	//SearchIp(bucketName string, ip string, value *byte) error
 }
 
 type RKV struct {
@@ -386,48 +385,7 @@ func (c RKV) Close() error {
 		return ErrTimeout
 	}
 }
-/*
-func (c RKV) SearchIp(bucketName string, ip string, value *byte) error {
-	// search for rkv.DbEntry.Ip as needed for /register
-	//fmt.Printf("rkv.SearchIp()\n")
-	idChanLock.Lock()
-	msgCounter++
-	myId := msgCounter
-	myChan := make(chan bool)
-	idChanMap[myId] = myChan
-	idChanLock.Unlock()
 
-	send(Command{MsgId:myId, KvStoreId:c.Dbr, Cmd:"SearchIp", Arg:bucketName, Key:ip})
-
-	//fmt.Printf("rkv.SearchIp waiting for remote reply...\n")
-	select {
-	case <-myChan:
-		//fmt.Printf("rkv.SearchIp received data\n")
-		receivedResponseLock.Lock()
-		resp := receivedResponseMap[myId]
-		delete(receivedResponseMap,myId)
-		receivedResponseLock.Unlock()
-		if resp.Err != "" {
-			//fmt.Printf("rkv.SearchIp bucketName=%s ip=%s rerr=%v\n",bucketName, ip, resp.Err)
-			return errors.New(resp.Err)
-		}
-		// decode resp.Data into value
-		//d := gob.NewDecoder(bytes.NewReader(resp.Data))
-		//return d.Decode(value)
-		if len(resp.Data)>0 {
-			*value = resp.Data[0]
-		}
-		//fmt.Printf("rkv.SearchIp bucketName=%s ip=%s val=%v no err\n", bucketName, ip, *value)
-		return nil
-	case <-closeChan:
-		//fmt.Printf("# rkv.SearchIp() connection closed\n")
-		return ErrDisconnect
-	case <-time.After(wsSendTimeoutDuration):
-		//fmt.Printf("# rkv.SearchIp() timeout\n")
-		return ErrTimeout
-	}
-}
-*/
 func Exit() error {
 	if !connectionClosed.Get() {
 		// connectionClosed.Set(true) prevents double close(closeChan) panic

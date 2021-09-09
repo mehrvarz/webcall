@@ -29,7 +29,6 @@ type KV interface {
 	Put(bucketName string, key string, value interface{}, waitConfirm bool) error
 	Delete(bucketName string, key string) error
 	Close() error
-	//SearchIp(bucketName string, ip string, value *byte) error
 }
 
 type SKV struct {
@@ -101,6 +100,8 @@ func (kvs SKV) Put(bucketName string, key string, value interface{}, waitConfirm
 	if err := gob.NewEncoder(&buf).Encode(value); err != nil {
 		return err
 	}
+	DbMutex.Lock()
+	defer DbMutex.Unlock()
 	return kvs.Db.Update(func(tx *bolt.Tx) error {
 		return tx.Bucket([]byte(bucketName)).Put([]byte(key), buf.Bytes())
 	})
@@ -144,6 +145,8 @@ func (kvs SKV) Get(bucketName string, key string, value interface{}) error {
 // Delete the entry with the given key. If no such key is present in the store,
 // it returns ErrNotFound.
 func (kvs SKV) Delete(bucketName string, key string) error {
+	DbMutex.Lock()
+	defer DbMutex.Unlock()
 	return kvs.Db.Update(func(tx *bolt.Tx) error {
 		c := tx.Bucket([]byte(bucketName)).Cursor()
 		if k, _ := c.Seek([]byte(key)); k == nil || string(k) != key {
@@ -158,26 +161,4 @@ func (kvs SKV) Delete(bucketName string, key string) error {
 func (kvs SKV) Close() error {
 	return kvs.Db.Close()
 }
-
-/*
-// SearchIp() is added functionality (tm)
-func (kvs SKV) SearchIp1(bucketName string, ip string, value *byte) error {
-	*value = 0
-	err := kvs.Db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(bucketName))
-		c := b.Cursor()
-		for k, v := c.First(); k != nil; k, v = c.Next() {
-			d := gob.NewDecoder(bytes.NewReader(v))
-			var dbEntry DbEntry
-			d.Decode(&dbEntry)
-			if dbEntry.Ip==ip {
-				*value = 1
-				return nil
-			}
-		}
-		return nil // not found: *value = 0
-	})
-	return err
-}
-*/
 
