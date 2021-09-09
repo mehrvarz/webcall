@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"math/rand"
 	"net/http"
+	"sync/atomic"
 	"github.com/mehrvarz/webcall/skv"
 	"github.com/mehrvarz/webcall/rkv"
 	"github.com/lesismal/nbio/nbhttp/websocket"
@@ -737,11 +738,9 @@ func (c *WsClient) setPingDeadline(secs int, comment string) {
 					if strings.Index(err.Error(),"broken pipe")<0 && strings.Index(err.Error(),"EOF")<0 {
 						fmt.Printf("# setPingDeadline ping sent err=%v (%s)\n", err, comment)
 					}
-					// sometimes getting "write: broken pipe"
-					// TODO hangup (unregister?) on error
-					// TODO count these errors (either total or per minute)
 					return
 				}
+				atomic.AddInt64(&pingSentCounter, 1)
 				c.setPingDeadline(secs,"restart")
 			}
 		case <-c.pingDone:

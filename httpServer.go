@@ -437,8 +437,6 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 			hubMapMutex.RLock()
 			defer hubMapMutex.RUnlock()
 			for calleeID := range hubMap {
-				// TODO would be good to print the r.UserAgent() / cli.userAgent
-				// leider habe ich kein mapping von calleeID zu client
 				printFunc(w,"online %s\n", calleeID)
 			}
 			printFunc(w,"\n")

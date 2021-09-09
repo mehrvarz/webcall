@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"syscall"
 	"sync"
+	"sync/atomic"
 	"strings"
 	"strconv"
 	"bufio"
@@ -138,6 +139,7 @@ var timeLocation *time.Location = nil
 
 var	backupScript = ""
 var	backupPauseMinutes = 0
+var pingSentCounter int64 = 0
 
 func main() {
 	flag.Parse()
@@ -406,10 +408,10 @@ func getStats() string {
 
 	numberOfCallsTodayMutex.RLock()
 	retStr := fmt.Sprintf("stats callees:%d callers:%d p2p:%d "+
-		"callsToday:%d callSecs:%d "+
-		"gor:%d",
+		"calls:%d callSecs:%d ping:%d gor:%d",
 		numberOfOnlineCallees, numberOfOnlineCallers, numberOfActivePureP2pCalls,
 		numberOfCallsToday, numberOfCallSecondsToday, // feed by hub.processTimeValues()
+		atomic.LoadInt64(&pingSentCounter),
 		runtime.NumGoroutine())
 	numberOfCallsTodayMutex.RUnlock()
 	return retStr
