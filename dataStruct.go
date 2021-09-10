@@ -7,11 +7,6 @@ type DbEntry struct { // ~40 bytes
 	Password string   // ~10 bytes
 }
 
-type NotifTweet struct { // key = TweetID string
-	TweetTime int64
-	Comment string
-}
-
 type DbUser struct {
 	Name string // nickname
 	Ip1 string
@@ -29,5 +24,10 @@ type DbUser struct {
 	Str3ua string // web push device 2 user agent
 	Int2 int // bit 0: hidden callee mode 0/1
 	//OfflineMsg string // currently not used
+}
+
+type NotifTweet struct { // key = TweetID string
+	TweetTime int64
+	Comment string
 }
 
