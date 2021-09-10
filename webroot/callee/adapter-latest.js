@@ -1,0 +1,1 @@
+../adapter-latest.js

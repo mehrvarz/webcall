@@ -1,0 +1,10 @@
+export BUILDDATE=`date --rfc-3339=date`
+echo "builddate $BUILDDATE"
+export VERSIONTAG=
+if [[ -f .git/config ]]
+then
+  export VERSIONTAG=`git tag`
+  echo "version ${VERSIONTAG##*$'\n'}" # last line of git tag
+fi
+go build -ldflags "-s -w -X main.builddate=$BUILDDATE -X main.codetag=${VERSIONTAG##*$'\n'}"
+
