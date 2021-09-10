@@ -1,12 +1,10 @@
 // WebCall Copyright 2021 timur.mobi. All rights reserved.
+// By default, dbLayer.go will forward all calls to skvLayer.go
+// In the future other db-layers may be used
 package main
 
 func localDb() bool {
 	return true
-}
-
-func Exit() error {
-	return nil
 }
 
 func GetOnlineCallee(calleeID string, ejectOn1stFound bool, reportHiddenCallee bool, callerIpAddr string, occupy bool, comment string) (string,*Hub,*Hub,error) { // actual calleeID, hostingServerIp
@@ -40,16 +38,15 @@ func SearchCallerIpInHubMap(ipAddr string) (bool,string,error) {
 }
 
 func DeleteFromHubMap(globalID string) (int64,int64) {
-/*
-	hubMapMutex.Lock()
-	delete(hubMap, globalID)
-	lenLocalHubMap := int64(len(hubMap))
-	hubMapMutex.Unlock()
-*/
 	hublen,err := locDeleteFromHubMap(globalID)
 	if err!=nil {
 		return int64(0),int64(0)
 	}
 	return hublen,int64(0)
 }
+/*
+func Exit() error {
+	return skv.Exit()
+}
+*/
 

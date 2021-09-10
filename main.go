@@ -360,7 +360,7 @@ func main() {
 	if err!=nil {
 		fmt.Printf("# error dbName %s close err=%v\n",dbMainName,err)
 	}
-	Exit()
+	skv.Exit()
 	os.Exit(0)
 }
 
