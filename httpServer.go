@@ -422,7 +422,10 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if remoteAddr=="127.0.0.1" {
+	readConfigLock.RLock()
+	myTurnIp := turnIP
+	readConfigLock.RUnlock()
+	if remoteAddr=="127.0.0.1" || remoteAddr==hostname || remoteAddr==myTurnIp {
 		printFunc := func(w http.ResponseWriter, format string, a ...interface{}) {
 			// printFunc writes to the console AND to the localhost http client
 			fmt.Printf(format, a...)
@@ -468,7 +471,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	fmt.Printf("# (%s) unhandled apicall by id=(%s) rip=%s\n",urlPath,urlID,remoteAddrWithPort)
+	fmt.Printf("# (%s) unhandled apicall by id=(%s) rip=%s\n",urlPath,urlID,remoteAddr)
 	return
 }
 
