@@ -61,47 +61,14 @@ type PwIdCombo struct {
 	Expiration int64
 }
 
+
 var version = flag.Bool("version", false, "show version")
 var	builddate string
 var	codetag string
 const configFileName = "config.ini"
 const statsFileName = "stats.ini"
-var hostname = ""
-var httpPort = 0
-var httpsPort = 0
-var httpToHttps = false
-var wsPort = 0
-var wssPort = 0
-var htmlPath = ""
-var insecureSkipVerify = false
-var turnIP = ""
-var turnPort = 0
-var turnRealm = ""
-var turnDebugLevel = 0
-var pprofPort = 0
-var dbPath = ""
-var maxRingSecs = 0
-var maxTalkSecsIfNoP2p = 0
-
-// twitter key for @WebCall user
-var twitterKey = ""
-var twitterSecret = ""
-
-// web push keys for (TODO a copy of vapidPublicKey is also being used in settings.js)
-var vapidPublicKey = ""
-var vapidPrivateKey = ""
-var adminEmail = ""
-
 var readConfigLock sync.RWMutex
-var wsUrl = ""
-var wssUrl = ""
-
 var	shutdownStarted atombool.AtomBool
-var maintenanceMode = false
-var allowNewAccounts = true
-var disconCalleeOnPeerConnected = false
-var disconCallerOnPeerConnected = true
-var calleeClientVersion = ""
 
 var hubMap map[string]*Hub
 var hubMapMutex sync.RWMutex
@@ -114,10 +81,6 @@ var numberOfCallSecondsToday = 0
 var numberOfCallsTodayMutex sync.RWMutex
 
 var lastCurrentDayOfMonth = 0 // will be set by timer.go
-var multiCallees = ""
-var logevents = ""
-var logeventMap map[string]bool
-var logeventMutex sync.RWMutex
 var httpRequestCountMutex sync.RWMutex
 var httpRequestCount = 0
 var httpResponseCount = 0
@@ -135,14 +98,48 @@ type wsClientDataType struct {
 }
 var wsClientMap map[uint64]wsClientDataType
 var wsClientMutex sync.RWMutex
+var pingSentCounter int64 = 0
 
+
+// config keywords must be evaluated with readConfigLock
+var hostname = ""
+var httpPort = 0
+var httpsPort = 0
+var httpToHttps = false
+var wsPort = 0
+var wssPort = 0
+var htmlPath = ""
+var insecureSkipVerify = false
+var turnIP = ""
+var turnPort = 0
+var turnRealm = ""
+var turnDebugLevel = 0
+var pprofPort = 0
+var dbPath = ""
+var wsUrl = ""
+var wssUrl = ""
+var twitterKey = ""
+var twitterSecret = ""
+var vapidPublicKey = ""
+var vapidPrivateKey = ""
 var timeLocationString = ""
 var timeLocation *time.Location = nil
-
+var maintenanceMode = false
+var allowNewAccounts = true
+var multiCallees = ""
+var logevents = ""
+var logeventMap map[string]bool
+var logeventMutex sync.RWMutex
+var disconCalleeOnPeerConnected = false
+var disconCallerOnPeerConnected = true
+var calleeClientVersion = ""
+var maxRingSecs = 0
+var maxTalkSecsIfNoP2p = 0
+var adminEmail = ""
 var	backupScript = ""
 var	backupPauseMinutes = 0
-var pingSentCounter int64 = 0
 var maxCallees = 0
+
 
 func main() {
 	flag.Parse()
@@ -424,8 +421,8 @@ func readConfig(init bool) {
 	//fmt.Printf("readConfig '%s' ...\n", configFileName)
 	configIni, err := ini.Load(configFileName)
 	if err != nil {
+		// ignore the read error and use the default values
 		configIni = nil
-		// ignore the error and use default values for everything
 	}
 
 	readConfigLock.Lock()
@@ -558,15 +555,17 @@ func writeStatsFile() {
 		fmt.Printf("# error creating statsFile (%s) err=%v\n", filename, err)
 		return
 	}
-	fwr := bufio.NewWriter(file)
 	defer func() {
-		if fwr!=nil {
-			fwr.Flush()
-		}
 		if file!=nil {
 			if err := file.Close(); err != nil {
 				fmt.Printf("# error closing statsFile (%s) err=%s\n",filename,err)
 			}
+		}
+	}()
+	fwr := bufio.NewWriter(file)
+	defer func() {
+		if fwr!=nil {
+			fwr.Flush()
 		}
 	}()
 
@@ -586,8 +585,7 @@ func writeStatsFile() {
 			filename, len(data), wrlen)
 		return
 	}
-	fmt.Printf("writing statsFile (%s) dlen=%d wrlen=%d\n",
-		filename, len(data), wrlen)
+	fmt.Printf("statsFile written (%s) dlen=%d wrlen=%d\n", filename, len(data), wrlen)
 	fwr.Flush()
 }
 

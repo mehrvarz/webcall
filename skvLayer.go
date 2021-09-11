@@ -4,6 +4,7 @@ package main
 
 import (
 	"strings"
+	"strconv"
 	"fmt"
 	"math/rand"
 	"github.com/mehrvarz/webcall/skv"
@@ -108,23 +109,27 @@ func locDeleteFromHubMap(id string) (int64,error) {
 
 func locStoreCalleeInHubMap(key string, hub *Hub, multiCallees string, remoteAddrWithPort string, wsClientID uint64, skipConfirm bool) (string,int64,error) {
 	//fmt.Printf("StoreCalleeInHubMap start key=%s\n",key)
-	//if hub!=nil && hub.ServerIpAddr == "" {
-	//	hub.ServerIpAddr = skv.MyOutBoundIpAddr
-	//}
 	hubMapMutex.Lock()
 	defer hubMapMutex.Unlock()
 
 	if strings.Index(multiCallees,"|"+key+"|")>=0 {
 		newKey := ""
-		idx := 0
-		for {
-			newKey = fmt.Sprintf("%s!%d",key,idx)
+		for i:=0; i<100; i++ {
+			var idExt uint64 = uint64(rand.Int63n(int64(99999999999)))
+			if(idExt < uint64(10000000000)) {
+				continue
+			}
+			newKey = key + "!" + strconv.FormatInt(int64(idExt),10)
 			_,ok := hubMap[newKey]
 			//fmt.Printf("StoreCalleeInHubMap try key=%s ok=%v idx=%d\n",newKey,ok,idx)
 			if !ok {
+				// newKey does not exist yet - found a free slot: exit loop
 				break
 			}
-			idx++
+			// newKey exists - must continue to search for a free slot
+			//if i>=98 {
+			//	fmt.Printf("StoreCalleeInHubMap %d tries\n",i)
+			//}
 		}
 		key = newKey
 	}
@@ -143,7 +148,8 @@ func locGetRandomCalleeID() (string,error) {
 		if(intID<uint64(10000000000)) {
 			continue;
 		}
-		newCalleeId = fmt.Sprintf("%d",intID)
+		//newCalleeId = fmt.Sprintf("%d",intID)
+		newCalleeId = strconv.FormatInt(int64(intID),10)
 		hub := hubMap[newCalleeId]
 		if hub!=nil {
 			continue;

@@ -365,7 +365,9 @@ func (c *WsClient) receiveProcess(message []byte) {
 
 		// store dbUser after set/clear isHiddenCallee in dbUser.Int2&1
 		var dbUser DbUser
-		userKey := fmt.Sprintf("%s_%d",c.hub.calleeID,c.hub.registrationStartTime)
+		//userKey := fmt.Sprintf("%s_%d",c.hub.calleeID,c.hub.registrationStartTime)
+		userKey := c.hub.calleeID + "_" + strconv.FormatInt(int64(c.hub.registrationStartTime),10)
+
 		err = kvMain.Get(dbUserBucket, userKey, &dbUser)
 		if err!=nil {
 			fmt.Printf("# serveWs calleeHidden db=%s bucket=%s getX key=%v err=%v\n",
@@ -429,7 +431,9 @@ func (c *WsClient) receiveProcess(message []byte) {
 			//	c.hub.calleeID, len(callsWhileInAbsence))
 			// search for callerIP:port + CallTime == callerAddrPortPlusCallTime
 			for idx := range callsWhileInAbsence {
-				id := fmt.Sprintf("%s_%d",callsWhileInAbsence[idx].AddrPort,callsWhileInAbsence[idx].CallTime)
+				//id := fmt.Sprintf("%s_%d",callsWhileInAbsence[idx].AddrPort,callsWhileInAbsence[idx].CallTime)
+				id := callsWhileInAbsence[idx].AddrPort + "_" +
+					 strconv.FormatInt(int64(callsWhileInAbsence[idx].CallTime),10)
 				//fmt.Printf("deleteCallWhileInAbsence %s compare (%s==%s)\n", callerAddrPortPlusCallTime, id)
 				if id == callerAddrPortPlusCallTime {
 					//fmt.Printf("serveWs deleteCallWhileInAbsence idx=%d\n",idx)
@@ -474,8 +478,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 		c.hub.CallerClient.Write(message)
 
 		// switching from maxRingSecs deadline to maxTalkSecsIfNoP2p deadline
-		if c.hub.LocalP2p && c.hub.RemoteP2p {
-			// full p2p con: remove maxRingSecs deadline and do NOT replace it with any talktimr deadline
+		if (c.hub.LocalP2p && c.hub.RemoteP2p) || c.hub.maxTalkSecsIfNoP2p<=0 {
+			// full p2p con: remove maxRingSecs deadline and do NOT replace it with any talktimer deadline
 			//fmt.Printf("skip setDeadline maxTalkSecsIfNoP2p %v %v\n", c.hub.LocalP2p, c.hub.RemoteP2p)
 			c.hub.setDeadline(0,"pickup")
 		} else {
@@ -484,7 +488,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 			c.hub.setDeadline(c.hub.maxTalkSecsIfNoP2p,"pickup")
 
 			// deliver max talktime to both clients
-			c.hub.doBroadcast([]byte("sessionDuration|"+fmt.Sprintf("%d",c.hub.maxTalkSecsIfNoP2p)))
+			//c.hub.doBroadcast([]byte("sessionDuration|"+fmt.Sprintf("%d",c.hub.maxTalkSecsIfNoP2p)))
+			c.hub.doBroadcast([]byte("sessionDuration|"+strconv.FormatInt(int64(c.hub.maxTalkSecsIfNoP2p),10)))
 		}
 		return
 	}

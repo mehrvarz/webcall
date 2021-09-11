@@ -1,6 +1,6 @@
 // WebCall Copyright 2021 timur.mobi. All rights reserved.
-// By default, dbLayer.go will forward all calls to skvLayer.go
-// In the future other db-layers may be used
+// By default dbLayer.go will forward all calls to skvLayer.go
+// In the future other db-layers may be implemented
 package main
 
 func localDb() bool {
