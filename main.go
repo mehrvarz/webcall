@@ -18,17 +18,14 @@ import (
 	"gopkg.in/ini.v1"
 	_ "net/http/pprof"
 	"github.com/mehrvarz/webcall/atombool"
-
 	"github.com/mehrvarz/webcall/skv"
-	//skv "github.com/mehrvarz/webcall/rkv"
-
 	"github.com/lesismal/nbio/nbhttp"
 	"github.com/lesismal/llib/std/crypto/tls"
 )
 
 var	kvMain skv.KV
 const dbMainName = "rtcsig.db"
-const dbRegisteredIDs = "activeIDs" // internal name changed active -> registered
+const dbRegisteredIDs = "activeIDs"
 const dbBlockedIDs = "blockedIDs"
 const dbUserBucket = "userData2"
 
@@ -101,7 +98,7 @@ var wsClientMutex sync.RWMutex
 var pingSentCounter int64 = 0
 
 
-// config keywords must be evaluated with readConfigLock
+// config keywords: must be evaluated with readConfigLock
 var hostname = ""
 var httpPort = 0
 var httpsPort = 0
@@ -323,13 +320,12 @@ func main() {
 	signal.Notify(sigc, os.Interrupt, syscall.SIGTERM)
 	<-sigc
 
-	//////////////// shutdown //////////////////
+	// shutdown
 	fmt.Printf("received os.Interrupt/SIGTERM signal: shutting down...\n")
 	// shutdownStarted.Set(true) will end all timer routines
-	// but it will not end our ListenAndServe() servers; this is why we call os.Exit() below
+	// but it will not end ListenAndServe() servers; this is why we call os.Exit() below
 	shutdownStarted.Set(true)
 	writeStatsFile()
-	// wait for shutdownStarted to take effect; then close all db's
 	time.Sleep(2 * time.Second)
 
 	fmt.Printf("kvContacts.Close...\n")
@@ -439,9 +435,8 @@ func readConfig(init bool) {
 		turnPort = readIniInt(configIni, "turnPort", turnPort, 0, 1) // 3739
 		turnRealm = readIniString(configIni, "turnRealm", turnRealm, "")
 		pprofPort = readIniInt(configIni, "pprofPort", pprofPort, 0, 1) // 8980
-
 		dbPath = readIniString(configIni, "dbPath", dbPath, "db/")
-
+		timeLocationString = readIniString(configIni, "timeLocation", timeLocationString, "")
 		wsUrl = readIniString(configIni, "wsUrl", wsUrl, "")
 		wssUrl = readIniString(configIni, "wssUrl", wssUrl, "")
 
@@ -450,8 +445,6 @@ func readConfig(init bool) {
 
 		vapidPublicKey = readIniString(configIni, "vapidPublicKey", vapidPublicKey, "")
 		vapidPrivateKey = readIniString(configIni, "vapidPrivateKey", vapidPrivateKey, "")
-
-		timeLocationString = readIniString(configIni, "timeLocation", timeLocationString, "")
 	}
 
 	maintenanceMode = readIniBoolean(configIni, "maintenanceMode", maintenanceMode, false)

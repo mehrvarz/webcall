@@ -44,9 +44,4 @@ func DeleteFromHubMap(globalID string) (int64,int64) {
 	}
 	return hublen,int64(0)
 }
-/*
-func Exit() error {
-	return skv.Exit()
-}
-*/
 

@@ -14,9 +14,6 @@ import (
 )
 
 func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *http.Cookie, pw string, remoteAddr string, remoteAddrWithPort string, myRequestCount int, nocookie bool, startRequestTime time.Time, pwIdCombo PwIdCombo) {
-	// used by callee.js
-	// if client arrives with cookie + is already logged in, then this is just starting a new ws-con
-
 	//fmt.Printf("/login urlID=(%s) rip=%s id=%d rt=%v\n",
 	//	urlID, remoteAddrWithPort, myRequestCount, time.Since(startRequestTime)) // rt=4.393µs
 
@@ -24,13 +21,12 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	referer := r.Referer()
 	if strings.Index(referer, "bot") >= 0 ||
 		strings.Index(referer, "search") >= 0 ||
-		strings.Index(referer, "facebook") >= 0 {
-		fmt.Printf("# /login by bot denied referer=(%s) urlID=(%s) rip=%s\n",
-			referer, urlID, remoteAddr)
+		strings.Index(referer, "acebook") >= 0 {
+		fmt.Printf("# /login by bot denied urlID=(%s) referer=(%s) rip=%s\n", urlID, referer, remoteAddr)
 		return
 	}
 
-	// check maxCallees
+	// reached maxCallees?
 	hubMapMutex.RLock()
 	lenHubMap := len(hubMap)
 	hubMapMutex.RUnlock()
@@ -38,8 +34,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	myMaxCallees := maxCallees
 	readConfigLock.RUnlock()
 	if lenHubMap > myMaxCallees {
-		fmt.Printf("# /login lenHubMap %d > myMaxCallees %d rip=%s\n",
-			lenHubMap, myMaxCallees, remoteAddr)
+		fmt.Printf("# /login lenHubMap %d > myMaxCallees %d rip=%s\n", lenHubMap, myMaxCallees, remoteAddr)
 		fmt.Fprintf(w, "error")
 		return
 	}
@@ -65,9 +60,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			fmt.Printf("# /login key=(%s) is already logged in rip=%s\n", key, remoteAddr)
 			return
 		}
-	} else {
-		// for a multiCallee's we don't check online state
-		// bc for these users "already logged-in" doesn't matter
 	}
 
 	if cookie == nil || pw == "" {
@@ -85,17 +77,15 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				pwData = strings.TrimRight(pwData, "\n")
 				pw = pwData[3:]
 			}
-			//fmt.Printf("/login urlID=(%s) get pw from http post\n", urlID)
 		}
 	}
-	// a pw must now exist
+	// pw must be available now
 	if pw == "" {
 		fmt.Printf("/login no pw urlID=%s rip=%s ua=%s\n", urlID, remoteAddr, r.UserAgent())
 		fmt.Fprintf(w, "error")
 		return
 	}
 
-	// no time lost until here
 	//fmt.Printf("/login pw given urlID=(%s) rip=%s id=%d rt=%v\n",
 	//	urlID, remoteAddr, myRequestCount, time.Since(startRequestTime)) // rt=23.184µs
 	var dbEntry DbEntry
@@ -107,9 +97,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 	if !strings.HasPrefix(urlID, "random") && !strings.HasPrefix(urlID, "!") {
 		// pw check for everyone other than random and duo
-		// if pw is not valid (or just too short) abort
 		if len(pw) < 6 {
-			// must delay to make guessing more difficult
+			// guessing more difficult if delayed
 			fmt.Printf("/login pw too short urlID=(%s) rip=%s\n", urlID, remoteAddr)
 			time.Sleep(3000 * time.Millisecond)
 			fmt.Fprintf(w, "error")
@@ -121,12 +110,12 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			fmt.Printf("# /login error db=%s bucket=%s key=%s get registeredID err=%v\n",
 				dbMainName, dbRegisteredIDs, urlID, err)
 			if strings.Index(err.Error(), "disconnect") >= 0 {
-				// TODO admin email notif (but not a 1000 times)
+				// TODO admin email notif may be useful
 				fmt.Fprintf(w, "error")
 				return
 			}
 			if strings.Index(err.Error(), "timeout") < 0 {
-				// delay response to slow down pw-guessing
+				// guessing more difficult if delayed
 				time.Sleep(3000 * time.Millisecond)
 			}
 			fmt.Fprintf(w, "notregistered")
@@ -151,7 +140,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		//fmt.Printf("/login dbUserKey=%v dbUser.Int=%d (hidden) id=%d rt=%v\n",
 		//	dbUserKey, dbUser.Int2, myRequestCount, time.Since(startRequestTime)) // rt=75ms
 
-		// create a new unique wsClientID
+		// create new unique wsClientID
 		wsClientMutex.Lock()
 		wsClientID = getNewWsClientID()
 		wsClientMutex.Unlock()
@@ -220,17 +209,14 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				fmt.Printf("/login persisted PwIdCombo db=%s bucket=%s key=%s\n",
 					dbHashedPwName, dbHashedPwBucket, cookieValue)
 			}
-
-			// TODO once in a while (far less often than 3m-loop; more like 1x per day)
-			// we need to delete expired dbHashedPwName entries (see pwIdCombo.Expiration)
 			//fmt.Printf("/login pwIdCombo stored id=%d time=%v\n",
 			//	myRequestCount, time.Since(startRequestTime))
 		}
 	}
 
 	readConfigLock.RLock()
-	myMaxRingSecs := maxRingSecs // 0=unlimited
-	myMaxTalkSecsIfNoP2p := maxTalkSecsIfNoP2p // 0=unlimited
+	myMaxRingSecs := maxRingSecs
+	myMaxTalkSecsIfNoP2p := maxTalkSecsIfNoP2p
 	readConfigLock.RUnlock()
 	var myHubMutex sync.RWMutex
 	hub := newHub(globalID, myMaxRingSecs, myMaxTalkSecsIfNoP2p, dbEntry.StartTime)
@@ -281,10 +267,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				_,lenGlobalHubMap = DeleteFromHubMap(globalID)
 			}
 			hub = nil
-		} else {
-			// this may happen if exitFunc is being called twice for the same callee
-			//fmt.Printf("# exitFunc hub==nil wsClientMap[wsClientID=%d] user=%d/%d (%s)\n",
-			//	wsClientID, len(hubMap), lenGlobalHubMap, comment)
 		}
 		myHubMutex.Unlock()
 
@@ -315,7 +297,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 	//fmt.Printf("/login run hub id=%s durationSecs=%d/%d id=%d rt=%v\n",
 	//	urlID,maxRingSecs,maxTalkSecsIfNoP2p, myRequestCount, time.Since(startRequestTime)) // rt=44ms, 113ms
-
 	wsAddr := fmt.Sprintf("ws://%s:%d/ws", hostname, wsPort)
 	readConfigLock.RLock()
 	if r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https" {
@@ -342,8 +323,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		len(hubMap),
 		lenGlobalHubMap,
 		myRequestCount,
-		runtime.NumGoroutine(),       // rt=63ms, 147ms
-		time.Since(startRequestTime), // 90% of this is the time spent talking to rtcdb
+		runtime.NumGoroutine(),
+		time.Since(startRequestTime),
 		remoteAddrWithPort)
 	hubMapMutex.RUnlock()
 
@@ -416,9 +397,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				if hub != nil && hub.CalleeClient != nil {
 					hub.doUnregister(hub.CalleeClient, "ws-con timeout")
 				}
-			} else {
-				// all is well, callee client has logged in (or is gone already)
-				//fmt.Printf("/login detected client activity from id=%s\n",globalID)
 			}
 			myHubMutex.RUnlock()
 		}()

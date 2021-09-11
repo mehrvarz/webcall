@@ -448,16 +448,14 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 			// show all hubs with the connected client
 			// TODO the printed order may change every time bc go map is unordered
 			printFunc(w,"hubinfo rip=%s\n",remoteAddr)
+			hubMapMutex.RLock()
+			defer hubMapMutex.RUnlock()
 			for calleeID,hub := range hubMap {
 				if hub!=nil {
-					hub.HubMutex.RLock()
-					defer hub.HubMutex.RUnlock()
-//					if hub.ClientIpAddr!="" {
-//						printFunc(w,"calleeID=%v connected client=%v\n",calleeID,hub.ClientIpAddr)
 					if hub.CallerClient!=nil {
-						printFunc(w,"calleeID=%v connected client=%v\n",calleeID,hub.CallerClient.RemoteAddr)
+						printFunc(w,"callee=%v connected client=%v\n",calleeID,hub.CallerClient.RemoteAddr)
 					} else {
-						printFunc(w,"calleeID=%v idle\n",calleeID)
+						printFunc(w,"callee=%v idle\n",calleeID)
 					}
 				}
 			}
@@ -518,10 +516,10 @@ func getNewWsClientID() uint64 {
 		}
 		_,ok := wsClientMap[intID]
 		if ok {
-			// already used
+			// already in use
 			continue
 		}
-		// wsClientMap[intID] is NOT used yet
+		// wsClientMap[intID] is NOT in use yet
 		return intID
 	}
 }

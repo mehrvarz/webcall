@@ -203,7 +203,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	}
 	hub.HubMutex.Unlock()
 
-	// send a ping every pingPeriod secs
+	// send ping every pingPeriod secs
 	client.setPingDeadline(pingPeriod,"start")
 }
 

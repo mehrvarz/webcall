@@ -10,7 +10,7 @@ import (
 	"sync"
 
 	//"github.com/pion/turn/v2" // see: https://github.com/pion/turn/issues/206#issuecomment-907091251
-	"github.com/mehrvarz/turn/v2" // this _is_ pion/turn, but with a minor patch for FF on Android
+	"github.com/mehrvarz/turn/v2" // this _is_ pion/turn but with a minor patch for FF on Android
 	"github.com/pion/logging"
 )
 
@@ -130,9 +130,7 @@ func runTurnServer() {
 			{
 				PacketConn: udpListener,
 				RelayAddressGenerator: &turn.RelayAddressGeneratorStatic{
-					// Claim that we are listening on IP passed by user (This should be your Public IP)
 					RelayAddress: net.ParseIP(turnIP),
-					// But actually be listening on every interface
 					Address:      "0.0.0.0",
 				},
 			},
