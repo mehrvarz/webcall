@@ -46,7 +46,6 @@ func httpServer() {
 			tlsConfig := &tls.Config{
 				Certificates: []tls.Certificate{cer},
 				InsecureSkipVerify: insecureSkipVerify,
-
 				// Causes servers to use Go's default ciphersuite preferences,
 				// which are tuned to avoid attacks. Does nothing on clients.
 				PreferServerCipherSuites: true,
@@ -55,7 +54,6 @@ func httpServer() {
 					tls.CurveP256,
 					tls.X25519,
 				},
-
 				MinVersion: tls.VersionTLS12,
 				CipherSuites: []uint16{
 					tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
@@ -91,7 +89,7 @@ func httpServer() {
 				httpsFunc()
 			}()
 		} else {
-			// no http server, only running a https server
+			// no http server, running https server only
 			httpsFunc()
 		}
 	}
@@ -138,7 +136,7 @@ func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 		urlPath = urlPath[:len(urlPath)-1]
 	}
 	if strings.Index(urlPath,"..")>=0 {
-		// suspicious! don't respond
+		// suspicious! do not respond
 		fmt.Printf("# substituteUserNameHandler abort on '..' in urlPath=(%s)\n", urlPath)
 		return
 	}
@@ -244,8 +242,8 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		cookie = nil
 	} else {
-		// cookie avail: may be a callee
-		// may also be a client sending the cookie of a previous callee instance
+		// cookie avail: could be a callee
+		// could also be a client sending the cookie of a previous callee session
 
 		// we should only show this if a callee is making use of the pw
 		//maxlen:=20; if len(cookie.Value)<20 { maxlen=len(cookie.Value) }
@@ -255,8 +253,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		// cookie.Value has format: calleeID + "&" + hashedPW
 		idxAmpasent := strings.Index(cookie.Value,"&")
 		if idxAmpasent<0 {
-			// error
-			fmt.Printf("# no ampasent in cookie.Value (%s) clear cookie\n", cookie.Value)
+			fmt.Printf("# error no ampasent in cookie.Value (%s) clear cookie\n", cookie.Value)
 			cookie = nil
 		} else {
 			calleeIdFromCookie := cookie.Value[:idxAmpasent]
