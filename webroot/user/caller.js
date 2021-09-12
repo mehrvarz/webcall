@@ -9,10 +9,11 @@ const bitrate = 280000;
 const neverAudio = false;
 const playDialSounds = true;
 
+var connectingText = "Connecting...";
 var singleButtonReadyText = "Click to make your order<br>Live operator";
-var singleButtonConnectingText = "Connecting...";
 var singleButtonBusyText = "All lines are busy.<br>Please try again a little later.";
 var singleButtonConnectedText = "You are connected.<br>How can we help you?";
+var ringingText = "Ringing... please be patient, answering a web call may take a bit longer than answering a regular phone call...";
 var dtmfDialingSound = null;
 var dialToneAfterDialingSound = null;
 var busySignalSound = null;
@@ -121,8 +122,8 @@ window.onload = function() {
 	}
 	text = getUrlParams("connectingText");
 	if(typeof text!=="undefined" && text!="") {
-		singleButtonConnectingText = decodeURI(text);
-		if(!gentle) console.log("onload url arg connectingText",singleButtonConnectingText);
+		connectingText = decodeURI(text);
+		if(!gentle) console.log("onload url arg connectingText",connectingText);
 	}
 	text = getUrlParams("busyText");
 	if(typeof text!=="undefined" && text!="") {
@@ -171,7 +172,7 @@ window.onload = function() {
 
 				dialButton.onclick = function() {
 					console.log("connecting...");
-					showStatus("Connecting...",-1);
+					showStatus(connectingText,-1);
 
 					rtcConnectStartDate = 0;
 					mediaConnectStartDate = 0;
@@ -179,7 +180,7 @@ window.onload = function() {
 					if(singlebutton) {
 						// switch from dialButton to hangupButton "Connecting..."
 						//hangupButton.style.backgroundColor = "#d33"; // color from button:active
-						hangupButton.innerHTML = singleButtonConnectingText;
+						hangupButton.innerHTML = connectingText;
 						dialButton.style.display = "none";
 						hangupButton.style.display = "inline-block";
 						// animate hangupButton background
@@ -1340,7 +1341,7 @@ function dial() {
 		hangupWithBusySound(true,"pickup with no localStream");
 		return;
 	}
-	showStatus("Connecting...",-1);
+	showStatus(connectingText,-1);
 	otherUA = "";
 	dialing = true;
 	rtcConnect = false;
@@ -1367,8 +1368,7 @@ function dial() {
 			} else {
 				//console.log("dialing timeout reached after rtcConnect, ignore");
 				if(!mediaConnect) {
-					showStatus("Ringing, please wait...",6000);
-					// TODO and singlebutton mode?
+					showStatus(ringingText,-1);
 				}
 			}
 		}
@@ -1474,7 +1474,7 @@ function dial() {
 		} else if(peerCon.connectionState=="connecting") {
 			// if we see this despite being mediaConnect already, it is caused by createDataChannel
 			if(!mediaConnect) {
-				showStatus("Connecting...",-1);
+				showStatus(connectingText,-1);
 			}
 		} else if(peerCon.connectionState=="connected") {
 			// if we see this despite being mediaConnect already, it is caused by createDataChannel
@@ -1557,7 +1557,7 @@ function dial() {
 			// switch from dialButton to hangupButton "Connecting..."
 			dialButton.style.display = "none";
 			hangupButton.style.backgroundColor = "#d33"; // color from button:active
-			hangupButton.innerHTML = singleButtonConnectingText;
+			hangupButton.innerHTML = connectingText;
 			hangupButton.style.display = "inline-block";
 		} else {
 			dialButton.disabled = true;
