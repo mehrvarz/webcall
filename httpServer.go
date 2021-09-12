@@ -422,7 +422,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if remoteAddr=="127.0.0.1" || remoteAddr==outboundIP {
+	if remoteAddr=="127.0.0.1" || (outboundIP!="" && remoteAddr==outboundIP) {
 		printFunc := func(w http.ResponseWriter, format string, a ...interface{}) {
 			// printFunc writes to the console AND to the localhost http client
 			fmt.Printf(format, a...)
