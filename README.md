@@ -1,4 +1,4 @@
-# WebCall - Your WebRTC Telco
+# WebCall - WebRTC Telephony Server
 
 [https://timur.mobi/webcall](https://timur.mobi/webcall)
 
