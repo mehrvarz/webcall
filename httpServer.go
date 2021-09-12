@@ -431,11 +431,11 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 
 		if urlPath=="/dumponline" {
 			// show the list of callee-IDs that are online (and their ports)
-			fmt.Printf("hubinfo rip=%s\n",remoteAddr)
+			printFunc(w,"/dumponline rip=%s\n",remoteAddr)
 			hubMapMutex.RLock()
 			defer hubMapMutex.RUnlock()
 			for calleeID := range hubMap {
-				printFunc(w,"online %s\n", calleeID)
+				fmt.Fprintf(w,"online %s\n", calleeID)
 			}
 			printFunc(w,"\n")
 			return
@@ -444,15 +444,15 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		if urlPath=="/hubinfo" {
 			// show all hubs with the connected client
 			// TODO the printed order may change every time bc go map is unordered
-			printFunc(w,"hubinfo rip=%s\n",remoteAddr)
+			printFunc(w,"/hubinfo rip=%s\n",remoteAddr)
 			hubMapMutex.RLock()
 			defer hubMapMutex.RUnlock()
 			for calleeID,hub := range hubMap {
 				if hub!=nil {
 					if hub.CallerClient!=nil {
-						printFunc(w,"callee=%v connected client=%v\n",calleeID,hub.CallerClient.RemoteAddr)
+						fmt.Fprintf(w,"callee=%v connected client=%v\n",calleeID,hub.CallerClient.RemoteAddr)
 					} else {
-						printFunc(w,"callee=%v idle\n",calleeID)
+						fmt.Fprintf(w,"callee=%v idle\n",calleeID)
 					}
 				}
 			}
