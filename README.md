@@ -1,9 +1,8 @@
 <h1 align="center">
-  <a href="https://timur.mobi/webcall"><img src="webroot/webcall-logo.png" alt="WebCall" height="250px"></a>
-  <br>
-  WebCall - WebRTC Telephony Server
-  <br>
+  <a href="https://timur.mobi/webcall"><img src="webroot/webcall-logo.png" alt="WebCall"></a>
 </h1>
+<br>
+
 # WebCall - WebRTC Telephony Server
 
 [https://timur.mobi/webcall](https://timur.mobi/webcall)
