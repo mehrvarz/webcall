@@ -18,6 +18,7 @@ import (
 	"gopkg.in/ini.v1"
 	_ "net/http/pprof"
 	"github.com/mehrvarz/webcall/atombool"
+	"github.com/mehrvarz/webcall/iptools"
 	"github.com/mehrvarz/webcall/skv"
 	"github.com/lesismal/nbio/nbhttp"
 	"github.com/lesismal/llib/std/crypto/tls"
@@ -230,6 +231,9 @@ func main() {
 	}
 
 	readStatsFile()
+
+	outboundIP,err := iptools.GetOutboundIP()
+	fmt.Printf("GetOutboundIP %s\n",outboundIP)
 
 	// websocket handler
 	if wsPort > 0 {

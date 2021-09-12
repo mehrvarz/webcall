@@ -328,10 +328,10 @@ func (c *WsClient) receiveProcess(message []byte) {
 		//}
 
 		// exchange useragent's
-		if c.hub.CallerClient.Write([]byte("ua|"+c.hub.CalleeClient.userAgent)) {
+		if c.hub.CallerClient.Write([]byte("ua|"+c.hub.CalleeClient.userAgent)) != nil {
 			return
 		}
-		if c.hub.CalleeClient.Write([]byte("ua|"+c.hub.CallerClient.userAgent)) {
+		if c.hub.CalleeClient.Write([]byte("ua|"+c.hub.CallerClient.userAgent)) != nil {
 			return
 		}
 

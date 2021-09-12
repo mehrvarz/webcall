@@ -2,7 +2,6 @@ package atombool
 
 import "sync/atomic"
 
-// atomic bool
 type AtomBool struct{ flag int32 }
 
 func (b *AtomBool) Set(value bool) {

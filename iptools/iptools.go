@@ -11,6 +11,5 @@ func GetOutboundIP() (string, error) {
 	defer conn.Close()
 	localAddr := conn.LocalAddr().(*net.UDPAddr)
 	var localIp string = localAddr.IP.String()
-	//fmt.Printf("rkv.GetOutboundIP localAddr=%v (%s)\n",localAddr,localIp)
 	return localIp, nil
 }
