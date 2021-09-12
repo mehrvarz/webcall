@@ -1,7 +1,6 @@
-<h1 align="center">
+<div align="center">
   <a href="https://timur.mobi/webcall"><img src="webroot/webcall-logo.png" alt="WebCall"></a>
-</h1>
-<br>
+</div>
 
 # WebCall - WebRTC Telephony Server
 
@@ -13,7 +12,7 @@
 
 # License
 
-AGPL3.0 - see [LICENSE](LICENSE)
+AGPL3.0 - see: [LICENSE](LICENSE)
 
 # 3rd party code (external)
 
