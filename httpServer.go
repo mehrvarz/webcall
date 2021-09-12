@@ -467,6 +467,9 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
+	} else {
+		fmt.Printf("# (%s) httpAdmin request denied for rip=%s\n",urlPath,remoteAddr)
+		return
 	}
 
 	fmt.Printf("# (%s) unhandled apicall by id=(%s) rip=%s\n",urlPath,urlID,remoteAddr)
