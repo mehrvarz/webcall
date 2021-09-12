@@ -140,12 +140,19 @@ window.onload = function() {
 		if(mode==0) {
 			// normal mode
 			if(calleeID.startsWith("random")) {
+				document.title = "WebCall Roulette";
 				if(titleElement) {
 					titleElement.innerHTML = "WebCall Roulette";
 				}
 			} else if(calleeID.startsWith("!")) {
+				document.title = "WebCall Duo";
 				if(titleElement) {
 					titleElement.innerHTML = "WebCall Duo";
+				}
+			} else {
+				document.title = "WebCall "+calleeID;
+				if(titleElement) {
+					titleElement.innerHTML = "WebCall "+calleeID;
 				}
 			}
 
