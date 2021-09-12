@@ -11,16 +11,16 @@ import (
 type Hub struct {
 	HubMutex sync.RWMutex
 
-	WsClientID uint64 // set by the callee; will be handed over to the caller at /online
-	calleeHostStr string // set by the callee; will be handed over to the caller at /online
+	WsClientID uint64 // set by the callee; will be handed over to the caller via /online
+	calleeHostStr string // set by the callee; will be handed over to the caller via /online
 
 	CalleeClient *WsClient
-	calleeID string	// calleeID=="random" will change on "pickup"  this is the global id (unlike client.calleeID)
+	calleeID string	// this is the global id (unlike CalleeClient.calleeID)
 	CalleeLogin atombool.AtomBool // connected to signaling server
 
 	CallerClient *WsClient
-	callerID string // id of the caller (may not be avail)
-	callerNickname string // nickname of the caller (may not be avail)
+	//callerID string // id of the caller (may not be avail)
+	//callerNickname string // nickname of the caller (may not be avail)
 
 	registrationStartTime int64 // this is the callees registration starttime; may be 0 for testuser
 	maxRingSecs int //durationSecs1 int // max wait secs till caller arrives
@@ -35,14 +35,12 @@ type Hub struct {
 	IsCalleeHidden bool
 	IsUnHiddenForCallerAddr string
 	ConnectedCallerIp string
-	ClientIpAddr string
 	WsUrl string
 	WssUrl string
 	exitFunc func(*WsClient, string)
 }
 
 func newHub(calleeID string, maxRingSecs int, maxTalkSecsIfNoP2p int, startTime int64) *Hub {
-	//fmt.Printf("newHub ID=%s startTime=%d\n", calleeID, startTime)
 	return &Hub{
 		registrationStartTime:  startTime,
 		calleeID:               calleeID,

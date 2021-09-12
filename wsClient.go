@@ -315,22 +315,25 @@ func (c *WsClient) receiveProcess(message []byte) {
 			//fmt.Printf("%s callerDescription payload=%s\n",c.connType,payload)
 		}
 
-		if c.hub.callerID!="" && c.hub.callerNickname!="" {
-			// send callerNickname so that it arrives AFTER "callerDescription" itself
-			go func() {
-				time.Sleep(200 * time.Millisecond)
-				sendCmd := "callerInfo|"+c.hub.callerID+":"+c.hub.callerNickname
-				// send this directly to the callee (the other side)
-				if c.hub.CalleeClient.Write([]byte(sendCmd)) != nil {
-					return
-				}
-			}()
+		if c.hub.CalleeClient.Write(message) != nil {
+			return
 		}
-		c.hub.CalleeClient.Write(message)
+
+		//if c.hub.callerID!="" && c.hub.callerNickname!="" {
+		//	// send this directly to the callee
+		//	sendCmd := "callerInfo|"+c.hub.callerID+":"+c.hub.callerNickname
+		//	if c.hub.CalleeClient.Write([]byte(sendCmd)) != nil {
+		//		return
+		//	}
+		//}
 
 		// exchange useragent's
-		c.hub.CallerClient.Write([]byte("ua|"+c.hub.CalleeClient.userAgent))
-		c.hub.CalleeClient.Write([]byte("ua|"+c.hub.CallerClient.userAgent))
+		if c.hub.CallerClient.Write([]byte("ua|"+c.hub.CalleeClient.userAgent)) {
+			return
+		}
+		if c.hub.CalleeClient.Write([]byte("ua|"+c.hub.CallerClient.userAgent)) {
+			return
+		}
 
 		if c.hub.maxRingSecs>0 {
 			// if after c.hub.maxRingSecs the callee has NOT picked up the call, callee will be disconnected

@@ -239,7 +239,7 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 				fmt.Fprintf(w,"cannot register user")
 			} else {
 				err = kvMain.Put(dbRegisteredIDs, registerID,
-						DbEntry{unixTime, /*freeAccountServiceSecs,*/ remoteAddr, pw}, false)
+						DbEntry{unixTime, remoteAddr, pw}, false)
 				if err!=nil {
 					fmt.Printf("# /register error db=%s bucket=%s put key=%s err=%v\n",
 						dbMainName,dbRegisteredIDs,registerID,err)
