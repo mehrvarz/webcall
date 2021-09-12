@@ -97,6 +97,7 @@ type wsClientDataType struct {
 var wsClientMap map[uint64]wsClientDataType
 var wsClientMutex sync.RWMutex
 var pingSentCounter int64 = 0
+var outboundIP = ""
 
 
 // config keywords: must be evaluated with readConfigLock
@@ -232,8 +233,8 @@ func main() {
 
 	readStatsFile()
 
-	outboundIP,err := iptools.GetOutboundIP()
-	fmt.Printf("GetOutboundIP %s\n",outboundIP)
+	outboundIP,err = iptools.GetOutboundIP()
+	fmt.Printf("outboundIP %s\n",outboundIP)
 
 	// websocket handler
 	if wsPort > 0 {

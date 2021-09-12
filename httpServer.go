@@ -422,10 +422,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	readConfigLock.RLock()
-	myTurnIp := turnIP
-	readConfigLock.RUnlock()
-	if remoteAddr=="127.0.0.1" || remoteAddr==hostname || remoteAddr==myTurnIp {
+	if remoteAddr=="127.0.0.1" || remoteAddr==outboundIP {
 		printFunc := func(w http.ResponseWriter, format string, a ...interface{}) {
 			// printFunc writes to the console AND to the localhost http client
 			fmt.Printf(format, a...)
