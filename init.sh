@@ -6,6 +6,8 @@ echo 'const gentle = true;' >> webroot/callee/custom.js
 echo 'const apiPath = "/rtcsig";' > webroot/button/custom.js
 echo 'const gentle = true;' >> webroot/button/custom.js
 echo 'const singlebutton = true;' >> webroot/button/custom.js
-wget https://github.com/webrtcHacks/adapter/raw/master/release/adapter.js
-mv adapter.js webroot/adapter-latest.js
+#wget https://github.com/webrtcHacks/adapter/raw/master/release/adapter.js
+#wget https://webrtc.github.io/adapter/adapter-latest.js
+wget https://webrtc.github.io/adapter/adapter-7.7.1.js
+mv adapter-7.7.1.js webroot/adapter-latest.js
 
