@@ -1807,7 +1807,7 @@ function createDataChannel() {
 		}
 		dataChannel.onerror = event => {
 			if(rtcConnect) {
-				if(!gentle) console.log("dataChannel.onerror",event);
+				console.warn("dataChannel.onerror",event);
 			}
 		}
 		dataChannel.onmessage = event => {
