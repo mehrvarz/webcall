@@ -23,7 +23,7 @@ func ticker3min() {
 		}
 
 		if localDb() {
-			// delete all twitter notification tweets that are older than 1h
+			// delete old twitter notifications
 			readConfigLock.RLock()
 			mytwitterKey := twitterKey
 			mytwitterSecret := twitterSecret

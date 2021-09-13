@@ -305,11 +305,10 @@ func main() {
 
 	go httpServer()
 	go runTurnServer()
-	go ticker3min()
-	go ticker30sec() // periodically log stats
-	go ticker10sec() // periodically call readConfig()
-	go ticker2sec()  // periodically check for remainingTalkSecs underruns
-	//go udpHealthService(8111) // TODO make udpHealthPort configurable
+	go ticker3min()  // call backupScript + delete old tw notifications
+	go ticker30sec() // log stats
+	go ticker10sec() // call readConfig()
+	go ticker2sec()  // check for new day
 	if pprofPort>0 {
 		go func() {
 			addr := fmt.Sprintf(":%d",pprofPort)
