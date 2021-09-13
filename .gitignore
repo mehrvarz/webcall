@@ -1,19 +1,13 @@
 config.ini
-webroot/webcall
+webcall
 tls.*
-tmp.*
 *.db
-*.pdf
-_old*
-_nginx
 stats.ini
-calllog/
-accessToken.txt
 webroot/callee/custom.js
 webroot/user/custom.js
 webroot/button/custom.js
+*.pdf
 readme-tm.txt
-config.demo
 sdp.txt
 favicon.ico
 
