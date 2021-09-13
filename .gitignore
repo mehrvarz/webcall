@@ -6,8 +6,8 @@ stats.ini
 webroot/callee/custom.js
 webroot/user/custom.js
 webroot/button/custom.js
+accessToken.txt
 *.pdf
-readme-tm.txt
-sdp.txt
+*.txt
 favicon.ico
 
