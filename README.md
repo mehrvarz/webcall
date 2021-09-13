@@ -2,7 +2,7 @@
   <a href="https://timur.mobi/webcall"><img src="webroot/webcall-logo.png" alt="WebCall"></a>
 </div>
 
-# WebCall - WebRTC Telephony Server
+# WebCall WebRTC Telephony Server
 
 [https://timur.mobi/webcall](https://timur.mobi/webcall)
 
@@ -16,12 +16,11 @@ AGPL3.0 - see: [LICENSE](LICENSE)
 
 # 3rd party code (external)
 
-- pion/turn (via mehrvarz/turn)
 - lesismal/nbio
-- fasthttp/websocket
+- go.etcd.io/bbolt
+- pion/turn (via mehrvarz/turn)
 - mrjones/oauth
 - SherClockHolmes/webpush-go
-- go.etcd.io/bbolt
 - gopkg.in/ini
 
 # 3rd party code (embedded/modified)
