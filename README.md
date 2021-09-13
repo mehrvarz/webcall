@@ -19,6 +19,7 @@ AGPL3.0 - see: [LICENSE](LICENSE)
 - lesismal/nbio
 - go.etcd.io/bbolt
 - pion/turn (via mehrvarz/turn)
+- webrtcHacks/adapter-latest.js
 - mrjones/oauth
 - SherClockHolmes/webpush-go
 - gopkg.in/ini
