@@ -440,6 +440,7 @@ func readConfig(init bool) {
 		turnRealm = readIniString(configIni, "turnRealm", turnRealm, "")
 		pprofPort = readIniInt(configIni, "pprofPort", pprofPort, 0, 1) // 8980
 		dbPath = readIniString(configIni, "dbPath", dbPath, "db/")
+		if dbPath!="" && !strings.HasSuffix(dbPath,"/") { dbPath = dbPath+"/" }
 		timeLocationString = readIniString(configIni, "timeLocation", timeLocationString, "")
 		wsUrl = readIniString(configIni, "wsUrl", wsUrl, "")
 		wssUrl = readIniString(configIni, "wssUrl", wssUrl, "")
