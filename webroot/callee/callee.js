@@ -1401,15 +1401,14 @@ function hangup() {
 		setTimeout(function() {
 			busySignalSound.pause();
 			busySignalSound.currentTime = 0;
+			endWebRtcSession(true,true); // -> peerConCloseFunc
+			//if(!gentle) console.log("hangup done");
 		},1000);
-		stopAllAudioEffects("reject/hangup");
 	} else {
 		console.log("hangup: no mediaConnect, no busy sound");
-		stopAllAudioEffects("reject/hangup");
+		endWebRtcSession(true,true); // -> peerConCloseFunc
+		//if(!gentle) console.log("hangup done");
 	}
-
-	endWebRtcSession(true,true); // -> peerConCloseFunc
-	//if(!gentle) console.log("hangup done");
 }
 
 function goOnline() {
