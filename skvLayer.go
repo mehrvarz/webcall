@@ -6,6 +6,7 @@ import (
 	"strings"
 	"strconv"
 	"fmt"
+	"time"
 	"math/rand"
 	"github.com/mehrvarz/webcall/skv"
 )
@@ -76,8 +77,26 @@ func locStoreCallerIpInHubMap(calleeId string, callerIp string, skipConfirm bool
 	if hub==nil {
 		err = skv.ErrNotFound
 	} else {
-		hub.ConnectedCallerIp = callerIp
-		hubMap[calleeId] = hub
+		if hub.ConnectedCallerIp != callerIp {
+			hub.ConnectedCallerIp = callerIp
+			hubMap[calleeId] = hub
+
+			if callerIp == "" {
+				// client is gone, but we prolong it's turn session time by x secs, to avoid turn-errors
+				turnCaller,ok := recentTurnCallerIps[callerIp]
+				if ok {
+					if turnCaller.CallerID == calleeId {
+						fmt.Printf("StoreCallerIpInHubMap prolong turn for callerIp=%s\n", callerIp)
+						turnCaller.TimeStored = time.Now()
+						recentTurnCallerIps[callerIp] = turnCaller
+					} else {
+						fmt.Printf("StoreCallerIpInHubMap cannot prolong turn for callerIp=%s A\n", callerIp)
+					}
+				} else {
+					fmt.Printf("StoreCallerIpInHubMap cannot prolong turn for callerIp=%s B\n", callerIp)
+				}
+			}
+		}
 	}
 	return err
 }
