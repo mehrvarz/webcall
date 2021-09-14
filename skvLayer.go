@@ -78,24 +78,27 @@ func locStoreCallerIpInHubMap(calleeId string, callerIp string, skipConfirm bool
 		err = skv.ErrNotFound
 	} else {
 		if hub.ConnectedCallerIp != callerIp {
-			hub.ConnectedCallerIp = callerIp
-			hubMap[calleeId] = hub
 
 			if callerIp == "" {
-				// client is gone, but we prolong it's turn session time by x secs, to avoid turn-errors
-				turnCaller,ok := recentTurnCallerIps[callerIp]
+				// client is gone, but we prolong turn session time by x secs, to avoid turn-errors
+				turnCaller,ok := recentTurnCallerIps[hub.ConnectedCallerIp]
 				if ok {
 					if turnCaller.CallerID == calleeId {
-						fmt.Printf("StoreCallerIpInHubMap prolong turn for callerIp=%s\n", callerIp)
+						fmt.Printf("StoreCallerIpInHubMap prolong turn for callerIp=%s\n", hub.ConnectedCallerIp)
 						turnCaller.TimeStored = time.Now()
 						recentTurnCallerIps[callerIp] = turnCaller
 					} else {
-						fmt.Printf("StoreCallerIpInHubMap cannot prolong turn for callerIp=%s A\n", callerIp)
+						fmt.Printf("StoreCallerIpInHubMap cannot prolong turn for callerIp=%s A\n",
+							hub.ConnectedCallerIp)
 					}
 				} else {
-					fmt.Printf("StoreCallerIpInHubMap cannot prolong turn for callerIp=%s B\n", callerIp)
+					fmt.Printf("StoreCallerIpInHubMap cannot prolong turn for callerIp=%s B\n",
+						hub.ConnectedCallerIp)
 				}
 			}
+
+			hub.ConnectedCallerIp = callerIp
+			hubMap[calleeId] = hub
 		}
 	}
 	return err
