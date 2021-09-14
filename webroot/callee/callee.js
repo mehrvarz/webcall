@@ -969,25 +969,24 @@ function connectSignaling(message) {
 							}
 							if(!gentle) console.log('cmd callerCandidate addIce',
 								address,callerCandidate.candidate);
-//							if(address.indexOf(":")<0) {
-							if(address.indexOf("10.1.")<0 && address.indexOf(":")<0) {
+							if(address!="" && address.indexOf("10.1.")<0 && address.indexOf(":")<0) {
 								// TODO hardcoded timur.mobi IP
-								if(address!="" && address!="66.228.46.43" && !address.startsWith("192.168.") &&
+								if(address!="66.228.46.43" && /*!address.startsWith("192.168.") &&*/
 										!address.endsWith(".local") && listOfClientIps.indexOf(address)<0) {
 									if(listOfClientIps!="") {
 										listOfClientIps += " ";
 									}
 									listOfClientIps += address;
-									if(!gentle) console.log("peerCon.addIceCandidate address",address);
+									if(!gentle) console.log("peerCon.addIceCandidate accept address",address);
 									peerCon.addIceCandidate(callerCandidate).catch(e => {
 										console.error("addIce callerCandidate",e,payload);
 										showStatus("RTC error "+e);
 									});
 								} else {
-									console.warn("cmd callerCandidate skip address",address);
+									console.warn("cmd callerCandidate skip1 address",address);
 								}
 							} else {
-								console.warn("cmd callerCandidate skip address",address);
+								console.warn("cmd callerCandidate skip2 address",address);
 							}
 						} else {
 							console.warn("cmd callerCandidate format err",payload);
