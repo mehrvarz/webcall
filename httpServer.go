@@ -37,7 +37,7 @@ func httpServer() {
 	if httpsPort>0 {
 		httpsFunc := func() {
 			addrPort := fmt.Sprintf(":%d",httpsPort)
-			fmt.Printf("httpServer https server is listening on %v\n", addrPort)
+			fmt.Printf("httpServer https listening on %v\n", addrPort)
 			cer, err := tls.LoadX509KeyPair("tls.pem","tls.key")
 			if err != nil {
 				fmt.Printf("# httpServer tls.LoadX509KeyPair err=(%v)\n", err)
@@ -96,7 +96,7 @@ func httpServer() {
 
 	if httpPort>0 {
 		addrPort := fmt.Sprintf(":%d",httpPort)
-		fmt.Printf("httpServer http server is listening on %v\n", addrPort)
+		fmt.Printf("httpServer http listening on %v\n", addrPort)
 		srv := &http.Server{
 			// this http.Server redirects to https
 			Addr: addrPort,
