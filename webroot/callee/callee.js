@@ -978,12 +978,14 @@ function connectSignaling(message) {
 										listOfClientIps += " ";
 									}
 									listOfClientIps += address;
+									if(!gentle) console.log("peerCon.addIceCandidate address",address);
+									peerCon.addIceCandidate(callerCandidate).catch(e => {
+										console.error("addIce callerCandidate",e,payload);
+										showStatus("RTC error "+e);
+									});
+								} else {
+									console.warn("cmd callerCandidate skip address",address);
 								}
-								if(!gentle) console.log("peerCon.addIceCandidate address",address);
-								peerCon.addIceCandidate(callerCandidate).catch(e => {
-									console.error("addIce callerCandidate",e,payload);
-									showStatus("RTC error "+e);
-								});
 							} else {
 								console.warn("cmd callerCandidate skip address",address);
 							}
