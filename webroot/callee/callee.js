@@ -1021,6 +1021,7 @@ function connectSignaling(message) {
 							// caller has canceled the call before connect
 							showStatus("Canceled");
 						}
+						stopAllAudioEffects();
 						endWebRtcSession(false,true); // -> peerConCloseFunc
 					} else {
 						stopAllAudioEffects("ignore cancel");
@@ -1401,14 +1402,14 @@ function hangup() {
 		setTimeout(function() {
 			busySignalSound.pause();
 			busySignalSound.currentTime = 0;
-			endWebRtcSession(true,true); // -> peerConCloseFunc
-			//if(!gentle) console.log("hangup done");
+			stopAllAudioEffects();
 		},1000);
 	} else {
 		console.log("hangup: no mediaConnect, no busy sound");
-		endWebRtcSession(true,true); // -> peerConCloseFunc
-		//if(!gentle) console.log("hangup done");
 	}
+
+	endWebRtcSession(true,true); // -> peerConCloseFunc
+	//if(!gentle) console.log("hangup done");
 }
 
 function goOnline() {
@@ -1495,6 +1496,7 @@ function goOnline() {
 		}
 		if(!gentle) console.log("onconnectionstatechange", peerCon.connectionState);
 		if(peerCon.connectionState=="disconnected") {
+			stopAllAudioEffects();
 			endWebRtcSession(true,true); // -> peerConCloseFunc
 		} else if(peerCon.connectionState=="connected") {
 			if(rtcConnect) {
@@ -1826,6 +1828,7 @@ function createDataChannel() {
 			// this next line should not be necessary
 			// it will also be executed on peerCon.onconnectionstatechange "disconnected"
 			// but at least in chrome this does speed up caller disconnect detection a lot
+			stopAllAudioEffects();
 			endWebRtcSession(true,true); // -> peerConCloseFunc
 		}
 		dataChannel.onerror = event => {
@@ -1891,7 +1894,6 @@ var goOnlinePending = false;
 function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 	// endWebRtcSession may be called twice in near parallel
 	console.log('endWebRtcSession',disconnectCaller,goOnlineAfter);
-	stopAllAudioEffects();
 	remoteAudio.pause();
 	remoteAudio.currentTime = 0;
 	remoteAudio.srcObject = null;
