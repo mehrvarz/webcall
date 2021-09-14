@@ -974,7 +974,7 @@ function connectSignaling(message) {
 								//address.indexOf(":")>=0 ||
 								//address=="66.228.46.43" ||     // TODO hardcoded timur.mobi IP
 								//address.endsWith(".local") ||
-								address.indexOf("10.1.")<0) {
+								address.indexOf("10.1.")>=0) {
 							console.log("# cmd callerCandidate skip address",address);
 							return;
 						}
