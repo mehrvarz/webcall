@@ -99,15 +99,16 @@ func locStoreCallerIpInHubMap(calleeId string, callerIp string, skipConfirm bool
 }
 
 func locSearchCallerIpInHubMap(ip string) (bool,string,error) {
-	fmt.Printf("SearchCallerIpInHubMap ip=%s\n",ip)
 	hubMapMutex.RLock()
 	defer hubMapMutex.RUnlock()
 	for id := range hubMap {
 		hub := hubMap[id]
 		if strings.HasPrefix(hub.ConnectedCallerIp,ip) {
+			fmt.Printf("SearchCallerIpInHubMap ip=%s found\n",ip)
 			return true,hub.calleeID,nil
 		}
 	}
+	fmt.Printf("SearchCallerIpInHubMap ip=%s not found\n",ip)
 	return false,"",nil
 }
 
