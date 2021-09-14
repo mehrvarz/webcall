@@ -1397,11 +1397,14 @@ function hangup() {
 
 	// testing: if mediaConnect -> short busy tone 
 	if(mediaConnect) {
+		console.log("hangup: mediaConnect -> short busy sound");
 		busySignalSound.play().catch(function(error) { });
 		setTimeout(function() {
 			busySignalSound.pause();
 			busySignalSound.currentTime = 0;
 		},1000);
+	} else {
+		console.log("hangup: no mediaConnect, no busy sound");
 	}
 
 	endWebRtcSession(true,true); // -> peerConCloseFunc
