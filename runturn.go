@@ -28,9 +28,9 @@ func runTurnServer() {
 
 	recentTurnCallerIps = make(map[string]TurnCaller)
 
-	if logWantedFor("turn") {
+	//if logWantedFor("turn") {
 		fmt.Printf("start turn server on '%s' port=%d\n", turnIP, turnPort)
-	}
+	//}
 	udpListener, err := net.ListenPacket("udp4", "0.0.0.0:"+strconv.Itoa(turnPort))
 	if err != nil {
 		fmt.Printf("# Failed to create TURN server listener: %s\n", err)
