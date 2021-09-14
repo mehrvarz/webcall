@@ -967,11 +967,9 @@ function connectSignaling(message) {
 								setTimeout(addIceCallerCandidate,100,callerCandidate);
 								return;
 							}
-							if(!gentle) console.log('cmd callerCandidate addIce',
-								address,callerCandidate.candidate);
 							if(address!="" && 
 									address.indexOf("10.1.")<0 && 
-									address.indexOf(":")<0 &&
+									//address.indexOf(":")<0 &&
 									address!="66.228.46.43" &&     // TODO hardcoded timur.mobi IP
 									!address.endsWith(".local")) {
 								if(listOfClientIps.indexOf(address)<0) {
@@ -980,7 +978,8 @@ function connectSignaling(message) {
 									}
 									listOfClientIps += address;
 								}
-								if(!gentle) console.log("peerCon.addIceCandidate accept address",address);
+								if(!gentle) console.log("!!! peerCon.addIceCandidate accept address",
+									address,callerCandidate.candidate);
 								peerCon.addIceCandidate(callerCandidate).catch(e => {
 									console.error("addIce callerCandidate",e,payload);
 									showStatus("RTC error "+e);
