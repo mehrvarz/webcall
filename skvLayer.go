@@ -80,20 +80,24 @@ func locStoreCallerIpInHubMap(calleeId string, callerIp string, skipConfirm bool
 		if hub.ConnectedCallerIp != callerIp {
 
 			if callerIp == "" {
+				ipAddr := hub.ConnectedCallerIp
+				if portIdx := strings.Index(ipAddr, ":"); portIdx >= 0 {
+					ipAddr = ipAddr[:portIdx]
+				}
 				// client is gone, but we prolong turn session time by x secs, to avoid turn-errors
-				turnCaller,ok := recentTurnCallerIps[hub.ConnectedCallerIp]
+				turnCaller,ok := recentTurnCallerIps[ipAddr]
 				if ok {
 					if turnCaller.CallerID == calleeId {
-						fmt.Printf("StoreCallerIpInHubMap prolong turn for callerIp=%s\n", hub.ConnectedCallerIp)
+						fmt.Printf("StoreCallerIpInHubMap prolong turn for callerIp=%s\n", ipAddr)
 						turnCaller.TimeStored = time.Now()
 						recentTurnCallerIps[callerIp] = turnCaller
 					} else {
 						fmt.Printf("StoreCallerIpInHubMap cannot prolong turn for callerIp=%s A\n",
-							hub.ConnectedCallerIp)
+							ipAddr)
 					}
 				} else {
 					fmt.Printf("StoreCallerIpInHubMap cannot prolong turn for callerIp=%s B\n",
-						hub.ConnectedCallerIp)
+						ipAddr)
 				}
 			}
 
