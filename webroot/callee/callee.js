@@ -1828,7 +1828,7 @@ function createDataChannel() {
 			// this next line should not be necessary
 			// it will also be executed on peerCon.onconnectionstatechange "disconnected"
 			// but at least in chrome this does speed up caller disconnect detection a lot
-			stopAllAudioEffects();
+			//stopAllAudioEffects();
 			endWebRtcSession(true,true); // -> peerConCloseFunc
 		}
 		dataChannel.onerror = event => {
