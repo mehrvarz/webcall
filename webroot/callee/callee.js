@@ -51,10 +51,10 @@ var localStream = null;
 var remoteStream = null;
 var dataChannel = null;
 var rtcConnect = false
+var rtcConnectStartDate = 0;
 var rtcLink = "";
 var mediaConnect = false;
 var mediaConnectStartDate = 0;
-var rtcConnectStartDate = 0;
 var listOfClientIps = "";
 var callerID = "";
 var callerName = "";
@@ -633,7 +633,7 @@ function gotStream(stream) {
 //		console.log('gotStream audioSinkSelect index',audioSinkSelect.selectedIndex);
 //	}
 
-	if(!gentle) console.log('gotStream set localStream');
+	if(!gentle) console.log('gotStream set localStream',stream);
 	localStream = stream;
 
 	stream.getTracks().forEach(function(track) {
@@ -641,9 +641,9 @@ function gotStream(stream) {
     })
 
 	if(pickupAfterMicStream) {
+		pickupAfterMicStream = false;
 		if(!gentle) console.log('gotStream pickup2()');
 		pickup2();
-		pickupAfterMicStream = false;
 	} else {
 		if(localStream) {
 			// disable mic until a call comes in
@@ -971,8 +971,8 @@ function connectSignaling(message) {
 							return;
 						}
 						if(address=="" 
-								//|| address.indexOf(":")>=0
 								//|| address=="66.228.46.43"
+								//|| address.indexOf(":")>=0
 								//|| address.endsWith(".local")
 								//|| address.indexOf("10.1.")>=0
 							) {
@@ -1353,7 +1353,7 @@ function updateClock(startDuration) {
 }
 
 function pickup() {
-	console.log('pickup + open mic');
+	console.log('pickup -> open mic');
 	pickupAfterMicStream = true;
 	getStream(); // -> pickup2()
 }
@@ -1361,18 +1361,20 @@ function pickup2() {
 	console.log('pickup2');
 	showStatus("");
 	stopAllAudioEffects("pickup");
-	wsSend("pickup|!")
 
 	//console.log('pickup2 remoteAudio.play()');
-	remoteAudio.srcObject = remoteStream;
+	remoteAudio.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
 	remoteAudio.load();
 	remoteAudio.play().catch(function(error) {});
 
-	if(localStream) {
+	if(localStream) { // from gotStream(stream)
 		const audioTracks = localStream.getAudioTracks();
 		if(!gentle) console.log('pickup2 peerCon addTrack mic',audioTracks[0],localStream);
+		// TODO maybe this does not work in all cases (getting the callee mic delivered to remote caller)
 		peerCon.addTrack(audioTracks[0],localStream);
 	}
+
+	wsSend("pickup|!") // tell caller to unmute our mic
 
 	answerButton.disabled = true;
 	onlineIndicator.src="red-gradient.svg";
@@ -1425,6 +1427,7 @@ function goOnline() {
 	};
 	peerCon.onicecandidate = e => onIceCandidate(e);
 	peerCon.onicecandidateerror = function(e) {
+		// chrome warn "701 STUN allocate request timed out" apparently related to pion turn not supporting ipv6
 		if(!gentle) console.warn("onicecandidateerror", e.errorCode, e.errorText, e.url);
 	}
 	peerCon.ontrack = ({track, streams}) => {
@@ -1558,7 +1561,7 @@ function goOnline() {
 					answerButton.disabled = false;
 				}
 				if(!calleeID.startsWith("random") && !calleeID.startsWith("!") && !calleeID.startsWith("answie")){
-					// no msgbox for random, duo an answie
+					// msgbox only if not random, duo or answie
 					// no msgbox if it is empty
 					if(msgbox.value!="") {
 						msgbox.style.display = "block";
