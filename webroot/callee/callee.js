@@ -949,7 +949,7 @@ function connectSignaling(message) {
 					callerCandidate.usernameFragment = null;
 					var addIceCallerCandidate = function(callerCandidate) {
 						if(!peerCon) {
-							console.log('abort addIceCallerCandidate');
+							console.warn('abort addIceCallerCandidate !peerCon');
 							return;
 						}
 						let tok = callerCandidate.candidate.split(' ');
@@ -958,9 +958,6 @@ function connectSignaling(message) {
 							if(tok.length>=10 && tok[8]=="raddr" && tok[9]!="0.0.0.0") {
 								address = tok[9];
 							}
-							if(!gentle)
-								console.log('cmd callerCandidate addIce',
-									address,callerCandidate.candidate);
 							if(!peerCon) {
 								console.warn('cmd callerCandidate abort no peerCon');
 								return;
@@ -970,6 +967,8 @@ function connectSignaling(message) {
 								setTimeout(addIceCallerCandidate,100,callerCandidate);
 								return;
 							}
+							if(!gentle) console.log('cmd callerCandidate addIce',
+								address,callerCandidate.candidate);
 //							if(address.indexOf(":")<0) {
 							if(address.indexOf("10.1.")<0 && address.indexOf(":")<0) {
 								// TODO hardcoded timur.mobi IP
@@ -980,10 +979,13 @@ function connectSignaling(message) {
 									}
 									listOfClientIps += address;
 								}
+								if(!gentle) console.log("peerCon.addIceCandidate address",address);
 								peerCon.addIceCandidate(callerCandidate).catch(e => {
 									console.error("addIce callerCandidate",e,payload);
 									showStatus("RTC error "+e);
 								});
+							} else {
+								console.warn("cmd callerCandidate skip address",address);
 							}
 						} else {
 							console.warn("cmd callerCandidate format err",payload);
