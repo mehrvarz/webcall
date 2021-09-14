@@ -970,7 +970,8 @@ function connectSignaling(message) {
 								setTimeout(addIceCallerCandidate,100,callerCandidate);
 								return;
 							}
-							if(address.indexOf(":")<0) {
+//							if(address.indexOf(":")<0) {
+							if(address.indexOf("10.1.")<0) {
 								// TODO hardcoded timur.mobi IP
 								if(address!="" && address!="66.228.46.43" && !address.startsWith("192.168.") &&
 										!address.endsWith(".local") && listOfClientIps.indexOf(address)<0) {
