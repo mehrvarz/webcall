@@ -1394,6 +1394,16 @@ function hangup() {
 	answerButton.style.display = "none";
 	rejectButton.style.display = "none";
 	stopAllAudioEffects("reject/hangup");
+
+	// testing: if mediaConnect -> short busy tone 
+	if(mediaConnect) {
+		busySignalSound.play().catch(function(error) { });
+		setTimeout(function() {
+			busySignalSound.pause();
+			busySignalSound.currentTime = 0;
+		},1000);
+	}
+
 	endWebRtcSession(true,true); // -> peerConCloseFunc
 	//if(!gentle) console.log("hangup done");
 }
@@ -1586,7 +1596,7 @@ function goOnline() {
 					pickup();
 				}
 				rejectButton.onclick = function() {
-					console.log("hangup button",calleeID);
+					console.log("hangup button");
 					buttonBlinking = false;
 					hangup();
 				}
