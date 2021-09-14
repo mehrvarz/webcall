@@ -1393,7 +1393,6 @@ function hangup() {
 	console.log("hangup");
 	answerButton.style.display = "none";
 	rejectButton.style.display = "none";
-	stopAllAudioEffects("reject/hangup");
 
 	// testing: if mediaConnect -> short busy tone 
 	if(mediaConnect) {
@@ -1403,8 +1402,10 @@ function hangup() {
 			busySignalSound.pause();
 			busySignalSound.currentTime = 0;
 		},1000);
+		stopAllAudioEffects("reject/hangup");
 	} else {
 		console.log("hangup: no mediaConnect, no busy sound");
+		stopAllAudioEffects("reject/hangup");
 	}
 
 	endWebRtcSession(true,true); // -> peerConCloseFunc
