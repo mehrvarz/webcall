@@ -970,19 +970,20 @@ function connectSignaling(message) {
 								setTimeout(addIceCallerCandidate,100,callerCandidate);
 								return;
 							}
-							// TODO hardcoded timur.mobi IP
-							if(address!="" && address!="66.228.46.43" && !address.startsWith("192.168.") &&
-									address.indexOf(":")<0 &&
-									!address.endsWith(".local") && listOfClientIps.indexOf(address)<0) {
-								if(listOfClientIps!="") {
-									listOfClientIps += " ";
+							if(address.indexOf(":")<0) {
+								// TODO hardcoded timur.mobi IP
+								if(address!="" && address!="66.228.46.43" && !address.startsWith("192.168.") &&
+										!address.endsWith(".local") && listOfClientIps.indexOf(address)<0) {
+									if(listOfClientIps!="") {
+										listOfClientIps += " ";
+									}
+									listOfClientIps += address;
 								}
-								listOfClientIps += address;
+								peerCon.addIceCandidate(callerCandidate).catch(e => {
+									console.error("addIce callerCandidate",e,payload);
+									showStatus("RTC error "+e);
+								});
 							}
-							peerCon.addIceCandidate(callerCandidate).catch(e => {
-								console.error("addIce callerCandidate",e,payload);
-								showStatus("RTC error "+e);
-							});
 						} else {
 							console.warn("cmd callerCandidate format err",payload);
 						}
