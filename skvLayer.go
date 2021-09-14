@@ -84,19 +84,15 @@ func locStoreCallerIpInHubMap(calleeId string, callerIp string, skipConfirm bool
 
 func locSearchCallerIpInHubMap(ip string) (bool,string,error) {
 	fmt.Printf("SearchCallerIpInHubMap ip=%s\n",ip)
-	foundIp := false
-	foundCalleeId := ""
 	hubMapMutex.RLock()
 	defer hubMapMutex.RUnlock()
 	for id := range hubMap {
 		hub := hubMap[id]
 		if strings.HasPrefix(hub.ConnectedCallerIp,ip) {
-			foundIp = true
-			foundCalleeId = hub.calleeID
-			break
+			return true,hub.calleeID,nil
 		}
 	}
-	return foundIp,foundCalleeId,nil
+	return false,"",nil
 }
 
 func locDeleteFromHubMap(id string) (int64,error) {
