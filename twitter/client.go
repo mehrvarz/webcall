@@ -1,4 +1,4 @@
-// https://github.com/ChimeraCoder/anaconda
+// github.com/ChimeraCoder/anaconda
 package twitter
 
 import (
