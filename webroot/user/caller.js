@@ -415,14 +415,9 @@ function calleeOnlineAction(from) {
 				if(!singlebutton) {
 					msgbox.style.display = "none";
 				}
-				showStatus( 'You are about to call Answie, our WebCall answering machine. Answie will '+
-							"play back some spoken words to demonstrate the WebCall sound quality.<br>"+
-							"The audio sample will not be delivered from a server, but from "+
-							"a remote WebCall client, like the one you are using right now. "+
-							"You should get the same sound quality when talking "+
-							"to any other WebCall user.",-1);
+				showStatus("You are about to call a WebCall answering machine.",-1);
 			} else if(calleeID.startsWith("!")) {
-				showStatus( "When you hit the Call button, a high quality telephony connection will be established.<br><br>Note: Using a laptop or a webcam microphone often leads to poor audio on the other side. Use a headset to eliminate the potential risk of feedback noises and sound cancellation.",-1)
+				showStatus("Hit the Call button to establish a telephony connection.",-1);
 			} else {
 				if(!singlebutton) {
 					showStatus( "Before you hit the Call button, you can enter a name "+
