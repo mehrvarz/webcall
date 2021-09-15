@@ -1368,6 +1368,8 @@ function pickup2() {
 		return;
 	}
 
+	onnegotiationneededAllowed = true;
+
 	//console.log('pickup2 remoteAudio.play()');
 	remoteAudio.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
 	remoteAudio.load();
@@ -1378,13 +1380,15 @@ function pickup2() {
 	if(!gentle) console.log('pickup2 peerCon addTrack mic',audioTracks.length,audioTracks,localStream);
 	peerCon.addTrack(audioTracks[0],localStream);
 
+	// onnegotiationneeded not allowed
+
 	setTimeout(function() {
 		// caller may need a bit of time to receive peerCon.ontrack
 		if(!gentle) console.log('pickup2: after short delay send pickup to caller');
 		wsSend("pickup|!") // make caller unmute the remote (our) mic
 		answerButton.disabled = true;
 		onlineIndicator.src="red-gradient.svg";
-		onnegotiationneededAllowed = true;
+//		onnegotiationneededAllowed = true;
 		mediaConnect = true;
 		mediaConnectStartDate = Date.now();
 
