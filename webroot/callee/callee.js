@@ -188,8 +188,6 @@ window.onload = function() {
 
 			ringtoneSound.onplaying = function() {
 				ringtoneIsPlaying = true;
-				//rtcConnectStartDate = 0;
-				//mediaConnectStartDate = 0;
 			};
 			ringtoneSound.onpause = function() {
 				ringtoneIsPlaying = false;
@@ -1420,6 +1418,8 @@ function goOnline() {
 	}
 	goOnlineButton.disabled = true;
 	goOfflineButton.disabled = false;
+	rtcConnectStartDate = 0;
+	mediaConnectStartDate = 0;
 	if(!gentle) console.log('goOnline',calleeID);
 	var ICE_config = {
 		"iceServers": [
@@ -1898,8 +1898,6 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 	remoteAudio.pause();
 	remoteAudio.currentTime = 0;
 	remoteAudio.srcObject = null;
-	rtcConnectStartDate = 0;
-	mediaConnectStartDate = 0;
 	remoteStream = null;
 	buttonBlinking = false;
 	if(msgbox) {
