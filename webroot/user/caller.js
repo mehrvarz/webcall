@@ -1161,7 +1161,7 @@ function connectSignaling(message,openedFunc) {
 							return;
 						}
 						if(!remoteStream) {
-							console.warn("cmd pickup no remoteStream");
+							hangupWithBusySound(true,"pickup with no remoteStream");
 							return;
 						}
 
