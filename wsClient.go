@@ -626,7 +626,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 	// or bc one side has unregistered
 	c.hub.setDeadline(0,comment)
 	if c.isConnectedToPeer.Get() {
-		fmt.Printf("%s peerConHasEnded %s rip=%s\n", c.connType, c.hub.calleeID, c.RemoteAddr)
+		fmt.Printf("%s peerConHasEnded %s rip=%s (%s)\n", c.connType, c.hub.calleeID, c.RemoteAddr, comment)
 		c.isConnectedToPeer.Set(false)
 		if c.isCallee {
 			if c.hub.CallerClient!=nil {
