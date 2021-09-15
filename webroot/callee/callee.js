@@ -1379,16 +1379,12 @@ function pickup2() {
 	audioTracks[0].enabled = true;
 	if(!gentle) console.log('pickup2 peerCon addTrack mic',audioTracks.length,audioTracks,localStream);
 	peerCon.addTrack(audioTracks[0],localStream);
-
-	// onnegotiationneeded not allowed
-
+	// allow some time for nnegotiation before we send "pickup|!" to caller
 	setTimeout(function() {
-		// caller may need a bit of time to receive peerCon.ontrack
 		if(!gentle) console.log('pickup2: after short delay send pickup to caller');
 		wsSend("pickup|!") // make caller unmute the remote (our) mic
 		answerButton.disabled = true;
 		onlineIndicator.src="red-gradient.svg";
-//		onnegotiationneededAllowed = true;
 		mediaConnect = true;
 		mediaConnectStartDate = Date.now();
 
