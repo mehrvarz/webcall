@@ -972,7 +972,7 @@ function connectSignaling(message) {
 							return;
 						}
 						if(address=="" 
-								//|| address=="66.228.46.43"
+								//|| address=="66.228.46.43"  // TODO use outboundIP?
 								//|| address.indexOf(":")>=0
 								//|| address.endsWith(".local")
 								//|| address.indexOf("10.1.")>=0
@@ -1374,6 +1374,7 @@ function pickup2() {
 	remoteAudio.play().catch(function(error) {});
 
 	const audioTracks = localStream.getAudioTracks();
+	audioTracks[0].enabled = true; // unmute mic
 	if(!gentle) console.log('pickup2 peerCon addTrack mic',audioTracks.length,audioTracks,localStream);
 	peerCon.addTrack(audioTracks[0],localStream);
 	wsSend("pickup|!") // tell caller to unmute the remote (our) mic
