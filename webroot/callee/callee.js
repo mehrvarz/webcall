@@ -715,7 +715,7 @@ function delayedWsAutoReconnect(reconPauseSecs) {
 		} else if(!wsAutoReconnecting) {
 			console.log('delayedWsAutoReconnect aborted on !wsAutoReconnecting');
 			wsAutoReconnecting = false;
-			offlineAction();
+			//offlineAction();
 		} else if(remainingTalkSecs<0 && !calleeID.startsWith("answie")) {
 			console.log('delayedWsAutoReconnect aborted on no talk time');
 			wsAutoReconnecting = false;
