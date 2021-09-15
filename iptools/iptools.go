@@ -1,3 +1,4 @@
+// stackoverflow.com/users/325320/mr-wang-from-next-door
 package iptools
 
 import "net"
