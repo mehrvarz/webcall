@@ -1,3 +1,4 @@
+# build script for webcall
 export BUILDDATE=`date --rfc-3339=date`
 echo "builddate $BUILDDATE"
 export VERSIONTAG=
