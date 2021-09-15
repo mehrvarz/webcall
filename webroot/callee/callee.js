@@ -1375,7 +1375,6 @@ function pickup2() {
 
 	const audioTracks = localStream.getAudioTracks();
 	audioTracks[0].enabled = true;
-	audioTracks[0].muted = false;
 	if(!gentle) console.log('pickup2 peerCon addTrack mic',audioTracks.length,audioTracks,localStream);
 	peerCon.addTrack(audioTracks[0],localStream);
 
