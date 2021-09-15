@@ -1160,6 +1160,10 @@ function connectSignaling(message,openedFunc) {
 							hangupWithBusySound(true,"pickup with no localStream");
 							return;
 						}
+						if(!remoteStream) {
+							console.warn("cmd pickup no remoteStream");
+							return;
+						}
 
 						let micStatus = "";
 						if(singlebutton) {
@@ -1180,7 +1184,7 @@ function connectSignaling(message,openedFunc) {
 							}
 						}
 
-						// un-mute remote audio
+						// enable (un-mute) remote audio
 						console.log('set remoteAudio',remoteStream);
 						remoteAudio.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
 						remoteAudio.load();
@@ -1400,7 +1404,12 @@ function dial() {
 		showStatus("Dialing error");
 		return
 	};
-
+	peerCon.onicecandidate = e => onIceCandidate(e);
+	peerCon.onicecandidateerror = function(e) {
+		if(!gentle) console.warn("onicecandidateerror", e.errorCode, e.errorText, e.url);
+		// for instance: "Unauthorized turn:..."
+		// or            "701 STUN host lookup received error."
+	}
 	peerCon.ontrack = ({track, streams}) => {
 		// once media for a remote track arrives, connect it to the remoteAudio element
 		console.log('peerCon.ontrack');
@@ -1451,13 +1460,6 @@ function dial() {
 	peerCon.optionalArgument = {}; // ignore all DTLS/ipv6 parameters
 	*/
 
-	peerCon.onicecandidate = e => onIceCandidate(e);
-
-	peerCon.onicecandidateerror = function(e) {
-		if(!gentle) console.warn("onicecandidateerror", e.errorCode, e.errorText, e.url);
-		// for instance: "Unauthorized turn:..."
-		// or            "701 STUN host lookup received error. stun:timur.mobi:3478"
-	}
 	peerCon.onicegatheringstatechange = event => {
 		let connection = event.target;
 		console.log("onicegatheringstatechange", connection.iceGatheringState);

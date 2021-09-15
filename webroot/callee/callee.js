@@ -1436,15 +1436,15 @@ function goOnline() {
 	try {
 		peerCon = new RTCPeerConnection(ICE_config);
 	} catch(ex) {
-		console.warn("RTCPeerConnection",ex);
+		console.error("RTCPeerConnection",ex);
 		showStatus("RTCPeerConnection error "+ex);
 		offlineAction();
 		return
 	};
 	peerCon.onicecandidate = e => onIceCandidate(e);
 	peerCon.onicecandidateerror = function(e) {
-		// chrome warn "701 STUN allocate request timed out" apparently related to pion turn not supporting ipv6
 		if(!gentle) console.warn("onicecandidateerror", e.errorCode, e.errorText, e.url);
+		// chrome warn "701 STUN allocate request timed out" apparently related to pion turn not supporting ipv6
 	}
 	peerCon.ontrack = ({track, streams}) => {
 		track.onunmute = () => {
