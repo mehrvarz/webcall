@@ -1,3 +1,4 @@
+// github.com/mahan
 package atombool
 
 import "sync/atomic"
