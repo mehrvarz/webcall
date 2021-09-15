@@ -564,6 +564,7 @@ function ajaxFetch(xhr, type, api, processData, errorFkt, postData) {
 function getStream() {
 	if(localStream) {
 		localStream.getTracks().forEach(track => { track.stop(); });
+		localStream = null;
 	}
 	let supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
 	if(!gentle) console.log('getStream supportedConstraints',supportedConstraints);
@@ -625,22 +626,25 @@ function gotStream(stream) {
 		}
 		console.log('gotStream audioSourceSelect index',audioSourceSelect.selectedIndex);
 	}
+
 //	if(stream && audioSinkSelect!=null) {
 //		audioSinkSelect.selectedIndex = [...audioSinkSelect.options].
 //			findIndex(option => option.text === stream.getAudioTracks()[0].label);
 //		console.log('gotStream audioSinkSelect index',audioSinkSelect.selectedIndex);
 //	}
 
-	if(!gentle) console.log('gotStream set localStream',stream);
 	localStream = stream;
 
-	stream.getTracks().forEach(function(track) {
-        console.log("gotStream track.getSettings",track.getSettings());
-    })
+	if(!gentle) {
+		console.log('gotStream set localStream',stream);
+		stream.getTracks().forEach(function(track) {
+	        console.log("gotStream track.getSettings",track.getSettings());
+	    })
+	}
 
 	if(pickupAfterMicStream) {
 		pickupAfterMicStream = false;
-		if(!gentle) console.log('gotStream pickup2()');
+		if(!gentle) console.log('gotStream -> auto pickup2()');
 		pickup2();
 	} else {
 		if(localStream) {
@@ -1360,21 +1364,20 @@ function pickup2() {
 	console.log('pickup2');
 	showStatus("");
 	stopAllAudioEffects("pickup");
+	if(!localStream) { // from gotStream(stream)
+		console.warn('pickup2 no localStream');
+		return;
+	}
 
 	//console.log('pickup2 remoteAudio.play()');
 	remoteAudio.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
 	remoteAudio.load();
 	remoteAudio.play().catch(function(error) {});
 
-	if(localStream) { // from gotStream(stream)
-		const audioTracks = localStream.getAudioTracks();
-		if(!gentle) console.log('pickup2 peerCon addTrack mic',audioTracks[0],localStream);
-		// TODO maybe this does not work in all cases (getting the callee mic delivered to remote caller)
-		peerCon.addTrack(audioTracks[0],localStream);
-	}
-
-	wsSend("pickup|!") // tell caller to unmute our mic
-
+	const audioTracks = localStream.getAudioTracks();
+	if(!gentle) console.log('pickup2 peerCon addTrack mic',audioTracks.length,audioTracks,localStream);
+	peerCon.addTrack(audioTracks[0],localStream);
+	wsSend("pickup|!") // tell caller to unmute the remote (our) mic
 	answerButton.disabled = true;
 	onlineIndicator.src="red-gradient.svg";
 	onnegotiationneededAllowed = true;
@@ -1393,7 +1396,7 @@ function hangup() {
 	answerButton.style.display = "none";
 	rejectButton.style.display = "none";
 
-	// testing: if mediaConnect -> short busy tone 
+	// if mediaConnect -> play short busy tone 
 	if(mediaConnect) {
 		console.log("hangup: mediaConnect -> short busy sound");
 		busySignalSound.play().catch(function(error) { });
@@ -1402,8 +1405,6 @@ function hangup() {
 			busySignalSound.currentTime = 0;
 			stopAllAudioEffects();
 		},1000);
-	} else {
-		console.log("hangup: no mediaConnect, no busy sound");
 	}
 
 	endWebRtcSession(true,true); // -> peerConCloseFunc

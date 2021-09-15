@@ -785,11 +785,12 @@ function gotStream(stream) {
 	if(audioSelect.selectedIndex<0) {
 		audioSelect.selectedIndex = 0;
 	}
-	if(!gentle) console.log('gotStream selectedIndex',audioSelect.selectedIndex);
-
-	stream.getTracks().forEach(function(track) {
-		if(!gentle) console.log("gotStream track.getSettings",track.getSettings());
-    })
+	if(!gentle) {
+		console.log('gotStream selectedIndex',audioSelect.selectedIndex);
+		stream.getTracks().forEach(function(track) {
+			console.log("gotStream track.getSettings",track.getSettings());
+	    })
+	}
 
 	if(dialAfterLocalStream) {
 		console.log("gotStream dialAfterLocalStream");
