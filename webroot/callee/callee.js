@@ -636,7 +636,6 @@ function gotStream(stream) {
 	localStream = stream;
 
 	if(!gentle) {
-		console.log('gotStream set localStream',stream);
 		stream.getTracks().forEach(function(track) {
 	        console.log("gotStream track.getSettings",track.getSettings());
 	    })
@@ -931,7 +930,7 @@ function connectSignaling(message) {
 								showStatus("Failed to createAnswer",8000);
 							});
 						} else {
-							console.log('callerDescriptionUpd received no offer');
+							console.log('callerDescriptionUpd received no offer',callerDescription.type);
 						}
 					}, err => {
 						console.warn(`Failed to set RemoteDescription`,err,callerDescription)
@@ -1467,9 +1466,9 @@ function goOnline() {
 			return;
 		}
 		if(!onnegotiationneededAllowed) {
+			if(!gentle) console.log('onnegotiationneeded not allowed');
 			return;
 		}
-		if(!gentle) console.log('onnegotiationneeded');
 		try {
 			// this will trigger onIceCandidates and send hostCandidate's to the client
 			console.log("onnegotiationneeded createOffer");
@@ -1873,7 +1872,7 @@ function createDataChannel() {
 var allAudioEffectsStopped = false;
 function stopAllAudioEffects(comment) {
 	if(!gentle) console.log('stopAllAudioEffects',comment);
-	allAudioEffectsStopped = true; // this will halt the ringtone loop
+	allAudioEffectsStopped = true; // halt the ringtone loop
 	try {
 		if(!ringtoneSound.paused && ringtoneIsPlaying) {
 			if(!gentle) console.log('stopAllAudioEffects ringtoneSound.pause');
