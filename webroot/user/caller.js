@@ -777,9 +777,9 @@ function gotStream(stream) {
 	localStream = stream;
 	audioSelect.selectedIndex = [...audioSelect.options].
 		findIndex(option => option.text === stream.getAudioTracks()[0].label);
-	if(audioSelect.selectedIndex<0) {
-		audioSelect.selectedIndex = 0;
-	}
+//	if(audioSelect.selectedIndex<0) {
+//		audioSelect.selectedIndex = 0; // TODO this doesn't seem to work
+//	}
 	if(!gentle) {
 		console.log('gotStream selectedIndex',audioSelect.selectedIndex);
 		stream.getTracks().forEach(function(track) {
@@ -1181,11 +1181,14 @@ function connectSignaling(message,openedFunc) {
 						}
 
 						// un-mute remote audio
+						console.log('set remoteAudio',remoteStream);
 						remoteAudio.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
 						remoteAudio.load();
 						remoteAudio.play().catch(function(error) {});
 						mediaConnect = true;
 						mediaConnectStartDate = Date.now();
+
+						// getting stats on p2p or relayed connection
 						console.log('full mediaConnect, getting stats...');
 						peerCon.getStats(null)
 							.then((results) => getStatsCandidateTypes(results,"Connected",micStatus),
@@ -1695,6 +1698,7 @@ function hangup(mustDisconnectCallee,message) {
 		localStream = null;
 	}
 
+	console.log('hangup remoteAudio.pause()');
 	remoteAudio.pause();
 	remoteAudio.currentTime = 0;
 	remoteAudio.srcObject = null;
