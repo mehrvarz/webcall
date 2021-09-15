@@ -1753,6 +1753,7 @@ function getStatsPostCall(results) {
 		statsPostCallDurationMS = 0;
 	}
 	if(rtcConnectStartDate==0) {
+		if(!gentle) console.log('getStatsPostCall rtcConnectStartDate==0');
 		durationRtcMS = 0;
 	}
 
@@ -1789,7 +1790,7 @@ function getStatsPostCall(results) {
 	if(durationRtcMS>0) {
 		bitsSentPerSec = Math.floor(bytesSent*8000/durationRtcMS);
 	}
-	//if(!gentle) console.log("getStatsPostCall bitsSentPerSec",bitsSentPerSec);
+	if(!gentle) console.log("getStatsPostCall bitsSentPerSec",bitsSentPerSec,durationRtcMS);
 	statsPostCallString =
 		"call duration: "+durationSecs+"s\n"+
 		"sent bytes: "+bytesSent+"\n"+

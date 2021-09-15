@@ -933,6 +933,7 @@ function getStatsPostCall(results) {
 		statsPostCallDurationMS = 0;
 	}
 	if(rtcConnectStartDate==0) {
+		if(!gentle) console.log('getStatsPostCall rtcConnectStartDate==0');
 		durationRtcMS = 0;
 	}
 		
@@ -1659,6 +1660,7 @@ function stopAllAudioEffects() {
 
 function hangup(mustDisconnectCallee,message) {
 	dialing = false;
+	remoteStream = null;
 	if(doneHangup) {
 		return;
 	}
