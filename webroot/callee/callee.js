@@ -188,8 +188,8 @@ window.onload = function() {
 
 			ringtoneSound.onplaying = function() {
 				ringtoneIsPlaying = true;
-				rtcConnectStartDate = 0;
-				mediaConnectStartDate = 0;
+				//rtcConnectStartDate = 0;
+				//mediaConnectStartDate = 0;
 			};
 			ringtoneSound.onpause = function() {
 				ringtoneIsPlaying = false;
@@ -1506,7 +1506,7 @@ function goOnline() {
 			goOfflineButton.disabled = true;
 			rtcConnectStartDate = Date.now();
 			mediaConnectStartDate = 0;
-			if(!gentle) console.log("rtcConnect");
+			if(!gentle) console.log("rtcConnect",rtcConnectStartDate);
 			wsSend("rtcConnect|")
 
 			if(ringtoneSound!=null) {
@@ -1898,6 +1898,8 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 	remoteAudio.pause();
 	remoteAudio.currentTime = 0;
 	remoteAudio.srcObject = null;
+	rtcConnectStartDate = 0;
+	mediaConnectStartDate = 0;
 	remoteStream = null;
 	buttonBlinking = false;
 	if(msgbox) {
