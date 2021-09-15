@@ -1548,9 +1548,9 @@ function dial() {
 
 	if(localStream) {
 		// add selected local audioTrack (audio input / mic) to peerCon
-		// tmtmtm why is this needed for remote audio to be played back
+		// TODO: an exception here leaves the callee hub "connected"
 		const audioTracks = localStream.getAudioTracks();
-		audioTracks[0].enabled = true;
+		audioTracks[0].enabled = true; // unmute
 		if(!gentle) console.log('dial addTrack',audioTracks[0],localStream);
 		peerCon.addTrack(audioTracks[0],localStream);
 	}
