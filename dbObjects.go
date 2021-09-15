@@ -23,7 +23,6 @@ type DbUser struct {
 	Str3 string             // web push device 2 subscription
 	Str3ua string           // web push device 2 user agent
 	Int2 int                // bit 0: hidden callee mode 0/1
-	//OfflineMsg string     // currently not used
 }
 
 type NotifTweet struct { // key = TweetID string
