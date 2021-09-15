@@ -1379,7 +1379,7 @@ function pickup2() {
 	audioTracks[0].enabled = true;
 	if(!gentle) console.log('pickup2 peerCon addTrack mic',audioTracks.length,audioTracks,localStream);
 	peerCon.addTrack(audioTracks[0],localStream);
-	// allow some time for nnegotiation before we send "pickup|!" to caller
+	// before we send "pickup|!" to caller allow some time for onnegotiation to take place
 	setTimeout(function() {
 		if(!gentle) console.log('pickup2: after short delay send pickup to caller');
 		wsSend("pickup|!") // make caller unmute the remote (our) mic
