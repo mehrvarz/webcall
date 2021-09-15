@@ -22,6 +22,7 @@ var wsConn = null;
 var peerCon = null;
 var localDescription = null;
 var localStream = null;
+var remoteStream = null;
 var hostDescription = null;
 var dialing = false;
 var rtcConnect = false;
@@ -1183,6 +1184,7 @@ function connectSignaling(message,openedFunc) {
 						}
 
 						// un-mute remote audio
+						remoteAudio.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
 						remoteAudio.load();
 						remoteAudio.play().catch(function(error) {});
 						mediaConnect = true;
@@ -1410,9 +1412,10 @@ function dial() {
 			}
 			if(!gentle)
 				console.log('peerCon.ontrack onunmute set remoteAudio.srcObject',streams[0]);
-			remoteAudio.srcObject = streams[0];
-			remoteAudio.load();
-			remoteAudio.play().catch(function(error) {});
+			//remoteAudio.srcObject = streams[0];
+			//remoteAudio.load();
+			//remoteAudio.play().catch(function(error) {});
+			remoteStream = streams[0];
 		};
 	};
 
