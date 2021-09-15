@@ -1,3 +1,4 @@
+// https://github.com/ChimeraCoder/anaconda
 package twitter
 
 import (
@@ -46,7 +47,7 @@ func (c *Client) BasicQuery(queryString string) ([]byte, error) {
 	fmt.Printf("BasicQuery queryString=%s\r\n",queryString)
 	response, err := c.HttpConn.Get(queryString)
 
-/*
+	/*
 	// tmtmtm TODO: not sure how to set the timeout
 	if c.HttpCli==nil {
 		timeout := time.Duration(10 * time.Second)
@@ -55,9 +56,9 @@ func (c *Client) BasicQuery(queryString string) ([]byte, error) {
 		}
 	}
 	response, err := c.HttpCli.Get(queryString)
-*/
+	*/
 	
-/*
+	/*
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -65,7 +66,7 @@ func (c *Client) BasicQuery(queryString string) ([]byte, error) {
 
 	bits, err := ioutil.ReadAll(response.Body)
 	return bits, err
-*/
+	*/
 	if err == nil {
 		defer response.Body.Close()
 		if err == nil {
@@ -118,10 +119,10 @@ func (c *Client) QueryTimeLine(count int, older_than_id int64, newer_than_id int
 
 func (c *Client) QueryStatus(id int64 ) (*TimelineTweet, []byte, error) {
 	requesURL := fmt.Sprintf("%s?id=%d&tweet_mode=extended", API_STATUS,id)
-//fmt.Printf("QueryStatus requesURL=%s\r\n",requesURL)
+	//fmt.Printf("QueryStatus requesURL=%s\r\n",requesURL)
 	data, err := c.BasicQuery(requesURL)
 	if err==nil {
-//fmt.Printf("QueryStatus data=[%s]\r\n",data)
+		//fmt.Printf("QueryStatus data=[%s]\r\n",data)
 		ret := TimelineTweet{}
 		err = json.Unmarshal(data, &ret)
 		if err==nil && ret.Id==0 {
@@ -132,7 +133,7 @@ func (c *Client) QueryStatus(id int64 ) (*TimelineTweet, []byte, error) {
 				return nil, data, errors.New(ret.Errors[0].Message)
 			}
 		}
-//fmt.Printf("QueryStatus Unmarshal err=[%v] ret.Id=%d\r\n",err,ret.Id)
+		//fmt.Printf("QueryStatus Unmarshal err=[%v] ret.Id=%d\r\n",err,ret.Id)
 		return &ret, data, err
 	}
 	return nil, data, err
@@ -182,7 +183,7 @@ func (c *Client) QueryFollowerById(id int) (UserDetail, []byte, error) {
 func (c *Client) SendTweet(msg string) ([]byte, error) {
 	requesURL := fmt.Sprintf("%s?status=%s", API_TWEET, url.QueryEscape(msg))
 	respdata, err := c.PostQuery(requesURL)
-//	fmt.Printf("SendTweet requesURL=(%v) response=[%s]\n",requesURL,respdata)
+	//	fmt.Printf("SendTweet requesURL=(%v) response=[%s]\n",requesURL,respdata)
 	if err==nil {
 		// err==nil does not mean everything has worked 
 		// if respdata contains "errors", we must evaluate it

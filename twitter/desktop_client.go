@@ -1,8 +1,7 @@
+// https://github.com/ChimeraCoder/anaconda
 package twitter
 
 import (
-//	"fmt"
-//	"log"
 	"github.com/mrjones/oauth"
 )
 
@@ -19,7 +18,6 @@ func NewDesktopClient(consumerKey, consumerSecret string) *DesktopClient {
 	)
 	//Enable debug info
 	newDesktop.OAuthConsumer.Debug(false)
-
 	return newDesktop
 }
 

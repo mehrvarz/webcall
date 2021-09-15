@@ -1,9 +1,8 @@
+// https://github.com/ChimeraCoder/anaconda
 package twitter
 
 import "time"
 
-// from: https://raw.githubusercontent.com/ChimeraCoder/anaconda/master/tweet.go
-	
 type TimelineTweet struct {
 	Contributors                []int64                `json:"contributors"`
 	Coordinates                 *Coordinates           `json:"coordinates"`
@@ -43,11 +42,8 @@ type TimelineTweet struct {
 	WithheldInCountries         []string               `json:"withheld_in_countries"`
 	WithheldScope               string                 `json:"withheld_scope"`
 
-	//Geo is deprecated
-	//Geo                  interface{} `json:"geo"`
-
 	CreatedAtTime				time.Time	// for display (sometimes the given time is wrong)
-	ReceivedAtTime				time.Time	// for sorting (includes prio) rssreader will use time.Now() except for 1st loop
+	ReceivedAtTime				time.Time	// for sorting (includes prio)
 	TtlMinutes                  int
 
 	CardImage                   string
@@ -59,12 +55,7 @@ type TimelineTweet struct {
 	CardTitle                   string
 	CardDescr                   string
 	CardLink                    string
-/*
-	Quoted2StatusID             int64                  
-	Quoted2StatusIdStr          string                 
-	Quoted2Status               *TimelineTweet         
-*/
-	// IMPORTAND: next two entries are not useful if this TimelineTweet is attached as a retweeted or quoted msg
+	// next two entries are not useful if this TimelineTweet is attached as a retweeted or quoted msg
 	// this TimelineTweet must be a main msg for these entries to be reliable
 	Shown                       bool
 	ShownTime                   time.Time
@@ -79,10 +70,6 @@ type TimelineTweet struct {
 	ReplySource                 bool	// true if this msg is "inreply"; set by fetchTwitterComTweet()
 
 	QuotedInitialState			int
-
-	// NOT BEING USED CURRENTLY
-	//FullyRendered               bool
-	//Delivered                   bool
 }
 
 type TimelineTweets []TimelineTweet
