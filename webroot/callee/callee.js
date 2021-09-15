@@ -814,7 +814,7 @@ function connectSignaling(message) {
 		stopAllAudioEffects("wsConn.onclose");
 		if(calleeID.startsWith("random") || calleeID.startsWith("!")) {
 			setTimeout(function() {
-				// this delay prevents this msg to show up on page reload
+				// this delay prevents this msg from being shown on page reload
 				showStatus("Lost signaling server");
 			},500);
 			return;
@@ -1374,10 +1374,12 @@ function pickup2() {
 	remoteAudio.play().catch(function(error) {});
 
 	const audioTracks = localStream.getAudioTracks();
-	audioTracks[0].enabled = true; // unmute mic
+	audioTracks[0].enabled = true;
+	audioTracks[0].muted = false;
 	if(!gentle) console.log('pickup2 peerCon addTrack mic',audioTracks.length,audioTracks,localStream);
 	peerCon.addTrack(audioTracks[0],localStream);
-	wsSend("pickup|!") // tell caller to unmute the remote (our) mic
+
+	wsSend("pickup|!") // make caller unmute the remote (our) mic
 	answerButton.disabled = true;
 	onlineIndicator.src="red-gradient.svg";
 	onnegotiationneededAllowed = true;
@@ -1463,11 +1465,11 @@ function goOnline() {
 	}
 	peerCon.onnegotiationneeded = async () => {
 		if(!peerCon) {
-			if(!gentle) console.log('onnegotiationneeded no peerCon');
+			if(!gentle) console.warn('onnegotiationneeded no peerCon');
 			return;
 		}
 		if(!onnegotiationneededAllowed) {
-			if(!gentle) console.log('onnegotiationneeded not allowed');
+			if(!gentle) console.warn('onnegotiationneeded not allowed');
 			return;
 		}
 		try {

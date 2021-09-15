@@ -1412,8 +1412,7 @@ function dial() {
 				console.warn('peerCon.ontrack onunmute was already set');
 				return;
 			}
-			if(!gentle)
-				console.log('peerCon.ontrack onunmute set remoteAudio.srcObject',streams[0]);
+			if(!gentle) console.log('peerCon.ontrack onunmute set remoteAudio.srcObject',streams[0]);
 			//remoteAudio.srcObject = streams[0];
 			//remoteAudio.load();
 			//remoteAudio.play().catch(function(error) {});
@@ -1551,6 +1550,8 @@ function dial() {
 		// add selected local audioTrack (audio input / mic) to peerCon
 		// tmtmtm why is this needed for remote audio to be played back
 		const audioTracks = localStream.getAudioTracks();
+		audioTracks[0].enabled = true;
+		audioTracks[0].muted = false;
 		if(!gentle) console.log('dial addTrack',audioTracks[0],localStream);
 		peerCon.addTrack(audioTracks[0],localStream);
 	}
