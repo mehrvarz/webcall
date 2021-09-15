@@ -1378,16 +1378,20 @@ function pickup2() {
 	if(!gentle) console.log('pickup2 peerCon addTrack mic',audioTracks.length,audioTracks,localStream);
 	peerCon.addTrack(audioTracks[0],localStream);
 
-	wsSend("pickup|!") // make caller unmute the remote (our) mic
-	answerButton.disabled = true;
-	onlineIndicator.src="red-gradient.svg";
-	onnegotiationneededAllowed = true;
-	mediaConnect = true;
-	mediaConnectStartDate = Date.now();
-
 	setTimeout(function() {
-		peerCon.getStats(null)
-		.then((results) => getStatsCandidateTypes(results,"Connected","Mic is open"), err => console.log(err));
+		// caller may need a bit of time to receive peerCon.ontrack
+		wsSend("pickup|!") // make caller unmute the remote (our) mic
+		answerButton.disabled = true;
+		onlineIndicator.src="red-gradient.svg";
+		onnegotiationneededAllowed = true;
+		mediaConnect = true;
+		mediaConnectStartDate = Date.now();
+
+		setTimeout(function() {
+			peerCon.getStats(null)
+			.then((results) => getStatsCandidateTypes(results,"Connected","Mic is open"),
+				err => console.log(err));
+		},200);
 	},200);
 }
 
