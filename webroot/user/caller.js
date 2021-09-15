@@ -1389,8 +1389,10 @@ function dial() {
 
 	var ICE_config= {
 		"iceServers": [
-			{	'urls': 'stun:'+window.location.hostname+':3739' },
-			{	'urls': 'turn:'+window.location.hostname+':3739',
+//			{	'urls': 'stun:'+window.location.hostname+':3739' },
+//			{	'urls': 'turn:'+window.location.hostname+':3739',
+			{	'urls': 'stun:66.228.46.43:3739' },
+			{	'urls': 'turn:66.228.46.43:3739',
 				'username': 'c807ec29df3c9ff',
 				'credential': '736518fb4232d44'
 			}
