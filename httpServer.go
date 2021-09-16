@@ -447,7 +447,8 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 			for calleeID,hub := range hubMap {
 				if hub!=nil {
 					if hub.CallerClient!=nil {
-						fmt.Fprintf(w,"callee=%v connected client=%v\n",calleeID,hub.CallerClient.RemoteAddr)
+//						fmt.Fprintf(w,"callee=%v connected client=%v\n",calleeID,hub.CallerClient.RemoteAddr)
+						fmt.Fprintf(w,"callee=%v connected client=%v\n",calleeID,hub.ConnectedCallerIp)
 					} else {
 						fmt.Fprintf(w,"callee=%v idle\n",calleeID)
 					}
