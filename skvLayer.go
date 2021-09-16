@@ -79,7 +79,7 @@ func locStoreCallerIpInHubMap(calleeId string, callerIp string, skipConfirm bool
 	} else {
 		if hub.ConnectedCallerIp != callerIp {
 
-			if callerIp == "" {
+			if callerIp == "" && recentTurnCallerIps!=nil {
 				// client is gone, but we prolong turn session by a few secs, to avoid turn-errors
 				ipAddr := hub.ConnectedCallerIp
 				if portIdx := strings.Index(ipAddr, ":"); portIdx >= 0 {
