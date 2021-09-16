@@ -24,7 +24,6 @@ const fullScreenOverlayElement = document.getElementById('fullScreenOverlay');
 const iframeWindowElement = document.getElementById('iframeWindow');
 const menuElement = document.getElementById('menu');
 const menuDialogElement = document.getElementById('menuDialog');
-//const postCallStatsElement = document.getElementById('postCallStats');
 //const audioSinkSelect = document.querySelector("select#audioSink");
 const bitrate = 280000;
 const neverAudio = false;
@@ -864,7 +863,6 @@ function connectSignaling(message) {
 					// "Uncaught SyntaxError: Unexpected end of JSON input"
 					callerDescription = JSON.parse(payload);
 					console.log('cmd callerDescription (incoming call)');
-					//postCallStatsElement.style.display = "none";
 					peerCon.setRemoteDescription(callerDescription).then(() => {
 						console.log('callerDescription createAnswer');
 						peerCon.createAnswer().then((desc) => {
@@ -1450,7 +1448,6 @@ function goOnline() {
 	peerCon.onicecandidateerror = function(e) {
 		if(!gentle) console.warn("onicecandidateerror", e.errorCode, e.errorText, e.url);
 		// chrome warn "701 STUN allocate request timed out" apparently related to pion turn not supporting ipv6
-		//alert("iceCandidate error "+e.errorCode+" "+e.errorText);
 		showStatus("iceCandidate error "+e.errorCode+" "+e.errorText,-1);
 	}
 	peerCon.ontrack = ({track, streams}) => {
@@ -1461,7 +1458,6 @@ function goOnline() {
 			}
 			if(!gentle)
 				console.log('peerCon.ontrack onunmute set remoteAudio.srcObject',streams[0]);
-			//remoteAudio.srcObject = streams[0];
 			remoteStream = streams[0];
 		};
 	};
@@ -1835,16 +1831,11 @@ function createDataChannel() {
 		};
 		dataChannel.onclose = event => {
 			if(!gentle) console.log("dataChannel.onclose");
-			// this next line should not be necessary
-			// it will also be executed on peerCon.onconnectionstatechange "disconnected"
-			// but at least in chrome this does speed up caller disconnect detection a lot
-			//stopAllAudioEffects();
 			endWebRtcSession(true,true); // -> peerConCloseFunc
 		}
 		dataChannel.onerror = event => {
 			if(rtcConnect) {
 				console.warn("dataChannel.onerror",event);
-				//alert("dataChannel error "+event);
 				showStatus("dataChannel error "+event,-1);
 			}
 		}
@@ -1976,10 +1967,9 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 			// this is causing an async delay
 			peerCon.getStats(null).then((results) => { 
 				getStatsPostCall(results);
-				if(statsPostCallString!="" && statsPostCallDurationMS>0) {
+				//if(statsPostCallString!="" && statsPostCallDurationMS>0) {
 					// enable info.svg button onclick -> showStatsPostCall()
-					//postCallStatsElement.style.display = "inline-block";
-				}
+				//}
 				peerConCloseFunc();
 			}, err => {
 				console.log(err); 
@@ -2052,12 +2042,9 @@ function goOffline() {
 	if(waitingCallersTitleElement!=null) {
 		waitingCallersTitleElement.style.display = "none";
 	}
-	//var missedCallsElement = document.getElementById('missedCalls');
 	if(missedCallsElement!=null) {
-		//missedCallsElement.innerHTML = "";
 		missedCallsElement.style.display = "none";
 	}
-	//var missedCallsTitleElement = document.getElementById('missedCallsTitle');
 	if(missedCallsTitleElement!=null) {
 		missedCallsTitleElement.style.display = "none";
 	}
