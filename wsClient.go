@@ -328,11 +328,13 @@ func (c *WsClient) receiveProcess(message []byte) {
 		//}
 
 		// exchange useragent's
-		if c.hub.CallerClient.Write([]byte("ua|"+c.hub.CalleeClient.userAgent)) != nil {
-			return
-		}
-		if c.hub.CalleeClient.Write([]byte("ua|"+c.hub.CallerClient.userAgent)) != nil {
-			return
+		if c.hub.CallerClient!=nil && c.hub.CalleeClient!=nil {
+			if c.hub.CallerClient.Write([]byte("ua|"+c.hub.CalleeClient.userAgent)) != nil {
+				return
+			}
+			if c.hub.CalleeClient.Write([]byte("ua|"+c.hub.CallerClient.userAgent)) != nil {
+				return
+			}
 		}
 
 		if c.hub.maxRingSecs>0 {
@@ -474,11 +476,13 @@ func (c *WsClient) receiveProcess(message []byte) {
 		//	c.connType, c.isOnline.Get(), c.isConnectedToPeer.Get())
 		c.hub.lastCallStartTime = time.Now().Unix()
 
-		// deliver "pickup" to the caller
-		if logWantedFor("wscall") {
-			fmt.Printf("%s forward pickup to caller %s\n", c.connType, c.hub.calleeID)
+		if c.hub.CallerClient!=nil {
+			// deliver "pickup" to the caller
+			if logWantedFor("wscall") {
+				fmt.Printf("%s forward pickup to caller %s\n", c.connType, c.hub.calleeID)
+			}
+			c.hub.CallerClient.Write(message)
 		}
-		c.hub.CallerClient.Write(message)
 
 		// switching from maxRingSecs deadline to maxTalkSecsIfNoP2p deadline
 		if (c.hub.LocalP2p && c.hub.RemoteP2p) || c.hub.maxTalkSecsIfNoP2p<=0 {
@@ -554,9 +558,10 @@ func (c *WsClient) receiveProcess(message []byte) {
 								c.hub.CalleeClient.Close("disconCalleeOnPeerConnected")
 							}
 							if myDisconCallerOnPeerConnected {
-								fmt.Printf("%s disconCallerOnPeerConnected %s\n", c.connType, c.hub.calleeID)
-								//c.hub.doUnregister(c.hub.CallerClient,"disconCallerOnPeerConnected")
-								c.hub.CallerClient.Close("disconCallerOnPeerConnected")
+								if c.hub.CallerClient != nil {
+									fmt.Printf("%s disconCallerOnPeerConnected %s\n", c.connType, c.hub.calleeID)
+									c.hub.CallerClient.Close("disconCallerOnPeerConnected")
+								}
 							}
 						}
 					}
@@ -568,7 +573,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 	}
 
 	if !c.isCallee {
-		// caller client
+		// client is caller
 		if !c.hub.CalleeClient.isOnline.Get() {
 			// but there is no callee
 			fmt.Printf("# %s client %s without callee not allowed (%s)\n",
@@ -576,7 +581,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 			c.Write([]byte("cancel|busy"))
 			return
 		}
-		if c.hub.CallerClient!=c {
+		if c.hub.CallerClient!=nil && c.hub.CallerClient!=c {
 			// but there is already another caller-client
 			fmt.Printf("# %s client %s is 2nd client not allowed\n",
 				c.connType, c.RemoteAddr)
@@ -591,9 +596,13 @@ func (c *WsClient) receiveProcess(message []byte) {
 	}
 	if len(payload)>0 {
 		if c.isCallee {
-			c.hub.CallerClient.Write(message)
+			if c.hub.CallerClient!=nil {
+				c.hub.CallerClient.Write(message)
+			}
 		} else {
-			c.hub.CalleeClient.Write(message)
+			if c.hub.CalleeClient!=nil {
+				c.hub.CalleeClient.Write(message)
+			}
 		}
 	} else {
 		//fmt.Printf("%s %s with no payload\n",c.connType,cmd)
@@ -659,6 +668,10 @@ func (c *WsClient) peerConHasEnded(comment string) {
 					c.connType, c.hub.calleeID)
 			}
 		}
+
+		// TODO: why not: c.hub.CallerClient=nil
+		// TODO: why not: c.hub.CallerClient.RemoteAddr = ""
+		// TODO: why not: c.hub.CallerClient.isOnline.Put(false)
 	}
 }
 
