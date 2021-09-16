@@ -1451,7 +1451,7 @@ function goOnline() {
 		if(!gentle) console.warn("onicecandidateerror", e.errorCode, e.errorText, e.url);
 		// chrome warn "701 STUN allocate request timed out" apparently related to pion turn not supporting ipv6
 		//alert("iceCandidate error "+e.errorCode+" "+e.errorText);
-		showStatus("iceCandidate error "+e.errorCode+" "+e.errorText,3000);
+		showStatus("iceCandidate error "+e.errorCode+" "+e.errorText);
 	}
 	peerCon.ontrack = ({track, streams}) => {
 		track.onunmute = () => {
@@ -1845,7 +1845,7 @@ function createDataChannel() {
 			if(rtcConnect) {
 				console.warn("dataChannel.onerror",event);
 				//alert("dataChannel error "+event);
-				showStatus("dataChannel error "+event,3000);
+				showStatus("dataChannel error "+event);
 			}
 		}
 		dataChannel.onmessage = event => {
