@@ -80,7 +80,7 @@ func locStoreCallerIpInHubMap(calleeId string, callerIp string, skipConfirm bool
 		if hub.ConnectedCallerIp != callerIp {
 
 			if callerIp == "" {
-				// client is gone, but we prolong turn session by a few x secs, to avoid turn-errors
+				// client is gone, but we prolong turn session by a few secs, to avoid turn-errors
 				ipAddr := hub.ConnectedCallerIp
 				if portIdx := strings.Index(ipAddr, ":"); portIdx >= 0 {
 					ipAddr = ipAddr[:portIdx]
@@ -104,11 +104,15 @@ func locSearchCallerIpInHubMap(ip string) (bool,string,error) {
 	for id := range hubMap {
 		hub := hubMap[id]
 		if strings.HasPrefix(hub.ConnectedCallerIp,ip) {
-			fmt.Printf("SearchCallerIpInHubMap ip=%s found\n",ip)
+			if logWantedFor("ipinhub") {
+				fmt.Printf("SearchCallerIpInHubMap ip=%s found\n",ip)
+			}
 			return true,hub.calleeID,nil
 		}
 	}
-	fmt.Printf("SearchCallerIpInHubMap ip=%s not found\n",ip)
+	if logWantedFor("ipinhub") {
+		fmt.Printf("SearchCallerIpInHubMap ip=%s not found\n",ip)
+	}
 	return false,"",nil
 }
 
