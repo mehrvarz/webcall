@@ -4,8 +4,9 @@
 
 # WebCall WebRTC Telephony Server
 
-WebCall enables E2E encrypted telephony over P2P links
-with the highest audio quality and without the need to install any software on your devices.
+E2E encrypted telephony over P2P links
+with very high audio quality and no
+need to install software.
 
 [https://timur.mobi/webcall](https://timur.mobi/webcall)
 
