@@ -4,13 +4,14 @@
 
 # WebCall WebRTC Telephony Server
 
-Find out how it works and how to make and receive telephony calls.
+WebCall enables E2E encrypted telephony over P2P links
+with the highest audio quality and without the need to install any software on your devices.
 
 [https://timur.mobi/webcall](https://timur.mobi/webcall)
 
 # Install
 
-Find out how to build and run the telephony server.
+Build and run a WebCall telephony server for yourself and for others.
 
 [https://timur.mobi/webcall/install](https://timur.mobi/webcall/install)
 
