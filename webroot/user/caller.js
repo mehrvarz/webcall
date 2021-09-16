@@ -1636,9 +1636,10 @@ function onIceCandidate(event) {
 			//console.warn('onIce skip callerCandidate.address==null');
 		} else*/
 		if(wsConn==null) {
-			console.log('onIce callerCandidate: wsConn==null', callerCandidate.address);
+			if(!gentle) console.log('onIce callerCandidate: wsConn==null', callerCandidate.address);
 		} else if(wsConn.readyState!=1) {
-			console.log('onIce callerCandidate: readyState!=1', callerCandidate.address, wsConn.readyState);
+			if(!gentle) console.log('onIce callerCandidate: readyState!=1',
+				callerCandidate.address, wsConn.readyState);
 		} else {
 			if(!gentle) console.log('onIce callerCandidate', callerCandidate.address);
 			wsSend("callerCandidate|"+JSON.stringify(callerCandidate));

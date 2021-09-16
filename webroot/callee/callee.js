@@ -2078,8 +2078,11 @@ function onIceCandidate(event) {
 		if(!gentle) console.log('onIce: end of calleeCandidates');
 	// else if(calleeCandidate.address==null) {
 		//console.warn('onIce skip calleeCandidate.address==null');
-	} else if(wsConn==null || wsConn.readyState!=1) {
-		console.warn('onIce wsConn==null || readyState!=1', calleeCandidate.address);
+	if(wsConn==null) {
+		if(!gentle) console.log('onIce callerCandidate: wsConn==null', callerCandidate.address);
+	} else if(wsConn.readyState!=1) {
+		if(!gentle) console.log('onIce callerCandidate: readyState!=1',
+			callerCandidate.address, wsConn.readyState);
 	} else {
 		if(!gentle) console.log('onIce calleeCandidate for signaling', calleeCandidate);
 		wsSend("calleeCandidate|"+JSON.stringify(calleeCandidate));
