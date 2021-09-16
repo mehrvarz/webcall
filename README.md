@@ -4,9 +4,13 @@
 
 # WebCall WebRTC Telephony Server
 
+Find out how it works and how to make and receive telephony calls.
+
 [https://timur.mobi/webcall](https://timur.mobi/webcall)
 
 # Install
+
+Find out how to build and run the telephony server.
 
 [https://timur.mobi/webcall/install](https://timur.mobi/webcall/install)
 
