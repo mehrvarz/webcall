@@ -1635,8 +1635,8 @@ function onIceCandidate(event) {
 		/*if(callerCandidate.address==null) {
 			//console.warn('onIce skip callerCandidate.address==null');
 		} else*/ if(wsConn==null || wsConn.readyState!=1) {
-			console.warn('onIce callerCandidate (%s): wsConn==null (%d) || readyState!=1 (%d)',
-				callerCandidate.address, wsConn, readyState);
+			console.warn('onIce callerCandidate (%s): wsConn==null (%d) || readyState!=1',
+				callerCandidate.address, wsConn);
 		} else {
 			if(!gentle) console.log('onIce callerCandidate', callerCandidate.address);
 			wsSend("callerCandidate|"+JSON.stringify(callerCandidate));
