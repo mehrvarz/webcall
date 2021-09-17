@@ -11,7 +11,7 @@ Lightweight and easy to use.
 
 # Install
 
-Build and run a WebCall telephony server for yourself and for others.
+Build and run WebCall telephony server for yourself and for others.
 
 [https://timur.mobi/webcall/install](https://timur.mobi/webcall/install)
 
