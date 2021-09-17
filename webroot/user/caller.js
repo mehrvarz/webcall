@@ -292,6 +292,7 @@ function checkCalleeOnline() {
 function calleeOnlineStatus(onlineStatus) {
 	if(rtcConnect || dialing) {
 		// TODO check if this is still required/meaningful
+		console.log('calleeOnlineStatus abort',rtcConnect,dialing);
 		return;
 	}
 	if(!gentle) console.log('calleeOnlineStatus',onlineStatus);
@@ -1665,7 +1666,10 @@ function stopAllAudioEffects() {
 function hangup(mustDisconnectCallee,message) {
 	dialing = false;
 	remoteStream = null;
+	rtcConnect = false;
+	mediaConnect = false;
 	if(doneHangup) {
+		if(!gentle) console.log('hangup doneHangup');
 		return;
 	}
 
@@ -1675,13 +1679,11 @@ function hangup(mustDisconnectCallee,message) {
 	}
 
 	doneHangup = true;
-	mediaConnect = false;
 	if(singlebutton) {
 		dialButton.style.boxShadow = "";
 	} else {
 		onlineIndicator.src="";
 	}
-	rtcConnect = false;
 	stopTimer();
 	onnegotiationneededAllowed = false;
 
