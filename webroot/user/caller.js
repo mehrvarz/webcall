@@ -1420,7 +1420,7 @@ function dial() {
 				console.warn('peerCon.ontrack onunmute was already set');
 				return;
 			}
-			if(!gentle) console.log('peerCon.ontrack onunmute set remoteAudio.srcObject',streams[0]);
+			console.log('peerCon.ontrack onunmute set remoteAudio.srcObject',streams[0]);
 			//remoteAudio.srcObject = streams[0];
 			//remoteAudio.load();
 			//remoteAudio.play().catch(function(error) {});
