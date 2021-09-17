@@ -1831,7 +1831,7 @@ function createDataChannel() {
 		};
 		dataChannel.onclose = event => {
 			if(!gentle) console.log("dataChannel.onclose");
-			endWebRtcSession(true,true); // -> peerConCloseFunc
+			//endWebRtcSession(true,true); // -> peerConCloseFunc
 		}
 		dataChannel.onerror = event => {
 			if(rtcConnect) {
