@@ -1668,6 +1668,9 @@ function hangup(mustDisconnectCallee,message) {
 	remoteStream = null;
 	rtcConnect = false;
 	mediaConnect = false;
+	if(!singlebutton) {
+		msgbox.value = "";
+	}
 	if(doneHangup) {
 		if(!gentle) console.log('hangup doneHangup');
 		return;
