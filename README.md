@@ -5,6 +5,7 @@
 # WebCall WebRTC Telephony Server
 
 Browser based telephony over E2E-encrypted P2P-links with very high audio quality.
+Lightweight and easy to use.
 
 [https://timur.mobi/webcall](https://timur.mobi/webcall)
 
