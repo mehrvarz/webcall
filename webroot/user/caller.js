@@ -1807,14 +1807,14 @@ function hangupWithBusySound(mustDisconnectCallee,message) {
 	dialing = false;
 	stopAllAudioEffects();
 	if(peerCon!=null) {
-		console.log(`hangupWithBusySound`);
+		console.log(`hangupWithBusySound `+message);
 		busySignalSound.play().catch(function(error) { });
 		setTimeout(function() {
 			if(!gentle) console.log(`hangupWithBusySound stopAllAudioEffects`);
 			stopAllAudioEffects();
 		},2500);
 	} else {
-		console.log(`hangupWithBusySound no peerCon`);
+		console.log(`hangupWithBusySound no peerCon `+message);
 	}
 	hangup(mustDisconnectCallee,message);
 }
