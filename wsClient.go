@@ -130,7 +130,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 	hub := wsClientData.hub // set by /login wsClientMap[wsClientID] = wsClientDataType{...}
 
-	wsConn.OnMessage(func(c *websocket.Conn, messageType websocket.MessageType, data []byte) {
+	upgrader.OnMessage(func(c *websocket.Conn, messageType websocket.MessageType, data []byte) {
 		switch messageType {
 		case websocket.TextMessage:
 			//fmt.Println("TextMessage:", messageType, string(data), len(data))
@@ -716,9 +716,9 @@ func (c *WsClient) setPingDeadline(secs int, comment string) {
 				c.wsConn.SetWriteDeadline(time.Now().Add(writeWait))
 				err := c.wsConn.WriteMessage(websocket.PingMessage, nil)
 				if err != nil {
-					if strings.Index(err.Error(),"broken pipe")<0 && strings.Index(err.Error(),"EOF")<0 {
+					//if strings.Index(err.Error(),"broken pipe")<0 && strings.Index(err.Error(),"EOF")<0 {
 						fmt.Printf("# setPingDeadline ping sent err=%v (%s)\n", err, comment)
-					}
+					//}
 					return
 				}
 				atomic.AddInt64(&pingSentCounter, 1)
