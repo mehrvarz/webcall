@@ -1633,10 +1633,9 @@ function onIceCandidate(event) {
 	} else {
 		//if(!gentle) console.log("onIce",callerCandidate.candidate);
 		//console.log('onIce callerCandidate.address',callerCandidate.address);
-		/*if(callerCandidate.address==null) {
+		if(callerCandidate.address==null) {
 			//console.warn('onIce skip callerCandidate.address==null');
-		} else*/
-		if(wsConn==null) {
+		} else if(wsConn==null) {
 			if(!gentle) console.log('onIce callerCandidate: wsConn==null', callerCandidate.address);
 		} else if(wsConn.readyState!=1) {
 			if(!gentle) console.log('onIce callerCandidate: readyState!=1',
