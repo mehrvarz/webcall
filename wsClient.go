@@ -646,33 +646,32 @@ func (c *WsClient) peerConHasEnded(comment string) {
 				c.hub.CalleeClient.isConnectedToPeer.Set(false)
 			}
 		}
-
-		// clear the callerIp from globhub.ConnectedCallerIp
-		// so this callee hub can be called again
-		c.hub.HubMutex.Lock()
-		if c.hub.lastCallStartTime>0 {
-			c.hub.processTimeValues()
-			c.hub.lastCallStartTime = 0
-		}
-		c.hub.HubMutex.Unlock()
-		err := StoreCallerIpInHubMap(c.hub.calleeID, "", false)
-		if err!=nil {
-			// err "key not found" means: callee has already signed off - can be ignored
-			if strings.Index(err.Error(),"key not found")<0 {
-				fmt.Printf("# %s peerConHasEnded %s clear callerIpInHub err=%v\n",
-					c.connType, c.hub.calleeID, err)
-			}
-		} else {
-			if logWantedFor("hub") {
-				fmt.Printf("%s peerConHasEnded %s clear callerIpInHub no err\n",
-					c.connType, c.hub.calleeID)
-			}
-		}
-
-		// TODO: why not: c.hub.CallerClient=nil
-		// TODO: why not: c.hub.CallerClient.RemoteAddr = ""
-		// TODO: why not: c.hub.CallerClient.isOnline.Put(false)
 	}
+
+	// clear callerIp from hub.ConnectedCallerIp
+	c.hub.HubMutex.Lock()
+	if c.hub.lastCallStartTime>0 {
+		c.hub.processTimeValues()
+		c.hub.lastCallStartTime = 0
+	}
+	c.hub.HubMutex.Unlock()
+	err := StoreCallerIpInHubMap(c.hub.calleeID, "", false)
+	if err!=nil {
+		// err "key not found" means: callee has already signed off - can be ignored
+		if strings.Index(err.Error(),"key not found")<0 {
+			fmt.Printf("# %s peerConHasEnded %s clear callerIpInHub err=%v\n",
+				c.connType, c.hub.calleeID, err)
+		}
+	} else {
+		if logWantedFor("hub") {
+			fmt.Printf("%s peerConHasEnded %s clear callerIpInHub no err\n",
+				c.connType, c.hub.calleeID)
+		}
+	}
+
+	// TODO: why not: c.hub.CallerClient=nil
+	// TODO: why not: c.hub.CallerClient.RemoteAddr = ""
+	// TODO: why not: c.hub.CallerClient.isOnline.Put(false)
 }
 
 func (c *WsClient) setPingDeadline(secs int, comment string) {
