@@ -2076,7 +2076,7 @@ function onIceCandidate(event) {
 	if(calleeCandidate==null) {
 		// ICE gathering has finished
 		if(!gentle) console.log('onIce: end of calleeCandidates');
-	// } else if(calleeCandidate.address==null) {
+	} else if(calleeCandidate.address==null) {
 		//console.warn('onIce skip calleeCandidate.address==null');
 	} else if(wsConn==null) {
 		if(!gentle) console.log('onIce callerCandidate: wsConn==null', callerCandidate.address);
