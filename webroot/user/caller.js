@@ -1204,6 +1204,7 @@ function connectSignaling(message,openedFunc) {
 					}
 
 					// we now wait up to 6x300ms for remoteStream before we continue with enableRemoteAudio()
+					// remoteStream will arrive via: peerCon.ontrack onunmute
 					var waitLoopCount=0;
 					let waitForRemoteStreamFunc = function() {
 						console.log('waitForRemoteStreamFunc',remoteStream!=null,waitLoopCount);
