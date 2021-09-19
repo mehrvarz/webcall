@@ -28,7 +28,7 @@ const menuDialogElement = document.getElementById('menuDialog');
 const bitrate = 280000;
 const neverAudio = false;
 const autoReconnectDelay = 30;
-const version = "1.14.10";
+const version = "1.14.11";
 
 var ringtoneSound = null;
 var ringtoneIsPlaying = false;

@@ -470,7 +470,7 @@ func readConfig(init bool) {
 		"disconCalleeOnPeerConnected", disconCalleeOnPeerConnected, false)
 	disconCallerOnPeerConnected = readIniBoolean(configIni,
 		"disconCallerOnPeerConnected", disconCallerOnPeerConnected, true)
-	calleeClientVersion = readIniString(configIni, "calleeClientVersion", calleeClientVersion, "1.14.10")
+	calleeClientVersion = readIniString(configIni, "calleeClientVersion", calleeClientVersion, "1.14.11")
 
 	maxRingSecs = readIniInt(configIni, "maxRingSecs", maxRingSecs, 300, 1)
 	maxTalkSecsIfNoP2p = readIniInt(configIni, "maxTalkSecsIfNoP2p", maxTalkSecsIfNoP2p, 600, 1)
