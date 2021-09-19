@@ -1144,28 +1144,12 @@ function connectSignaling(message,openedFunc) {
 
 				} else if(cmd=="pickup") {
 					console.log('cmd pickup');
-					if(rtcConnect) {
-						console.log('callee is answering our call');
-						stopAllAudioEffects();
+					if(!rtcConnect) {
+						if(!gentle) console.warn('cmd pickup without rtcConnect; ignored');
+						return
+					}
 
-						if(!singlebutton) {
-							msgbox.style.display = "none";
-						}
-
-						if(!localStream && !neverAudio) {
-							console.warn("cmd pickup no localStream");
-							// I see this when I quickly re-dial while busy signal of last call is still playing
-							// TODO button may now continue to show "Connecting..."
-							// but connection is still established (at least when calling answie)
-							//tmtmtm test:
-							hangupWithBusySound(true,"pickup with no localStream");
-							return;
-						}
-						if(!remoteStream) {
-							hangupWithBusySound(true,"pickup with no remoteStream");
-							return;
-						}
-
+					var enableRemoteAudio = function(calleeCandidate) {
 						let micStatus = "";
 						if(singlebutton) {
 							hangupButton.innerHTML = singleButtonConnectedText;
@@ -1200,9 +1184,42 @@ function connectSignaling(message,openedFunc) {
 							err => console.log(err));
 
 						onnegotiationneededAllowed = true;
-					} else {
-						if(!gentle) console.warn('cmd pickup without rtcConnect; ignored');
 					}
+
+					console.log('callee is answering our call');
+					stopAllAudioEffects();
+
+					if(!singlebutton) {
+						msgbox.style.display = "none";
+					}
+
+					if(!localStream && !neverAudio) {
+						console.warn("cmd pickup no localStream");
+						// I see this when I quickly re-dial while busy signal of last call is still playing
+						// TODO button may now continue to show "Connecting..."
+						// but connection is still established (at least when calling answie)
+						//tmtmtm test:
+						hangupWithBusySound(true,"pickup but no localStream");
+						return;
+					}
+
+					// we now wait up to 6x300ms for remoteStream before we continue with enableRemoteAudio()
+					var waitLoopCount=0;
+					let waitForRemoteStreamFunc = function() {
+						console.log('waitForRemoteStreamFunc',remoteStream!=null,waitLoopCount);
+						if(!remoteStream) {
+							waitLoopCount++;
+							if(waitLoopCount>=6) {
+								hangupWithBusySound(true,"pickup but no remoteStream");
+								return;
+							}
+							setTimeout(waitForRemoteStreamFunc, 300);
+							return;
+						}
+						console.log('waitForRemoteStreamFunc enableRemoteAudio');
+						enableRemoteAudio();
+					}
+					waitForRemoteStreamFunc();
 
 				} else if(cmd=="cancel") {
 					if(payload!="c") {
