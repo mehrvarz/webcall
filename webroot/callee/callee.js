@@ -193,6 +193,7 @@ window.onload = function() {
 			};
 
 			if(calleeID.startsWith("random")) {
+				document.title = "WebCall Roulette";
 				if(titleElement) {
 					titleElement.innerHTML = "WebCall Roulette";
 				}
@@ -201,6 +202,7 @@ window.onload = function() {
 				return;
 			}
 			if(calleeID.startsWith("!")) {
+				document.title = "WebCall Duo";
 				if(titleElement) {
 					titleElement.innerHTML = "WebCall Duo";
 				}
@@ -208,13 +210,14 @@ window.onload = function() {
 				start();
 				return;
 			}
+			document.title = "WebCall Callee "+calleeID;
 			if(titleElement) {
-				if(calleeID.match(/^[0-9]*$/) != null) {
-					// calleeID is pure numeric - don't show
-					titleElement.innerHTML = "WebCall Callee";
-				} else {
+//				if(calleeID.match(/^[0-9]*$/) != null) {
+//					// calleeID is pure numeric - don't show
+//					titleElement.innerHTML = "WebCall Callee";
+//				} else {
 					titleElement.innerHTML = "WebCall Callee "+calleeID;
-				}
+//				}
 			}
 
 			calleeID = calleeID.toLowerCase();
