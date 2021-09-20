@@ -961,23 +961,25 @@ function connectSignaling(message) {
 							console.log("# cmd callerCandidate skip address = null");
 							return;
 						}
-						if(address=="" 
-								//|| address=="66.228.46.43"  // TODO use outboundIP?
-								//|| address.indexOf(":")>=0
-								//|| address.endsWith(".local")
-								//|| address.indexOf("10.1.")>=0
-							) {
-							console.log("# cmd callerCandidate skip address",address,callerCandidate.candidate);
+						if(address=="") {
+							console.log("# cmd callerCandidate skip empty address");
 							return;
 						}
 
 						if(!gentle) console.log("! peerCon.addIceCandidate accept address",
 							address,callerCandidate.candidate);
-						if(listOfClientIps.indexOf(address)<0) {
-							if(listOfClientIps!="") {
-								listOfClientIps += " ";
+						if(address.indexOf(":")>=0
+								//|| address=="66.228.46.43"  // TODO use outboundIP
+								|| address.endsWith(".local")
+								|| address.indexOf("10.1.")>=0) {
+							// do not add to listOfClientIps
+						} else {
+							if(listOfClientIps.indexOf(address)<0) {
+								if(listOfClientIps!="") {
+									listOfClientIps += " ";
+								}
+								listOfClientIps += address;
 							}
-							listOfClientIps += address;
 						}
 						peerCon.addIceCandidate(callerCandidate).catch(e => {
 							console.error("addIce callerCandidate",e,payload);
