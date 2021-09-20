@@ -1769,6 +1769,7 @@ function hangup(mustDisconnectCallee,message) {
 					if(peerCon!=null) {
 						if(dataChannel && dataChannel.readyState=="open") {
 							console.log('hangup dataChannel.close 1');
+							dataChannel.send("disconnect"); // tmtmtm
 							dataChannel.close();
 						}
 						console.log('hangup peerCon.close 1');
