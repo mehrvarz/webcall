@@ -649,12 +649,15 @@ func (c *WsClient) peerConHasEnded(comment string) {
 	}
 
 	// clear callerIp from hub.ConnectedCallerIp
-	c.hub.HubMutex.Lock()
-	if c.hub.lastCallStartTime>0 {
-		c.hub.processTimeValues()
-		c.hub.lastCallStartTime = 0
+	if c.isCallee {
+		c.hub.HubMutex.Lock()
+		if c.hub.lastCallStartTime>0 {
+			c.hub.processTimeValues()
+			c.hub.lastCallStartTime = 0
+		}
+		c.hub.HubMutex.Unlock()
 	}
-	c.hub.HubMutex.Unlock()
+
 	err := StoreCallerIpInHubMap(c.hub.calleeID, "", false)
 	if err!=nil {
 		// err "key not found" means: callee has already signed off - can be ignored
