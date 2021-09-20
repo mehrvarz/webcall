@@ -631,8 +631,8 @@ func (c *WsClient) Write(b []byte) error {
 }
 
 func (c *WsClient) peerConHasEnded(comment string) {
-	// the peerConnection has ended, either bc one side has sent cmd "cancel|..."
-	// or bc one side has unregistered
+	// the peerConnection has ended, either bc one side has sent cmd "cancel"
+	// or bc callee has unregistered
 	c.hub.setDeadline(0,comment)
 	if c.isConnectedToPeer.Get() {
 		fmt.Printf("%s peerConHasEnded %s rip=%s (%s)\n", c.connType, c.hub.calleeID, c.RemoteAddr, comment)
@@ -649,14 +649,12 @@ func (c *WsClient) peerConHasEnded(comment string) {
 	}
 
 	// clear callerIp from hub.ConnectedCallerIp
-	if c.isCallee {
-		c.hub.HubMutex.Lock()
-		if c.hub.lastCallStartTime>0 {
-			c.hub.processTimeValues()
-			c.hub.lastCallStartTime = 0
-		}
-		c.hub.HubMutex.Unlock()
+	c.hub.HubMutex.Lock()
+	if c.hub.lastCallStartTime>0 {
+		c.hub.processTimeValues()
+		c.hub.lastCallStartTime = 0
 	}
+	c.hub.HubMutex.Unlock()
 
 	err := StoreCallerIpInHubMap(c.hub.calleeID, "", false)
 	if err!=nil {
@@ -671,10 +669,6 @@ func (c *WsClient) peerConHasEnded(comment string) {
 				c.connType, c.hub.calleeID)
 		}
 	}
-
-	// TODO: why not: c.hub.CallerClient=nil
-	// TODO: why not: c.hub.CallerClient.RemoteAddr = ""
-	// TODO: why not: c.hub.CallerClient.isOnline.Put(false)
 }
 
 func (c *WsClient) setPingDeadline(secs int, comment string) {
