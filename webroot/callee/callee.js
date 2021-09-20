@@ -395,7 +395,7 @@ function login(retryFlag) {
 				// provides access to iframeWindowOpen()
 				// offer checkbox: [] Hidden
 			}
-			if(!gentle) console.log('calleeType',calleeType);
+			if(!gentle) console.log('calleeType/outboundIP',calleeType,outboundIP);
 
 			if(!calleeID.startsWith("random") && !calleeID.startsWith("!")) {
 				let api = apiPath+"/getsettings?id="+calleeID;
