@@ -45,8 +45,8 @@ type SKV struct {
 var (
 	DbMutex sync.Mutex
 	MyOutBoundIpAddr string
-	ErrNotFound = errors.New("rkv key not found")
-	ErrBadValue = errors.New("rkv bad value")
+	ErrNotFound = errors.New("skv key not found")
+	ErrBadValue = errors.New("skv bad value")
 )
 
 // Open a key-value store. "path" is the full path to the database file, any
