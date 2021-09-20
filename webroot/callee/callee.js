@@ -36,7 +36,7 @@ var busySignalSound = null;
 var notificationSound = null;
 var wsAddr = "";
 var talkSecs = 0;
-var maxTalkSecs = 0;
+var outboundIP = "";
 var serviceSecs = 0;
 var calleeType = false;
 var remainingTalkSecs = 0;
@@ -379,7 +379,8 @@ function login(retryFlag) {
 				talkSecs = parseInt(parts[1], 10);
 			}
 			if(parts.length>=3) {
-				maxTalkSecs = parseInt(parts[2], 10); // 0 = nocheck
+				//maxTalkSecs = parseInt(parts[2], 10); // 0 = nocheck
+				outboundIP = parts[2];
 			}
 			if(parts.length>=4) {
 				serviceSecs = parseInt(parts[3], 10);
@@ -509,7 +510,6 @@ function login(retryFlag) {
 			},4000);
 		} else {
 			talkSecs=0;
-			maxTalkSecs=0;
 			serviceSecs=0;
 			remainingTalkSecs=0;
 			remainingServiceSecs=0;
@@ -969,7 +969,7 @@ function connectSignaling(message) {
 						if(!gentle) console.log("! peerCon.addIceCandidate accept address",
 							address,callerCandidate.candidate);
 						if(address.indexOf(":")>=0
-								//|| address=="66.228.46.43"  // TODO use outboundIP
+								|| address==outboundIP 
 								|| address.endsWith(".local")
 								|| address.indexOf("10.1.")>=0) {
 							// do not add to listOfClientIps

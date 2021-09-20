@@ -331,7 +331,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	responseString := fmt.Sprintf("%s|%d|%d|%d|%d|%d|%v",
 		wsAddr,
 		dbUser.ConnectedToPeerSecs,
-		0,
+		outboundIP,
 		serviceSecs,
 		0,
 		dbUser.PremiumLevel,
