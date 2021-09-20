@@ -184,7 +184,7 @@ func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 		readConfigLock.RUnlock()
 		if myCspString!="" {
 			if logWantedFor("csp") {
-				fmt.Printf("csp sub (%s)\n", myCspString)
+				fmt.Printf("csp sub (%s) (%s)\n", r.URL.Path, myCspString)
 			}
 			header := w.Header()
 			header.Set("Content-Security-Policy", myCspString)
