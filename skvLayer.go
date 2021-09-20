@@ -69,7 +69,7 @@ func locGetOnlineCallee(calleeID string, ejectOn1stFound bool, reportHiddenCalle
 }
 
 func locStoreCallerIpInHubMap(calleeId string, callerIp string, skipConfirm bool) error {
-	fmt.Printf("StoreCallerIpInHubMap calleeId=%s callerIp=%s\n", calleeId, callerIp)
+	//fmt.Printf("StoreCallerIpInHubMap calleeId=%s callerIp=%s\n", calleeId, callerIp)
 	var err error = nil
 	hubMapMutex.Lock()
 	defer hubMapMutex.Unlock()
@@ -85,7 +85,7 @@ func locStoreCallerIpInHubMap(calleeId string, callerIp string, skipConfirm bool
 				if portIdx := strings.Index(ipAddr, ":"); portIdx >= 0 {
 					ipAddr = ipAddr[:portIdx]
 				}
-				fmt.Printf("StoreCallerIpInHubMap prolong turn for callerIp=%s\n", ipAddr)
+				//fmt.Printf("StoreCallerIpInHubMap prolong turn for callerIp=%s\n", ipAddr)
 				recentTurnCallerIpMutex.Lock()
 				recentTurnCallerIps[ipAddr] = TurnCaller{calleeId,time.Now()}
 				recentTurnCallerIpMutex.Unlock()
