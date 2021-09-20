@@ -420,9 +420,9 @@ func logWantedFor(topic string) bool {
 
 func readConfig(init bool) {
 	//fmt.Printf("readConfig '%s' ...\n", configFileName)
-	configIni, err := ini.Load(configFileName)
+	configIni, err := ini.LoadSources(ini.LoadOptions{IgnoreInlineComment: true,},configFileName)
 	if err != nil {
-		// ignore the read error and use the default values
+		// ignore the read error and instead use the default values
 		configIni = nil
 	}
 
