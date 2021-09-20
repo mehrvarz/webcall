@@ -109,6 +109,9 @@ func (h *Hub) doBroadcast(message []byte) {
 func (h *Hub) processTimeValues() {
 	if h.lastCallStartTime>0 {
 		callDurationSecs := int(time.Now().Unix() - h.lastCallStartTime)
+		if logWantedFor("hub") {
+			fmt.Printf("hub processTimeValues %d\n", callDurationSecs)
+		}
 		if callDurationSecs>0 {
 			numberOfCallsTodayMutex.Lock()
 			numberOfCallsToday++
@@ -121,12 +124,12 @@ func (h *Hub) processTimeValues() {
 // doUnregister() disconnects the client; and if client==callee, calls exitFunc to deactivate hub + wsClientID
 func (h *Hub) doUnregister(client *WsClient, comment string) {
 	if client.isCallee && !client.clearOnCloseDone {
-		h.HubMutex.Lock()
 		if logWantedFor("hub") {
-			fmt.Printf("hub client unregister (%s) isCallee=%v %d (%s)\n",
-				client.hub.calleeID, client.isCallee, int(time.Now().Unix() - h.lastCallStartTime), comment)
+			fmt.Printf("hub client unregister (%s) isCallee=%v (%s)\n",
+				client.hub.calleeID, client.isCallee, comment)
 		}
 		h.setDeadline(-1,"doUnregister "+comment)
+		h.HubMutex.Lock()
 		if h.lastCallStartTime>0 {
 			h.processTimeValues()
 			h.lastCallStartTime = 0
