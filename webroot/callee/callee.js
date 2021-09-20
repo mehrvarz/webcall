@@ -1843,6 +1843,7 @@ function createDataChannel() {
 				console.log("dataChannel.onmessage on 'disconnect'");
 				dataChannel.close();
 				dataChannel = null;
+				stopAllAudioEffects("dataChannel disconnect");
 				hangup();
 			} else if(event.data.startsWith("msg|")) {
 				// sanitize incoming data
