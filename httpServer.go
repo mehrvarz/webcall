@@ -32,6 +32,25 @@ func httpServer() {
 		webroot := curdir + "/" + htmlPath
 		fmt.Printf("httpServer htmlPath=%s fullPath=%s\n", htmlPath, webroot)
 		http.Handle("/", http.FileServer(http.Dir(webroot)))
+		/*
+		// if we wanted to set a header before http.FileServer() we would use this
+		setHeaderThenServe := func(h http.Handler) http.HandlerFunc {
+			return func(w http.ResponseWriter, r *http.Request) {
+				readConfigLock.RLock()
+				myCspString := cspString
+				readConfigLock.RUnlock()
+				if myCspString!="" {
+					if logWantedFor("csp") {
+						fmt.Printf("csp file (%s) (%s)\n", r.URL.Path, myCspString)
+					}
+					header := w.Header()
+					header.Set("Content-Security-Policy", myCspString)
+				}
+				h.ServeHTTP(w, r)
+			}
+		}
+		http.Handle("/", setHeaderThenServe(http.FileServer(http.Dir(webroot))))
+		*/
 	}
 
 	if httpsPort>0 {
@@ -158,6 +177,18 @@ func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if logWantedFor("http") {
 		fmt.Printf("substituteUserNameHandler (%s) try (%s)\n", r.URL.Path, fullpath)
+	}
+	if strings.HasSuffix(r.URL.Path,".js") {
+		readConfigLock.RLock()
+		myCspString := cspString
+		readConfigLock.RUnlock()
+		if myCspString!="" {
+			if logWantedFor("csp") {
+				fmt.Printf("csp sub (%s)\n", myCspString)
+			}
+			header := w.Header()
+			header.Set("Content-Security-Policy", myCspString)
+		}
 	}
 	http.ServeFile(w, r, fullpath)
 }

@@ -415,25 +415,14 @@ function login(retryFlag) {
 			}
 
 			if(calleeType && !pushRegistration) {
-				// NOTE: we retrieve the pushRegistration here under /callee/(calleeID),
+				// we retrieve the pushRegistration here under /callee/(calleeID),
 				// so that the pushRegistration.scope will also be /callee/(calleeID)
-				// therefore settings.js will later make use of the correct pushRegistration
+				// so that settings.js will later make use of the correct pushRegistration
 				console.log("serviceWorker.register...");
-				// TODO: ungoo-chromium logs this error: "Refused to create a worker from ...
-				// ...because it violates the following Content Security Policy directive: "worker-src 'none'"
-				// and this error cannot be catched by JS; the real problem appears to be
-				// that ungoo-chromium does not support a serviceWorker for event 'push'
-				let ret = navigator.serviceWorker.register('service-worker.js')
-				.then(function(registration) {
-					console.log("serviceWorker.register OK",registration);
-				}, /*catch*/ function(error) {
-					console.log("serviceWorker.register err",error);
-				});
-
-				console.log("serviceWorker.ready...",ret);
+				let ret = navigator.serviceWorker.register('service-worker.js');
+				console.log("/callee/serviceWorker.ready...",ret);
 				// get access to the registration (and registration.pushManager) object
 				navigator.serviceWorker.ready.then(function(registration) {
-					// here we could print the ret promise
 					console.log("serviceWorker.ready promise",ret);
 					pushRegistration = registration;
 					console.log("serviceWorker.ready got pushRegistration",pushRegistration);
@@ -444,7 +433,6 @@ function login(retryFlag) {
 			if(parts.length>=7 && parts[6]=="true") {
 				isHiddenCheckbox.checked = true;
 				autoanswerCheckbox.checked = false;
-				//autoanswerCheckbox.disabled = true;
 			}
 			if(!gentle) console.log('isHiddenCheckbox.checked',isHiddenCheckbox.checked);
 			wsSend("init|!"); // -> connectSignaling()
