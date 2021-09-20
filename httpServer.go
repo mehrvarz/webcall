@@ -6,6 +6,7 @@ import (
 	"time"
 	"strings"
 	"fmt"
+	"sort"
 	"encoding/json"
 	"io"
 	"os"
@@ -471,18 +472,24 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 
 		if urlPath=="/hubinfo" {
 			// show all hubs with the connected client
-			// TODO the printed order will change every time bc go map is unordered
 			printFunc(w,"/hubinfo rip=%s\n",remoteAddr)
 			hubMapMutex.RLock()
 			defer hubMapMutex.RUnlock()
+			var hubinfoSlice []string
 			for calleeID,hub := range hubMap {
 				if hub!=nil {
 					if hub.ConnectedCallerIp!="" {
-						fmt.Fprintf(w,"callee=%v connected client=%v\n",calleeID,hub.ConnectedCallerIp)
+						hubinfoSlice = append(hubinfoSlice,calleeID+" caller: "+hub.ConnectedCallerIp)
 					} else {
-						fmt.Fprintf(w,"callee=%v idle\n",calleeID)
+						hubinfoSlice = append(hubinfoSlice,calleeID+" idle")
 					}
 				}
+			}
+			sort.Slice(hubinfoSlice, func(i, j int) bool {
+				return hubinfoSlice[i] < hubinfoSlice[j]
+			})
+			for idx := range hubinfoSlice {
+				fmt.Fprintln(w,hubinfoSlice[idx])
 			}
 			return
 		}
