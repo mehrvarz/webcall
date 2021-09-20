@@ -1843,7 +1843,7 @@ function createDataChannel() {
 				console.log("dataChannel.onmessage on 'disconnect'");
 				dataChannel.close();
 				dataChannel = null;
-				// TODO may need forced hangup
+				hangup();
 			} else if(event.data.startsWith("msg|")) {
 				// sanitize incoming data
 				let cleanString = event.data.substring(4).replace(/<(?:.|\n)*?>/gm, "...");
