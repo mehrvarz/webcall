@@ -1198,7 +1198,6 @@ function connectSignaling(message,openedFunc) {
 						// I see this when I quickly re-dial while busy signal of last call is still playing
 						// TODO button may now continue to show "Connecting..."
 						// but connection is still established (at least when calling answie)
-						//tmtmtm test:
 						hangupWithBusySound(true,"pickup but no localStream");
 						return;
 					}
@@ -1369,7 +1368,6 @@ function dial() {
 	if(!localStream && !neverAudio) {
 		console.log('abort dial localStream not set');
 		showStatus("abort no localStream");
-		// tmtmtm test:
 		hangupWithBusySound(true,"pickup with no localStream");
 		return;
 	}
@@ -1781,6 +1779,7 @@ function hangup(mustDisconnectCallee,message) {
 
 			} else if(dataChannel && dataChannel.readyState=="open") {
 				console.log('hangup dataChannel.close 2');
+				dataChannel.send("disconnect"); // tmtmtm
 				dataChannel.close();
 				// in case we get no dataChannel.onclose
 				setTimeout(function() {
