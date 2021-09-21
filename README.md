@@ -15,8 +15,8 @@ A big WebCall server can provide 1M individuals with free, secure telephony.
 1000 mini WebCall servers, each hosting 10K uses, can do the same for 10M users.
 You can always use my server. But you can also run the server yourself.
 Or have someone you trust do it. It's not that difficult.
-Here I describes how you can build and run WebCall server for 10000 users.
-And do so on a dirt cheap server.
+Here I describes how you can build WebCall server and serve 10-30K users
+on a dirt cheap server.
 
 [https://timur.mobi/webcall/install](https://timur.mobi/webcall/install)
 
