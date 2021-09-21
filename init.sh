@@ -9,5 +9,6 @@ echo 'const singlebutton = true;' >> webroot/button/custom.js
 #wget https://github.com/webrtcHacks/adapter/raw/master/release/adapter.js
 #wget https://webrtc.github.io/adapter/adapter-latest.js
 wget https://webrtc.github.io/adapter/adapter-7.7.1.js
-mv adapter-7.7.1.js webroot/adapter-latest.js
+cp adapter-7.7.1.js webroot/adapter-latest.js
+rm adapter-7.7.1.js
 
