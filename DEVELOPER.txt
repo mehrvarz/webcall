@@ -1,4 +1,0 @@
-If you did a git pull before 2021-09-18 and are doing 
-another git pull on 2021-09-18 or after, you will need 
-to execute ./init.sh again.
-
