@@ -11,7 +11,7 @@ WebCall is lightweight and easy to use.
 
 # Installation
 
-A big WebCall server can provide 1M individuals with free, secure telephony.
+A big WebCall server can provide 1M individuals with free and secure telephony.
 1000 mini WebCall servers, each hosting 10K uses, can do the same for 10M users.
 You can always use my server. But you can also run the server yourself.
 Or have someone you trust do it. It's not that difficult.
