@@ -9,9 +9,14 @@ WebCall is lightweight and easy to use.
 
 [https://timur.mobi/webcall](https://timur.mobi/webcall)
 
-# Install
+# Installation
 
-Build WebCall telephony server and run it for yourself and for others.
+A big WebCall server can provide 1M individuals with free, secure telephony.
+1000 mini WebCall servers, each hosting 10K uses, can do the same for 10M users.
+You can always use my server. But you can also run the server yourself.
+Or have someone you trust do it. It's not that difficult.
+Here I describes how you can build and run WebCall server for 10000 users.
+And do so on a dirt cheap server.
 
 [https://timur.mobi/webcall/install](https://timur.mobi/webcall/install)
 
@@ -21,11 +26,11 @@ AGPL3.0 - see: [LICENSE](LICENSE)
 
 # 3rd party code (external)
 
-- lesismal/nbio
+- github.com/lesismal/nbio
 - go.etcd.io/bbolt
-- pion/turn
-- mrjones/oauth
-- SherClockHolmes/webpush-go
+- github.com/pion/turn
+- github.com/mrjones/oauth
+- github.com/SherClockHolmes/webpush-go
 - gopkg.in/ini
 - webrtcHacks/adapter.js
 
