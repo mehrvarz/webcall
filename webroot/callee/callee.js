@@ -1021,7 +1021,7 @@ function connectSignaling(message) {
 					}
 				} else if(cmd=="sessionId") {
 					// callee has checked in
-					console.log('cmd sessionId curVers/newVers',version,payload);
+					//console.log('cmd sessionId curVers/newVers',version,payload);
 					showOnlineReadyMsg(payload);
 
 				} else if(cmd=="sessionDuration") { // in call
