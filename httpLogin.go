@@ -123,7 +123,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		}
 
 		if pw != dbEntry.Password {
-			fmt.Fprintf(os.Stderr, "/login fail id=%s wrong password\n", urlID)
+			fmt.Fprintf(os.Stderr, "/login fail id=%s wrong password rip=%s\n", urlID, remoteAddr)
 			// must delay to make guessing more difficult
 			time.Sleep(3000 * time.Millisecond)
 			fmt.Fprintf(w, "error")

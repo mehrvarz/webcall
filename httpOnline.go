@@ -193,9 +193,8 @@ func httpNewId(w http.ResponseWriter, r *http.Request, urlID string, calleeID st
 
 func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath string, remoteAddr string, startRequestTime time.Time) {
 	if allowNewAccounts {
-		// registerID should be tmpCalleeID from /newid
 		registerID := urlPath[10:]
-		fmt.Printf("/register id=%s\n",registerID)
+		fmt.Printf("/register id=%s rip=%s\n",registerID,remoteAddr)
 
 		postBuf := make([]byte, 128)
 		length,_ := io.ReadFull(r.Body, postBuf)
