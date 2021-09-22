@@ -4,7 +4,7 @@
 
 # WebCall WebRTC Telephony Server
 
-Browser based telephony P2P E2EE with very high audio quality.
+Browser based telephony over E2EE P2P with very high audio quality.
 WebCall is lightweight and easy to use.
 
 [https://timur.mobi/webcall](https://timur.mobi/webcall)
@@ -12,9 +12,8 @@ WebCall is lightweight and easy to use.
 # Installation
 
 A single WebCall server can provide free and secure telephony to 1M users.
-You can also run a small server for 10-30K users.
-Or have someone you trust do it for you.
-Here I describe how to build and run WebCall server and everything else you need to know.
+A small (1GB, shared) server can host 10-30K users.
+Here I describe how to build and run WebCall server. And everything else you need to know.
 
 [https://timur.mobi/webcall/install](https://timur.mobi/webcall/install)
 
@@ -30,7 +29,7 @@ AGPL3.0 - see: [LICENSE](LICENSE)
 - github.com/mrjones/oauth
 - github.com/SherClockHolmes/webpush-go
 - gopkg.in/ini
-- webrtcHacks/adapter.js
+- github.com/webrtcHacks/adapter.js
 
 # 3rd party code (embedded/modified)
 
