@@ -6,6 +6,7 @@
 
 Browser based telephony over E2EE P2P with very high audio quality.
 WebCall is lightweight and easy to use.
+Fetch a unique phone number (a WebCall user link), send it to a friend and ask to be called back:
 
 [https://timur.mobi/webcall](https://timur.mobi/webcall)
 
