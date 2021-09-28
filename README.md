@@ -23,9 +23,8 @@ Here I describe how you can build WebCall server and how you can run it for your
 We can build a network of telephony servers, offering completely free and
 boundless telephony to everyone. This is possible because new WebCall 
 servers can be added very easily. And because as a user, you can interact with any 
-other WebCall user, independet of who is hosting their users. 
+other WebCall user, independet of who is hosting these users. 
 All of this is possible without any server-to-server coordination taking place.
-Here I describe the simple mechanism behind this:
 
 [https://timur.mobi/webcall/info/server](https://timur.mobi/webcall/info/server)
 
