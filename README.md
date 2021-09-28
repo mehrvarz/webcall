@@ -14,16 +14,16 @@ Fetch a unique phone number (a WebCall user link), send it to a friend and ask t
 
 A single WebCall server can provide free and secure telephony to 1M users.
 A small (1GB, shared) server can host 10-30K users.
-Here I describe how you can build WebCall server and how you can run it for yourself and for friends:
+Here I describe how you can build WebCall server and how you can run it for yourself and for your friends:
 
 [https://timur.mobi/webcall/install](https://timur.mobi/webcall/install)
 
 # Distributed WebCall
 
-We can build a network of telephony servers, ultimately offering free, 
+We can build a network of telephony servers, ultimately offering free and
 boundless telephony to everyone. This is possible because new WebCall 
-servers can be added very easily and because as a user, you can interact with any 
-other WebCall user, independet of where these users are being hosted. 
+servers can be added easily and because as a user, you can interact with any 
+other WebCall user, independet of who is hosting these users. 
 All of this is possible without any server-to-server coordination or background 
 communications. Here I describe how this works:
 
