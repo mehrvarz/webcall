@@ -20,12 +20,7 @@ Here I describe how you can build and run WebCall server for yourself:
 
 # Distributed WebCall
 
-With WebCall there can be a network of telephony servers, ultimately offering
-free, boundless telephony to everyone.
-This works because WebCall servers can be easily operated and as a user you are able to reach any other user,
-independet of where you are being hosted.
-All this is possible without any server-to-server coordination or communication.
-Here I describe how this works:
+There can be a network of telephony servers, ultimately offering free, boundless telephony to everyone. This is possible because it is simple to add new WebCall servers and because as a user, you can interact with any other WebCall user, independet of where and how users are being hosted. This is possible without any server-to-server coordination or communication. Here I describe how this works:
 
 [https://timur.mobi/webcall/info/server](https://timur.mobi/webcall/info/server)
 
