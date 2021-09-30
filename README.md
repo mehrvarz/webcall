@@ -10,6 +10,21 @@ Fetch a unique phone number (a WebCall user link), send it to a friend and ask t
 
 [https://timur.mobi/webcall](https://timur.mobi/webcall)
 
+
+# Decentral WebCall
+
+We can build a network of telephony servers, offering completely free and
+boundless telephony to everyone. This is possible because WebCall
+servers can be operated by anyone. And because, as a user, you can interact with any
+other WebCall user, regardless of who is hosting you or them.
+All of this is possible without central coordination and without any server-to-server
+communication taking place.
+
++++ Please post this link to your favorite site +++
+
+[https://timur.mobi/webcall/info/server](https://timur.mobi/webcall/info/server)
+
+
 # Installation
 
 A single WebCall server can provide free and secure telephony to 1M users.
@@ -18,20 +33,11 @@ Here I describe how you can build WebCall and run it for yourself and 30K friend
 
 [https://timur.mobi/webcall/install](https://timur.mobi/webcall/install)
 
-# Decentralized WebCall
-
-We can build a network of telephony servers, offering completely free and
-boundless telephony to everyone. This is possible because new WebCall 
-servers can be added easily by anyone. And because, as a user, you can interact with any 
-other WebCall user, regardless of who is hosting you or them. 
-All of this is possible without central coordination and without any server-to-server 
-communication taking place.
-
-[https://timur.mobi/webcall/info/server](https://timur.mobi/webcall/info/server)
 
 # License
 
 AGPL3.0 - see: [LICENSE](LICENSE)
+
 
 # 3rd party code (external)
 
