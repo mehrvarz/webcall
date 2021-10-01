@@ -19,8 +19,7 @@ servers can be operated by anyone. And because, as a user, you can interact with
 other WebCall user, regardless of who is hosting you or them.
 All of this is possible without central coordination and without any server-to-server
 communication taking place.
-
-+++ Please post this link to your favorite site +++
+(Please post this link to your favorite site.)
 
 [https://timur.mobi/webcall/info/server](https://timur.mobi/webcall/info/server)
 
@@ -28,8 +27,8 @@ communication taking place.
 # Installation
 
 A single WebCall server can provide free and secure telephony to 1M users.
-A very small (1GB, shared) server can host up to 30K concurrent users.
-Here I describe how you can build WebCall and run it for yourself and 30K friends:
+A very small (1GB, 1core, shared) server can host up to 50K concurrent users.
+Here I describe how you can build WebCall and run it for yourself and 50K friends:
 
 [https://timur.mobi/webcall/install](https://timur.mobi/webcall/install)
 
