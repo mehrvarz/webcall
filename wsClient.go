@@ -9,25 +9,21 @@ import (
 	"strconv"
 	"errors"
 	"encoding/json"
-	"math/rand"
 	"net/http"
 	"sync/atomic"
+	"sync"
 	"github.com/mehrvarz/webcall/atombool"
 	"github.com/lesismal/nbio/nbhttp/websocket"
 )
 
 const (
-	// Time allowed to write a message to the peer.
-	writeWait = 20 * time.Second // see: "<-pingTicker.C"
-
-	// Time allowed to read the next pong message from the peer.
-	pongWait = 60 // see: c.conn.SetReadDeadline(time.Now().Add(pongWait))
-
 	// Send pings to peer with this period. Must be less than pongWait.
-	pingPeriod = (pongWait * 9) / 10 // =54 see: time.NewTicker(pingPeriod)
+	pingPeriod = (60 * 9) / 10 // =54
 )
 
+var keepAliveMgr *KeepAliveMgr
 var ErrWriteNotConnected = errors.New("Write not connected")
+var OnCloseCount int64 = 0
 
 type WsClient struct {
 	hub *Hub
@@ -44,8 +40,6 @@ type WsClient struct {
 	clearOnCloseDone bool
 	connType string
 	PremiumLevel int
-	pingStart time.Time
-	pingDone chan struct{}
 }
 
 func serveWs(w http.ResponseWriter, r *http.Request) {
@@ -59,6 +53,11 @@ func serveWss(w http.ResponseWriter, r *http.Request) {
 func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	if logWantedFor("wsverbose") {
 		fmt.Printf("serve url=%s tls=%v\n", r.URL.String(), tls)
+	}
+
+	if keepAliveMgr==nil {
+		keepAliveMgr = NewKeepAliveMgr()
+		go keepAliveMgr.Run()
 	}
 
 	remoteAddr := r.RemoteAddr
@@ -118,8 +117,12 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		return
 	}
 	wsConn := conn.(*websocket.Conn)
-	//wsConn.EnableWriteCompression(true)
-	wsConn.SetReadDeadline(time.Time{})
+	//wsConn.EnableWriteCompression(true) // TODO
+	wsConn.SetReadDeadline(time.Time{}) // no read deadline
+
+	keepAliveMgr.Add(wsConn)
+	// set the time for sending the next ping
+	keepAliveMgr.SetPingDeadline(wsConn, pingPeriod)
 
 	client := &WsClient{wsConn:wsConn}
 	if tls {
@@ -128,27 +131,49 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		client.connType = "serveWs"
 	}
 
+
 	hub := wsClientData.hub // set by /login wsClientMap[wsClientID] = wsClientDataType{...}
 
-	upgrader.OnMessage(func(c *websocket.Conn, messageType websocket.MessageType, data []byte) {
+	upgrader.OnMessage(func(wsConn *websocket.Conn, messageType websocket.MessageType, data []byte) {
+		// set the time for sending the next ping
+		keepAliveMgr.SetPingDeadline(wsConn, pingPeriod)
+		wsConn.SetReadDeadline(time.Time{}) // no read deadline
+
 		switch messageType {
 		case websocket.TextMessage:
 			//fmt.Println("TextMessage:", messageType, string(data), len(data))
-			client.receive(data)
+			n := len(data)
+			if n>0 {
+				if logWantedFor("wsreceive") {
+					max := n; if max>10 { max = 10 }
+					fmt.Printf("%s received n=%d isCallee=%v calleeID=(%s) (%s)\n",
+						client.connType, n, client.isCallee, client.hub.calleeID, data[:max])
+				}
+				client.receiveProcess(data)
+			}
 		case websocket.BinaryMessage:
 			fmt.Printf("# %s binary dataLen=%d\n", client.connType, len(data))
 		}
 	})
+	upgrader.SetPongHandler(func(wsConn *websocket.Conn, s string) {
+		// set the time for sending the next ping
+		keepAliveMgr.SetPingDeadline(wsConn, pingPeriod)
+		wsConn.SetReadDeadline(time.Time{}) // no read deadline
+		//atomic.AddInt64(&pongRecvCounter, 1)
+	})
+
 	wsConn.OnClose(func(c *websocket.Conn, err error) {
-		client.isOnline.Set(false) // prevent doUnregister() from closing this already closed connection
+		atomic.AddInt64(&OnCloseCount, 1)
+		keepAliveMgr.Delete(c)
+		client.isOnline.Set(false) // prevents doUnregister() from closing this already closed connection
 		if logWantedFor("wsclose") {
 			hub.HubMutex.RLock()
 			if err!=nil {
-				fmt.Printf("%s onclose %s isCallee=%v err=%v\n",
-					client.connType, hub.calleeID, client.isCallee, err)
+				fmt.Printf("%s onclose %s isCallee=%v %d err=%v\n",
+					client.connType, hub.calleeID, client.isCallee, atomic.LoadInt64(&OnCloseCount), err)
 			} else {
-				fmt.Printf("%s onclose %s isCallee=%v\n",
-					client.connType, hub.calleeID, client.isCallee)
+				fmt.Printf("%s onclose %s isCallee=%v %d noerr\n",
+					client.connType, hub.calleeID, client.isCallee, atomic.LoadInt64(&OnCloseCount))
 			}
 			hub.HubMutex.RUnlock()
 		}
@@ -199,26 +224,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		if err!=nil {
 			fmt.Printf("# %s StoreCallerIpInHubMap err=%v\n", client.connType, err)
 		}
-
 	}
 	hub.HubMutex.Unlock()
-
-	// send ping every pingPeriod secs
-	client.setPingDeadline(pingPeriod,"start")
-}
-
-func (c *WsClient) receive(data []byte) error {
-	n := len(data)
-	c.setPingDeadline(pingPeriod,"receive")
-	if n>0 {
-		if logWantedFor("wsreceive") {
-			max := n; if max>10 { max = 10 }
-			fmt.Printf("%s received n=%d isCallee=%v calleeID=(%s) (%s)\n",
-				c.connType, n, c.isCallee, c.hub.calleeID, data[:max])
-		}
-		c.receiveProcess(data)
-	}
-	return nil
 }
 
 func (c *WsClient) receiveProcess(message []byte) {
@@ -501,19 +508,15 @@ func (c *WsClient) receiveProcess(message []byte) {
 		return
 	}
 
-	if cmd=="check" {
-		// send a payload back to client
-		//fmt.Printf("wsSend confirm\n")
-		sendCmd := "confirm|"+payload
-		c.Write([]byte(sendCmd))
+	if cmd=="heartbeat" {
+		// ignore: clients may send this to check the connection to the server
 		return
 	}
 
-	if cmd=="heartbeat" {
-		// client sends this only to see if it gets an error
-		if logWantedFor("heartbeat") {
-			fmt.Printf("received client heartbeat (%s)\n",c.hub.calleeID)
-		}
+	if cmd=="check" {
+		// clients may send this to check communication with the server
+		// server sends payload back to client
+		c.Write([]byte("confirm|"+payload))
 		return
 	}
 
@@ -522,7 +525,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 		tok := strings.Split(payload, " ")
 		if len(tok)>=3 {
 			// callee Connected p2p/p2p port=10001 id=3949620073
-			// TODO make extra sure this "log" payload is valid (not malformed)
+			// TODO make extra sure this "log" payload is not malformed
 			if strings.TrimSpace(tok[1])=="Connected" || strings.TrimSpace(tok[1])=="Incoming" ||
 					strings.TrimSpace(tok[1])=="ConForce" { // test-caller-client
 				tok2 := strings.Split(strings.TrimSpace(tok[2]), "/")
@@ -554,7 +557,6 @@ func (c *WsClient) receiveProcess(message []byte) {
 							}
 							if myDisconCalleeOnPeerConnected {
 								fmt.Printf("%s disconCalleeOnPeerConnected %s\n", c.connType, c.hub.calleeID)
-								//c.hub.doUnregister(c,"disconCalleeOnPeerConnected")
 								c.hub.CalleeClient.Close("disconCalleeOnPeerConnected")
 							}
 							if myDisconCallerOnPeerConnected {
@@ -621,12 +623,9 @@ func (c *WsClient) Write(b []byte) error {
 			c.connType, b[:max], c.hub.calleeID, c.isCallee, c.isConnectedToPeer.Get())
 	}
 
-	// TODO SetWriteDeadline ?
 	c.wsConn.WriteMessage(websocket.TextMessage, b)
-
-	// we sent data to the client, so no need to send a ping now; next ping in pingPeriod (in 54 see)
-	max = len(b); if max>10 { max=10 }
-	c.setPingDeadline(pingPeriod,"sentdata ("+string(b[:max])+")")
+	// set the time for sending the next ping
+	keepAliveMgr.SetPingDeadline(c.wsConn, pingPeriod)
 	return nil
 }
 
@@ -671,76 +670,80 @@ func (c *WsClient) peerConHasEnded(comment string) {
 	}
 }
 
-func (c *WsClient) setPingDeadline(secs int, comment string) {
-	if logWantedFor("ping") {
-		fmt.Printf("ping set secs %d (%s)\n",secs,comment)
-	}
-	timeNow := time.Now()
-	if c.pingDone!=nil {
-		if secs>0 {
-			lastTimerRunningMS := timeNow.Sub(c.pingStart).Milliseconds()
-			if lastTimerRunningMS < 3000 {
-				if logWantedFor("ping") {
-					fmt.Printf("ping ignore new %d\n",lastTimerRunningMS)
-				}
-				return
-			}
-		}
-	}
-	if secs==0 || !c.isOnline.Get() {
-		if c.pingDone!=nil {
-			if logWantedFor("ping") {
-				fmt.Printf("ping close old\n")
-			}
-			close(c.pingDone)
-			c.pingDone=nil
-		}
-		return
-	}
-	pingDur := secs + rand.Intn(4)
-	if logWantedFor("ping") {
-		fmt.Printf("pingDur %d secs\n", pingDur)
-	}
-	c.pingStart = timeNow
-	if c.pingDone==nil {
-		c.pingDone = make(chan struct{})
-	}
-	go func() {
-		select {
-		case <-time.After(time.Duration(pingDur) * time.Second):
-			if c.isOnline.Get() {
-				c.wsConn.SetWriteDeadline(time.Now().Add(writeWait))
-				err := c.wsConn.WriteMessage(websocket.PingMessage, nil)
-				if err != nil {
-					//if strings.Index(err.Error(),"broken pipe")<0 && strings.Index(err.Error(),"EOF")<0 {
-						fmt.Printf("# setPingDeadline ping sent err=%v (%s)\n", err, comment)
-					//}
-					return
-				}
-				atomic.AddInt64(&pingSentCounter, 1)
-				c.setPingDeadline(secs,"restart")
-			}
-		case <-c.pingDone:
-			if logWantedFor("ping") {
-				fmt.Println("ping done release")
-			}
-		}
-	}()
-}
-
 func (c *WsClient) Close(reason string) {
-	// close this client
-	c.setPingDeadline(0,"Close "+reason)
 	if c.isOnline.Get() {
 		if logWantedFor("wsclose") {
-			fmt.Printf("wsclient Close %s callee=%v %s\n",
-				c.hub.calleeID, c.isCallee, reason)
+			fmt.Printf("wsclient Close %s callee=%v %s\n", c.hub.calleeID, c.isCallee, reason)
 		}
 		c.wsConn.WriteMessage(websocket.CloseMessage, nil)
 		c.wsConn.Close()
-		if logWantedFor("wsclose") {
-			fmt.Printf("wsclient wsConn.Close done %s callee=%v\n", c.hub.calleeID, c.isCallee)
+	}
+}
+
+
+type KeepAliveMgr struct {
+	mux       sync.RWMutex
+	clients   map[*websocket.Conn]struct{}
+}
+
+func NewKeepAliveMgr() *KeepAliveMgr {
+	return &KeepAliveMgr{
+		clients: make(map[*websocket.Conn]struct{}),
+	}
+}
+
+func (kaMgr *KeepAliveMgr) SetPingDeadline(wsConn *websocket.Conn, secs int) {
+	// set the absolute time for sending the next ping
+	wsConn.SetSession(time.Now().Add(time.Duration(secs)*time.Second))
+}
+
+func (kaMgr *KeepAliveMgr) Add(c *websocket.Conn) {
+	kaMgr.mux.Lock()
+	defer kaMgr.mux.Unlock()
+	kaMgr.clients[c] = struct{}{}
+}
+
+func (kaMgr *KeepAliveMgr) Delete(c *websocket.Conn) {
+	kaMgr.mux.Lock()
+	defer kaMgr.mux.Unlock()
+	delete(kaMgr.clients,c)
+}
+
+func (kaMgr *KeepAliveMgr) Run() {
+	ticker := time.NewTicker(2*time.Second)
+	defer ticker.Stop()
+	//var nPingTotal int64 = 0
+	for {
+		<-ticker.C
+		if shutdownStarted.Get() {
+			break
 		}
+		kaMgr.mux.RLock()
+		myClients := make([]*websocket.Conn, len(kaMgr.clients))
+		i:=0
+		for wsConn := range kaMgr.clients {
+			myClients[i] = wsConn
+			i++
+		}
+		kaMgr.mux.RUnlock()
+
+		var nPing int64 = 0
+		timeNow := time.Now()
+		for _,wsConn := range myClients {
+			pingTime := wsConn.Session()
+			if pingTime!=nil && timeNow.After(pingTime.(time.Time)) {
+				// set the time for sending the next ping in pingPeriod secs
+				kaMgr.SetPingDeadline(wsConn, pingPeriod)
+				// we expect a pong to our ping within max 30 secs from now
+				wsConn.SetReadDeadline(timeNow.Add(30*time.Second))
+				// send the ping
+				wsConn.WriteMessage(websocket.PingMessage, nil)
+				nPing++
+			}
+		}
+		atomic.AddInt64(&pingSentCounter, nPing)
+		//nPingTotal+=nPing
+		//fmt.Printf("keepalive: ping [%v/%v/%v] clients\n", nPing, nPingTotal, len(kaMgr.clients))
 	}
 }
 

@@ -59,8 +59,8 @@ func (h *Hub) setDeadline(secs int, comment string) {
 		}
 		h.dontCancel = true
 		h.timer.Stop()
-		time.Sleep(100 * time.Millisecond)
-		h.timer = nil
+		//time.Sleep(100 * time.Millisecond)
+		//h.timer = nil
 	}
 
 	if(secs>0) {
@@ -73,6 +73,7 @@ func (h *Hub) setDeadline(secs int, comment string) {
 			timeStart := time.Now()
 			<-h.timer.C
 			// timer has ended
+			h.timer = nil
 			if h.dontCancel {
 				// timer was aborted
 				//fmt.Printf("setDeadline reached; cancel; no disconnect caller (secs=%d %v)\n",
