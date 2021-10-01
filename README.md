@@ -19,7 +19,6 @@ servers can be operated by anyone. And because, as a user, you can interact with
 other WebCall user, regardless of who is hosting you or them.
 All of this is possible without central coordination and without any server-to-server
 communication taking place.
-(Please post this link to your favorite site.)
 
 [https://timur.mobi/webcall/info/server](https://timur.mobi/webcall/info/server)
 
