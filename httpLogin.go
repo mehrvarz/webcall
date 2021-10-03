@@ -272,7 +272,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 		hubMapMutex.RLock()
 		fmt.Printf("exithub %s wsID=%d %d/%d %s rip=%s\n",
-			globalID, wsClientID, len(hubMap), lenGlobalHubMap, comment, remoteAddr)
+			globalID, wsClientID, len(hubMap), lenGlobalHubMap, comment, remoteAddrWithPort)
 		hubMapMutex.RUnlock()
 
 		wsClientMutex.Lock()
@@ -387,7 +387,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			if hub != nil && !hub.CalleeLogin.Get() {
 				myHubMutex.RUnlock()
 				fmt.Printf("# /login ws-connect timeout %ds removing %s/%s rip=%s\n",
-					waitedFor, urlID, globalID, remoteAddr)
+					waitedFor, urlID, globalID, remoteAddrWithPort)
 				if globalID != "" {
 					//_,lenGlobalHubMap = 
 						DeleteFromHubMap(globalID)
