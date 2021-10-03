@@ -1212,12 +1212,14 @@ function connectSignaling(message,openedFunc) {
 						console.log('waitForRemoteStreamFunc',remoteStream!=null,waitLoopCount);
 						if(!remoteStream) {
 							waitLoopCount++;
-							if(waitLoopCount>=6) {
-								hangupWithBusySound(true,"pickup but no remoteStream");
+//							if(waitLoopCount>=6) {
+//								hangupWithBusySound(true,"pickup but no remoteStream");
+//								return;
+//							}
+							if(waitLoopCount<=4) {
+								setTimeout(waitForRemoteStreamFunc, 300);
 								return;
 							}
-							setTimeout(waitForRemoteStreamFunc, 300);
-							return;
 						}
 						console.log('waitForRemoteStreamFunc enableRemoteAudio');
 						enableRemoteAudio();
