@@ -65,6 +65,7 @@ if(!singlebutton) {
 var callerId = ""; // calleeId of the caller
 var callerName = ""; // callee name of the caller
 var otherUA="";
+var microphoneIsNeeded = true;
 
 var extMessage = function(e) {
 	//if(e.origin != 'http://origin-domain.com') {
@@ -338,7 +339,7 @@ function calleeOnlineStatus(onlineStatus) {
 	dialButton.disabled = false;
 	hangupButton.disabled = true;
 	audioSelect.disabled = false;
-	if(!calleeID.startsWith("random") && !calleeID.startsWith("answie") && !neverAudio) {
+	if(!calleeID.startsWith("random") && /*!calleeID.startsWith("answie") &&*/ !neverAudio) {
 		if(!localStream) {
 			// we need to call mediaDevices.enumerateDevices() anyway
 			loadJS("adapter-latest.js",function() {
@@ -791,10 +792,12 @@ function gotStream(stream) {
 	if(dialAfterLocalStream) {
 		console.log("gotStream dialAfterLocalStream");
 		dialAfterLocalStream=false;
+/*
 		if(calleeID.startsWith("answie")) {
 			// disable local mic for answie client
 			localStream.getTracks().forEach(track => { track.stop(); });
 		}
+*/
 		//dialAfterCalleeOnline = true;
 		//checkCalleeOnline();
 		connectSignaling("",dial);
@@ -900,7 +903,7 @@ function getStatsCandidateTypes(results,eventString1,eventString2) {
 		msg += ". "+eventString2+".";
 	}
 
-	if(otherUA!="" && !calleeID.startsWith("answie")) {
+	if(otherUA!="" /*&& !calleeID.startsWith("answie")*/) {
 		msg += "<div style='font-size:0.8em;margin-top:10px;color:#aac;'>"+otherUA+"</div>";
 	}
 	showStatus(msg,-1);
@@ -1158,7 +1161,7 @@ function connectSignaling(message,openedFunc) {
 							dialButton.style.backgroundColor = "";
 							hangupButton.style.backgroundColor = "";
 						} else {
-							if(!calleeID.startsWith("answie") && !neverAudio) {
+							if(microphoneIsNeeded && !neverAudio) {
 								onlineIndicator.src="red-gradient.svg";
 								micStatus = "Mic is open";
 							} else {
@@ -1244,7 +1247,7 @@ function connectSignaling(message,openedFunc) {
 						// no timer
 					} else if(mediaConnect) {
 						if(!timerStartDate) {
-							if(sessionDuration>0 && !calleeID.startsWith("answie")) {
+							if(sessionDuration>0 /*&& !calleeID.startsWith("answie")*/) {
 								startTimer(sessionDuration);
 							}
 						}
@@ -1633,10 +1636,18 @@ function createDataChannel() {
 	}
 	dataChannel.onmessage = event => {
 		if(!gentle) console.debug("dataChannel.onmessage",event.data);
-		if(event.data && event.data.startsWith("disconnect")) {
-			console.log("dataChannel.close on 'disconnect'");
-			dataChannel.close();
-			hangupWithBusySound(false,"Peer hang up");
+		if(event.data) {
+			if(event.data.startsWith("disconnect")) {
+				console.log("dataChannel.close on 'disconnect'");
+				dataChannel.close();
+				hangupWithBusySound(false,"Peer hang up");
+			} else if(event.data.startsWith("cmd|ledred")) {
+				onlineIndicator.src="red-gradient.svg";
+				microphoneIsNeeded = true;
+			} else if(event.data.startsWith("cmd|ledgreen")) {
+				onlineIndicator.src="green-gradient.svg";
+				microphoneIsNeeded = false;
+			}
 		}
 	}
 }
@@ -1796,7 +1807,7 @@ function hangup(mustDisconnectCallee,message) {
 				peerCon = null;
 			}
 		};
-		if(calleeID.startsWith("random") || calleeID.startsWith("answie") || singlebutton) {
+		if(calleeID.startsWith("random") || /*calleeID.startsWith("answie") ||*/ singlebutton) {
 			// no StatsPostCall for you
 			peerConCloseFunc();
 		} else {
