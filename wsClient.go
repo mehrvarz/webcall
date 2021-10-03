@@ -177,7 +177,11 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			}
 			hub.HubMutex.RUnlock()
 		}
-		client.hub.doUnregister(client, "OnClose")
+		if err!=nil {
+			client.hub.doUnregister(client, "OnClose "+err.Error())
+		} else {
+			client.hub.doUnregister(client, "OnClose")
+		}
 	})
 
 	hub.HubMutex.Lock()
