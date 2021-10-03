@@ -88,8 +88,8 @@ func httpServer() {
 			srv := &http.Server{
 				Addr: addrPort,
 				ReadHeaderTimeout: 2 * time.Second,
-				ReadTimeout: 3 * time.Second,
-				WriteTimeout: 20 * time.Second,	// includes the header read and the first byte wait
+				ReadTimeout: 5 * time.Second,
+				WriteTimeout: 10 * time.Second,	// includes the header read and the first byte wait
 				IdleTimeout: 30 * time.Second,
 				//IdleConnTimeout: 60 * time.Second,
 				//MaxIdleConns: 100, // TODO
@@ -120,8 +120,8 @@ func httpServer() {
 		srv := &http.Server{
 			// this http.Server redirects to https
 			Addr: addrPort,
-			ReadTimeout:  3 * time.Second,
-			WriteTimeout: 3 * time.Second,
+			ReadTimeout:  5 * time.Second,
+			WriteTimeout: 5 * time.Second,
 			Handler: http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 				w.Header().Set("Connection", "close")
 				url := "https://" + req.Host + req.URL.String()
@@ -133,8 +133,8 @@ func httpServer() {
 				// this http.Server will NOT redirect to https
 				Addr: addrPort,
 				ReadHeaderTimeout: 2 * time.Second,
-				ReadTimeout: 3 * time.Second,
-				WriteTimeout: 20 * time.Second,	// from end of req header read to the end of the response write
+				ReadTimeout: 5 * time.Second,
+				WriteTimeout: 10 * time.Second,	// from end of req header read to the end of the response write
 				IdleTimeout: 30 * time.Second,
 				//IdleConnTimeout: 60 * time.Second,
 				//MaxIdleConns: 100, // TODO
