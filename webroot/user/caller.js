@@ -334,7 +334,7 @@ function calleeOnlineStatus(onlineStatus) {
 	dialButton.disabled = false;
 	hangupButton.disabled = true;
 	audioSelect.disabled = false;
-	if(!calleeID.startsWith("random") && /*!calleeID.startsWith("answie") &&*/ !neverAudio) {
+	if(!calleeID.startsWith("random") && !neverAudio) {
 		if(!localStream) {
 			// we need to call mediaDevices.enumerateDevices() anyway
 			loadJS("adapter-latest.js",function() {
@@ -412,7 +412,7 @@ function calleeOnlineAction(from) {
 				if(!singlebutton) {
 					msgbox.style.display = "none";
 				}
-				showStatus("You are about to call a WebCall answering machine.",-1);
+				showStatus("You are about to call a digital answering machine.",-1);
 			} else if(calleeID.startsWith("talkback")) {
 				if(!singlebutton) {
 					msgbox.style.display = "none";
@@ -794,12 +794,6 @@ function gotStream(stream) {
 	if(dialAfterLocalStream) {
 		console.log("gotStream dialAfterLocalStream");
 		dialAfterLocalStream=false;
-/*
-		if(calleeID.startsWith("answie")) {
-			// disable local mic for answie client
-			localStream.getTracks().forEach(track => { track.stop(); });
-		}
-*/
 		//dialAfterCalleeOnline = true;
 		//checkCalleeOnline();
 		connectSignaling("",dial);
@@ -905,8 +899,8 @@ function getStatsCandidateTypes(results,eventString1,eventString2) {
 		msg += ". "+eventString2+".";
 	}
 
-	if(otherUA!="" /*&& !calleeID.startsWith("answie")*/) {
-		msg += "<div style='font-size:0.8em;margin-top:10px;color:#aac;'>"+otherUA+"</div>";
+	if(otherUA!="") {
+		msg += "<div style='font-size:0.8em;margin-top:10px;color:#aac;'>UA: "+otherUA+"</div>";
 	}
 	showStatus(msg,-1);
 }
@@ -1167,10 +1161,9 @@ function connectSignaling(message,openedFunc) {
 								onlineIndicator.src="red-gradient.svg";
 								micStatus = "Mic is open";
 							} else {
-								// when calling answie, we don't open the local mic
+								// mic not open
 								dialButton.style.boxShadow = "";
 								onlineIndicator.src="green-gradient.svg";
-								//msgbox.style.display = "none";
 							}
 						}
 
@@ -1202,7 +1195,7 @@ function connectSignaling(message,openedFunc) {
 						console.warn("cmd pickup no localStream");
 						// I see this when I quickly re-dial while busy signal of last call is still playing
 						// TODO button may now continue to show "Connecting..."
-						// but connection is still established (at least when calling answie)
+						// but connection is still established (at least when calling answ)
 						hangupWithBusySound(true,"pickup but no localStream");
 						return;
 					}
@@ -1251,7 +1244,7 @@ function connectSignaling(message,openedFunc) {
 						// no timer
 					} else if(mediaConnect) {
 						if(!timerStartDate) {
-							if(sessionDuration>0 /*&& !calleeID.startsWith("answie")*/) {
+							if(sessionDuration>0) {
 								startTimer(sessionDuration);
 							}
 						}
@@ -1825,7 +1818,7 @@ function hangup(mustDisconnectCallee,message) {
 				peerCon = null;
 			}
 		};
-		if(calleeID.startsWith("random") || /*calleeID.startsWith("answie") ||*/ singlebutton) {
+		if(calleeID.startsWith("random") || singlebutton) {
 			// no StatsPostCall for you
 			peerConCloseFunc();
 		} else {
