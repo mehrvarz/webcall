@@ -8,6 +8,7 @@ import (
 	"encoding/gob"
 	"os"
 	"os/exec"
+	"sync/atomic"
 	"github.com/mehrvarz/webcall/skv"
 	bolt "go.etcd.io/bbolt"
 )
@@ -214,6 +215,7 @@ func ticker2sec() {
 			numberOfCallsToday = 0
 			numberOfCallSecondsToday = 0
 			numberOfCallsTodayMutex.Unlock()
+			atomic.StoreInt64(&pingSentCounter, 0)
 			writeStatsFile()
 		}
 	}
