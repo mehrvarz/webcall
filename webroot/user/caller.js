@@ -141,21 +141,16 @@ window.onload = function() {
 	checkServerMode(function(mode) {
 		if(mode==0) {
 			// normal mode
+			var calleeIdTitle = calleeID.charAt(0).toUpperCase() + calleeID.slice(1);
 			if(calleeID.startsWith("random")) {
-				document.title = "WebCall Roulette";
-				if(titleElement) {
-					titleElement.innerHTML = "WebCall Roulette";
-				}
+				calleeIdTitle = "Roulette"
 			} else if(calleeID.startsWith("!")) {
-				document.title = "WebCall Duo";
-				if(titleElement) {
-					titleElement.innerHTML = "WebCall Duo";
-				}
-			} else {
-				document.title = "WebCall "+calleeID;
-				if(titleElement) {
-					titleElement.innerHTML = "WebCall "+calleeID;
-				}
+				calleeIdTitle = "Duo"
+			}
+
+			document.title = "WebCall "+calleeIdTitle;
+			if(titleElement) {
+				titleElement.innerHTML = "WebCall "+calleeIdTitle;
 			}
 
 			if(!gentle) console.log('start caller with calleeID',calleeID);
@@ -174,7 +169,7 @@ window.onload = function() {
 						if(calleeID.match(/^[0-9]*$/) != null) {
 							// calleeID is pure numeric - don't show
 						} else {
-							dialButton.innerHTML = "Call "+calleeID;
+							dialButton.innerHTML = "Call "+calleeIdTitle;
 						}
 					}
 				}
@@ -418,6 +413,13 @@ function calleeOnlineAction(from) {
 					msgbox.style.display = "none";
 				}
 				showStatus("You are about to call a WebCall answering machine.",-1);
+			} else if(calleeID.startsWith("talkback")) {
+				if(!singlebutton) {
+					msgbox.style.display = "none";
+				}
+				showStatus( "Talkback service let's you test your microphone audio quality. "+
+							"The first six seconds of the call will be recorded (red led) "+
+							"and then immediately played back to you (green led).",-1);
 			} else if(calleeID.startsWith("!")) {
 				showStatus("Hit the Call button to establish a telephony connection.",-1);
 			} else {
@@ -1646,9 +1648,23 @@ function createDataChannel() {
 			} else if(event.data.startsWith("cmd|ledred")) {
 				onlineIndicator.src="red-gradient.svg";
 				microphoneIsNeeded = true;
+
+				// unmute micro
+				if(localStream!=null) {
+					const audioTracks = localStream.getAudioTracks();
+					audioTracks[0].enabled = true;
+					// localStream.getTracks().forEach(track => { ??? });
+				}
 			} else if(event.data.startsWith("cmd|ledgreen")) {
 				onlineIndicator.src="green-gradient.svg";
 				microphoneIsNeeded = false;
+
+				// mute micro
+				if(localStream!=null) {
+					const audioTracks = localStream.getAudioTracks();
+					audioTracks[0].enabled = false;
+					// localStream.getTracks().forEach(track => { track.stop(); });
+				}
 			}
 		}
 	}
