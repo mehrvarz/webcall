@@ -24,6 +24,8 @@ const fullScreenOverlayElement = document.getElementById('fullScreenOverlay');
 const iframeWindowElement = document.getElementById('iframeWindow');
 const menuElement = document.getElementById('menu');
 const menuDialogElement = document.getElementById('menuDialog');
+const fileInput = document.querySelector('input#fileInput');
+const downloadAnchor = document.querySelector('a#download');
 //const audioSinkSelect = document.querySelector("select#audioSink");
 const bitrate = 280000;
 const neverAudio = false;
@@ -77,6 +79,10 @@ var callsWhileInAbsenceSlice = null;
 var hashcounter=0;
 var pushRegistration=null;
 var otherUA="";
+var fileReceiveBuffer = [];
+var fileReceivedSize = 0;
+var fileName = "";
+var fileSize = 0;
 
 window.onload = function() {
 	if(!navigator.mediaDevices) {
@@ -1835,32 +1841,61 @@ function createDataChannel() {
 			}
 		}
 		dataChannel.onmessage = event => {
-			if(!gentle) console.log("dataChannel.onmessage",event.data);
-			if(event.data=="ping") {
-				if(dataChannel && dataChannel.readyState=="open") {
-					dataChannel.send(event.data+" response");
-				}
-			} else if(event.data.startsWith("disconnect")) {
-				console.log("dataChannel.onmessage on 'disconnect'");
-				dataChannel.close();
-				dataChannel = null;
-				stopAllAudioEffects("dataChannel disconnect");
-				hangup();
-			} else if(event.data.startsWith("msg|")) {
-				// sanitize incoming data
-				let cleanString = event.data.substring(4).replace(/<(?:.|\n)*?>/gm, "...");
-				if(cleanString!="") {
-					console.log("dataChannel.onmessage msg",cleanString);
-					if(msgbox) {
-						let curDate = new Date().toString();
-						// cut off trailing " (Central European Summer Time)" from date
-						let bracketIdx = curDate.indexOf(" (");
-						if(bracketIdx>0) {
-							curDate = curDate.substring(0,bracketIdx);
-						}
-						let msg = "--- "+curDate+" ---\n" + cleanString + "\n";
-						msgbox.value = msg;
+			if(typeof event.data === "string") {
+				if(!gentle) console.log("dataChannel.onmessage string",event.data);
+				if(event.data=="ping") {
+					if(dataChannel && dataChannel.readyState=="open") {
+						dataChannel.send(event.data+" response");
 					}
+				} else if(event.data.startsWith("disconnect")) {
+					console.log("dataChannel.onmessage on 'disconnect'");
+					dataChannel.close();
+					dataChannel = null;
+					stopAllAudioEffects("dataChannel disconnect");
+					hangup();
+				} else if(event.data.startsWith("msg|")) {
+					// sanitize incoming data
+					let cleanString = event.data.substring(4).replace(/<(?:.|\n)*?>/gm, "...");
+					if(cleanString!="") {
+						console.log("dataChannel.onmessage msg",cleanString);
+						if(msgbox) {
+							let curDate = new Date().toString();
+							// cut off trailing " (Central European Summer Time)" from date
+							let bracketIdx = curDate.indexOf(" (");
+							if(bracketIdx>0) {
+								curDate = curDate.substring(0,bracketIdx);
+							}
+							let msg = "--- "+curDate+" ---\n" + cleanString + "\n";
+							msgbox.value = msg;
+						}
+					}
+				} else if(event.data.startsWith("file|")) {
+					// parse: "file|"+file.name+","+file.size+","+file.type+","+file.lastModified);
+					var fileDescr = event.data.substring(5);
+					let tok = fileDescr.split(",");
+					fileName = tok[0];
+					fileSize = 0;
+					if(tok.length>=2) {
+						fileSize = parseInt(tok[1]);
+					}
+					fileReceivedSize = 0;
+					fileReceiveBuffer = [];
+				}
+			} else {
+				fileReceiveBuffer.push(event.data);
+				fileReceivedSize += event.data.size;
+// TODO			receiveProgress.value = receivedSize;
+				if(!gentle) console.log("dataChannel.onmessage binary chunk",
+					event.data.size, fileReceivedSize, fileSize);
+				if(fileReceivedSize === fileSize) {
+					const receivedBlob = new Blob(fileReceiveBuffer);
+					fileReceiveBuffer = [];
+					
+					downloadAnchor.href = URL.createObjectURL(receivedBlob);
+					downloadAnchor.download = fileName;
+					downloadAnchor.textContent =
+					  `Click to download '${fileName}' (${fileSize} bytes)`;
+					downloadAnchor.style.display = 'block';
 				}
 			}
 		}

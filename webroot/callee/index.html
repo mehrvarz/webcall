@@ -261,6 +261,11 @@ input[type=submit]:focus {
 
 	<div id="status" class="status"></div>
 
+	<form id="fileInfo" style="display:none">
+		<input type="file" id="fileInput" name="files"/>
+	</form>
+	<a id="download" style="display:none"></a>
+
 	<div id="waitingCallersTitle" class="callListTitle" style="color:#f46; display:none;">Waiting calls:</div>
 	<div id="waitingCallers" class="callList"></div>
 
@@ -271,11 +276,11 @@ input[type=submit]:focus {
 
 	<div style="opacity:0.7;margin-top:30px;">WebCall by <a href="https://timur.mobi/webcall">timur.mobi</a></div>
 
-    <div id="audio">
-        <div style="width:50%;float:left;">
-            <audio id="remoteAudio" autoplay></audio>
-        </div>
-    </div>
+	<div id="audio">
+		<div style="width:50%;float:left;">
+			<audio id="remoteAudio" autoplay></audio>
+		</div>
+	</div>
 </div>
 <script src="custom.js"></script>
 <script src="callee.js"></script>

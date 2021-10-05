@@ -5,6 +5,7 @@ const dialButton = document.querySelector('button#callButton');
 const hangupButton = document.querySelector('button#hangupButton');
 const calleeOnlineElement = document.getElementById("calleeOnline");
 const remoteAudio = document.querySelector('audio#remoteAudio');
+const fileSelectElement = document.getElementById("fileselect");
 const bitrate = 280000;
 const neverAudio = false;
 const playDialSounds = true;
@@ -89,6 +90,35 @@ var extMessage = function(e) {
 }
 window.addEventListener('message', extMessage, false); 
 console.log("caller client extMessage now listening");
+
+fileSelectElement.addEventListener('change', (event) => {
+	const files = fileSelectElement.files;
+	const file = files.item(0);
+	console.log("fileSelect: "+file.name, file.size, file.type, file.lastModified);
+	dataChannel.send("file|"+file.name+","+file.size+","+file.type+","+file.lastModified);
+
+	const chunkSize = 16*1024;
+	let fileReader = new FileReader();
+	let offset = 0;
+	fileReader.addEventListener('error', error => console.error('Error reading file:', error));
+	fileReader.addEventListener('abort', event => console.log('File reading aborted:', event));
+	fileReader.addEventListener('load', e => {
+		//console.log('FileRead.onload ', e);
+		dataChannel.send(e.target.result);
+		offset += e.target.result.byteLength;
+		console.log('file send', offset, file.size);
+		//sendProgress.value = offset;
+		if (offset < file.size) {
+			readSlice(offset);
+		}
+	});
+	const readSlice = o => {
+		console.log('readSlice ', o);
+		const slice = file.slice(offset, o + chunkSize);
+		fileReader.readAsArrayBuffer(slice);
+	};
+	readSlice(0);
+});
 
 window.onload = function() {
 	//if(!gentle) console.log("onload");
@@ -1174,6 +1204,7 @@ function connectSignaling(message,openedFunc) {
 						remoteAudio.play().catch(function(error) {});
 						mediaConnect = true;
 						mediaConnectStartDate = Date.now();
+						fileSelectElement.style.display = "block";
 
 						// getting stats on p2p or relayed connection
 						console.log('full mediaConnect, getting stats...');
@@ -1376,6 +1407,8 @@ function dial() {
 	dialing = true;
 	rtcConnect = false;
 	mediaConnect = false;
+	fileSelectElement.style.display = "none";
+
 	if(singlebutton) {
 		dialButton.style.boxShadow = "";
 	} else {
@@ -1705,6 +1738,7 @@ function hangup(mustDisconnectCallee,message) {
 	remoteStream = null;
 	rtcConnect = false;
 	mediaConnect = false;
+	fileSelectElement.style.display = "none";
 	if(!singlebutton) {
 		msgbox.value = "";
 	}
