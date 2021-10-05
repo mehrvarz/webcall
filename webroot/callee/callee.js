@@ -210,13 +210,14 @@ window.onload = function() {
 				start();
 				return;
 			}
-			document.title = "WebCall Callee "+calleeID;
+			var calleeIdTitle = calleeID.charAt(0).toUpperCase() + calleeID.slice(1);
+			document.title = "WebCall Callee "+calleeIdTitle;
 			if(titleElement) {
 //				if(calleeID.match(/^[0-9]*$/) != null) {
 //					// calleeID is pure numeric - don't show
 //					titleElement.innerHTML = "WebCall Callee";
 //				} else {
-					titleElement.innerHTML = "WebCall Callee "+calleeID;
+					titleElement.innerHTML = "WebCall Callee "+calleeIdTitle;
 //				}
 			}
 
