@@ -685,6 +685,8 @@ func (c *WsClient) Close(reason string) {
 }
 
 
+// KeepAliveMgr done with kind support from lesismal of github.com/lesismal/nbio
+// Keeping many idle clients alive: https://github.com/lesismal/nbio/issues/92 
 type KeepAliveMgr struct {
 	mux       sync.RWMutex
 	clients   map[*websocket.Conn]struct{}
@@ -716,7 +718,6 @@ func (kaMgr *KeepAliveMgr) Delete(c *websocket.Conn) {
 func (kaMgr *KeepAliveMgr) Run() {
 	ticker := time.NewTicker(2*time.Second)
 	defer ticker.Stop()
-	//var nPingTotal int64 = 0
 	for {
 		<-ticker.C
 		if shutdownStarted.Get() {
@@ -746,8 +747,6 @@ func (kaMgr *KeepAliveMgr) Run() {
 			}
 		}
 		atomic.AddInt64(&pingSentCounter, nPing)
-		//nPingTotal+=nPing
-		//fmt.Printf("keepalive: ping [%v/%v/%v] clients\n", nPing, nPingTotal, len(kaMgr.clients))
 	}
 }
 
