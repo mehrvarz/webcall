@@ -267,8 +267,8 @@ input[type=submit]:focus {
 	</form>
 
 	<div id="download" style="margin-bottom:10px;"></div>
-	<div id="progress" class="progress" style="width:100%;display:none;">
-		<div class="label">Receive progress: </div>
+	<div id="progress" class="progress" style="width:100%;max-width:360px;display:none;">
+		<div id="progressLabel" class="progressLabel">Receive progress:</div>
 		<progress id="fileProgress" max="0" value="0" style="width:100%"></progress>
 	</div>
 	<input id="fileselect" type="file" style="display:none">

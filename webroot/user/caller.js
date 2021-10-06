@@ -7,6 +7,7 @@ const calleeOnlineElement = document.getElementById("calleeOnline");
 const remoteAudio = document.querySelector('audio#remoteAudio');
 const downloadList = document.getElementById('download');
 const progressElement = document.getElementById('progress'); // switch on and off
+const progressLabelElement = document.getElementById('progressLabel'); 
 const fileProgress = document.querySelector('progress#fileProgress'); // actual progress bar
 const fileSelectElement = document.getElementById("fileselect");
 const bitrate = 280000;
@@ -121,6 +122,7 @@ fileSelectElement.addEventListener('change', (event) => {
 	let fileReader = new FileReader();
 	let offset = 0;
 	fileProgress.max = file.size;
+	progressLabelElement.innerHTML = "Send progress:"
 	progressElement.style.display = "block";
 	fileReader.addEventListener('error', error => console.error('Error reading file:', error));
 	fileReader.addEventListener('abort', event => console.log('File reading aborted:', event));
@@ -1730,6 +1732,7 @@ function createDataChannel() {
 					if(tok.length>=2) {
 						fileSize = parseInt(tok[1]);
 						fileProgress.max = fileSize;
+						progressLabelElement.innerHTML = "Receive progress:"
 						progressElement.style.display = "block";
 					}
 					if(!gentle) console.log("file receive",fileName,fileSize);
