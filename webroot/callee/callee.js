@@ -26,6 +26,8 @@ const menuElement = document.getElementById('menu');
 const menuDialogElement = document.getElementById('menuDialog');
 const fileInput = document.querySelector('input#fileInput');
 const downloadAnchor = document.querySelector('a#download');
+const progressElement = document.getElementById('progress');
+const fileProgress = document.querySelector('progress#fileProgress');
 //const audioSinkSelect = document.querySelector("select#audioSink");
 const bitrate = 280000;
 const neverAudio = false;
@@ -1880,6 +1882,8 @@ function createDataChannel() {
 					fileSize = 0;
 					if(tok.length>=2) {
 						fileSize = parseInt(tok[1]);
+						fileProgress.max = fileSize;
+						progressElement.style.display = "block";
 					}
 					fileReceivedSize = 0;
 					fileReceiveBuffer = [];
@@ -1892,17 +1896,18 @@ function createDataChannel() {
 				}
 
 				fileReceivedSize += chunkSize;
-// TODO			receiveProgress.value = fileReceivedSize;
+				fileProgress.value = fileReceivedSize;
 				if(!gentle) console.log("binary chunk", chunkSize, fileReceivedSize, fileSize);
 				if(fileReceivedSize === fileSize) {
 					if(!gentle) console.log("file receive complete");
 					const receivedBlob = new Blob(fileReceiveBuffer);
 					fileReceiveBuffer = [];
+					progressElement.style.display = "none";
 
 // TODO must be able to receive multiple files; show multiple downloadAnchor's
 					downloadAnchor.href = URL.createObjectURL(receivedBlob);
 					downloadAnchor.download = fileName;
-					downloadAnchor.textContent = `Store received '${fileName}' (${fileSize} bytes)`;
+					downloadAnchor.textContent = `received '${fileName.substring(0,20)}' (${fileSize} bytes)`;
 					downloadAnchor.style.display = 'block';
 				}
 			}

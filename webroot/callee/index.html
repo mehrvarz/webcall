@@ -265,7 +265,10 @@ input[type=submit]:focus {
 	<form id="fileInfo" style="display:none">
 		<input type="file" id="fileInput" name="files"/>
 	</form>
-	<!-- TODO need progress bar -->
+	<div id="progress" class="progress" style="width:100%;display:none;">
+		<div class="label">Receive progress: </div>
+		<progress id="fileProgress" max="0" value="0" style="width:100%"></progress>
+	</div>
 	<a id="download" style="display:none"></a> <!-- TODO need X closer -->
 
 	<div id="waitingCallersTitle" class="callListTitle" style="color:#f46; display:none;">Waiting calls:</div>
