@@ -1883,18 +1883,23 @@ function createDataChannel() {
 				}
 			} else {
 				fileReceiveBuffer.push(event.data);
-				fileReceivedSize += event.data.size;
-// TODO			receiveProgress.value = receivedSize;
-				if(!gentle) console.log("dataChannel.onmessage binary chunk",
-					event.data.size, fileReceivedSize, fileSize);
+				var chunkSize = event.data.size; // ff
+				if(isNaN(chunkSize)) {
+					chunkSize = event.data.byteLength; // chrome
+				}
+
+				fileReceivedSize += chunkSize;
+// TODO			receiveProgress.value = fileReceivedSize;
+				if(!gentle) console.log("binary chunk", chunkSize, fileReceivedSize, fileSize);
 				if(fileReceivedSize === fileSize) {
+					if(!gentle) console.log("file receive complete");
 					const receivedBlob = new Blob(fileReceiveBuffer);
 					fileReceiveBuffer = [];
-					
+
+// TODO must be able to receive multiple files; show multiple downloadAnchor's
 					downloadAnchor.href = URL.createObjectURL(receivedBlob);
 					downloadAnchor.download = fileName;
-					downloadAnchor.textContent =
-					  `Click to download '${fileName}' (${fileSize} bytes)`;
+					downloadAnchor.textContent = `Store received '${fileName}' (${fileSize} bytes)`;
 					downloadAnchor.style.display = 'block';
 				}
 			}
