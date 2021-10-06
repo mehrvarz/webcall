@@ -67,6 +67,7 @@ var callerId = ""; // calleeId of the caller
 var callerName = ""; // callee name of the caller
 var otherUA="";
 var microphoneIsNeeded = true;
+var fileuplEnabled = false
 
 var extMessage = function(e) {
 	//if(e.origin != 'http://origin-domain.com') {
@@ -168,6 +169,8 @@ window.onload = function() {
 		singleButtonConnectedText = decodeURI(text);
 		if(!gentle) console.log("onload url arg connectedText",singleButtonConnectedText);
 	}
+
+	fileuplEnabled = getUrlParams("upl");
 
 	checkServerMode(function(mode) {
 		if(mode==0) {
@@ -1205,7 +1208,9 @@ function connectSignaling(message,openedFunc) {
 						remoteAudio.play().catch(function(error) {});
 						mediaConnect = true;
 						mediaConnectStartDate = Date.now();
-						fileSelectElement.style.display = "block";
+						if(fileuplEnabled) {
+							fileSelectElement.style.display = "block";
+						}
 
 						// getting stats on p2p or relayed connection
 						console.log('full mediaConnect, getting stats...');
