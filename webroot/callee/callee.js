@@ -29,6 +29,7 @@ const fileInput = document.querySelector('input#fileInput');
 const downloadList = document.getElementById('download');
 const progressElement = document.getElementById('progress');
 const fileProgress = document.querySelector('progress#fileProgress');
+const fileSelectElement = document.getElementById("fileselect");
 //const audioSinkSelect = document.querySelector("select#audioSink");
 const bitrate = 280000;
 const neverAudio = false;
@@ -86,6 +87,7 @@ var fileReceiveBuffer = [];
 var fileReceivedSize = 0;
 var fileName = "";
 var fileSize = 0;
+var fileuplEnabled = false
 
 window.onload = function() {
 	if(!navigator.mediaDevices) {
@@ -101,6 +103,10 @@ window.onload = function() {
 		calleeID = id;
 	}
 	console.log("calleeID (%s)",calleeID);
+
+	fileuplEnabled = getUrlParams("upl");
+	console.log("fileuplEnabled",fileuplEnabled);
+
 	//console.log("document.cookie (%s)",document.cookie);
 	if(calleeID=="") {
 		// if callee was started without a calleeID, reload with calleeID from cookie
@@ -295,20 +301,57 @@ function checkServerMode(callback) {
 
 function getUrlParams(param) {
 	if(window.location.search!="") {
+		//console.log("getUrlParams search=%s",window.location.search);
 		var query = window.location.search.substring(1);
 		var parts = query.split("&");
 		for (var i=0;i<parts.length;i++) {
+			//console.log("getUrlParams part(%d)=%s",i,parts[i]);
 			var seg = parts[i].split("=");
 			if (seg[0] == param) {
-				return seg[1];
+				//console.log("getUrlParams found=(%s)",seg[1]);
+				if(typeof seg[1]!=="undefined" && seg[1]!="" && seg[1]!="undefined") {
+					return decodeURI(seg[1]);
+				}
+				return true;
 			}
 		}
-	} else {
-		let path = window.location.pathname;
-		let lastSlash = path.lastIndexOf("/");
-		return path.substring(lastSlash+1);
 	}
+	let path = window.location.pathname;
+	let lastSlash = path.lastIndexOf("/");
+	let value = path.substring(lastSlash+1);
+	console.log("getUrlParams val=%s",value);
+	return value;
 }
+
+fileSelectElement.addEventListener('change', (event) => {
+	const files = fileSelectElement.files;
+	const file = files.item(0);
+	console.log("fileSelect: "+file.name, file.size, file.type, file.lastModified);
+	dataChannel.send("file|"+file.name+","+file.size+","+file.type+","+file.lastModified);
+
+	const chunkSize = 16*1024;
+	let fileReader = new FileReader();
+	let offset = 0;
+	fileReader.addEventListener('error', error => console.error('Error reading file:', error));
+	fileReader.addEventListener('abort', event => console.log('File reading aborted:', event));
+	fileReader.addEventListener('load', e => {
+		dataChannel.send(e.target.result);
+		offset += e.target.result.byteLength;
+		if(!gentle) console.log('file send', offset, file.size);
+		//sendProgress.value = offset;
+		if (offset < file.size) {
+			readSlice(offset);
+		} else {
+			console.log('file send complete', file.size);
+		}
+	});
+	const readSlice = o => {
+		//if(!gentle) console.log('readSlice ', o);
+		const slice = file.slice(offset, o + chunkSize);
+		fileReader.readAsArrayBuffer(slice);
+	};
+	readSlice(0);
+});
 
 function enablePasswordForm() {
 	console.log('enter password for calleeID',calleeID);
@@ -1389,6 +1432,9 @@ function pickup2() {
 		onlineIndicator.src="red-gradient.svg";
 		mediaConnect = true;
 		mediaConnectStartDate = Date.now();
+		if(fileuplEnabled) {
+			fileSelectElement.style.display = "block";
+		}
 
 		setTimeout(function() {
 			peerCon.getStats(null)
@@ -2057,6 +2103,7 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 	goOfflineButton.disabled = false;
 	goOnlineButton.style.display = "inline-block";
 	goOfflineButton.style.display = "inline-block";
+	fileSelectElement.style.display = "none";
 
 	// goOnlinePending flag prevents secondary calls to goOnline
 	if(goOnlineAfter && !goOnlinePending) {

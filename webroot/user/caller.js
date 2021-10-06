@@ -5,6 +5,9 @@ const dialButton = document.querySelector('button#callButton');
 const hangupButton = document.querySelector('button#hangupButton');
 const calleeOnlineElement = document.getElementById("calleeOnline");
 const remoteAudio = document.querySelector('audio#remoteAudio');
+const downloadList = document.getElementById('download');
+const progressElement = document.getElementById('progress');
+const fileProgress = document.querySelector('progress#fileProgress');
 const fileSelectElement = document.getElementById("fileselect");
 const bitrate = 280000;
 const neverAudio = false;
@@ -67,6 +70,10 @@ var callerId = ""; // calleeId of the caller
 var callerName = ""; // callee name of the caller
 var otherUA="";
 var microphoneIsNeeded = true;
+var fileReceiveBuffer = [];
+var fileReceivedSize = 0;
+var fileName = "";
+var fileSize = 0;
 var fileuplEnabled = false
 
 var extMessage = function(e) {
@@ -1671,32 +1678,81 @@ function createDataChannel() {
 		}
 	}
 	dataChannel.onmessage = event => {
-		if(!gentle) console.debug("dataChannel.onmessage",event.data);
-		if(event.data) {
-			if(event.data.startsWith("disconnect")) {
-				console.log("dataChannel.close on 'disconnect'");
-				dataChannel.close();
-				hangupWithBusySound(false,"Peer hang up");
-			} else if(event.data.startsWith("cmd|ledred")) {
-				onlineIndicator.src="red-gradient.svg";
-				microphoneIsNeeded = true;
+		if(typeof event.data === "string") {
+			if(!gentle) console.debug("dataChannel.onmessage",event.data);
+			if(event.data) {
+				if(event.data.startsWith("disconnect")) {
+					console.log("dataChannel.close on 'disconnect'");
+					dataChannel.close();
+					hangupWithBusySound(false,"Peer hang up");
+				} else if(event.data.startsWith("cmd|ledred")) {
+					onlineIndicator.src="red-gradient.svg";
+					microphoneIsNeeded = true;
 
-				// unmute micro
-				if(localStream!=null) {
-					const audioTracks = localStream.getAudioTracks();
-					audioTracks[0].enabled = true;
-					// localStream.getTracks().forEach(track => { ??? });
-				}
-			} else if(event.data.startsWith("cmd|ledgreen")) {
-				onlineIndicator.src="green-gradient.svg";
-				microphoneIsNeeded = false;
+					// unmute micro
+					if(localStream!=null) {
+						const audioTracks = localStream.getAudioTracks();
+						audioTracks[0].enabled = true;
+						// localStream.getTracks().forEach(track => { ??? });
+					}
+				} else if(event.data.startsWith("cmd|ledgreen")) {
+					onlineIndicator.src="green-gradient.svg";
+					microphoneIsNeeded = false;
 
-				// mute micro
-				if(localStream!=null) {
-					const audioTracks = localStream.getAudioTracks();
-					audioTracks[0].enabled = false;
-					// localStream.getTracks().forEach(track => { track.stop(); });
+					// mute micro
+					if(localStream!=null) {
+						const audioTracks = localStream.getAudioTracks();
+						audioTracks[0].enabled = false;
+						// localStream.getTracks().forEach(track => { track.stop(); });
+					}
+				} else if(event.data.startsWith("file|")) {
+					// parse: "file|"+file.name+","+file.size+","+file.type+","+file.lastModified);
+					var fileDescr = event.data.substring(5);
+					let tok = fileDescr.split(",");
+					fileName = tok[0];
+					fileSize = 0;
+					if(tok.length>=2) {
+						fileSize = parseInt(tok[1]);
+						fileProgress.max = fileSize;
+						progressElement.style.display = "block";
+					}
+					if(!gentle) console.log("file receive",fileName,fileSize);
+					fileReceivedSize = 0;
+					fileReceiveBuffer = [];
 				}
+			}
+		} else {
+			fileReceiveBuffer.push(event.data);
+			var chunkSize = event.data.size; // ff
+			if(isNaN(chunkSize)) {
+				chunkSize = event.data.byteLength; // chrome
+			}
+
+			fileReceivedSize += chunkSize;
+			fileProgress.value = fileReceivedSize;
+			if(!gentle) console.log("binary chunk", chunkSize, fileReceivedSize, fileSize);
+			if(fileReceivedSize === fileSize) {
+				if(!gentle) console.log("file receive complete");
+				const receivedBlob = new Blob(fileReceiveBuffer);
+				fileReceiveBuffer = [];
+				progressElement.style.display = "none";
+
+				let randId = ""+Math.random()*100000000;
+				var aDivElement = document.createElement("div");
+				aDivElement.id = randId;
+				downloadList.appendChild(aDivElement);
+
+				var aElement = document.createElement("a");
+				aElement.href = URL.createObjectURL(receivedBlob);
+				aElement.download = fileName;
+				aElement.textContent = `received '${fileName.substring(0,20)}' (${fileSize} bytes)`;
+				aDivElement.appendChild(aElement);
+
+				var aDeleteElement = document.createElement("a");
+				aDeleteElement.style = "margin-left:10px;";
+				aDeleteElement.onclick = function(){ downloadList.removeChild(aDivElement); }
+				aDeleteElement.textContent = `[x]`;
+				aDivElement.appendChild(aDeleteElement);
 			}
 		}
 	}
