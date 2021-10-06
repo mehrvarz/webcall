@@ -1448,8 +1448,11 @@ function goOnline() {
 	peerCon.onicecandidate = e => onIceCandidate(e);
 	peerCon.onicecandidateerror = function(e) {
 		if(!gentle) console.warn("onicecandidateerror", e.errorCode, e.errorText, e.url);
-		// chrome warn "701 STUN allocate request timed out" apparently related to pion turn not supporting ipv6
-		showStatus("iceCandidate error "+e.errorCode+" "+e.errorText,-1);
+		// chrome warn "701 STUN allocate request timed out" apparently related to pion turn not supporting ipv6?
+		// TODO: happens also with ip4 addr - but only in chromium (propblem with ungoogled chromium?)
+		if(e.errorCode!=701) {
+			showStatus("iceCandidate error "+e.errorCode+" "+e.errorText,-1);
+		}
 	}
 	peerCon.ontrack = ({track, streams}) => {
 		track.onunmute = () => {
