@@ -103,17 +103,18 @@ fileSelectElement.addEventListener('change', (event) => {
 	fileReader.addEventListener('error', error => console.error('Error reading file:', error));
 	fileReader.addEventListener('abort', event => console.log('File reading aborted:', event));
 	fileReader.addEventListener('load', e => {
-		//console.log('FileRead.onload ', e);
 		dataChannel.send(e.target.result);
 		offset += e.target.result.byteLength;
-		console.log('file send', offset, file.size);
+		if(!gentle) console.log('file send', offset, file.size);
 		//sendProgress.value = offset;
 		if (offset < file.size) {
 			readSlice(offset);
+		} else {
+			console.log('file send complete', file.size);
 		}
 	});
 	const readSlice = o => {
-		console.log('readSlice ', o);
+		//if(!gentle) console.log('readSlice ', o);
 		const slice = file.slice(offset, o + chunkSize);
 		fileReader.readAsArrayBuffer(slice);
 	};

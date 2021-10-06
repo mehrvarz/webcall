@@ -25,7 +25,8 @@ const iframeWindowElement = document.getElementById('iframeWindow');
 const menuElement = document.getElementById('menu');
 const menuDialogElement = document.getElementById('menuDialog');
 const fileInput = document.querySelector('input#fileInput');
-const downloadAnchor = document.querySelector('a#download');
+//const downloadAnchor = document.querySelector('a#download');
+const downloadList = document.getElementById('download');
 const progressElement = document.getElementById('progress');
 const fileProgress = document.querySelector('progress#fileProgress');
 //const audioSinkSelect = document.querySelector("select#audioSink");
@@ -1904,11 +1905,22 @@ function createDataChannel() {
 					fileReceiveBuffer = [];
 					progressElement.style.display = "none";
 
-// TODO must be able to receive multiple files; show multiple downloadAnchor's
-					downloadAnchor.href = URL.createObjectURL(receivedBlob);
-					downloadAnchor.download = fileName;
-					downloadAnchor.textContent = `received '${fileName.substring(0,20)}' (${fileSize} bytes)`;
-					downloadAnchor.style.display = 'block';
+					let randId = ""+Math.random()*100000000;
+					var aDivElement = document.createElement("div");
+					aDivElement.id = randId;
+					downloadList.appendChild(aDivElement);
+
+					var aElement = document.createElement("a");
+					aElement.href = URL.createObjectURL(receivedBlob);
+					aElement.download = fileName;
+					aElement.textContent = `received '${fileName.substring(0,20)}' (${fileSize} bytes)`;
+					aDivElement.appendChild(aElement);
+
+					var aDeleteElement = document.createElement("a");
+					aDeleteElement.style = "margin-left:10px;";
+					aDeleteElement.onclick = function(){ downloadList.removeChild(aDivElement); }
+					aDeleteElement.textContent = `[x]`;
+					aDivElement.appendChild(aDeleteElement);
 				}
 			}
 		}
