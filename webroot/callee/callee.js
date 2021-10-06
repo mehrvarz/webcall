@@ -27,8 +27,8 @@ const menuDialogElement = document.getElementById('menuDialog');
 const fileInput = document.querySelector('input#fileInput');
 //const downloadAnchor = document.querySelector('a#download');
 const downloadList = document.getElementById('download');
-const progressElement = document.getElementById('progress');
-const fileProgress = document.querySelector('progress#fileProgress');
+const progressElement = document.getElementById('progress'); // switch on and off
+const fileProgress = document.querySelector('progress#fileProgress'); // actual progress bar
 const fileSelectElement = document.getElementById("fileselect");
 //const audioSinkSelect = document.querySelector("select#audioSink");
 const bitrate = 280000;
@@ -326,23 +326,39 @@ function getUrlParams(param) {
 fileSelectElement.addEventListener('change', (event) => {
 	const files = fileSelectElement.files;
 	const file = files.item(0);
+	if(file==null) {
+		console.log("fileSelect file==nulll");
+		return;
+	}
+	if(file.name=="") {
+		console.log("fileSelect file.name is empty");
+		return;
+	}
+	if(file.size<=0) {
+		console.log("fileSelect file.size <= 0");
+		return;
+	}
 	console.log("fileSelect: "+file.name, file.size, file.type, file.lastModified);
 	dataChannel.send("file|"+file.name+","+file.size+","+file.type+","+file.lastModified);
 
 	const chunkSize = 16*1024;
 	let fileReader = new FileReader();
 	let offset = 0;
+	fileProgress.max = file.size;
+	progressElement.style.display = "block";
 	fileReader.addEventListener('error', error => console.error('Error reading file:', error));
 	fileReader.addEventListener('abort', event => console.log('File reading aborted:', event));
 	fileReader.addEventListener('load', e => {
 		dataChannel.send(e.target.result);
 		offset += e.target.result.byteLength;
 		if(!gentle) console.log('file send', offset, file.size);
-		//sendProgress.value = offset;
+		fileProgress.value = offset;
 		if (offset < file.size) {
 			readSlice(offset);
 		} else {
 			console.log('file send complete', file.size);
+			offset = 0;
+			progressElement.style.display = "none";
 		}
 	});
 	const readSlice = o => {
