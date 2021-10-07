@@ -89,7 +89,6 @@ var fileReceiveBuffer = [];
 var fileReceivedSize = 0;
 var fileName = "";
 var fileSize = 0;
-var fileuplEnabled = false
 
 window.onload = function() {
 	if(!navigator.mediaDevices) {
@@ -105,9 +104,6 @@ window.onload = function() {
 		calleeID = id;
 	}
 	console.log("calleeID (%s)",calleeID);
-
-	fileuplEnabled = getUrlParams("upl");
-	console.log("fileuplEnabled",fileuplEnabled);
 
 	//console.log("document.cookie (%s)",document.cookie);
 	if(calleeID=="") {
@@ -1459,9 +1455,7 @@ function pickup2() {
 		onlineIndicator.src="red-gradient.svg";
 		mediaConnect = true;
 		mediaConnectStartDate = Date.now();
-		if(fileuplEnabled) {
-			fileselectLabel.style.display = "inline-block";
-		}
+		fileselectLabel.style.display = "inline-block";
 
 		setTimeout(function() {
 			peerCon.getStats(null)
@@ -1987,7 +1981,7 @@ function createDataChannel() {
 					var aElement = document.createElement("a");
 					aElement.href = URL.createObjectURL(receivedBlob);
 					aElement.download = fileName;
-					aElement.textContent = `received '${fileName.substring(0,20)}' ${fileSize} bytes`;
+					aElement.textContent = `received '${fileName.substring(0,25)}' ${fileSize} bytes`;
 					aDivElement.appendChild(aElement);
 
 					var aDeleteElement = document.createElement("a");

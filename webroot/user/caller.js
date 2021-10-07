@@ -78,7 +78,6 @@ var fileReceiveBuffer = [];
 var fileReceivedSize = 0;
 var fileName = "";
 var fileSize = 0;
-var fileuplEnabled = false
 var hashcounter=0;
 
 var extMessage = function(e) {
@@ -206,8 +205,6 @@ window.onload = function() {
 		singleButtonConnectedText = decodeURI(text);
 		if(!gentle) console.log("onload url arg connectedText",singleButtonConnectedText);
 	}
-
-	fileuplEnabled = getUrlParams("upl");
 
 	// if on start there is a fragment/hash ('#') in the URL, remove it
 	if(location.hash.length > 0) {
@@ -1293,10 +1290,7 @@ function connectSignaling(message,openedFunc) {
 						remoteAudio.play().catch(function(error) {});
 						mediaConnect = true;
 						mediaConnectStartDate = Date.now();
-						fileselectlabel.style.display = "block";
-						if(fileuplEnabled) {
-							fileselectLabel.style.display = "block";
-						}
+						fileselectLabel.style.display = "inline-block";
 
 						// getting stats on p2p or relayed connection
 						console.log('full mediaConnect, getting stats...');
@@ -1826,7 +1820,7 @@ function createDataChannel() {
 				var aElement = document.createElement("a");
 				aElement.href = URL.createObjectURL(receivedBlob);
 				aElement.download = fileName;
-				aElement.textContent = `received '${fileName.substring(0,20)}' ${fileSize} bytes`;
+				aElement.textContent = `received '${fileName.substring(0,25)}' ${fileSize} bytes`;
 				aDivElement.appendChild(aElement);
 
 				var aDeleteElement = document.createElement("a");
