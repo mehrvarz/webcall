@@ -347,7 +347,7 @@ fileSelectElement.addEventListener('change', (event) => {
 		return;
 	}
 	console.log("fileSelect: "+file.name, file.size, file.type, file.lastModified);
-	showStatus("file upload "+file.name.substring(0,20)+" "+file.size+" bytes",-1);
+//	showStatus("file upload "+file.name.substring(0,25)+" "+file.size+" bytes",-1);
 	dataChannel.send("file|"+file.name+","+file.size+","+file.type+","+file.lastModified);
 
 	const chunkSize = 16*1024;
@@ -369,6 +369,7 @@ fileSelectElement.addEventListener('change', (event) => {
 			console.log('file send complete', file.size);
 			offset = 0;
 			progressElement.style.display = "none";
+			showStatus("sent '"+file.name.substring(0,25)+"' "+file.size+" bytes",-1);
 		}
 	});
 	const readSlice = o => {
@@ -1986,7 +1987,7 @@ function createDataChannel() {
 					var aElement = document.createElement("a");
 					aElement.href = URL.createObjectURL(receivedBlob);
 					aElement.download = fileName;
-					aElement.textContent = `received '${fileName.substring(0,20)}' (${fileSize} bytes)`;
+					aElement.textContent = `received '${fileName.substring(0,20)}' ${fileSize} bytes`;
 					aDivElement.appendChild(aElement);
 
 					var aDeleteElement = document.createElement("a");
