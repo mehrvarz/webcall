@@ -6,9 +6,14 @@ const hangupButton = document.querySelector('button#hangupButton');
 const calleeOnlineElement = document.getElementById("calleeOnline");
 const remoteAudio = document.querySelector('audio#remoteAudio');
 const downloadList = document.getElementById('download');
+const mainElement = document.getElementById('container');
+const menuElement = document.getElementById('menu');
+const menuDialogElement = document.getElementById('menuDialog');
+const fullScreenOverlayElement = document.getElementById('fullScreenOverlay');
 const progressElement = document.getElementById('progress'); // switch on and off
 const progressLabelElement = document.getElementById('progressLabel'); 
 const fileProgress = document.querySelector('progress#fileProgress'); // actual progress bar
+const fileselectLabel = document.getElementById("fileselectlabel");
 const fileSelectElement = document.getElementById("fileselect");
 const bitrate = 280000;
 const neverAudio = false;
@@ -54,7 +59,6 @@ var titleElement;
 var statusLine;
 var msgbox;
 var timerElement;
-var postCallStatsElement;
 var calleeOfflineElement;
 var onlineIndicator;
 if(!singlebutton) {
@@ -63,7 +67,6 @@ if(!singlebutton) {
 	statusLine = document.getElementById('status');
 	msgbox = document.querySelector('textarea#msgbox');
 	timerElement = document.querySelector('div#timer');
-	postCallStatsElement = document.getElementById('postCallStats');
 	calleeOfflineElement = document.getElementById("calleeOffline");
 	onlineIndicator = document.querySelector('img#onlineIndicator');
 }
@@ -76,6 +79,7 @@ var fileReceivedSize = 0;
 var fileName = "";
 var fileSize = 0;
 var fileuplEnabled = false
+var hashcounter=0;
 
 var extMessage = function(e) {
 	//if(e.origin != 'http://origin-domain.com') {
@@ -101,6 +105,8 @@ window.addEventListener('message', extMessage, false);
 console.log("caller client extMessage now listening");
 
 fileSelectElement.addEventListener('change', (event) => {
+	if(!gentle) console.log("fileSelect event");
+	menuDialogClose();
 	const files = fileSelectElement.files;
 	const file = files.item(0);
 	if(file==null) {
@@ -115,7 +121,12 @@ fileSelectElement.addEventListener('change', (event) => {
 		console.log("fileSelect file.size <= 0");
 		return;
 	}
+	if(dataChannel==null) {
+		console.log("fileSelect no dataChannel");
+		return;
+	}
 	console.log("fileSelect: "+file.name, file.size, file.type, file.lastModified);
+	showStatus("file upload "+file.name.substring(0,20)+" "+file.size+" bytes",-1);
 	dataChannel.send("file|"+file.name+","+file.size+","+file.type+","+file.lastModified);
 
 	const chunkSize = 16*1024;
@@ -157,9 +168,9 @@ window.onload = function() {
 		if(!gentle) console.log("onload no calleeID abort");
 		//window.location.reload(); //replace("/webcall");
 		//window.location = window.location.href + "../..";
-		let mainElement = document.getElementById('container')
-		let mainParent = mainElement.parentNode;
-		mainParent.removeChild(mainElement);
+		let myMainElement = document.getElementById('container')
+		let mainParent = myMainElement.parentNode;
+		mainParent.removeChild(myMainElement);
 		var msgElement = document.createElement("div");
 		msgElement.style = "margin-top:15%; display:flex; flex-direction:column; align-items:center; "+
 						   "justify-content:center; text-align:center; font-size:1.2em; line-height:1.5em;";
@@ -196,6 +207,51 @@ window.onload = function() {
 	}
 
 	fileuplEnabled = getUrlParams("upl");
+
+	// if on start there is a fragment/hash ('#') in the URL, remove it
+	if(location.hash.length > 0) {
+		console.log("location.hash.length=%d",location.hash.length);
+		window.location.replace("/user/"+calleeID);
+		return;
+	}
+
+	window.onhashchange = function() {
+		var newhashcounter;
+		if(location.hash.length > 0) {
+			newhashcounter = parseInt(location.hash.replace('#',''),10);
+		} else {
+			newhashcounter = 0;
+		}
+		if(hashcounter>0 && newhashcounter<hashcounter) {
+			if(menuDialogOpenFlag) {
+				if(!gentle) console.log("onhashchange menuDialogClose");
+				menuDialogClose();
+			}
+		}
+		hashcounter = newhashcounter;
+		//console.log("onhashchange ",hashcounter);
+	}
+
+	document.onkeydown = function(evt) {
+		//console.log('menuDialogOpen onkeydown event');
+		evt = evt || window.event;
+		var isEscape = false;
+		if("key" in evt) {
+			isEscape = (evt.key === "Escape" || evt.key === "Esc");
+		} else {
+			isEscape = (evt.keyCode === 27);
+		}
+		if(isEscape) {
+			console.log('callee esc key');
+			if(menuDialogOpenFlag) {
+				historyBack();
+			}	
+		} else if(evt.key=="!") {
+			menuDialogOpen();
+		} else {
+			//console.log('callee key',evt.key);
+		}
+	};
 
 	checkServerMode(function(mode) {
 		if(mode==0) {
@@ -283,9 +339,9 @@ window.onload = function() {
 		}
 		if(mode==1) {
 			// maintenance mode
-			let mainElement = document.getElementById('container')
-			let mainParent = mainElement.parentNode;
-			mainParent.removeChild(mainElement);
+			let myMainElement = document.getElementById('container')
+			let mainParent = myMainElement.parentNode;
+			mainParent.removeChild(myMainElement);
 			var msgElement = document.createElement("div");
 			msgElement.style = "margin-top:15%; display:flex; flex-direction:column; align-items:center; "+
 							   "justify-content:center; text-align:center; font-size:1.2em; line-height:1.5em;";
@@ -484,7 +540,7 @@ function calleeOnlineAction(from) {
 			} else {
 				if(!singlebutton) {
 					showStatus( "Before you hit the Call button, you can enter a name "+
-								"or a topic for the convenience of the callee. Thank you.",-1)
+								"or a topic for the convenience of the callee.",-1)
 					msgbox.style.display = "block";
 					console.log('callerName',callerName);
 					if(typeof callerName!=="undefined" && callerName!="") {
@@ -497,7 +553,9 @@ function calleeOnlineAction(from) {
 					};
 					msgbox.onblur = function() {
 						// caller leaving the msgbox
-						msgbox.placeholder = placeholderText;
+						if(placeholderText!="") {
+							msgbox.placeholder = placeholderText;
+						}
 					};
 				}
 			}
@@ -1050,12 +1108,13 @@ function getStatsPostCall(results) {
 }
 
 function showStatsPostCall() {
-	let myStatsPostCallString = statsPostCallString.replaceAll("\n","<br>");
-	if(!singlebutton) {
-		postCallStatsElement.style.display = "none";
+	menuDialogClose();
+	if(statsPostCallString=="") {
+		showStatus("No stats",-1);
+	} else {
+		let myStatsPostCallString = statsPostCallString.replaceAll("\n","<br>");
+		showStatus(myStatsPostCallString,-1);
 	}
-	showStatus(myStatsPostCallString,-1);
-	statsPostCallString = "";
 }
 
 function connectSignaling(message,openedFunc) {
@@ -1233,8 +1292,10 @@ function connectSignaling(message,openedFunc) {
 						remoteAudio.play().catch(function(error) {});
 						mediaConnect = true;
 						mediaConnectStartDate = Date.now();
+//						menuElement.style.display = "block";
+						fileselectlabel.style.display = "block";
 						if(fileuplEnabled) {
-							fileSelectElement.style.display = "block";
+							fileselectLabel.style.display = "block";
 						}
 
 						// getting stats on p2p or relayed connection
@@ -1438,7 +1499,8 @@ function dial() {
 	dialing = true;
 	rtcConnect = false;
 	mediaConnect = false;
-	fileSelectElement.style.display = "none";
+//	menuElement.style.display = "none";
+	fileselectLabel.style.display = "none";
 
 	if(singlebutton) {
 		dialButton.style.boxShadow = "";
@@ -1819,7 +1881,8 @@ function hangup(mustDisconnectCallee,message) {
 	remoteStream = null;
 	rtcConnect = false;
 	mediaConnect = false;
-	fileSelectElement.style.display = "none";
+//	menuElement.style.display = "none";
+	fileselectLabel.style.display = "none";
 	if(!singlebutton) {
 		msgbox.value = "";
 	}
@@ -1939,10 +2002,12 @@ function hangup(mustDisconnectCallee,message) {
 		} else {
 			peerCon.getStats(null).then((results) => { 
 				getStatsPostCall(results);
+/*
 				if(statsPostCallString!="" && statsPostCallDurationMS>0) {
 					// enable info.svg button onclick -> showStatsPostCall()
 					postCallStatsElement.style.display = "inline-block";
 				}
+*/
 				peerConCloseFunc();
 			}, err => {
 				console.log(err); 
@@ -1971,5 +2036,40 @@ function hangupWithBusySound(mustDisconnectCallee,message) {
 		console.log(`hangupWithBusySound no peerCon `+message);
 	}
 	hangup(mustDisconnectCallee,message);
+}
+
+function menuDialogClose() {
+	if(!gentle) console.log('menuDialogClose');
+	menuDialogElement.style.display = "none";
+	mainElement.style.filter = "";
+	fullScreenOverlayElement.style.display = "none";
+	fullScreenOverlayElement.onclick = null;
+	menuDialogOpenFlag = false;
+}
+
+function historyBack() {
+	history.back(); // will call closeResults()
+}
+
+var menuDialogOpenFlag = false;
+function menuDialogOpen() {
+	if(menuDialogOpenFlag) {
+		console.log('menuDialogOpen menuDialogOpenFlag');
+		return;
+	}
+	if(!gentle) console.log('menuDialogOpen');
+	menuDialogOpenFlag = true;
+
+	hashcounter++;
+	location.hash = hashcounter;
+
+	// fullScreenOverlayElement disables all other buttons and enables abort by click outside
+	fullScreenOverlayElement.style.display = "block";
+	fullScreenOverlayElement.onclick = function() {
+		console.log('fullScreenOverlay click');
+		historyBack();
+	}
+	mainElement.style.filter = "blur(0.8px) brightness(60%)";
+	menuDialogElement.style.display = "block";
 }
 

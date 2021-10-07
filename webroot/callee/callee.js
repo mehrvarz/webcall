@@ -30,6 +30,7 @@ const downloadList = document.getElementById('download');
 const progressElement = document.getElementById('progress'); // switch on and off
 const progressLabelElement = document.getElementById('progressLabel'); 
 const fileProgress = document.querySelector('progress#fileProgress'); // actual progress bar
+const fileselectLabel = document.getElementById("fileselectlabel");
 const fileSelectElement = document.getElementById("fileselect");
 //const audioSinkSelect = document.querySelector("select#audioSink");
 const bitrate = 280000;
@@ -320,11 +321,13 @@ function getUrlParams(param) {
 	let path = window.location.pathname;
 	let lastSlash = path.lastIndexOf("/");
 	let value = path.substring(lastSlash+1);
-	console.log("getUrlParams val=%s",value);
+	if(!gentle) console.log("getUrlParams val=%s",value);
 	return value;
 }
 
 fileSelectElement.addEventListener('change', (event) => {
+	if(!gentle) console.log("fileSelect event");
+	menuDialogClose();
 	const files = fileSelectElement.files;
 	const file = files.item(0);
 	if(file==null) {
@@ -339,7 +342,12 @@ fileSelectElement.addEventListener('change', (event) => {
 		console.log("fileSelect file.size <= 0");
 		return;
 	}
+	if(dataChannel==null) {
+		console.log("fileSelect no dataChannel");
+		return;
+	}
 	console.log("fileSelect: "+file.name, file.size, file.type, file.lastModified);
+	showStatus("file upload "+file.name.substring(0,20)+" "+file.size+" bytes",-1);
 	dataChannel.send("file|"+file.name+","+file.size+","+file.type+","+file.lastModified);
 
 	const chunkSize = 16*1024;
@@ -1451,7 +1459,7 @@ function pickup2() {
 		mediaConnect = true;
 		mediaConnectStartDate = Date.now();
 		if(fileuplEnabled) {
-			fileSelectElement.style.display = "block";
+			fileselectLabel.style.display = "inline-block";
 		}
 
 		setTimeout(function() {
@@ -2122,7 +2130,7 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 	goOfflineButton.disabled = false;
 	goOnlineButton.style.display = "inline-block";
 	goOfflineButton.style.display = "inline-block";
-	fileSelectElement.style.display = "none";
+	fileselectLabel.style.display = "none";
 
 	// goOnlinePending flag prevents secondary calls to goOnline
 	if(goOnlineAfter && !goOnlinePending) {
