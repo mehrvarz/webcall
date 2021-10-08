@@ -317,7 +317,8 @@ function getUrlParams(param) {
 
 fileSelectElement.addEventListener('change', (event) => {
 	if(!gentle) console.log("fileSelect event");
-	menuDialogClose();
+//	menuDialogClose();
+	historyBack();
 	const files = fileSelectElement.files;
 	const file = files.item(0);
 	if(file==null) {
@@ -771,23 +772,23 @@ function delayedWsAutoReconnect(reconPauseSecs) {
 			wsAutoReconnecting = false;
 			// but if we have a connection now, we don't kill it
 			if(!wsConn) {
-				console.log('delayedWsAutoReconnect aborted on user action',startPauseDate,lastUserActionDate);
+				if(!gentle) console.log('delayedWsAutoReconnect aborted on user action',startPauseDate,lastUserActionDate);
 				offlineAction();
 			}
 		} else if(!wsAutoReconnecting) {
-			console.log('delayedWsAutoReconnect aborted on !wsAutoReconnecting');
+			if(!gentle) console.log('delayedWsAutoReconnect aborted on !wsAutoReconnecting');
 			wsAutoReconnecting = false;
 			//offlineAction();
 		} else if(remainingTalkSecs<0 && !calleeID.startsWith("answie")) {
-			console.log('delayedWsAutoReconnect aborted on no talk time');
+			if(!gentle) console.log('delayedWsAutoReconnect aborted on no talk time');
 			wsAutoReconnecting = false;
 			offlineAction();
 		} else if(remainingServiceSecs<0 && !calleeID.startsWith("answie")) {
-			console.log('delayedWsAutoReconnect aborted on no service time');
+			if(!gentle) console.log('delayedWsAutoReconnect aborted on no service time');
 			wsAutoReconnecting = false;
 			offlineAction();
 		} else {
-			console.log('delayedWsAutoReconnect login...');
+			if(!gentle) console.log('delayedWsAutoReconnect login...');
 			login(true); // -> connectSignaling("init|")
 		}
 	},reconPauseSecs*1000);
@@ -814,7 +815,7 @@ function showOnlineReadyMsg(sessionIdPayload) {
 		let msg = "";
 		msg += "You will receive calls made by this link:<br>"+
 			"<a target='_blank' href='"+calleeLink+"'>"+calleeLink+"</a><br>";
-		console.log('showOnlineReadyMsg',version,sessionIdPayload,version<sessionIdPayload);
+		if(!gentle) console.log('showOnlineReadyMsg',version,sessionIdPayload,version<sessionIdPayload);
 		if(sessionIdPayload!="" && version<sessionIdPayload) {
 			msg += "Software update available. Reload to update.<br>";
 		}
@@ -882,20 +883,20 @@ function connectSignaling(message) {
 			},500);
 			return;
 		}
-		showStatus("Disconnected from signaling server");
+		showStatus("disconnected from signaling server");
 		if(!mediaConnect) {
 			onlineIndicator.src="";
 		}
 		if(tryingToOpenWebSocket) {
 			// onclose occured before a ws-connection could be established
-			console.log('wsConn.onclose failed to open');
+			if(!gentle) console.log('wsConn.onclose failed to open');
 		} else {
-			console.log('wsConn.onclose after being connected');
+			if(!gentle) console.log('wsConn.onclose after being connected');
 		}
 		if(goOnlineButton.disabled) {
 			// this is not a user-intended offline; we should be online
 			let delay = autoReconnectDelay + Math.floor(Math.random() * 10) - 5;
-			console.log('reconnecting to signaling server in %ds...', delay);
+			if(!gentle) console.log('reconnecting to signaling server in %ds...', delay);
 			showStatus("Reconnecting to signaling server...",-1);
 			//notificationSound.play().catch(function(error) { });
 			missedCallsElement.style.display = "none";
@@ -912,10 +913,10 @@ function connectSignaling(message) {
 				let cmd = tok[0];
 				let payload = tok[1];
 				if(cmd=="init") {
-					console.log('cmd init');
+					if(!gentle) console.log('cmd init');
 				} else if(cmd=="callerDescription") {
 					if(peerCon==null) {
-						console.warn('callerDescription but peerCon==null');
+						console.warn('callerDescription but no peerCon');
 						continue;
 					}
 					if(!rtcConnect) {
@@ -923,30 +924,30 @@ function connectSignaling(message) {
 						callerID = "";
 						callerName = "";
 					}
-					console.log('cmd callerDescription');
+					if(!gentle) console.log('cmd callerDescription');
 					// "Uncaught SyntaxError: Unexpected end of JSON input"
 					callerDescription = JSON.parse(payload);
 					console.log('cmd callerDescription (incoming call)');
 					peerCon.setRemoteDescription(callerDescription).then(() => {
-						console.log('callerDescription createAnswer');
+						if(!gentle) console.log('callerDescription createAnswer');
 						peerCon.createAnswer().then((desc) => {
 							localDescription = desc;
-							console.log('callerDescription got localDescription');
+							if(!gentle) console.log('callerDescription got localDescription');
 							localDescription.sdp =
 								maybePreferCodec(localDescription.sdp, 'audio', 'send', "opus");
 							localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
 								'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
 							peerCon.setLocalDescription(localDescription).then(() => {
-								console.log('callerDescription localDescription set -> signal');
+								if(!gentle) console.log('callerDescription localDescription set -> signal');
 								wsSend("calleeDescription|"+JSON.stringify(localDescription));
 							}, err => console.error(`Failed to set local descr: ${err.toString()}`));
 						}, err => {
 							// DOMException: Cannot create answer in stable
-							console.warn("Failed to createAnswer",err)
+							console.warn("failed to createAnswer",err)
 							showStatus("Failed to createAnswer",8000);
 						});
 					}, err => {
-						console.warn(`Failed to set RemoteDescription`,err,callerDescription)
+						console.warn(`failed to set RemoteDescription`,err,callerDescription)
 						showStatus("Failed to set RemoteDescription",8000);
 					});
 
@@ -955,14 +956,14 @@ function connectSignaling(message) {
 					if(idxColon>=0) {
 						callerID = payload.substring(0,idxColon);
 						callerName = payload.substring(idxColon+1);
-						console.log('cmd callerInfo (%s) (%s)',callerID,callerName);
+						if(!gentle) console.log('cmd callerInfo (%s) (%s)',callerID,callerName);
 					} else {
-						console.log('cmd callerInfo payload=(%s)',payload);
+						if(!gentle) console.log('cmd callerInfo payload=(%s)',payload);
 					}
 
 				} else if(cmd=="callerDescriptionUpd") {
 					if(peerCon==null) {
-						console.warn('callerDescription but peerCon==null');
+						console.warn('callerDescription but no peerCon');
 						continue;
 					}
 					if(!rtcConnect) {
@@ -971,19 +972,19 @@ function connectSignaling(message) {
 						//callerName = "";
 					}
 					callerDescription = JSON.parse(payload);
-					console.log('cmd callerDescriptionUpd');
+					if(!gentle) console.log('cmd callerDescriptionUpd');
 					peerCon.setRemoteDescription(callerDescription).then(() => {
 						if(callerDescription.type == "offer") {
-							console.log('callerDescriptionUpd received offer createAnswer');
+							if(!gentle) console.log('callerDescriptionUpd received offer createAnswer');
 							peerCon.createAnswer().then((desc) => {
 								localDescription = desc;
-								console.log('callerDescriptionUpd got localDescription');
+								if(!gentle) console.log('callerDescriptionUpd got localDescription');
 								localDescription.sdp =
 									maybePreferCodec(localDescription.sdp, 'audio', 'send', "opus");
 								localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
 									'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
 								peerCon.setLocalDescription(localDescription).then(() => {
-									console.log('callerDescriptionUpd localDescription set -> signal');
+									if(!gentle) console.log('callerDescriptionUpd localDescription set -> signal');
 									wsSend("calleeDescriptionUpd|"+JSON.stringify(localDescription));
 								}, err => console.error(`Failed to set local descr: ${err.toString()}`));
 							}, err => {
@@ -992,7 +993,7 @@ function connectSignaling(message) {
 								showStatus("Failed to createAnswer",8000);
 							});
 						} else {
-							console.log('callerDescriptionUpd received no offer',callerDescription.type);
+							if(!gentle) console.log('callerDescriptionUpd received no offer',callerDescription.type);
 						}
 					}, err => {
 						console.warn(`Failed to set RemoteDescription`,err,callerDescription)
@@ -1001,28 +1002,28 @@ function connectSignaling(message) {
 
 				} else if(cmd=="callerCandidate") {
 					if(peerCon==null) {
-						console.warn('callerCandidate but peerCon==null');
+						console.warn('callerCandidate but no peerCon');
 						continue;
 					}
 					var callerCandidate = JSON.parse(payload);
 					if(callerCandidate.candidate=="") {
-						console.log('skip empty callerCandidate');
+						if(!gentle) console.log('skip empty callerCandidate');
 						continue;
 					}
 					callerCandidate.usernameFragment = null;
 					var addIceCallerCandidate = function(callerCandidate) {
 						if(!peerCon) {
-							console.warn('# cmd callerCandidate abort no peerCon');
+							console.warn('cmd callerCandidate abort no peerCon');
 							return;
 						}
 						if(!peerCon.remoteDescription) {
-							console.warn("# cmd callerCandidate !peerCon.remoteDescription",payload);
+							console.warn("cmd callerCandidate !peerCon.remoteDescription",payload);
 							setTimeout(addIceCallerCandidate,100,callerCandidate);
 							return;
 						}
 						let tok = callerCandidate.candidate.split(' ');
 						if(tok.length<5) {
-							console.warn("# cmd callerCandidate format err",payload);
+							console.warn("cmd callerCandidate format err",payload);
 							return;
 						}
 						let address = tok[4];
@@ -1102,7 +1103,7 @@ function connectSignaling(message) {
 					} else if(mediaConnect) {
 						var sessionDuration = parseInt(payload,10); // maxTalkSecsIfNoP2p
 						if(sessionDuration>0 && !timerStartDate) {
-							console.log('sessionDuration',sessionDuration);
+							if(!gentle) console.log('sessionDuration',sessionDuration);
 							startTimer(sessionDuration);
 						}
 					}
@@ -1134,7 +1135,7 @@ function connectSignaling(message) {
 					showWaitingCallers();
 
 				} else if(cmd=="missedCalls") {
-					console.log('showCallsWhileInAbsence msg',payload.length);
+					if(!gentle) console.log('showCallsWhileInAbsence msg',payload.length);
 					callsWhileInAbsenceSlice = null;
 					if(payload.length>0) {
 						callsWhileInAbsenceSlice = JSON.parse(payload);
@@ -1143,7 +1144,7 @@ function connectSignaling(message) {
 
 				} else if(cmd=="ua") {
 					otherUA = payload;
-					console.log("otherUA",otherUA);
+					if(!gentle) console.log("otherUA",otherUA);
 
 				} else if(cmd=="ping") {
 				} else if(cmd=="calleeDescriptionUpd") {
@@ -1154,7 +1155,7 @@ function connectSignaling(message) {
 				} else if(cmd=="calleeCandidate") {
 				} else if(cmd=="calleeDescription") {
 				} else {
-					console.warn('ignore incom cmd',cmd);
+					if(!gentle) console.warn('ignore incom cmd',cmd);
 				}
 			} else {
 				console.warn('ws message len/tok.length',messages[i].length,tok.length);
@@ -1625,11 +1626,11 @@ function goOnline() {
 					answerButton.style.background = "#04c";
 					buttonBgHighlighted = false;
 					if(!buttonBlinking || wsConn==null) {
-						console.log("buttonBlinking stop");
+						if(!gentle) console.log("buttonBlinking stop");
 						answerButton.style.background = "#04c";
 						return;
 					}
-					console.log("buttonBlinking...");
+					if(!gentle) console.log("buttonBlinking...");
 					setTimeout(blinkButtonFunc, 500);
 				}
 			}
@@ -1671,12 +1672,12 @@ function goOnline() {
 				}
 
 				answerButton.onclick = function() {
-					console.log("answer button");
+					if(!gentle) console.log("answer button");
 					buttonBlinking = false;
 					pickup();
 				}
 				rejectButton.onclick = function() {
-					console.log("hangup button");
+					if(!gentle) console.log("hangup button");
 					buttonBlinking = false;
 					hangup();
 				}
@@ -1700,7 +1701,7 @@ function goOnline() {
 var localCandidateType = "";
 var remoteCandidateType = "";
 function getStatsCandidateTypes(results,eventString1,eventString2) {
-	console.log('getStatsCandidateTypes start');
+	if(!gentle) console.log('getStatsCandidateTypes start');
 	rtcLink = "unknown";
 	let localCandidateId = "";
 	let remoteCandidateId = "";
@@ -1726,8 +1727,7 @@ function getStatsCandidateTypes(results,eventString1,eventString2) {
 					if(res.id==selectedCandidatePairId) {
 						localCandidateId = res.localCandidateId;
 						remoteCandidateId = res.remoteCandidateId
-						if(!gentle)
-							console.log("getStatsCandidateTypes 2nd",localCandidateId,remoteCandidateId);
+						if(!gentle) console.log("getStatsCandidateTypes 2nd",localCandidateId,remoteCandidateId);
 					}
 				});
 			}
@@ -1771,7 +1771,7 @@ function getStatsCandidateTypes(results,eventString1,eventString2) {
 	}
 	rtcLink = localPeerConType+"/"+remotePeerConType;
 
-	console.log('getStatsCandidateTypes',rtcLink,localCandidateType,remoteCandidateType);
+	if(!gentle) console.log('getStatsCandidateTypes',rtcLink,localCandidateType,remoteCandidateType);
 	let msg = eventString1+" "+rtcLink;
 	if(calleeID.startsWith("random") || calleeID.startsWith("!")) {
 		let showMsg = msg;
@@ -2058,7 +2058,7 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 				}
 				if(dataChannel) {
 					if(dataChannel.readyState=="open") {
-						console.log('endWebRtcSession dataChannel.send(disconnect)');
+						if(!gentle) console.log('endWebRtcSession dataChannel.send(disconnect)');
 						dataChannel.send("disconnect");
 					}
 				} else {
@@ -2066,12 +2066,12 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 				}
 			}
 			if(dataChannel) {
-				console.log('endWebRtcSession dataChannel.close');
+				if(!gentle) console.log('endWebRtcSession dataChannel.close');
 				dataChannel.close();
 				dataChannel = null;
 			}
 			if(peerCon) {
-				console.log('endWebRtcSession peerConCloseFunc remove sender tracks');
+				if(!gentle) console.log('endWebRtcSession peerConCloseFunc remove sender tracks');
 				const senders = peerCon.getSenders();
 				if(senders) {
 					try {
@@ -2086,13 +2086,10 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 		};
 
 		if(rtcConnect && peerCon) {
-			console.log('endWebRtcSession getStatsPostCall');
+			if(!gentle) console.log('endWebRtcSession getStatsPostCall');
 			// this is causing an async delay
 			peerCon.getStats(null).then((results) => { 
 				getStatsPostCall(results);
-				//if(statsPostCallString!="" && statsPostCallDurationMS>0) {
-					// enable info.svg button onclick -> showStatsPostCall()
-				//}
 				peerConCloseFunc();
 			}, err => {
 				console.log(err); 
@@ -2102,7 +2099,7 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 			peerConCloseFunc();
 		}
 	} else {
-		showStatus("endWebRtcSession already peerDisconnected");
+		//showStatus("endWebRtcSession already peerDisconnected");
 	}
 
 	if(wsConn)
@@ -2134,9 +2131,9 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 		// however, bc we keep our wsConn as is, no new login will be executed
 		// so no new ws-hib will be created on the server side
 		goOnlinePending = true;
-		console.log('endWebRtcSession delayed auto goOnline()...');
+		if(!gentle) console.log('endWebRtcSession delayed auto goOnline()...');
 		setTimeout(function() {
-			console.log('endWebRtcSession auto goOnline()');
+			if(!gentle) console.log('endWebRtcSession auto goOnline()');
 			goOnlinePending = false;
 			goOnlineButton.disabled = false;
 			// get peerCon ready for the next incoming call

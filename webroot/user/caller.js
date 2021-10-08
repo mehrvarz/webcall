@@ -106,7 +106,8 @@ console.log("caller client extMessage now listening");
 
 fileSelectElement.addEventListener('change', (event) => {
 	if(!gentle) console.log("fileSelect event");
-	menuDialogClose();
+//	menuDialogClose();
+	historyBack();
 	const files = fileSelectElement.files;
 	const file = files.item(0);
 	if(file==null) {
