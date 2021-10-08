@@ -106,7 +106,6 @@ console.log("caller client extMessage now listening");
 
 fileSelectElement.addEventListener('change', (event) => {
 	if(!gentle) console.log("fileSelect event");
-//	menuDialogClose();
 	historyBack();
 	const files = fileSelectElement.files;
 	const file = files.item(0);
@@ -1754,9 +1753,13 @@ function createDataChannel() {
 	dataChannel.onerror = event => {
 		if(rtcConnect) {
 			console.log("dataChannel.onerror",event);
-			showStatus("dataChannel error "+event,-1);
+			showStatus("dataChannel error "+event.error,-1);	// .message ?
 		}
 		progressSendElement.style.display = "none";
+		if(dataChannel!=null) {
+			// tell other side to hide progress bar
+			dataChannel.send("file|end");
+		}
 		if(mediaConnect) {
 			fileselectLabel.style.display = "inline-block";
 		}
@@ -1790,8 +1793,15 @@ function createDataChannel() {
 						// localStream.getTracks().forEach(track => { track.stop(); });
 					}
 				} else if(event.data.startsWith("file|")) {
-					// parse: "file|"+file.name+","+file.size+","+file.type+","+file.lastModified);
 					var fileDescr = event.data.substring(5);
+					if(fileDescr=="end") {
+						if(dataChannel!=null) {
+							// close progress bar
+							progressRcvElement.style.display = "none";
+						}
+						return;
+					}
+					// parse: "file|"+file.name+","+file.size+","+file.type+","+file.lastModified);
 					let tok = fileDescr.split(",");
 					fileName = tok[0];
 					fileSize = 0;
