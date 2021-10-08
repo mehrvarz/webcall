@@ -121,7 +121,7 @@ fileSelectElement.addEventListener('change', (event) => {
 		console.log("fileSelect file.size <= 0");
 		return;
 	}
-	if(dataChannel==null) {
+	if(dataChannel==null || dataChannel.readyState!="open") {
 		console.log("fileSelect no dataChannel");
 		return;
 	}
@@ -148,7 +148,7 @@ fileSelectElement.addEventListener('change', (event) => {
 			offset = 0;
 			progressSendElement.style.display = "none";
 			showStatus("sent '"+file.name.substring(0,25)+"' "+file.size+" bytes",-1);
-			if(mediaConnect) {
+			if(mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
 				fileselectLabel.style.display = "inline-block";
 			}
 		}
@@ -1756,7 +1756,7 @@ function createDataChannel() {
 			showStatus("dataChannel error "+event.error,-1);	// .message ?
 		}
 		progressSendElement.style.display = "none";
-		if(dataChannel!=null) {
+		if(dataChannel!=null && dataChannel.readyState=="open") {
 			// tell other side to hide progress bar
 			dataChannel.send("file|end");
 		}
@@ -1795,7 +1795,7 @@ function createDataChannel() {
 				} else if(event.data.startsWith("file|")) {
 					var fileDescr = event.data.substring(5);
 					if(fileDescr=="end") {
-						if(dataChannel!=null) {
+						if(dataChannel!=null && dataChannel.readyState=="open") {
 							// close progress bar
 							progressRcvElement.style.display = "none";
 						}

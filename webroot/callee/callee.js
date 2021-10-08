@@ -102,7 +102,7 @@ window.onload = function() {
 	if(typeof id!=="undefined" && id!="") {
 		calleeID = id;
 	}
-	console.log("calleeID (%s)",calleeID);
+	if(!gentle) console.log("calleeID (%s)",calleeID);
 
 	//console.log("document.cookie (%s)",document.cookie);
 	if(calleeID=="") {
@@ -126,7 +126,7 @@ window.onload = function() {
 
 	// if on start there is a fragment/hash ('#') in the URL, remove it
 	if(location.hash.length > 0) {
-		console.log("location.hash.length=%d",location.hash.length);
+		if(!gentle) console.log("location.hash.length=%d",location.hash.length);
 		window.location.replace("/callee/"+calleeID);
 		return;
 	}
@@ -140,10 +140,10 @@ window.onload = function() {
 		}
 		if(hashcounter>0 && newhashcounter<hashcounter) {
 			if(iframeWindowOpenFlag) {
-				console.log("onhashchange iframeWindowClose");
+				if(!gentle) console.log("onhashchange iframeWindowClose");
 				iframeWindowClose();
 			} else if(menuDialogOpenFlag) {
-				console.log("onhashchange menuDialogClose");
+				if(!gentle) console.log("onhashchange menuDialogClose");
 				menuDialogClose();
 			}
 		}
@@ -161,7 +161,7 @@ window.onload = function() {
 			isEscape = (evt.keyCode === 27);
 		}
 		if(isEscape) {
-			console.log('callee esc key');
+			if(!gentle) console.log('callee esc key');
 			if(iframeWindowOpenFlag || menuDialogOpenFlag) {
 				historyBack();
 			}	
@@ -174,7 +174,7 @@ window.onload = function() {
 
 	isHiddenCheckbox.addEventListener('change', function() {
 		if(this.checked) {
-			console.log("isHiddenCheckbox checked");
+			if(!gentle) console.log("isHiddenCheckbox checked");
 			autoanswerCheckbox.checked = false;
 		}
 		// report new hidden state to server
@@ -182,7 +182,7 @@ window.onload = function() {
 	});
 	autoanswerCheckbox.addEventListener('change', function() {
 		if(this.checked) {
-			console.log("autoanswerCheckbox checked");
+			if(!gentle) console.log("autoanswerCheckbox checked");
 			isHiddenCheckbox.checked = false;
 			// report new hidden state to server
 			wsSend("calleeHidden|false");
@@ -229,9 +229,9 @@ window.onload = function() {
 			}
 
 			calleeID = calleeID.toLowerCase();
-			console.log('onload calleeID lowercase (%s)',calleeID);
+			if(!gentle) console.log('onload calleeID lowercase (%s)',calleeID);
 			if(mode==1) {
-				console.log('onload pw-entry not required with cookie');
+				if(!gentle) console.log('onload pw-entry not required with cookie');
 				// we have a cockie, so no manual pw-entry is needed
 				// but let's turn automatic go online off, the user needs to interact before we can answer calls
 				onGotStreamGoOnline = false;
@@ -240,7 +240,7 @@ window.onload = function() {
 				return;
 			}
 			if(wsSecret!="") {
-				console.log('onload pw-entry not required with wsSecret',wsSecret.length);
+				if(!gentle) console.log('onload pw-entry not required with wsSecret',wsSecret.length);
 				// we have a pw, so manual pw-entry is not needed
 				// but let's turn automatic go online off, the user needs to interact before we can answer calls
 				onGotStreamGoOnline = false;
@@ -249,7 +249,7 @@ window.onload = function() {
 				return;
 			}
 
-			console.log('onload pw-entry is needed');
+			if(!gentle) console.log('onload pw-entry is needed');
 			onGotStreamGoOnline = true;
 			goOnlineButton.disabled = true;
 			goOfflineButton.disabled = true;
@@ -332,7 +332,7 @@ fileSelectElement.addEventListener('change', (event) => {
 		console.log("fileSelect file.size <= 0");
 		return;
 	}
-	if(dataChannel==null) {
+	if(dataChannel==null || dataChannel.readyState!="open") {
 		console.log("fileSelect no dataChannel");
 		return;
 	}
@@ -359,7 +359,7 @@ fileSelectElement.addEventListener('change', (event) => {
 			offset = 0;
 			progressSendElement.style.display = "none";
 			showStatus("sent '"+file.name.substring(0,25)+"' "+file.size+" bytes",-1);
-			if(mediaConnect) {
+			if(mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
 				fileselectLabel.style.display = "inline-block";
 			}
 		}
@@ -430,7 +430,7 @@ function start() {
 }
 
 function login(retryFlag) {
-	console.log("login to signaling server...", retryFlag, calleeID, wsSecret.length);
+	if(!gentle) console.log("login to signaling server...", retryFlag, calleeID, wsSecret.length);
 	calleeType = false;
 	menuElement.style.display = "none";
 	let api = apiPath+"/login?id="+calleeID;
@@ -441,8 +441,7 @@ function login(retryFlag) {
 		if(parts.length>=1 && parts[0].indexOf("wsid=")>=0) {
 			wsAddr = parts[0];
 			// we're now a logged-in callee-user
-			console.log('loginStatus wsAddr',wsAddr);
-			console.log('login success');
+			if(!gentle) console.log('login success wsAddr',wsAddr);
 
 			// hide the form
 			form.style.display = "none";
@@ -479,7 +478,7 @@ function login(retryFlag) {
 						let serverSettings = JSON.parse(xhr.responseText);
 						if(typeof serverSettings.nickname!=="undefined") {
 							calleeName = serverSettings.nickname;
-							console.log('login calleeName',calleeName);
+							if(!gentle) console.log('login calleeName',calleeName);
 						}
 					}
 				}, function(errString,errcode) {
@@ -491,14 +490,14 @@ function login(retryFlag) {
 				// we retrieve the pushRegistration here under /callee/(calleeID),
 				// so that the pushRegistration.scope will also be /callee/(calleeID)
 				// so that settings.js will later make use of the correct pushRegistration
-				console.log("serviceWorker.register...");
+				if(!gentle) console.log("serviceWorker.register...");
 				let ret = navigator.serviceWorker.register('service-worker.js');
-				console.log("/callee/serviceWorker.ready...",ret);
+				if(!gentle) console.log("/callee/serviceWorker.ready...",ret);
 				// get access to the registration (and registration.pushManager) object
 				navigator.serviceWorker.ready.then(function(registration) {
-					console.log("serviceWorker.ready promise",ret);
+					if(!gentle) console.log("serviceWorker.ready promise",ret);
 					pushRegistration = registration;
-					console.log("serviceWorker.ready got pushRegistration",pushRegistration);
+					if(!gentle) console.log("serviceWorker.ready got pushRegistration",pushRegistration);
 				}).catch(err => {
 					console.log("serviceWorker.ready err",err);
 				});
@@ -574,7 +573,7 @@ function login(retryFlag) {
 		if(retryFlag) {
 			setTimeout(function() {
 				let delay = autoReconnectDelay + Math.floor(Math.random() * 10) - 5;
-				console.log('reconnecting to signaling server in %ds...', delay);
+				if(!gentle) console.log('reconnecting to signaling server in %ds...', delay);
 				showStatus("Reconnecting to signaling server...",-1);
 				missedCallsElement.style.display = "none";
 				missedCallsTitleElement.style.display = "none";
@@ -592,7 +591,7 @@ function login(retryFlag) {
 
 function offlineAction() {
 	// make buttons reflect offline state
-	console.log('offlineAction');
+	if(!gentle) console.log('offlineAction');
 	goOnlineButton.disabled = false;
 	goOfflineButton.disabled = true;
 }
@@ -662,7 +661,7 @@ function gotDevices(deviceInfos) {
 			if(deviceInfoLabel=="Default") {
 				deviceInfoLabel="Default Audio Input";
 			}
-			console.log('gotDevices (%s) (%s)', deviceInfoLabel, audioSourceSelect.length);
+			if(!gentle) console.log('gotDevices (%s) (%s)', deviceInfoLabel, audioSourceSelect.length);
 			option.text = deviceInfoLabel || `Microphone ${audioSourceSelect.length + 1}`;
 			audioSourceSelect.appendChild(option);
 		/*
@@ -1908,8 +1907,9 @@ function createDataChannel() {
 				showStatus("dataChannel error "+event.error,-1);	// .message ?
 			}
 			progressSendElement.style.display = "none";
-			if(dataChannel!=null) {
+			if(dataChannel!=null && dataChannel.readyState=="open") {
 				// tell other side to hide progress bar
+				// tmtmtm das klappt nicht, weil dataChannel jetzt schon tot
 				dataChannel.send("file|end");
 			}
 			if(mediaConnect) {
@@ -1948,7 +1948,7 @@ function createDataChannel() {
 				} else if(event.data.startsWith("file|")) {
 					var fileDescr = event.data.substring(5);
 					if(fileDescr=="end") {
-						if(dataChannel!=null) {
+						if(dataChannel!=null && dataChannel.readyState=="open") {
 							// close progress bar
 							progressRcvElement.style.display = "none";
 						}
@@ -2289,7 +2289,7 @@ function getCookieSupport() {
 }
 
 function menuDialogClose() {
-	console.log('menuDialogClose');
+	if(!gentle) console.log('menuDialogClose');
 	menuDialogElement.style.display = "none";
 	mainElement.style.filter = "";
 	fullScreenOverlayElement.style.display = "none";
@@ -2322,7 +2322,7 @@ function iframeWindowOpen(url,addStyleString) {
 
 	mainElement.style.filter = "blur(0.8px) brightness(60%)";
 
-	console.log('iframeWindowOpen', url);
+	if(!gentle) console.log('iframeWindowOpen', url);
 	iframeWindowOpenFlag = true;
 	let styleString = "width:100%; max-width:450px; position:absolute; left:3.5%; top:1%; padding:10px; z-index:200;";
 	if(url.startsWith("string:")) {
@@ -2339,7 +2339,7 @@ function iframeWindowOpen(url,addStyleString) {
 }
 
 function iframeWindowClose() {
-	console.log('iframeWindowClose');
+	if(!gentle) console.log('iframeWindowClose');
 	mainElement.style.filter="";
 	iframeWindowElement.innerHTML = "";
 	iframeWindowElement.style.display = "none";
@@ -2351,19 +2351,19 @@ function iframeWindowClose() {
 var counter=0;
 function openContacts() {
 	let url = "/callee/contacts?callerId="+calleeID+"&name="+calleeName+"&i="+counter++;
-	console.log('openContacts',url);
+	if(!gentle) console.log('openContacts',url);
 	iframeWindowOpen(url);
 }
 
 function openSettings() {
 	let url = "/callee/settings?id="+calleeID+"&i="+counter++;
-	console.log('openSettings',url);
+	if(!gentle) console.log('openSettings',url);
 	iframeWindowOpen(url);
 }
 
 function openPostCallStats() {
 	let str = "string:<h2>Call Statistics</h2>"+showStatsPostCall();
-	console.log('openPostCallStats');
+	if(!gentle) console.log('openPostCallStats');
 	iframeWindowOpen(str,"background:#33ad; color:#eee; min-height:480px; padding:20px; max-width:400px; left:5.0%; top:3%; font-size:1.1em; line-height:1.4em;");
 }
 
