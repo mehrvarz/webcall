@@ -127,6 +127,7 @@ fileSelectElement.addEventListener('change', (event) => {
 	}
 	console.log("fileSelect: "+file.name, file.size, file.type, file.lastModified);
 	dataChannel.send("file|"+file.name+","+file.size+","+file.type+","+file.lastModified);
+	fileselectLabel.style.display = "none";
 
 	const chunkSize = 16*1024;
 	let fileReader = new FileReader();
@@ -147,6 +148,9 @@ fileSelectElement.addEventListener('change', (event) => {
 			offset = 0;
 			progressSendElement.style.display = "none";
 			showStatus("sent '"+file.name.substring(0,25)+"' "+file.size+" bytes",-1);
+			if(mediaConnect) {
+				fileselectLabel.style.display = "inline-block";
+			}
 		}
 	});
 	const readSlice = o => {
@@ -1750,7 +1754,10 @@ function createDataChannel() {
 		if(rtcConnect) {
 			console.log("dataChannel.onerror",event);
 			showStatus("dataChannel error "+event,-1);
-			progressSendElement.style.display = "none";
+		}
+		progressSendElement.style.display = "none";
+		if(mediaConnect) {
+			fileselectLabel.style.display = "inline-block";
 		}
 	}
 	dataChannel.onmessage = event => {
