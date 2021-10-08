@@ -1903,6 +1903,7 @@ function createDataChannel() {
 			if(rtcConnect) {
 				console.warn("dataChannel.onerror",event);
 				showStatus("dataChannel error "+event,-1);
+				progressSendElement.style.display = "none";
 			}
 		}
 		dataChannel.onmessage = event => {

@@ -1749,6 +1749,8 @@ function createDataChannel() {
 	dataChannel.onerror = event => {
 		if(rtcConnect) {
 			console.log("dataChannel.onerror",event);
+			showStatus("dataChannel error "+event,-1);
+			progressSendElement.style.display = "none";
 		}
 	}
 	dataChannel.onmessage = event => {
