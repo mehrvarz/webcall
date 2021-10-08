@@ -5,14 +5,15 @@ const dialButton = document.querySelector('button#callButton');
 const hangupButton = document.querySelector('button#hangupButton');
 const calleeOnlineElement = document.getElementById("calleeOnline");
 const remoteAudio = document.querySelector('audio#remoteAudio');
-const downloadList = document.getElementById('download');
 const mainElement = document.getElementById('container');
 const menuElement = document.getElementById('menu');
 const menuDialogElement = document.getElementById('menuDialog');
 const fullScreenOverlayElement = document.getElementById('fullScreenOverlay');
-const progressElement = document.getElementById('progress'); // switch on and off
-const progressLabelElement = document.getElementById('progressLabel'); 
-const fileProgress = document.querySelector('progress#fileProgress'); // actual progress bar
+const progressSendElement = document.getElementById('progressSend'); // switch on and off
+const progressSendBar = document.getElementById('fileProgressSend'); // actual progress bar
+const downloadList = document.getElementById('download');
+const progressRcvElement = document.getElementById('progressRcv'); // switch on and off
+const progressRcvBar = document.getElementById('fileProgressRcv'); // actual progress bar
 const fileselectLabel = document.getElementById("fileselectlabel");
 const fileSelectElement = document.getElementById("fileselect");
 const bitrate = 280000;
@@ -125,28 +126,26 @@ fileSelectElement.addEventListener('change', (event) => {
 		return;
 	}
 	console.log("fileSelect: "+file.name, file.size, file.type, file.lastModified);
-//	showStatus("file upload "+file.name.substring(0,25)+" "+file.size+" bytes",-1);
 	dataChannel.send("file|"+file.name+","+file.size+","+file.type+","+file.lastModified);
 
 	const chunkSize = 16*1024;
 	let fileReader = new FileReader();
 	let offset = 0;
-	fileProgress.max = file.size;
-	progressLabelElement.innerHTML = "Send progress:"
-	progressElement.style.display = "block";
+	progressSendBar.max = file.size;
+	progressSendElement.style.display = "block";
 	fileReader.addEventListener('error', error => console.error('Error reading file:', error));
 	fileReader.addEventListener('abort', event => console.log('File reading aborted:', event));
 	fileReader.addEventListener('load', e => {
 		dataChannel.send(e.target.result);
 		offset += e.target.result.byteLength;
 		if(!gentle) console.log('file send', offset, file.size);
-		fileProgress.value = offset;
+		progressSendBar.value = offset;
 		if (offset < file.size) {
 			readSlice(offset);
 		} else {
 			console.log('file send complete', file.size);
 			offset = 0;
-			progressElement.style.display = "none";
+			progressSendElement.style.display = "none";
 			showStatus("sent '"+file.name.substring(0,25)+"' "+file.size+" bytes",-1);
 		}
 	});
@@ -1108,7 +1107,7 @@ function getStatsPostCall(results) {
 function showStatsPostCall() {
 	menuDialogClose();
 	if(statsPostCallString=="") {
-		showStatus("No stats",-1);
+		showStatus("No stats available",-1);
 	} else {
 		let myStatsPostCallString = statsPostCallString.replaceAll("\n","<br>");
 		showStatus(myStatsPostCallString,-1);
@@ -1493,8 +1492,9 @@ function dial() {
 	dialing = true;
 	rtcConnect = false;
 	mediaConnect = false;
-//	menuElement.style.display = "none";
 	fileselectLabel.style.display = "none";
+	progressSendElement.style.display = "none";
+	progressRcvElement.style.display = "none";
 
 	if(singlebutton) {
 		dialButton.style.boxShadow = "";
@@ -1787,9 +1787,8 @@ function createDataChannel() {
 					fileSize = 0;
 					if(tok.length>=2) {
 						fileSize = parseInt(tok[1]);
-						fileProgress.max = fileSize;
-						progressLabelElement.innerHTML = "Receive progress:"
-						progressElement.style.display = "block";
+						progressRcvBar.max = fileSize;
+						progressRcvElement.style.display = "block";
 					}
 					if(!gentle) console.log("file receive",fileName,fileSize);
 					fileReceivedSize = 0;
@@ -1804,13 +1803,13 @@ function createDataChannel() {
 			}
 
 			fileReceivedSize += chunkSize;
-			fileProgress.value = fileReceivedSize;
+			progressRcvBar.value = fileReceivedSize;
 			if(!gentle) console.log("binary chunk", chunkSize, fileReceivedSize, fileSize);
 			if(fileReceivedSize === fileSize) {
 				if(!gentle) console.log("file receive complete");
 				const receivedBlob = new Blob(fileReceiveBuffer);
 				fileReceiveBuffer = [];
-				progressElement.style.display = "none";
+				progressRcvElement.style.display = "none";
 
 				let randId = ""+Math.random()*100000000;
 				var aDivElement = document.createElement("div");
@@ -1875,8 +1874,9 @@ function hangup(mustDisconnectCallee,message) {
 	remoteStream = null;
 	rtcConnect = false;
 	mediaConnect = false;
-//	menuElement.style.display = "none";
 	fileselectLabel.style.display = "none";
+	progressSendElement.style.display = "none";
+	progressRcvElement.style.display = "none";
 	if(!singlebutton) {
 		msgbox.value = "";
 	}

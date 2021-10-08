@@ -24,12 +24,11 @@ const fullScreenOverlayElement = document.getElementById('fullScreenOverlay');
 const iframeWindowElement = document.getElementById('iframeWindow');
 const menuElement = document.getElementById('menu');
 const menuDialogElement = document.getElementById('menuDialog');
-const fileInput = document.querySelector('input#fileInput');
-//const downloadAnchor = document.querySelector('a#download');
+const progressSendElement = document.getElementById('progressSend'); // switch on and off
+const progressSendBar = document.getElementById('fileProgressSend'); // actual progress bar
 const downloadList = document.getElementById('download');
-const progressElement = document.getElementById('progress'); // switch on and off
-const progressLabelElement = document.getElementById('progressLabel'); 
-const fileProgress = document.querySelector('progress#fileProgress'); // actual progress bar
+const progressRcvElement = document.getElementById('progressRcv'); // switch on and off
+const progressRcvBar = document.getElementById('fileProgressRcv'); // actual progress bar
 const fileselectLabel = document.getElementById("fileselectlabel");
 const fileSelectElement = document.getElementById("fileselect");
 //const audioSinkSelect = document.querySelector("select#audioSink");
@@ -226,12 +225,7 @@ window.onload = function() {
 			var calleeIdTitle = calleeID.charAt(0).toUpperCase() + calleeID.slice(1);
 			document.title = "WebCall Callee "+calleeIdTitle;
 			if(titleElement) {
-//				if(calleeID.match(/^[0-9]*$/) != null) {
-//					// calleeID is pure numeric - don't show
-//					titleElement.innerHTML = "WebCall Callee";
-//				} else {
-					titleElement.innerHTML = "WebCall Callee "+calleeIdTitle;
-//				}
+				titleElement.innerHTML = "WebCall Callee "+calleeIdTitle;
 			}
 
 			calleeID = calleeID.toLowerCase();
@@ -343,28 +337,26 @@ fileSelectElement.addEventListener('change', (event) => {
 		return;
 	}
 	console.log("fileSelect: "+file.name, file.size, file.type, file.lastModified);
-//	showStatus("file upload "+file.name.substring(0,25)+" "+file.size+" bytes",-1);
 	dataChannel.send("file|"+file.name+","+file.size+","+file.type+","+file.lastModified);
 
 	const chunkSize = 16*1024;
 	let fileReader = new FileReader();
 	let offset = 0;
-	fileProgress.max = file.size;
-	progressLabelElement.innerHTML = "Send progress:"
-	progressElement.style.display = "block";
+	progressSendBar.max = file.size;
+	progressSendElement.style.display = "block";
 	fileReader.addEventListener('error', error => console.error('Error reading file:', error));
 	fileReader.addEventListener('abort', event => console.log('File reading aborted:', event));
 	fileReader.addEventListener('load', e => {
 		dataChannel.send(e.target.result);
 		offset += e.target.result.byteLength;
 		if(!gentle) console.log('file send', offset, file.size);
-		fileProgress.value = offset;
+		progressSendBar.value = offset;
 		if (offset < file.size) {
 			readSlice(offset);
 		} else {
 			console.log('file send complete', file.size);
 			offset = 0;
-			progressElement.style.display = "none";
+			progressSendElement.style.display = "none";
 			showStatus("sent '"+file.name.substring(0,25)+"' "+file.size+" bytes",-1);
 		}
 	});
@@ -1950,9 +1942,8 @@ function createDataChannel() {
 					fileSize = 0;
 					if(tok.length>=2) {
 						fileSize = parseInt(tok[1]);
-						fileProgress.max = fileSize;
-						progressLabelElement.innerHTML = "Receive progress:"
-						progressElement.style.display = "block";
+						progressRcvBar.max = fileSize;
+						progressRcvElement.style.display = "block";
 					}
 					fileReceivedSize = 0;
 					fileReceiveBuffer = [];
@@ -1965,13 +1956,13 @@ function createDataChannel() {
 				}
 
 				fileReceivedSize += chunkSize;
-				fileProgress.value = fileReceivedSize;
+				progressRcvBar.value = fileReceivedSize;
 				if(!gentle) console.log("binary chunk", chunkSize, fileReceivedSize, fileSize);
 				if(fileReceivedSize === fileSize) {
 					if(!gentle) console.log("file receive complete");
 					const receivedBlob = new Blob(fileReceiveBuffer);
 					fileReceiveBuffer = [];
-					progressElement.style.display = "none";
+					progressRcvElement.style.display = "none";
 
 					let randId = ""+Math.random()*100000000;
 					var aDivElement = document.createElement("div");
@@ -2126,6 +2117,8 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 	goOnlineButton.style.display = "inline-block";
 	goOfflineButton.style.display = "inline-block";
 	fileselectLabel.style.display = "none";
+	progressSendElement.style.display = "none";
+	progressRcvElement.style.display = "none";
 
 	// goOnlinePending flag prevents secondary calls to goOnline
 	if(goOnlineAfter && !goOnlinePending) {

@@ -179,11 +179,11 @@ input[type=submit]:focus {
 
 <div id="menuDialog" style="position:relative; max-width:520px; margin-top:2vh; display:none;">
 	<div style="position:absolute; right:0px; z-index:110; background:#45dd; color:#fff; padding:10px 20px; line-height:2.6em; border-radius:3px; cursor:pointer;">
+		<div id="postCallStats" onclick="showStatsPostCall()">Call Stats</div>
 		<label id="fileselectlabel" style="cursor:pointer; display:none;">
 			Send File
 			<input id="fileselect" type="file" style="display:none"></input>
 		</label>
-		<div id="postCallStats" onclick="showStatsPostCall()">Call Stats</div>
 	</div>
 </div>
 
@@ -206,11 +206,16 @@ input[type=submit]:focus {
 
 <div id="status" class="status"></div>
 
-<div id="download" style="margin-bottom:10px;"></div>
-<div id="progress" class="progress" style="width:100%;max-width:360px;display:none;">
-	<div id="progressLabel" class="progressLabel">Receive progress: </div>
-	<progress id="fileProgress" max="0" value="0" style="width:100%"></progress>
+<div id="progressSend" style="width:100%;max-width:360px;display:none;">
+	<div id="progressSendLabel">Send progress:</div>
+	<progress id="fileProgressSend" max="0" value="0" style="width:100%"></progress>
 </div>
+<div id="download" style="margin-bottom:10px;"></div>
+<div id="progressRcv" style="width:100%;max-width:360px;display:none;">
+	<div id="progressRcvLabel">Receive progress:</div>
+	<progress id="fileProgressRcv" max="0" value="0" style="width:100%"></progress>
+</div>
+
 <div id="timer" class="timer">0:00</div>
 
 <div style="opacity:0.7;margin-top:30px;">WebCall by <a href="https://timur.mobi/webcall">timur.mobi</a></div>

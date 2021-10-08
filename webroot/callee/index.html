@@ -267,10 +267,14 @@ input[type=submit]:focus {
 		<input type="file" id="fileInput" name="files"/>
 	</form>
 
+	<div id="progressSend" style="width:100%;max-width:360px;display:none;">
+		<div id="progressSendLabel">Send progress:</div>
+		<progress id="fileProgressSend" max="0" value="0" style="width:100%"></progress>
+	</div>
 	<div id="download" style="margin-bottom:10px;"></div>
-	<div id="progress" class="progress" style="width:100%;max-width:360px;display:none;">
-		<div id="progressLabel" class="progressLabel">Receive progress:</div>
-		<progress id="fileProgress" max="0" value="0" style="width:100%"></progress>
+	<div id="progressRcv" style="width:100%;max-width:360px;display:none;">
+		<div id="progressRcvLabel">Receive progress:</div>
+		<progress id="fileProgressRcv" max="0" value="0" style="width:100%"></progress>
 	</div>
 	<div id="waitingCallersTitle" class="callListTitle" style="color:#f46; display:none;">Waiting calls:</div>
 	<div id="waitingCallers" class="callList"></div>
