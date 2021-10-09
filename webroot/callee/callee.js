@@ -366,11 +366,15 @@ fileSelectElement.addEventListener('change', (event) => {
 	});
 	const readSlice = o => {
 		//if(!gentle) console.log('readSlice ', o);
-		if(dataChannel.bufferedAmount > 5000000) {
+		if(dataChannel==null || dataChannel.readyState!="open") {
+			console.log('file send abort');
+			return;
+		}
+		if(dataChannel.bufferedAmount > 500000) {
+			// file send delay
 			setTimeout(function() {
-				console.log('file send postpone readSlice', file.size);
 				readSlice(o);
-			},500);
+			},200);
 			return;
 		}
 		const slice = file.slice(offset, o + chunkSize);
@@ -379,6 +383,7 @@ fileSelectElement.addEventListener('change', (event) => {
 	readSlice(0);
 });
 
+// TODO not yet working
 function stopProgressRcv() {
 	if(!gentle) console.log("stopProgressRcv");
 }
