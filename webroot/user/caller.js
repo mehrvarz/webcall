@@ -5,6 +5,7 @@ const dialButton = document.querySelector('button#callButton');
 const hangupButton = document.querySelector('button#hangupButton');
 const calleeOnlineElement = document.getElementById("calleeOnline");
 const remoteAudio = document.querySelector('audio#remoteAudio');
+const iframeWindowElement = document.getElementById('iframeWindow');
 const mainElement = document.getElementById('container');
 const menuElement = document.getElementById('menu');
 const menuDialogElement = document.getElementById('menuDialog');
@@ -243,7 +244,10 @@ window.onload = function() {
 			newhashcounter = 0;
 		}
 		if(hashcounter>0 && newhashcounter<hashcounter) {
-			if(menuDialogOpenFlag) {
+			if(iframeWindowOpenFlag) {
+				if(!gentle) console.log("onhashchange iframeWindowClose");
+				iframeWindowClose();
+			} else if(menuDialogOpenFlag) {
 				if(!gentle) console.log("onhashchange menuDialogClose");
 				menuDialogClose();
 			}
@@ -263,7 +267,7 @@ window.onload = function() {
 		}
 		if(isEscape) {
 			console.log('callee esc key');
-			if(menuDialogOpenFlag) {
+			if(iframeWindowOpenFlag || menuDialogOpenFlag) {
 				historyBack();
 			}	
 		} else if(evt.key=="!") {
@@ -1124,17 +1128,19 @@ function getStatsPostCall(results) {
 		"retransmittedPacketsSent: "+retransmittedPacketsSent+"\n"+
 		"roundTripTime: "+roundTripTime+"\n"+
 		"connection: "+rtcLink+"\n";
-	console.log("statsPostCall",statsPostCallString);
+	if(!gentle) console.log("statsPostCall",statsPostCallString);
 }
 
 function showStatsPostCall() {
-	menuDialogClose();
-	if(statsPostCallString=="") {
-		showStatus("No stats available",-1);
-	} else {
+	historyBack();
+	setTimeout(function() {
 		let myStatsPostCallString = statsPostCallString.replaceAll("\n","<br>");
-		showStatus(myStatsPostCallString,-1);
-	}
+		if(statsPostCallString=="") {
+			myStatsPostCallString = "No stats available";
+		}
+		let str = "string:<h2>Call Statistics</h2>"+myStatsPostCallString;
+		iframeWindowOpen(str,"background:#33ad; color:#eee; min-height:480px; padding:20px; max-width:400px; left:5.0%; top:3%; font-size:1.1em; line-height:1.4em;");
+	},100);
 }
 
 function connectSignaling(message,openedFunc) {
@@ -2056,21 +2062,21 @@ function hangup(mustDisconnectCallee,message) {
 		wsConn.close();
 		wsConn=null;
 	}
-	console.log('hangup end',calleeID);
+	if(!gentle) console.log('hangup end',calleeID);
 }
 
 function hangupWithBusySound(mustDisconnectCallee,message) {
 	dialing = false;
 	stopAllAudioEffects();
 	if(peerCon!=null) {
-		console.log(`hangupWithBusySound `+message);
+		if(!gentle) console.log(`hangupWithBusySound `+message);
 		busySignalSound.play().catch(function(error) { });
 		setTimeout(function() {
 			if(!gentle) console.log(`hangupWithBusySound stopAllAudioEffects`);
 			stopAllAudioEffects();
 		},2500);
 	} else {
-		console.log(`hangupWithBusySound no peerCon `+message);
+		if(!gentle) console.log(`hangupWithBusySound no peerCon `+message);
 	}
 	hangup(mustDisconnectCallee,message);
 }
@@ -2082,6 +2088,53 @@ function menuDialogClose() {
 	fullScreenOverlayElement.style.display = "none";
 	fullScreenOverlayElement.onclick = null;
 	menuDialogOpenFlag = false;
+}
+
+var iframeWindowOpenFlag = false;
+function iframeWindowOpen(url,addStyleString) {
+	if(iframeWindowOpenFlag) {
+		console.log('iframeWindowOpen iframeWindowOpenFlag');
+		return;
+	}
+	if(menuDialogOpenFlag) {
+		menuDialogClose();
+	} else {
+		hashcounter++;
+		location.hash = hashcounter;
+	}
+
+	// fullScreenOverlayElement disables all other buttons and enables abort by click outside
+	fullScreenOverlayElement.style.display = "block";
+	fullScreenOverlayElement.onclick = function() {
+		historyBack();
+	}
+
+	mainElement.style.filter = "blur(0.8px) brightness(60%)";
+
+	if(!gentle) console.log('iframeWindowOpen', url);
+	iframeWindowOpenFlag = true;
+	let styleString = "width:100%; max-width:450px; position:absolute; left:3.5%; top:1%; padding:10px; z-index:200;";
+	if(url.startsWith("string:")) {
+		if(addStyleString) {
+			styleString += addStyleString;
+		}
+		iframeWindowElement.style = styleString;
+		iframeWindowElement.innerHTML = url.substring(7);
+	} else {
+		iframeWindowElement.style = styleString;
+		iframeWindowElement.innerHTML = "<iframe src='"+url+"' scrolling='no' frameborder='no' width='100%' height='800px' allow='microphone' onload='this.contentWindow.focus()'></iframe>";
+		// NOTE: this.contentWindow.focus() is needed for onkeydown events to arrive in the iframe
+	}
+}
+
+function iframeWindowClose() {
+	if(!gentle) console.log('iframeWindowClose');
+	mainElement.style.filter="";
+	iframeWindowElement.innerHTML = "";
+	iframeWindowElement.style.display = "none";
+	fullScreenOverlayElement.style.display = "none";
+	fullScreenOverlayElement.onclick = null;
+	iframeWindowOpenFlag = false;
 }
 
 function historyBack() {
