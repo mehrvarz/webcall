@@ -167,11 +167,11 @@ fileSelectElement.addEventListener('change', (event) => {
 			console.log('file send abort');
 			return;
 		}
-		if(dataChannel.bufferedAmount > 500000) {
+		if(dataChannel.bufferedAmount > 10*chunkSize) {
 			// file send delay
 			setTimeout(function() {
 				readSlice(o);
-			},200);
+			},100);
 			return;
 		}
 		const slice = file.slice(offset, o + chunkSize);
@@ -562,7 +562,7 @@ function calleeOnlineAction(from) {
 					showStatus( "Before you hit the Call button, you can enter a name "+
 								"or a topic for the convenience of the callee.",-1)
 					msgbox.style.display = "block";
-					console.log('callerName',callerName);
+					if(!gentle) console.log('callerName',callerName);
 					if(typeof callerName!=="undefined" && callerName!="") {
 						msgbox.value = "Hi, this is "+callerName;
 					}
@@ -835,7 +835,7 @@ function getStream() {
 	if(neverAudio) {
 		if(dialAfterLocalStream) {
 			dialAfterLocalStream=false;
-			console.log("getStream -> dialAfterCalleeOnline");
+			console.log("getStream neverAudio -> dialAfterCalleeOnline");
 			//dialAfterCalleeOnline = true;
 			//checkCalleeOnline();
 			gotStream(); // pretend
@@ -929,7 +929,7 @@ function gotStream(stream) {
 	}
 
 	if(dialAfterLocalStream) {
-		console.log("gotStream dialAfterLocalStream");
+		if(!gentle) console.log("gotStream dialAfterLocalStream");
 		dialAfterLocalStream=false;
 		//dialAfterCalleeOnline = true;
 		//checkCalleeOnline();
@@ -1173,11 +1173,11 @@ function connectSignaling(message,openedFunc) {
 					}
 					hostDescription = JSON.parse(payload);
 
-					console.log("cmd calleeDescription setLocalDescription");
+					if(!gentle) console.log("cmd calleeDescription setLocalDescription");
 					peerCon.setLocalDescription(localDescription).then(() => {
-						console.log('cmd hostDescription setRemoteDescription');
+						if(!gentle) console.log('cmd hostDescription setRemoteDescription');
 						peerCon.setRemoteDescription(hostDescription).then(() => {
-							console.log('cmd hostDescription setRemoteDescription done');
+							if(!gentle) console.log('cmd hostDescription setRemoteDescription done');
 						}, err => {
 							console.warn(`hostDescription Failed to set RemoteDescription`,err)
 							showStatus("Cannot set remoteDescr "+err);
@@ -1191,7 +1191,7 @@ function connectSignaling(message,openedFunc) {
 					hostDescription = JSON.parse(payload);
 					console.log('cmd calleeDescriptionUpd setRemoteDescription');
 					peerCon.setRemoteDescription(hostDescription).then(() => {
-						console.log('cmd calleeDescriptionUpd setRemoteDescription done');
+						if(!gentle) console.log('cmd calleeDescriptionUpd setRemoteDescription done');
 
 						if(hostDescription.type == "offer") {
 							console.log('cmd calleeDescriptionUpd received offer createAnswer');
@@ -1203,7 +1203,7 @@ function connectSignaling(message,openedFunc) {
 								localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
 									'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
 								peerCon.setLocalDescription(localDescription).then(() => {
-									console.log('calleeDescriptionUpd localDescription set -> signal');
+									if(!gentle) console.log('calleeDescriptionUpd localDescription set -> signal');
 									wsSend("callerDescriptionUpd|"+JSON.stringify(localDescription));
 								}, err => console.error(`Failed to set local descr: ${err.toString()}`));
 							}, err => {
@@ -1306,7 +1306,7 @@ function connectSignaling(message,openedFunc) {
 						}
 
 						// enable (un-mute) remote audio
-						console.log('set remoteAudio',remoteStream);
+						if(!gentle) console.log('set remoteAudio',remoteStream);
 						remoteAudio.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
 						remoteAudio.load();
 						remoteAudio.play().catch(function(error) {});
@@ -1343,7 +1343,7 @@ function connectSignaling(message,openedFunc) {
 					// remoteStream will arrive via: peerCon.ontrack onunmute
 					var waitLoopCount=0;
 					let waitForRemoteStreamFunc = function() {
-						console.log('waitForRemoteStreamFunc',remoteStream!=null,waitLoopCount);
+						if(!gentle) console.log('waitForRemoteStreamFunc',remoteStream!=null,waitLoopCount);
 						if(!remoteStream) {
 							waitLoopCount++;
 //							if(waitLoopCount>=6) {
@@ -1355,7 +1355,7 @@ function connectSignaling(message,openedFunc) {
 								return;
 							}
 						}
-						console.log('waitForRemoteStreamFunc enableRemoteAudio');
+						if(!gentle) console.log('waitForRemoteStreamFunc enableRemoteAudio');
 						enableRemoteAudio();
 					}
 					waitForRemoteStreamFunc();
@@ -1579,7 +1579,7 @@ function dial() {
 				console.warn('peerCon.ontrack onunmute was already set');
 				return;
 			}
-			console.log('peerCon.ontrack onunmute set remoteAudio.srcObject',streams[0]);
+			if(!gentle) console.log('peerCon.ontrack onunmute set remoteAudio.srcObject',streams[0]);
 			//remoteAudio.srcObject = streams[0];
 			//remoteAudio.load();
 			//remoteAudio.play().catch(function(error) {});
@@ -1663,11 +1663,11 @@ function dial() {
 
 				if(!singlebutton) {
 					let msgboxText = msgbox.value.substring(0,300);
-					console.log('msgboxText',msgboxText);
+					if(!gentle) console.log('msgboxText',msgboxText);
 					if(msgboxText!="") {
 						if(dataChannel) {
 							if(dataChannel.readyState=="open") {
-								console.log('send msgbox',msgboxText);
+								if(!gentle) console.log('send msgbox',msgboxText);
 								dataChannel.send("msg|"+msgboxText);
 							} else {
 								dataChannelSendMsg = msgboxText;

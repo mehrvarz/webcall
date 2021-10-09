@@ -712,7 +712,7 @@ function gotStream(stream) {
 		if(audioSourceSelect.selectedIndex<0) {
 			audioSourceSelect.selectedIndex = 0;
 		}
-		console.log('gotStream audioSourceSelect index',audioSourceSelect.selectedIndex);
+		if(!gentle) console.log('gotStream audioSourceSelect index',audioSourceSelect.selectedIndex);
 	}
 
 //	if(stream && audioSinkSelect!=null) {
@@ -1495,7 +1495,7 @@ function hangup() {
 
 	// if mediaConnect -> play short busy tone 
 	if(mediaConnect) {
-		console.log("hangup: mediaConnect -> short busy sound");
+		if(!gentle) console.log("hangup: mediaConnect -> short busy sound");
 		busySignalSound.play().catch(function(error) { });
 		setTimeout(function() {
 			busySignalSound.pause();
@@ -1552,14 +1552,13 @@ function goOnline() {
 				if(!gentle) console.warn('peerCon.ontrack onunmute was already set');
 				return;
 			}
-			if(!gentle)
-				console.log('peerCon.ontrack onunmute set remoteAudio.srcObject',streams[0]);
+			if(!gentle) console.log('peerCon.ontrack onunmute set remoteAudio.srcObject',streams[0]);
 			remoteStream = streams[0];
 		};
 	};
 	peerCon.onicegatheringstatechange = event => {
 		let connection = event.target;
-		console.log("onicegatheringstatechange", connection.iceGatheringState);
+		if(!gentle) console.log("onicegatheringstatechange", connection.iceGatheringState);
 	}
 	peerCon.onnegotiationneeded = async () => {
 		if(!peerCon) {
@@ -1578,7 +1577,7 @@ function goOnline() {
 			localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
 				'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
 			peerCon.setLocalDescription(localDescription).then(() => {
-				console.log('onnegotiationneeded localDescription set -> signal');
+				if(!gentle) console.log('onnegotiationneeded localDescription set -> signal');
 				wsSend("calleeDescriptionUpd|"+JSON.stringify(localDescription));
 			}, err => console.error(`Failed to set local descr: ${err.toString()}`));
 		} catch(err) {
@@ -1586,7 +1585,7 @@ function goOnline() {
 		}
 	};
 	peerCon.onsignalingstatechange = event => {
-		console.log("signalingstatechange", peerCon.signalingState);
+		if(!gentle) console.log("signalingstatechange", peerCon.signalingState);
 	}
 	peerCon.oniceconnectionstatechange = event => {
 		if(!gentle) console.log("oniceconnectionstatechange", peerCon.iceConnectionState);
@@ -1905,7 +1904,7 @@ function getStatsPostCall(results) {
 		"retransmittedPacketsSent: "+retransmittedPacketsSent+"\n"+
 		"roundTripTime: "+roundTripTime+"\n"+
 		"connection: "+rtcLink+"\n";
-	console.log("statsPostCall",statsPostCallString);
+	if(!gentle) console.log("statsPostCall",statsPostCallString);
 }
 
 function showStatsPostCall() {
@@ -2081,7 +2080,7 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 		autoPlaybackAudioSource = null;
 	}
 	if(localStream!=null) {
-		console.log('endWebRtcSession localStream=null',localStream);
+		if(!gentle) console.log('endWebRtcSession localStream=null',localStream);
 		const audioTracks = localStream.getAudioTracks();
 		audioTracks[0].enabled = false; // mute mic
 		localStream.getTracks().forEach(track => { track.stop(); });
@@ -2092,9 +2091,9 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 		let peerConCloseFunc = function() {
 			// rtcConnect && peerCon may be cleared by now
 			if(disconnectCaller) {
-				console.log('endWebRtcSession disconnectCaller');
+				if(!gentle) console.log('endWebRtcSession disconnectCaller');
 				if(wsConn) {
-					console.log('endWebRtcSession wsSend(cancel)');
+					if(!gentle) console.log('endWebRtcSession wsSend(cancel)');
 					wsSend("cancel|disconnect"); // important
 				}
 				if(dataChannel) {
@@ -2103,7 +2102,7 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 						dataChannel.send("disconnect");
 					}
 				} else {
-					console.log('endWebRtcSession cannot send disconnect to peer');
+					if(!gentle) console.log('endWebRtcSession cannot send disconnect to peer');
 				}
 			}
 			if(dataChannel) {
@@ -2267,7 +2266,7 @@ function menuDialogOpen() {
 		console.log('menuDialogOpen menuDialogOpenFlag');
 		return;
 	}
-	console.log('menuDialogOpen');
+	if(!gentle) console.log('menuDialogOpen');
 	menuDialogOpenFlag = true;
 
 	hashcounter++;

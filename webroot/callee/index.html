@@ -262,7 +262,6 @@ input[type=submit]:focus {
 
 	<div id="status" class="status"></div>
 
-	<!-- enable this for callee file upload -->
 	<form id="fileInfo" style="display:none">
 		<input type="file" id="fileInput" name="files"/>
 	</form>
@@ -270,13 +269,13 @@ input[type=submit]:focus {
 	<div id="progressSend" style="width:100%;max-width:360px;display:none;">
 		<div id="progressSendLabel">Send progress:</div>
 		<progress id="fileProgressSend" max="0" value="0" style="width:100%"></progress>
-		<div onclick="stopProgressSend()">[x]</div>	<!-- TODO -->
+		<!-- TODO <div onclick="stopProgressSend()">[x]</div>	 -->
 	</div>
 	<div id="download" style="margin-bottom:10px;"></div>
 	<div id="progressRcv" style="width:100%;max-width:360px;display:none;">
 		<div id="progressRcvLabel">Receive progress:</div>
 		<progress id="fileProgressRcv" max="0" value="0" style="width:100%"></progress>
-		<div onclick="stopProgressRcv()">[x]</div>	<!-- TODO -->
+		<!-- TODO <div onclick="stopProgressRcv()">[x]</div>	 -->
 	</div>
 	<div id="waitingCallersTitle" class="callListTitle" style="color:#f46; display:none;">Waiting calls:</div>
 	<div id="waitingCallers" class="callList"></div>
