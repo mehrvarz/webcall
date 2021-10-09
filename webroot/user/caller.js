@@ -144,13 +144,21 @@ fileSelectElement.addEventListener('change', (event) => {
 		if (offset < file.size) {
 			readSlice(offset);
 		} else {
-			console.log('file send complete', file.size);
-			offset = 0;
-			progressSendElement.style.display = "none";
-			showStatus("sent '"+file.name.substring(0,25)+"' "+file.size+" bytes",-1);
-			if(mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
-				fileselectLabel.style.display = "inline-block";
-			}
+			let sendComplete = function() {
+				if(dataChannel!=null && dataChannel.bufferedAmount > 0) {
+					console.log('file send flushing buffered...');
+					setTimeout(sendComplete,200);
+					return;
+				}
+				console.log('file send complete', file.size);
+				offset = 0;
+				progressSendElement.style.display = "none";
+				showStatus("sent '"+file.name.substring(0,25)+"' "+file.size+" bytes",-1);
+				if(mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
+					fileselectLabel.style.display = "inline-block";
+				}
+			};
+			sendComplete();
 		}
 	});
 	const readSlice = o => {
