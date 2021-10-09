@@ -139,7 +139,7 @@ fileSelectElement.addEventListener('change', (event) => {
 	fileReader.addEventListener('load', e => {
 		dataChannel.send(e.target.result);
 		offset += e.target.result.byteLength;
-		if(!gentle) console.log('file send', offset, file.size);
+		if(!gentle) console.log('file send', offset, file.size, dataChannel.bufferedAmount);
 		progressSendBar.value = offset;
 		if (offset < file.size) {
 			readSlice(offset);
@@ -155,6 +155,13 @@ fileSelectElement.addEventListener('change', (event) => {
 	});
 	const readSlice = o => {
 		//if(!gentle) console.log('readSlice ', o);
+		if(dataChannel.bufferedAmount > 5000000) {
+			setTimeout(function() {
+				console.log('file send postpone readSlice', file.size);
+				readSlice(o);
+			},500);
+			return;
+		}
 		const slice = file.slice(offset, o + chunkSize);
 		fileReader.readAsArrayBuffer(slice);
 	};
@@ -1756,10 +1763,12 @@ function createDataChannel() {
 			showStatus("dataChannel error "+event.error,-1);	// .message ?
 		}
 		progressSendElement.style.display = "none";
+/*
 		if(dataChannel!=null && dataChannel.readyState=="open") {
 			// tell other side to hide progress bar
 			dataChannel.send("file|end");
 		}
+*/
 		if(mediaConnect) {
 			fileselectLabel.style.display = "inline-block";
 		}
@@ -1794,6 +1803,7 @@ function createDataChannel() {
 					}
 				} else if(event.data.startsWith("file|")) {
 					var fileDescr = event.data.substring(5);
+/*
 					if(fileDescr=="end") {
 						if(dataChannel!=null && dataChannel.readyState=="open") {
 							// close progress bar
@@ -1801,6 +1811,7 @@ function createDataChannel() {
 						}
 						return;
 					}
+*/
 					// parse: "file|"+file.name+","+file.size+","+file.type+","+file.lastModified);
 					let tok = fileDescr.split(",");
 					fileName = tok[0];
