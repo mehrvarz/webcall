@@ -95,7 +95,26 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	serviceSecs := 0
 	globalID := ""
 
-	if !strings.HasPrefix(urlID, "random") && !strings.HasPrefix(urlID, "!") {
+	if strings.HasPrefix(urlID, "random") {
+		// TODO
+	} else if strings.HasPrefix(urlID, "!") {
+		// create new unique wsClientID
+		wsClientMutex.Lock()
+		wsClientID = getNewWsClientID()
+		wsClientMutex.Unlock()
+		//fmt.Printf("/login set wsClientMap[%d] for ID=(%s)\n", wsClientID, globalID)
+		// hub.WsClientID and hub.ConnectedCallerIp will be set by wsclient.go
+
+		var err error
+		globalID,_,err = StoreCalleeInHubMap(urlID, myMultiCallees, remoteAddrWithPort, wsClientID, false)
+		if err != nil || globalID == "" {
+			fmt.Printf("# /login id=(%s) StoreCalleeInHubMap(%s) err=%v\n", globalID, urlID, err)
+			fmt.Fprintf(w, "noservice")
+			return
+		}
+		//fmt.Printf("/login globalID=(%s) urlID=(%s) rip=%s id=%d rt=%v\n",
+		//	globalID, urlID, remoteAddr, myRequestCount, time.Since(startRequestTime))
+	} else {
 		// pw check for everyone other than random and duo
 		if len(pw) < 6 {
 			// guessing more difficult if delayed
