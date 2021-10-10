@@ -448,6 +448,10 @@ function start() {
 		goOffline();
 	};
 	audioSourceSelect.onchange = getStream;
+	if(calleeID.startsWith("!")) {
+		// auto connect for duo user
+		onGotStreamGoOnline = true;
+	}
 	try {
 		getStream().then(() => navigator.mediaDevices.enumerateDevices()).then(gotDevices);
 		//getStream() -> getUserMedia(constraints) -> gotStream() -> goOnline() -> login()
@@ -831,7 +835,8 @@ function showOnlineReadyMsg(sessionIdPayload) {
 		let callerURL = window.location.href;
 		callerURL = callerURL.replace("/callee/","/user/");
 		var msg = "";
-		msg += 'You will receive calls made by this link: <a href="'+callerURL+'" target="_blank">'+callerURL+'</a><br><br>Pass it on! Max wait time 30 min. Max talk time 15 min (if relayed). You must keep this tab open to receive call.<br><br>Note: Using a laptop or a webcam microphone often leads to poor audio on the other side. A headset eliminates the risk of feedback noises, echos and sound cancellation effects.';
+		msg +=  'You will receive calls made by this link: <a href="'+callerURL+'" target="_blank">'+callerURL+'</a>';
+//				'<br><br>Max wait time 30 min. Max talk time 15 min (if relayed). You must keep this tab open to receive call.';
 		showStatus(msg,-1);
 	} else {
 		msgbox.style.display = "none";
