@@ -48,7 +48,7 @@ var wsAddr = "";
 var talkSecs = 0;
 var outboundIP = "";
 var serviceSecs = 0;
-var calleeType = false;
+var calleeLevel = 0;
 var remainingTalkSecs = 0;
 var remainingServiceSecs = 0;
 var wsConn = null;
@@ -456,7 +456,7 @@ function start() {
 
 function login(retryFlag) {
 	if(!gentle) console.log("login to signaling server...", retryFlag, calleeID, wsSecret.length);
-	calleeType = false;
+	calleeLevel = 0;
 	menuElement.style.display = "none";
 	let api = apiPath+"/login?id="+calleeID;
 	ajaxFetch(new XMLHttpRequest(), "POST", api, function(xhr) {
@@ -483,15 +483,9 @@ function login(retryFlag) {
 				serviceSecs = parseInt(parts[3], 10);
 			}
 			if(parts.length>=6) {
-				let calleeLevel = parseInt(parts[5], 10);
-				if(calleeLevel>0) {
-					// TODO replace calleeType with calleeLevel everywhere
-					calleeType = true;
-				}
-				// provides access to iframeWindowOpen()
-				// offer checkbox: [] Hidden
+				calleeLevel = parseInt(parts[5], 10);
 			}
-			if(!gentle) console.log('calleeType/outboundIP',calleeType,outboundIP);
+			if(!gentle) console.log('calleeLevel/outboundIP',calleeLevel,outboundIP);
 
 			if(!calleeID.startsWith("!")) {
 				let api = apiPath+"/getsettings?id="+calleeID;
@@ -511,7 +505,7 @@ function login(retryFlag) {
 				});
 			}
 
-			if(calleeType && !pushRegistration) {
+			if(calleeLevel>0 && !pushRegistration) {
 				// we retrieve the pushRegistration here under /callee/(calleeID),
 				// so that the pushRegistration.scope will also be /callee/(calleeID)
 				// so that settings.js will later make use of the correct pushRegistration
@@ -875,7 +869,7 @@ function connectSignaling(message) {
 			if(!gentle) console.log('ws connection send',message);
 			wsSend(message);
 		}
-		if(calleeType) {
+		if(calleeLevel>0) {
 			// logged in callee (not a duo callee)
 			isHiddenlabel.style.display = "block";
 			autoanswerlabel.style.display = "block";
@@ -2271,7 +2265,7 @@ function menuDialogOpen() {
 	}
 	mainElement.style.filter = "blur(0.8px) brightness(60%)";
 	// hide "Settings" and "Exit" if cookies are not allowed
-	if(calleeType && navigator.cookieEnabled && getCookieSupport()!=null) {
+	if(calleeLevel>0 && navigator.cookieEnabled && getCookieSupport()!=null) {
 		// cookies can be used
 		if(!gentle) console.log('menuSettingsElement on (cookies enabled)');
 		if(menuSettingsElement) {
