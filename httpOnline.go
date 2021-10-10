@@ -37,9 +37,9 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		return
 	}
 	if locHub == nil && globHub == nil {
-		// error
+		// unknown urlID
 		fmt.Printf("# /online GetOnlineCallee(%s/%s) no hub rip=%s\n", urlID, globalID, remoteAddr)
-		fmt.Fprintf(w, "error")
+		fmt.Fprintf(w, "unknown")
 		return
 	}
 	if globalID == "" {
