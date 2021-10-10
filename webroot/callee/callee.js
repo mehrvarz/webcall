@@ -24,6 +24,9 @@ const fullScreenOverlayElement = document.getElementById('fullScreenOverlay');
 const iframeWindowElement = document.getElementById('iframeWindow');
 const menuElement = document.getElementById('menu');
 const menuDialogElement = document.getElementById('menuDialog');
+const menuSettingsElement = document.getElementById('menuSettings');
+const menuContactsElement = document.getElementById('menuContacts');
+const menuExitElement = document.getElementById('menuExit');
 const progressSendElement = document.getElementById('progressSend'); // switch on and off
 const progressSendBar = document.getElementById('fileProgressSend'); // actual progress bar
 const downloadList = document.getElementById('download');
@@ -204,15 +207,6 @@ window.onload = function() {
 				ringtoneIsPlaying = false;
 			};
 
-			if(calleeID.startsWith("random")) {
-				document.title = "WebCall Roulette";
-				if(titleElement) {
-					titleElement.innerHTML = "WebCall Roulette";
-				}
-				wsSecret = "notrequired";
-				start();
-				return;
-			}
 			if(calleeID.startsWith("!")) {
 				document.title = "WebCall Duo";
 				if(titleElement) {
@@ -472,6 +466,7 @@ function login(retryFlag) {
 		if(parts.length>=1 && parts[0].indexOf("wsid=")>=0) {
 			wsAddr = parts[0];
 			// we're now a logged-in callee-user
+			menuElement.style.display = "block";
 			if(!gentle) console.log('login success wsAddr',wsAddr);
 
 			// hide the form
@@ -492,14 +487,13 @@ function login(retryFlag) {
 				if(calleeLevel>0) {
 					// TODO replace calleeType with calleeLevel everywhere
 					calleeType = true;
-					menuElement.style.display = "block";
 				}
 				// provides access to iframeWindowOpen()
 				// offer checkbox: [] Hidden
 			}
 			if(!gentle) console.log('calleeType/outboundIP',calleeType,outboundIP);
 
-			if(!calleeID.startsWith("random") && !calleeID.startsWith("!")) {
+			if(!calleeID.startsWith("!")) {
 				let api = apiPath+"/getsettings?id="+calleeID;
 				if(!gentle) console.log('login getsettings api',api);
 				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
@@ -556,7 +550,7 @@ function login(retryFlag) {
 			showStatus("User ID unknown<br><a href='"+mainLink+"'>Main page</a>",-1);
 			form.style.display = "none";
 		} else if(loginStatus=="busy") {
-			if(calleeID.startsWith("random") || calleeID.startsWith("!")) {
+			if(calleeID.startsWith("!")) {
 				// become caller
 				window.location.replace("/user/"+calleeID);
 				return;
@@ -581,7 +575,7 @@ function login(retryFlag) {
 
 	}, function(errString,err) {
 		console.log('xhr error',errString);
-		if(calleeID.startsWith("random") || calleeID.startsWith("!")) {
+		if(calleeID.startsWith("!")) {
 			// go to main page // TODO best solution?
 			window.location.replace("");
 			return;
@@ -829,9 +823,7 @@ function showOnlineReadyMsg(sessionIdPayload) {
 		return;
 	}
 
-	if(calleeID.startsWith("random")) {
-		showStatus( "You will be connected to the next available caller. Max wait time 30 minutes. Max talk time 15 min (if relayed). Note: Using a laptop or a webcam microphone often leads to poor audio on the other side. A headset eliminates the risk of feedback noises, echos and sound cancellation effects.",-1);
-	} else if(calleeID.startsWith("!")) {
+	if(calleeID.startsWith("!")) {
 		let callerURL = window.location.href;
 		callerURL = callerURL.replace("/callee/","/user/");
 		var msg = "";
@@ -883,11 +875,13 @@ function connectSignaling(message) {
 			if(!gentle) console.log('ws connection send',message);
 			wsSend(message);
 		}
-		if(!calleeID.startsWith("random") && !calleeID.startsWith("!")) {
-			if(calleeType) {
-				isHiddenlabel.style.display = "block";
-				autoanswerlabel.style.display = "block";
-			}
+		if(calleeType) {
+			// logged in callee (not a duo callee)
+			isHiddenlabel.style.display = "block";
+			autoanswerlabel.style.display = "block";
+			menuSettingsElement.style.display = "block";
+			menuContactsElement.style.display = "block";
+			menuExitElement.style.display = "block";
 		}
 		goOfflineButton.disabled = false;
 		// start background wsSend loop until !rtcConnect and while wsConn!=null
@@ -906,7 +900,7 @@ function connectSignaling(message) {
 		buttonBlinking=false;
 		onnegotiationneededAllowed = false;
 		stopAllAudioEffects("wsConn.onclose");
-		if(calleeID.startsWith("random") || calleeID.startsWith("!")) {
+		if(calleeID.startsWith("!")) {
 			setTimeout(function() {
 				// this delay prevents this msg from being shown on page reload
 				showStatus("Lost signaling server");
@@ -1099,7 +1093,7 @@ function connectSignaling(message) {
 						rejectButton.style.display = "none";
 						stopAllAudioEffects("incoming cancel");
 						if(mediaConnect) {
-							if(calleeID.startsWith("random") || calleeID.startsWith("!")) {
+							if(calleeID.startsWith("!")) {
 								showStatus("Caller canceled call ("+
 									localCandidateType+"/"+remoteCandidateType+")",8000);
 							} else {
@@ -1391,8 +1385,7 @@ function wsSend(message) {
 				console.log('wsSend ws state',wsConn.readyState);
 			}
 		}
-		if(remainingTalkSecs>=0 || calleeID.startsWith("random") ||
-				calleeID.startsWith("!") || calleeID.startsWith("answie")) {
+		if(remainingTalkSecs>=0 || calleeID.startsWith("!") || calleeID.startsWith("answie")) {
 			if(!gentle) console.log('wsSend connectSignaling',message);
 			connectSignaling(message);
 		} else {
@@ -1676,12 +1669,9 @@ function goOnline() {
 				peerCon.getStats(null)
 				.then((results) => getStatsCandidateTypes(results,"Incoming", ""), err => console.log(err));
 
-				if(!calleeID.startsWith("random") /*&& !calleeID.startsWith("!")*/) {
-					// no answerButton random
-					answerButton.disabled = false;
-				}
-				if(!calleeID.startsWith("random") && !calleeID.startsWith("!") && !calleeID.startsWith("answie")){
-					// msgbox only if not random, duo or answie
+				answerButton.disabled = false;
+				if(!calleeID.startsWith("!") && !calleeID.startsWith("answie")){
+					// msgbox only if not duo or answie
 					// no msgbox if it is empty
 					if(msgbox.value!="") {
 						msgbox.style.display = "block";
@@ -1802,7 +1792,7 @@ function getStatsCandidateTypes(results,eventString1,eventString2) {
 
 	if(!gentle) console.log('getStatsCandidateTypes',rtcLink,localCandidateType,remoteCandidateType);
 	let msg = eventString1+" "+rtcLink;
-	if(calleeID.startsWith("random") || calleeID.startsWith("!")) {
+	if(calleeID.startsWith("!")) {
 		let showMsg = msg;
 		if(eventString2!="") {
 			showMsg += ". "+eventString2+".";
@@ -1821,7 +1811,7 @@ function getStatsCandidateTypes(results,eventString1,eventString2) {
 	} else if(listOfClientIps!="") {
 		msg += " "+listOfClientIps;
 	}
-	if(!calleeID.startsWith("random") && !calleeID.startsWith("!")) {
+	if(!calleeID.startsWith("!")) {
 		let showMsg = msg;
 		if(eventString2!="") {
 			showMsg += ". "+eventString2+".";
@@ -2155,7 +2145,7 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 	answerButton.style.display = "none";
 	rejectButton.style.display = "none";
 
-	if(calleeID.startsWith("random") || calleeID.startsWith("!")) {
+	if(calleeID.startsWith("!")) {
 		// go to main page // TODO best solution?
 		window.location.replace("");
 		return
@@ -2216,8 +2206,8 @@ function goOffline() {
 	if(missedCallsTitleElement!=null) {
 		missedCallsTitleElement.style.display = "none";
 	}
-	if(calleeID.startsWith("random") || calleeID.startsWith("!")) {
-		// go to main page // TODO is this correct?
+	if(calleeID.startsWith("!")) {
+		// go to main page // TODO best solution?
 		window.location.replace("");
 		return;
 	}
@@ -2263,10 +2253,6 @@ function historyBack() {
 
 var menuDialogOpenFlag = false;
 function menuDialogOpen() {
-	if(!calleeType) {
-		console.log('menuDialogOpen !calleeType');
-		return;
-	}
 	if(menuDialogOpenFlag) {
 		console.log('menuDialogOpen menuDialogOpenFlag');
 		return;
@@ -2285,11 +2271,9 @@ function menuDialogOpen() {
 	}
 	mainElement.style.filter = "blur(0.8px) brightness(60%)";
 	// hide "Settings" and "Exit" if cookies are not allowed
-	var menuSettingsElement = document.getElementById('menuSettings');
-	var menuExitElement = document.getElementById('menuExit');
-	if(navigator.cookieEnabled && getCookieSupport()!=null) {
+	if(calleeType && navigator.cookieEnabled && getCookieSupport()!=null) {
 		// cookies can be used
-		console.log('menuSettingsElement on (cookies enabled)');
+		if(!gentle) console.log('menuSettingsElement on (cookies enabled)');
 		if(menuSettingsElement) {
 			menuSettingsElement.style.display = "block";
 		}
@@ -2298,7 +2282,7 @@ function menuDialogOpen() {
 		}
 	} else {
 		// cookies can NOT be used
-		console.log('menuSettingsElement off (cookies disabled)');
+		if(!gentle) console.log('menuSettingsElement off (cookies disabled)');
 		if(menuSettingsElement) {
 			menuSettingsElement.style.display = "none";
 		}
@@ -2334,10 +2318,6 @@ function menuDialogClose() {
 
 var iframeWindowOpenFlag = false;
 function iframeWindowOpen(url,addStyleString) {
-	if(!calleeType) {
-		console.log('iframeWindowOpen !calleeType');
-		return;
-	}
 	if(iframeWindowOpenFlag) {
 		console.log('iframeWindowOpen iframeWindowOpenFlag');
 		return;

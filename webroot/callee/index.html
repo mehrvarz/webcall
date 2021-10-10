@@ -214,8 +214,9 @@ input[type=submit]:focus {
 
 <div id="menuDialog" style="position:relative; max-width:520px; margin-top:2vh; display:none;">
 	<div style="position:absolute; right:0px; z-index:110; background:#45dd; color:#fff; padding:10px 20px; line-height:2.6em; border-radius:3px; cursor:pointer;">
-		<div onclick="openContacts()">Contacts</div>
-		<div id="menuSettings" onclick="openSettings()">Settings</div>
+		<div id="menuContacts" style="display:none" onclick="openContacts()">Contacts</div>
+		<div id="menuSettings" style="display:none" onclick="openSettings()">Settings</div>
+		<div onclick="openPostCallStats()">Call Stats</div>
 		<label id="fileselectlabel" _class="custom-fileselect" style="cursor:pointer; display:none;">
 			Send File
 			<input id="fileselect" type="file" style="display:none"></input>
@@ -226,8 +227,7 @@ input[type=submit]:focus {
 		<label id="autoanswerlabel" style="margin-left:-4px; display:none">
 			<input type="checkbox" id="autoanswer" class="checkbox"> Auto-Answer</label>
 		</label>
-		<div onclick="openPostCallStats()">Call Stats</div>
-		<div id="menuExit" onclick="exit()">Exit / Clear cookie</div>
+		<div id="menuExit" style="display:none" onclick="exit()">Exit / Clear cookie</div>
 	</div>
 </div>
 

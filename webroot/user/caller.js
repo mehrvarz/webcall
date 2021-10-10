@@ -281,9 +281,7 @@ window.onload = function() {
 		if(mode==0) {
 			// normal mode
 			var calleeIdTitle = calleeID.charAt(0).toUpperCase() + calleeID.slice(1);
-			if(calleeID.startsWith("random")) {
-				calleeIdTitle = "Roulette"
-			} else if(calleeID.startsWith("!")) {
+			if(calleeID.startsWith("!")) {
 				calleeIdTitle = "Duo"
 			}
 
@@ -300,8 +298,7 @@ window.onload = function() {
 			checkCalleeOnline();
 
 			if(dialButton!=null) {
-				if(!calleeID.startsWith("random") && !calleeID.startsWith("!")) {
-
+				if(!calleeID.startsWith("!")) {
 					if(singlebutton) {
 						dialButton.innerHTML = "<b>W E B C A L L</b><br>"+singleButtonReadyText;
 					} else {
@@ -473,7 +470,7 @@ function calleeOnlineStatus(onlineStatus) {
 	dialButton.disabled = false;
 	hangupButton.disabled = true;
 	audioSelect.disabled = false;
-	if(!calleeID.startsWith("random") && !neverAudio) {
+	if(!neverAudio) {
 		if(!localStream) {
 			// we need to call mediaDevices.enumerateDevices() anyway
 			loadJS("adapter-latest.js",function() {
@@ -523,13 +520,13 @@ function calleeOnlineAction(from) {
 			return;
 		}
 
-		if(calleeID.startsWith("random")) {
-			// random callers don't manually click call button - they autoconnect
-			console.log('calleeOnlineAction autodial enumerateDevices');
-			navigator.mediaDevices.enumerateDevices().then(gotDevices);
-			if(!gentle) console.log('calleeOnlineAction autodial dialAfterCalleeOnline');
-			dialAfterCalleeOnline = true;
-		}
+//		if(calleeID.startsWith("random")) {
+//			// random callers don't manually click call button - they autoconnect
+//			console.log('calleeOnlineAction autodial enumerateDevices');
+//			navigator.mediaDevices.enumerateDevices().then(gotDevices);
+//			if(!gentle) console.log('calleeOnlineAction autodial dialAfterCalleeOnline');
+//			dialAfterCalleeOnline = true;
+//		}
 		if(dialAfterCalleeOnline) {
 			// autodial after detected callee is online
 			// normally set by gotStream, if dialAfterLocalStream was set (by dialButton.onclick)
@@ -625,10 +622,10 @@ function loadJS(jsFile,callback) {
 }
 
 function calleeOfflineAction() {
-	if(calleeID.startsWith("random")) {
-		window.location.replace("/callee/"+calleeID);
-		return;
-	}
+//	if(calleeID.startsWith("random")) {
+//		window.location.replace("/callee/"+calleeID);
+//		return;
+//	}
 
 	if(!singlebutton) {
 		// switch to callee-is-offline layout
@@ -2039,7 +2036,7 @@ function hangup(mustDisconnectCallee,message) {
 				peerCon = null;
 			}
 		};
-		if(calleeID.startsWith("random") || singlebutton) {
+		if(singlebutton) {
 			// no StatsPostCall for you
 			peerConCloseFunc();
 		} else {
