@@ -1873,10 +1873,10 @@ function createDataChannel() {
 					var fileDescr = event.data.substring(5);
 
 					if(fileDescr=="end-send") {
-						if(!gentle) console.log("file receive aborted by sender");
+						if(!gentle) console.log("file transmit aborted by sender");
 						progressRcvElement.style.display = "none";
 						if(fileReceivedSize < fileSize) {
-							showStatus("file receive aborted by sender");
+							showStatus("file transmit aborted by sender");
 						}
 						fileReceivedSize = 0;
 						fileReceiveBuffer = [];

@@ -2014,18 +2014,18 @@ function createDataChannel() {
 						var fileDescr = event.data.substring(5);
 
 						if(fileDescr=="end-send") {
-							if(!gentle) console.log("file receive aborted by sender");
+							if(!gentle) console.log("file transmit aborted by sender");
 							progressRcvElement.style.display = "none";
 							if(fileReceivedSize < fileSize) {
-								showStatus("file receive aborted by sender");
+								showStatus("file transmit aborted by sender");
 							}
 							fileReceivedSize = 0;
 							fileReceiveBuffer = [];
 							return;
 						}
 						if(fileDescr=="end-rcv") {
-							if(!gentle) console.log("file send aborted by receiver");
-							showStatus("file send aborted by receiver");
+							if(!gentle) console.log("file send aborted by peer");
+							showStatus("file send aborted by peer");
 							fileSendAbort = true;
 							progressSendElement.style.display = "none";
 							if(mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
