@@ -430,7 +430,7 @@ function stopProgressSend() {
 }
 function stopProgressRcv() {
 	console.log("stopProgressRcv");
-	showStatus("file receive aborted",-1);
+	showStatus("file receive aborted");
 	fileReceiveAbort = true;
 	progressRcvElement.style.display = "none";
 	if(dataChannel!=null && dataChannel.readyState=="open") {
@@ -789,7 +789,7 @@ function gotStream(stream) {
 }
 
 function showStatus(msg,timeoutMs) {
-	let sleepMs = 2500;
+	let sleepMs = 3000;
 	if(typeof timeoutMs!=="undefined") {
 		sleepMs = timeoutMs;
 	}
