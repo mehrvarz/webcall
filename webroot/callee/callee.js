@@ -2017,7 +2017,7 @@ function createDataChannel() {
 							if(!gentle) console.log("file receive aborted by sender");
 							progressRcvElement.style.display = "none";
 							if(fileReceivedSize < fileSize) {
-								showStatus("file receive aborted by sender",-1);
+								showStatus("file receive aborted by sender");
 							}
 							fileReceivedSize = 0;
 							fileReceiveBuffer = [];
