@@ -1514,7 +1514,9 @@ function pickup2() {
 		onlineIndicator.src="red-gradient.svg";
 		mediaConnect = true;
 		mediaConnectStartDate = Date.now();
-		fileselectLabel.style.display = "inline-block";
+		if(dataChannel!=null && dataChannel.readyState=="open") {
+			fileselectLabel.style.display = "inline-block";
+		}
 
 		setTimeout(function() {
 			peerCon.getStats(null)
@@ -1974,7 +1976,7 @@ function createDataChannel() {
 				dataChannel.send("file|end-");
 			}
 */
-			if(mediaConnect) {
+			if(mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
 				fileselectLabel.style.display = "inline-block";
 			}
 		}
@@ -2026,7 +2028,9 @@ function createDataChannel() {
 							showStatus("file send aborted by receiver");
 							fileSendAbort = true;
 							progressSendElement.style.display = "none";
-							fileselectLabel.style.display = "inline-block";
+							if(mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
+								fileselectLabel.style.display = "inline-block";
+							}
 							return;
 						}
 
@@ -2084,7 +2088,8 @@ function createDataChannel() {
 					var aElement = document.createElement("a");
 					aElement.href = URL.createObjectURL(receivedBlob);
 					aElement.download = fileName;
-					aElement.textContent = `received '${fileName.substring(0,25)}' ${fileSize} bytes`;
+					let kbytes = Math.floor(fileReceivedSize/1000);
+					aElement.textContent = `received '${fileName.substring(0,25)}' ${kbytes} KB`;
 					aDivElement.appendChild(aElement);
 
 					var aDeleteElement = document.createElement("a");

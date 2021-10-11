@@ -970,9 +970,9 @@ function gotStream(stream) {
 	localStream = stream;
 	audioSelect.selectedIndex = [...audioSelect.options].
 		findIndex(option => option.text === stream.getAudioTracks()[0].label);
-//	if(audioSelect.selectedIndex<0) {
-//		audioSelect.selectedIndex = 0; // TODO this doesn't seem to work
-//	}
+	if(audioSelect.selectedIndex<0) {
+		audioSelect.selectedIndex = 0; // TODO this doesn't seem to work?
+	}
 	if(!gentle) {
 		console.log('gotStream selectedIndex',audioSelect.selectedIndex);
 		stream.getTracks().forEach(function(track) {
@@ -1366,7 +1366,9 @@ function connectSignaling(message,openedFunc) {
 						remoteAudio.play().catch(function(error) {});
 						mediaConnect = true;
 						mediaConnectStartDate = Date.now();
-						fileselectLabel.style.display = "inline-block";
+						if(dataChannel!=null && dataChannel.readyState=="open") {
+							fileselectLabel.style.display = "inline-block";
+						}
 
 						// getting stats on p2p or relayed connection
 						console.log('full mediaConnect, getting stats...');
@@ -1835,7 +1837,7 @@ function createDataChannel() {
 			dataChannel.send("file|end-");
 		}
 */
-		if(mediaConnect) {
+		if(mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
 			fileselectLabel.style.display = "inline-block";
 		}
 	}
@@ -1885,7 +1887,9 @@ function createDataChannel() {
 						showStatus("file send aborted by receiver");
 						fileSendAbort = true;
 						progressSendElement.style.display = "none";
-						fileselectLabel.style.display = "inline-block";
+						if(mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
+							fileselectLabel.style.display = "inline-block";
+						}
 						return;
 					}
 
@@ -1944,7 +1948,8 @@ function createDataChannel() {
 				var aElement = document.createElement("a");
 				aElement.href = URL.createObjectURL(receivedBlob);
 				aElement.download = fileName;
-				aElement.textContent = `received '${fileName.substring(0,25)}' ${fileSize} bytes`;
+				let kbytes = Math.floor(fileReceivedSize/1000);
+				aElement.textContent = `received '${fileName.substring(0,25)}' ${kbytes} KB`;
 				aDivElement.appendChild(aElement);
 
 				var aDeleteElement = document.createElement("a");
