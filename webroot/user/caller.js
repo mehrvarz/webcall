@@ -85,6 +85,8 @@ var fileSize = 0;
 var hashcounter=0;
 var fileReceiveStartDate=0;
 var fileReceiveSinceStartSecs=0;
+var fileSendAbort=false;
+var fileReceiveAbort=false;
 
 var extMessage = function(e) {
 	//if(e.origin != 'http://origin-domain.com') {
@@ -133,18 +135,25 @@ fileSelectElement.addEventListener('change', (event) => {
 	console.log("fileSelect: "+file.name, file.size, file.type, file.lastModified);
 	dataChannel.send("file|"+file.name+","+file.size+","+file.type+","+file.lastModified);
 	fileselectLabel.style.display = "none";
+	showStatus("",-1);
 
 	const chunkSize = 16*1024;
 	let fileReader = new FileReader();
 	let offset = 0;
 	let fileSendStartDate = Date.now();
 	let fileSendLastSinceStartSecs = 0;
+	fileSendAbort = false;
 	progressSendBar.max = file.size;
 	progressSendLabel.innerHTML = "Sending: "+file.name.substring(0,25);
 	progressSendElement.style.display = "block";
 	fileReader.addEventListener('error', error => console.error('Error reading file:', error));
 	fileReader.addEventListener('abort', event => console.log('File reading aborted:', event));
 	fileReader.addEventListener('load', e => {
+		if(fileSendAbort) {
+			console.log('file send user abort');
+			fileReader.abort();
+			return;
+		}
 		if(!dataChannel) {
 			console.log('file send no dataChannel');
 			return;
@@ -181,8 +190,13 @@ fileSelectElement.addEventListener('change', (event) => {
 	});
 	const readSlice = o => {
 		//if(!gentle) console.log('readSlice ', o);
+		if(fileSendAbort) {
+			console.log('file send user abort');
+			fileReader.abort();
+			return;
+		}
 		if(dataChannel==null || dataChannel.readyState!="open") {
-			console.log('file send abort');
+			console.log('file send abort on dataChannel');
 			return;
 		}
 		if(dataChannel.bufferedAmount > 10*chunkSize) {
@@ -198,6 +212,28 @@ fileSelectElement.addEventListener('change', (event) => {
 	readSlice(0);
 });
 
+function stopProgressSend() {
+	console.log("stopProgressSend");
+	showStatus("file send aborted");
+	fileSendAbort = true;
+	progressSendElement.style.display = "none";
+	if(dataChannel!=null && dataChannel.readyState=="open") {
+		dataChannel.send("file|end-send");
+		if(mediaConnect) {
+			fileselectLabel.style.display = "inline-block";
+		}
+	}
+}
+function stopProgressRcv() {
+	console.log("stopProgressRcv");
+	showStatus("file receive aborted",-1);
+	fileReceiveAbort = true;
+	progressRcvElement.style.display = "none";
+	if(dataChannel!=null && dataChannel.readyState=="open") {
+		dataChannel.send("file|end-rcv");
+	}
+}
+
 window.onload = function() {
 	//if(!gentle) console.log("onload");
 	let id = getUrlParams("id");
@@ -206,8 +242,6 @@ window.onload = function() {
 	}
 	if(calleeID=="") {
 		if(!gentle) console.log("onload no calleeID abort");
-		//window.location.reload(); //replace("/webcall");
-		//window.location = window.location.href + "../..";
 		let myMainElement = document.getElementById('container')
 		let mainParent = myMainElement.parentNode;
 		mainParent.removeChild(myMainElement);
@@ -1798,7 +1832,7 @@ function createDataChannel() {
 /*
 		if(dataChannel!=null && dataChannel.readyState=="open") {
 			// tell other side to hide progress bar
-			dataChannel.send("file|end");
+			dataChannel.send("file|end-");
 		}
 */
 		if(mediaConnect) {
@@ -1835,15 +1869,28 @@ function createDataChannel() {
 					}
 				} else if(event.data.startsWith("file|")) {
 					var fileDescr = event.data.substring(5);
-/*
-					if(fileDescr=="end") {
-						if(dataChannel!=null && dataChannel.readyState=="open") {
-							// close progress bar
-							progressRcvElement.style.display = "none";
+
+					if(fileDescr=="end-send") {
+						if(!gentle) console.log("file receive aborted by sender");
+						progressRcvElement.style.display = "none";
+						if(fileReceivedSize < fileSize) {
+							showStatus("file receive aborted by sender",-1);
 						}
+						fileReceivedSize = 0;
+						fileReceiveBuffer = [];
 						return;
 					}
-*/
+					if(fileDescr=="end-rcv") {
+						if(!gentle) console.log("file send aborted by receiver");
+						showStatus("file send aborted by receiver");
+						fileSendAbort = true;
+						progressSendElement.style.display = "none";
+						fileselectLabel.style.display = "inline-block";
+						return;
+					}
+
+					showStatus("",-1);
+					fileReceiveAbort = false;
 					// parse: "file|"+file.name+","+file.size+","+file.type+","+file.lastModified);
 					let tok = fileDescr.split(",");
 					fileName = tok[0];
@@ -1861,6 +1908,13 @@ function createDataChannel() {
 				}
 			}
 		} else {
+			if(fileReceiveAbort) {
+				if(!gentle) console.log("file receive abort");
+				fileReceivedSize = 0;
+				fileReceiveBuffer = [];
+				return;
+			}
+
 			fileReceiveBuffer.push(event.data);
 			var chunkSize = event.data.size; // ff
 			if(isNaN(chunkSize)) {

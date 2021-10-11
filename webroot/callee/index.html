@@ -212,7 +212,7 @@ input[type=submit]:focus {
 
 <div id="iframeWindow" style="display:none"></div>
 
-<div id="menuDialog" style="position:relative; max-width:520px; margin-top:2vh; display:none;">
+<div id="menuDialog" style="position:relative; max-width:520px; margin-top:2vh; user-select:none; display:none;">
 	<div style="position:absolute; right:0px; z-index:110; background:#45dd; color:#fff; padding:10px 20px; line-height:2.6em; border-radius:3px; cursor:pointer;">
 		<div id="menuContacts" style="display:none" onclick="openContacts()">Contacts</div>
 		<div id="menuSettings" style="display:none" onclick="openSettings()">Settings</div>
@@ -261,21 +261,19 @@ input[type=submit]:focus {
 	<textarea id="msgbox" class="msgbox" spellcheck="false" style="display:none"></textarea>
 
 	<div id="status" class="status"></div>
-
+<!--
 	<form id="fileInfo" style="display:none">
 		<input type="file" id="fileInput" name="files"/>
 	</form>
-
+-->
 	<div id="progressSend" style="width:100%;max-width:360px;display:none;">
 		<div id="progressSendLabel">sending:</div>
-		<progress id="fileProgressSend" max="0" value="0" style="width:100%"></progress>
-		<!-- TODO <div onclick="stopProgressSend()">[x]</div>	 -->
+		<progress id="fileProgressSend" max="0" value="0" style="width:100%" onclick="stopProgressSend()"></progress>
 	</div>
 	<div id="download" style="margin-bottom:10px;"></div>
 	<div id="progressRcv" style="width:100%;max-width:360px;display:none;">
 		<div id="progressRcvLabel">receiving:</div>
-		<progress id="fileProgressRcv" max="0" value="0" style="width:100%"></progress>
-		<!-- TODO <div onclick="stopProgressRcv()">[x]</div>	 -->
+		<progress id="fileProgressRcv" max="0" value="0" style="width:100%" onclick="stopProgressRcv()"></progress>
 	</div>
 	<div id="waitingCallersTitle" class="callListTitle" style="color:#f46; display:none;">Waiting calls:</div>
 	<div id="waitingCallers" class="callList"></div>
