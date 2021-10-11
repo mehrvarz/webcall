@@ -11,9 +11,11 @@ const menuElement = document.getElementById('menu');
 const menuDialogElement = document.getElementById('menuDialog');
 const fullScreenOverlayElement = document.getElementById('fullScreenOverlay');
 const progressSendElement = document.getElementById('progressSend'); // switch on and off
+const progressSendLabel = document.getElementById('progressSendLabel');
 const progressSendBar = document.getElementById('fileProgressSend'); // actual progress bar
 const downloadList = document.getElementById('download');
 const progressRcvElement = document.getElementById('progressRcv'); // switch on and off
+const progressRcvLabel = document.getElementById('progressRcvLabel');
 const progressRcvBar = document.getElementById('fileProgressRcv'); // actual progress bar
 const fileselectLabel = document.getElementById("fileselectlabel");
 const fileSelectElement = document.getElementById("fileselect");
@@ -81,6 +83,8 @@ var fileReceivedSize = 0;
 var fileName = "";
 var fileSize = 0;
 var hashcounter=0;
+var fileReceiveStartDate=0;
+var fileReceiveSinceStartSecs=0;
 
 var extMessage = function(e) {
 	//if(e.origin != 'http://origin-domain.com') {
@@ -133,15 +137,28 @@ fileSelectElement.addEventListener('change', (event) => {
 	const chunkSize = 16*1024;
 	let fileReader = new FileReader();
 	let offset = 0;
+	let fileSendStartDate = Date.now();
+	let fileSendLastSinceStartSecs = 0;
 	progressSendBar.max = file.size;
+	progressSendLabel.innerHTML = "Sending: "+file.name.substring(0,25);
 	progressSendElement.style.display = "block";
 	fileReader.addEventListener('error', error => console.error('Error reading file:', error));
 	fileReader.addEventListener('abort', event => console.log('File reading aborted:', event));
 	fileReader.addEventListener('load', e => {
+		if(!dataChannel) {
+			console.log('file send no dataChannel');
+			return;
+		}
 		dataChannel.send(e.target.result);
 		offset += e.target.result.byteLength;
-		if(!gentle) console.log('file send', offset, file.size, dataChannel.bufferedAmount);
+		//if(!gentle) console.log('file send', offset, file.size, dataChannel.bufferedAmount);
 		progressSendBar.value = offset;
+		let sinceStartSecs = Math.floor((Date.now() - fileSendStartDate + 500)/1000);
+		if(sinceStartSecs!=fileSendLastSinceStartSecs && sinceStartSecs!=0) {
+			let kbytesPerSec = Math.floor(offset/1000/sinceStartSecs);
+			progressSendLabel.innerHTML = "sending '"+file.name.substring(0,22)+"' "+kbytesPerSec+" KB/s";
+			fileSendLastSinceStartSecs = sinceStartSecs;
+		}
 		if (offset < file.size) {
 			readSlice(offset);
 		} else {
@@ -154,7 +171,7 @@ fileSelectElement.addEventListener('change', (event) => {
 				console.log('file send complete', file.size);
 				offset = 0;
 				progressSendElement.style.display = "none";
-				showStatus("sent '"+file.name.substring(0,25)+"' "+file.size+" bytes",-1);
+				showStatus("sent '"+file.name.substring(0,25)+"' "+Math.floor(file.size/1000)+" KB",-1);
 				if(mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
 					fileselectLabel.style.display = "inline-block";
 				}
@@ -1839,6 +1856,8 @@ function createDataChannel() {
 					if(!gentle) console.log("file receive",fileName,fileSize);
 					fileReceivedSize = 0;
 					fileReceiveBuffer = [];
+					fileReceiveStartDate = Date.now();
+					fileReceiveSinceStartSecs=0;
 				}
 			}
 		} else {
@@ -1850,7 +1869,13 @@ function createDataChannel() {
 
 			fileReceivedSize += chunkSize;
 			progressRcvBar.value = fileReceivedSize;
-			if(!gentle) console.log("binary chunk", chunkSize, fileReceivedSize, fileSize);
+			let sinceStartSecs = Math.floor((Date.now() - fileReceiveStartDate + 500)/1000);
+			if(sinceStartSecs!=fileReceiveSinceStartSecs && sinceStartSecs!=0) {
+				let kbytesPerSec = Math.floor(fileReceivedSize/1000/sinceStartSecs);
+				progressRcvLabel.innerHTML = "receiving '"+fileName.substring(0,22)+"' "+kbytesPerSec+" KB/s";
+				fileReceiveSinceStartSecs = sinceStartSecs;
+			}
+			//if(!gentle) console.log("binary chunk", chunkSize, fileReceivedSize, fileSize);
 			if(fileReceivedSize === fileSize) {
 				if(!gentle) console.log("file receive complete");
 				const receivedBlob = new Blob(fileReceiveBuffer);
