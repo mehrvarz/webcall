@@ -318,10 +318,8 @@ function getUrlParams(param) {
 
 function showPw() {
 	if(formPw.type=="password") {
-		//if(!gentle) console.log("showPw to text");
 		formPw.type="text";
 	} else {
-		//if(!gentle) console.log("showPw to password");
 		formPw.type="password";
 	}
 }
