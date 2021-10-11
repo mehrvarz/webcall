@@ -253,10 +253,10 @@ input[type=submit]:focus {
 		<!-- value attr will be set by JS -->
 		<input type="text" autocomplete="username" id="username" style="display:none;" required>
 		<label for="current-password" style="display:inline-block;">Password:</label>
-		<span onclick="showPw()" style="font-size:0.95em;float:right;margin-right:16%;margin-top:2px;opacity:0.9;">show</span>
+		<span onclick="showPw()" style="font-size:0.95em;float:right;margin-right:16%;margin-top:2px;opacity:0.9;user-select:none;cursor:pointer;">show</span>
 		<br>
 		<input autocomplete="current-password" id="current-password" type="password" class="formtext" autofocus required>
-		<span onclick="clearForm(0)" style="margin-left:5px; user-select:none;">X</span><br>
+		<span onclick="clearForm(0)" style="margin-left:5px; user-select:none; cursor:pointer;">X</span><br>
 		<input type="submit" name="Submit" id="submit" value="OK" style="width:120px; margin-top:12px;">
 	</form>
 
