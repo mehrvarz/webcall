@@ -20,6 +20,7 @@ const missedCallsElement = document.getElementById('missedCalls');
 const missedCallsTitleElement = document.getElementById('missedCallsTitle');
 const form = document.querySelector('form#password');
 const formPw = document.querySelector('input#current-password');
+//const showPw = document.querySelector('input#showpw');
 const fullScreenOverlayElement = document.getElementById('fullScreenOverlay');
 const iframeWindowElement = document.getElementById('iframeWindow');
 const menuElement = document.getElementById('menu');
@@ -313,6 +314,16 @@ function getUrlParams(param) {
 	let value = path.substring(lastSlash+1);
 	if(!gentle) console.log("getUrlParams val=%s",value);
 	return value;
+}
+
+function showPw() {
+	if(formPw.type=="password") {
+		//if(!gentle) console.log("showPw to text");
+		formPw.type="text";
+	} else {
+		//if(!gentle) console.log("showPw to password");
+		formPw.type="password";
+	}
 }
 
 fileSelectElement.addEventListener('change', (event) => {
