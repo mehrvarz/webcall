@@ -20,7 +20,6 @@ const missedCallsElement = document.getElementById('missedCalls');
 const missedCallsTitleElement = document.getElementById('missedCallsTitle');
 const form = document.querySelector('form#password');
 const formPw = document.querySelector('input#current-password');
-//const showPw = document.querySelector('input#showpw');
 const fullScreenOverlayElement = document.getElementById('fullScreenOverlay');
 const iframeWindowElement = document.getElementById('iframeWindow');
 const menuElement = document.getElementById('menu');
@@ -37,7 +36,6 @@ const progressRcvLabel = document.getElementById('progressRcvLabel');
 const progressRcvBar = document.getElementById('fileProgressRcv'); // actual progress bar
 const fileselectLabel = document.getElementById("fileselectlabel");
 const fileSelectElement = document.getElementById("fileselect");
-//const audioSinkSelect = document.querySelector("select#audioSink");
 const bitrate = 280000;
 const neverAudio = false;
 const autoReconnectDelay = 30;
@@ -234,7 +232,7 @@ window.onload = function() {
 			if(mode==1) {
 				if(!gentle) console.log('onload pw-entry not required with cookie');
 				// we have a cockie, so no manual pw-entry is needed
-				// but let's turn automatic go online off, the user needs to interact before we can answer calls
+				// but let's turn automatic online off, the user needs to interact before we can answer calls
 				onGotStreamGoOnline = false;
 				goOfflineButton.disabled = true;
 				start();
@@ -402,7 +400,6 @@ fileSelectElement.addEventListener('change', (event) => {
 		}
 	});
 	const readSlice = o => {
-		//if(!gentle) console.log('readSlice ', o);
 		if(fileSendAbort) {
 			console.log('file send user abort');
 			fileReader.abort();
@@ -530,7 +527,6 @@ function login(retryFlag) {
 				talkSecs = parseInt(parts[1], 10);
 			}
 			if(parts.length>=3) {
-				//maxTalkSecs = parseInt(parts[2], 10); // 0 = nocheck
 				outboundIP = parts[2];
 			}
 			if(parts.length>=4) {
@@ -737,15 +733,7 @@ function gotDevices(deviceInfos) {
 			if(!gentle) console.log('gotDevices (%s) (%s)', deviceInfoLabel, audioSourceSelect.length);
 			option.text = deviceInfoLabel || `Microphone ${audioSourceSelect.length + 1}`;
 			audioSourceSelect.appendChild(option);
-		/*
-		} else if (deviceInfo.kind === 'videoinput') {
-		} else if (deviceInfo.kind === "audiooutput") {
-			// looks like FF doesn't report these
-			if(audioSinkSelect!=null) {
-				option.text = deviceInfo.label || `Speaker ${audioSinkSelect.length + 1}`;
-				audioSinkSelect.appendChild(option);
-			}
-		*/
+//		} else if (deviceInfo.kind === 'videoinput') {
 		}
 	}
 }
@@ -760,12 +748,6 @@ function gotStream(stream) {
 		}
 		if(!gentle) console.log('gotStream audioSourceSelect index',audioSourceSelect.selectedIndex);
 	}
-
-//	if(stream && audioSinkSelect!=null) {
-//		audioSinkSelect.selectedIndex = [...audioSinkSelect.options].
-//			findIndex(option => option.text === stream.getAudioTracks()[0].label);
-//		console.log('gotStream audioSinkSelect index',audioSinkSelect.selectedIndex);
-//	}
 
 	localStream = stream;
 
@@ -876,7 +858,6 @@ function showOnlineReadyMsg(sessionIdPayload) {
 		callerURL = callerURL.replace("/callee/","/user/");
 		var msg = "";
 		msg +=  'You will receive calls made by this link: <a href="'+callerURL+'" target="_blank">'+callerURL+'</a>';
-//				'<br><br>Max wait time 30 min. Max talk time 15 min (if relayed). You must keep this tab open to receive call.';
 		showStatus(msg,-1);
 	} else {
 		msgbox.style.display = "none";
@@ -932,8 +913,6 @@ function connectSignaling(message) {
 			menuExitElement.style.display = "block";
 		}
 		goOfflineButton.disabled = false;
-		// start background wsSend loop until !rtcConnect and while wsConn!=null
-		//setTimeout(wsHeartbeat, wsHeartbeatPauseSecs*1000);
 	};
 	wsConn.onerror = function(evt) {
 		console.log("wsConn.onerror",calleeID,wsUrl);
@@ -970,7 +949,6 @@ function connectSignaling(message) {
 			let delay = autoReconnectDelay + Math.floor(Math.random() * 10) - 5;
 			if(!gentle) console.log('reconnecting to signaling server in %ds...', delay);
 			showStatus("Reconnecting to signaling server...",-1);
-			//notificationSound.play().catch(function(error) { });
 			missedCallsElement.style.display = "none";
 			missedCallsTitleElement.style.display = "none";
 			// if conditions are right after delay secs this will call login()
@@ -1040,8 +1018,6 @@ function connectSignaling(message) {
 					}
 					if(!rtcConnect) {
 						listOfClientIps = "";
-						//callerID = "";
-						//callerName = "";
 					}
 					callerDescription = JSON.parse(payload);
 					if(!gentle) console.log('cmd callerDescriptionUpd');
@@ -1060,7 +1036,6 @@ function connectSignaling(message) {
 									wsSend("calleeDescriptionUpd|"+JSON.stringify(localDescription));
 								}, err => console.error(`Failed to set local descr: ${err.toString()}`));
 							}, err => {
-								// DOMException: Cannot create answer in stable
 								console.warn(`Failed to createAnswer`,err)
 								showStatus("Failed to createAnswer",8000);
 							});
@@ -1166,7 +1141,6 @@ function connectSignaling(message) {
 					}
 				} else if(cmd=="sessionId") {
 					// callee has checked in
-					//console.log('cmd sessionId curVers/newVers',version,payload);
 					showOnlineReadyMsg(payload);
 
 				} else if(cmd=="sessionDuration") { // in call
@@ -1241,7 +1215,6 @@ function showWaitingCallers() {
 	if(waitingCallersElement!=null) {
 		let waitingCallersTitleElement = document.getElementById('waitingCallersTitle');
 		if(waitingCallerSlice==null || waitingCallerSlice.length<=0) {
-			//console.log('showWaitingCallers fkt waitingCallerSlice == null');
 			waitingCallersElement.innerHTML = "";
 			if(waitingCallersTitleElement!=null) {
 				waitingCallersTitleElement.style.display = "none";
@@ -1316,8 +1289,6 @@ function showCallsWhileInAbsence() {
 		for(var i=0; i<callsWhileInAbsenceSlice.length; i++) {
 			str += "<tr>"
 			let waitingSecs = timeNowSecs - callsWhileInAbsenceSlice[i].CallTime;
-			//if(!gentle) console.log('showWaitingCallers %d - %d = %d',
-			//	timeNowSecs,callsWhileInAbsenceSlice[i].CallTime, waitingSecs);
 
 			// split waitingTimeString by days, hours, min
 			let waitingTimeString = ""+waitingSecs+" sec";
@@ -1362,7 +1333,6 @@ function showCallsWhileInAbsence() {
 
 					// open caller in iframe
 					callerLink = "<a onclick='iframeWindowOpen(\""+callerLink+"\")'>"+callerID+"</a>";
-					//console.log('callerLink',callerLink);
 				}
 			}
 			str += "<td>"+callsWhileInAbsenceSlice[i].CallerName + "</td><td>"+
@@ -1395,9 +1365,7 @@ function showCallsWhileInAbsence() {
 }
 
 function halfShowIpAddr(ipAddr) {
-	//console.log('halfShowIpAddr',ipAddr);
 	let idxFirstDot = ipAddr.indexOf(".");
-	//console.log('halfShowIpAddr idxFirstDot',idxFirstDot);
 	if(idxFirstDot>=0) {
 		let idxSecondDot = ipAddr.substring(idxFirstDot+1).indexOf(".")
 		//console.log('halfShowIpAddr idxSecondDot',idxSecondDot);
@@ -1499,14 +1467,13 @@ function pickup2() {
 	console.log('pickup2');
 	showStatus("");
 	stopAllAudioEffects("pickup");
-	if(!localStream) { // from gotStream(stream)
+	if(!localStream) {
 		console.warn('pickup2 no localStream');
 		return;
 	}
 
 	onnegotiationneededAllowed = true;
 
-	//console.log('pickup2 remoteAudio.play()');
 	remoteAudio.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
 	remoteAudio.load();
 	remoteAudio.play().catch(function(error) {});
@@ -1552,8 +1519,7 @@ function hangup() {
 		},1000);
 	}
 
-	endWebRtcSession(true,true); // -> peerConCloseFunc
-	//if(!gentle) console.log("hangup done");
+	endWebRtcSession(true,true);
 }
 
 function goOnline() {
@@ -1588,8 +1554,7 @@ function goOnline() {
 	peerCon.onicecandidate = e => onIceCandidate(e);
 	peerCon.onicecandidateerror = function(e) {
 		if(!gentle) console.warn("onicecandidateerror", e.errorCode, e.errorText, e.url);
-		// chrome warn "701 STUN allocate request timed out" apparently related to pion turn not supporting ipv6?
-		// TODO: happens also with ip4 addr - but only in chromium (propblem with ungoogled chromium?)
+		// chrome warn "701 STUN allocate request timed out"
 		if(e.errorCode!=701) {
 			showStatus("iceCandidate error "+e.errorCode+" "+e.errorText,-1);
 		}
@@ -1710,7 +1675,7 @@ function goOnline() {
 
 			setTimeout(function() {
 				if(!peerCon) {
-					// looks like calling peer has quickly aborted the call
+					// calling peer has quickly aborted the call
 					return;
 				}
 				// TODO if callerID and/or callerName are avail we would rather show them
@@ -1924,12 +1889,10 @@ function getStatsPostCall(results) {
 		}
 	});
 	let durationSecs = Math.floor((statsPostCallDurationMS+500)/1000);
-	//if(!gentle) console.log("getStatsPostCall durationMS",statsPostCallDurationMS,durationSecs);
 	let bitsReceivedPerSec = 0;
 	if(statsPostCallDurationMS>0) {
 		bitsReceivedPerSec = Math.floor(bytesReceived*8000/statsPostCallDurationMS);
 	}
-	//if(!gentle) console.log("getStatsPostCall bitsReceivedPerSec",bitsReceivedPerSec);
 	let bitsSentPerSec = 0;
 	if(durationRtcMS>0) {
 		bitsSentPerSec = Math.floor(bytesSent*8000/durationRtcMS);
@@ -1970,7 +1933,6 @@ function createDataChannel() {
 		};
 		dataChannel.onclose = event => {
 			if(!gentle) console.log("dataChannel.onclose");
-			//endWebRtcSession(true,true); // -> peerConCloseFunc
 		}
 		dataChannel.onerror = event => {
 			if(rtcConnect) {
@@ -1978,13 +1940,6 @@ function createDataChannel() {
 				showStatus("dataChannel error "+event.error,-1);	// .message ?
 			}
 			progressSendElement.style.display = "none";
-/*
-			if(dataChannel!=null && dataChannel.readyState=="open") {
-				// tell other side to hide progress bar
-				// tmtmtm das klappt nicht, weil dataChannel jetzt schon tot
-				dataChannel.send("file|end-");
-			}
-*/
 			if(mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
 				fileselectLabel.style.display = "inline-block";
 			}
@@ -2115,7 +2070,7 @@ function createDataChannel() {
 var allAudioEffectsStopped = false;
 function stopAllAudioEffects(comment) {
 	if(!gentle) console.log('stopAllAudioEffects',comment);
-	allAudioEffectsStopped = true; // halt the ringtone loop
+	allAudioEffectsStopped = true;
 	try {
 		if(!ringtoneSound.paused && ringtoneIsPlaying) {
 			if(!gentle) console.log('stopAllAudioEffects ringtoneSound.pause');
@@ -2136,7 +2091,6 @@ function stopAllAudioEffects(comment) {
 
 var goOnlinePending = false;
 function endWebRtcSession(disconnectCaller,goOnlineAfter) {
-	// endWebRtcSession may be called twice in near parallel
 	console.log('endWebRtcSession',disconnectCaller,goOnlineAfter);
 	remoteAudio.pause();
 	remoteAudio.currentTime = 0;
@@ -2205,7 +2159,6 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 
 		if(rtcConnect && peerCon) {
 			if(!gentle) console.log('endWebRtcSession getStatsPostCall');
-			// this is causing an async delay
 			peerCon.getStats(null).then((results) => { 
 				getStatsPostCall(results);
 				peerConCloseFunc();
@@ -2229,7 +2182,7 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 	rejectButton.style.display = "none";
 
 	if(calleeID.startsWith("!")) {
-		// go to main page // TODO best solution?
+		// go to main page
 		window.location.replace("");
 		return
 	}
@@ -2272,7 +2225,6 @@ function goOffline() {
 	stopAllAudioEffects("goOffline");
 	waitingCallerSlice = null;
 
-	//menuElement.style.display = "none";
 	isHiddenlabel.style.display = "none";
 	autoanswerlabel.style.display = "none";
 	var waitingCallersLine = document.getElementById('waitingCallers');
@@ -2290,7 +2242,7 @@ function goOffline() {
 		missedCallsTitleElement.style.display = "none";
 	}
 	if(calleeID.startsWith("!")) {
-		// go to main page // TODO best solution?
+		// go to main page
 		window.location.replace("");
 		return;
 	}
@@ -2318,7 +2270,6 @@ function onIceCandidate(event) {
 		// ICE gathering has finished
 		if(!gentle) console.log('onIce: end of calleeCandidates');
 	} else if(calleeCandidate.address==null) {
-		//console.warn('onIce skip calleeCandidate.address==null');
 	} else if(wsConn==null) {
 		if(!gentle) console.log('onIce callerCandidate: wsConn==null', callerCandidate.address);
 	} else if(wsConn.readyState!=1) {
@@ -2346,16 +2297,14 @@ function menuDialogOpen() {
 	hashcounter++;
 	location.hash = hashcounter;
 
-	// fullScreenOverlayElement disables all other buttons and enables abort by click outside
 	fullScreenOverlayElement.style.display = "block";
 	fullScreenOverlayElement.onclick = function() {
 		console.log('fullScreenOverlay click');
 		historyBack();
 	}
 	mainElement.style.filter = "blur(0.8px) brightness(60%)";
-	// "Settings" and "Exit" only if logged-in and cookies allowed
 	if(calleeLevel>0 && navigator.cookieEnabled && getCookieSupport()!=null) {
-		// cookies can be used
+		// cookies avail, "Settings" and "Exit" allowed
 		if(!gentle) console.log('menuSettingsElement on (cookies enabled)');
 		if(menuSettingsElement) {
 			menuSettingsElement.style.display = "block";
@@ -2364,7 +2313,6 @@ function menuDialogOpen() {
 			menuExit.style.display = "block";
 		}
 	} else {
-		// cookies can NOT be used
 		if(!gentle) console.log('menuSettingsElement off (cookies disabled)');
 		if(menuSettingsElement) {
 			menuSettingsElement.style.display = "none";
@@ -2412,7 +2360,6 @@ function iframeWindowOpen(url,addStyleString) {
 		location.hash = hashcounter;
 	}
 
-	// fullScreenOverlayElement disables all other buttons and enables abort by click outside
 	fullScreenOverlayElement.style.display = "block";
 	fullScreenOverlayElement.onclick = function() {
 		historyBack();
@@ -2432,7 +2379,6 @@ function iframeWindowOpen(url,addStyleString) {
 	} else {
 		iframeWindowElement.style = styleString;
 		iframeWindowElement.innerHTML = "<iframe src='"+url+"' scrolling='yes' frameborder='no' width='100%' height='100%' allow='microphone' onload='this.contentWindow.focus()'></iframe>";
-		// NOTE: this.contentWindow.focus() is needed for onkeydown events to arrive in the iframe
 	}
 }
 
