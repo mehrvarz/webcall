@@ -1573,9 +1573,11 @@ function dial() {
 	dialing = true;
 	rtcConnect = false;
 	mediaConnect = false;
-	fileselectLabel.style.display = "none";
-	progressSendElement.style.display = "none";
-	progressRcvElement.style.display = "none";
+	if(fileselectLabel!=null) {
+		fileselectLabel.style.display = "none";
+		progressSendElement.style.display = "none";
+		progressRcvElement.style.display = "none";
+	}
 
 	if(singlebutton) {
 		dialButton.style.boxShadow = "";
