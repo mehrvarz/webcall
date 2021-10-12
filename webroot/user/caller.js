@@ -2194,7 +2194,7 @@ function iframeWindowOpen(url,addStyleString) {
 
 	if(!gentle) console.log('iframeWindowOpen', url);
 	iframeWindowOpenFlag = true;
-	let styleString = "width:100%; max-width:450px; position:absolute; left:3.5%; top:1%; padding:10px; z-index:200;";
+	let styleString = "width:90%; max-width:520px; height:98%; position:absolute; left:3.5%; top:1%; padding:10px; z-index:200; overflow-y:scroll;";
 	if(url.startsWith("string:")) {
 		if(addStyleString) {
 			styleString += addStyleString;
@@ -2203,7 +2203,7 @@ function iframeWindowOpen(url,addStyleString) {
 		iframeWindowElement.innerHTML = url.substring(7);
 	} else {
 		iframeWindowElement.style = styleString;
-		iframeWindowElement.innerHTML = "<iframe src='"+url+"' scrolling='no' frameborder='no' width='100%' height='800px' allow='microphone' onload='this.contentWindow.focus()'></iframe>";
+		iframeWindowElement.innerHTML = "<iframe src='"+url+"' scrolling='yes' frameborder='no' width='100%' height='100%' allow='microphone' onload='this.contentWindow.focus()'></iframe>";
 		// NOTE: this.contentWindow.focus() is needed for onkeydown events to arrive in the iframe
 	}
 }
