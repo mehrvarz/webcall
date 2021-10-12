@@ -6,7 +6,8 @@
 
 Browser based telephony over E2EE P2P with very high audio quality.
 WebCall is lightweight and easy to use.
-Fetch a unique phone number (a WebCall user link), send it to a friend and ask to be called back:
+
+New: WebCall now offers fast, bidirectional, device-to-device file transfer.
 
 [https://timur.mobi/webcall](https://timur.mobi/webcall)
 
@@ -16,7 +17,7 @@ Fetch a unique phone number (a WebCall user link), send it to a friend and ask t
 We can build a network of telephony servers, offering completely free and
 boundless telephony to everyone. This is possible because WebCall
 servers can be operated by anyone. And because, as a user, you can interact with any
-other WebCall user, regardless of who is hosting you or them.
+other WebCall user, regardless of who is hosting you.
 All of this is possible without central coordination and without any server-to-server
 communication taking place.
 
@@ -27,7 +28,7 @@ communication taking place.
 
 A single WebCall server can provide free and secure telephony to 1M users.
 A very small (1GB, 1core, shared) server can host up to 50K concurrent users.
-Here I describe how you can build WebCall and run it for yourself and 50K friends:
+Here I describe how you can build WebCall and run it for yourself and your friends:
 
 [https://timur.mobi/webcall/install](https://timur.mobi/webcall/install)
 
