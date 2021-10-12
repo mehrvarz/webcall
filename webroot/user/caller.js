@@ -510,11 +510,8 @@ function calleeOnlineStatus(onlineStatus) {
 			dialButton.innerHTML = singleButtonBusyText;
 			dialButton.style.backgroundColor = "";
 			dialButton.style.display = "inline-block";
-			//calleeOnlineElement.style.display = "block";
 			setTimeout(function() {
-				//console.log('singlebutton back to singleButtonReadyText');
 				dialButton.innerHTML = "<b>W E B C A L L</b><br>"+singleButtonReadyText;
-				// this is a long pause
 			},9000);
 		},700);
 		return;
@@ -573,13 +570,6 @@ function calleeOnlineAction(from) {
 			return;
 		}
 
-//		if(calleeID.startsWith("random")) {
-//			// random callers don't manually click call button - they autoconnect
-//			console.log('calleeOnlineAction autodial enumerateDevices');
-//			navigator.mediaDevices.enumerateDevices().then(gotDevices);
-//			if(!gentle) console.log('calleeOnlineAction autodial dialAfterCalleeOnline');
-//			dialAfterCalleeOnline = true;
-//		}
 		if(dialAfterCalleeOnline) {
 			// autodial after detected callee is online
 			// normally set by gotStream, if dialAfterLocalStream was set (by dialButton.onclick)
@@ -642,13 +632,11 @@ var loadJsBusy = 0;
 function loadJS(jsFile,callback) {
 	// do not load same file more than once
 	if(loadedJsMap.get(jsFile)) {
-		//if(!gentle) console.log('loadJS %s was already loaded',jsFile);
 		callback();
 		return;
 	}
 	if(loadJsBusy>0) {
 		setTimeout(function() {
-			//if(!gentle) console.log('loadJS %s retry',jsFile);
 			loadJS(jsFile,callback);
 		},100);
 		return;
@@ -675,11 +663,6 @@ function loadJS(jsFile,callback) {
 }
 
 function calleeOfflineAction() {
-//	if(calleeID.startsWith("random")) {
-//		window.location.replace("/callee/"+calleeID);
-//		return;
-//	}
-
 	if(!singlebutton) {
 		// switch to callee-is-offline layout
 		if(!gentle) console.log('calleeOfflineAction !singlebutton callee-is-offline');
@@ -718,7 +701,6 @@ function calleeOfflineAction() {
 	if(!gentle) console.log('calleeOfflineAction done');
 }
 
-// not for singlebutton
 var calleeName = "";
 var confirmValue = "";
 var confirmWord = "123";
@@ -726,7 +708,6 @@ var confirmXhrNickname = false;
 function confirmNotifyConnect() {
 	// offer caller to enter own name and ask to confirm with a specific word ("yes")
 	// using a form with two text fields
-	//console.log('confirmNotifyConnect callerName',callerName);
 
 	// TODO change confirmWord randomly
 
@@ -803,7 +784,6 @@ function clearForm(idx) {
 	}
 }
 
-// not for singlebutton
 function confirmNotifyConnect2() {
 	callerName = document.getElementById("nickname").value;
 	callerId = document.getElementById("callerID").value;
@@ -826,7 +806,6 @@ function confirmNotifyConnect2() {
 	notifyConnect(callerName,callerId);
 }
 
-// not for singlebutton
 function notifyConnect(callerName,callerId) {
 	showStatus("Trying to get "+calleeID+" on the phone now. Please wait...<br><br><img src='preloader-circles.svg' style='width:95%;max-height:450px;margin-top:-20%;'>",-1);
 
@@ -890,8 +869,6 @@ function getStream() {
 		if(dialAfterLocalStream) {
 			dialAfterLocalStream=false;
 			console.log("getStream neverAudio -> dialAfterCalleeOnline");
-			//dialAfterCalleeOnline = true;
-			//checkCalleeOnline();
 			gotStream(); // pretend
 		}
 		return
@@ -985,8 +962,6 @@ function gotStream(stream) {
 	if(dialAfterLocalStream) {
 		if(!gentle) console.log("gotStream dialAfterLocalStream");
 		dialAfterLocalStream=false;
-		//dialAfterCalleeOnline = true;
-		//checkCalleeOnline();
 		connectSignaling("",dial);
 	} else if(localStream) {
 		// disable local mic until we start dialing
@@ -1404,10 +1379,6 @@ function connectSignaling(message,openedFunc) {
 						if(!gentle) console.log('waitForRemoteStreamFunc',remoteStream!=null,waitLoopCount);
 						if(!remoteStream) {
 							waitLoopCount++;
-//							if(waitLoopCount>=6) {
-//								hangupWithBusySound(true,"pickup but no remoteStream");
-//								return;
-//							}
 							if(waitLoopCount<=4) {
 								setTimeout(waitForRemoteStreamFunc, 300);
 								return;
@@ -1452,7 +1423,6 @@ function connectSignaling(message,openedFunc) {
 
 				} else if(cmd=="callerDescription" || cmd=="callerCandidate" || "callerInfo" ||
 						cmd=="stop" || cmd=="ping" || cmd=="rtcConnect" || cmd=="callerDescriptionUpd") {
-					// skip noise
 				} else {
 					console.warn('ignore incom cmd',cmd);
 				}
@@ -1476,9 +1446,6 @@ function connectSignaling(message,openedFunc) {
 			// onclose after a ws-connection has been established
 			// most likey the callee is busy
 			console.log('ws close: disconnect');
-			//if(mediaConnect) {
-			//	showStatus("Signaling server disconnected");
-			//}
 		}
 		wsConn=null;
 	};
@@ -1640,9 +1607,6 @@ function dial() {
 				return;
 			}
 			if(!gentle) console.log('peerCon.ontrack onunmute set remoteAudio.srcObject',streams[0]);
-			//remoteAudio.srcObject = streams[0];
-			//remoteAudio.load();
-			//remoteAudio.play().catch(function(error) {});
 			remoteStream = streams[0];
 		};
 	};
@@ -1717,10 +1681,6 @@ function dial() {
 				rtcConnectStartDate = Date.now();
 				mediaConnectStartDate = 0;
 
-				//peerCon.getStats(null)
-				//	.then((results) => getStatsCandidateTypes(results,"Establishing call",""),
-				//	err => console.log(err));
-
 				if(!singlebutton) {
 					let msgboxText = msgbox.value.substring(0,300);
 					if(!gentle) console.log('msgboxText',msgboxText);
@@ -1784,19 +1744,6 @@ function dial() {
 		localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
 			'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
 		console.log('got localDescription');
-		/*
-		if(singlebutton) {
-			// switch from dialButton to hangupButton "Connecting..."
-			dialButton.style.display = "none";
-			hangupButton.style.backgroundColor = "#d33"; // color from button:active
-			hangupButton.innerHTML = connectingText;
-			hangupButton.style.display = "inline-block";
-		} else {
-			dialButton.disabled = true;
-			hangupButton.disabled = false;
-			audioSelect.disabled = true;
-		}
-		*/
 		if(playDialSounds) {
 			dtmfDialingSound.play().catch(function(error) {
 				console.warn('ex dtmfDialingSound.play',error) });
@@ -1835,12 +1782,6 @@ function createDataChannel() {
 			showStatus("dataChannel error "+event.error,-1);	// .message ?
 		}
 		progressSendElement.style.display = "none";
-/*
-		if(dataChannel!=null && dataChannel.readyState=="open") {
-			// tell other side to hide progress bar
-			dataChannel.send("file|end-");
-		}
-*/
 		if(fileselectLabel!=null && mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
 			fileselectLabel.style.display = "inline-block";
 		}
@@ -1871,11 +1812,10 @@ function createDataChannel() {
 					}
 					microphoneIsNeeded = false;
 
-					// mute micro
+					// mute mic
 					if(localStream!=null) {
 						const audioTracks = localStream.getAudioTracks();
 						audioTracks[0].enabled = false;
-						// localStream.getTracks().forEach(track => { track.stop(); });
 					}
 				} else if(event.data.startsWith("file|")) {
 					var fileDescr = event.data.substring(5);
@@ -1973,7 +1913,7 @@ function createDataChannel() {
 function onIceCandidate(event) {
 	var callerCandidate = event.candidate;
 	if(callerCandidate==null) {
-		// ICE gathering has finished
+		// ICE gathering finished
 		if(!gentle) console.log('onIce: end of callerCandidates');
 	} else {
 		//if(!gentle) console.log("onIce",callerCandidate.candidate);
@@ -2136,12 +2076,6 @@ function hangup(mustDisconnectCallee,message) {
 		} else {
 			peerCon.getStats(null).then((results) => { 
 				getStatsPostCall(results);
-/*
-				if(statsPostCallString!="" && statsPostCallDurationMS>0) {
-					// enable info.svg button onclick -> showStatsPostCall()
-					postCallStatsElement.style.display = "inline-block";
-				}
-*/
 				peerConCloseFunc();
 			}, err => {
 				console.log(err); 
@@ -2229,7 +2163,7 @@ function iframeWindowClose() {
 }
 
 function historyBack() {
-	history.back(); // will call closeResults()
+	history.back();
 }
 
 var menuDialogOpenFlag = false;
@@ -2244,7 +2178,6 @@ function menuDialogOpen() {
 	hashcounter++;
 	location.hash = hashcounter;
 
-	// fullScreenOverlayElement disables all other buttons and enables abort by click outside
 	fullScreenOverlayElement.style.display = "block";
 	fullScreenOverlayElement.onclick = function() {
 		console.log('fullScreenOverlay click');
