@@ -1,5 +1,10 @@
 package main
 
+import (
+	"fmt"
+	"net"
+)
+
 func udpHealthService(port int) error {
 	// start listen to UDP port
 	udpAddr := fmt.Sprintf(":%d", port)
