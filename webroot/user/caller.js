@@ -221,7 +221,7 @@ function stopProgressSend() {
 	progressSendElement.style.display = "none";
 	if(dataChannel!=null && dataChannel.readyState=="open") {
 		dataChannel.send("file|end-send");
-		if(mediaConnect) {
+		if(fileselectLabel!=null && mediaConnect) {
 			fileselectLabel.style.display = "inline-block";
 		}
 	}
@@ -1368,7 +1368,7 @@ function connectSignaling(message,openedFunc) {
 						remoteAudio.play().catch(function(error) {});
 						mediaConnect = true;
 						mediaConnectStartDate = Date.now();
-						if(dataChannel!=null && dataChannel.readyState=="open") {
+						if(fileselectLabel!=null && dataChannel!=null && dataChannel.readyState=="open") {
 							fileselectLabel.style.display = "inline-block";
 						}
 
@@ -1841,7 +1841,7 @@ function createDataChannel() {
 			dataChannel.send("file|end-");
 		}
 */
-		if(mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
+		if(fileselectLabel!=null && mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
 			fileselectLabel.style.display = "inline-block";
 		}
 	}
@@ -1854,7 +1854,9 @@ function createDataChannel() {
 					dataChannel.close();
 					hangupWithBusySound(false,"Peer hang up");
 				} else if(event.data.startsWith("cmd|ledred")) {
-					onlineIndicator.src="red-gradient.svg";
+					if(onlineIndicator!=null) {
+						onlineIndicator.src="red-gradient.svg";
+					}
 					microphoneIsNeeded = true;
 
 					// unmute micro
@@ -1864,7 +1866,9 @@ function createDataChannel() {
 						// localStream.getTracks().forEach(track => { ??? });
 					}
 				} else if(event.data.startsWith("cmd|ledgreen")) {
-					onlineIndicator.src="green-gradient.svg";
+					if(onlineIndicator!=null) {
+						onlineIndicator.src="green-gradient.svg";
+					}
 					microphoneIsNeeded = false;
 
 					// mute micro
@@ -1891,7 +1895,7 @@ function createDataChannel() {
 						showStatus("file send aborted by receiver");
 						fileSendAbort = true;
 						progressSendElement.style.display = "none";
-						if(mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
+						if(fileselectLabel!=null && mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
 							fileselectLabel.style.display = "inline-block";
 						}
 						return;
@@ -2008,9 +2012,11 @@ function hangup(mustDisconnectCallee,message) {
 	remoteStream = null;
 	rtcConnect = false;
 	mediaConnect = false;
-	fileselectLabel.style.display = "none";
-	progressSendElement.style.display = "none";
-	progressRcvElement.style.display = "none";
+	if(fileselectLabel!=null) {
+		fileselectLabel.style.display = "none";
+		progressSendElement.style.display = "none";
+		progressRcvElement.style.display = "none";
+	}
 	if(!singlebutton) {
 		msgbox.value = "";
 	}
