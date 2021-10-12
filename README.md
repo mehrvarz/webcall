@@ -7,7 +7,9 @@
 Browser based telephony over E2EE P2P with very high audio quality.
 WebCall is lightweight and easy to use.
 
-New: WebCall now offers fast, bidirectional, device-to-device file transfer.
+New: WebCall offers device-to-device, bidirectional file transfer. 
+If you need to send files to someone quick, I cannot think of a better solution.
+And you can use the voice feature to make sure only the right person gets the files.
 
 [https://timur.mobi/webcall](https://timur.mobi/webcall)
 
