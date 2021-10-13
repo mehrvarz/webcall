@@ -204,7 +204,7 @@ if(fileSelectElement!=null) {
 				// file send delay
 				setTimeout(function() {
 					readSlice(o);
-				},100);
+				},50);
 				return;
 			}
 			const slice = file.slice(offset, o + chunkSize);
