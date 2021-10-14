@@ -747,16 +747,12 @@ function getStream() {
 		.then(gotStream)
 		.catch(function(err) {
 			// "Permissions policy violation: microphone is not allowed in this document"
-			// "DOMException: Permission denied"
-			// this happens for example if caller.js is invoked from a http:// context
-			// in singlebutton mode the button gets stuck in "Connecting..." state
-			// so we hide the buttons here
-			// TODO but we still need to message the client (via alert()?)
+			// happens if caller.js is invoked via insecure http:, so we remove the buttons
 			dialButton.style.display = "none";
 			hangupButton.style.display = "none";
 			console.error('no audio input device found', err);
 			if(singlebutton) {
-				alert("No audio input device found\n"+err);
+				//alert("No audio input device found\n"+err);
 			} else {
 				showStatus("No audio input device found<br>"+err,-1);
 			}
