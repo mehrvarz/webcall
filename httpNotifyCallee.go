@@ -399,7 +399,7 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 
 	if dbUser.Email2=="" && dbUser.Str2=="" && dbUser.Str3=="" {
 		// this user can NOT rcv push msg (not pushable)
-		fmt.Printf("# /canbenotified (%s) has no push channel rip=%s\n",urlID,remoteAddr)
+		fmt.Printf("/canbenotified (%s) has no push channel rip=%s\n",urlID,remoteAddr)
 		// store missed call
 		var missedCallsSlice []CallerInfo
 		err := kvCalls.Get(dbMissedCalls,urlID,&missedCallsSlice)
