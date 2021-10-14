@@ -234,7 +234,7 @@ func httpGetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 	var callerInfoMap map[string]string // callerID -> name
 	err := kvContacts.Get(dbContactsBucket,calleeID,&callerInfoMap)
 	if err!=nil {
-		fmt.Printf("# /getcontacts db get calleeID=%s err=%v\n", calleeID, err)
+		fmt.Printf("/getcontacts db get calleeID=%s err=%v\n", calleeID, err)
 		return
 	}
 	jsonStr, err := json.Marshal(callerInfoMap)
