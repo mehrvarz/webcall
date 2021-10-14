@@ -267,7 +267,7 @@ function showStatsPostCall() {
 function openPostCallStats() {
 	let str = "string:<h2>Call Statistics</h2>"+showStatsPostCall();
 	if(!gentle) console.log('openPostCallStats');
-	iframeWindowOpen(str,"background:#33ad; color:#eee; min-height:480px; padding:20px; max-width:400px; left:5.0%; top:3%; font-size:1.1em; line-height:1.4em;");
+	iframeWindowOpen(str,"background:#33ad; color:#eee; padding:20px; max-width:400px; left:5.0%; top:3%; font-size:1.1em; line-height:1.4em;");
 }
 
 function stopProgressSend() {
@@ -367,11 +367,11 @@ function iframeWindowOpen(url,addStyleString) {
 
 	if(!gentle) console.log('iframeWindowOpen', url);
 	iframeWindowOpenFlag = true;
-	let styleString = "width:90%; max-width:460px; height:94%; position:absolute; left:3.5%; top:1%; padding:10px; z-index:200; _overflow-y:scroll;";
+	let styleString = "width:90%; max-width:440px; height:94%; position:absolute; left:3.5%; top:1%; padding:10px; z-index:200; _overflow-y:scroll;";
+	if(addStyleString) {
+		styleString += addStyleString;
+	}
 	if(url.startsWith("string:")) {
-		if(addStyleString) {
-			styleString += addStyleString;
-		}
 		iframeWindowElement.style = styleString;
 		iframeWindowElement.innerHTML = url.substring(7);
 	} else {
