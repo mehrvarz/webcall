@@ -167,6 +167,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		//	globalID, urlID, remoteAddr, myRequestCount, time.Since(startRequestTime))
 
 		if cookie == nil && !nocookie {
+			err,cookieValue := createCookie(w, urlID, pw, &pwIdCombo)
+/*
 			// create new cookie with name=webcallid value=urlID
 			// store only if url parameter nocookie is NOT set
 			cookieSecret := fmt.Sprintf("%d", rand.Int63n(99999999999))
@@ -205,6 +207,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 			skipConfirm := true
 			err = kvHashedPw.Put(dbHashedPwBucket, cookieValue, pwIdCombo, skipConfirm)
+*/
 			if err != nil {
 				fmt.Printf("# /login persist PwIdCombo error db=%s bucket=%s cookie=%s err=%v\n",
 					dbHashedPwName, dbHashedPwBucket, cookieValue, err)
@@ -412,5 +415,62 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		}()
 	}
 	return
+}
+
+func createCookie(w http.ResponseWriter, urlID string, pw string, pwIdCombo *PwIdCombo) (error,string) {
+	// create new cookie with name=webcallid value=urlID
+	// store only if url parameter nocookie is NOT set
+	cookieSecret := fmt.Sprintf("%d", rand.Int63n(99999999999))
+	if logWantedFor("cookie") {
+		fmt.Printf("/login cookieSecret=%s\n", cookieSecret)
+	}
+
+	// we need urlID in cookieName only for answie#
+	cookieName := "webcallid"
+	if strings.HasPrefix(urlID, "answie") {
+		cookieName = "webcallid-" + urlID
+	}
+	expiration := time.Now().Add(6 * 31 * 24 * time.Hour)
+	cookieValue := fmt.Sprintf("%s&%s", urlID, string(cookieSecret))
+	if logWantedFor("cookie") {
+		fmt.Printf("/login create cookie cookieName=(%s) cookieValue=(%s)\n",
+			cookieName, cookieValue)
+	}
+	cookieObj := http.Cookie{Name: cookieName, Value: cookieValue,
+		Path:     "/",
+		HttpOnly: false,
+		SameSite: http.SameSiteStrictMode,
+		Expires:  expiration}
+	cookie := &cookieObj
+	http.SetCookie(w, cookie)
+	if logWantedFor("cookie") {
+		fmt.Printf("/login cookie (%v) created\n", cookieValue)
+	}
+
+	pwIdCombo.Pw = pw
+	pwIdCombo.CalleeId = urlID // TODO or globalID?
+	pwIdCombo.Created = time.Now().Unix()
+	pwIdCombo.Expiration = expiration.Unix()
+
+	skipConfirm := true
+	return kvHashedPw.Put(dbHashedPwBucket, cookieValue, pwIdCombo, skipConfirm), cookieValue
+/*
+	if err != nil {
+		fmt.Printf("# /login persist PwIdCombo error db=%s bucket=%s cookie=%s err=%v\n",
+			dbHashedPwName, dbHashedPwBucket, cookieValue, err)
+		if globalID != "" {
+			_,lenGlobalHubMap = DeleteFromHubMap(globalID)
+		}
+		fmt.Fprintf(w, "noservice")
+		return
+	}
+
+	if logWantedFor("cookie") {
+		fmt.Printf("/login persisted PwIdCombo db=%s bucket=%s key=%s\n",
+			dbHashedPwName, dbHashedPwBucket, cookieValue)
+	}
+*/
+	//fmt.Printf("/login pwIdCombo stored id=%d time=%v\n",
+	//	myRequestCount, time.Since(startRequestTime))
 }
 

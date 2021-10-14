@@ -248,6 +248,13 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 					fmt.Printf("/register db=%s bucket=%s stored ID=%s OK\n",
 						dbMainName, dbRegisteredIDs, registerID)
 					// registerID is now available for use
+					var pwIdCombo PwIdCombo
+					err,cookieValue := createCookie(w, registerID, pw, &pwIdCombo)
+					if err!=nil {
+						fmt.Printf("/register create cookie error id=%s cookie=%s err=%v\n",
+							registerID, cookieValue, err)
+						// not fatal, but user needs to enter pw again now
+					}
 					fmt.Fprintf(w, "OK")
 				}
 			}

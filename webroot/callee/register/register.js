@@ -116,8 +116,7 @@ function submitForm(theForm) {
 				calleeLink = calleeLink.replace("register/","");
 				calleeLink += myCalleeID;
 				if(!gentle) console.log('calleeLink',calleeLink);
-				showStatus( "Your personal callee link is shown below. Save the link for later use! You can click on it now, to start receiving calls right away.<br><br>"+
-				"When you open your callee link you will be asked to enter your password again.<br><br>"+
+				showStatus( "Your personal callee link is shown below. Save the link for later use! You can click on it now to start receiving calls right away.<br><br>"+
 				"<a onclick='exelink(this.href); return false;' href='"+calleeLink+"'>"+calleeLink+"</a>",-1);
 			} else {
 				console.log('response:',xhr.responseText);
