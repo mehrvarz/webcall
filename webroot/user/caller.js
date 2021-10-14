@@ -2106,66 +2106,6 @@ function hangupWithBusySound(mustDisconnectCallee,message) {
 	hangup(mustDisconnectCallee,message);
 }
 
-function menuDialogClose() {
-	if(!gentle) console.log('menuDialogClose');
-	menuDialogElement.style.display = "none";
-	mainElement.style.filter = "";
-	fullScreenOverlayElement.style.display = "none";
-	fullScreenOverlayElement.onclick = null;
-	menuDialogOpenFlag = false;
-}
-
-var iframeWindowOpenFlag = false;
-function iframeWindowOpen(url,addStyleString) {
-	if(iframeWindowOpenFlag) {
-		console.log('iframeWindowOpen iframeWindowOpenFlag');
-		return;
-	}
-	if(menuDialogOpenFlag) {
-		menuDialogClose();
-	} else {
-		hashcounter++;
-		location.hash = hashcounter;
-	}
-
-	// fullScreenOverlayElement disables all other buttons and enables abort by click outside
-	fullScreenOverlayElement.style.display = "block";
-	fullScreenOverlayElement.onclick = function() {
-		historyBack();
-	}
-
-	mainElement.style.filter = "blur(0.8px) brightness(60%)";
-
-	if(!gentle) console.log('iframeWindowOpen', url);
-	iframeWindowOpenFlag = true;
-	let styleString = "width:90%; max-width:520px; height:98%; position:absolute; left:3.5%; top:1%; padding:10px; z-index:200; overflow-y:scroll;";
-	if(url.startsWith("string:")) {
-		if(addStyleString) {
-			styleString += addStyleString;
-		}
-		iframeWindowElement.style = styleString;
-		iframeWindowElement.innerHTML = url.substring(7);
-	} else {
-		iframeWindowElement.style = styleString;
-		iframeWindowElement.innerHTML = "<iframe src='"+url+"' scrolling='yes' frameborder='no' width='100%' height='100%' allow='microphone' onload='this.contentWindow.focus()'></iframe>";
-		// NOTE: this.contentWindow.focus() is needed for onkeydown events to arrive in the iframe
-	}
-}
-
-function iframeWindowClose() {
-	if(!gentle) console.log('iframeWindowClose');
-	mainElement.style.filter="";
-	iframeWindowElement.innerHTML = "";
-	iframeWindowElement.style.display = "none";
-	fullScreenOverlayElement.style.display = "none";
-	fullScreenOverlayElement.onclick = null;
-	iframeWindowOpenFlag = false;
-}
-
-function historyBack() {
-	history.back();
-}
-
 var menuDialogOpenFlag = false;
 function menuDialogOpen() {
 	if(menuDialogOpenFlag) {
