@@ -155,8 +155,9 @@ if(fileSelectElement!=null) {
 				fileReader.abort();
 				return;
 			}
-			if(!dataChannel) {
+			if(dataChannel==null || dataChannel.readyState!="open") {
 				console.log('file send no dataChannel');
+				fileReader.abort();
 				return;
 			}
 			dataChannel.send(e.target.result);
