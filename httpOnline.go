@@ -247,7 +247,7 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 				} else {
 					fmt.Printf("/register db=%s bucket=%s stored ID=%s OK\n",
 						dbMainName, dbRegisteredIDs, registerID)
-					// registerID is now available for use for 24h
+					// registerID is now available for use
 					fmt.Fprintf(w, "OK")
 				}
 			}

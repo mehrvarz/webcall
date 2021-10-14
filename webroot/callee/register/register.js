@@ -99,7 +99,7 @@ function submitForm(theForm) {
 	var valuePw = document.getElementById("pw").value;
 	if(!gentle) console.log('submitForm valuePw.length',valuePw.length);
 	if(valuePw.length < 6) {
-		showStatus("Password needs to be at least six characters long",-1);
+		showStatus("Password must have six or more characters",-1);
 		return;
 	}
 
