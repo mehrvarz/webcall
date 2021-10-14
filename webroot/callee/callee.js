@@ -35,7 +35,6 @@ const progressRcvElement = document.getElementById('progressRcv'); // switch on 
 const progressRcvLabel = document.getElementById('progressRcvLabel');
 const progressRcvBar = document.getElementById('fileProgressRcv'); // actual progress bar
 const fileselectLabel = document.getElementById("fileselectlabel");
-const fileSelectElement = document.getElementById("fileselect");
 const bitrate = 280000;
 const neverAudio = false;
 const autoReconnectDelay = 30;
@@ -320,107 +319,6 @@ function showPw() {
 		formPw.type="password";
 	}
 }
-
-fileSelectElement.addEventListener('change', (event) => {
-	if(!gentle) console.log("fileSelect event");
-	historyBack();
-	const files = fileSelectElement.files;
-	const file = files.item(0);
-	if(file==null) {
-		console.log("fileSelect file==nulll");
-		return;
-	}
-	if(file.name=="") {
-		console.log("fileSelect file.name is empty");
-		return;
-	}
-	if(file.size<=0) {
-		console.log("fileSelect file.size <= 0");
-		return;
-	}
-	if(dataChannel==null || dataChannel.readyState!="open") {
-		console.log("fileSelect no dataChannel");
-		return;
-	}
-	console.log("fileSelect: "+file.name, file.size, file.type, file.lastModified);
-	dataChannel.send("file|"+file.name+","+file.size+","+file.type+","+file.lastModified);
-	fileselectLabel.style.display = "none";
-	showStatus("",-1);
-
-	const chunkSize = 16*1024;
-	let fileReader = new FileReader();
-	let offset = 0;
-	let timerStartDate = Date.now();
-	let lastSinceStartSecs = 0;
-	fileSendAbort = false;
-	progressSendBar.max = file.size;
-	progressSendLabel.innerHTML = "Sending: "+file.name.substring(0,25);
-	progressSendElement.style.display = "block";
-	fileReader.addEventListener('error', error => console.error('Error reading file:', error));
-	fileReader.addEventListener('abort', event => console.log('File reading aborted:', event));
-	fileReader.addEventListener('load', e => {
-		if(fileSendAbort) {
-			console.log('file send user abort');
-			fileReader.abort();
-			return;
-		}
-		if(dataChannel==null || dataChannel.readyState!="open") {
-			console.log('file send no dataChannel');
-			fileReader.abort();
-			return;
-		}
-		dataChannel.send(e.target.result);
-		offset += e.target.result.byteLength;
-		//if(!gentle) console.log('file send', offset, file.size, dataChannel.bufferedAmount);
-		progressSendBar.value = offset;
-		let sinceStartSecs = Math.floor((Date.now() - timerStartDate + 500)/1000);
-		if(sinceStartSecs!=lastSinceStartSecs && sinceStartSecs!=0) {
-			let kbytesPerSec = Math.floor(offset/1000/sinceStartSecs);
-			progressSendLabel.innerHTML = "sending '"+file.name.substring(0,22)+"' "+kbytesPerSec+" KB/s";
-			lastSinceStartSecs = sinceStartSecs;
-		}
-		if (offset < file.size) {
-			readSlice(offset);
-		} else {
-			let sendComplete = function() {
-				if(dataChannel!=null && dataChannel.bufferedAmount > 0) {
-					console.log('file send flushing buffered...');
-					setTimeout(sendComplete,200);
-					return;
-				}
-				console.log('file send complete', file.size);
-				offset = 0;
-				progressSendElement.style.display = "none";
-				showStatus("sent '"+file.name.substring(0,25)+"' "+Math.floor(file.size/1000)+" KB",-1);
-				if(mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
-					fileselectLabel.style.display = "inline-block";
-				}
-			};
-			sendComplete();
-		}
-	});
-	const readSlice = o => {
-		if(fileSendAbort) {
-			console.log('file send user abort');
-			fileReader.abort();
-			return;
-		}
-		if(dataChannel==null || dataChannel.readyState!="open") {
-			console.log('file send abort on dataChannel');
-			return;
-		}
-		if(dataChannel.bufferedAmount > 10*chunkSize) {
-			// file send delay
-			setTimeout(function() {
-				readSlice(o);
-			},50);
-			return;
-		}
-		const slice = file.slice(offset, o + chunkSize);
-		fileReader.readAsArrayBuffer(slice);
-	};
-	readSlice(0);
-});
 
 function enablePasswordForm() {
 	console.log('enter password for calleeID',calleeID);
