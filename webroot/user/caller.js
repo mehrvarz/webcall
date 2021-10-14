@@ -88,9 +88,6 @@ var fileSendAbort=false;
 var fileReceiveAbort=false;
 
 var extMessage = function(e) {
-	//if(e.origin != 'http://origin-domain.com') {
-	//	return
-	//}
 	var data = e.data.split(':')
 	var action = data[0];
 	var actionArg = data[1];
@@ -110,9 +107,7 @@ var extMessage = function(e) {
 window.addEventListener('message', extMessage, false); 
 console.log("caller client extMessage now listening");
 
-
 window.onload = function() {
-	//if(!gentle) console.log("onload");
 	let id = getUrlParams("id");
 	if(typeof id!=="undefined" && id!="") {
 		calleeID = id;
