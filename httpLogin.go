@@ -17,15 +17,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	//fmt.Printf("/login urlID=(%s) rip=%s id=%d rt=%v\n",
 	//	urlID, remoteAddrWithPort, myRequestCount, time.Since(startRequestTime)) // rt=4.393µs
 
-	// deny bot's
-	referer := r.Referer()
-	if strings.Index(referer, "bot") >= 0 ||
-		strings.Index(referer, "search") >= 0 ||
-		strings.Index(referer, "acebook") >= 0 {
-		fmt.Printf("# /login by bot denied urlID=(%s) referer=(%s) rip=%s\n", urlID, referer, remoteAddr)
-		return
-	}
-
 	// reached maxCallees?
 	hubMapMutex.RLock()
 	lenHubMap := len(hubMap)

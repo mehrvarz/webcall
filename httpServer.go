@@ -219,6 +219,18 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("http api (%v) tls=%v rip=%s\n", r.URL, r.TLS!=nil, remoteAddrWithPort)
 	}
 
+	// deny bot's
+	userAgent := r.UserAgent()
+	if userAgent=="" || 
+		strings.Index(userAgent, "bot") >= 0 ||
+		strings.Index(userAgent, "spider") >= 0 ||
+		strings.Index(userAgent, "scan") >= 0 ||
+		strings.Index(userAgent, "search") >= 0 ||
+		strings.Index(userAgent, "acebook") >= 0 {
+		fmt.Printf("# /http by bot denied path=(%s) userAgent=(%s) rip=%s\n", r.URL.Path, userAgent, remoteAddr)
+		return
+	}
+
 	referer := r.Referer()
 	refOptionsIdx := strings.Index(referer,"?")
 	if refOptionsIdx>=0 {

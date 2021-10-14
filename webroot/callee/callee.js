@@ -2288,7 +2288,7 @@ function historyBack() {
 var menuDialogOpenFlag = false;
 function menuDialogOpen() {
 	if(menuDialogOpenFlag) {
-		console.log('menuDialogOpen menuDialogOpenFlag');
+		if(!gentle) console.log('menuDialogOpen menuDialogOpenFlag');
 		return;
 	}
 	if(!gentle) console.log('menuDialogOpen');
@@ -2299,7 +2299,7 @@ function menuDialogOpen() {
 
 	fullScreenOverlayElement.style.display = "block";
 	fullScreenOverlayElement.onclick = function() {
-		console.log('fullScreenOverlay click');
+		if(!gentle) console.log('fullScreenOverlay click');
 		historyBack();
 	}
 	mainElement.style.filter = "blur(0.8px) brightness(60%)";
