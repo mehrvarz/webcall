@@ -48,7 +48,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		if key != "" {
 			fmt.Fprintf(w, "fatal")
 			httpResponseCount++
-			fmt.Printf("# /login key=(%s) is already logged in rip=%s\n", key, remoteAddr)
+			fmt.Printf("/login key=(%s) is already logged in rip=%s\n", key, remoteAddr)
 			return
 		}
 	}
