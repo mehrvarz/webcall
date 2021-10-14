@@ -62,7 +62,6 @@ var remoteStream = null;
 var dataChannel = null;
 var rtcConnect = false
 var rtcConnectStartDate = 0;
-var rtcLink = "";
 var mediaConnect = false;
 var mediaConnectStartDate = 0;
 var listOfClientIps = "";
@@ -422,28 +421,6 @@ fileSelectElement.addEventListener('change', (event) => {
 	readSlice(0);
 });
 
-function stopProgressSend() {
-	console.log("stopProgressSend");
-	showStatus("file send aborted");
-	fileSendAbort = true;
-	progressSendElement.style.display = "none";
-	if(dataChannel!=null && dataChannel.readyState=="open") {
-		dataChannel.send("file|end-send");
-		if(mediaConnect) {
-			fileselectLabel.style.display = "inline-block";
-		}
-	}
-}
-function stopProgressRcv() {
-	console.log("stopProgressRcv");
-	showStatus("file receive aborted");
-	fileReceiveAbort = true;
-	progressRcvElement.style.display = "none";
-	if(dataChannel!=null && dataChannel.readyState=="open") {
-		dataChannel.send("file|end-rcv");
-	}
-}
-
 function enablePasswordForm() {
 	console.log('enter password for calleeID',calleeID);
 	showStatus("Login calleeID: "+calleeID,-1);
@@ -663,32 +640,6 @@ function offlineAction() {
 	if(!gentle) console.log('offlineAction');
 	goOnlineButton.disabled = false;
 	goOfflineButton.disabled = true;
-}
-
-var xhrTimeout = 30000;
-function ajaxFetch(xhr, type, api, processData, errorFkt, postData) {
-	xhr.onreadystatechange = function() {
-		if(xhr.readyState == 4 && (xhr.status==200 || xhr.status==0)) {
-			processData(xhr);
-		} else if(xhr.readyState==4) {
-			errorFkt("fetch error",xhr.status);
-		}
-	}
-	xhr.timeout = xhrTimeout;
-	xhr.ontimeout = function () {
-		errorFkt("timeout",0);
-	}
-	xhr.onerror= function(e) {
-		errorFkt("fetching",xhr.status);
-	};
-	if(!gentle) console.log('xhr send',api);
-	xhr.open(type, api, true);
-	xhr.setRequestHeader("Content-type", "text/plain; charset=utf-8");
-	if(postData) {
-		xhr.send(postData);
-	} else {
-		xhr.send();
-	}
 }
 
 function getStream() {
@@ -1415,49 +1366,6 @@ function wsSend(message) {
 	}
 }
 
-let timerStartDate;
-let timerIntervalID=0;
-function startTimer(startDuration) {
-	if(!timerStartDate && startDuration>0) {
-		if(!gentle) console.log('startTimer',startDuration);
-		timerElement.style.opacity = "0.5";
-		timerStartDate = Date.now();
-		updateClock(startDuration);
-		timerIntervalID = setInterval(updateClock, 999, startDuration);
-	}
-}
-function stopTimer() {
-	timerStartDate = null
-	if(timerIntervalID && timerIntervalID>0) {
-		if(!gentle) console.log('stopTimer');
-		clearInterval(timerIntervalID);
-		timerIntervalID=0;
-		timerElement.style.opacity = "0";
-		return;
-	}
-}
-function updateClock(startDuration) {
-	let sinceStartSecs = Math.floor((Date.now() - timerStartDate + 500)/1000);
-	let countDownSecs = startDuration - sinceStartSecs;
-	if(countDownSecs<=0) {
-		countDownSecs=0;
-	}
-	if(countDownSecs==120 || countDownSecs==60 || countDownSecs==30 || countDownSecs==15) {
-		notificationSound.play().catch(function(error) { });
-	}
-	let timerMin = Math.floor(countDownSecs/60);
-	let timerSec = countDownSecs - timerMin*60;
-	let timerSecStr = ""+timerSec;
-	if(timerSec<10) {
-		timerSecStr = "0"+timerSecStr;
-	}
-	timerElement.innerHTML = ""+timerMin+":"+timerSecStr;
-	if(countDownSecs<=0) {
-		if(!gentle) console.log('updateClock countDownSecs<=0 stopTimer',countDownSecs);
-		stopTimer();
-	}
-}
-
 function pickup() {
 	console.log('pickup -> open mic');
 	pickupAfterMicStream = true;
@@ -1641,7 +1549,7 @@ function goOnline() {
 					if(ringtoneSound.paused && !ringtoneIsPlaying) {
 						if(!gentle) console.log('ringtone play will be started...');
 						ringtoneSound.play().catch(error => {
-							if(!gentle) console.log('ringtone play ex',ex);
+							if(!gentle) console.log('ringtone play',error);
 						});
 					} else {
 						if(!gentle) console.log('ringtone play NOT started',
@@ -1732,6 +1640,7 @@ function goOnline() {
 }
 
 
+var rtcLink = "";
 var localCandidateType = "";
 var remoteCandidateType = "";
 function getStatsCandidateTypes(results,eventString1,eventString2) {
@@ -1743,16 +1652,16 @@ function getStatsCandidateTypes(results,eventString1,eventString2) {
 	remoteCandidateType = "";
 	results.forEach(res => {
 		if(res.type=="candidate-pair") {
-			if(/*res.nominated && res.writable && res.state=="succeeded" &&*/ res.selected) {
+			if(res.selected) {
 				localCandidateId = res.localCandidateId;
 				remoteCandidateId = res.remoteCandidateId;
-				if(!gentle) console.log("getStatsCandidateTypes 1st",localCandidateId,remoteCandidateId);
+				if(!gentle) console.log("getStatsCandidateTypes 1st", localCandidateId,remoteCandidateId);
 			}
 		}
 	});
-	if(!gentle) console.log("getStatsCandidateTypes candidateId's A",localCandidateId,remoteCandidateId);
+	if(!gentle) console.log("getStatsCandidateTypes candidateId's A", localCandidateId,remoteCandidateId);
 	if(localCandidateId=="" || remoteCandidateId=="") {
-		// for callee on chrome
+		// for chrome
 		results.forEach(res => {
 			if(res.type=="transport" && res.selectedCandidatePairId!="") {
 				let selectedCandidatePairId = res.selectedCandidatePairId;
@@ -1807,6 +1716,8 @@ function getStatsCandidateTypes(results,eventString1,eventString2) {
 
 	if(!gentle) console.log('getStatsCandidateTypes',rtcLink,localCandidateType,remoteCandidateType);
 	let msg = eventString1+" "+rtcLink;
+	wsSend("log|callee "+msg);
+
 	if(calleeID.startsWith("!")) {
 		let showMsg = msg;
 		if(eventString2!="") {
@@ -1814,7 +1725,6 @@ function getStatsCandidateTypes(results,eventString1,eventString2) {
 		}
 		showStatus(showMsg,-1);
 	}
-	wsSend("log|callee "+msg);
 
 	// we rather show callerID and/or callerName if they are avail, instead of listOfClientIps
 	if(callerName!="" || callerID!="") {
@@ -1836,91 +1746,6 @@ function getStatsCandidateTypes(results,eventString1,eventString2) {
 		}
 		showStatus(showMsg,-1);
 	}
-}
-
-var statsPostCallString = "";
-var statsPostCallDurationMS = 0;
-function getStatsPostCall(results) {
-	if(!gentle) console.log('getStatsPostCall start');
-	// RTCInboundRTPAudioStream "inbound-rtp" https://www.w3.org/TR/webrtc-stats/#dom-rtcinboundrtpstreamstats
-	// RTCOutboundRTPAudioStream "outbound-rtp" https://www.w3.org/TR/webrtc-stats/#dom-rtcoutboundrtpstreamstats
-	// RTCAudioReceiverStats "receiver" 
-	let timeNow = Date.now(),
-		durationRtcMS = timeNow - rtcConnectStartDate,
-		bytesReceived = 0,
-		bytesSent = 0,
-		packetsReceived = 0,
-		packetsSent = 0,
-		packetsLost = 0,
-		jitter = 0,
-		jitterBufferDelay = 0,
-		retransmittedPacketsSent = 0,
-		roundTripTime = 0;
-
-	statsPostCallDurationMS = timeNow - mediaConnectStartDate;
-	if(mediaConnectStartDate==0) {
-		statsPostCallDurationMS = 0;
-	}
-	if(rtcConnectStartDate==0) {
-		if(!gentle) console.log('getStatsPostCall rtcConnectStartDate==0');
-		durationRtcMS = 0;
-	}
-
-	results.forEach(res => {
-		if(res.type=="inbound-rtp") {
-			bytesReceived = res.bytesReceived;
-			packetsReceived = res.packetsReceived;
-			packetsLost = res.packetsLost;
-			jitter = res.jitter;
-			jitterBufferDelay = res.jitterBufferDelay; // FF: undefined
-			//console.log("getStatsPostCall inbound-rtp",res);
-		} else if(res.type=="outbound-rtp") {
-			bytesSent = res.bytesSent;
-			packetsSent = res.packetsSent;
-			retransmittedPacketsSent = res.retransmittedPacketsSent; // FF: undefined
-			//console.log("getStatsPostCall outbound-rtp",res);
-		} else if(res.type=="remote-inbound-rtp") {
-			roundTripTime = res.roundTripTime; // FF: undefined
-			//console.log("getStatsPostCall remote-inbound-rtp",res);
-		} else if(res.type=="remote-outbound-rtp") {
-			//console.log("getStatsPostCall remote-outbound-rtp",res);
-		} else {
-			//if(!gentle) console.log("getStatsPostCall type",res.type);
-		}
-	});
-	let durationSecs = Math.floor((statsPostCallDurationMS+500)/1000);
-	let bitsReceivedPerSec = 0;
-	if(statsPostCallDurationMS>0) {
-		bitsReceivedPerSec = Math.floor(bytesReceived*8000/statsPostCallDurationMS);
-	}
-	let bitsSentPerSec = 0;
-	if(durationRtcMS>0) {
-		bitsSentPerSec = Math.floor(bytesSent*8000/durationRtcMS);
-	}
-	if(!gentle) console.log("getStatsPostCall bitsSentPerSec",bitsSentPerSec,durationRtcMS);
-	statsPostCallString =
-		"call duration: "+durationSecs+"s\n"+
-		"sent bytes: "+bytesSent+"\n"+
-		"sent bitrate: "+bitsSentPerSec+" bps\n"+
-		"sent packets: "+packetsSent+"\n"+
-		"packetsLost: "+packetsLost+"\n"+
-		"jitter: "+jitter+"\n"+
-		"jitterBufferDelay: "+jitterBufferDelay+"\n"+
-		"received bytes: "+bytesReceived+"\n"+
-		"received bitrate: "+bitsReceivedPerSec+" bps\n"+
-		"received packets: "+packetsReceived+"\n"+
-		"retransmittedPacketsSent: "+retransmittedPacketsSent+"\n"+
-		"roundTripTime: "+roundTripTime+"\n"+
-		"connection: "+rtcLink+"\n";
-	if(!gentle) console.log("statsPostCall",statsPostCallString);
-}
-
-function showStatsPostCall() {
-	var myStatsPostCallString = statsPostCallString.replaceAll("\n","<br>");
-	if(myStatsPostCallString=="") {
-		myStatsPostCallString = "No call stats available";
-	}
-	return myStatsPostCallString;
 }
 
 function createDataChannel() {
@@ -2345,12 +2170,6 @@ function openSettings() {
 	let url = "/callee/settings?id="+calleeID+"&i="+counter++;
 	if(!gentle) console.log('openSettings',url);
 	iframeWindowOpen(url);
-}
-
-function openPostCallStats() {
-	let str = "string:<h2>Call Statistics</h2>"+showStatsPostCall();
-	if(!gentle) console.log('openPostCallStats');
-	iframeWindowOpen(str,"background:#33ad; color:#eee; min-height:480px; padding:20px; max-width:400px; left:5.0%; top:3%; font-size:1.1em; line-height:1.4em;");
 }
 
 function exit() {

@@ -11,7 +11,7 @@
 <style>
 ::-webkit-scrollbar { display:none; }
 html {
-	width:100%; height:100%; _min-height:1200px;
+	width:100%; min-height:100%; _min-height:1200px;
 	background-image:linear-gradient(#003, #46f);
 	color:#ddd;
 	scrollbar-width:none;
@@ -207,8 +207,7 @@ input[type=submit]:focus {
 <img src="phone.svg"
 	style="position:absolute;right:0;top:2vh;width:440px;max-height:80vh;padding:2%;opacity:0.1;z-index:-1;">
 
-<!-- make height same as min-height of html element -->
-<div id="fullScreenOverlay" style="position:absolute; left:0; top:0; margin:0; padding:0; width:100%; height:1200px; z-index:105; display:none;"></div>
+<div id="fullScreenOverlay" style="position:absolute; left:0; top:0; margin:0; padding:0; width:100%; height:100%; z-index:105; display:none;"></div>
 
 <div id="iframeWindow" style="display:none"></div>
 
@@ -244,13 +243,8 @@ input[type=submit]:focus {
 	</div>
 
 	<select id="audioSource" style="margin-top:8px; background-color:#04c; color:white; font-size:0.9em; border:none; min-width:200px;"></select><br>
-	<!--
-	<select id="audioSink" style="margin-top:5px;background-color:#04c;color:white;font-size:0.9em;border:none;">
-	</select>
-	-->
 
 	<form action="javascript:;" onsubmit="submitFormDone(this)" style="max-width:420px;display:none;" id="password">
-		<!-- value attr will be set by JS -->
 		<input type="text" autocomplete="username" id="username" style="display:none;" required>
 		<label for="current-password" style="display:inline-block;">Password:</label>
 		<span onclick="showPw()" style="font-size:0.95em;float:right;margin-right:16%;margin-top:2px;opacity:0.9;user-select:none;cursor:pointer;">show</span>
