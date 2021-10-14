@@ -560,12 +560,14 @@ func (c *WsClient) receiveProcess(message []byte) {
 								time.Sleep(20 * time.Millisecond)
 							}
 							if myDisconCalleeOnPeerConnected {
-								fmt.Printf("%s disconCalleeOnPeerConnected %s\n", c.connType, c.hub.calleeID)
+								fmt.Printf("%s disconCalleeOnPeerConnected %s rip=%s\n",
+									c.connType, c.hub.calleeID, c.RemoteAddr)
 								c.hub.CalleeClient.Close("disconCalleeOnPeerConnected")
 							}
 							if myDisconCallerOnPeerConnected {
 								if c.hub.CallerClient != nil {
-									fmt.Printf("%s disconCallerOnPeerConnected %s\n", c.connType, c.hub.calleeID)
+									fmt.Printf("%s disconCallerOnPeerConnected %s rip=%s\n",
+										c.connType, c.hub.calleeID, c.RemoteAddr)
 									c.hub.CallerClient.Close("disconCallerOnPeerConnected")
 								}
 							}
