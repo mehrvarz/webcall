@@ -75,7 +75,9 @@ if(fileSelectElement!=null) {
 					progressSendElement.style.display = "none";
 					showStatus("sent '"+file.name.substring(0,25)+"' "+Math.floor(file.size/1000)+" KB",-1);
 					if(mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
-						fileselectLabel.style.display = "inline-block";
+						if(localCandidateType!="relay" && remoteCandidateType!="relay") {
+							fileselectLabel.style.display = "inline-block";
+						}
 					}
 				};
 				sendComplete();
@@ -278,7 +280,9 @@ function stopProgressSend() {
 	if(dataChannel!=null && dataChannel.readyState=="open") {
 		dataChannel.send("file|end-send");
 		if(fileselectLabel!=null && mediaConnect) {
-			fileselectLabel.style.display = "inline-block";
+			if(localCandidateType!="relay" && remoteCandidateType!="relay") {
+				fileselectLabel.style.display = "inline-block";
+			}
 		}
 	}
 }
@@ -291,6 +295,84 @@ function stopProgressRcv() {
 	if(dataChannel!=null && dataChannel.readyState=="open") {
 		dataChannel.send("file|end-rcv");
 	}
+}
+
+var rtcLink = "";
+var localCandidateType = "";
+var remoteCandidateType = "";
+function getStatsCandidateTypesEx(results,eventString1,eventString2) {
+	if(!gentle) console.log('getStatsCandidateTypes start');
+	rtcLink = "unknown";
+	let localCandidateId = "";
+	let remoteCandidateId = "";
+	localCandidateType = "";
+	remoteCandidateType = "";
+	results.forEach(res => {
+		if(res.type=="candidate-pair") {
+			if(res.selected) {
+				localCandidateId = res.localCandidateId;
+				remoteCandidateId = res.remoteCandidateId;
+				if(!gentle) console.log("getStatsCandidateTypes 1st", localCandidateId,remoteCandidateId);
+			}
+		}
+	});
+	if(!gentle) console.log("getStatsCandidateTypes candidateId's A", localCandidateId,remoteCandidateId);
+	if(localCandidateId=="" || remoteCandidateId=="") {
+		// for chrome
+		results.forEach(res => {
+			if(res.type=="transport" && res.selectedCandidatePairId!="") {
+				let selectedCandidatePairId = res.selectedCandidatePairId;
+				if(!gentle) console.log('getStatsCandidateTypes PairId',selectedCandidatePairId);
+				results.forEach(res => {
+					if(res.id==selectedCandidatePairId) {
+						localCandidateId = res.localCandidateId;
+						remoteCandidateId = res.remoteCandidateId
+						if(!gentle) console.log("getStatsCandidateTypes 2nd",localCandidateId,remoteCandidateId);
+					}
+				});
+			}
+		});
+	}
+
+	if(!gentle) console.log("getStatsCandidateTypes candidateId's B",localCandidateId,remoteCandidateId);
+	if(localCandidateId!="") {
+		results.forEach(res => {
+			if(res.id==localCandidateId) {
+				Object.keys(res).forEach(k => {
+					if(k=="candidateType") {
+						localCandidateType = res[k];
+					}
+				});
+			} else if(res.id==remoteCandidateId) {
+				Object.keys(res).forEach(k => {
+					if(k=="candidateType") {
+						remoteCandidateType = res[k];
+					}
+				});
+			}
+		});
+	}
+
+	let localPeerConType = "";
+	if(localCandidateType=="") {
+		localPeerConType = "unknw";
+	} else if(localCandidateType=="relay") {
+		localPeerConType = "relay";
+	} else {
+		localPeerConType = "p2p";
+	}
+	let remotePeerConType = "";
+	if(remoteCandidateType=="") {
+		remotePeerConType = "unknw";
+	} else if(remoteCandidateType=="relay") {
+		remotePeerConType = "relay";
+	} else {
+		remotePeerConType = "p2p";
+	}
+	rtcLink = localPeerConType+"/"+remotePeerConType;
+
+	if(!gentle) console.log('getStatsCandidateTypes',rtcLink,localCandidateType,remoteCandidateType);
+	return eventString1+" "+rtcLink;
 }
 
 var menuDialogOpenFlag = false;

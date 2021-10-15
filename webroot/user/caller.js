@@ -814,82 +814,8 @@ function gotStream(stream) {
 	}
 }
 
-let rtcLink="";
-let localCandidateType = "";
-let remoteCandidateType = "";
 function getStatsCandidateTypes(results,eventString1,eventString2) {
-	if(!gentle) console.log('getStatsCandidateTypes start');
-	rtcLink = "unknown";
-	let localCandidateId = "";
-	let remoteCandidateId = "";
-	localCandidateType = "";
-	remoteCandidateType = "";
-	results.forEach(res => {
-		if(res.type=="candidate-pair") {
-			if(res.selected) {
-				localCandidateId = res.localCandidateId;
-				remoteCandidateId = res.remoteCandidateId;
-				if(!gentle) console.log("getStatsCandidateTypes 1st", localCandidateId,remoteCandidateId);
-			}
-		}
-	});
-	if(!gentle) console.log("getStatsCandidateTypes candidateId's A", localCandidateId,remoteCandidateId);
-	if(localCandidateId=="" || remoteCandidateId=="") {
-		// for chrome
-		results.forEach(res => {
-			if(res.type=="transport" && res.selectedCandidatePairId!="") {
-				let selectedCandidatePairId = res.selectedCandidatePairId;
-				if(!gentle) console.log('getStatsCandidateTypes PairId',selectedCandidatePairId);
-				results.forEach(res => {
-					if(res.id==selectedCandidatePairId) {
-						localCandidateId = res.localCandidateId;
-						remoteCandidateId = res.remoteCandidateId
-						if(!gentle) console.log("getStatsCandidateTypes 2nd",localCandidateId,remoteCandidateId);
-					}
-				});
-			}
-		});
-	}
-
-	if(!gentle) console.log("getStatsCandidateTypes candidateId's B",localCandidateId,remoteCandidateId);
-	if(localCandidateId!="") {
-		results.forEach(res => {
-			if(res.id==localCandidateId) {
-				Object.keys(res).forEach(k => {
-					if(k=="candidateType") {
-						localCandidateType = res[k];
-					}
-				});
-			} else if(res.id==remoteCandidateId) {
-				Object.keys(res).forEach(k => {
-					if(k=="candidateType") {
-						remoteCandidateType = res[k];
-					}
-				});
-			}
-		});
-	}
-
-	let localPeerConType = "";
-	if(localCandidateType=="") {
-		localPeerConType = "unknw";
-	} else if(localCandidateType=="relay") {
-		localPeerConType = "relay";
-	} else {
-		localPeerConType = "p2p";
-	}
-	let remotePeerConType = "";
-	if(remoteCandidateType=="") {
-		remotePeerConType = "unknw";
-	} else if(remoteCandidateType=="relay") {
-		remotePeerConType = "relay";
-	} else {
-		remotePeerConType = "p2p";
-	}
-	rtcLink = localPeerConType+"/"+remotePeerConType;
-
-	if(!gentle) console.log('getStatsCandidateTypes',rtcLink,localCandidateType,remoteCandidateType);
-	let msg = eventString1+" "+rtcLink;
+	let msg = getStatsCandidateTypesEx(results,eventString1,eventString2)
 	wsSend("log|caller "+msg);
 
 	if(eventString2!="") {
@@ -1078,7 +1004,9 @@ function connectSignaling(message,openedFunc) {
 						mediaConnect = true;
 						mediaConnectStartDate = Date.now();
 						if(fileselectLabel!=null && dataChannel!=null && dataChannel.readyState=="open") {
-							fileselectLabel.style.display = "inline-block";
+							if(localCandidateType!="relay" && remoteCandidateType!="relay") {
+								fileselectLabel.style.display = "inline-block";
+							}
 						}
 
 						// getting stats on p2p or relayed connection
@@ -1470,7 +1398,9 @@ function createDataChannel() {
 		}
 		progressSendElement.style.display = "none";
 		if(fileselectLabel!=null && mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
-			fileselectLabel.style.display = "inline-block";
+			if(localCandidateType!="relay" && remoteCandidateType!="relay") {
+				fileselectLabel.style.display = "inline-block";
+			}
 		}
 	}
 	dataChannel.onmessage = event => {
@@ -1523,7 +1453,9 @@ function createDataChannel() {
 						fileSendAbort = true;
 						progressSendElement.style.display = "none";
 						if(fileselectLabel!=null && mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
-							fileselectLabel.style.display = "inline-block";
+							if(localCandidateType!="relay" && remoteCandidateType!="relay") {
+								fileselectLabel.style.display = "inline-block";
+							}
 						}
 						return;
 					}
