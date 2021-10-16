@@ -230,7 +230,7 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 
 			unixTime := startRequestTime.Unix()
 			dbUserKey := fmt.Sprintf("%s_%d",registerID, unixTime)
-			dbUser := DbUser{PremiumLevel:1, Ip1:remoteAddr, UserAgent:r.UserAgent()}
+			dbUser := DbUser{Ip1:remoteAddr, UserAgent:r.UserAgent()}
 			err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
 			if err!=nil {
 				fmt.Printf("# /register error db=%s bucket=%s put key=%s err=%v\n",

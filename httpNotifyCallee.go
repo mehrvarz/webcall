@@ -55,10 +55,6 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		fmt.Printf("# /notifyCallee (%s) failed on dbUserBucket\n", urlID)
 		return
 	}
-	if dbUser.PremiumLevel==0 {
-		fmt.Printf("# /notifyCallee urlID (%s) not a premium user\n", urlID)
-		return
-	}
 
 	// check if callee is hidden online
 	calleeIsHiddenOnline := false
@@ -339,10 +335,8 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	}
 
 	if cli != nil {
-		if dbUser.PremiumLevel >= 1 {
-			// premium callee is online: send updated waitingCallerSlice + missedCalls
-			waitingCallerToCallee(urlID, waitingCallerSlice, missedCallsSlice, cli)
-		}
+		// send updated waitingCallerSlice + missedCalls
+		waitingCallerToCallee(urlID, waitingCallerSlice, missedCallsSlice, cli)
 	} else {
 		fmt.Printf("# /notifyCallee (%s) cli==nil\n", urlID)
 	}

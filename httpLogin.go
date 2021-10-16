@@ -307,7 +307,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		outboundIP,
 		serviceSecs,
 		0,
-		dbUser.PremiumLevel,
+		1,
 		dbUser.Int2&1 != 0) // isHiddenCallee
 	fmt.Fprintf(w, responseString)
 

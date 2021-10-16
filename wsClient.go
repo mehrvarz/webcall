@@ -39,7 +39,6 @@ type WsClient struct {
 	calleeID string
 	clearOnCloseDone bool
 	connType string
-	PremiumLevel int
 }
 
 func serveWs(w http.ResponseWriter, r *http.Request) {
@@ -192,7 +191,6 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	client.authenticationShown = false // being used to make sure 'TURN auth SUCCESS' is only shown 1x per client
 	client.calleeID = wsClientData.calleeID // this is the local ID
 
-	client.PremiumLevel = wsClientData.dbUser.PremiumLevel
 	if hub.CalleeClient==nil {
 		// callee client (1st client)
 		if logWantedFor("wsclient") {
@@ -277,44 +275,41 @@ func (c *WsClient) receiveProcess(message []byte) {
 			return
 		}
 		c.clearOnCloseDone = false
-		// send list of waitingCaller and missedCalls to premium callee client
-		//fmt.Printf("%s c.PremiumLevel=%d\n",c.connType,c.PremiumLevel)
-		if c.PremiumLevel>=1 {
-			var waitingCallerSlice []CallerInfo
-			err := kvCalls.Get(dbWaitingCaller,c.calleeID,&waitingCallerSlice)
-			if err!=nil {
-				// can be ignored
-				//fmt.Printf("# serveWs (id=%s) failed to read dbWaitingCaller err=%v\n", urlID, err)
-			}
-			// before we send waitingCallerSlice
-			// we remove all entries that are older than 10min
-			countOutdated:=0
-			for idx := range waitingCallerSlice {
-				if time.Now().Unix() - waitingCallerSlice[idx].CallTime > 10*60 {
-					// remove outdated caller from waitingCallerSlice
-					waitingCallerSlice = append(waitingCallerSlice[:idx],
-						waitingCallerSlice[idx+1:]...)
-					countOutdated++
-				}
-			}
-			if countOutdated>0 {
-				fmt.Printf("# %s (id=%s) deleted %d outdated from waitingCallerSlice\n",
-					c.connType, c.calleeID, countOutdated)
-				err = kvCalls.Put(dbWaitingCaller, c.calleeID, waitingCallerSlice, true) // skipConfirm
-				if err!=nil {
-					fmt.Printf("# %s (id=%s) failed to store dbWaitingCaller\n",c.connType,c.calleeID)
-				}
-			}
-			var missedCallsSlice []CallerInfo
-			err = kvCalls.Get(dbMissedCalls,c.calleeID,&missedCallsSlice)
-			if err!=nil {
-				// we can ignore this
-				//fmt.Printf("# %s (id=%s) failed to read dbMissedCalls %v\n",
-				//	c.connType, c.calleeID, err)
-			}
-			//fmt.Printf("%s waitingCallerToCallee\n",c.connType)
-			waitingCallerToCallee(c.calleeID, waitingCallerSlice, missedCallsSlice, c)
+		// send list of waitingCaller and missedCalls to callee client
+		var waitingCallerSlice []CallerInfo
+		err := kvCalls.Get(dbWaitingCaller,c.calleeID,&waitingCallerSlice)
+		if err!=nil {
+			// can be ignored
+			//fmt.Printf("# serveWs (id=%s) failed to read dbWaitingCaller err=%v\n", urlID, err)
 		}
+		// before we send waitingCallerSlice
+		// we remove all entries that are older than 10min
+		countOutdated:=0
+		for idx := range waitingCallerSlice {
+			if time.Now().Unix() - waitingCallerSlice[idx].CallTime > 10*60 {
+				// remove outdated caller from waitingCallerSlice
+				waitingCallerSlice = append(waitingCallerSlice[:idx],
+					waitingCallerSlice[idx+1:]...)
+				countOutdated++
+			}
+		}
+		if countOutdated>0 {
+			fmt.Printf("# %s (id=%s) deleted %d outdated from waitingCallerSlice\n",
+				c.connType, c.calleeID, countOutdated)
+			err = kvCalls.Put(dbWaitingCaller, c.calleeID, waitingCallerSlice, true) // skipConfirm
+			if err!=nil {
+				fmt.Printf("# %s (id=%s) failed to store dbWaitingCaller\n",c.connType,c.calleeID)
+			}
+		}
+		var missedCallsSlice []CallerInfo
+		err = kvCalls.Get(dbMissedCalls,c.calleeID,&missedCallsSlice)
+		if err!=nil {
+			// we can ignore this
+			//fmt.Printf("# %s (id=%s) failed to read dbMissedCalls %v\n",
+			//	c.connType, c.calleeID, err)
+		}
+		//fmt.Printf("%s waitingCallerToCallee\n",c.connType)
+		waitingCallerToCallee(c.calleeID, waitingCallerSlice, missedCallsSlice, c)
 		return
 	}
 
@@ -411,8 +406,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 				//	fmt.Printf("# serveWs calleeHidden verify db=%s bucket=%s getX key=%v err=%v\n",
 				//		dbMainName, dbUserBucket, userKey, err)
 				//} else {
-				//	fmt.Printf("serveWs calleeHidden verify userKey=%v isHiddenCallee=%v (%d %v)\n",
-				//		userKey, c.isHiddenCallee, dbUser2.Int2, dbUser2.PremiumLevel)
+				//	fmt.Printf("serveWs calleeHidden verify userKey=%v isHiddenCallee=%v (%d)\n",
+				//		userKey, c.isHiddenCallee, dbUser2.Int2)
 				//}
 			}
 		}

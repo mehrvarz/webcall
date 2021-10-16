@@ -34,9 +34,9 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 				var dbUser DbUser
 				d := gob.NewDecoder(bytes.NewReader(v))
 				d.Decode(&dbUser)
-				printFunc(w, "user %20s %d calls=%d p2p=%d/%d talk=%d\n",
+				printFunc(w, "user %20s calls=%d p2p=%d/%d talk=%d\n",
 					k,
-					dbUser.PremiumLevel, dbUser.CallCounter,
+					dbUser.CallCounter,
 					dbUser.LocalP2pCounter, dbUser.RemoteP2pCounter,
 					dbUser.ConnectedToPeerSecs)
 			}
@@ -243,18 +243,11 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		}
 		urlPw := url_arg_array[0]
 
-		// get prem flag from url-arg
-		premiumLevel := 0
-		_, ok = r.URL.Query()["prem"]
-		if ok {
-			premiumLevel = 1
-		}
-
 		fmt.Printf("/makeregistered dbName=%s\n", dbMainName)
 
 		unixTime := time.Now().Unix()
 		dbUserKey := fmt.Sprintf("%s_%d",urlID, unixTime)
-		dbUser := DbUser{PremiumLevel:premiumLevel, Ip1:remoteAddr}
+		dbUser := DbUser{Ip1:remoteAddr}
 		err = kv.Put(dbUserBucket, dbUserKey, dbUser, false)
 		if err!=nil {
 			printFunc(w,"# /makeregistered error db=%s bucket=%s put key=%s err=%v\n",
@@ -266,8 +259,8 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 				printFunc(w,"# /makeregistered error db=%s bucket=%s put key=%s err=%v\n",
 					dbMainName,dbRegisteredIDs,urlID,err)
 			} else {
-				printFunc(w,"/makeregistered db=%s bucket=%s new id=%s prem=%v created\n",
-					dbMainName,dbRegisteredIDs,urlID,premiumLevel)
+				printFunc(w,"/makeregistered db=%s bucket=%s new id=%s created\n",
+					dbMainName,dbRegisteredIDs,urlID)
 			}
 		}
 		if err!=nil {
@@ -308,21 +301,13 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 			return true
 		}
 
-		// get prem flag from url-arg
-		premiumLevel := 0
-		_, ok = r.URL.Query()["prem"]
-		if ok {
-			premiumLevel = 1
-		}
-		dbUser.PremiumLevel = premiumLevel
-
 		err = kv.Put(dbUserBucket, dbUserKey, dbUser, false)
 		if err!=nil {
 			printFunc(w,"# /editprem error db=%s bucket=%s put key=%s err=%v\n",
 				dbMainName,dbUserBucket,urlID,err)
 		} else {
-			printFunc(w,"/editprem db=%s bucket=%s new id=%s prem=%v created\n",
-				dbMainName,dbRegisteredIDs,urlID,premiumLevel)
+			printFunc(w,"/editprem db=%s bucket=%s new id=%s created\n",
+				dbMainName,dbRegisteredIDs,urlID)
 		}
 		fmt.Fprintf(w,"\n")
 		return true

@@ -15,7 +15,6 @@ type DbUser struct {
 	ConnectedToPeerSecs int // incremented by wsHub processTimeValues()
 	LocalP2pCounter int     // incremented by wsHub processTimeValues()
 	RemoteP2pCounter int    // incremented by wsHub processTimeValues()
-	PremiumLevel int        // if > 0: enables hamburger menu
 	Email2 string           // now used as tw_handle
 	Str1 string             // now used as tw_user_id
 	Str2 string             // web push device 1 subscription
