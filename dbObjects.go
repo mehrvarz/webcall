@@ -1,10 +1,10 @@
 // WebCall Copyright 2021 timur.mobi. All rights reserved.
 package main
 
-type DbEntry struct { // ~34 bytes
-	StartTime int64   //   8 bytes
-	Ip string         // ~16 bytes
-	Password string   // ~10 bytes
+type DbEntry struct {
+	StartTime int64
+	Ip string
+	Password string
 }
 
 type DbUser struct {
