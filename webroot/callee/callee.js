@@ -38,7 +38,7 @@ const fileselectLabel = document.getElementById("fileselectlabel");
 const bitrate = 280000;
 const neverAudio = false;
 const autoReconnectDelay = 30;
-const version = "1.15.0";
+const version = "1.16.0";
 
 var ringtoneSound = null;
 var ringtoneIsPlaying = false;
