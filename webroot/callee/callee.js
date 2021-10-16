@@ -442,7 +442,7 @@ function login(retryFlag) {
 					console.log("serviceWorker.ready err",err);
 				});
 			}
-			if(parts.length>=7 && parts[6]=="true") {
+			if(parts.length>=5 && parts[4]=="true") {
 				isHiddenCheckbox.checked = true;
 				autoanswerCheckbox.checked = false;
 			}
