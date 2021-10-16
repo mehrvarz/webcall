@@ -48,7 +48,6 @@ var wsAddr = "";
 var talkSecs = 0;
 var outboundIP = "";
 var serviceSecs = 0;
-var calleeLevel = 0;
 var remainingTalkSecs = 0;
 var remainingServiceSecs = 0;
 var wsConn = null;
@@ -383,7 +382,6 @@ function start() {
 
 function login(retryFlag) {
 	if(!gentle) console.log("login to signaling server...", retryFlag, calleeID, wsSecret.length);
-	calleeLevel = 0;
 	menuElement.style.display = "none";
 	let api = apiPath+"/login?id="+calleeID;
 	ajaxFetch(new XMLHttpRequest(), "POST", api, function(xhr) {
@@ -408,10 +406,7 @@ function login(retryFlag) {
 			if(parts.length>=4) {
 				serviceSecs = parseInt(parts[3], 10);
 			}
-			if(parts.length>=6) {
-				calleeLevel = parseInt(parts[5], 10);
-			}
-			if(!gentle) console.log('calleeLevel/outboundIP',calleeLevel,outboundIP);
+			if(!gentle) console.log('outboundIP',outboundIP);
 
 			if(!calleeID.startsWith("!")) {
 				let api = apiPath+"/getsettings?id="+calleeID;
@@ -431,7 +426,7 @@ function login(retryFlag) {
 				});
 			}
 
-			if(calleeLevel>0 && !pushRegistration) {
+			if(!pushRegistration) {
 				// we retrieve the pushRegistration here under /callee/(calleeID),
 				// so that the pushRegistration.scope will also be /callee/(calleeID)
 				// so that settings.js will later make use of the correct pushRegistration
@@ -754,14 +749,12 @@ function connectSignaling(message) {
 			if(!gentle) console.log('ws connection send',message);
 			wsSend(message);
 		}
-		if(calleeLevel>0) {
-			// logged in callee (not a duo callee)
-			isHiddenlabel.style.display = "block";
-			autoanswerlabel.style.display = "block";
-			menuSettingsElement.style.display = "block";
-			menuContactsElement.style.display = "block";
-			menuExitElement.style.display = "block";
-		}
+		// logged in callee (not a duo callee)
+		isHiddenlabel.style.display = "block";
+		autoanswerlabel.style.display = "block";
+		menuSettingsElement.style.display = "block";
+		menuContactsElement.style.display = "block";
+		menuExitElement.style.display = "block";
 		goOfflineButton.disabled = false;
 	};
 	wsConn.onerror = function(evt) {
@@ -1954,7 +1947,7 @@ function menuDialogOpen() {
 		historyBack();
 	}
 	mainElement.style.filter = "blur(0.8px) brightness(60%)";
-	if(calleeLevel>0 && navigator.cookieEnabled && getCookieSupport()!=null) {
+	if(navigator.cookieEnabled && getCookieSupport()!=null) {
 		// cookies avail, "Settings" and "Exit" allowed
 		if(!gentle) console.log('menuSettingsElement on (cookies enabled)');
 		if(menuSettingsElement) {
