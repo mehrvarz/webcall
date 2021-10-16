@@ -21,7 +21,7 @@ var twitterAuthFailedCount = 0
 func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr string, remoteAddrWithPort string) {
 	// caller wants to wait for callee to come online to answer call
 	if urlID == "" {
-		fmt.Printf("# notifyCallee failed no urlID\n")
+		fmt.Printf("# /notifyCallee failed no urlID\n")
 		// JS will tell caller: could not reach urlID
 		return
 	}
@@ -52,11 +52,11 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	var dbUser DbUser
 	err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 	if err != nil {
-		fmt.Printf("# notifyCallee (%s) failed on dbUserBucket\n", urlID)
+		fmt.Printf("# /notifyCallee (%s) failed on dbUserBucket\n", urlID)
 		return
 	}
 	if dbUser.PremiumLevel==0 {
-		fmt.Printf("# notifyCallee urlID (%s) not a premium user\n", urlID)
+		fmt.Printf("# /notifyCallee urlID (%s) not a premium user\n", urlID)
 		return
 	}
 
@@ -90,14 +90,14 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 			// here we use web push to send a notification
 			err, statusCode := webpushSend(dbUser.Str2, msg, urlID)
 			if err != nil {
-				fmt.Printf("# notifyCallee (%s) webpush fail device1 err=%v\n", urlID, err)
+				fmt.Printf("# /notifyCallee (%s) webpush fail device1 err=%v\n", urlID, err)
 			} else if statusCode == 201 {
 				notificationSent = true
 			} else if statusCode == 410 {
-				fmt.Printf("# notifyCallee (%s) webpush fail device1 delete subscr\n", urlID)
+				fmt.Printf("# /notifyCallee (%s) webpush fail device1 delete subscr\n", urlID)
 				dbUser.Str2 = ""
 			} else {
-				fmt.Printf("# notifyCallee (%s) webpush fail device1 status=%d\n",
+				fmt.Printf("# /notifyCallee (%s) webpush fail device1 status=%d\n",
 					urlID, statusCode)
 			}
 		}
@@ -107,14 +107,14 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 			// here we use web push to send a notification
 			err, statusCode := webpushSend(dbUser.Str3, msg, urlID)
 			if err != nil {
-				fmt.Printf("# notifyCallee (%s) webpush fail device2 err=%v\n", urlID, err)
+				fmt.Printf("# /notifyCallee (%s) webpush fail device2 err=%v\n", urlID, err)
 			} else if statusCode == 201 {
 				notificationSent = true
 			} else if statusCode == 410 {
-				fmt.Printf("# notifyCallee (%s) webpush fail device2 delete subscr\n", urlID)
+				fmt.Printf("# /notifyCallee (%s) webpush fail device2 delete subscr\n", urlID)
 				dbUser.Str3 = ""
 			} else {
-				fmt.Printf("# notifyCallee (%s) webpush fail device2 status=%d\n",
+				fmt.Printf("# /notifyCallee (%s) webpush fail device2 status=%d\n",
 					urlID, statusCode)
 			}
 		}
@@ -128,7 +128,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 			}
 			twitterClientLock.Unlock()
 			if twitterClient == nil {
-				fmt.Printf("# notifyCallee (%s) failed no twitterClient\n", urlID)
+				fmt.Printf("# /notifyCallee (%s) failed no twitterClient\n", urlID)
 				// script will tell caller: could not reach urlID
 			} else {
 				//_,err = twitterClient.SendDirect(dbUser.Email2, msg)
@@ -144,7 +144,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 					if len(dbUser.Email2) < 30 {
 						maxlen = len(dbUser.Email2)
 					}
-					fmt.Printf("# notifyCallee (%s/%s) SendDirect err=%v\n",
+					fmt.Printf("# /notifyCallee (%s/%s) SendDirect err=%v\n",
 						urlID, dbUser.Email2[:maxlen], err)
 					// script will tell caller: could not reach urlID
 					// TODO: but if the err is caused by the callee entering a faulty tw_user_id
@@ -168,7 +168,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 						notifTweet := NotifTweet{time.Now().Unix(), msg}
 						err = kvNotif.Put(dbSentNotifTweets, tweet.IdStr, notifTweet, false)
 						if err != nil {
-							fmt.Printf("# notifyCallee (%s) failed to store dbSentNotifTweets\n",
+							fmt.Printf("# /notifyCallee (%s) failed to store dbSentNotifTweets\n",
 								tweet.IdStr)
 						}
 					}
@@ -178,12 +178,12 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 
 		if !notificationSent {
 			// we couldn't send any notifications: store call as missed call
-			fmt.Printf("# notifyCallee (%s) no notification sent - store as missed call\n", urlID)
+			fmt.Printf("# /notifyCallee (%s) no notification sent - store as missed call\n", urlID)
 			caller := CallerInfo{remoteAddrWithPort, callerName, time.Now().Unix(), callerId}
 			var missedCallsSlice []CallerInfo
 			err := kvCalls.Get(dbMissedCalls, urlID, &missedCallsSlice)
 			if err != nil {
-				//fmt.Printf("# notifyCallee (%s) failed to read dbMissedCalls %v\n", urlID, err)
+				//fmt.Printf("# /notifyCallee (%s) failed to read dbMissedCalls %v\n", urlID, err)
 			}
 			// make sure we never have more than 10 missed calls
 			if missedCallsSlice != nil && len(missedCallsSlice) >= 10 {
@@ -192,7 +192,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 			missedCallsSlice = append(missedCallsSlice, caller)
 			err = kvCalls.Put(dbMissedCalls, urlID, missedCallsSlice, false)
 			if err != nil {
-				fmt.Printf("# notifyCallee (%s) failed to store dbMissedCalls %v\n", urlID, err)
+				fmt.Printf("# /notifyCallee (%s) failed to store dbMissedCalls %v\n", urlID, err)
 			}
 			// there is no need for the caller to wait, bc we could not send a push notification
 			// by NOT responding "ok" we tell the caller that we were NOT able to reach the callee
@@ -212,12 +212,12 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	var waitingCallerSlice []CallerInfo
 	err = kvCalls.Get(dbWaitingCaller, urlID, &waitingCallerSlice)
 	if err != nil {
-		//fmt.Printf("# notifyCallee (%s) failed to read dbWaitingCaller\n",urlID)
+		//fmt.Printf("# /notifyCallee (%s) failed to read dbWaitingCaller\n",urlID)
 	}
 	waitingCallerSlice = append(waitingCallerSlice, waitingCaller)
 	err = kvCalls.Put(dbWaitingCaller, urlID, waitingCallerSlice, false)
 	if err != nil {
-		fmt.Printf("# notifyCallee (%s) failed to store dbWaitingCaller\n", urlID)
+		fmt.Printf("# /notifyCallee (%s) failed to store dbWaitingCaller\n", urlID)
 	}
 
 	hubMapMutex.RLock()
@@ -230,7 +230,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 			urlID, len(waitingCallerSlice))
 		json, err := json.Marshal(waitingCallerSlice)
 		if err != nil {
-			fmt.Printf("# notifyCallee json.Marshal(waitingCallerSlice) err=%v\n", err)
+			fmt.Printf("# /notifyCallee json.Marshal(waitingCallerSlice) err=%v\n", err)
 		} else {
 			fmt.Printf("/notifyCallee send waitingCallers (%s)\n", urlID)
 
@@ -314,7 +314,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 			waitingCallerSlice = append(waitingCallerSlice[:idx], waitingCallerSlice[idx+1:]...)
 			err = kvCalls.Put(dbWaitingCaller, urlID, waitingCallerSlice, false)
 			if err != nil {
-				fmt.Printf("# notifyCallee (%s) failed to store dbWaitingCaller\n", urlID)
+				fmt.Printf("# /notifyCallee (%s) failed to store dbWaitingCaller\n", urlID)
 			}
 
 			if callerGaveUp {
@@ -322,7 +322,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 				fmt.Printf("/notifyCallee (%s) store missed call\n", urlID)
 				err = kvCalls.Get(dbMissedCalls, urlID, &missedCallsSlice)
 				if err != nil {
-					fmt.Printf("# notifyCallee (%s) failed to read dbMissedCalls %v\n", urlID, err)
+					fmt.Printf("# /notifyCallee (%s) failed to read dbMissedCalls %v\n", urlID, err)
 				}
 				// make sure we never have more than 10 missed calls
 				if missedCallsSlice != nil && len(missedCallsSlice) >= 10 {
@@ -331,7 +331,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 				missedCallsSlice = append(missedCallsSlice, waitingCaller)
 				err = kvCalls.Put(dbMissedCalls, urlID, missedCallsSlice, false)
 				if err != nil {
-					fmt.Printf("# notifyCallee (%s) failed to store dbMissedCalls %v\n", urlID, err)
+					fmt.Printf("# /notifyCallee (%s) failed to store dbMissedCalls %v\n", urlID, err)
 				}
 			}
 			break
@@ -344,7 +344,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 			waitingCallerToCallee(urlID, waitingCallerSlice, missedCallsSlice, cli)
 		}
 	} else {
-		fmt.Printf("# notifyCallee (%s) cli==nil\n", urlID)
+		fmt.Printf("# /notifyCallee (%s) cli==nil\n", urlID)
 	}
 	return
 }
