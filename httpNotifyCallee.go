@@ -37,7 +37,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	if ok && len(url_arg_array[0]) >= 1 {
 		callerName = url_arg_array[0]
 	}
-	fmt.Printf("notifyCallee callerId=(%s) callerName=(%s)\n", callerId, callerName)
+	fmt.Printf("/notifyCallee callerId=(%s) callerName=(%s)\n", callerId, callerName)
 	if callerId != "" {
 		addContact(urlID, callerId, callerName, "/notifyCallee")
 	}
@@ -45,7 +45,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	var dbEntry DbEntry
 	err := kvMain.Get(dbRegisteredIDs, urlID, &dbEntry)
 	if err != nil {
-		fmt.Printf("# notifyCallee (%s) failed on dbRegisteredIDs\n", urlID)
+		fmt.Printf("/notifyCallee (%s) failed on dbRegisteredIDs\n", urlID)
 		return
 	}
 	dbUserKey := fmt.Sprintf("%s_%d", urlID, dbEntry.StartTime)
@@ -73,7 +73,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	}
 	if globalID != "" {
 		if (locHub!=nil && locHub.IsCalleeHidden) || (globHub!=nil && globHub.IsCalleeHidden) {
-			fmt.Printf("notifyCallee (%s) isHiddenOnline\n", urlID)
+			fmt.Printf("/notifyCallee (%s) isHiddenOnline\n", urlID)
 			calleeIsHiddenOnline = true
 		}
 	}
@@ -226,13 +226,13 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 
 	if calleeIsHiddenOnline {
 		// send an updated json to callee-client
-		fmt.Printf("notifyCallee (%s) send waitingCallerSlice len=%d\n",
+		fmt.Printf("/notifyCallee (%s) send waitingCallerSlice len=%d\n",
 			urlID, len(waitingCallerSlice))
 		json, err := json.Marshal(waitingCallerSlice)
 		if err != nil {
 			fmt.Printf("# notifyCallee json.Marshal(waitingCallerSlice) err=%v\n", err)
 		} else {
-			fmt.Printf("notifyCallee send waitingCallers (%s)\n", urlID)
+			fmt.Printf("/notifyCallee send waitingCallers (%s)\n", urlID)
 
 			if cli != nil {
 				cli.Write([]byte("waitingCallers|" + string(json)))
@@ -241,7 +241,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	}
 
 	// let caller wait (let it's xhr stand) until callee picks up the call
-	fmt.Printf("notifyCallee (%s) waiting for callee online notification\n", urlID)
+	fmt.Printf("/notifyCallee (%s) waiting for callee online notification\n", urlID)
 	if cli != nil {
 		cli.unHiddenForCaller = "" // TODO ???
 	}
@@ -300,7 +300,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		}
 	}
 
-	fmt.Printf("notifyCallee (%s) delete callee online-notification chan\n", urlID)
+	fmt.Printf("/notifyCallee (%s) delete callee online-notification chan\n", urlID)
 	waitingCallerChanLock.Lock()
 	delete(waitingCallerChanMap, remoteAddrWithPort)
 	waitingCallerChanLock.Unlock()
@@ -310,7 +310,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	// remove this caller from waitingCallerSlice
 	for idx := range waitingCallerSlice {
 		if waitingCallerSlice[idx].AddrPort == remoteAddrWithPort {
-			fmt.Printf("notifyCallee (%s) remove caller from waitingCallerSlice + store\n", urlID)
+			fmt.Printf("/notifyCallee (%s) remove caller from waitingCallerSlice + store\n", urlID)
 			waitingCallerSlice = append(waitingCallerSlice[:idx], waitingCallerSlice[idx+1:]...)
 			err = kvCalls.Put(dbWaitingCaller, urlID, waitingCallerSlice, false)
 			if err != nil {
@@ -319,7 +319,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 
 			if callerGaveUp {
 				// store missed call
-				fmt.Printf("notifyCallee (%s) store missed call\n", urlID)
+				fmt.Printf("/notifyCallee (%s) store missed call\n", urlID)
 				err = kvCalls.Get(dbMissedCalls, urlID, &missedCallsSlice)
 				if err != nil {
 					fmt.Printf("# notifyCallee (%s) failed to read dbMissedCalls %v\n", urlID, err)
@@ -361,7 +361,7 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 	var dbUser DbUser
 	err := kvMain.Get(dbRegisteredIDs,urlID,&dbEntry)
 	if err!=nil {
-		fmt.Printf("# /canbenotified (%s) failed on dbRegisteredIDs rip=%s\n",urlID,remoteAddr)
+		fmt.Printf("/canbenotified (%s) failed on dbRegisteredIDs rip=%s\n",urlID,remoteAddr)
 		return
 	}
 	dbUserKey := fmt.Sprintf("%s_%d",urlID, dbEntry.StartTime)
@@ -371,10 +371,6 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 		return
 	}
 	calleeName := dbUser.Name
-	if dbUser.PremiumLevel==0 {
-		fmt.Printf("/canbenotified urlID=(%s) is no premium user rip=%s\n",urlID,remoteAddr)
-		return
-	}
 
 	// urlID is a paying user
 	// remoteAddrWithPort of incoming call
