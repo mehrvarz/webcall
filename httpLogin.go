@@ -301,7 +301,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		remoteAddrWithPort)
 	hubMapMutex.RUnlock()
 
-	responseString := fmt.Sprintf("%s|%d|%s|%d|%d|%d|%v",
+	responseString := fmt.Sprintf("%s|%d|%s|%d|%v",
 		wsAddr,                     // 0
 		dbUser.ConnectedToPeerSecs, // 1
 		outboundIP,                 // 2
