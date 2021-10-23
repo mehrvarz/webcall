@@ -12,7 +12,7 @@
 ::-webkit-scrollbar { display:none; }
 html {
 	width:100%; min-height:100%; _min-height:1200px;
-	background-image:linear-gradient(#003, #46f);
+	background-image:linear-gradient(#004, #139);
 	color:#ddd;
 	scrollbar-width:none;
 }
@@ -52,7 +52,7 @@ button[disabled]:hover {
 }
 
 div#container {
-	padding: 1em 1.5em 1em 1.5em;
+	padding: 0em 1.0em 1em 1.0em;
 	max-width:520px;
 }
 div.outputSelector {
@@ -200,6 +200,16 @@ input[type=submit]:focus {
 	background-color: #9d9;
 	color: #000;
 }
+@media (min-aspect-ratio: 1/1) {
+	.videoframe {
+		width:48%; aspect-ratio:16/9; margin-right:6px; float:left; user-select:none;
+	}
+}
+@media (max-aspect-ratio: 1/1) {
+	.videoframe {
+		width:98%; aspect-ratio:16/9; user-select:none;
+	}
+}
 </style>
 </head>
 
@@ -211,27 +221,42 @@ input[type=submit]:focus {
 
 <div id="iframeWindow" style="display:none"></div>
 
-<div id="menuDialog" style="position:relative; max-width:520px; margin-top:2vh; user-select:none; display:none;">
+<div id="menuDialog" style="position:relative; max-width:520px; _margin-top:2vh; user-select:none; display:none;">
 	<div style="position:absolute; right:0px; z-index:110; background:#45dd; color:#fff; padding:10px 20px; line-height:2.6em; border-radius:3px; cursor:pointer;">
 		<div id="menuContacts" style="display:none" onclick="openContacts()">Contacts</div>
 		<div id="menuSettings" style="display:none" onclick="openSettings()">Settings</div>
 		<div onclick="openPostCallStats()">Call Stats</div>
-		<label id="fileselectlabel" _class="custom-fileselect" style="cursor:pointer; display:none;">
+		<label id="fileselectlabel" style="cursor:pointer; display:none;">
 			Send File
 			<input id="fileselect" type="file" style="display:none"></input>
 		</label>
-		<label id="isHiddenlabel" style="margin-left:-4px; display:none">
+		<label id="isHiddenlabel" style="margin-left:-4px; display:none;">
 			<input type="checkbox" id="isHidden" class="checkbox"> Hide me</label>
 		</label>
-		<label id="autoanswerlabel" style="margin-left:-4px; display:none">
+		<label id="autoanswerlabel" style="margin-left:-4px; display:none;">
 			<input type="checkbox" id="autoanswer" class="checkbox"> Auto-Answer</label>
+		</label>
+		<label id="enableVideoLabel" style="margin-left:-4px;">
+			<input type="checkbox" id="enableVideoCheckbox" class="checkbox"> Video</label>
 		</label>
 		<div id="menuExit" style="display:none" onclick="exit()">Exit / Clear cookie</div>
 	</div>
 </div>
 
-<div id="container" style="margin-top:3vh;">
-	<img id="menu" src="menu.svg" style="position:relative; float:right; margin-top:23px; margin-right:24px; width:25px; z-index:100; user-select:none; cursor:pointer; display:none;" onclick="menuDialogOpen()">
+<div>
+<div id="remoteVideoDiv" class="videoframe" style="display:none;">
+	<video id="remoteVideoFrame" style="width:100%;height:100%;background:#111;" _poster="red-gradient.svg" autoplay></video>
+	<div id="remoteVideoLabel" style="opacity:0.7;text-align:center;margin-top:-2px;">remote cam not streaming</div>
+</div>
+<div id="localVideoDiv" class="videoframe" style="cursor:pointer;display:none;">
+	<video id="localVideoFrame"  style="width:100%;height:100%;background:#111;" _poster="green-gradient.svg" autoplay></video>
+	<div id="localVideoLabel" onclick="connectLocalVideo(false)" style="opacity:0.7;text-align:center;margin-top:-2px;">local cam not streaming</div>
+</div>
+<div style="clear:both"></div>
+</div>
+
+<div id="container">
+	<img id="menu" src="menu.svg" style="position:relative; float:right; width:25px; z-index:100; user-select:none; cursor:pointer;" onclick="menuDialogOpen()">
 
     <h1 id="title">WebCall</h1>
 	<div id="buttons" style="display:grid; grid-template-columns: 1fr 1fr 40px; list-style-type:none; max-width:360px;">
@@ -242,7 +267,7 @@ input[type=submit]:focus {
 		<img id="onlineIndicator" src="" style="width:26px; margin:0.6em 0.8em 0.8em 0; user-select:none;">
 	</div>
 
-	<select id="audioSource" style="margin-top:8px; background-color:#04c; color:white; font-size:0.9em; border:none; min-width:200px;"></select><br>
+	<select id="avSelect" class="select"></select>
 
 	<form action="javascript:;" onsubmit="submitFormDone(this)" style="max-width:420px;display:none;" id="password">
 		<input type="text" autocomplete="username" id="username" style="display:none;" required>
@@ -274,14 +299,10 @@ input[type=submit]:focus {
 	<div id="missedCalls" class="callList"></div>
 
 	<div id="timer" class="timer">4:32</div>
-
+<!--
+	<audio id="remoteAudio" autoplay></audio>
+-->
 	<div style="opacity:0.7;margin-top:30px;">WebCall by <a href="https://timur.mobi/webcall">timur.mobi</a></div>
-
-	<div id="audio">
-		<div style="width:50%;float:left;">
-			<audio id="remoteAudio" autoplay></audio>
-		</div>
-	</div>
 </div>
 <script src="custom.js"></script>
 <script src="client.js"></script>

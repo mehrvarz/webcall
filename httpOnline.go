@@ -52,6 +52,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		// callee is managed by this server
 		locHub.HubMutex.RLock()
 		wsClientID := locHub.WsClientID
+		videoEnabled := locHub.CalleeClient.videoEnabled
 		locHub.HubMutex.RUnlock()
 		if wsClientID == 0 {
 			// something has gone wrong
@@ -79,7 +80,8 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 			}
 		}
 		readConfigLock.RUnlock()
-		wsAddr = fmt.Sprintf("%s?wsid=%d", wsAddr, wsClientID)
+// TODO callee should be able to signal if (onstart) video is wanted
+		wsAddr = fmt.Sprintf("%s?wsid=%d|video=%v", wsAddr, wsClientID, videoEnabled)
 		if logWantedFor("wsAddr") {
 			fmt.Printf("/online id=%s onl/avail %s rip=%s\n", globalID, wsAddr, remoteAddr)
 		} else {

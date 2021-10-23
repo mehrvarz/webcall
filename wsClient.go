@@ -33,6 +33,7 @@ type WsClient struct {
 	isOnline atombool.AtomBool	// connected to signaling server
 	isConnectedToPeer atombool.AtomBool
 	isHiddenCallee bool // if set, we don't report callee as online; see: getOnlinePort()
+	videoEnabled bool
 	unHiddenForCaller string
 	RemoteAddr string // without port
 	userAgent string
@@ -410,6 +411,17 @@ func (c *WsClient) receiveProcess(message []byte) {
 				//		userKey, c.isHiddenCallee, dbUser2.Int2)
 				//}
 			}
+		}
+		return
+	}
+
+	if cmd=="enableVideo" {
+// TODO not fully implemented
+		fmt.Printf("%s enableVideo from %s (%s)\n",c.connType,c.RemoteAddr,payload)
+		if(payload=="true") {
+			c.videoEnabled = true
+		} else {
+			c.videoEnabled = false
 		}
 		return
 	}

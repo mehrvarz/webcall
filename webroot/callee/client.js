@@ -472,3 +472,170 @@ function iframeWindowClose() {
 	iframeWindowOpenFlag = false;
 }
 
+function getStream() {
+	if(neverAudio) {
+		if(dialAfterLocalStream) {
+			dialAfterLocalStream=false;
+			console.log("getStream neverAudio -> dialAfterCalleeOnline");
+			gotStream(); // pretend
+		}
+		return
+	}
+
+	if(localStream) {
+		localStream.getTracks().forEach(track => { track.stop(); });
+		localStream = null;
+	}
+
+//	let supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
+//	if(!gentle) console.log('getStream supportedConstraints',supportedConstraints);
+
+	var constraints = {
+		audio: {
+//			deviceId: avSelect.value ? {exact: avSelect.value} : undefined,
+			noiseSuppression: true,  // true by default
+			echoCancellation: true,  // true by default
+			autoGainControl: false,
+		}
+		,video: {
+//			deviceId: avSelect.value ? {exact: avSelect.value} : undefined,
+			width: {
+			  min: 480,
+//			  ideal: 1280,
+			  max: 1920		// 4096
+			},
+			height: {
+			  min: 360,
+//			  ideal: 720,
+			  max: 1080		// 2160
+			},
+		}
+	};
+	if(!gentle) console.log('getStream getUserMedia video-checkbox',enableVideoCheckbox.checked);
+	if(!enableVideoCheckbox.checked) {
+		constraints.video = false;
+	}
+
+	if(!gentle) console.log('getStream getUserMedia constraints',avSelect.value,constraints);
+	if(!neverAudio) {
+		return navigator.mediaDevices.getUserMedia(constraints)
+			.then(gotStream)
+			.catch(function(err) {
+				if(!enableVideoCheckbox.checked) {
+					console.error('no audio input', err);
+					showStatus("No audio input<br>"+err,-1);
+				} else {
+					console.error('no audio/video input', err);
+					showStatus("No audio/video input<br>"+err,-1);
+				}
+			});
+	}
+}
+
+function gotDevices(deviceInfos) {
+	if(!gentle) console.log('gotDevices',deviceInfos);
+	var i, L = avSelect.options.length - 1;
+	for(i = L; i >= 0; i--) {
+		avSelect.remove(i);
+	}
+	for(const deviceInfo of deviceInfos) {
+		const option = document.createElement('option');
+		option.value = deviceInfo.deviceId;
+		if(deviceInfo.kind === 'audioinput') {
+			let deviceInfoLabel = deviceInfo.label;
+			if(!gentle) console.log('gotDevices audioinput label',deviceInfoLabel);
+			if(deviceInfoLabel=="Default") {
+				deviceInfoLabel="Audio Input Default";
+			} else if(deviceInfoLabel) {
+				deviceInfoLabel = "Audio "+deviceInfoLabel
+			}
+			option.text = deviceInfoLabel || `Audio ${avSelect.length + 1}`;
+			var exists=false
+			var length = avSelect.options.length;
+			for(var i = length-1; i >= 0; i--) {
+				if(avSelect.options[i].text == option.text) {
+					exists=true; // don't add again
+					break;
+				}
+			}
+			if(!exists) {
+				avSelect.appendChild(option);
+			}
+			//console.log('audioinput',option);
+		} else if (deviceInfo.kind === 'videoinput') {
+			if(enableVideoCheckbox.checked) {
+				let deviceInfoLabel = deviceInfo.label;
+				if(!gentle) console.log('gotDevices videoinput label',deviceInfoLabel);
+				if(deviceInfoLabel=="Default") {
+					deviceInfoLabel="Video Input Default";
+				} else if(deviceInfoLabel) {
+					deviceInfoLabel = "Video "+deviceInfoLabel
+				}
+				var exists=false
+				option.text = deviceInfoLabel || `Video ${avSelect.length + 1}`;
+				var length = avSelect.options.length;
+				for(var i = length-1; i >= 0; i--) {
+					if(avSelect.options[i].text == option.text) {
+						exists=true; // don't add again
+						break;
+					}
+				}
+				if(!exists) {
+					avSelect.appendChild(option);
+				}
+
+			}
+		} else if (deviceInfo.kind === "audioouput") {
+			// ignore
+		}
+	}
+}
+
+var videoSendTrack = null;
+function gotStream(stream) {
+	localStream = stream;
+
+	// avSelect.selectedIndex may be -1
+	let avSelectSelectedIndex = avSelect.selectedIndex;
+	if(avSelectSelectedIndex<0) avSelectSelectedIndex=0;
+	let optionElements = Array.from(avSelect);
+    if(!gentle) console.log("gotStream avSelect.selectedIndex",
+		avSelect.selectedIndex,avSelectSelectedIndex,optionElements.length)
+
+	let audioOnly = false;
+	if(optionElements.length>0) {
+		if(optionElements[avSelectSelectedIndex].text.startsWith("Audio"))
+			audioOnly = true;
+	}
+
+	if(audioOnly) {
+		// disable all video tracks
+		stream.getTracks().forEach(function(track) {
+			if(typeof track.getSettings().aspectRatio!=="undefined") {
+				// this is a video track
+				if(!gentle) console.log("gotStream stop video track");
+				track.stop();
+			}
+		})
+	} else {
+		if(enableVideoCheckbox.checked && sendLocalStream) {
+			if(localCandidateType=="relay" || remoteCandidateType=="relay") {
+				if(!gentle) console.log('pickup2 peerCon no addTrack vid on relayed con (%s)(%s)',localCandidateType,remoteCandidateType);
+			} else if(localStream.getTracks().length>=2) {
+				if(!gentle) console.log('pickup2 peerCon addTrack vid',localStream.getTracks()[1]);
+				videoSendTrack = peerCon.addTrack(localStream.getTracks()[1],localStream);
+			} else {
+				if(!gentle) console.log('pickup2 peerCon no addTrack vid',localStream.getTracks().length);
+			}
+		}
+	}
+
+	if(!gentle) console.log("gotStream enable localStream");
+	localVideoFrame.srcObject = localStream;
+	localVideoFrame.volume = 0;
+	localVideoFrame.load();
+	localVideoFrame.play().catch(function(error) {});
+
+	gotStream2();
+}
+
