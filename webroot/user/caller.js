@@ -215,6 +215,8 @@ window.onload = function() {
 				localVideoFrame.play().catch(function(error) {});
 			}
 			localVideoDiv.style.display = "block";
+			localVideoDiv.style.visibility = "visible";
+			localVideoDiv.style.height = "";
 
 			if(remoteStream) {
 				// enable local video
@@ -224,6 +226,8 @@ window.onload = function() {
 				remoteVideoFrame.play().catch(function(error) {});
 			}
 			remoteVideoDiv.style.display = "block";
+			remoteVideoDiv.style.visibility = "visible";
+			remoteVideoDiv.style.height = "";
 
 			getStream().then(() => navigator.mediaDevices.enumerateDevices()) //.then(gotDevices);
 			.then((deviceInfos) => {
@@ -252,13 +256,17 @@ window.onload = function() {
 			if(localStream) {
 				if(localStream.getAudioTracks().length>0) {
 					// preserve audio
+					if(!gentle) console.log("enableVideoCheckbox unchecked preserve local audio");
 					localVideoDiv.style.visibility = "hidden";
+					localVideoDiv.style.height = "0px";
 				} else {
 					// disable audio + video
+					if(!gentle) console.log("enableVideoCheckbox unchecked disable local audio + video");
 					localVideoDiv.style.display = "none";
 				}
 				connectLocalVideo(true); // stop video track
 			} else {	
+				if(!gentle) console.log("enableVideoCheckbox unchecked remove local audio + video frame");
 				localVideoDiv.style.display = "none";
 			}
 
@@ -266,9 +274,12 @@ window.onload = function() {
 			if(remoteStream) {
 				if(remoteStream.getAudioTracks().length>0) {
 					// preserve audio
+					if(!gentle) console.log("enableVideoCheckbox unchecked preserve remote audio");
 					remoteVideoDiv.style.visibility = "hidden";
+					remoteVideoDiv.style.height = "0px";
 				} else {
 					// disable audio + video
+					if(!gentle) console.log("enableVideoCheckbox unchecked disable remote audio + video");
 					remoteVideoDiv.style.display = "none";
 				}
 
@@ -280,7 +291,7 @@ window.onload = function() {
 					if(!gentle) console.log("enableVideoCheckbox unchecked peerCon.removeTrack(videoSendTrack) (no videoSendTrack)");
 				}
 			} else {
-				if(!gentle) console.log("enableVideoCheckbox unchecked remove video Track (no remoteStream)");
+				if(!gentle) console.log("enableVideoCheckbox unchecked remove remote audio + video frame");
 				remoteVideoDiv.style.display = "none";
 			}
 
@@ -1192,6 +1203,13 @@ function signallingCommand(message) {
 			enableVideoLabel.style.display = "block";
 		}
 
+	} else if(cmd=="rtcVideoOff") {
+		// remote video track removed by callee
+		if(!gentle) console.log("rtcVideoOff");
+// TODO remove last frame
+		remoteVideoLabel.innerHTML = "remote cam not streaming";
+		remoteVideoLabel.style.color = "#fff";
+
 	} else if(cmd=="callerDescription" || cmd=="callerCandidate" || "callerInfo" ||
 			cmd=="stop" || cmd=="ping" || cmd=="rtcConnect" || cmd=="callerDescriptionUpd") {
 		// ignore without log
@@ -1242,6 +1260,9 @@ function connectLocalVideo(forceOff) {
 		}
 	} else {
 		sendLocalStream = false;
+		if(dataChannel && dataChannel.readyState=="open") {
+			dataChannel.send("cmd|rtcVideoOff");
+		}
 
 		if(!localStream) {
 			console.log("connectLocalVideo() disconnect (!localStream)");
