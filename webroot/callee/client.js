@@ -476,7 +476,7 @@ function getStream() {
 	if(neverAudio) {
 		if(dialAfterLocalStream) {
 			dialAfterLocalStream=false;
-			console.log("getStream neverAudio -> dialAfterCalleeOnline");
+			console.warn("getStream neverAudio + dialAfter");
 			gotStream(); // pretend
 		}
 		return
@@ -485,6 +485,7 @@ function getStream() {
 	if(localStream) {
 		localStream.getTracks().forEach(track => { track.stop(); });
 		localStream = null;
+		console.log("getStream localStream clear");
 	}
 
 //	let supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
@@ -511,8 +512,8 @@ function getStream() {
 			},
 		}
 	};
-	if(!gentle) console.log('getStream getUserMedia video-checkbox',enableVideoCheckbox.checked);
-	if(!enableVideoCheckbox.checked) {
+	if(!gentle) console.log('getStream getUserMedia',videoEnabled);
+	if(!videoEnabled) {
 		constraints.video = false;
 	}
 
@@ -521,7 +522,7 @@ function getStream() {
 		return navigator.mediaDevices.getUserMedia(constraints)
 			.then(gotStream)
 			.catch(function(err) {
-				if(!enableVideoCheckbox.checked) {
+				if(!videoEnabled) {
 					console.error('no audio input', err);
 					showStatus("No audio input<br>"+err,-1);
 				} else {
@@ -563,7 +564,7 @@ function gotDevices(deviceInfos) {
 			}
 			//console.log('audioinput',option);
 		} else if (deviceInfo.kind === 'videoinput') {
-			if(enableVideoCheckbox.checked) {
+			if(videoEnabled) {
 				let deviceInfoLabel = deviceInfo.label;
 				if(!gentle) console.log('gotDevices videoinput label',deviceInfoLabel);
 				if(deviceInfoLabel=="Default") {
@@ -593,6 +594,7 @@ function gotDevices(deviceInfos) {
 
 var videoSendTrack = null;
 function gotStream(stream) {
+    if(!gentle) console.log("gotStream set localStream");
 	localStream = stream;
 
 	// avSelect.selectedIndex may be -1
@@ -618,7 +620,7 @@ function gotStream(stream) {
 			}
 		})
 	} else {
-		if(enableVideoCheckbox.checked && sendLocalStream) {
+		if(videoEnabled && sendLocalStream) {
 			if(localCandidateType=="relay" || remoteCandidateType=="relay") {
 				if(!gentle) console.log('pickup2 peerCon no addTrack vid on relayed con (%s)(%s)',localCandidateType,remoteCandidateType);
 			} else if(localStream.getTracks().length>=2) {
@@ -630,7 +632,7 @@ function gotStream(stream) {
 		}
 	}
 
-	if(!gentle) console.log("gotStream enable localStream");
+	if(!gentle) console.log("gotStream enable localVideoFrame");
 	localVideoFrame.srcObject = localStream;
 	localVideoFrame.volume = 0;
 	localVideoFrame.load();

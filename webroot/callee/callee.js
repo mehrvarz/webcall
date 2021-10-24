@@ -7,7 +7,6 @@ const localVideoLabel = document.querySelector('div#localVideoLabel');
 const remoteVideoDiv = document.querySelector('div#remoteVideoDiv');
 const remoteVideoFrame = document.querySelector('video#remoteVideoFrame');
 const remoteVideoLabel = document.querySelector('div#remoteVideoLabel');
-const enableVideoCheckbox = document.querySelector('input#enableVideoCheckbox');
 
 const goOnlineButton = document.querySelector('button#onlineButton');
 const goOfflineButton = document.querySelector('button#offlineButton');
@@ -48,6 +47,7 @@ const autoReconnectDelay = 30;
 const version = "1.16.0";
 const singlebutton = false;
 
+var videoEnabled = false;
 var ringtoneSound = null;
 var ringtoneIsPlaying = false;
 var busySignalSound = null;
@@ -193,19 +193,6 @@ window.onload = function() {
 		if(!gentle) console.log('remote video size changed',remoteVideoFrame.videoWidth, remoteVideoFrame.videoHeight);
 	}
 
-	enableVideoCheckbox.addEventListener('change', function() {
-		if(this.checked) {
-			videoOn();
-		} else {
-			videoOff()
-		}
-
-		if(wsConn) {
-// TODO tmtmtm must implement this on server side
-			wsSend("enableVideo|"+this.checked);
-		}
-		setTimeout(historyBack,150);
-	});
 	isHiddenCheckbox.addEventListener('change', function() {
 		if(this.checked) {
 			if(!gentle) console.log("isHiddenCheckbox checked");
@@ -297,14 +284,15 @@ window.onload = function() {
 }
 
 function videoOn() {
-	if(!gentle) console.log("enableVideoCheckbox checked");
+	if(!gentle) console.log("videoOn");
+	videoEnabled = true;
 	if(localStream) {
 		// enable local video
 		if(peerCon && sendLocalStream && localStream.getTracks().length>=2 && !videoSendTrack) {
 			if(localCandidateType=="relay" || remoteCandidateType=="relay") {
-				if(!gentle) console.log('enableVideoCheckbox checked no addTrack video on relayed con (%s)(%s)',localCandidateType,remoteCandidateType);
+				if(!gentle) console.log('videoOn no addTrack video on relayed con (%s)(%s)',localCandidateType,remoteCandidateType);
 			} else {
-				if(!gentle) console.log('enableVideoCheckbox checked addTrack vid',localStream.getTracks()[1]);
+				if(!gentle) console.log('videoOn addTrack vid',localStream.getTracks()[1]);
 				videoSendTrack = peerCon.addTrack(localStream.getTracks()[1],localStream);
 			}
 		}
@@ -334,7 +322,7 @@ function videoOn() {
 		// now switch to the 1st video option
 		let optionElements = Array.from(avSelect);
 		if(optionElements.length>0) {
-			if(!gentle) console.log("enableVideoCheckbox set avSelect.selectedIndex",optionElements.length);
+			if(!gentle) console.log("videoOn avSelect.selectedIndex",optionElements.length);
 			// pre-select the 1st video device
 			for(let i=0; i<optionElements.length; i++) {
 				if(optionElements[i].text.startsWith("Video")) {
@@ -351,10 +339,16 @@ function videoOn() {
 		// allow caller to enable video
 		dataChannel.send("cmd|enableVideo|true");
 	}
+
+	if(wsConn) {
+// TODO tmtmtm must implement this on server side
+		wsSend("enableVideo|"+videoEnabled); // enableVideoCheckbox.checked);
+	}
 }
 
 function videoOff() {
-	if(!gentle) console.log("enableVideoCheckbox unchecked");
+	if(!gentle) console.log("videoOff");
+	videoEnabled = false;
 	if(dataChannel && dataChannel.readyState=="open") {
 		dataChannel.send("cmd|rtcVideoOff");
 	}
@@ -363,17 +357,17 @@ function videoOff() {
 	if(localStream) {
 		if(localStream.getAudioTracks().length>0) {
 			// preserve audio
-			if(!gentle) console.log("enableVideoCheckbox unchecked preserve local audio");
+			if(!gentle) console.log("videoOff preserve local audio");
 			localVideoDiv.style.visibility = "hidden";
 			localVideoDiv.style.height = "0px";
 		} else {
 			// disable audio + video
-			if(!gentle) console.log("enableVideoCheckbox unchecked disable local audio + video");
+			if(!gentle) console.log("videoOff disable local audio + video");
 			localVideoDiv.style.display = "none";
 		}
 		connectLocalVideo(true); // stop video track
 	} else {	
-		if(!gentle) console.log("enableVideoCheckbox unchecked no localStream");
+		if(!gentle) console.log("videoOff no localStream");
 		localVideoDiv.style.display = "none";
 	}
 
@@ -381,31 +375,31 @@ function videoOff() {
 	if(remoteStream) {
 		if(remoteStream.getAudioTracks().length>0) {
 			// preserve audio
-			if(!gentle) console.log("enableVideoCheckbox unchecked preserve remote audio");
+			if(!gentle) console.log("videoOff preserve remote audio");
 			remoteVideoDiv.style.visibility = "hidden";
 			remoteVideoDiv.style.height = "0px";
 		} else {
 			// disable audio + video
-			if(!gentle) console.log("enableVideoCheckbox unchecked disable remote audio + video");
+			if(!gentle) console.log("videoOff disable remote audio + video");
 			remoteVideoDiv.style.display = "none";
 		}
 
 		if(videoSendTrack) {
-			if(!gentle) console.log("enableVideoCheckbox unchecked peerCon.removeTrack(videoSendTrack)");
+			if(!gentle) console.log("videoOff peerCon.removeTrack(videoSendTrack)");
 			peerCon.removeTrack(videoSendTrack); // videoSendTrack from peerCon.addTrack(videotrack)
 			videoSendTrack = null;
 		} else {
-			if(!gentle) console.log("enableVideoCheckbox unchecked no videoSendTrack");
+			if(!gentle) console.log("videoOff no videoSendTrack");
 		}
 	} else {
-		if(!gentle) console.log("enableVideoCheckbox unchecked no remoteStream");
+		if(!gentle) console.log("videoOff no remoteStream");
 		remoteVideoDiv.style.display = "none";
 	}
 
 	// now switch to the 1st audio option
 	let optionElements = Array.from(avSelect);
 	if(optionElements.length>0) {
-		if(!gentle) console.log("enableVideoCheckbox unchecked avSelect.selectedIndex",optionElements.length);
+		if(!gentle) console.log("videoOff avSelect.selectedIndex",optionElements.length);
 		// pre-select the 1st video device
 		for(let i=0; i<optionElements.length; i++) {
 			if(optionElements[i].text.startsWith("Audio")) {
@@ -420,20 +414,18 @@ function videoOff() {
 // TODO "remote cam streaming" -> "remote cam not streaming"
 
 // TODO need to make sure the last frame on callee-side (now frozen) disappears
-}
-
-function videoSwitch() {
-	if(enableVideoCheckbox.checked) {
-		enableVideoCheckbox.checked = false;
-		videoOff();
-	} else {
-		enableVideoCheckbox.checked = true;
-		videoOn();
-	}
 
 	if(wsConn) {
 // TODO tmtmtm must implement this on server side
-		wsSend("enableVideo|"+enableVideoCheckbox.checked);
+		wsSend("enableVideo|"+videoEnabled); // enableVideoCheckbox.checked);
+	}
+}
+
+function videoSwitch() {
+	if(videoEnabled) {
+		videoOff();
+	} else {
+		videoOn();
 	}
 }
 
@@ -714,7 +706,7 @@ function gotStream2() {
 		if(!gentle) console.log('gotStream2 -> auto pickup2()');
 		pickup2();
 	} else {
-		if(!enableVideoCheckbox.checked && localStream) {
+		if(!videoEnabled && localStream) {
 			// disable mic until a call comes in
 			if(!gentle) console.log('gotStream2 disable localStream');
 			localStream.getTracks().forEach(track => { track.stop(); });
@@ -1412,7 +1404,7 @@ function pickup2() {
 	peerCon.addTrack(audioTracks[0],localStream);
 
 /*
-	if(enableVideoCheckbox.checked && sendLocalStream) {
+	if(videoEnabled && sendLocalStream) {
 		if(localStream.getTracks().length>=2) {
 			if(!gentle) console.log('pickup2 peerCon addTrack vid',localStream.getTracks()[1]);
 			peerCon.addTrack(localStream.getTracks()[1],localStream);
@@ -1426,12 +1418,12 @@ function pickup2() {
 		remoteVideoFrame.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
 		remoteVideoFrame.load();
 		remoteVideoFrame.play().catch(function(error) {});
-		if(enableVideoCheckbox.checked) {
+		if(videoEnabled) {
 			remoteVideoDiv.style.display = "block";
 		}
 	} else {
 		if(!gentle) console.log('pickup2 peerCon cannot start remoteVideoFrame');
-		if(enableVideoCheckbox.checked) {
+		if(videoEnabled) {
 			remoteVideoDiv.style.display = "none";
 		}
 	}
@@ -1476,7 +1468,7 @@ function connectLocalVideo(forceOff) {
 			pickup(); // pickupAfterLocalStream=true + gotStream() -> pickup2() -> "calleeDescriptionUpd"
 /*
 			// moved to gotStream() - but why?
-			if(enableVideoCheckbox.checked && sendLocalStream) {
+			if(videoEnabled && sendLocalStream) {
 				if(localStream.getTracks().length>=2) {
 					if(!gentle) console.log('pickup2 peerCon addTrack vid',localStream.getTracks()[1]);
 					peerCon.addTrack(localStream.getTracks()[1],localStream);

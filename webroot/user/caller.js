@@ -11,13 +11,12 @@ const localVideoLabel = document.querySelector('div#localVideoLabel');
 const remoteVideoDiv = document.querySelector('div#remoteVideoDiv');
 const remoteVideoFrame = document.querySelector('video#remoteVideoFrame');
 const remoteVideoLabel = document.querySelector('div#remoteVideoLabel');
-const enableVideoLabel = document.querySelector('label#enableVideoLabel');
-const enableVideoCheckbox = document.querySelector('input#enableVideoCheckbox');
 
 const iframeWindowElement = document.getElementById('iframeWindow');
 const mainElement = document.getElementById('container');
 const menuElement = document.getElementById('menu');
 const menuDialogElement = document.getElementById('menuDialog');
+const tvElement = document.getElementById('tv');
 const fullScreenOverlayElement = document.getElementById('fullScreenOverlay');
 const progressSendElement = document.getElementById('progressSend'); // switch on and off
 const progressSendLabel = document.getElementById('progressSendLabel');
@@ -31,6 +30,7 @@ const bitrate = 280000;
 const neverAudio = false;
 const playDialSounds = true;
 
+var videoEnabled = false;
 var connectingText = "Connecting...";
 var singleButtonReadyText = "Click to make your order<br>Live operator";
 var singleButtonBusyText = "All lines are busy.<br>Please try again a little later.";
@@ -196,127 +196,6 @@ window.onload = function() {
 		if(!gentle) console.log('remote video size changed',remoteVideoFrame.videoWidth, remoteVideoFrame.videoHeight);
 	}
 
-	enableVideoCheckbox.addEventListener('change', function() {
-		if(this.checked) {
-			if(!gentle) console.log("enableVideoCheckbox checked");
-			if(localStream) {
-				// enable local stream
-				if(peerCon && sendLocalStream && localStream.getTracks().length>=2 && !videoSendTrack) {
-					if(localCandidateType=="relay" || remoteCandidateType=="relay") {
-						if(!gentle) console.log('enableVideoCheckbox checked no addTrack vid on relayed con (%s)(%s)',localCandidateType,remoteCandidateType);
-					} else {
-						if(!gentle) console.log('enableVideoCheckbox checked addTrack vid',localStream.getTracks()[1]);
-						videoSendTrack = peerCon.addTrack(localStream.getTracks()[1],localStream);
-					}
-				}
-				localVideoFrame.srcObject = localStream; // see gotStream()
-				localVideoFrame.volume = 0; // avoid audio feedback
-				localVideoFrame.load();
-				localVideoFrame.play().catch(function(error) {});
-			}
-			localVideoDiv.style.display = "block";
-			localVideoDiv.style.visibility = "visible";
-			localVideoDiv.style.height = "";
-
-			if(remoteStream) {
-				// enable local video
-				remoteVideoFrame.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
-
-				remoteVideoFrame.load();
-				remoteVideoFrame.play().catch(function(error) {});
-			}
-			remoteVideoDiv.style.display = "block";
-			remoteVideoDiv.style.visibility = "visible";
-			remoteVideoDiv.style.height = "";
-
-			getStream().then(() => navigator.mediaDevices.enumerateDevices()) //.then(gotDevices);
-			.then((deviceInfos) => {
-				gotDevices(deviceInfos);
-
-				// now switch to the 1st video option
-				let optionElements = Array.from(avSelect);
-				if(optionElements.length>0) {
-					if(!gentle) console.log("enableVideoCheckbox set avSelect.selectedIndex",optionElements.length -1);
-					// pre-select the 1st video device
-					for(let i=0; i<optionElements.length; i++) {
-						if(optionElements[i].text.startsWith("Video")) {
-							avSelect.selectedIndex = i;
-							break;
-						}
-					}
-					// activate the selected device
-					getStream();
-				}
-			});
-		} else {
-			// disable local video
-			if(!gentle) console.log("enableVideoCheckbox unchecked");
-
-			// disable local video
-			if(localStream) {
-				if(localStream.getAudioTracks().length>0) {
-					// preserve audio
-					if(!gentle) console.log("enableVideoCheckbox unchecked preserve local audio");
-					localVideoDiv.style.visibility = "hidden";
-					localVideoDiv.style.height = "0px";
-				} else {
-					// disable audio + video
-					if(!gentle) console.log("enableVideoCheckbox unchecked disable local audio + video");
-					localVideoDiv.style.display = "none";
-				}
-				connectLocalVideo(true); // stop video track
-			} else {	
-				if(!gentle) console.log("enableVideoCheckbox unchecked remove local audio + video frame");
-				localVideoDiv.style.display = "none";
-			}
-
-			// disable remote video
-			if(remoteStream) {
-				if(remoteStream.getAudioTracks().length>0) {
-					// preserve audio
-					if(!gentle) console.log("enableVideoCheckbox unchecked preserve remote audio");
-					remoteVideoDiv.style.visibility = "hidden";
-					remoteVideoDiv.style.height = "0px";
-				} else {
-					// disable audio + video
-					if(!gentle) console.log("enableVideoCheckbox unchecked disable remote audio + video");
-					remoteVideoDiv.style.display = "none";
-				}
-
-				if(videoSendTrack) {
-					if(!gentle) console.log("enableVideoCheckbox unchecked peerCon.removeTrack(videoSendTrack)");
-					peerCon.removeTrack(videoSendTrack); // videoSendTrack is from peerCon.addTrack(videotrack)
-					videoSendTrack = null;
-				} else {
-					if(!gentle) console.log("enableVideoCheckbox unchecked peerCon.removeTrack(videoSendTrack) (no videoSendTrack)");
-				}
-			} else {
-				if(!gentle) console.log("enableVideoCheckbox unchecked remove remote audio + video frame");
-				remoteVideoDiv.style.display = "none";
-			}
-
-			// now switch to the 1st audio option
-			let optionElements = Array.from(avSelect);
-			if(optionElements.length>0) {
-				if(!gentle) console.log("enableVideoCheckbox unchecked avSelect.selectedIndex",optionElements.length);
-				// pre-select the 1st video device
-				for(let i=0; i<optionElements.length; i++) {
-					if(optionElements[i].text.startsWith("Audio")) {
-						avSelect.selectedIndex = i;
-						break;
-					}
-				}
-				// activate the selected device
-				getStream();
-			}
-
-// TODO "remote cam streaming" -> "remote cam not streaming"
-
-// TODO need to make sure the last frame on callee-side (now frozen) disappears
-		}
-		setTimeout(historyBack,150);
-	});
-
 	document.onkeydown = function(evt) {
 		//console.log('menuDialogOpen onkeydown event');
 		evt = evt || window.event;
@@ -435,6 +314,132 @@ window.onload = function() {
 	});
 }
 
+function videoOn() {
+	if(!gentle) console.log("videoOn");
+	videoEnabled = true;
+	if(localStream) {
+		// enable local stream
+		if(peerCon && sendLocalStream && localStream.getTracks().length>=2 && !videoSendTrack) {
+			if(localCandidateType=="relay" || remoteCandidateType=="relay") {
+				if(!gentle) console.log('videoOn no addTrack vid on relayed con (%s)(%s)',localCandidateType,remoteCandidateType);
+			} else {
+				if(!gentle) console.log('videoOn addTrack vid',localStream.getTracks()[1]);
+				videoSendTrack = peerCon.addTrack(localStream.getTracks()[1],localStream);
+			}
+		}
+		localVideoFrame.srcObject = localStream; // see gotStream()
+		localVideoFrame.volume = 0; // avoid audio feedback
+		localVideoFrame.load();
+		localVideoFrame.play().catch(function(error) {});
+	}
+	localVideoDiv.style.display = "block";
+	localVideoDiv.style.visibility = "visible";
+	localVideoDiv.style.height = "";
+
+	if(remoteStream) {
+		// enable local video
+		remoteVideoFrame.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
+
+		remoteVideoFrame.load();
+		remoteVideoFrame.play().catch(function(error) {});
+	}
+	remoteVideoDiv.style.display = "block";
+	remoteVideoDiv.style.visibility = "visible";
+	remoteVideoDiv.style.height = "";
+
+	getStream().then(() => navigator.mediaDevices.enumerateDevices()) //.then(gotDevices);
+	.then((deviceInfos) => {
+		gotDevices(deviceInfos);
+
+		// now switch to the 1st video option
+		let optionElements = Array.from(avSelect);
+		if(optionElements.length>0) {
+			if(!gentle) console.log("videoOn avSelect.selectedIndex",optionElements.length -1);
+			// pre-select the 1st video device
+			for(let i=0; i<optionElements.length; i++) {
+				if(optionElements[i].text.startsWith("Video")) {
+					avSelect.selectedIndex = i;
+					break;
+				}
+			}
+			// activate the selected device
+			getStream();
+		}
+	});
+}
+
+function videoOff() {
+	// disable local video
+	if(!gentle) console.log("videoOff");
+	videoEnabled = false;
+
+	// disable local video
+	if(localStream) {
+		if(localStream.getAudioTracks().length>0) {
+			// preserve audio
+			if(!gentle) console.log("videoOff preserve local audio");
+			localVideoDiv.style.visibility = "hidden";
+			localVideoDiv.style.height = "0px";
+		} else {
+			// disable audio + video
+			if(!gentle) console.log("videoOff disable local audio + video");
+			localVideoDiv.style.display = "none";
+		}
+		connectLocalVideo(true); // stop video track
+	} else {	
+		if(!gentle) console.log("videoOff remove local audio + video frame");
+		localVideoDiv.style.display = "none";
+	}
+
+	// disable remote video
+	if(remoteStream) {
+		if(remoteStream.getAudioTracks().length>0) {
+			// preserve audio
+			if(!gentle) console.log("videoOff preserve remote audio");
+			remoteVideoDiv.style.visibility = "hidden";
+			remoteVideoDiv.style.height = "0px";
+		} else {
+			// disable audio + video
+			if(!gentle) console.log("videoOff disable remote audio + video");
+			remoteVideoDiv.style.display = "none";
+		}
+
+		if(videoSendTrack) {
+			if(!gentle) console.log("videoOff peerCon.removeTrack(videoSendTrack)");
+			peerCon.removeTrack(videoSendTrack); // videoSendTrack is from peerCon.addTrack(videotrack)
+			videoSendTrack = null;
+		} else {
+			if(!gentle) console.log("videoOff peerCon.removeTrack(videoSendTrack) (no videoSendTrack)");
+		}
+	} else {
+		if(!gentle) console.log("videoOff remove remote audio + video frame");
+		remoteVideoDiv.style.display = "none";
+	}
+
+	// now switch to the 1st audio option
+	let optionElements = Array.from(avSelect);
+	if(optionElements.length>0) {
+		if(!gentle) console.log("videoOff avSelect.selectedIndex",optionElements.length);
+		// pre-select the 1st video device
+		for(let i=0; i<optionElements.length; i++) {
+			if(optionElements[i].text.startsWith("Audio")) {
+				avSelect.selectedIndex = i;
+				break;
+			}
+		}
+		// activate the selected device
+		getStream();
+	}
+}
+
+function videoSwitch() {
+	if(videoEnabled) {
+		videoOff();
+	} else {
+		videoOn();
+	}
+}
+
 function checkServerMode(callback) {
 	let api = apiPath+"/mode";
 	xhrTimeout = 30*1000;
@@ -508,11 +513,12 @@ function calleeOnlineStatus(onlineStatus) {
 			}
 		}
 		if(calleeVideo) {
-			// enable video checkbox in popup menuDialog
-			enableVideoLabel.style.display = "block";
+			// enable tv icon
+			tvElement.style.display = "block";
+			setTimeout(videoOn,500);
 		} else {
-			enableVideoLabel.style.display = "none";
-			enableVideoCheckbox.checked = false;
+			// disable tv icon (leave it disabled)
+			tvElement.style.display = "none";
 		}
 
 		if(singlebutton) {
@@ -582,13 +588,13 @@ function calleeOnlineAction(from) {
 		}
 	}
 
-	// switch to callee-is-online layout
+	// switch to callee-is-online layout (call and hangupButton)
 	calleeOnlineElement.style.display = "block";
 	if(!singlebutton) {
 		calleeOfflineElement.style.display = "none";
 	}
 
-	// now that we know callee is online, we lazy load adapter-latest.js
+	// now that we know callee is online, we load adapter-latest.js
 	loadJS("adapter-latest.js",function(){
 		if(!navigator.mediaDevices) {
 			console.warn("navigator.mediaDevices not available");
@@ -608,7 +614,7 @@ function calleeOnlineAction(from) {
 			if(localStream || neverAudio) {
 				connectSignaling("",dial);
 			} else {
-				console.log('calleeOnlineAction dialAfterLocalStream');
+				console.log('calleeOnlineAction dialAfter');
 				dialAfterLocalStream = true;
 				getStream().then(() => navigator.mediaDevices.enumerateDevices()).then(gotDevices);
 				// also -> gotStream -> connectSignalling
@@ -874,16 +880,17 @@ function errorAction(errString,errcode) {
 
 function gotStream2() {
 	if(dialAfterLocalStream) {
-		if(!gentle) console.log("gotStream dialAfterLocalStream");
+		if(!gentle) console.log("gotStream with dialAfter");
 		dialAfterLocalStream=false;
 		connectSignaling("",dial);
 	} else {
-		if(!enableVideoCheckbox.checked && localStream) {
+		if(!videoEnabled && localStream) {
 			// disable local mic until we start dialing
 			localStream.getTracks().forEach(track => { track.stop(); });
 			const audioTracks = localStream.getAudioTracks();
 			localStream.removeTrack(audioTracks[0]);
 			localStream = null;
+			console.log("getStream2 localStream clear (mute before dial)");
 		}
 	}
 }
@@ -1110,7 +1117,7 @@ function signallingCommand(message) {
 			remoteVideoFrame.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
 			remoteVideoFrame.load();
 			remoteVideoFrame.play().catch(function(error) {});
-			if(enableVideoCheckbox.checked) {
+			if(videoEnabled) {
 				remoteVideoDiv.style.display = "block";
 			}
 			mediaConnect = true;
@@ -1198,9 +1205,9 @@ function signallingCommand(message) {
 
 	} else if(cmd=="enableVideo") {
 		if(payload=="false") {
-			enableVideoLabel.style.display = "none";
+			videoOff();
 		} else {
-			enableVideoLabel.style.display = "block";
+			videoOn();
 		}
 
 	} else if(cmd=="rtcVideoOff") {
@@ -1241,7 +1248,7 @@ function connectLocalVideo(forceOff) {
 //			audioTracks[0].enabled = true; // unmute
 //			peerCon.addTrack(audioTracks[0],localStream);
 
-			if(enableVideoCheckbox.checked && sendLocalStream) {
+			if(videoEnabled && sendLocalStream) {
 				if(localCandidateType=="relay" || remoteCandidateType=="relay") {
 					if(!gentle) console.log('connectLocalVideo() peerCon no addTrack video on relayed con (%s)(%s)',localCandidateType,remoteCandidateType);
 				} else if(localStream.getTracks().length>=2) {
@@ -1315,7 +1322,7 @@ function showStatus(msg,timeoutMs) {
 let dialDate;
 function dial() {
 	if(!localStream && !neverAudio) {
-		console.log('abort dial localStream not set');
+		console.warn('abort dial localStream not set',neverAudio,localStream);
 		showStatus("abort no localStream");
 		hangupWithBusySound(true,"pickup with no localStream");
 		return;
@@ -1388,21 +1395,20 @@ function dial() {
 	}
 	peerCon.ontrack = ({track, streams}) => {
 		if(!gentle) console.log('peerCon.ontrack',track, streams);
-// TODO if track (MediaStreamTrack) kind=="video" enabled==true -> "remote cam streaming"
 		if(track.enabled && track.kind=="video") {
 			remoteVideoLabel.innerHTML = "remote cam streaming";
 			remoteVideoLabel.style.color = "#ff0";
+			// we switch back to "remote cam not streaming" when other peer sends us ... via dataChannel
 		}
-// not sure yet when to switch back to "remote cam not streaming"
 
-		track.onunmute = () => {
-			if(remoteVideoFrame!=null && remoteVideoFrame.srcObject == streams[0]) {
-				if(!gentle) console.warn('peerCon.ontrack onunmute was already set');
-				return;
-			}
+//		track.onunmute = () => {
+//			if(remoteVideoFrame!=null && remoteVideoFrame.srcObject == streams[0]) {
+//				if(!gentle) console.warn('peerCon.ontrack onunmute was already set');
+//				return;
+//			}
 			if(!gentle) console.log('peerCon.ontrack onunmute set remoteStream',streams.length,streams[0]);
 			remoteStream = streams[0];
-		};
+//		};
 	};
 
 	peerCon.onnegotiationneeded = async () => {
@@ -1533,7 +1539,7 @@ function dial() {
 		peerCon.addTrack(audioTracks[0],localStream);
 /*
 		// we do this in connectLocalVideo()
-		if(enableVideoCheckbox.checked) {
+		if(videoEnabled) {
 			if(localStream.getTracks().length>=2) {
 				if(!gentle) console.log('dial  addTrack vid',localStream.getTracks()[1]);
 				peerCon.addTrack(localStream.getTracks()[1],localStream);
@@ -1815,6 +1821,7 @@ function hangup(mustDisconnectCallee,message) {
 		localStream.getTracks().forEach(track => { track.stop(); });
 		localStream.removeTrack(audioTracks[0]);
 		localStream = null;
+		console.warn("hangup localStream clear");
 	}
 
 	if(remoteVideoFrame!=null) {
@@ -1865,7 +1872,7 @@ function hangup(mustDisconnectCallee,message) {
 					if(peerCon!=null) {
 						if(dataChannel && dataChannel.readyState=="open") {
 							console.log('hangup dataChannel.close 1');
-							dataChannel.send("disconnect"); // tmtmtm
+							dataChannel.send("disconnect");
 							dataChannel.close();
 						}
 						console.log('hangup peerCon.close 1');
@@ -1876,7 +1883,7 @@ function hangup(mustDisconnectCallee,message) {
 
 			} else if(dataChannel && dataChannel.readyState=="open") {
 				console.log('hangup dataChannel.close 2');
-				dataChannel.send("disconnect"); // tmtmtm
+				dataChannel.send("disconnect");
 				dataChannel.close();
 				// in case we get no dataChannel.onclose
 				setTimeout(function() {

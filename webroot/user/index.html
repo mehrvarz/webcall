@@ -215,9 +215,6 @@ input[type=submit]:focus {
 			Send File
 			<input id="fileselect" type="file" style="display:none"></input>
 		</label>
-		<label id="enableVideoLabel" style="margin-left:-4px;">
-			<input type="checkbox" id="enableVideoCheckbox" class="checkbox"> Video</label>
-		</label>
 	</div>
 </div>
 
@@ -235,39 +232,40 @@ input[type=submit]:focus {
 
 
 <div id="container">
-<img id="menu" src="menu.svg" style="position:relative; float:right; margin-right:6px; width:25px; z-index:100; user-select:none; cursor:pointer;" onclick="menuDialogOpen()">
-<h1 id="title">WebCall</h1>
-<div id="calleeOnline" style="display:none">
-	<div style="display:grid; grid-template-columns: 1fr 1fr 40px; list-style-type:none; max-width:320px;">
-		<button id="callButton">Call</button>
-		<button id="hangupButton" disabled>Hang Up</button>
-		<img id="onlineIndicator" src="" style="width:26px; margin:0.6em 0 0 0; user-select:none;">
+	<img id="menu" onclick="menuDialogOpen()" src="menu.svg" style="position:relative; float:right; width:25px; margin-top:6px; z-index:100; _background:#0a0; user-select:none; cursor:pointer;">
+	<img id="tv" onclick="videoSwitch()" src="tv.svg" style="position:relative; float:right; width:25px; margin-top:6px; margin-right:20px; _background:#0a0; z-index:100; user-select:none; cursor:pointer; display:none;">
+	<h1 id="title">WebCall</h1>
+	<div id="calleeOnline" style="display:none">
+		<div style="display:grid; grid-template-columns: 1fr 1fr 40px; list-style-type:none; max-width:320px;">
+			<button id="callButton">Call</button>
+			<button id="hangupButton" disabled>Hang Up</button>
+			<img id="onlineIndicator" src="" style="width:26px; margin:0.6em 0 0 0; user-select:none;">
+		</div>
+
+		<select id="avSelect" class="select"></select>
+	</div>
+	<div id="calleeOffline" style="display:none">
 	</div>
 
-	<select id="avSelect" class="select"></select>
-</div>
-<div id="calleeOffline" style="display:none">
-</div>
+	<textarea id="msgbox" class="msgbox" placeholder="Hi, this is ..." style="display:none"></textarea>
 
-<textarea id="msgbox" class="msgbox" placeholder="Hi, this is ..." style="display:none"></textarea>
+	<div id="status" class="status"></div>
 
-<div id="status" class="status"></div>
+	<div id="progressSend" style="width:100%;max-width:360px;display:none;">
+		<div id="progressSendLabel">sending:</div>
+		<progress id="fileProgressSend" max="0" value="0" style="width:100%" onclick="stopProgressSend()"></progress>
+	</div>
+	<div id="download" style="margin-bottom:10px;"></div>
+	<div id="progressRcv" style="width:100%;max-width:360px;display:none;">
+		<div id="progressRcvLabel">receiving:</div>
+		<progress id="fileProgressRcv" max="0" value="0" style="width:100%" onclick="stopProgressRcv()"></progress>
+	</div>
 
-<div id="progressSend" style="width:100%;max-width:360px;display:none;">
-	<div id="progressSendLabel">sending:</div>
-	<progress id="fileProgressSend" max="0" value="0" style="width:100%" onclick="stopProgressSend()"></progress>
-</div>
-<div id="download" style="margin-bottom:10px;"></div>
-<div id="progressRcv" style="width:100%;max-width:360px;display:none;">
-	<div id="progressRcvLabel">receiving:</div>
-	<progress id="fileProgressRcv" max="0" value="0" style="width:100%" onclick="stopProgressRcv()"></progress>
-</div>
-
-<div id="timer" class="timer">0:00</div>
-<!--
-<audio id="remoteAudio" autoplay></audio>
--->
-<div style="opacity:0.7;margin-top:30px;">WebCall by <a href="https://timur.mobi/webcall">timur.mobi</a></div>
+	<div id="timer" class="timer">0:00</div>
+	<!--
+	<audio id="remoteAudio" autoplay></audio>
+	-->
+	<div style="opacity:0.7;margin-top:30px;">WebCall by <a href="https://timur.mobi/webcall">timur.mobi</a></div>
 </div>
 <script src="custom.js"></script>
 <script src="client.js"></script>
