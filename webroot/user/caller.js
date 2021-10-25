@@ -1077,18 +1077,12 @@ function signallingCommand(message) {
 				}
 			}
 
-
 			// enable (un-mute) remoteStream
 			if(!gentle) console.log('set remoteVideoFrame',remoteStream);
 			remoteVideoFrame.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
 			remoteVideoFrame.load();
 			remoteVideoFrame.play().catch(function(error) {});
-/*
-			if(videoEnabled) {
-				remoteVideoDiv.style.visibility = "visible";
-				remoteVideoDiv.style.height = "";
-			}
-*/
+
 			mediaConnect = true;
 			mediaConnectStartDate = Date.now();
 
@@ -1105,6 +1099,16 @@ function signallingCommand(message) {
 				err => console.log(err));
 
 			onnegotiationneededAllowed = true;
+
+			// if local video active, blink localVideoLabel
+			if(videoEnabled) {
+				console.log('full mediaConnect, blink localVideoLabel');
+				localVideoLabel.innerHTML = ">>> local cam not streaming <<<";
+				localVideoLabel.classList.add('blink_me');
+				setTimeout(function() {localVideoLabel.classList.remove('blink_me')},8000);
+			} else {
+				console.log('full mediaConnect, not videoEnabled, no blink localVideoLabel');
+			}
 		}
 
 		console.log('callee is answering our call');
@@ -1200,71 +1204,6 @@ function signallingCommand(message) {
 		console.warn('ignore incom cmd',cmd);
 	}
 }
-
-/*
-var sendLocalStream = false;
-function connectLocalVideo(forceOff) {
-	// invoked by onclick id="localVideoConnect"
-	if(!sendLocalStream && !forceOff) {
-		// we want to send localVideo stream to other peer
-		if(dataChannel && dataChannel.readyState=="open") {
-			console.log("connectLocalVideo() request rtcNegotiate via dataChannel");
-			// make callee execute connectLocalVideo() -> pickup() -> gotStream() -> "calleeDescriptionUpd"
-			dataChannel.send("cmd|rtcNegotiate");
-			sendLocalStream = true;
-
-//			const audioTracks = localStream.getAudioTracks();
-//			audioTracks[0].enabled = true; // unmute
-//			peerCon.addTrack(audioTracks[0],localStream);
-
-			if(videoEnabled && sendLocalStream) {
-				if(localCandidateType=="relay" || remoteCandidateType=="relay") {
-					if(!gentle) console.log('connectLocalVideo() peerCon no addTrack video on relayed con (%s)(%s)',localCandidateType,remoteCandidateType);
-				} else if(localStream.getTracks().length>=2) {
-					if(!gentle) console.log('connectLocalVideo() addTrack vid',localStream.getTracks()[1]);
-					videoSendTrack = peerCon.addTrack(localStream.getTracks()[1],localStream);
-				} else {
-					if(!gentle) console.log('connectLocalVideo() no addTrack vid no vid track',localStream.getTracks().length);
-				}
-			}
-
-// TODO tmtmtm do this when local video is actually streaming
-			localVideoLabel.innerHTML = "local cam streaming";
-			localVideoLabel.style.color = "#ff0";
-		} else {
-			console.log("######## connectLocalVideo() no dataChannel");
-		}
-	} else {
-		// we want to stop sending localVideo stream to other peer
-		sendLocalStream = false;
-		if(dataChannel && dataChannel.readyState=="open") {
-			dataChannel.send("cmd|rtcVideoOff");
-		}
-
-		if(!localStream) {
-			console.log("connectLocalVideo() disconnect (!localStream)");
-		} else if(videoSendTrack) {
-			console.log("connectLocalVideo() disconnect (stop video track)");
-			peerCon.removeTrack(videoSendTrack);
-			videoSendTrack = null;
-			// connection needs to be negotiated again!
-		} else {
-			console.log("connectLocalVideo() disconnect (do nothing)",localStream.getTracks().length);
-		}
-
-		// hide localVideoFrame
-//		localVideoDiv.style.visibility = "hidden";
-//		localVideoDiv.style.height = "0px";
-		localVideoLabel.innerHTML = "local cam not streaming";
-		localVideoLabel.style.color = "#fff";
-
-		if(dataChannel && dataChannel.readyState=="open") {
-			// make caller hide remove video
-			dataChannel.send("cmd|rtcVideoOff");
-		}
-	}
-}
-*/
 
 function wsSend(message) {
 	if(wsConn==null || wsConn.readyState!=1) {

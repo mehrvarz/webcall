@@ -649,6 +649,8 @@ function videoSwitch() {
 
 var sendLocalStream = false;
 function connectLocalVideo(forceOff) {
+	localVideoLabel.classList.remove('blink_me');
+
 	if(!sendLocalStream && !forceOff) {
 		// we want to send localVideo stream to other peer
 		if(dataChannel && dataChannel.readyState=="open") {
