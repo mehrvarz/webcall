@@ -186,11 +186,17 @@ window.onload = function() {
 	};
 
 	localVideoFrame.onresize = function() {
-		if(!gentle) console.log('local video size changed',localVideoFrame.videoWidth, localVideoFrame.videoHeight);
+		if(videoEnabled) {
+			if(!gentle) console.log('local video size changed',
+				localVideoFrame.videoWidth, localVideoFrame.videoHeight);
+		}
 	}
 
 	remoteVideoFrame.onresize = function() {
-		if(!gentle) console.log('remote video size changed',remoteVideoFrame.videoWidth, remoteVideoFrame.videoHeight);
+		if(videoEnabled) {
+			if(!gentle) console.log('remote video size changed',
+				remoteVideoFrame.videoWidth, remoteVideoFrame.videoHeight);
+		}
 	}
 
 	isHiddenCheckbox.addEventListener('change', function() {
@@ -301,7 +307,7 @@ function videoOn() {
 		localVideoFrame.load();
 		localVideoFrame.play().catch(function(error) {});
 	}
-	localVideoDiv.style.display = "block";
+//	localVideoDiv.style.display = "block";
 	localVideoDiv.style.visibility = "visible";
 	localVideoDiv.style.height = "";
 
@@ -311,7 +317,7 @@ function videoOn() {
 		remoteVideoFrame.load();
 		remoteVideoFrame.play().catch(function(error) {});
 	}
-	remoteVideoDiv.style.display = "block";
+//	remoteVideoDiv.style.display = "block";
 	remoteVideoDiv.style.visibility = "visible";
 	remoteVideoDiv.style.height = "";
 
@@ -322,11 +328,12 @@ function videoOn() {
 		// now switch to the 1st video option
 		let optionElements = Array.from(avSelect);
 		if(optionElements.length>0) {
-			if(!gentle) console.log("videoOn avSelect.selectedIndex",optionElements.length);
+			if(!gentle) console.log("videoOn avSelect.selectedIndex count",optionElements.length);
 			// pre-select the 1st video device
 			for(let i=0; i<optionElements.length; i++) {
 				if(optionElements[i].text.startsWith("Video")) {
 					avSelect.selectedIndex = i;
+					if(!gentle) console.log("videoOn avSelect.selectedIndex set",i);
 					break;
 				}
 			}
@@ -363,12 +370,16 @@ function videoOff() {
 		} else {
 			// disable audio + video
 			if(!gentle) console.log("videoOff disable local audio + video");
-			localVideoDiv.style.display = "none";
+//			localVideoDiv.style.display = "none";
+			localVideoDiv.style.visibility = "hidden";
+			localVideoDiv.style.height = "0px";
 		}
 		connectLocalVideo(true); // stop video track
 	} else {	
 		if(!gentle) console.log("videoOff no localStream");
-		localVideoDiv.style.display = "none";
+//		localVideoDiv.style.display = "none";
+		localVideoDiv.style.visibility = "hidden";
+		localVideoDiv.style.height = "0px";
 	}
 
 	// disable remote video
@@ -381,7 +392,9 @@ function videoOff() {
 		} else {
 			// disable audio + video
 			if(!gentle) console.log("videoOff disable remote audio + video");
-			remoteVideoDiv.style.display = "none";
+//			remoteVideoDiv.style.display = "none";
+			remoteVideoDiv.style.visibility = "hidden";
+			remoteVideoDiv.style.height = "0px";
 		}
 
 		if(videoSendTrack) {
@@ -393,7 +406,9 @@ function videoOff() {
 		}
 	} else {
 		if(!gentle) console.log("videoOff no remoteStream");
-		remoteVideoDiv.style.display = "none";
+//		remoteVideoDiv.style.display = "none";
+		remoteVideoDiv.style.visibility = "hidden";
+		remoteVideoDiv.style.height = "0px";
 	}
 
 	// now switch to the 1st audio option
@@ -418,14 +433,6 @@ function videoOff() {
 	if(wsConn) {
 // TODO tmtmtm must implement this on server side
 		wsSend("enableVideo|"+videoEnabled); // enableVideoCheckbox.checked);
-	}
-}
-
-function videoSwitch() {
-	if(videoEnabled) {
-		videoOff();
-	} else {
-		videoOn();
 	}
 }
 
@@ -706,8 +713,8 @@ function gotStream2() {
 		if(!gentle) console.log('gotStream2 -> auto pickup2()');
 		pickup2();
 	} else {
-		if(!videoEnabled && localStream) {
-			// disable mic until a call comes in
+		if(localStream && !videoEnabled && !peerCon) {
+			// mute (disable) mic until a call comes in
 			if(!gentle) console.log('gotStream2 disable localStream');
 			localStream.getTracks().forEach(track => { track.stop(); });
 			const audioTracks = localStream.getAudioTracks();
@@ -718,7 +725,7 @@ function gotStream2() {
 			if(!gentle) console.log('gotStream2 onGotStreamGoOnline goOnline');
 			goOnline();
 		} else {
-			if(!gentle) console.log('gotStream2 !onGotStreamGoOnline !goOnline');
+			//if(!gentle) console.log('gotStream2 !onGotStreamGoOnline !goOnline');
 		}
 	}
 }
@@ -918,9 +925,11 @@ function signallingCommand(message) {
 
 	if(cmd=="init") {
 		if(!gentle) console.log('cmd init');
-	} else if(cmd=="callerDescription") {
+
+//	} else if(cmd=="callerDescription") {
+	} else if(cmd=="callerOffer" || cmd=="callerOfferUpd") {
 		if(peerCon==null) {
-			console.warn('callerDescription but no peerCon');
+			console.warn('callerOffer but no peerCon');
 			return;
 		}
 		if(!rtcConnect) {
@@ -928,22 +937,22 @@ function signallingCommand(message) {
 			callerID = "";
 			callerName = "";
 		}
-		if(!gentle) console.log('cmd callerDescription');
+		if(!gentle) console.log('callerOffer');
 		// "Uncaught SyntaxError: Unexpected end of JSON input"
 		callerDescription = JSON.parse(payload);
-		console.log('cmd callerDescription (incoming call)');
+		console.log('callerOffer (incoming call)');
 		peerCon.setRemoteDescription(callerDescription).then(() => {
-			if(!gentle) console.log('callerDescription createAnswer');
+			if(!gentle) console.log('callerOffer createAnswer');
 			peerCon.createAnswer().then((desc) => {
 				localDescription = desc;
-				if(!gentle) console.log('callerDescription got localDescription');
+				if(!gentle) console.log('callerOffer in, calleeAnswer out');
 				localDescription.sdp =
 					maybePreferCodec(localDescription.sdp, 'audio', 'send', "opus");
 				localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
 					'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
 				peerCon.setLocalDescription(localDescription).then(() => {
-					if(!gentle) console.log('callerDescription localDescription set -> signal');
-					wsSend("calleeDescription|"+JSON.stringify(localDescription));
+					if(!gentle) console.log('calleeAnswer localDescription set -> signal');
+					wsSend("calleeAnswer|"+JSON.stringify(localDescription));
 				}, err => console.error(`Failed to set local descr: ${err.toString()}`));
 			}, err => {
 				// DOMException: Cannot create answer in stable
@@ -955,17 +964,7 @@ function signallingCommand(message) {
 			showStatus("Failed to set RemoteDescription",8000);
 		});
 
-	} else if(cmd=="callerInfo") {
-		let idxColon = payload.indexOf(":");
-		if(idxColon>=0) {
-			callerID = payload.substring(0,idxColon);
-			callerName = payload.substring(idxColon+1);
-			if(!gentle) console.log('cmd callerInfo (%s) (%s)',callerID,callerName);
-		} else {
-			if(!gentle) console.log('cmd callerInfo payload=(%s)',payload);
-		}
-
-	} else if(cmd=="callerDescriptionUpd") {
+/*	} else if(cmd=="callerDescriptionUpd") {
 		if(peerCon==null) {
 			console.warn('callerDescription but no peerCon');
 			return;
@@ -998,12 +997,44 @@ function signallingCommand(message) {
 					showStatus("Failed to createAnswer",8000);
 				});
 			} else {
-				if(!gentle) console.log('callerDescriptionUpd received no offer',callerDescription.type);
+				if(!gentle) console.log('# callerDescriptionUpd received no offer',callerDescription.type);
 			}
 		}, err => {
 			console.warn(`Failed to set RemoteDescription`,err,callerDescription)
 			showStatus("Failed to set RemoteDescription",8000);
 		});
+*/
+
+	} else if(cmd=="callerAnswer") {
+		if(!peerCon) {
+			console.warn('callerAnswer abort no peerCon');
+			return;
+		}
+		callerDescription = JSON.parse(payload);
+
+		if(!gentle) console.log("callerAnswer setLocalDescription");
+		peerCon.setLocalDescription(localDescription).then(() => {
+			if(!gentle) console.log('callerAnswer setRemoteDescription');
+			peerCon.setRemoteDescription(callerDescription).then(() => {
+				if(!gentle) console.log('callerAnswer setRemoteDescription done');
+			}, err => {
+				console.warn(`callerAnswer Failed to set RemoteDescription`,err)
+				showStatus("Cannot set remoteDescr "+err);
+			});
+		}, err => {
+			console.warn("callerAnswer setLocalDescription fail",err)
+			showStatus("Cannot set localDescr"+err);
+		});
+
+	} else if(cmd=="callerInfo") {
+		let idxColon = payload.indexOf(":");
+		if(idxColon>=0) {
+			callerID = payload.substring(0,idxColon);
+			callerName = payload.substring(idxColon+1);
+			if(!gentle) console.log('cmd callerInfo (%s) (%s)',callerID,callerName);
+		} else {
+			if(!gentle) console.log('cmd callerInfo payload=(%s)',payload);
+		}
 
 	} else if(cmd=="callerCandidate") {
 		if(peerCon==null) {
@@ -1154,7 +1185,8 @@ function signallingCommand(message) {
 		// remote video track added by caller
 		if(!gentle) console.log("rtcNegotiate");
 		if(dataChannel && dataChannel.readyState=="open") {
-			pickup(); // pickupAfterLocalStream=true + gotStream() -> pickup2() -> "calleeDescriptionUpd"
+			pickupAfterLocalStream = true;
+			getStream(); // -> pickup2() -> "calleeDescriptionUpd"
 		}
 	} else if(cmd=="rtcVideoOff") {
 		// remote video track removed by caller
@@ -1398,10 +1430,12 @@ function pickup2() {
 
 	onnegotiationneededAllowed = true;
 
+/* now in gotStream()
 	const audioTracks = localStream.getAudioTracks();
 	audioTracks[0].enabled = true;
 	if(!gentle) console.log('pickup2 peerCon addTrack mic',audioTracks.length,audioTracks,localStream);
 	peerCon.addTrack(audioTracks[0],localStream);
+*/
 
 /*
 	if(videoEnabled && sendLocalStream) {
@@ -1413,18 +1447,22 @@ function pickup2() {
 		}
 	}
 */
-	if(remoteVideoFrame!=null) {
+	if(remoteStream) {
 		if(!gentle) console.log('pickup2 peerCon start remoteVideoFrame');
 		remoteVideoFrame.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
 		remoteVideoFrame.load();
 		remoteVideoFrame.play().catch(function(error) {});
 		if(videoEnabled) {
-			remoteVideoDiv.style.display = "block";
+//			remoteVideoDiv.style.display = "block";
+			remoteVideoDiv.style.visibility = "visible";
+			remoteVideoDiv.style.height = "";
 		}
 	} else {
-		if(!gentle) console.log('pickup2 peerCon cannot start remoteVideoFrame');
+		if(!gentle) console.log('pickup2 no remoteStream');
 		if(videoEnabled) {
-			remoteVideoDiv.style.display = "none";
+//			remoteVideoDiv.style.display = "none";
+			remoteVideoDiv.style.visibility = "hidden";
+			remoteVideoDiv.style.height = "0px";
 		}
 	}
 
@@ -1462,10 +1500,9 @@ function connectLocalVideo(forceOff) {
 		// we want to send localVideo to other peer
 		if(dataChannel && dataChannel.readyState=="open") {
 			console.log("connectLocalVideo via dataChannel");
-			sendLocalStream = true;
-			// with sendLocalStream == true, we can now connect localStream
-
-			pickup(); // pickupAfterLocalStream=true + gotStream() -> pickup2() -> "calleeDescriptionUpd"
+			sendLocalStream = true; // will cause: peerCon.addTrack(video)
+			pickupAfterLocalStream = true; // will cause: pickup2()
+			getStream(); // -> gotStream() -> gotStream2() -> pickup2() -> "calleeDescriptionUpd"
 /*
 			// moved to gotStream() - but why?
 			if(videoEnabled && sendLocalStream) {
@@ -1590,6 +1627,7 @@ function goOnline() {
 			return;
 		}
 		if(!onnegotiationneededAllowed) {
+			// pickup2() enables, endWebRtcSession() and wsConn.onclose disable
 			if(!gentle) console.warn('onnegotiationneeded not allowed');
 			return;
 		}
@@ -1603,9 +1641,9 @@ function goOnline() {
 			peerCon.setLocalDescription(localDescription).then(() => {
 				if(!gentle) console.log('onnegotiationneeded localDescription set -> signal');
 				if(dataChannel && dataChannel.readyState=="open") {
-					dataChannel.send("cmd|calleeDescriptionUpd|"+JSON.stringify(localDescription));
+					dataChannel.send("cmd|calleeOffer|"+JSON.stringify(localDescription));
 				} else {
-					wsSend("calleeDescriptionUpd|"+JSON.stringify(localDescription));
+					wsSend("calleeOffer|"+JSON.stringify(localDescription));
 				}
 			}, err => console.error(`Failed to set local descr: ${err.toString()}`));
 		} catch(err) {
@@ -1835,7 +1873,7 @@ function createDataChannel() {
 						}
 					} else if(event.data.startsWith("cmd|")) {
 						let subCmd = event.data.substring(4);
-						if(!gentle) console.log("dataChannel.onmessage -> signallingCommand");
+						if(!gentle) console.log("dataChannel.onmessage signalling");
 						signallingCommand(subCmd);
 					} else if(event.data.startsWith("file|")) {
 						var fileDescr = event.data.substring(5);

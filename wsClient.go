@@ -314,7 +314,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 		return
 	}
 
-	if cmd=="callerDescription" {
+	if cmd=="callerDescription" || cmd=="callerOffer" {
 		// caller starting a call - payload is JSON.stringify(localDescription)
 		if logWantedFor("wscall") {
 			fmt.Printf("%s callerDescription (call attempt) from %s to %s\n",

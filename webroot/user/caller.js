@@ -16,7 +16,7 @@ const iframeWindowElement = document.getElementById('iframeWindow');
 const mainElement = document.getElementById('container');
 const menuElement = document.getElementById('menu');
 const menuDialogElement = document.getElementById('menuDialog');
-const tvElement = document.getElementById('tv');
+const cameraElement = document.getElementById('camera');
 const fullScreenOverlayElement = document.getElementById('fullScreenOverlay');
 const progressSendElement = document.getElementById('progressSend'); // switch on and off
 const progressSendLabel = document.getElementById('progressSendLabel');
@@ -189,11 +189,17 @@ window.onload = function() {
 	}
 
 	localVideoFrame.onresize = function() {
-		if(!gentle) console.log('local video size changed',localVideoFrame.videoWidth, localVideoFrame.videoHeight);
+		if(videoEnabled) {
+			if(!gentle) console.log('local video size changed',
+				localVideoFrame.videoWidth, localVideoFrame.videoHeight);
+		}
 	}
 
 	remoteVideoFrame.onresize = function() {
-		if(!gentle) console.log('remote video size changed',remoteVideoFrame.videoWidth, remoteVideoFrame.videoHeight);
+		if(videoEnabled) {
+			if(!gentle) console.log('remote video size changed',
+				remoteVideoFrame.videoWidth, remoteVideoFrame.videoHeight);
+		}
 	}
 
 	document.onkeydown = function(evt) {
@@ -332,7 +338,7 @@ function videoOn() {
 		localVideoFrame.load();
 		localVideoFrame.play().catch(function(error) {});
 	}
-	localVideoDiv.style.display = "block";
+//	localVideoDiv.style.display = "block";
 	localVideoDiv.style.visibility = "visible";
 	localVideoDiv.style.height = "";
 
@@ -343,7 +349,7 @@ function videoOn() {
 		remoteVideoFrame.load();
 		remoteVideoFrame.play().catch(function(error) {});
 	}
-	remoteVideoDiv.style.display = "block";
+//	remoteVideoDiv.style.display = "block";
 	remoteVideoDiv.style.visibility = "visible";
 	remoteVideoDiv.style.height = "";
 
@@ -373,26 +379,39 @@ function videoOff() {
 	if(!gentle) console.log("videoOff");
 	videoEnabled = false;
 
-	// disable local video
+	// hide local video frame
+	localVideoDiv.style.visibility = "hidden";
+	localVideoDiv.style.height = "0px";
 	if(localStream) {
+/*
 		if(localStream.getAudioTracks().length>0) {
 			// preserve audio
 			if(!gentle) console.log("videoOff preserve local audio");
 			localVideoDiv.style.visibility = "hidden";
 			localVideoDiv.style.height = "0px";
 		} else {
-			// disable audio + video
+			// hide video frames
 			if(!gentle) console.log("videoOff disable local audio + video");
-			localVideoDiv.style.display = "none";
+//			localVideoDiv.style.display = "none";
+			localVideoDiv.style.visibility = "hidden";
+			localVideoDiv.style.height = "0px";
 		}
+*/
 		connectLocalVideo(true); // stop video track
-	} else {	
-		if(!gentle) console.log("videoOff remove local audio + video frame");
-		localVideoDiv.style.display = "none";
-	}
 
-	// disable remote video
+	} /*else {	
+		if(!gentle) console.log("videoOff remove local audio + video frame");
+//		localVideoDiv.style.display = "none";
+		localVideoDiv.style.visibility = "hidden";
+		localVideoDiv.style.height = "0px";
+	}
+*/
+
+	// hide remote video frame
+	remoteVideoDiv.style.visibility = "hidden";
+	remoteVideoDiv.style.height = "0px";
 	if(remoteStream) {
+/*
 		if(remoteStream.getAudioTracks().length>0) {
 			// preserve audio
 			if(!gentle) console.log("videoOff preserve remote audio");
@@ -401,9 +420,11 @@ function videoOff() {
 		} else {
 			// disable audio + video
 			if(!gentle) console.log("videoOff disable remote audio + video");
-			remoteVideoDiv.style.display = "none";
+//			remoteVideoDiv.style.display = "none";
+			remoteVideoDiv.style.visibility = "hidden";
+			remoteVideoDiv.style.height = "0px";
 		}
-
+*/
 		if(videoSendTrack) {
 			if(!gentle) console.log("videoOff peerCon.removeTrack(videoSendTrack)");
 			peerCon.removeTrack(videoSendTrack); // videoSendTrack is from peerCon.addTrack(videotrack)
@@ -411,9 +432,13 @@ function videoOff() {
 		} else {
 			if(!gentle) console.log("videoOff peerCon.removeTrack(videoSendTrack) (no videoSendTrack)");
 		}
+/*
 	} else {
 		if(!gentle) console.log("videoOff remove remote audio + video frame");
-		remoteVideoDiv.style.display = "none";
+//		remoteVideoDiv.style.display = "none";
+		remoteVideoDiv.style.visibility = "hidden";
+		remoteVideoDiv.style.height = "0px";
+*/
 	}
 
 	// now switch to the 1st audio option
@@ -429,14 +454,6 @@ function videoOff() {
 		}
 		// activate the selected device
 		getStream();
-	}
-}
-
-function videoSwitch() {
-	if(videoEnabled) {
-		videoOff();
-	} else {
-		videoOn();
 	}
 }
 
@@ -512,14 +529,17 @@ function calleeOnlineStatus(onlineStatus) {
 				}
 			}
 		}
+/*
 		if(calleeVideo) {
 			// enable tv icon
-			tvElement.style.display = "block";
+			cameraElement.style.display = "block";
 			setTimeout(videoOn,500);
 		} else {
 			// disable tv icon (leave it disabled)
-			tvElement.style.display = "none";
+			cameraElement.style.display = "none";
 		}
+*/
+		cameraElement.style.display = "block";
 
 		if(singlebutton) {
 			// enable parent iframe (height)
@@ -880,11 +900,11 @@ function errorAction(errString,errcode) {
 
 function gotStream2() {
 	if(dialAfterLocalStream) {
-		if(!gentle) console.log("gotStream with dialAfter");
+		if(!gentle) console.log("gotStream2 with dialAfter");
 		dialAfterLocalStream=false;
 		connectSignaling("",dial);
 	} else {
-		if(!videoEnabled && localStream) {
+		if(!videoEnabled && localStream && !peerCon) {
 			// disable local mic until we start dialing
 			localStream.getTracks().forEach(track => { track.stop(); });
 			const audioTracks = localStream.getAudioTracks();
@@ -966,8 +986,10 @@ function signallingCommand(message) {
 	if(tok.length>=2) {
 		payload = tok[1];
 	}
+	console.log('signalling cmd=%s',cmd);
 
-	if(cmd=="calleeDescription") {
+//	if(cmd=="calleeDescription") {
+	if(cmd=="calleeAnswer") {
 		if(!peerCon) {
 			console.warn('calleeDescription abort no peerCon');
 			return;
@@ -988,7 +1010,8 @@ function signallingCommand(message) {
 			showStatus("Cannot set localDescr"+err);
 		});
 
-	} else if(cmd=="calleeDescriptionUpd") {
+//	} else if(cmd=="calleeDescriptionUpd") {
+	} else if(cmd=="calleeOffer") {
 		hostDescription = JSON.parse(payload);
 		console.log('cmd calleeDescriptionUpd setRemoteDescription');
 		peerCon.setRemoteDescription(hostDescription).then(() => {
@@ -1008,9 +1031,9 @@ function signallingCommand(message) {
 // on 'RTCPeerConnection': Failed to set local answer sdp: Called in wrong state: stable"
 						if(!gentle) console.log('calleeDescriptionUpd localDescription set -> signal');
 						if(dataChannel && dataChannel.readyState=="open") {
-							dataChannel.send("cmd|callerDescriptionUpd|"+JSON.stringify(localDescription));
+							dataChannel.send("cmd|callerAnswer|"+JSON.stringify(localDescription));
 						} else {
-							wsSend("callerDescriptionUpd|"+JSON.stringify(localDescription));
+							wsSend("callerAnswer|"+JSON.stringify(localDescription));
 						}
 					}, err => console.error(`Failed to set local descr: ${err.toString()}`));
 				}, err => {
@@ -1087,7 +1110,6 @@ function signallingCommand(message) {
 		addIceCalleeCandidate(calleeCandidate);
 
 	} else if(cmd=="pickup") {
-		console.log('cmd pickup');
 		if(!rtcConnect) {
 			if(!gentle) console.warn('cmd pickup without rtcConnect; ignored');
 			return
@@ -1118,7 +1140,9 @@ function signallingCommand(message) {
 			remoteVideoFrame.load();
 			remoteVideoFrame.play().catch(function(error) {});
 			if(videoEnabled) {
-				remoteVideoDiv.style.display = "block";
+//				remoteVideoDiv.style.display = "block";
+				remoteVideoDiv.style.visibility = "visible";
+				remoteVideoDiv.style.height = "";
 			}
 			mediaConnect = true;
 			mediaConnectStartDate = Date.now();
@@ -1431,9 +1455,9 @@ function dial() {
 			peerCon.setLocalDescription(localDescription).then(() => {
 				console.log('onnegotiationneeded localDescription set -> signal');
 				if(dataChannel && dataChannel.readyState=="open") {
-					dataChannel.send("cmd|callerDescriptionUpd|"+JSON.stringify(localDescription));
+					dataChannel.send("cmd|callerOfferUpd|"+JSON.stringify(localDescription));
 				} else {
-					wsSend("callerDescriptionUpd|"+JSON.stringify(localDescription));
+					wsSend("callerOfferUpd|"+JSON.stringify(localDescription));
 				}
 			}, err => console.error(`Failed to set local descr: ${err.toString()}`));
 		} catch(err) {
@@ -1568,7 +1592,7 @@ function dial() {
 			// this check is important bc the caller may have disconnected already
 			if(wsConn!=null) {
 				console.log('signal callerDescription (outgoing call)');
-				wsSend("callerDescription|"+JSON.stringify(localDescription));
+				wsSend("callerOffer|"+JSON.stringify(localDescription));
 			}
 		},1500);
 	}, err => console.warn(`dial createOffer failed: ${error.toString()}`));
@@ -1637,7 +1661,7 @@ function createDataChannel() {
 							audioTracks[0].enabled = false;
 						}
 					} else {
-						if(!gentle) console.log("dataChannel.onmessage -> signallingCommand()");
+						if(!gentle) console.log("dataChannel.onmessage signalling");
 						signallingCommand(subCmd);
 					}
 				} else if(event.data.startsWith("file|")) {
@@ -1821,7 +1845,7 @@ function hangup(mustDisconnectCallee,message) {
 		localStream.getTracks().forEach(track => { track.stop(); });
 		localStream.removeTrack(audioTracks[0]);
 		localStream = null;
-		console.warn("hangup localStream clear");
+		console.log("hangup localStream clear");
 	}
 
 	if(remoteVideoFrame!=null) {

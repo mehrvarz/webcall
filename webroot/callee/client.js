@@ -544,7 +544,7 @@ function gotDevices(deviceInfos) {
 		option.value = deviceInfo.deviceId;
 		if(deviceInfo.kind === 'audioinput') {
 			let deviceInfoLabel = deviceInfo.label;
-			if(!gentle) console.log('gotDevices audioinput label',deviceInfoLabel);
+			//if(!gentle) console.log('gotDevices audioinput label',deviceInfoLabel);
 			if(deviceInfoLabel=="Default") {
 				deviceInfoLabel="Audio Input Default";
 			} else if(deviceInfoLabel) {
@@ -566,7 +566,7 @@ function gotDevices(deviceInfos) {
 		} else if (deviceInfo.kind === 'videoinput') {
 			if(videoEnabled) {
 				let deviceInfoLabel = deviceInfo.label;
-				if(!gentle) console.log('gotDevices videoinput label',deviceInfoLabel);
+				//if(!gentle) console.log('gotDevices videoinput label',deviceInfoLabel);
 				if(deviceInfoLabel=="Default") {
 					deviceInfoLabel="Video Input Default";
 				} else if(deviceInfoLabel) {
@@ -597,19 +597,27 @@ function gotStream(stream) {
     if(!gentle) console.log("gotStream set localStream");
 	localStream = stream;
 
+	if(peerCon) {
+		const audioTracks = localStream.getAudioTracks();
+		audioTracks[0].enabled = true;
+		if(!gentle) console.log('gotStream peerCon addTrack mic',audioTracks.length);
+		peerCon.addTrack(audioTracks[0],localStream);
+	} else {
+		if(!gentle) console.log('gotStream no peerCon, cannot addTrack mic');
+	}
+/*
+	// if localStream is videoEnabled
 	// avSelect.selectedIndex may be -1
 	let avSelectSelectedIndex = avSelect.selectedIndex;
 	if(avSelectSelectedIndex<0) avSelectSelectedIndex=0;
 	let optionElements = Array.from(avSelect);
     if(!gentle) console.log("gotStream avSelect.selectedIndex",
 		avSelect.selectedIndex,avSelectSelectedIndex,optionElements.length)
-
 	let audioOnly = false;
 	if(optionElements.length>0) {
 		if(optionElements[avSelectSelectedIndex].text.startsWith("Audio"))
 			audioOnly = true;
 	}
-
 	if(audioOnly) {
 		// disable all video tracks
 		stream.getTracks().forEach(function(track) {
@@ -619,25 +627,45 @@ function gotStream(stream) {
 				track.stop();
 			}
 		})
-	} else {
-		if(videoEnabled && sendLocalStream) {
-			if(localCandidateType=="relay" || remoteCandidateType=="relay") {
-				if(!gentle) console.log('pickup2 peerCon no addTrack vid on relayed con (%s)(%s)',localCandidateType,remoteCandidateType);
-			} else if(localStream.getTracks().length>=2) {
-				if(!gentle) console.log('pickup2 peerCon addTrack vid',localStream.getTracks()[1]);
-				videoSendTrack = peerCon.addTrack(localStream.getTracks()[1],localStream);
-			} else {
-				if(!gentle) console.log('pickup2 peerCon no addTrack vid',localStream.getTracks().length);
+*/
+	// now let's look at all the reasons why we would NOT add the video track to peerCon
+	if(!videoEnabled) {
+		// disable all video tracks (do not show the video locally)
+		if(!gentle) console.log("gotStream !videoEnabled stop video tracks");
+		stream.getTracks().forEach(function(track) {
+			if(typeof track.getSettings().aspectRatio!=="undefined") {
+				// this is a video track: stop it
+				track.stop();
+				if(!gentle) console.log("gotStream !videoEnabled video track stopped");
 			}
-		}
+		})
+	} else if(!sendLocalStream) {
+		// video has not been activated for delivery
+		if(!gentle) console.log('gotStream videoEnabled !sendLocalStream');
+	} else if(!peerCon) {
+		if(!gentle) console.log('gotStream videoEnabled !peerCon');
+	} else if(localCandidateType=="relay" || remoteCandidateType=="relay") {
+		if(!gentle) console.log('gotStream videoEnabled: no addTrack video on relayed con (%s)(%s)',localCandidateType,remoteCandidateType);
+	} else if(localStream.getTracks().length<2) {
+		if(!gentle) console.log('gotStream videoEnabled: getTracks().length<2: no addTrack vid',localStream.getTracks().length);
+	} else {
+		if(!gentle) console.log('gotStream videoEnabled addTrack vid',localStream.getTracks()[1]);
+		videoSendTrack = peerCon.addTrack(localStream.getTracks()[1],localStream);
 	}
 
-	if(!gentle) console.log("gotStream enable localVideoFrame");
+	if(!gentle) console.log("gotStream set localVideoFrame");
 	localVideoFrame.srcObject = localStream;
 	localVideoFrame.volume = 0;
 	localVideoFrame.load();
 	localVideoFrame.play().catch(function(error) {});
-
 	gotStream2();
+}
+
+function videoSwitch() {
+	if(videoEnabled) {
+		videoOff();
+	} else {
+		videoOn();
+	}
 }
 
