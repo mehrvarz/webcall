@@ -5,8 +5,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1.0">
 <title>WebCall Caller</title>
-<meta property="og:title" content="Audiophile Web-Telephony">
-<meta name="twitter:title" content="Audiophile Web-Telephony">
+<meta property="og:title" content="WebCall Audiophile Telephony">
+<meta name="twitter:title" content="WebCall Audiophile Telephony">
 <meta name="mobile-web-app-capable" content="yes">
 <style>
 ::-webkit-scrollbar { display:none; }
@@ -24,6 +24,7 @@ body {
 }
 button, button:focus {
 	background-color:#04c;
+	transition: background-color 300ms;
 	border:none;
 	border-radius:3px;
 	color:white;
@@ -51,9 +52,6 @@ button[disabled]:hover {
 }
 
 div#container {
-	_margin: 0 auto 0 auto;
-	_padding: 1em 0.8em 1em 1.5em;
-	_padding: 1em 1.5em 1em 1.5em;
 	padding: 0em 1.0em 1em 1.0em;
 	max-width:520px;
 }
@@ -63,7 +61,7 @@ div.outputSelector {
 h1 {
 	font-size:1.7em;
 	font-weight:600;
-	_opacity:0.9;
+	user-select:none;
 }
 a, a:link, a:visited, a:active {
     color:#ddd;
@@ -96,13 +94,12 @@ a:hover {
 }
 
 .status {
-	margin-top:10px;
+	margin-top:18px;
 	margin-bottom:18px;
 	width:98%;
 	max-width:520px;
     font-size:1.1em;
 	line-height:1.3em;
-	_min-height:3.6em;
 	transition:opacity 600ms;
     color:#ddd;
 }
@@ -195,7 +192,7 @@ input[type=submit]:focus {
 }
 @media (max-aspect-ratio: 1/1) {
 	.videoframe {
-		width:98%; aspect-ratio:16/9; margin-bottom:10px; user-select:none;
+		width:99%; aspect-ratio:16/9; user-select:none;
 	}
 }
 .blink_me {
@@ -208,6 +205,7 @@ input[type=submit]:focus {
 }
 </style>
 </head>
+
 <body>
 <img src="phone.svg"
    style="position:absolute;right:0;top:2vh;width:440px;max-height:80vh;padding:2%;opacity:0.1;z-index:-1;">
