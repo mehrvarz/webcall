@@ -603,31 +603,9 @@ function gotStream(stream) {
 		if(!gentle) console.log('gotStream peerCon addTrack mic',audioTracks.length);
 		peerCon.addTrack(audioTracks[0],localStream);
 	} else {
-		if(!gentle) console.log('gotStream no peerCon, cannot addTrack mic');
+		if(!gentle) console.log('# gotStream no peerCon, cannot addTrack mic');
 	}
-/*
-	// if localStream is videoEnabled
-	// avSelect.selectedIndex may be -1
-	let avSelectSelectedIndex = avSelect.selectedIndex;
-	if(avSelectSelectedIndex<0) avSelectSelectedIndex=0;
-	let optionElements = Array.from(avSelect);
-    if(!gentle) console.log("gotStream avSelect.selectedIndex",
-		avSelect.selectedIndex,avSelectSelectedIndex,optionElements.length)
-	let audioOnly = false;
-	if(optionElements.length>0) {
-		if(optionElements[avSelectSelectedIndex].text.startsWith("Audio"))
-			audioOnly = true;
-	}
-	if(audioOnly) {
-		// disable all video tracks
-		stream.getTracks().forEach(function(track) {
-			if(typeof track.getSettings().aspectRatio!=="undefined") {
-				// this is a video track
-				if(!gentle) console.log("gotStream stop video track");
-				track.stop();
-			}
-		})
-*/
+
 	// now let's look at all the reasons why we would NOT add the video track to peerCon
 	if(!videoEnabled) {
 		// disable all video tracks (do not show the video locally)
@@ -643,11 +621,11 @@ function gotStream(stream) {
 		// video has not been activated for delivery
 		if(!gentle) console.log('gotStream videoEnabled !sendLocalStream');
 	} else if(!peerCon) {
-		if(!gentle) console.log('gotStream videoEnabled !peerCon');
+		if(!gentle) console.log('# gotStream videoEnabled !peerCon');
 	} else if(localCandidateType=="relay" || remoteCandidateType=="relay") {
 		if(!gentle) console.log('gotStream videoEnabled: no addTrack video on relayed con (%s)(%s)',localCandidateType,remoteCandidateType);
 	} else if(localStream.getTracks().length<2) {
-		if(!gentle) console.log('gotStream videoEnabled: getTracks().length<2: no addTrack vid',localStream.getTracks().length);
+		if(!gentle) console.log('# gotStream videoEnabled: getTracks().length<2: no addTrack vid',localStream.getTracks().length);
 	} else {
 		if(!gentle) console.log('gotStream videoEnabled addTrack vid',localStream.getTracks()[1]);
 		videoSendTrack = peerCon.addTrack(localStream.getTracks()[1],localStream);
@@ -666,6 +644,45 @@ function videoSwitch() {
 		videoOff();
 	} else {
 		videoOn();
+	}
+}
+
+var sendLocalStream = false;
+function connectLocalVideo(forceOff) {
+	if(!sendLocalStream && !forceOff) {
+		// we want to send localVideo stream to other peer
+		if(dataChannel && dataChannel.readyState=="open") {
+			console.log("connectLocalVideo via dataChannel");
+			sendLocalStream = true; // will cause: peerCon.addTrack(video)
+			pickupAfterLocalStream = true; // will cause: pickup2()
+			getStream(); // -> gotStream() -> gotStream2() -> pickup2() -> "calleeDescriptionUpd"
+
+			// TODO tmtmtm do this when local video is actually streaming
+			localVideoLabel.innerHTML = "local cam streaming";
+			localVideoLabel.style.color = "#ff0";
+		} else {
+			console.log("######## connectLocalVideo no dataChannel");
+		}
+	} else {
+		// we want to stop streaming localVideo to other peer
+		sendLocalStream = false;
+		if(!localStream) {
+			console.log("connectLocalVideo disconnect (!localStream)");
+		} else if(videoSendTrack) {
+			console.log("connectLocalVideo disconnect (stop video track)");
+			peerCon.removeTrack(videoSendTrack);
+			videoSendTrack = null;
+			// connection needs to be negotiated again!
+		} else {
+			console.log("connectLocalVideo disconnect (videoSendTrack not set)",localStream.getTracks().length);
+		}
+
+		if(dataChannel && dataChannel.readyState=="open") {
+			// make caller switch to "remote cam not streaming"
+			dataChannel.send("cmd|rtcVideoOff");
+		}
+		localVideoLabel.innerHTML = "local cam not streaming";
+		localVideoLabel.style.color = "#fff";
 	}
 }
 
