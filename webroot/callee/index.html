@@ -210,6 +210,14 @@ input[type=submit]:focus {
 		width:98%; aspect-ratio:16/9; user-select:none;
 	}
 }
+.blink_me {
+	animation: blinker 800ms linear infinite;
+}
+@keyframes blinker {
+	50% {
+	    opacity: 0.2;
+	}
+}
 </style>
 </head>
 

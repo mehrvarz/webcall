@@ -1101,7 +1101,7 @@ function signallingCommand(message) {
 			onnegotiationneededAllowed = true;
 
 			// if local video active, blink localVideoLabel
-			if(videoEnabled) {
+			if(videoEnabled && !sendLocalStream) {
 				console.log('full mediaConnect, blink localVideoLabel');
 				localVideoLabel.innerHTML = ">>> local cam not streaming <<<";
 				localVideoLabel.classList.add('blink_me');
@@ -1461,6 +1461,7 @@ function dial() {
 		peerCon.addTrack(audioTracks[0],localStream);
 	}
 
+// TODO move createDataChannel to rtcConnect=true?
 	createDataChannel();
 
 	console.log('dial peerCon.createOffer');

@@ -1389,6 +1389,14 @@ function pickup2() {
 		}
 
 		setTimeout(function() {
+			console.log('full mediaConnect, blink localVideoLabel');
+
+			if(videoEnabled && !sendLocalStream) {
+				localVideoLabel.innerHTML = ">>> local cam not streaming <<<";
+				localVideoLabel.classList.add('blink_me');
+				setTimeout(function() {localVideoLabel.classList.remove('blink_me')},8000);
+			}
+
 			peerCon.getStats(null)
 			.then((results) => getStatsCandidateTypes(results,"Connected","Mic is open"),
 				err => console.log(err));
@@ -1655,12 +1663,7 @@ function goOnline() {
 			},400);
 		}
 	}
-/*
-	if(!dataChannel) {
-		if(!gentle) console.log('goOnline have no dataChannel');
-		createDataChannel();
-	}
-*/
+
 	if(!wsConn) {
 		if(!gentle) console.log('goOnline have no wsConn');
 		login(false);
