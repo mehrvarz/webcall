@@ -392,7 +392,7 @@ function menuDialogOpen() {
 		if(!gentle) console.log('fullScreenOverlay click');
 		historyBack();
 	}
-	mainElement.style.filter = "blur(0.8px) brightness(60%)";
+	containerElement.style.filter = "blur(0.8px) brightness(60%)";
 	if(calleeLevel>0 && navigator.cookieEnabled && getCookieSupport()!=null) {
 		// cookies avail, "Settings" and "Exit" allowed
 		if(!gentle) console.log('menuSettingsElement on (cookies enabled)');
@@ -421,7 +421,7 @@ function historyBack() {
 function menuDialogClose() {
 	//if(!gentle) console.log('menuDialogClose');
 	menuDialogElement.style.display = "none";
-	mainElement.style.filter = "";
+	containerElement.style.filter = "";
 	fullScreenOverlayElement.style.display = "none";
 	fullScreenOverlayElement.onclick = null;
 	menuDialogOpenFlag = false;
@@ -445,7 +445,7 @@ function iframeWindowOpen(url,addStyleString) {
 		historyBack();
 	}
 
-	mainElement.style.filter = "blur(0.8px) brightness(60%)";
+	containerElement.style.filter = "blur(0.8px) brightness(60%)";
 
 	if(!gentle) console.log('iframeWindowOpen', url);
 	iframeWindowOpenFlag = true;
@@ -464,7 +464,7 @@ function iframeWindowOpen(url,addStyleString) {
 
 function iframeWindowClose() {
 	if(!gentle) console.log('iframeWindowClose');
-	mainElement.style.filter="";
+	containerElement.style.filter="";
 	iframeWindowElement.innerHTML = "";
 	iframeWindowElement.style.display = "none";
 	fullScreenOverlayElement.style.display = "none";

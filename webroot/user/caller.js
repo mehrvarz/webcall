@@ -13,7 +13,9 @@ const remoteVideoFrame = document.querySelector('video#remoteVideoFrame');
 const remoteVideoLabel = document.querySelector('div#remoteVideoLabel');
 
 const iframeWindowElement = document.getElementById('iframeWindow');
-const mainElement = document.getElementById('container');
+const fullscreenCheckbox = document.querySelector('input#fullscreen');
+const mainElement = document.getElementById('main');
+const containerElement = document.getElementById('container');
 const menuElement = document.getElementById('menu');
 const menuDialogElement = document.getElementById('menuDialog');
 const cameraElement = document.getElementById('camera');
@@ -123,9 +125,11 @@ window.onload = function() {
 	}
 	if(calleeID=="") {
 		if(!gentle) console.log("onload no calleeID abort");
-		let myMainElement = document.getElementById('container')
-		let mainParent = myMainElement.parentNode;
-		mainParent.removeChild(myMainElement);
+//		let myMainElement = document.getElementById('container')
+//		let mainParent = myMainElement.parentNode;
+//		mainParent.removeChild(myMainElement);
+		let mainParent = containerElement.parentNode;
+		mainParent.removeChild(containerElement);
 		var msgElement = document.createElement("div");
 		msgElement.style = "margin-top:15%; display:flex; flex-direction:column; align-items:center; "+
 						   "justify-content:center; text-align:center; font-size:1.2em; line-height:1.5em;";
@@ -201,6 +205,32 @@ window.onload = function() {
 				remoteVideoFrame.videoWidth, remoteVideoFrame.videoHeight);
 		}
 	}
+
+	fullscreenCheckbox.addEventListener('change', function() {
+		if(this.checked) {
+			// user is requesting fullscreen mode
+			if(!mainElement.fullscreenElement) {
+				// not yet in fullscreen-mode: switch to fullscreen mode
+				if(mainElement.requestFullscreen) {
+					// this will trigger fullscreenchange (below)
+					mainElement.requestFullscreen();
+				}
+			}
+		} else {
+			// user is requesting end of fullscreen mode
+			document.exitFullscreen().catch(err => { });
+		}
+		setTimeout(historyBack,150);
+	});
+	document.addEventListener('fullscreenchange', (event) => {
+		if(document.fullscreenElement) {
+			// we have switched to fullscreen mode
+			fullscreenCheckbox.checked = true;
+		} else {
+			// we have left fullscreen mode
+			fullscreenCheckbox.checked = false;
+		}
+	});
 
 	document.onkeydown = function(evt) {
 		//console.log('menuDialogOpen onkeydown event');
@@ -306,9 +336,11 @@ window.onload = function() {
 		}
 		if(mode==1) {
 			// maintenance mode
-			let myMainElement = document.getElementById('container')
-			let mainParent = myMainElement.parentNode;
-			mainParent.removeChild(myMainElement);
+//			let myMainElement = document.getElementById('container')
+//			let mainParent = myMainElement.parentNode;
+//			mainParent.removeChild(myMainElement);
+			let mainParent = containerElement.parentNode;
+			mainParent.removeChild(containerElement);
 			var msgElement = document.createElement("div");
 			msgElement.style = "margin-top:15%; display:flex; flex-direction:column; align-items:center; "+
 							   "justify-content:center; text-align:center; font-size:1.2em; line-height:1.5em;";
@@ -1925,7 +1957,7 @@ function menuDialogOpen() {
 		if(!gentle) console.log('fullScreenOverlay click');
 		historyBack();
 	}
-	mainElement.style.filter = "blur(0.8px) brightness(60%)";
+	containerElement.style.filter = "blur(0.8px) brightness(60%)";
 
 	// position menuDialog at mouse coordinate
     var e = window.event;

@@ -17,7 +17,9 @@ const isHiddenCheckbox = document.querySelector('input#isHidden');
 const isHiddenlabel = document.querySelector('label#isHiddenlabel');
 const autoanswerCheckbox = document.querySelector('input#autoanswer');
 const autoanswerlabel = document.querySelector('label#autoanswerlabel');
-const mainElement = document.getElementById('container');
+const fullscreenCheckbox = document.querySelector('input#fullscreen');
+const mainElement = document.getElementById('main');
+const containerElement = document.getElementById('container');
 const titleElement = document.getElementById('title');
 const statusLine = document.getElementById('status');
 const msgbox = document.querySelector('textarea#msgbox');
@@ -217,6 +219,31 @@ window.onload = function() {
 		}
 		setTimeout(historyBack,150);
 	});
+	fullscreenCheckbox.addEventListener('change', function() {
+		if(this.checked) {
+			// user is requesting fullscreen mode
+			if(!mainElement.fullscreenElement) {
+				// not yet in fullscreen-mode: switch to fullscreen mode
+				if(mainElement.requestFullscreen) {
+					// this will trigger fullscreenchange (below)
+					mainElement.requestFullscreen();
+				}
+			}
+		} else {
+			// user is requesting end of fullscreen mode
+			document.exitFullscreen().catch(err => { });
+		}
+		setTimeout(historyBack,150);
+	});
+	document.addEventListener('fullscreenchange', (event) => {
+		if(document.fullscreenElement) {
+			// we have switched to fullscreen mode
+			fullscreenCheckbox.checked = true;
+		} else {
+			// we have left fullscreen mode
+			fullscreenCheckbox.checked = false;
+		}
+	});
 
 	checkServerMode(function(mode) {
 		if(mode==0 || mode==1) {
@@ -278,8 +305,8 @@ window.onload = function() {
 		}
 		if(mode==2) {
 			// server is in maintenance mode
-			let mainParent = mainElement.parentNode;
-			mainParent.removeChild(mainElement);
+			let mainParent = containerElement.parentNode;
+			mainParent.removeChild(containerElement);
 			var msgElement = document.createElement("div");
 			msgElement.style = "margin-top:15%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; font-size:1.2em; line-height:1.5em;";
 			msgElement.innerHTML = "<div>WebCall server is currently in maintenance mode.<br>Please try again a little later.</div>";
@@ -2112,7 +2139,7 @@ function menuDialogOpen() {
 		//if(!gentle) console.log('menuDialogOpen fullScreenOverlay click');
 		historyBack();
 	}
-	mainElement.style.filter = "blur(0.8px) brightness(60%)";
+	containerElement.style.filter = "blur(0.8px) brightness(60%)";
 	if(wsConn && navigator.cookieEnabled && getCookieSupport()!=null) {
 		// cookies avail, "Settings" and "Exit" allowed
 		//if(!gentle) console.log('menuSettingsElement on (cookies enabled)');
@@ -2179,7 +2206,7 @@ function openSettings() {
 
 function exit() {
 	console.log("exit (id=%s)",calleeID);
-	mainElement.style.filter = "blur(0.8px) brightness(60%)";
+	containerElement.style.filter = "blur(0.8px) brightness(60%)";
 	goOffline();
 
 	if(iframeWindowOpenFlag || menuDialogOpenFlag) {
