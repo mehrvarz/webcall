@@ -682,7 +682,7 @@ function gotStream2() {
 			localStream.removeTrack(audioTracks[0]);
 			localStream = null;
 		}
-		if(onGotStreamGoOnline) {
+		if(onGotStreamGoOnline && !rtcConnect) {
 			if(!gentle) console.log('gotStream2 onGotStreamGoOnline goOnline');
 			goOnline();
 		} else {

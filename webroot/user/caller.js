@@ -966,6 +966,7 @@ function signalingCommand(message) {
 			});
 		}, err => {
 			console.warn("calleeAnswer setLocalDescription fail",err)
+// TODO: ff: "Cannot set local offer when createOffer has not been called."
 			showStatus("Cannot set localDescr"+err);
 		});
 
@@ -1715,11 +1716,28 @@ function hangup(mustDisconnectCallee,message) {
 		msgbox.value = "";
 	}
 
+	console.log('hangup shutdown remoteAV');
+	remoteVideoFrame.pause();
+	remoteVideoFrame.currentTime = 0;
 	remoteVideoFrame.srcObject = null;
 	remoteVideoDiv.style.visibility = "hidden";
 	remoteVideoDiv.style.height = "0px";
 	remoteVideoLabel.innerHTML = "remote cam not streaming";
 	remoteVideoLabel.style.color = "#fff";
+
+	if(!videoEnabled) {
+		console.log("hangup shutdown localAV");
+		if(localStream) {
+			const audioTracks = localStream.getAudioTracks();
+			audioTracks[0].enabled = false; // mute mic
+			localStream.getTracks().forEach(track => { track.stop(); });
+			localStream.removeTrack(audioTracks[0]);
+			localStream = null;
+		}
+		localVideoFrame.pause();
+		localVideoFrame.currentTime = 0;
+		localVideoFrame.srcObject = null;
+	}
 
 	if(doneHangup) {
 		if(!gentle) console.log('hangup doneHangup');
@@ -1750,21 +1768,6 @@ function hangup(mustDisconnectCallee,message) {
 		calleeOnlineAction("post-hangup");
 	},2000);
 
-	if(localStream!=null) {
-		const audioTracks = localStream.getAudioTracks();
-		audioTracks[0].enabled = false; // mute mic
-		localStream.getTracks().forEach(track => { track.stop(); });
-		localStream.removeTrack(audioTracks[0]);
-		localStream = null;
-		console.log("hangup localStream clear");
-	}
-
-	if(remoteVideoFrame!=null) {
-		console.log('hangup remoteVideoFrame.pause()');
-		remoteVideoFrame.pause();
-		remoteVideoFrame.currentTime = 0;
-		remoteVideoFrame.srcObject = null;
-	}
 	localDescription = null;
 	if(singlebutton) {
 		hangupButton.style.display = "none";
