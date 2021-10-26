@@ -916,8 +916,11 @@ function signalingCommand(message) {
 			if(!gentle) console.log('callerOfferUpd (in-call)');
 		}
 		callerDescription = JSON.parse(payload);
+// failed to set RemoteDescription DOMException: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': 
+// Failed to set remote answer sdp: Called in wrong state: stable
 		peerCon.setRemoteDescription(callerDescription).then(() => {
 			if(!gentle) console.log('callerOffer createAnswer');
+// DOMException: Cannot create answer in stable
 			peerCon.createAnswer().then((desc) => {
 				localDescription = desc;
 				if(!gentle) console.log('callerOffer in, calleeAnswer out');
@@ -934,7 +937,6 @@ function signalingCommand(message) {
 					}
 				}, err => console.error(`Failed to set local descr: ${err.toString()}`));
 			}, err => {
-				// DOMException: Cannot create answer in stable
 				console.warn("failed to createAnswer",err)
 				showStatus("Failed to createAnswer",8000);
 			});

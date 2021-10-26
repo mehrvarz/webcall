@@ -971,6 +971,9 @@ function signalingCommand(message) {
 		hostDescription = JSON.parse(payload);
 
 		if(!gentle) console.log("calleeAnswer setLocalDescription");
+		// setLocalDescription should cause "onsignalingstate have-local-offer"
+// TODO: ff: "Cannot set local offer when createOffer has not been called."
+// but we did do: "dial peerCon.createOffer"
 		peerCon.setLocalDescription(localDescription).then(() => {
 			if(!gentle) console.log('calleeAnswer setRemoteDescription');
 			peerCon.setRemoteDescription(hostDescription).then(() => {
@@ -981,7 +984,6 @@ function signalingCommand(message) {
 			});
 		}, err => {
 			console.warn("calleeAnswer setLocalDescription fail",err)
-// TODO: ff: "Cannot set local offer when createOffer has not been called."
 			showStatus("Cannot set localDescr"+err);
 		});
 
@@ -1392,8 +1394,8 @@ function dial() {
 					console.log('onnegotiationneeded send callerOfferUpd via dc');
 					dataChannel.send("cmd|callerOfferUpd|"+JSON.stringify(localDescription));
 				} else {
-					console.log('onnegotiationneeded send callerOfferUpd via ws');
-					wsSend("callerOfferUpd|"+JSON.stringify(localDescription));
+					console.log('onnegotiationneeded send callerOffer via ws');
+					wsSend("callerOffer|"+JSON.stringify(localDescription));
 				}
 			}, err => console.error(`Failed to set local descr: ${err.toString()}`));
 		} catch(err) {
@@ -1513,6 +1515,14 @@ function dial() {
 			dtmfDialingSound.play().catch(function(error) {
 				console.warn('ex dtmfDialingSound.play',error) });
 		}
+		// -> onsignalingstate have-local-offer
+		// -> onnegotiationneeded send callerOfferUpd via ws
+		// -> signaling cmd calleeAnswer -> calleeAnswer setLocalDescription -> calleeAnswer setRemoteDescription
+		// -> onconnectionstate connected
+		// -> signaling cmd calleeOffer -> calleeOffer setRemoteDescription -> onsignalingstate have-remote-offer
+		// -> calleeOffer received offer createAnswer
+
+/*
 		setTimeout(function() {
 			// we do this delay only to hear the dial tone
 			// this check is important bc the caller may have disconnected already
@@ -1521,6 +1531,7 @@ function dial() {
 				wsSend("callerOffer|"+JSON.stringify(localDescription));
 			}
 		},1500);
+*/
 	}, err => console.warn(`dial createOffer failed: ${error.toString()}`));
 }
 
