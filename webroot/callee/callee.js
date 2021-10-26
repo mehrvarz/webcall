@@ -354,6 +354,8 @@ function videoOff() {
 		if(localStream) {
 			if(peerCon && audioSendTrack) {
 				if(!gentle) console.log("videoOff !rtcConnect peerCon.removeTrack(audioSendTrack)");
+// TODO Failed to execute 'removeTrack' on 'RTCPeerConnection': 
+// The sender was not created by this peer connection.
 				peerCon.removeTrack(audioSendTrack);
 				audioSendTrack = null;
 			}
@@ -1479,13 +1481,15 @@ function goOnline() {
 		]
 	};
 	//console.warn("RTCPeerConnection ICE_config",ICE_config);
+	audioSendTrack = null;
+	videoSendTrack = null;
 	try {
 		peerCon = new RTCPeerConnection(ICE_config);
 	} catch(ex) {
 		console.error("RTCPeerConnection",ex);
 		showStatus("RTCPeerConnection error "+ex);
 		offlineAction();
-		return
+		return;
 	};
 	peerCon.onicecandidate = e => onIceCandidate(e);
 	peerCon.onicecandidateerror = function(e) {

@@ -380,21 +380,36 @@ function videoOff() {
 	}
 
 	if(!rtcConnect) {
-		if(!gentle) console.log("videoOff !rtcConnect close localVideo");
 		if(localStream) {
+			if(peerCon && audioSendTrack) {
+				if(!gentle) console.log("videoOff !rtcConnect peerCon.removeTrack(audioSendTrack)");
+// TODO Failed to execute 'removeTrack' on 'RTCPeerConnection': 
+// The sender was not created by this peer connection.
+				peerCon.removeTrack(audioSendTrack);
+				audioSendTrack = null;
+			}
+
+			if(!gentle) console.log("videoOff !rtcConnect localStream stop");
+//			const audioTracks = localStream.getAudioTracks();
+//			audioTracks[0].enabled = false; // mute mic
+//			localStream.removeTrack(audioTracks[0]);
 			localStream.getTracks().forEach(track => { track.stop(); });
 			localStream = null;
 		}
-		localVideoFrame.srcObject = null;
+		if(!gentle) console.log("videoOff !rtcConnect shutdown localVideo");
 		localVideoFrame.pause();
 		localVideoFrame.currentTime = 0;
+		localVideoFrame.srcObject = null;
 
-		if(!gentle) console.log("videoOff !rtcConnect close remoteVideo");
+		if(!gentle) console.log("videoOff !rtcConnect shutdown remoteVideo");
+		remoteVideoFrame.pause();
+		remoteVideoFrame.currentTime = 0;
 		remoteVideoFrame.srcObject = null;
 		remoteVideoDiv.style.visibility = "hidden";
 		remoteVideoDiv.style.height = "0px";
 		remoteVideoLabel.innerHTML = "remote cam not streaming";
 		remoteVideoLabel.style.color = "#fff";
+		remoteStream = null;
 	}
 
 	// switch to the 1st audio option
@@ -1307,6 +1322,8 @@ function dial() {
 		]
 	};
 	//console.warn("ICE_config",ICE_config);
+	audioSendTrack = null;
+	videoSendTrack = null;
 	try {
 		peerCon = new RTCPeerConnection(ICE_config);
 	} catch(ex) {
@@ -1684,6 +1701,7 @@ function onIceCandidate(event) {
 		if(!gentle) console.log('onIce callerCandidate: readyState!=1',	callerCandidate.address, wsConn.readyState);
 	} else {
 		if(!gentle) console.log('onIce callerCandidate via wsSend', callerCandidate.address);
+		// 300ms delay to prevent 'cmd callerCandidate no peerCon.remoteDescription' on callee side
 		setTimeout(function() {
 			wsSend("callerCandidate|"+JSON.stringify(callerCandidate));
 		},300);
