@@ -481,12 +481,13 @@ function getStream() {
 		}
 		return
 	}
-
+/*
 	if(localStream) {
 		localStream.getTracks().forEach(track => { track.stop(); });
 		localStream = null;
 		console.log("getStream localStream clear");
 	}
+*/
 
 //	let supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
 //	if(!gentle) console.log('getStream supportedConstraints',supportedConstraints);
@@ -597,13 +598,13 @@ function gotStream(stream) {
     if(!gentle) console.log("gotStream set localStream");
 	localStream = stream;
 
-	if(peerCon) {
+	if(!peerCon) {
+		//if(!gentle) console.log('gotStream no peerCon');
+	} else {
 		const audioTracks = localStream.getAudioTracks();
 		audioTracks[0].enabled = true;
-		if(!gentle) console.log('gotStream peerCon addTrack mic',audioTracks.length);
+		if(!gentle) console.log('gotStream peerCon addTrack mic',audioTracks.length,audioTracks[0]);
 		peerCon.addTrack(audioTracks[0],localStream);
-	} else {
-		if(!gentle) console.log('# gotStream no peerCon, cannot addTrack mic');
 	}
 
 	// now let's look at all the reasons why we would NOT add the video track to peerCon
@@ -618,7 +619,7 @@ function gotStream(stream) {
 			}
 		})
 	} else if(!sendLocalStream) {
-		// video has not been activated for delivery
+		// video streaming has not been activated yet
 		if(!gentle) console.log('gotStream videoEnabled !sendLocalStream');
 	} else if(!peerCon) {
 		if(!gentle) console.log('# gotStream videoEnabled !peerCon');

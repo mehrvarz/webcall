@@ -290,7 +290,7 @@ window.onload = function() {
 }
 
 function videoOn() {
-	// local video on (not yet streaming, but locally visible)
+	// open local video-frame (it is not yet streaming, but locally visible)
 	if(!gentle) console.log("videoOn");
 	videoEnabled = true;
 	// enable local video
@@ -338,26 +338,32 @@ function videoOn() {
 }
 
 function videoOff() {
+	// hide/close localVideoFrame (not needed anymore)
 	if(!gentle) console.log("videoOff");
 	videoEnabled = false;
 
-	// hide localVideoFrame
 	localVideoDiv.style.visibility = "hidden";
 	localVideoDiv.style.height = "0px";
+	localVideoLabel.innerHTML = "remote cam not streaming";
+	localVideoLabel.style.color = "#fff";
 	if(localStream) {
 		connectLocalVideo(true); // stop video track (peerCon.removeTrack(videoSendTrack))
 	}
 
 	if(!rtcConnect) {
+		if(!gentle) console.log("videoOff !rtcConnect close localVideo");
 		if(localStream) {
-			if(!gentle) console.log('videoOff clear localStream');
-			const audioTracks = localStream.getAudioTracks();
-			audioTracks[0].enabled = false; // mute mic
+//			const audioTracks = localStream.getAudioTracks();
+//			audioTracks[0].enabled = false; // mute mic
 			localStream.getTracks().forEach(track => { track.stop(); });
-			localStream.removeTrack(audioTracks[0]);
+//			localStream.removeTrack(audioTracks[0]);
 			localStream = null;
 		}
+		localVideoFrame.srcObject = null;
+		localVideoFrame.pause();
+		localVideoFrame.currentTime = 0;
 
+		if(!gentle) console.log("videoOff !rtcConnect close remoteVideo");
 		remoteVideoFrame.srcObject = null;
 		remoteVideoDiv.style.visibility = "hidden";
 		remoteVideoDiv.style.height = "0px";
@@ -368,17 +374,20 @@ function videoOff() {
 	// now switch to the 1st audio option
 	let optionElements = Array.from(avSelect);
 	if(optionElements.length>0) {
-		if(!gentle) console.log("videoOff avSelect.selectedIndex",optionElements.length);
+		if(!gentle) console.log("videoOff avSelect.selectedIndex len",optionElements.length);
 		// pre-select the 1st video device
 		for(let i=0; i<optionElements.length; i++) {
 			if(optionElements[i].text.startsWith("Audio")) {
 				avSelect.selectedIndex = i;
+				if(!gentle) console.log("videoOff avSelect.selectedIndex set",i);
 				break;
 			}
 		}
-		// activate the selected device
-		onnegotiationneededAllowed=true;
-		getStream();
+		if(rtcConnect) {
+			// activate the selected device
+			onnegotiationneededAllowed=true;
+			getStream();
+		}
 	}
 /*
 	if(wsConn) {
@@ -859,7 +868,7 @@ function connectSignaling(message) {
 	wsConn.onmessage = function(evt) {
 		var messages = evt.data.split('\n');
 		for (var i = 0; i < messages.length; i++) {
-			signallingCommand(messages[i]);
+			signalingCommand(messages[i]);
 			if(!peerCon) {
 				break;
 			}
@@ -867,7 +876,7 @@ function connectSignaling(message) {
 	};
 }
 
-function signallingCommand(message) {
+function signalingCommand(message) {
 	let tok = message.split("|");
 	let cmd = tok[0];
 	let payload = "";
@@ -1105,10 +1114,9 @@ function signallingCommand(message) {
 			getStream(); // -> pickup2() -> "calleeDescriptionUpd"
 		}
 	} else if(cmd=="rtcVideoOff") {
-		// remote video track removed by other side
-		// clear/reset remote video frame (it was set by peerCon.ontrack)
+		// remote video track removed by other side (hide remoteVideoFrame so that audio can still be received)
 		if(!gentle) console.log("rtcVideoOff");
-		remoteVideoFrame.srcObject = null;
+		//remoteVideoFrame.srcObject = null;
 		remoteVideoDiv.style.visibility = "hidden";
 		remoteVideoDiv.style.height = "0px";
 		remoteVideoLabel.innerHTML = "remote cam not streaming";
@@ -1392,7 +1400,7 @@ function pickup2() {
 			console.log('full mediaConnect, blink localVideoLabel');
 
 			if(videoEnabled && !sendLocalStream) {
-				localVideoLabel.innerHTML = ">>> local cam not streaming <<<";
+				localVideoLabel.innerHTML = "--- local cam not streaming ---";
 				localVideoLabel.classList.add('blink_me');
 				setTimeout(function() {localVideoLabel.classList.remove('blink_me')},8000);
 			}
@@ -1762,8 +1770,8 @@ function createDataChannel() {
 						}
 					} else if(event.data.startsWith("cmd|")) {
 						let subCmd = event.data.substring(4);
-						if(!gentle) console.log("dataChannel.onmessage signalling");
-						signallingCommand(subCmd);
+						if(!gentle) console.log("dataChannel.onmessage signaling");
+						signalingCommand(subCmd);
 					} else if(event.data.startsWith("file|")) {
 						var fileDescr = event.data.substring(5);
 
