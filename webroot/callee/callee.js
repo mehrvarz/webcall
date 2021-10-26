@@ -952,6 +952,10 @@ function signalingCommand(message) {
 		callerDescription = JSON.parse(payload);
 
 		if(!gentle) console.log("callerAnswer setLocalDescription");
+// TODO tmtmtm
+// callerAnswer setLocalDescription fail DOMException:
+// Failed to execute 'setLocalDescription' on 'RTCPeerConnection':
+// The SDP does not match the previously generated SDP for this type
 		peerCon.setLocalDescription(localDescription).then(() => {
 			if(!gentle) console.log('callerAnswer setRemoteDescription');
 			peerCon.setRemoteDescription(callerDescription).then(() => {
@@ -1393,11 +1397,11 @@ function pickup2() {
 	// before we send "pickup|!" to caller allow some time for onnegotiation to take place
 	setTimeout(function() {
 		if(!gentle) console.log('pickup2: after short delay send pickup to caller');
-		if(dataChannel!=null && dataChannel.readyState=="open") {
-			dataChannel.send("cmd|pickup|!");
-		} else {
+//		if(dataChannel!=null && dataChannel.readyState=="open") {
+//			dataChannel.send("cmd|pickup|!");
+//		} else {
 			wsSend("pickup|!") // make caller unmute the remote (our) mic
-		}
+//		}
 
 		answerButton.disabled = true;
 		onlineIndicator.src="red-gradient.svg";
