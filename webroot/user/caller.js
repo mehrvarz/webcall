@@ -946,7 +946,7 @@ function signalingCommand(message) {
 	if(tok.length>=2) {
 		payload = tok[1];
 	}
-	console.log('signaling cmd=%s',cmd);
+	if(!gentle) console.log('signaling cmd',cmd);
 
 	if(cmd=="calleeAnswer") {
 		if(!peerCon) {
@@ -1682,7 +1682,9 @@ function onIceCandidate(event) {
 		if(!gentle) console.log('onIce callerCandidate: readyState!=1',	callerCandidate.address, wsConn.readyState);
 	} else {
 		if(!gentle) console.log('onIce callerCandidate via wsSend', callerCandidate.address);
-		wsSend("callerCandidate|"+JSON.stringify(callerCandidate));
+		setTimeout(function() {
+			wsSend("callerCandidate|"+JSON.stringify(callerCandidate));
+		},300);
 	}
 }
 

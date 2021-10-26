@@ -419,7 +419,7 @@ function historyBack() {
 }
 
 function menuDialogClose() {
-	if(!gentle) console.log('menuDialogClose');
+	//if(!gentle) console.log('menuDialogClose');
 	menuDialogElement.style.display = "none";
 	mainElement.style.filter = "";
 	fullScreenOverlayElement.style.display = "none";

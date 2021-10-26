@@ -153,10 +153,10 @@ window.onload = function() {
 		}
 		if(hashcounter>0 && newhashcounter<hashcounter) {
 			if(iframeWindowOpenFlag) {
-				if(!gentle) console.log("onhashchange iframeWindowClose");
+				//if(!gentle) console.log("onhashchange iframeWindowClose");
 				iframeWindowClose();
 			} else if(menuDialogOpenFlag) {
-				if(!gentle) console.log("onhashchange menuDialogClose");
+				//if(!gentle) console.log("onhashchange menuDialogClose");
 				menuDialogClose();
 			}
 		}
@@ -883,9 +883,9 @@ function signalingCommand(message) {
 	if(tok.length>=2) {
 		payload = tok[1];
 	}
+	if(!gentle) console.log('signaling cmd',cmd);
 
 	if(cmd=="init") {
-		if(!gentle) console.log('cmd init');
 
 	} else if(cmd=="callerOffer" || cmd=="callerOfferUpd") {
 		if(peerCon==null) {
@@ -929,7 +929,6 @@ function signalingCommand(message) {
 			console.warn(`failed to set RemoteDescription`,err,callerDescription)
 			showStatus("Failed to set RemoteDescription",8000);
 		});
-
 	} else if(cmd=="callerAnswer") {
 		if(!peerCon) {
 			console.warn('callerAnswer abort no peerCon');
@@ -1566,7 +1565,7 @@ function goOnline() {
 			goOfflineButton.disabled = true;
 			rtcConnectStartDate = Date.now();
 			mediaConnectStartDate = 0;
-			if(!gentle) console.log("rtcConnect",rtcConnectStartDate);
+			if(!gentle) console.log("rtcConnect");
 			wsSend("rtcConnect|")
 
 			if(!dataChannel) {
@@ -2080,10 +2079,10 @@ function onIceCandidate(event) {
 var menuDialogOpenFlag = false;
 function menuDialogOpen() {
 	if(menuDialogOpenFlag) {
-		if(!gentle) console.log('menuDialogOpen menuDialogOpenFlag');
+		if(!gentle) console.log('# menuDialogOpen menuDialogOpenFlag');
 		return;
 	}
-	if(!gentle) console.log('menuDialogOpen');
+	//if(!gentle) console.log('menuDialogOpen');
 	menuDialogOpenFlag = true;
 
 	hashcounter++;
@@ -2091,13 +2090,13 @@ function menuDialogOpen() {
 
 	fullScreenOverlayElement.style.display = "block";
 	fullScreenOverlayElement.onclick = function() {
-		if(!gentle) console.log('menuDialogOpen fullScreenOverlay click');
+		//if(!gentle) console.log('menuDialogOpen fullScreenOverlay click');
 		historyBack();
 	}
 	mainElement.style.filter = "blur(0.8px) brightness(60%)";
 	if(wsConn && navigator.cookieEnabled && getCookieSupport()!=null) {
 		// cookies avail, "Settings" and "Exit" allowed
-		if(!gentle) console.log('menuSettingsElement on (cookies enabled)');
+		//if(!gentle) console.log('menuSettingsElement on (cookies enabled)');
 		if(menuContactsElement) {
 			menuContactsElement.style.display = "block";
 		}
@@ -2108,7 +2107,7 @@ function menuDialogOpen() {
 			menuExit.style.display = "block";
 		}
 	} else {
-		if(!gentle) console.log('menuSettingsElement off (cookies disabled)');
+		//if(!gentle) console.log('menuSettingsElement off (cookies disabled)');
 		if(menuContactsElement) {
 			menuContactsElement.style.display = "none";
 		}
@@ -2126,7 +2125,7 @@ function menuDialogOpen() {
 	if(posX<0) posX=0;
     var posY = e.clientY;
 	if(posY>50) posY-=50;
-	if(!gentle) console.log('menuDialogOpen x/y',posX,posY);
+	//if(!gentle) console.log('menuDialogOpen x/y',posX,posY);
 	menuDialogElement.style.left = posX+"px";
 	menuDialogElement.style.top = posY+"px";
 	menuDialogElement.style.display = "block";
