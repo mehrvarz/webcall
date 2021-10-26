@@ -46,7 +46,6 @@ var peerCon = null;
 var localDescription = null;
 var localStream = null;
 var remoteStream = null;
-var hostDescription = null;
 var dialing = false;
 var rtcConnect = false;
 var rtcConnectStartDate = 0;
@@ -968,7 +967,7 @@ function signalingCommand(message) {
 			console.warn('calleeAnswer abort no peerCon');
 			return;
 		}
-		hostDescription = JSON.parse(payload);
+		let hostDescription = JSON.parse(payload);
 
 		if(!gentle) console.log("calleeAnswer setLocalDescription");
 		// setLocalDescription should cause "onsignalingstate have-local-offer"
@@ -988,7 +987,8 @@ function signalingCommand(message) {
 		});
 
 	} else if(cmd=="calleeOffer") {
-		hostDescription = JSON.parse(payload);
+		// calleeOffer is being used when callee wants to deliver a config change
+		let hostDescription = JSON.parse(payload);
 		console.log('calleeOffer setRemoteDescription');
 		peerCon.setRemoteDescription(hostDescription).then(() => {
 			if(!gentle) console.log('calleeOffer setRemoteDescription done');
@@ -1345,6 +1345,7 @@ function dial() {
 	}
 	peerCon.ontrack = ({track, streams}) => {
 		if(!gentle) console.log('peerCon.ontrack',track, streams);
+// TODO tmtmtm
 //		track.onunmute = () => {
 //			if(remoteVideoFrame!=null && remoteVideoFrame.srcObject == streams[0]) {
 //				if(!gentle) console.warn('peerCon.ontrack onunmute was already set');
@@ -1510,13 +1511,14 @@ function dial() {
 		localDescription.sdp = maybePreferCodec(localDescription.sdp, 'audio', 'send', "opus");
 		localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
 			'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
+		// this localDescription will be sent with upcoming calleeAnswer in response to upcoming callerOffer
 		console.log('dial got localDescription');
 		if(playDialSounds) {
 			dtmfDialingSound.play().catch(function(error) {
 				console.warn('ex dtmfDialingSound.play',error) });
 		}
 		// -> onsignalingstate have-local-offer
-		// -> onnegotiationneeded send callerOfferUpd via ws
+		// -> onnegotiationneeded send callerOffer via ws
 		// -> signaling cmd calleeAnswer -> calleeAnswer setLocalDescription -> calleeAnswer setRemoteDescription
 		// -> onconnectionstate connected
 		// -> signaling cmd calleeOffer -> calleeOffer setRemoteDescription -> onsignalingstate have-remote-offer
