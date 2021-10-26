@@ -351,24 +351,34 @@ function videoOff() {
 	}
 
 	if(!rtcConnect) {
-		if(!gentle) console.log("videoOff !rtcConnect close localVideo");
 		if(localStream) {
+			if(peerCon && audioSendTrack) {
+				if(!gentle) console.log("videoOff !rtcConnect peerCon.removeTrack(audioSendTrack)");
+				peerCon.removeTrack(audioSendTrack);
+				audioSendTrack = null;
+			}
+
+			if(!gentle) console.log("videoOff !rtcConnect localStream stop");
 //			const audioTracks = localStream.getAudioTracks();
 //			audioTracks[0].enabled = false; // mute mic
-			localStream.getTracks().forEach(track => { track.stop(); });
 //			localStream.removeTrack(audioTracks[0]);
+			localStream.getTracks().forEach(track => { track.stop(); });
 			localStream = null;
 		}
-		localVideoFrame.srcObject = null;
+		if(!gentle) console.log("videoOff !rtcConnect shutdown localVideo");
 		localVideoFrame.pause();
 		localVideoFrame.currentTime = 0;
+		localVideoFrame.srcObject = null;
 
-		if(!gentle) console.log("videoOff !rtcConnect close remoteVideo");
+		if(!gentle) console.log("videoOff !rtcConnect shutdown remoteVideo");
+		remoteVideoFrame.pause();
+		remoteVideoFrame.currentTime = 0;
 		remoteVideoFrame.srcObject = null;
 		remoteVideoDiv.style.visibility = "hidden";
 		remoteVideoDiv.style.height = "0px";
 		remoteVideoLabel.innerHTML = "remote cam not streaming";
 		remoteVideoLabel.style.color = "#fff";
+		remoteStream = null;
 	}
 
 	// now switch to the 1st audio option
@@ -385,6 +395,7 @@ function videoOff() {
 		}
 		if(rtcConnect) {
 			// activate the selected device
+			if(!gentle) console.log("videoOff rtcConnect getStream()");
 			onnegotiationneededAllowed=true;
 			getStream();
 		}
@@ -1519,11 +1530,13 @@ function goOnline() {
 			if(!gentle) console.warn('onnegotiationneeded no peerCon');
 			return;
 		}
+/* tmtmtm
 		if(!onnegotiationneededAllowed) {
 			// pickup2() enables, endWebRtcSession() and wsConn.onclose disable
 			if(!gentle) console.warn('onnegotiationneeded not allowed');
 			return;
 		}
+*/
 		try {
 			// this will trigger onIceCandidates and send hostCandidate's to the client
 			console.log("onnegotiationneeded createOffer");

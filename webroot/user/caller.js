@@ -1354,10 +1354,12 @@ function dial() {
 			if(!gentle) console.log('# onnegotiationneeded no peerCon');
 			return;
 		}
+/*
 		if(!onnegotiationneededAllowed) {
 			if(!gentle) console.log('# onnegotiationneeded not allowed');
-//			return;
+			return;
 		}
+*/
 		if(!gentle) console.log('onnegotiationneeded');
 		try {
 			// note: this will trigger onIceCandidates and send calleeCandidate's to the client

@@ -593,6 +593,7 @@ function gotDevices(deviceInfos) {
 	}
 }
 
+var audioSendTrack = null;
 var videoSendTrack = null;
 function gotStream(stream) {
     if(!gentle) console.log("gotStream set localStream");
@@ -604,7 +605,7 @@ function gotStream(stream) {
 		const audioTracks = localStream.getAudioTracks();
 		audioTracks[0].enabled = true;
 		if(!gentle) console.log('gotStream peerCon addTrack mic',audioTracks.length,audioTracks[0]);
-		peerCon.addTrack(audioTracks[0],localStream);
+		audioSendTrack = peerCon.addTrack(audioTracks[0],localStream);
 	}
 
 	// now let's look at all the reasons why we would NOT add the video track to peerCon
