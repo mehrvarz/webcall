@@ -441,7 +441,7 @@ function videoOff() {
 		remoteStream = null;
 
 		if(dataChannel) {
-			if(!gentle) console.log("videoOff !rtcConnect dataChannel is set",dataChannel.readyState);
+			if(!gentle) console.log("videoOff !rtcConnect dataChannel still set",dataChannel.readyState);
 		}
 	}
 
@@ -1407,10 +1407,10 @@ function dial() {
 			if(!gentle) console.log('# onnegotiationneeded no peerCon');
 			return;
 		}
-		if(!rtcConnect) {
-			if(!gentle) console.log('# onnegotiationneeded deny: no rtcConnect');
-			return;
-		}
+//		if(!rtcConnect) {
+//			if(!gentle) console.log('# onnegotiationneeded deny: no rtcConnect');
+//			return;
+//		}
 		if(!gentle) console.log('onnegotiationneeded');
 		try {
 			// note: this will trigger onIceCandidates and send calleeCandidate's to the client

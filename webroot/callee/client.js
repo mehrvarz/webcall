@@ -524,11 +524,11 @@ function getStream() {
 			.then(gotStream)
 			.catch(function(err) {
 				if(!videoEnabled) {
-					console.error('no audio input', err);
-					showStatus("No audio input<br>"+err,-1);
+					console.error('audio input error', err);
+					showStatus("audio input error<br>"+err,-1);
 				} else {
-					console.error('no audio/video input', err);
-					showStatus("No audio/video input<br>"+err,-1);
+					console.error('audio/video input error', err);
+					showStatus("audio/video input error<br>"+err,-1);
 				}
 			});
 	}

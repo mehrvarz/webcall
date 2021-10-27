@@ -411,7 +411,7 @@ function videoOff() {
 		remoteStream = null;
 
 		if(dataChannel) {
-			if(!gentle) console.log("videoOff !rtcConnect dataChannel is set",dataChannel.readyState);
+			if(!gentle) console.log("videoOff !rtcConnect dataChannel still set",dataChannel.readyState);
 		}
 	}
 
