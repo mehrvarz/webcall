@@ -76,7 +76,6 @@ var mediaConnectStartDate = 0;
 var listOfClientIps = "";
 var callerID = "";
 var callerName = "";
-var onnegotiationneededAllowed = false;
 var lastResult;
 var lastUserActionDate = 0;
 var calleeID = "";
@@ -356,7 +355,6 @@ function videoOn() {
 				}
 			}
 			// activate the selected device
-			onnegotiationneededAllowed=true;
 			getStream();
 		}
 	});
@@ -411,6 +409,10 @@ function videoOff() {
 		remoteVideoLabel.innerHTML = "remote cam not streaming";
 		remoteVideoLabel.style.color = "#fff";
 		remoteStream = null;
+
+		if(dataChannel) {
+			if(!gentle) console.log("videoOff !rtcConnect dataChannel is set",dataChannel.readyState);
+		}
 	}
 
 	cameraElement.src="camera.svg";
@@ -430,7 +432,6 @@ function videoOff() {
 		if(rtcConnect) {
 			// activate the selected device
 			if(!gentle) console.log("videoOff rtcConnect getStream()");
-			onnegotiationneededAllowed=true;
 			getStream();
 		}
 	}
@@ -880,7 +881,6 @@ function connectSignaling(message) {
 		console.log("wsConn.onclose",calleeID,wsUrl);
 		wsConn=null;
 		buttonBlinking=false;
-		onnegotiationneededAllowed = false;
 		stopAllAudioEffects("wsConn.onclose");
 		if(calleeID.startsWith("!")) {
 			setTimeout(function() {
@@ -1405,8 +1405,6 @@ function pickup2() {
 		return;
 	}
 
-	onnegotiationneededAllowed = true;
-
 	if(remoteStream) {
 		if(!gentle) console.log('pickup2 peerCon start remoteVideoFrame');
 		remoteVideoFrame.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
@@ -1565,16 +1563,13 @@ function goOnline() {
 	}
 	peerCon.onnegotiationneeded = async () => {
 		if(!peerCon) {
-			if(!gentle) console.warn('onnegotiationneeded no peerCon');
+			if(!gentle) console.log('# onnegotiationneeded deny: no peerCon');
 			return;
 		}
-/* tmtmtm
-		if(!onnegotiationneededAllowed) {
-			// pickup2() enables, endWebRtcSession() and wsConn.onclose disable
-			if(!gentle) console.warn('onnegotiationneeded not allowed');
+		if(!rtcConnect) {
+			if(!gentle) console.log('# onnegotiationneeded deny: no rtcConnect');
 			return;
 		}
-*/
 		try {
 			// this will trigger onIceCandidates and send hostCandidate's to the client
 			console.log("onnegotiationneeded createOffer");
@@ -1953,7 +1948,6 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 		msgbox.value = "";
 	}
 	stopTimer();
-	onnegotiationneededAllowed = false;
 	if(autoPlaybackAudioSource) {
 		autoPlaybackAudioSource.disconnect();
 		if(autoPlaybackAudioSourceStarted) {

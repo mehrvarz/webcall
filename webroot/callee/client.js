@@ -503,12 +503,12 @@ function getStream() {
 //			deviceId: avSelect.value ? {exact: avSelect.value} : undefined,
 			width: {
 			  min: 480,
-//			  ideal: 1280,
+			  ideal: 1280,
 			  max: 1920		// 4096
 			},
 			height: {
 			  min: 360,
-//			  ideal: 720,
+			  ideal: 720,
 			  max: 1080		// 2160
 			},
 		}
@@ -670,15 +670,14 @@ function connectLocalVideo(forceOff) {
 	} else {
 		// we want to stop streaming localVideo to other peer
 		sendLocalStream = false;
-		if(!localStream) {
-			if(!gentle) console.log("connectLocalVideo disconnect (!localStream)");
-		} else if(videoSendTrack) {
-			if(!gentle) console.log("connectLocalVideo disconnect (stop video track)");
+		if(!videoSendTrack) {
+			if(!gentle) console.log("connectLocalVideo disconnect !videoSendTrack",localStream.getTracks().length);
+		} else if(!peerCon) {
+			if(!gentle) console.log("connectLocalVideo disconnect !peerCon");
+		} else  {
+			if(!gentle) console.log("connectLocalVideo disconnect peerCon.removeTrack(videoSendTrack)");
 			peerCon.removeTrack(videoSendTrack);
 			videoSendTrack = null;
-			// connection needs to be negotiated again!
-		} else {
-			if(!gentle) console.log("connectLocalVideo disconnect (videoSendTrack not set)",localStream.getTracks().length);
 		}
 
 		if(dataChannel && dataChannel.readyState=="open") {

@@ -57,7 +57,6 @@ var dataChannel = null;
 var doneHangup = false;
 var dialAfterLocalStream = false;
 var dialAfterCalleeOnline = false;
-var onnegotiationneededAllowed = false;
 var lastResult;
 var candidateArray = [];
 var candidateResultGenerated = true;
@@ -390,7 +389,6 @@ function videoOn() {
 			}
 			// activate the selected device
 // TODO
-//			onnegotiationneededAllowed=true;
 //			getStream();
 		}
 	});
@@ -441,6 +439,10 @@ function videoOff() {
 		remoteVideoLabel.innerHTML = "remote cam not streaming";
 		remoteVideoLabel.style.color = "#fff";
 		remoteStream = null;
+
+		if(dataChannel) {
+			if(!gentle) console.log("videoOff !rtcConnect dataChannel is set",dataChannel.readyState);
+		}
 	}
 
 	cameraElement.src="camera.svg";
@@ -459,7 +461,6 @@ function videoOff() {
 		}
 		if(rtcConnect) {
 			// activate the selected device
-			onnegotiationneededAllowed = true;
 			getStream();
 		}
 	}
@@ -1165,8 +1166,6 @@ function signalingCommand(message) {
 				.then((results) => getStatsCandidateTypes(results,"Connected",micStatus),
 				err => console.log(err));
 
-			onnegotiationneededAllowed = true;
-
 			// if local video active, blink localVideoLabel
 			if(videoEnabled && !sendLocalStream) {
 				console.log('full mediaConnect, blink localVideoLabel');
@@ -1408,12 +1407,10 @@ function dial() {
 			if(!gentle) console.log('# onnegotiationneeded no peerCon');
 			return;
 		}
-/*
-		if(!onnegotiationneededAllowed) {
-			if(!gentle) console.log('# onnegotiationneeded not allowed');
+		if(!rtcConnect) {
+			if(!gentle) console.log('# onnegotiationneeded deny: no rtcConnect');
 			return;
 		}
-*/
 		if(!gentle) console.log('onnegotiationneeded');
 		try {
 			// note: this will trigger onIceCandidates and send calleeCandidate's to the client
@@ -1539,7 +1536,6 @@ function dial() {
 	createDataChannel();
 
 	console.log('dial peerCon.createOffer');
-	onnegotiationneededAllowed = true;
 	peerCon.createOffer().then((desc) => {
 		localDescription = desc;
 		localDescription.sdp = maybePreferCodec(localDescription.sdp, 'audio', 'send', "opus");
@@ -1825,7 +1821,6 @@ function hangup(mustDisconnectCallee,message) {
 		onlineIndicator.src="";
 	}
 	stopTimer();
-	onnegotiationneededAllowed = false;
 
 	setTimeout(function() {
 		// TODO not sure about this
