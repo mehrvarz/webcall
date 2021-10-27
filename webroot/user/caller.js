@@ -354,46 +354,46 @@ window.onload = function() {
 
 function videoOn() {
 	if(!gentle) console.log("videoOn");
-//	if(localStream) {
-		videoEnabled = true;
-		// enable local stream
-		if(peerCon && rtcConnect && sendLocalStream && localStream.getTracks().length>=2 && !videoSendTrack) {
-			if(localCandidateType=="relay" || remoteCandidateType=="relay") {
-				if(!gentle) console.log('videoOn no addTrack vid on relayed con (%s)(%s)',localCandidateType,remoteCandidateType);
-			} else {
-				if(!gentle) console.log('videoOn addTrack vid',localStream.getTracks()[1]);
-				videoSendTrack = peerCon.addTrack(localStream.getTracks()[1],localStream);
-			}
+	videoEnabled = true;
+	// enable local stream
+	if(peerCon && rtcConnect && sendLocalStream && localStream.getTracks().length>=2 && !videoSendTrack) {
+		if(localCandidateType=="relay" || remoteCandidateType=="relay") {
+			if(!gentle) console.log('videoOn no addTrack vid on relayed con (%s)(%s)',localCandidateType,remoteCandidateType);
+		} else {
+			if(!gentle) console.log('videoOn addTrack vid',localStream.getTracks()[1]);
+			videoSendTrack = peerCon.addTrack(localStream.getTracks()[1],localStream);
 		}
-		localVideoFrame.srcObject = localStream; // see gotStream()
-		localVideoFrame.volume = 0; // avoid audio feedback
-		localVideoFrame.load();
-		localVideoFrame.play().catch(function(error) {});
-		localVideoDiv.style.visibility = "visible";
-		localVideoDiv.style.height = "";
+	}
+	localVideoFrame.srcObject = localStream; // see gotStream()
+	localVideoFrame.volume = 0; // avoid audio feedback
+	localVideoFrame.load();
+	localVideoFrame.play().catch(function(error) {});
+	localVideoDiv.style.visibility = "visible";
+	localVideoDiv.style.height = "";
 
-		getStream().then(() => navigator.mediaDevices.enumerateDevices()) //.then(gotDevices);
-		.then((deviceInfos) => {
-			gotDevices(deviceInfos);
+	cameraElement.src="camera-select.svg";
 
-			// now switch to the 1st video option
-			let optionElements = Array.from(avSelect);
-			if(optionElements.length>0) {
-				if(!gentle) console.log("videoOn avSelect.selectedIndex",optionElements.length -1);
-				// pre-select the 1st video device
-				for(let i=0; i<optionElements.length; i++) {
-					if(optionElements[i].text.startsWith("Video")) {
-						avSelect.selectedIndex = i;
-						break;
-					}
+	getStream().then(() => navigator.mediaDevices.enumerateDevices()) //.then(gotDevices);
+	.then((deviceInfos) => {
+		gotDevices(deviceInfos);
+
+		// now switch to the 1st video option
+		let optionElements = Array.from(avSelect);
+		if(optionElements.length>0) {
+			if(!gentle) console.log("videoOn avSelect.selectedIndex",optionElements.length -1);
+			// pre-select the 1st video device
+			for(let i=0; i<optionElements.length; i++) {
+				if(optionElements[i].text.startsWith("Video")) {
+					avSelect.selectedIndex = i;
+					break;
 				}
-				// activate the selected device
-	// TODO
-	//			onnegotiationneededAllowed=true;
-	//			getStream();
 			}
-		});
-//	}
+			// activate the selected device
+// TODO
+//			onnegotiationneededAllowed=true;
+//			getStream();
+		}
+	});
 }
 
 function videoOff() {
@@ -442,6 +442,8 @@ function videoOff() {
 		remoteVideoLabel.style.color = "#fff";
 		remoteStream = null;
 	}
+
+	cameraElement.src="camera.svg";
 
 	// switch to the 1st audio option
 	let optionElements = Array.from(avSelect);

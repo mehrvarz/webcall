@@ -35,6 +35,7 @@ const menuDialogElement = document.getElementById('menuDialog');
 const menuSettingsElement = document.getElementById('menuSettings');
 const menuContactsElement = document.getElementById('menuContacts');
 const menuExitElement = document.getElementById('menuExit');
+const cameraElement = document.getElementById('camera');
 const progressSendElement = document.getElementById('progressSend'); // switch on and off
 const progressSendLabel = document.getElementById('progressSendLabel');
 const progressSendBar = document.getElementById('fileProgressSend'); // actual progress bar
@@ -336,6 +337,8 @@ function videoOn() {
 	localVideoDiv.style.visibility = "visible";
 	localVideoDiv.style.height = "";
 
+	cameraElement.src="camera-select.svg";
+
 	getStream().then(() => navigator.mediaDevices.enumerateDevices())
 	.then((deviceInfos) => {
 		gotDevices(deviceInfos);
@@ -409,6 +412,8 @@ function videoOff() {
 		remoteVideoLabel.style.color = "#fff";
 		remoteStream = null;
 	}
+
+	cameraElement.src="camera.svg";
 
 	// now switch to the 1st audio option
 	let optionElements = Array.from(avSelect);
