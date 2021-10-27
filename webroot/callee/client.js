@@ -656,29 +656,29 @@ function connectLocalVideo(forceOff) {
 	if(!sendLocalStream && !forceOff) {
 		// we want to send localVideo stream to other peer
 		if(dataChannel && dataChannel.readyState=="open") {
-			console.log("connectLocalVideo via dataChannel");
+			if(!gentle) console.log("connectLocalVideo via dataChannel");
 			sendLocalStream = true; // will cause: peerCon.addTrack(video)
 			pickupAfterLocalStream = true; // will cause: pickup2()
 			getStream(); // -> gotStream() -> gotStream2() -> pickup2() -> "calleeDescriptionUpd"
 
-			// TODO tmtmtm do this when local video is actually streaming
+			// TODO do this when local video is actually streaming
 			localVideoLabel.innerHTML = "local cam streaming";
 			localVideoLabel.style.color = "#ff0";
 		} else {
-			console.log("######## connectLocalVideo no dataChannel");
+			if(!gentle) console.log("connectLocalVideo no dataChannel");
 		}
 	} else {
 		// we want to stop streaming localVideo to other peer
 		sendLocalStream = false;
 		if(!localStream) {
-			console.log("connectLocalVideo disconnect (!localStream)");
+			if(!gentle) console.log("connectLocalVideo disconnect (!localStream)");
 		} else if(videoSendTrack) {
-			console.log("connectLocalVideo disconnect (stop video track)");
+			if(!gentle) console.log("connectLocalVideo disconnect (stop video track)");
 			peerCon.removeTrack(videoSendTrack);
 			videoSendTrack = null;
 			// connection needs to be negotiated again!
 		} else {
-			console.log("connectLocalVideo disconnect (videoSendTrack not set)",localStream.getTracks().length);
+			if(!gentle) console.log("connectLocalVideo disconnect (videoSendTrack not set)",localStream.getTracks().length);
 		}
 
 		if(dataChannel && dataChannel.readyState=="open") {

@@ -546,9 +546,9 @@ function calleeOnlineStatus(onlineStatus) {
 			// disable tv icon (leave it disabled)
 			cameraElement.style.display = "none";
 		}
-*/
-		cameraElement.style.display = "block";
 
+		cameraElement.style.display = "block";
+*/
 		if(singlebutton) {
 			// enable parent iframe (height)
 			if(iframeParent) {
