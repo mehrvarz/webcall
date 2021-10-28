@@ -331,7 +331,7 @@ function videoOn() {
 	}
 	localVideoFrame.srcObject = localStream; // see gotStream()
 	localVideoFrame.volume = 0; // avoid audio feedback
-	localVideoFrame.load();
+//	localVideoFrame.load();
 	localVideoFrame.play().catch(function(error) {});
 	localVideoDiv.style.visibility = "visible";
 	localVideoDiv.style.height = "";
@@ -1407,7 +1407,7 @@ function pickup2() {
 	if(remoteStream) {
 		if(!gentle) console.log('pickup2 peerCon start remoteVideoFrame');
 		remoteVideoFrame.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
-		remoteVideoFrame.load();
+//		remoteVideoFrame.load();
 		var isPlaying = remoteVideoFrame.currentTime > 0 && !remoteVideoFrame.paused && !remoteVideoFrame.ended && remoteVideoFrame.readyState > remoteVideoFrame.HAVE_CURRENT_DATA;
 		if(!isPlaying) {
 			remoteVideoFrame.play().catch(function(error) {
@@ -1527,7 +1527,7 @@ function goOnline() {
 		offlineAction();
 		return;
 	};
-	peerCon.onicecandidate = e => onIceCandidate(e);
+	peerCon.onicecandidate = e => onIceCandidate(e,"calleeCandidate");
 	peerCon.onicecandidateerror = function(e) {
 		if(e.errorCode==701) {
 			// don't use "warn" on 701 chrome "701 STUN allocate request timed out"
@@ -1537,49 +1537,7 @@ function goOnline() {
 			showStatus("iceCandidate error "+e.errorCode+" "+e.errorText,-1);
 		}
 	}
-	peerCon.ontrack = ({track, streams}) => {
-//		if(!gentle) console.log('peerCon.ontrack',track, streams);
-// TODO
-//		track.onunmute = () => {
-//			if(remoteVideoFrame!=null && remoteVideoFrame.srcObject == streams[0]) {
-//				if(!gentle) console.warn('peerCon.ontrack onunmute was already set');
-//				return;
-//			}
-			if(!gentle) console.log('peerCon.ontrack onunmute set remoteVideoFrame.srcObject',streams[0]);
-			if(remoteStream) {
-				if(!gentle) console.log('peerCon.ontrack onunmute have prev remoteStream');
-				// TODO treat like localStream in gotStream() ? apparently not needed
-			}
-			remoteStream = streams[0];
-//		};
-
-		if(!track.enabled) {
-			if(!gentle) console.log('peerCon.ontrack onunmute !track.enabled: not set remoteVideoFrame');
-		} else {
-			if(!gentle) console.log('peerCon.ontrack onunmute track.enabled: set remoteVideoFrame',track.kind);
-			remoteVideoFrame.srcObject = remoteStream;
-			remoteVideoFrame.load();
-			var isPlaying = remoteVideoFrame.currentTime > 0 && !remoteVideoFrame.paused && !remoteVideoFrame.ended && remoteVideoFrame.readyState > remoteVideoFrame.HAVE_CURRENT_DATA;
-			if(!isPlaying) {
-				remoteVideoFrame.play().catch(function(error) {
-					if(!gentle) console.log("# remoteVideoFrame error",error);
-				});
-			}
-			if(track.kind=="video") {
-				remoteVideoDiv.style.visibility = "visible";
-				remoteVideoDiv.style.height = "";
-				remoteVideoDiv.style.display = "block";
-				remoteVideoLabel.innerHTML = "remote cam streaming";
-				remoteVideoLabel.style.color = "#ff0";
-			} else if(track.kind=="audio") {
-				remoteVideoDiv.style.visibility = "hidden";
-				remoteVideoDiv.style.height = "0px";
-				remoteVideoDiv.style.display = "block";
-				remoteVideoLabel.innerHTML = "remote cam not streaming";
-				remoteVideoLabel.style.color = "#fff";
-			}
-		}
-	};
+	peerCon.ontrack = ({track, streams}) => peerConOntrack(track, streams);
 	peerCon.onicegatheringstatechange = event => {
 		let connection = event.target;
 		if(!gentle) console.log("onicegatheringstatechange", connection.iceGatheringState);
@@ -1838,7 +1796,7 @@ function createDataChannel() {
 						}
 					} else if(event.data.startsWith("cmd|")) {
 						let subCmd = event.data.substring(4);
-						if(!gentle) console.log("dataChannel.onmessage signaling");
+						//if(!gentle) console.log("dataChannel.onmessage signaling");
 						signalingCommand(subCmd);
 					} else if(event.data.startsWith("file|")) {
 						var fileDescr = event.data.substring(5);
@@ -2125,25 +2083,29 @@ function goOffline() {
 		goOnlineButton.disabled = false;
 	}
 }
-
+/*
 function onIceCandidate(event) {
-	var calleeCandidate = event.candidate;
-	if(calleeCandidate==null) {
+	if(event.candidate==null) {
 		// ICE gathering has finished
 		if(!gentle) console.log('onIce: end of calleeCandidates');
-	} else if(calleeCandidate.address==null) {
+	} else if(event.candidate.address==null) {
+		//console.warn('onIce skip event.candidate.address==null');
 	} else if(dataChannel && dataChannel.readyState=="open") {
-		dataChannel.send("cmd|calleeCandidate|"+JSON.stringify(calleeCandidate));
+		if(!gentle) console.log('onIce calleeCandidate via dataChannel', event.candidate.address);
+		dataChannel.send("cmd|calleeCandidate|"+JSON.stringify(event.candidate));
 	} else if(wsConn==null) {
-		if(!gentle) console.log('onIce callerCandidate: wsConn==null', callerCandidate.address);
+		if(!gentle) console.log('onIce calleeCandidate: wsConn==null', event.candidate.address);
 	} else if(wsConn.readyState!=1) {
-		if(!gentle) console.log('onIce callerCandidate: readyState!=1',	callerCandidate.address, wsConn.readyState);
+		if(!gentle) console.log('onIce calleeCandidate: readyState!=1',	event.candidate.address, wsConn.readyState);
 	} else {
-		if(!gentle) console.log('onIce calleeCandidate for signaling', calleeCandidate);
-		wsSend("calleeCandidate|"+JSON.stringify(calleeCandidate));
+		if(!gentle) console.log('onIce calleeCandidate for signaling', event.candidate);
+		// 300ms delay to prevent 'cmd calleeCandidate no peerCon.remoteDescription' on callee side
+		setTimeout(function() {
+			wsSend("calleeCandidate|"+JSON.stringify(event.candidate));
+		},300);
 	}
 }
-
+*/
 var menuDialogOpenFlag = false;
 function menuDialogOpen() {
 	if(menuDialogOpenFlag) {

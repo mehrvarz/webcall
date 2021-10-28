@@ -653,14 +653,14 @@ function gotStream(stream) {
 	if(!gentle) console.log("gotStream set localVideoFrame");
 	localVideoFrame.srcObject = localStream;
 	localVideoFrame.volume = 0;
-	localVideoFrame.load();
-
+//	localVideoFrame.load();
 	var isPlaying = localVideoFrame.currentTime > 0 && !localVideoFrame.paused && !localVideoFrame.ended && localVideoFrame.readyState > localVideoFrame.HAVE_CURRENT_DATA;
 	if(!isPlaying) {
 		localVideoFrame.play().catch(function(error) {
 			if(!gentle) console.log("# localVideoFrame error",error);
-			// "The play() request was interrupted by a new load request"
-			// see: https://www.mumets.com/host-https-stackoverflow.com/questions/36803176/how-to-prevent-the-play-request-was-interrupted-by-a-call-to-pause-error
+			// error "The play() request was interrupted by a new load request"
+			// https://www.mumets.com/host-https-stackoverflow.com/questions/36803176/how-to-prevent-the-play-request-was-interrupted-by-a-call-to-pause-error
+			if(!gentle) console.log("# localVideoFrame",localVideoFrame.currentTime,localVideoFrame.paused,localVideoFrame.ended,localVideoFrame.readyState,localVideoFrame.HAVE_CURRENT_DATA);
 		});
 	}
 	gotStream2();
@@ -716,4 +716,81 @@ function connectLocalVideo(forceOff) {
 // TODO may need to reactivate audio streaming (only on caller?)
 	}
 }
+
+function onIceCandidate(event,myCandidateName) {
+	if(event.candidate==null) {
+		// ICE gathering has finished
+		if(!gentle) console.log('onIce end of candidates');
+	} else if(event.candidate.address==null) {
+		//console.warn('onIce skip event.candidate.address==null');
+	} else if(dataChannel && dataChannel.readyState=="open") {
+		if(!gentle) console.log("onIce "+myCandidateName+" via dataChannel", event.candidate.address);
+		dataChannel.send("cmd|"+myCandidateName+"|"+JSON.stringify(event.candidate));
+	} else if(wsConn==null) {
+		if(!gentle) console.log("onIce "+myCandidateName+": wsConn==null", event.candidate.address);
+	} else if(wsConn.readyState!=1) {
+		if(!gentle) console.log("onIce "+myCandidateName+": readyState!=1",	event.candidate.address, wsConn.readyState);
+	} else {
+		if(!gentle) console.log("onIce "+myCandidateName+" via wsSend", event.candidate.address);
+// TODO support dataChannel delivery?
+		// 300ms delay to prevent "cmd "+myCandidateName+" no peerCon.remoteDescription" on other side
+		setTimeout(function() {
+			wsSend(myCandidateName+"|"+JSON.stringify(event.candidate));
+		},300);
+	}
+}
+
+function peerConOntrack(track, streams) {
+//		if(!gentle) console.log('peerCon.ontrack',track, streams);
+// TODO tmtmtm
+//		track.onunmute = () => {
+//			if(remoteVideoFrame!=null && remoteVideoFrame.srcObject == streams[0]) {
+//				if(!gentle) console.warn('peerCon.ontrack onunmute was already set');
+//				return;
+//			}
+		if(!gentle) console.log('peerCon.ontrack onunmute set remoteVideoFrame.srcObject',streams[0]);
+		if(remoteStream) {
+			if(!gentle) console.log('peerCon.ontrack onunmute have prev remoteStream');
+			// TODO treat like localStream in gotStream() ? apparently not needed
+		}
+		remoteStream = streams[0];
+//		};
+
+	if(!track.enabled) {
+		if(!gentle) console.log('peerCon.ontrack onunmute !track.enabled: not set remoteVideoFrame');
+	} else {
+		if(!gentle) console.log('peerCon.ontrack onunmute track.enabled: set remoteVideoFrame',track.kind);
+		if(remoteVideoFrame.srcObject == remoteStream) {
+			if(!gentle) console.log('peerCon.ontrack onunmute track.enabled: same remoteStream again');
+		} else {
+			if(!gentle) console.log('peerCon.ontrack onunmute track.enabled: new remoteStream');
+			remoteVideoFrame.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
+//				remoteVideoFrame.load();
+			var isPlaying = remoteVideoFrame.currentTime > 0 && !remoteVideoFrame.paused && !remoteVideoFrame.ended && remoteVideoFrame.readyState > remoteVideoFrame.HAVE_CURRENT_DATA;
+			if(!isPlaying) {
+				remoteVideoFrame.play().catch(function(error) {
+					if(!gentle) console.log("# remoteVideoFrame error",error);
+					if(!gentle) console.log("# remoteVideoFrame",remoteVideoFrame.currentTime,remoteVideoFrame.paused,remoteVideoFrame.ended,remoteVideoFrame.readyState,remoteVideoFrame.HAVE_CURRENT_DATA);
+				});
+			}
+		}
+		setTimeout(function() {
+			let videoTracks = remoteStream.getVideoTracks();
+			if(!gentle) console.log('peerCon.ontrack onunmute track.enabled: delayed v-tracks',videoTracks.length);
+			if(videoTracks.length>0) {
+				remoteVideoDiv.style.visibility = "visible";
+				remoteVideoDiv.style.height = "";
+				remoteVideoDiv.style.display = "block";
+				remoteVideoLabel.innerHTML = "remote cam streaming";
+				remoteVideoLabel.style.color = "#ff0";
+			} else {
+				remoteVideoDiv.style.visibility = "hidden";
+				remoteVideoDiv.style.height = "0px";
+				remoteVideoDiv.style.display = "block";
+				remoteVideoLabel.innerHTML = "remote cam not streaming";
+				remoteVideoLabel.style.color = "#fff";
+			}
+		},500);
+	}
+};
 
