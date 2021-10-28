@@ -1451,15 +1451,13 @@ function dial() {
 			if(!gentle) console.log('peerCon.ontrack onunmute set remoteVideoFrame.srcObject',streams[0]);
 			if(remoteStream) {
 				if(!gentle) console.log('peerCon.ontrack onunmute have prev remoteStream');
-// TODO treat like localStream in gotStream() ?
+				// TODO treat like localStream in gotStream() ? apparently not needed
 			}
 			remoteStream = streams[0];
 //		};
 
 		if(!track.enabled) {
 			if(!gentle) console.log('peerCon.ontrack onunmute !track.enabled: not set remoteVideoFrame');
-//		} else if(track.kind!="video") {
-//			if(!gentle) console.log('peerCon.ontrack onunmute kind!=video: not set remoteVideoFrame',track.kind);
 		} else {
 			if(!gentle) console.log('peerCon.ontrack onunmute track.enabled: set remoteVideoFrame',track.kind);
 			remoteVideoFrame.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
@@ -1474,18 +1472,15 @@ function dial() {
 				remoteVideoDiv.style.visibility = "visible";
 				remoteVideoDiv.style.height = "";
 				remoteVideoDiv.style.display = "block";
-
 				remoteVideoLabel.innerHTML = "remote cam streaming";
 				remoteVideoLabel.style.color = "#ff0";
 			} else if(track.kind=="audio") {
 				remoteVideoDiv.style.visibility = "hidden";
 				remoteVideoDiv.style.height = "0px";
 				remoteVideoDiv.style.display = "block";
-
 				remoteVideoLabel.innerHTML = "remote cam not streaming";
 				remoteVideoLabel.style.color = "#fff";
 			}
-			// we switch back to "remote cam not streaming" when other peer sends us ... via dataChannel
 		}
 	};
 
