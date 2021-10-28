@@ -481,13 +481,6 @@ function getStream() {
 		}
 		return
 	}
-/*
-	if(localStream) {
-		localStream.getTracks().forEach(track => { track.stop(); });
-		localStream = null;
-		console.log("getStream localStream clear");
-	}
-*/
 
 //	let supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
 //	if(!gentle) console.log('getStream supportedConstraints',supportedConstraints);
@@ -535,6 +528,7 @@ function getStream() {
 }
 
 function gotDevices(deviceInfos) {
+	// fill avSelect with the available audio/video input devices (mics and cams)
 	if(!gentle) console.log('gotDevices',deviceInfos);
 	var i, L = avSelect.options.length - 1;
 	for(i = L; i >= 0; i--) {
@@ -585,7 +579,6 @@ function gotDevices(deviceInfos) {
 				if(!exists) {
 					avSelect.appendChild(option);
 				}
-
 			}
 		} else if (deviceInfo.kind === "audioouput") {
 			// ignore
@@ -596,11 +589,25 @@ function gotDevices(deviceInfos) {
 var audioSendTrack = null;
 var videoSendTrack = null;
 function gotStream(stream) {
+	// add localStream audioTrack and (possibly) localStream videoTrack to peerCon using peerCon.addTrack()
+	// then activate localVideoFrame with localStream
     if(!gentle) console.log("gotStream set localStream");
+	if(localStream) {
+		// stop all tracks on previous localStream
+		const allTracks = localStream.getTracks();
+		if(!gentle) console.log("videoOff !rtcConnect localStream stop len",allTracks.length);
+		allTracks.forEach(track => {
+			console.log('videoOff local track.stop()',track);
+			track.stop(); 
+		});
+	}
+
 	localStream = stream;
 
 	if(!peerCon) {
-		//if(!gentle) console.log('gotStream no peerCon');
+		if(!gentle) console.log('# gotStream no peerCon');
+	} else if(audioSendTrack) {
+		if(!gentle) console.log('gotStream audioSendTrack already set');
 	} else {
 		const audioTracks = localStream.getAudioTracks();
 		audioTracks[0].enabled = true;
@@ -608,7 +615,7 @@ function gotStream(stream) {
 		audioSendTrack = peerCon.addTrack(audioTracks[0],localStream);
 	}
 
-	// now let's look at all the reasons why we would NOT add the video track to peerCon
+	// now let's look at all the reasons why we would NOT add the localStream.videoTrack to peerCon
 	if(!videoEnabled) {
 		// disable all video tracks (do not show the video locally)
 		if(!gentle) console.log("gotStream !videoEnabled stop video tracks");
@@ -637,7 +644,9 @@ function gotStream(stream) {
 	localVideoFrame.srcObject = localStream;
 	localVideoFrame.volume = 0;
 	localVideoFrame.load();
-	localVideoFrame.play().catch(function(error) {});
+	localVideoFrame.play().catch(function(error) {
+		if(!gentle) console.log("# localVideoFrame error",error);
+	});
 	gotStream2();
 }
 
@@ -668,12 +677,12 @@ function connectLocalVideo(forceOff) {
 			if(!gentle) console.log("connectLocalVideo no dataChannel");
 		}
 	} else {
-		// we want to stop streaming localVideo to other peer
+		// stop streaming localVideo to other peer
 		sendLocalStream = false;
 		if(!videoSendTrack) {
-			if(!gentle) console.log("connectLocalVideo disconnect !videoSendTrack",localStream.getTracks().length);
+			if(!gentle) console.log("connectLocalVideo disconnect !videoSendTrack !removeTrack",localStream.getTracks().length);
 		} else if(!peerCon) {
-			if(!gentle) console.log("connectLocalVideo disconnect !peerCon");
+			if(!gentle) console.log("connectLocalVideo disconnect !peerCon -> !removeTrack");
 		} else  {
 			if(!gentle) console.log("connectLocalVideo disconnect peerCon.removeTrack(videoSendTrack)");
 			peerCon.removeTrack(videoSendTrack);
