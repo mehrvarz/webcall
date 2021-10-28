@@ -1044,9 +1044,9 @@ function connectSignaling(message,openedFunc) {
 		} else {
 			// onclose after a ws-connection has been established
 			// most likey the callee is busy
-			console.log('wsConn.onclose');
+			if(!gentle) console.log('wsConn.onclose');
 		}
-		wsConn=null;
+		wsConn = null;
 	};
 }
 
@@ -1084,15 +1084,15 @@ function signalingCommand(message) {
 	} else if(cmd=="calleeOffer") {
 		// calleeOffer is being used when callee wants to deliver a config change
 		let hostDescription = JSON.parse(payload);
-		console.log('calleeOffer setRemoteDescription');
+		if(!gentle) console.log('calleeOffer setRemoteDescription');
 		peerCon.setRemoteDescription(hostDescription).then(() => {
 			if(!gentle) console.log('calleeOffer setRemoteDescription done');
 
 			if(hostDescription.type == "offer") {
-				console.log('calleeOffer received offer createAnswer');
+				if(!gentle) console.log('calleeOffer received offer createAnswer');
 				peerCon.createAnswer().then((desc) => {
 					localDescription = desc;
-					console.log('calleeOffer got localDescription');
+					if(!gentle) console.log('calleeOffer got localDescription');
 					localDescription.sdp =
 						maybePreferCodec(localDescription.sdp, 'audio', 'send', "opus");
 					localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
@@ -1112,7 +1112,7 @@ function signalingCommand(message) {
 					showStatus("Failed to createAnswer",8000);
 				});
 			} else {
-				console.log("calleeOffer received no offer");
+				console.log("calleeOffer received no offer:",hostDescription.type);
 			}
 
 		}, err => {
@@ -1147,8 +1147,7 @@ function signalingCommand(message) {
 				if(tok.length>=10 && tok[8]=="raddr" && tok[9]!="0.0.0.0") {
 					address = tok[9];
 				}
-				if(!gentle)
-					console.log('cmd calleeCandidate addIce',address,calleeCandidate.candidate);
+				if(!gentle) console.log('cmd calleeCandidate addIce',address,calleeCandidate.candidate);
 				// "Failed to execute 'addIceCandidate' on 'RTCPeerConnection'"
 				// may happen if peerCon.setRemoteDescription is not finished yet
 				if(!peerCon) {
@@ -1157,13 +1156,13 @@ function signalingCommand(message) {
 				}
 				if(!peerCon.remoteDescription) {
 					// this happens bc setRemoteDescription may take a while
-					console.log("cmd calleeCandidate !peerCon.remoteDescription",
+					if(!gentle) console.log("cmd calleeCandidate !peerCon.remoteDescription",
 						calleeCandidate.candidate);
 					setTimeout(addIceCalleeCandidate,100,calleeCandidate);
 					return;
 				}
 				if(!peerCon.remoteDescription.type) {
-					console.log("cmd calleeCandidate !peerCon.remoteDescription.type",
+					if(!gentle) console.log("cmd calleeCandidate !peerCon.remoteDescription.type",
 						calleeCandidate.candidate);
 					setTimeout(addIceCalleeCandidate,100,calleeCandidate);
 					return;
@@ -1235,7 +1234,7 @@ function signalingCommand(message) {
 				localVideoLabel.classList.add('blink_me');
 				setTimeout(function() {localVideoLabel.classList.remove('blink_me')},8000);
 			} else {
-				console.log('full mediaConnect, not videoEnabled, no blink localVideoLabel');
+				if(!gentle) console.log('full mediaConnect, not videoEnabled, no blink localVideoLabel');
 			}
 		}
 
@@ -1302,7 +1301,7 @@ function signalingCommand(message) {
 		}
 	} else if(cmd=="ua") {
 		otherUA = payload;
-		console.log("otherUA",otherUA);
+		if(!gentle) console.log("otherUA",otherUA);
 /*
 	} else if(cmd=="enableVideo") {
 		if(payload=="false") {
@@ -1542,7 +1541,7 @@ function dial() {
 			}
 		} else if(peerCon.connectionState=="connected") {
 			// if we see this despite being mediaConnect already, it is caused by createDataChannel
-			console.log('peerCon connected',rtcConnect,mediaConnect);
+			console.log('peerCon connected');
 			if(!rtcConnect && !mediaConnect) {
 				// the caller got peer-connected to the callee; callee now starts ringing
 				stopAllAudioEffects();
