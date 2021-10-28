@@ -1507,15 +1507,7 @@ function goOnline() {
 	rtcConnectStartDate = 0;
 	mediaConnectStartDate = 0;
 	if(!gentle) console.log('goOnline',calleeID);
-	var ICE_config = {
-		"iceServers": [
-			{	'urls': 'stun:'+window.location.hostname+':3739' },
-			{	'urls': 'turn:'+window.location.hostname+':3739',
-				'username': 'c807ec29df3c9ff',
-				'credential': '736518fb4232d44'
-			}
-		]
-	};
+
 	//console.warn("RTCPeerConnection ICE_config",ICE_config);
 	audioSendTrack = null;
 	videoSendTrack = null;
@@ -1577,11 +1569,14 @@ function goOnline() {
 		if(!gentle) console.log("oniceconnectionstatechange", peerCon.iceConnectionState);
 	}
 	peerCon.onconnectionstatechange = event => {
-		if(peerCon==null) {
+		if(!gentle) console.log("peerCon connectionstatechange", peerCon.connectionState);
+		if(!peerCon) {
+			hangupWithBusySound(true,"Peer disconnected");
 			return;
 		}
 		if(!gentle) console.log("onconnectionstatechange", peerCon.connectionState);
 		if(peerCon.connectionState=="disconnected") {
+			console.log('peerCon disconnected',rtcConnect,mediaConnect);
 			stopAllAudioEffects();
 			endWebRtcSession(true,true); // -> peerConCloseFunc
 		} else if(peerCon.connectionState=="connected") {

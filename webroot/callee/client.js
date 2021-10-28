@@ -2,6 +2,16 @@
 'use strict';
 const fileSelectElement = document.getElementById("fileselect");
 
+var ICE_config = {
+	"iceServers": [
+		{	'urls': 'stun:'+window.location.hostname+':3739' },
+		{	'urls': 'turn:'+window.location.hostname+':3739',
+			'username': 'c807ec29df3c9ff',
+			'credential': '736518fb4232d44'
+		}
+	]
+};
+
 if(fileSelectElement!=null) {
 	fileSelectElement.addEventListener('change', (event) => {
 		if(!gentle) console.log("fileSelect event");

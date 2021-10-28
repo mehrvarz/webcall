@@ -1410,15 +1410,6 @@ function dial() {
 		}
 	},20000,dialDate);
 
-	var ICE_config= {
-		"iceServers": [
-			{	'urls': 'stun:'+window.location.hostname+':3739' },
-			{	'urls': 'turn:'+window.location.hostname+':3739',
-				'username': 'c807ec29df3c9ff',
-				'credential': '736518fb4232d44'
-			}
-		]
-	};
 	//console.warn("ICE_config",ICE_config);
 	audioSendTrack = null;
 	videoSendTrack = null;
@@ -1500,6 +1491,7 @@ function dial() {
 			hangupWithBusySound(true,"Peer disconnected");
 			return;
 		}
+		if(!gentle) console.log("onconnectionstatechange", peerCon.connectionState);
 		if(peerCon.connectionState=="disconnected") {
 			console.log('peerCon disconnected',rtcConnect,mediaConnect);
 			hangupWithBusySound(true,"Peer disconnected");
