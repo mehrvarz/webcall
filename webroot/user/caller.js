@@ -1751,30 +1751,7 @@ function createDataChannel() {
 		}
 	}
 }
-/*
-function onIceCandidate(event,myCandidateName) {
-	if(event.candidate==null) {
-		// ICE gathering has finished
-		if(!gentle) console.log('onIce end of candidates');
-	} else if(event.candidate.address==null) {
-		//console.warn('onIce skip event.candidate.address==null');
-	} else if(dataChannel && dataChannel.readyState=="open") {
-		if(!gentle) console.log("onIce "+myCandidateName+" via dataChannel", event.candidate.address);
-		dataChannel.send("cmd|"+myCandidateName+"|"+JSON.stringify(event.candidate));
-	} else if(wsConn==null) {
-		if(!gentle) console.log("onIce "+myCandidateName+": wsConn==null", event.candidate.address);
-	} else if(wsConn.readyState!=1) {
-		if(!gentle) console.log("onIce "+myCandidateName+": readyState!=1",	event.candidate.address, wsConn.readyState);
-	} else {
-		if(!gentle) console.log("onIce "+myCandidateName+" via wsSend", event.candidate.address);
-// TODO support dataChannel delivery?
-		// 300ms delay to prevent "cmd "+myCandidateName+" no peerCon.remoteDescription" on other side
-		setTimeout(function() {
-			wsSend(myCandidateName+"|"+JSON.stringify(event.candidate));
-		},300);
-	}
-}
-*/
+
 function stopAllAudioEffects() {
 	if(dtmfDialingSound!=null) {
 		dtmfDialingSound.pause();
@@ -1792,9 +1769,6 @@ function stopAllAudioEffects() {
 
 function hangup(mustDisconnectCallee,message) {
 	dialing = false;
-//	remoteStream = null;
-//	rtcConnect = false;
-//	mediaConnect = false;
 	connectLocalVideo(true); // peerCon.removeTrack(videoSendTrack); dataChannel.send("cmd|rtcVideoOff");
 	if(fileselectLabel!=null) {
 		fileselectLabel.style.display = "none";

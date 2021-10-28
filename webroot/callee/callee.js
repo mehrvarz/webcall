@@ -2078,29 +2078,7 @@ function goOffline() {
 		goOnlineButton.disabled = false;
 	}
 }
-/*
-function onIceCandidate(event) {
-	if(event.candidate==null) {
-		// ICE gathering has finished
-		if(!gentle) console.log('onIce: end of calleeCandidates');
-	} else if(event.candidate.address==null) {
-		//console.warn('onIce skip event.candidate.address==null');
-	} else if(dataChannel && dataChannel.readyState=="open") {
-		if(!gentle) console.log('onIce calleeCandidate via dataChannel', event.candidate.address);
-		dataChannel.send("cmd|calleeCandidate|"+JSON.stringify(event.candidate));
-	} else if(wsConn==null) {
-		if(!gentle) console.log('onIce calleeCandidate: wsConn==null', event.candidate.address);
-	} else if(wsConn.readyState!=1) {
-		if(!gentle) console.log('onIce calleeCandidate: readyState!=1',	event.candidate.address, wsConn.readyState);
-	} else {
-		if(!gentle) console.log('onIce calleeCandidate for signaling', event.candidate);
-		// 300ms delay to prevent 'cmd calleeCandidate no peerCon.remoteDescription' on callee side
-		setTimeout(function() {
-			wsSend("calleeCandidate|"+JSON.stringify(event.candidate));
-		},300);
-	}
-}
-*/
+
 var menuDialogOpenFlag = false;
 function menuDialogOpen() {
 	if(menuDialogOpenFlag) {
