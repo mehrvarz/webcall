@@ -597,7 +597,7 @@ function gotStream(stream) {
 		const allTracks = localStream.getTracks();
 		if(!gentle) console.log("videoOff !rtcConnect localStream stop len",allTracks.length);
 		allTracks.forEach(track => {
-			console.log('videoOff local track.stop()',track);
+			if(!gentle) console.log('videoOff local track.stop()',track);
 			track.stop(); 
 		});
 	}
@@ -611,7 +611,7 @@ function gotStream(stream) {
 	} else {
 		const audioTracks = localStream.getAudioTracks();
 		audioTracks[0].enabled = true;
-		if(!gentle) console.log('gotStream peerCon addTrack mic',audioTracks.length,audioTracks[0]);
+		console.log('peerCon addTrack local audio input',audioTracks[0]);
 		audioSendTrack = peerCon.addTrack(audioTracks[0],localStream);
 	}
 
@@ -636,7 +636,7 @@ function gotStream(stream) {
 	} else if(localStream.getTracks().length<2) {
 		if(!gentle) console.log('# gotStream videoEnabled: getTracks().length<2: no addTrack vid',localStream.getTracks().length);
 	} else {
-		if(!gentle) console.log('gotStream videoEnabled addTrack vid',localStream.getTracks()[1]);
+		console.log('peerCon addTrack local video input',localStream.getTracks()[1]);
 		videoSendTrack = peerCon.addTrack(localStream.getTracks()[1],localStream);
 	}
 

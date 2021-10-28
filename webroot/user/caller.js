@@ -361,7 +361,7 @@ function videoOn() {
 		if(localCandidateType=="relay" || remoteCandidateType=="relay") {
 			if(!gentle) console.log('videoOn no addTrack vid on relayed con (%s)(%s)',localCandidateType,remoteCandidateType);
 		} else {
-			if(!gentle) console.log('videoOn addTrack vid',localStream.getTracks()[1]);
+			console.log('videoOn addTrack local video input',localStream.getTracks()[1]);
 			videoSendTrack = peerCon.addTrack(localStream.getTracks()[1],localStream);
 		}
 	}
@@ -443,7 +443,7 @@ function videoOff() {
 			const allTracks = localStream.getTracks();
 			if(!gentle) console.log("videoOff !rtcConnect localStream stop len",allTracks.length);
 			allTracks.forEach(track => {
-				console.log('videoOff local track.stop()',track);
+				if(!gentle) console.log('videoOff local track.stop()',track);
 				track.stop(); 
 			});
 		}
@@ -947,11 +947,11 @@ function gotStream2() {
 		if(!gentle) console.log("gotStream2 !dialAfter");
 
 		if(videoEnabled) {
-			if(!gentle) console.log("gotStream2 NO mute mic until dial (videoEnabled)");
+			if(!gentle) console.log("gotStream2 mute mic until dial abort (videoEnabled)");
 		} else if(!localStream) {
-			console.log("# gotStream2 NO mute mic until dial (!localStream)");
+			if(!gentle) console.log("# gotStream2 mute mic until dial abort (!localStream)");
 		} else if(rtcConnect) {
-			console.log("# gotStream2 NO mute mic until dial (rtcConnect)");
+			if(!gentle) console.log("# gotStream2 mute mic until dial abort (rtcConnect)");
 		} else {
 			if(!gentle) console.log("gotStream2 mute mic until dial");
 
@@ -1600,7 +1600,7 @@ function dial() {
 		const audioTracks = localStream.getAudioTracks();
 		if(audioTracks.length>0) {
 			audioTracks[0].enabled = true; // unmute
-			if(!gentle) console.log('dial addTrack local audio',audioTracks[0]);
+			console.log('peerCon addTrack local audio input',audioTracks[0]);
 			audioSendTrack = peerCon.addTrack(audioTracks[0],localStream);
 		}
 	}
