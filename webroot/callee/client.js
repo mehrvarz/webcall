@@ -586,8 +586,8 @@ function gotDevices(deviceInfos) {
 	}
 }
 
-var audioSendTrack = null;
-var videoSendTrack = null;
+var audioSendTrack = null; // TODO naming: better audioTrackWasAdded
+var videoSendTrack = null; // TODO naming: better videoTrackWasAdded
 function gotStream(stream) {
 	// add localStream audioTrack and (possibly) localStream videoTrack to peerCon using peerCon.addTrack()
 	// then activate localVideoFrame with localStream
@@ -595,19 +595,29 @@ function gotStream(stream) {
 	if(localStream) {
 		// stop all tracks on previous localStream
 		const allTracks = localStream.getTracks();
-		if(!gentle) console.log("videoOff !rtcConnect localStream stop len",allTracks.length);
+		if(!gentle) console.log("gotStream previous localStream len",allTracks.length);
 		allTracks.forEach(track => {
-			if(!gentle) console.log('videoOff local track.stop()',track);
+			if(!gentle) console.log('gotStream previous localStream track.stop()',track);
 			track.stop(); 
 		});
+		if(peerCon && audioSendTrack) {
+			if(!gentle) console.log("gotStream previous localStream peerCon.removeTrack(audioSendTrack)");
+			peerCon.removeTrack(audioSendTrack);
+		}
+		audioSendTrack = null;
+		if(peerCon && videoSendTrack) {
+			if(!gentle) console.log("gotStream previous localStream peerCon.removeTrack(videoSendTrack)");
+			peerCon.removeTrack(videoSendTrack);
+		}
+		videoSendTrack = null;
 	}
 
 	localStream = stream;
 
 	if(!peerCon) {
-		if(!gentle) console.log('# gotStream no peerCon');
+		if(!gentle) console.log('gotStream no peerCon: no peerCon.addTrack');
 	} else if(audioSendTrack) {
-		if(!gentle) console.log('gotStream audioSendTrack already set');
+		if(!gentle) console.log('gotStream audioSendTrack already set: no peerCon.addTrack');
 	} else {
 		const audioTracks = localStream.getAudioTracks();
 		audioTracks[0].enabled = true;
@@ -618,23 +628,23 @@ function gotStream(stream) {
 	// now let's look at all the reasons why we would NOT add the localStream.videoTrack to peerCon
 	if(!videoEnabled) {
 		// disable all video tracks (do not show the video locally)
-		if(!gentle) console.log("gotStream !videoEnabled stop video tracks");
-		stream.getTracks().forEach(function(track) {
-			if(typeof track.getSettings().aspectRatio!=="undefined") {
+		if(!gentle) console.log("gotStream !videoEnabled -> stop video tracks");
+		stream.getVideoTracks().forEach(function(track) {
+//			if(typeof track.getSettings().aspectRatio!=="undefined") {
 				// this is a video track: stop it
+				if(!gentle) console.log("gotStream !videoEnabled stop video track",track);
 				track.stop();
-				if(!gentle) console.log("gotStream !videoEnabled video track stopped");
-			}
+//			}
 		})
-	} else if(!sendLocalStream) {
+	} else if(!addLocalVideoEnabled) {
 		// video streaming has not been activated yet
-		if(!gentle) console.log('gotStream videoEnabled !sendLocalStream');
+		if(!gentle) console.log('gotStream videoEnabled but !addLocalVideoEnabled: no addTrack vid');
 	} else if(!peerCon) {
-		if(!gentle) console.log('# gotStream videoEnabled !peerCon');
+		if(!gentle) console.log('# gotStream videoEnabled but !peerCon: no addTrack vid');
 	} else if(localCandidateType=="relay" || remoteCandidateType=="relay") {
-		if(!gentle) console.log('gotStream videoEnabled: no addTrack video on relayed con (%s)(%s)',localCandidateType,remoteCandidateType);
+		if(!gentle) console.log('gotStream videoEnabled but relayed con: no addTrack vid (%s)(%s)',localCandidateType,remoteCandidateType);
 	} else if(localStream.getTracks().length<2) {
-		if(!gentle) console.log('# gotStream videoEnabled: getTracks().length<2: no addTrack vid',localStream.getTracks().length);
+		if(!gentle) console.log('# gotStream videoEnabled but getTracks().length<2: no addTrack vid',localStream.getTracks().length);
 	} else {
 		console.log('peerCon addTrack local video input',localStream.getTracks()[1]);
 		videoSendTrack = peerCon.addTrack(localStream.getTracks()[1],localStream);
@@ -644,9 +654,15 @@ function gotStream(stream) {
 	localVideoFrame.srcObject = localStream;
 	localVideoFrame.volume = 0;
 	localVideoFrame.load();
-	localVideoFrame.play().catch(function(error) {
-		if(!gentle) console.log("# localVideoFrame error",error);
-	});
+
+	var isPlaying = localVideoFrame.currentTime > 0 && !localVideoFrame.paused && !localVideoFrame.ended && localVideoFrame.readyState > localVideoFrame.HAVE_CURRENT_DATA;
+	if(!isPlaying) {
+		localVideoFrame.play().catch(function(error) {
+			if(!gentle) console.log("# localVideoFrame error",error);
+			// "The play() request was interrupted by a new load request"
+			// see: https://www.mumets.com/host-https-stackoverflow.com/questions/36803176/how-to-prevent-the-play-request-was-interrupted-by-a-call-to-pause-error
+		});
+	}
 	gotStream2();
 }
 
@@ -658,15 +674,15 @@ function videoSwitch() {
 	}
 }
 
-var sendLocalStream = false;
+var addLocalVideoEnabled = false; // was sendLocalStream
 function connectLocalVideo(forceOff) {
-	localVideoLabel.classList.remove('blink_me');
-
-	if(!sendLocalStream && !forceOff) {
+//	localVideoLabel.classList.remove('blink_me');
+	if(!addLocalVideoEnabled && !forceOff) {
 		// we want to send localVideo stream to other peer
 		if(dataChannel && dataChannel.readyState=="open") {
-			if(!gentle) console.log("connectLocalVideo via dataChannel");
-			sendLocalStream = true; // will cause: peerCon.addTrack(video)
+			if(!gentle) console.log("connectLocalVideo set");
+			localVideoLabel.classList.remove('blink_me');
+			addLocalVideoEnabled = true; // will cause: peerCon.addTrack(video)
 			pickupAfterLocalStream = true; // will cause: pickup2()
 			getStream(); // -> gotStream() -> gotStream2() -> pickup2() -> "calleeDescriptionUpd"
 
@@ -674,11 +690,11 @@ function connectLocalVideo(forceOff) {
 			localVideoLabel.innerHTML = "local cam streaming";
 			localVideoLabel.style.color = "#ff0";
 		} else {
-			if(!gentle) console.log("connectLocalVideo no dataChannel");
+			if(!gentle) console.log("# connectLocalVideo no dataChannel");
 		}
 	} else {
 		// stop streaming localVideo to other peer
-		sendLocalStream = false;
+		addLocalVideoEnabled = false;
 		if(!videoSendTrack) {
 			if(!gentle) console.log("connectLocalVideo disconnect !videoSendTrack !removeTrack",localStream.getTracks().length);
 		} else if(!peerCon) {
@@ -691,10 +707,13 @@ function connectLocalVideo(forceOff) {
 
 		if(dataChannel && dataChannel.readyState=="open") {
 			// make caller switch to "remote cam not streaming"
+			if(!gentle) console.log("connectLocalVideo disconnect dataChannel.send(rtcVideoOff)");
 			dataChannel.send("cmd|rtcVideoOff");
 		}
 		localVideoLabel.innerHTML = "local cam not streaming";
 		localVideoLabel.style.color = "#fff";
+
+// TODO may need to reactivate audio streaming (only on caller?)
 	}
 }
 

@@ -357,7 +357,7 @@ function videoOn() {
 	videoEnabled = true;
 
 	// add localStream video-track to peerCon
-	if(peerCon && rtcConnect && sendLocalStream && localStream.getTracks().length>=2 && !videoSendTrack) {
+	if(peerCon && rtcConnect && addLocalVideoEnabled && localStream.getTracks().length>=2 && !videoSendTrack) {
 		if(localCandidateType=="relay" || remoteCandidateType=="relay") {
 			if(!gentle) console.log('videoOn no addTrack vid on relayed con (%s)(%s)',localCandidateType,remoteCandidateType);
 		} else {
@@ -370,9 +370,12 @@ function videoOn() {
 	localVideoFrame.srcObject = localStream; // see gotStream()
 	localVideoFrame.volume = 0; // avoid audio feedback
 	localVideoFrame.load();
-	localVideoFrame.play().catch(function(error) {
-		if(!gentle) console.log("# localVideoFrame error",error);
-	});
+	var isPlaying = localVideoFrame.currentTime > 0 && !localVideoFrame.paused && !localVideoFrame.ended && localVideoFrame.readyState > localVideoFrame.HAVE_CURRENT_DATA;
+	if(!isPlaying) {
+		localVideoFrame.play().catch(function(error) {
+			if(!gentle) console.log("# localVideoFrame error",error);
+		});
+	}
 	localVideoDiv.style.visibility = "visible";
 	localVideoDiv.style.height = "";
 	localVideoDiv.style.display = "block";
@@ -947,11 +950,11 @@ function gotStream2() {
 		if(!gentle) console.log("gotStream2 !dialAfter");
 
 		if(videoEnabled) {
-			if(!gentle) console.log("gotStream2 mute mic until dial abort (videoEnabled)");
+			if(!gentle) console.log("gotStream2 videoEnabled: no mute mic until dial");
 		} else if(!localStream) {
-			if(!gentle) console.log("# gotStream2 mute mic until dial abort (!localStream)");
+			if(!gentle) console.log("# gotStream2 !localStream: no mute mic until dial");
 		} else if(rtcConnect) {
-			if(!gentle) console.log("# gotStream2 mute mic until dial abort (rtcConnect)");
+			if(!gentle) console.log("gotStream2 rtcConnect: no mute mic until dial");
 		} else {
 			if(!gentle) console.log("gotStream2 mute mic until dial");
 
@@ -1228,7 +1231,7 @@ function signalingCommand(message) {
 				err => console.log(err));
 
 			// if local video active, blink localVideoLabel
-			if(videoEnabled && !sendLocalStream) {
+			if(videoEnabled && !addLocalVideoEnabled) {
 				console.log('full mediaConnect, blink localVideoLabel');
 				localVideoLabel.innerHTML = "--- local cam not streaming ---";
 				localVideoLabel.classList.add('blink_me');
@@ -1316,8 +1319,6 @@ function signalingCommand(message) {
 		// remote video has ended
 		// clear/reset remote video frame (it was set by peerCon.ontrack)
 		if(!gentle) console.log("rtcVideoOff");
-		remoteVideoFrame.srcObject = null;
-//		remoteVideoFrame.load();
 		remoteVideoDiv.style.visibility = "hidden";
 		remoteVideoDiv.style.height = "0px";
 		remoteVideoLabel.innerHTML = "remote cam not streaming";
@@ -1440,30 +1441,50 @@ function dial() {
 		}
 	}
 	peerCon.ontrack = ({track, streams}) => {
-		if(!gentle) console.log('peerCon.ontrack',track, streams);
+//		if(!gentle) console.log('peerCon.ontrack',track, streams);
 // TODO tmtmtm
 //		track.onunmute = () => {
 //			if(remoteVideoFrame!=null && remoteVideoFrame.srcObject == streams[0]) {
 //				if(!gentle) console.warn('peerCon.ontrack onunmute was already set');
 //				return;
 //			}
-			if(!gentle) console.log('peerCon.ontrack onunmute set remoteStream',streams.length,streams[0]);
+			if(!gentle) console.log('peerCon.ontrack onunmute set remoteVideoFrame.srcObject',streams[0]);
+			if(remoteStream) {
+				if(!gentle) console.log('peerCon.ontrack onunmute have prev remoteStream');
+// TODO treat like localStream in gotStream() ?
+			}
 			remoteStream = streams[0];
 //		};
 
-		if(track.enabled && track.kind=="video") {
-			// enable remote video
+		if(!track.enabled) {
+			if(!gentle) console.log('peerCon.ontrack onunmute !track.enabled: not set remoteVideoFrame');
+//		} else if(track.kind!="video") {
+//			if(!gentle) console.log('peerCon.ontrack onunmute kind!=video: not set remoteVideoFrame',track.kind);
+		} else {
+			if(!gentle) console.log('peerCon.ontrack onunmute track.enabled: set remoteVideoFrame',track.kind);
 			remoteVideoFrame.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
 			remoteVideoFrame.load();
-			remoteVideoFrame.play().catch(function(error) {
-				if(!gentle) console.log("# remoteVideoFrame error",error);
-			});
-			remoteVideoDiv.style.visibility = "visible";
-			remoteVideoDiv.style.height = "";
-			remoteVideoDiv.style.display = "block";
+			var isPlaying = remoteVideoFrame.currentTime > 0 && !remoteVideoFrame.paused && !remoteVideoFrame.ended && remoteVideoFrame.readyState > remoteVideoFrame.HAVE_CURRENT_DATA;
+			if(!isPlaying) {
+				remoteVideoFrame.play().catch(function(error) {
+					if(!gentle) console.log("# remoteVideoFrame error",error);
+				});
+			}
+			if(track.kind=="video") {
+				remoteVideoDiv.style.visibility = "visible";
+				remoteVideoDiv.style.height = "";
+				remoteVideoDiv.style.display = "block";
 
-			remoteVideoLabel.innerHTML = "remote cam streaming";
-			remoteVideoLabel.style.color = "#ff0";
+				remoteVideoLabel.innerHTML = "remote cam streaming";
+				remoteVideoLabel.style.color = "#ff0";
+			} else if(track.kind=="audio") {
+				remoteVideoDiv.style.visibility = "hidden";
+				remoteVideoDiv.style.height = "0px";
+				remoteVideoDiv.style.display = "block";
+
+				remoteVideoLabel.innerHTML = "remote cam not streaming";
+				remoteVideoLabel.style.color = "#fff";
+			}
 			// we switch back to "remote cam not streaming" when other peer sends us ... via dataChannel
 		}
 	};
@@ -1689,7 +1710,7 @@ function createDataChannel() {
 							audioTracks[0].enabled = false;
 						}
 					} else {
-						if(!gentle) console.log("dataChannel.onmessage signaling");
+						//if(!gentle) console.log("dataChannel.onmessage signaling");
 						signalingCommand(subCmd);
 					}
 				} else if(event.data.startsWith("file|")) {

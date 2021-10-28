@@ -321,7 +321,7 @@ function videoOn() {
 	if(!gentle) console.log("videoOn");
 	videoEnabled = true;
 	// enable local video
-	if(peerCon && rtcConnect && sendLocalStream && localStream.getTracks().length>=2 && !videoSendTrack) {
+	if(peerCon && rtcConnect && addLocalVideoEnabled && localStream.getTracks().length>=2 && !videoSendTrack) {
 		if(localCandidateType=="relay" || remoteCandidateType=="relay") {
 			if(!gentle) console.log('videoOn no addTrack video on relayed con (%s)(%s)',localCandidateType,remoteCandidateType);
 		} else {
@@ -1166,7 +1166,6 @@ function signalingCommand(message) {
 	} else if(cmd=="rtcVideoOff") {
 		// remote video track removed by other side (hide remoteVideoFrame so that audio can still be received)
 		if(!gentle) console.log("rtcVideoOff");
-		//remoteVideoFrame.srcObject = null;
 		remoteVideoDiv.style.visibility = "hidden";
 		remoteVideoDiv.style.height = "0px";
 		remoteVideoLabel.innerHTML = "remote cam not streaming";
@@ -1409,7 +1408,12 @@ function pickup2() {
 		if(!gentle) console.log('pickup2 peerCon start remoteVideoFrame');
 		remoteVideoFrame.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
 		remoteVideoFrame.load();
-		remoteVideoFrame.play().catch(function(error) {});
+		var isPlaying = remoteVideoFrame.currentTime > 0 && !remoteVideoFrame.paused && !remoteVideoFrame.ended && remoteVideoFrame.readyState > remoteVideoFrame.HAVE_CURRENT_DATA;
+		if(!isPlaying) {
+			remoteVideoFrame.play().catch(function(error) {
+				if(!gentle) console.log("# remoteVideoFrame error",error);
+			});
+		}
 /*
 		if(videoEnabled) {
 			remoteVideoDiv.style.visibility = "visible";
@@ -1443,7 +1447,7 @@ function pickup2() {
 		setTimeout(function() {
 			console.log('full mediaConnect, blink localVideoLabel');
 
-			if(videoEnabled && !sendLocalStream) {
+			if(videoEnabled && !addLocalVideoEnabled) {
 				localVideoLabel.innerHTML = "--- local cam not streaming ---";
 				localVideoLabel.classList.add('blink_me');
 				setTimeout(function() {localVideoLabel.classList.remove('blink_me')},8000);
@@ -1534,27 +1538,50 @@ function goOnline() {
 		}
 	}
 	peerCon.ontrack = ({track, streams}) => {
-		if(!gentle) console.log('peerCon.ontrack',track, streams);
-
+//		if(!gentle) console.log('peerCon.ontrack',track, streams);
+// TODO
 //		track.onunmute = () => {
 //			if(remoteVideoFrame!=null && remoteVideoFrame.srcObject == streams[0]) {
 //				if(!gentle) console.warn('peerCon.ontrack onunmute was already set');
 //				return;
 //			}
 			if(!gentle) console.log('peerCon.ontrack onunmute set remoteVideoFrame.srcObject',streams[0]);
+			if(remoteStream) {
+				if(!gentle) console.log('peerCon.ontrack onunmute have prev remoteStream');
+// TODO treat like localStream in gotStream() ?
+			}
 			remoteStream = streams[0];
 //		};
 
-		if(track.enabled && track.kind=="video") {
-			// enable remote video
-			remoteVideoFrame.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
+		if(!track.enabled) {
+			if(!gentle) console.log('peerCon.ontrack onunmute !track.enabled: not set remoteVideoFrame');
+//		} else if(track.kind!="video") {
+//			if(!gentle) console.log('peerCon.ontrack onunmute kind!=video: not set remoteVideoFrame',track.kind);
+		} else {
+			if(!gentle) console.log('peerCon.ontrack onunmute track.enabled: set remoteVideoFrame',track.kind);
+			remoteVideoFrame.srcObject = remoteStream;
 			remoteVideoFrame.load();
-			remoteVideoFrame.play().catch(function(error) {});
-			remoteVideoDiv.style.visibility = "visible";
-			remoteVideoDiv.style.height = "";
+			var isPlaying = remoteVideoFrame.currentTime > 0 && !remoteVideoFrame.paused && !remoteVideoFrame.ended && remoteVideoFrame.readyState > remoteVideoFrame.HAVE_CURRENT_DATA;
+			if(!isPlaying) {
+				remoteVideoFrame.play().catch(function(error) {
+					if(!gentle) console.log("# remoteVideoFrame error",error);
+				});
+			}
+			if(track.kind=="video") {
+				remoteVideoDiv.style.visibility = "visible";
+				remoteVideoDiv.style.height = "";
+				remoteVideoDiv.style.display = "block";
 
-			remoteVideoLabel.innerHTML = "remote cam streaming";
-			remoteVideoLabel.style.color = "#ff0";
+				remoteVideoLabel.innerHTML = "remote cam streaming";
+				remoteVideoLabel.style.color = "#ff0";
+			} else if(track.kind=="audio") {
+				remoteVideoDiv.style.visibility = "hidden";
+				remoteVideoDiv.style.height = "0px";
+				remoteVideoDiv.style.display = "block";
+
+				remoteVideoLabel.innerHTML = "remote cam not streaming";
+				remoteVideoLabel.style.color = "#fff";
+			}
 		}
 	};
 	peerCon.onicegatheringstatechange = event => {
