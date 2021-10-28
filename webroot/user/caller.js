@@ -420,9 +420,9 @@ function videoOff() {
 			}
 
 			const audioTracks = localStream.getAudioTracks();
-			console.log('videoOff removeTrack local mic audioTracks.length',audioTracks.length);
+			if(!gentle) console.log('videoOff removeTrack local mic audioTracks.length',audioTracks.length);
 			if(audioTracks.length>0) {
-				console.log('videoOff removeTrack local mic',audioTracks[0]);
+				if(!gentle) console.log('videoOff removeTrack local mic',audioTracks[0]);
 				// TODO would it be enough to do this?
 				audioTracks[0].enabled = false;
 				audioTracks[0].stop();
@@ -430,9 +430,9 @@ function videoOff() {
 			}
 
 			const videoTracks = localStream.getVideoTracks();
-			console.log('videoOff removeTrack local vid videoTracks.length',videoTracks.length);
+			if(!gentle) console.log('videoOff removeTrack local vid videoTracks.length',videoTracks.length);
 			if(videoTracks.length>0) {
-				console.log('videoOff removeTrack local vid',videoTracks[0]);
+				if(!gentle) console.log('videoOff removeTrack local vid',videoTracks[0]);
 				// TODO would it be enough to do this?
 				videoTracks[0].enabled = false;
 				videoTracks[0].stop();
@@ -673,7 +673,7 @@ function calleeOnlineAction(from) {
 			if(localStream || neverAudio) {
 				connectSignaling("",dial); 
 			} else {
-				console.log('calleeOnlineAction dialAfter');
+				if(!gentle) console.log('calleeOnlineAction dialAfter');
 				dialAfterLocalStream = true;
 				getStream().then(() => navigator.mediaDevices.enumerateDevices()).then(gotDevices);
 				// also -> gotStream -> connectSignaling
@@ -947,24 +947,24 @@ function gotStream2() {
 		if(!gentle) console.log("gotStream2 !dialAfter");
 
 		if(videoEnabled) {
-			console.log("gotStream2 NO mute mic until dial (videoEnabled)");
+			if(!gentle) console.log("gotStream2 NO mute mic until dial (videoEnabled)");
 		} else if(!localStream) {
-			console.log("gotStream2 NO mute mic until dial (!localStream)");
+			console.log("# gotStream2 NO mute mic until dial (!localStream)");
 		} else if(rtcConnect) {
-			console.log("gotStream2 NO mute mic until dial (rtcConnect)");
+			console.log("# gotStream2 NO mute mic until dial (rtcConnect)");
 		} else {
-			console.log("gotStream2 mute mic until dial");
+			if(!gentle) console.log("gotStream2 mute mic until dial");
 
 			// disable local mic until we start dialing
 			localStream.getTracks().forEach(track => {
-				console.log('gotStream2 local mic track.stop()',track);
+				if(!gentle) console.log('gotStream2 local mic track.stop()',track);
 				track.stop(); 
 			});
 
 			const audioTracks = localStream.getAudioTracks();
-			console.log('gotStream2 removeTrack local mic audioTracks.length',audioTracks.length);
+			if(!gentle) console.log('gotStream2 removeTrack local mic audioTracks.length',audioTracks.length);
 			if(audioTracks.length>0) {
-				console.log('gotStream2 removeTrack local mic',audioTracks[0]);
+				if(!gentle) console.log('gotStream2 removeTrack local mic',audioTracks[0]);
 				// TODO would it be enough to do this?
 				//audioTracks[0].enabled = false;
 				audioTracks[0].stop();
@@ -972,9 +972,9 @@ function gotStream2() {
 			}
 
 			const videoTracks = localStream.getVideoTracks();
-			console.log('gotStream2 removeTrack local vid videoTracks.length',videoTracks.length);
+			if(!gentle) console.log('gotStream2 removeTrack local vid videoTracks.length',videoTracks.length);
 			if(videoTracks.length>0) {
-				console.log('videoOff removeTrack local vid',videoTracks[0]);
+				if(!gentle) console.log('videoOff removeTrack local vid',videoTracks[0]);
 				// TODO would it be enough to do this?
 				//videoTracks[0].enabled = false;
 				videoTracks[0].stop();
@@ -1481,7 +1481,7 @@ function dial() {
 		if(!gentle) console.log('onnegotiationneeded');
 		try {
 			// note: this will trigger onIceCandidates and send calleeCandidate's to the client
-			console.log("onnegotiationneeded createOffer");
+			if(!gentle) console.log("onnegotiationneeded createOffer");
 			localDescription = await peerCon.createOffer();
 			localDescription.sdp = maybePreferCodec(localDescription.sdp, 'audio', 'send', "opus");
 			localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
@@ -1489,14 +1489,14 @@ function dial() {
 
 			peerCon.setLocalDescription(localDescription).then(() => {
 				if(doneHangup) {
-					if(!gentle) console.log('# onnegotiationneeded deny send: doneHangup');
+					if(!gentle) console.log('onnegotiationneeded deny send: doneHangup');
 				} else if(!rtcConnect && !dialing) {
-					if(!gentle) console.log('# onnegotiationneeded deny send: !rtcConnect && !dialing');
+					console.log('# onnegotiationneeded deny send: !rtcConnect && !dialing');
 				} else if(dataChannel && dataChannel.readyState=="open") {
-					console.log('onnegotiationneeded send callerOfferUpd via dc');
+					if(!gentle) console.log('onnegotiationneeded send callerOfferUpd via dc');
 					dataChannel.send("cmd|callerOfferUpd|"+JSON.stringify(localDescription));
 				} else {
-					console.log('onnegotiationneeded send callerOffer via ws');
+					if(!gentle) console.log('onnegotiationneeded send callerOffer via ws');
 					wsSend("callerOffer|"+JSON.stringify(localDescription));
 				}
 			}, err => console.error(`Failed to set local descr: ${err.toString()}`));
@@ -1514,7 +1514,7 @@ function dial() {
 
 	peerCon.onicegatheringstatechange = event => {
 		let connection = event.target;
-		console.log("onicegatheringstatechange", connection.iceGatheringState);
+		if(!gentle) console.log("onicegatheringstatechange", connection.iceGatheringState);
 	}
 	peerCon.onsignalingstatechange = event => {
 		if(!gentle) console.log("onsignalingstate", peerCon.signalingState);
@@ -1523,7 +1523,7 @@ function dial() {
 		if(!gentle) console.log("oniceconnectionstate", peerCon.iceConnectionState);
 	}
 	peerCon.onconnectionstatechange = event => {
-		console.log("peerCon connectionstatechange", peerCon.connectionState);
+		if(!gentle) console.log("peerCon connectionstatechange", peerCon.connectionState);
 		if(!peerCon) {
 			hangupWithBusySound(true,"Peer disconnected");
 			return;
@@ -1608,14 +1608,14 @@ function dial() {
 
 	createDataChannel();
 
-	console.log('dial peerCon.createOffer');
+	if(!gentle) console.log('dial peerCon.createOffer');
 	peerCon.createOffer().then((desc) => {
 		localDescription = desc;
 		localDescription.sdp = maybePreferCodec(localDescription.sdp, 'audio', 'send', "opus");
 		localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
 			'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
 		// this localDescription will be sent with upcoming calleeAnswer in response to upcoming callerOffer
-		console.log('dial got localDescription');
+		if(!gentle) console.log('dial got localDescription');
 		if(playDialSounds) {
 			dtmfDialingSound.play().catch(function(error) { });
 		}
@@ -1634,8 +1634,7 @@ function createDataChannel() {
 	dataChannel.onopen = event => {
 		if(!gentle)
 			console.log("dataChannel.onopen",
-				dataChannel.ordered, dataChannel.binaryType,
-				dataChannel.reliable, dataChannel.sctp);
+				dataChannel.ordered, dataChannel.binaryType, dataChannel.reliable, dataChannel.sctp);
 		dataChannel.send("ping");
 		if(dataChannelSendMsg!="") {
 			dataChannel.send("msg|"+dataChannelSendMsg);
@@ -1879,17 +1878,17 @@ function hangup(mustDisconnectCallee,message) {
 
 	if(mustDisconnectCallee && wsConn!=null && wsConn.readyState==1) {
 		// for instance in case we are still ws-connected (if hangup occurs while still "ringing")
-		console.log('hangup wsSend(cancel)');
+		if(!gentle) console.log('hangup wsSend(cancel)');
 		wsSend("cancel|c");
 	}
 	if(wsConn) {
-		console.log('hangup wsConn.close');
+		if(!gentle) console.log('hangup wsConn.close');
 		wsConn.close();
 		wsConn=null;
 	}
 
 	let shutdownFramesFunc = function() {
-		console.log('hangup shutdown remoteAV');
+		if(!gentle) console.log('hangup shutdown remoteAV');
 		remoteVideoFrame.pause();
 		remoteVideoFrame.currentTime = 0;
 		remoteVideoFrame.srcObject = null;
@@ -1911,30 +1910,30 @@ function hangup(mustDisconnectCallee,message) {
 		}
 
 		if(videoEnabled) {
-			console.log("hangup no shutdown localAV bc videoEnabled",videoEnabled);
+			if(!gentle) console.log("hangup no shutdown localAV bc videoEnabled",videoEnabled);
 		} else {
-			console.log("hangup shutdown localAV");
+			if(!gentle) console.log("hangup shutdown localAV");
 			if(localStream) {
 				// stop all localStream tracks
 				localStream.getTracks().forEach(track => {
-					console.log('hangup stop localStream track.stop()',track);
+					if(!gentle) console.log('hangup stop localStream track.stop()',track);
 					track.stop(); 
 				});
 
 				// remove local mic from localStream
 				const audioTracks = localStream.getAudioTracks();
-				console.log('hangup remove local mic audioTracks.length',audioTracks.length);
+				if(!gentle) console.log('hangup remove local mic audioTracks.length',audioTracks.length);
 				if(audioTracks.length>0) {
-					console.log('hangup remove local mic localStream.removeTrack',audioTracks[0]);
+					if(!gentle) console.log('hangup remove local mic localStream.removeTrack',audioTracks[0]);
 					audioTracks[0].stop();
 					localStream.removeTrack(audioTracks[0]);
 				}
 
 				// remove local vid from localStream
 				const videoTracks = localStream.getVideoTracks();
-				console.log('hangup remove local vid videoTracks.length',videoTracks.length);
+				if(!gentle) console.log('hangup remove local vid videoTracks.length',videoTracks.length);
 				if(videoTracks.length>0) {
-					console.log('hangup remove local vid localStream.removeTrack',videoTracks[0]);
+					if(!gentle) console.log('hangup remove local vid localStream.removeTrack',videoTracks[0]);
 					videoTracks[0].stop();
 					localStream.removeTrack(videoTracks[0]);
 				}
@@ -1953,28 +1952,28 @@ function hangup(mustDisconnectCallee,message) {
 	shutdownFramesFunc();
 
 	if(peerCon) {
-		console.log('hangup peerCon');
+		if(!gentle) console.log('hangup peerCon');
 		let peerConCloseFunc = function() {
-			console.log('hangup peerConCloseFunc');
+			if(!gentle) console.log('hangup peerConCloseFunc');
 			if(mustDisconnectCallee /*&& (wsConn==null || wsConn.readyState!=1)*/) {
-				console.log('hangup mustDisconnectCallee');
+				if(!gentle) console.log('hangup mustDisconnectCallee');
 				if(dataChannel && dataChannel.readyState=="open") {
-					console.log('hangup dataChannel send disconnect');
+					if(!gentle) console.log('hangup dataChannel send disconnect');
 					dataChannel.send("disconnect");
 					// give dataChannel disconnect some time to deliver
 					setTimeout(function() {
 						if(dataChannel) {
-							console.log('hangup dataChannel.close');
+							if(!gentle) console.log('hangup dataChannel.close');
 							dataChannel.close();
 							dataChannel = null;
 						}
 
 						const senders = peerCon.getSenders();
 						if(senders) {
-							console.log('hangup peerCon.removeTrack senders',senders.length);
+							if(!gentle) console.log('hangup peerCon.removeTrack senders',senders.length);
 							try {
 								senders.forEach((sender) => {
-									console.log('hangup peerCon.removeTrack sender',sender);
+									if(!gentle) console.log('hangup peerCon.removeTrack sender',sender);
 									peerCon.removeTrack(sender);
 								})
 							} catch(ex) {
@@ -1984,10 +1983,10 @@ function hangup(mustDisconnectCallee,message) {
 
 						const receivers = peerCon.getReceivers();
 						if(receivers) {
-							console.log('hangup peerCon.receivers len=%d',receivers.length);
+							if(!gentle) console.log('hangup peerCon.receivers len=%d',receivers.length);
 							try {
 								receivers.forEach((receiver) => {
-									console.log('hangup receiver.track.stop()',receiver);
+									if(!gentle) console.log('hangup receiver.track.stop()',receiver);
 									const tracks = receiver.track.stop();
 								});
 							} catch(ex) {
@@ -1997,10 +1996,10 @@ function hangup(mustDisconnectCallee,message) {
 
 						const transceivers = peerCon.getTransceivers();
 						if(transceivers) {
-							console.log('hangup peerCon.transceivers len=%d',transceivers.length);
+							if(!gentle) console.log('hangup peerCon.transceivers len=%d',transceivers.length);
 							try {
 								transceivers.forEach((transceiver) => {
-									console.log('hangup peerCon.transceiver stop',transceiver);
+									if(!gentle) console.log('hangup peerCon.transceiver stop',transceiver);
 									transceiver.stop();
 								})
 							} catch(ex) {
@@ -2009,25 +2008,25 @@ function hangup(mustDisconnectCallee,message) {
 						}
 
 						setTimeout(function() {
-							console.log('hangup peerCon.close');
+							if(!gentle) console.log('hangup peerCon.close');
 							peerCon.close();
-							console.log('hangup peerCon.signalingState',peerCon.signalingState); // shd be 'closed'
+							if(!gentle) console.log('hangup peerCon.signalingState',peerCon.signalingState); // shd be 'closed'
 							peerCon = null;
 						},500);
 					},500);
 				}
 			} else {
 				if(dataChannel) {
-					console.log('hangup dataChannel.close');
+					if(!gentle) console.log('hangup dataChannel.close');
 					dataChannel.close();
 					dataChannel = null;
 				}
 
 				// TODO peerCon.getSenders().forEach( peerCon.removeTrack(sender) ) etc like above?
 
-				console.log('hangup peerCon.close 2',calleeID);
+				if(!gentle) console.log('hangup peerCon.close 2',calleeID);
 				peerCon.close();
-				console.log('hangup peerCon.signalingState',peerCon.signalingState); // shd be 'closed'
+				if(!gentle) console.log('hangup peerCon.signalingState',peerCon.signalingState); // shd be 'closed'
 				peerCon = null;
 			}
 		}
@@ -2044,7 +2043,7 @@ function hangup(mustDisconnectCallee,message) {
 			});
 		}
 	} else {
-		console.log('hangup !peerCon');
+		if(!gentle) console.log('hangup !peerCon');
 	}
 
 	setTimeout(function() {
