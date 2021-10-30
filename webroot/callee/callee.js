@@ -1392,8 +1392,6 @@ function hangup() {
 	answerButton.style.display = "none";
 	rejectButton.style.display = "none";
 
-	vsendButton.style.color = "#fff";
-
 	remoteVideoFrame.srcObject = null;
 	remoteVideoDiv.style.visibility = "hidden";
 	remoteVideoDiv.style.height = "0px";
@@ -1413,6 +1411,8 @@ function hangup() {
 
 	connectLocalVideo(true); // stop streaming local video
 	endWebRtcSession(true,true);
+	vmonitor();
+	vsendButton.classList.remove('blink_me')
 
 	if(localStream && !videoEnabled) {
 		if(!gentle) console.log('videoOff clear localStream');

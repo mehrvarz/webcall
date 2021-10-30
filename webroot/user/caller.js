@@ -1754,7 +1754,6 @@ function hangup(mustDisconnectCallee,message) {
 	if(!singlebutton) {
 		msgbox.value = "";
 	}
-	vsendButton.style.color = "#fff";
 
 	if(doneHangup) {
 		if(!gentle) console.log('hangup doneHangup');
@@ -1800,69 +1799,67 @@ function hangup(mustDisconnectCallee,message) {
 		wsConn=null;
 	}
 
-	let shutdownFramesFunc = function() {
-		if(!gentle) console.log('hangup shutdown remoteAV');
-		remoteVideoFrame.pause();
-		remoteVideoFrame.currentTime = 0;
-		remoteVideoFrame.srcObject = null;
-		remoteVideoDiv.style.visibility = "hidden";
-		remoteVideoDiv.style.height = "0px";
-		remoteVideoDiv.style.display = "none";
-		remoteVideoLabel.innerHTML = "remote cam not streaming";
-		remoteVideoLabel.style.color = "#fff";
-		remoteStream = null;
+	if(!gentle) console.log('hangup shutdown remoteAV');
+	remoteVideoFrame.pause();
+	remoteVideoFrame.currentTime = 0;
+	remoteVideoFrame.srcObject = null;
+	remoteVideoDiv.style.visibility = "hidden";
+	remoteVideoDiv.style.height = "0px";
+	remoteVideoDiv.style.display = "none";
+	remoteVideoLabel.innerHTML = "remote cam not streaming";
+	remoteVideoLabel.style.color = "#fff";
+	remoteStream = null;
 
-		if(peerCon) {
-			if(addedAudioTrack) {
-				if(!gentle) console.log("hangup peerCon.removeTrack(addedAudioTrack)");
-				peerCon.removeTrack(addedAudioTrack);
-				addedAudioTrack = null;
-			} else {
-				if(!gentle) console.log("hangup no addedAudioTrack for peerCon.removeTrack()");
-			}
-		}
-
-		if(videoEnabled) {
-			if(!gentle) console.log("hangup no shutdown localAV bc videoEnabled",videoEnabled);
+	if(peerCon) {
+		if(addedAudioTrack) {
+			if(!gentle) console.log("hangup peerCon.removeTrack(addedAudioTrack)");
+			peerCon.removeTrack(addedAudioTrack);
+			addedAudioTrack = null;
 		} else {
-			if(!gentle) console.log("hangup shutdown localAV");
-			if(localStream) {
-				// stop all localStream tracks
-				localStream.getTracks().forEach(track => {
-					if(!gentle) console.log('hangup stop localStream track.stop()',track);
-					track.stop(); 
-				});
-
-				// remove local mic from localStream
-				const audioTracks = localStream.getAudioTracks();
-				if(!gentle) console.log('hangup remove local mic audioTracks.length',audioTracks.length);
-				if(audioTracks.length>0) {
-					if(!gentle) console.log('hangup remove local mic localStream.removeTrack',audioTracks[0]);
-					audioTracks[0].stop();
-					localStream.removeTrack(audioTracks[0]);
-				}
-
-				// remove local vid from localStream
-				const videoTracks = localStream.getVideoTracks();
-				if(!gentle) console.log('hangup remove local vid videoTracks.length',videoTracks.length);
-				if(videoTracks.length>0) {
-					if(!gentle) console.log('hangup remove local vid localStream.removeTrack',videoTracks[0]);
-					videoTracks[0].stop();
-					localStream.removeTrack(videoTracks[0]);
-				}
-			}
-			localVideoFrame.pause();
-			localVideoFrame.currentTime = 0;
-			localVideoFrame.srcObject = null;
-			localVideoDiv.style.display = "none";
-			localStream = null;
+			if(!gentle) console.log("hangup no addedAudioTrack for peerCon.removeTrack()");
 		}
-
-		mediaConnect = false;
-		rtcConnect = false;
 	}
 
-	shutdownFramesFunc();
+	if(videoEnabled) {
+		if(!gentle) console.log("hangup no shutdown localAV bc videoEnabled",videoEnabled);
+	} else {
+		if(!gentle) console.log("hangup shutdown localAV");
+		if(localStream) {
+			// stop all localStream tracks
+			localStream.getTracks().forEach(track => {
+				if(!gentle) console.log('hangup stop localStream track.stop()',track);
+				track.stop(); 
+			});
+
+			// remove local mic from localStream
+			const audioTracks = localStream.getAudioTracks();
+			if(!gentle) console.log('hangup remove local mic audioTracks.length',audioTracks.length);
+			if(audioTracks.length>0) {
+				if(!gentle) console.log('hangup remove local mic localStream.removeTrack',audioTracks[0]);
+				audioTracks[0].stop();
+				localStream.removeTrack(audioTracks[0]);
+			}
+
+			// remove local vid from localStream
+			const videoTracks = localStream.getVideoTracks();
+			if(!gentle) console.log('hangup remove local vid videoTracks.length',videoTracks.length);
+			if(videoTracks.length>0) {
+				if(!gentle) console.log('hangup remove local vid localStream.removeTrack',videoTracks[0]);
+				videoTracks[0].stop();
+				localStream.removeTrack(videoTracks[0]);
+			}
+		}
+		localVideoFrame.pause();
+		localVideoFrame.currentTime = 0;
+		localVideoFrame.srcObject = null;
+		localVideoDiv.style.display = "none";
+		localStream = null;
+	}
+
+	mediaConnect = false;
+	rtcConnect = false;
+	vmonitor();
+	vsendButton.classList.remove('blink_me')
 
 	if(peerCon) {
 		if(!gentle) console.log('hangup peerCon');

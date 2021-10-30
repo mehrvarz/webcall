@@ -655,15 +655,6 @@ function gotStream(stream) {
 	if(!gentle) console.log("gotStream set localVideoFrame");
 	localVideoFrame.srcObject = localStream;
 	localVideoFrame.volume = 0;
-//	var isPlaying = localVideoFrame.currentTime > 0 && !localVideoFrame.paused && !localVideoFrame.ended && localVideoFrame.readyState > localVideoFrame.HAVE_CURRENT_DATA;
-//	if(!isPlaying) {
-//		localVideoFrame.play().catch(function(error) {
-//			if(!gentle) console.log("# localVideoFrame error",error);
-//			// error "The play() request was interrupted by a new load request"
-//			// https://www.mumets.com/host-https-stackoverflow.com/questions/36803176/how-to-prevent-the-play-request-was-interrupted-by-a-call-to-pause-error
-//			if(!gentle) console.log("# localVideoFrame",localVideoFrame.currentTime,localVideoFrame.paused,localVideoFrame.ended,localVideoFrame.readyState,localVideoFrame.HAVE_CURRENT_DATA);
-//		});
-//	}
 	vmonitor();
 	gotStream2();
 }
@@ -678,6 +669,10 @@ function videoSwitch() {
 
 var addLocalVideoEnabled = false; // was sendLocalStream
 function connectLocalVideo(forceOff) {
+	if(vpauseTimer) {
+		clearTimeout(vpauseTimer);
+		vpauseTimer = null;
+	}
 	if(!addLocalVideoEnabled && !forceOff) {
 		// start streaming localVideo to other peer
 		if(dataChannel && dataChannel.readyState=="open") {
@@ -716,27 +711,37 @@ function connectLocalVideo(forceOff) {
 
 var vpauseTimer = null;
 function vmonitor() {
+	if(!gentle) console.log("vmonitor");
+// TODO this does not activate after call disconnect (so a new timer is started)
 	localVideoPaused.innerHTML = "";
-	localVideoFrame.play().catch(function(error) {});
 	vmonitorButton.style.color = "#ff0";
 	vpauseButton.style.color = "#fff";
-	if(!mediaConnect) {
-		vsendButton.style.color = "#fff";
+	if(videoEnabled) {
+		localVideoFrame.play().catch(function(error) {});
+		if(!mediaConnect) {
+			if(!gentle) console.log("vmonitor !mediaConnect");
+			vsendButton.style.color = "#fff";
+			if(vpauseTimer) {
+				clearTimeout(vpauseTimer);
+				vpauseTimer = null;
+			}
+			vpauseTimer = setTimeout(vpauseByTimer, 30000);
+		} else {
+// TODO unpause microphone if necessary
+		}
 	}
-	if(vpauseTimer) {
-		clearTimeout(vpauseTimer);
-		vpauseTimer = null;
-	}
-	vpauseTimer = setTimeout(vpauseByTimer, 20000);
 }
 
 function vpauseByTimer() {
+	if(!gentle) console.log("vpauseByTimer",mediaConnect);
 	if(!mediaConnect) {
 		vpause();
+// TODO also microphone pause, so that there will be no red-tab
 	}
 }
 
 function vpause() {
+	if(!gentle) console.log("vpause");
 	localVideoFrame.pause();
 	vpauseButton.style.color = "#ff0";
 	vmonitorButton.style.color = "#fff";
