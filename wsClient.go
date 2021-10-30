@@ -295,7 +295,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 			}
 		}
 		if countOutdated>0 {
-			fmt.Printf("# %s (id=%s) deleted %d outdated from waitingCallerSlice\n",
+			fmt.Printf("%s (id=%s) deleted %d outdated from waitingCallerSlice\n",
 				c.connType, c.calleeID, countOutdated)
 			err = kvCalls.Put(dbWaitingCaller, c.calleeID, waitingCallerSlice, true) // skipConfirm
 			if err!=nil {
