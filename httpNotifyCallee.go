@@ -217,7 +217,11 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	}
 
 	hubMapMutex.RLock()
-	cli := hubMap[globalID].CalleeClient
+	myhub := hubMap[globalID]
+	var cli *WsClient = nil
+	if myhub!=nil {
+		cli = myhub.CalleeClient
+	}
 	hubMapMutex.RUnlock()
 
 	if calleeIsHiddenOnline {
