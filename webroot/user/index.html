@@ -187,10 +187,10 @@ input[type=submit]:focus {
 }
 @media (min-aspect-ratio: 1/1) {
 	.videoframe-r {
-		width:63%; aspect-ratio:16/9; margin-right:6px; float:left; user-select:none;
+		width:49%; aspect-ratio:16/9; margin-right:6px; float:left; user-select:none;
 	}
 	.videoframe-l {
-		width:33%; aspect-ratio:16/9; margin-right:6px; float:left; user-select:none;
+		width:49%; aspect-ratio:16/9; margin-right:6px; float:left; user-select:none;
 	}
 }
 @media (max-aspect-ratio: 1/1) {
@@ -198,7 +198,7 @@ input[type=submit]:focus {
 		width:99%; aspect-ratio:16/9; user-select:none;
 	}
 	.videoframe-l {
-		width:99%; aspect-ratio:16/9; user-select:none;
+		width:99%; aspect-ratio:16/9; margin-top:8px; user-select:none;
 	}
 }
 .blink_me {
@@ -239,8 +239,19 @@ input[type=submit]:focus {
 	<div id="remoteVideoLabel" style="opacity:0.7;text-align:center;margin-top:-2px;">remote cam not streaming</div>
 </div>
 <div id="localVideoDiv" class="videoframe-l" style="cursor:pointer;visibility:hidden;height:0px;">
-	<video id="localVideoFrame"  style="width:100%;height:100%;background:#111;" _poster="green-gradient.svg" autoplay></video>
-	<div id="localVideoLabel" onclick="connectLocalVideo(false)" style="opacity:0.7;text-align:center;margin-top:-2px;">local cam not streaming</div>
+	<div style="position:relative; display:inline-block; width:100%; height:100%;">
+		<video id="localVideoFrame" onclick="vmonitor()"
+			  style="width:100%;height:100%;background:#111;" _poster="green-gradient.svg" autoplay></video>
+		<span id="localVideoPaused" onclick="vmonitor()" 
+			  style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50% ); text-align:center; color:white; font-weight:bold;">Paused</span>
+	</div>
+	<div id="localVideoLabel" style="opacity:0.7;text-align:center;margin-top:-2px;">
+		<span id="vmonitor" onclick="vmonitor()" style="margin-right:7px">monitor</span>
+		<span id="vpause" onclick="vpause()" style="margin-right:7px">pause</span>
+		<span id="vsend" onclick="connectLocalVideo(false)" style="margin-right:7px">send</span>
+		<!--span id="vres" onclick="vres()" style="margin-right:7px">res</span-->
+		<span id="vclose" onclick="videoSwitch()">close</span>
+	</div>
 </div>
 <div style="clear:both"></div>
 </div>

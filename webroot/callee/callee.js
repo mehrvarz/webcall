@@ -3,7 +3,10 @@
 const avSelect = document.querySelector("select#avSelect");
 const localVideoDiv = document.querySelector('div#localVideoDiv');
 const localVideoFrame = document.querySelector('video#localVideoFrame');
-const localVideoLabel = document.querySelector('div#localVideoLabel');
+const localVideoPaused = document.querySelector('span#localVideoPaused');
+const vmonitorButton = document.querySelector('span#vmonitor');
+const vpauseButton = document.querySelector('span#vpause');
+const vsendButton = document.querySelector('span#vsend');
 const remoteVideoDiv = document.querySelector('div#remoteVideoDiv');
 const remoteVideoFrame = document.querySelector('video#remoteVideoFrame');
 const remoteVideoLabel = document.querySelector('div#remoteVideoLabel');
@@ -36,13 +39,13 @@ const menuSettingsElement = document.getElementById('menuSettings');
 const menuContactsElement = document.getElementById('menuContacts');
 const menuExitElement = document.getElementById('menuExit');
 const cameraElement = document.getElementById('camera');
-const progressSendElement = document.getElementById('progressSend'); // switch on and off
+const progressSendElement = document.getElementById('progressSend');
 const progressSendLabel = document.getElementById('progressSendLabel');
-const progressSendBar = document.getElementById('fileProgressSend'); // actual progress bar
+const progressSendBar = document.getElementById('fileProgressSend');
 const downloadList = document.getElementById('download');
-const progressRcvElement = document.getElementById('progressRcv'); // switch on and off
+const progressRcvElement = document.getElementById('progressRcv');
 const progressRcvLabel = document.getElementById('progressRcvLabel');
-const progressRcvBar = document.getElementById('fileProgressRcv'); // actual progress bar
+const progressRcvBar = document.getElementById('fileProgressRcv');
 const fileselectLabel = document.getElementById("fileselectlabel");
 const bitrate = 280000;
 const neverAudio = false;
@@ -119,7 +122,6 @@ window.onload = function() {
 	}
 	if(!gentle) console.log("calleeID (%s)",calleeID);
 
-	//console.log("document.cookie (%s)",document.cookie);
 	if(calleeID=="") {
 		// if callee was started without a calleeID, reload with calleeID from cookie
 		if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
@@ -139,7 +141,7 @@ window.onload = function() {
 		return;
 	}
 
-	// if on start there is a fragment/hash ('#') in the URL, remove it
+	// remote on start fragment/hash ('#') in URL
 	if(location.hash.length > 0) {
 		if(!gentle) console.log("location.hash.length=%d",location.hash.length);
 		window.location.replace("/callee/"+calleeID);
@@ -155,19 +157,15 @@ window.onload = function() {
 		}
 		if(hashcounter>0 && newhashcounter<hashcounter) {
 			if(iframeWindowOpenFlag) {
-				//if(!gentle) console.log("onhashchange iframeWindowClose");
 				iframeWindowClose();
 			} else if(menuDialogOpenFlag) {
-				//if(!gentle) console.log("onhashchange menuDialogClose");
 				menuDialogClose();
 			}
 		}
 		hashcounter = newhashcounter;
-		//console.log("onhashchange ",hashcounter);
 	}
 
 	document.onkeydown = function(evt) {
-		//console.log('menuDialogOpen onkeydown event');
 		evt = evt || window.event;
 		var isEscape = false;
 		if("key" in evt) {
@@ -182,8 +180,6 @@ window.onload = function() {
 			}	
 		} else if(evt.key=="!") {
 			menuDialogOpen();
-		} else {
-			//console.log('callee key',evt.key);
 		}
 	};
 
@@ -206,41 +202,38 @@ window.onload = function() {
 			if(!gentle) console.log("isHiddenCheckbox checked");
 			autoanswerCheckbox.checked = false;
 		}
-		// report new hidden state to server
 		wsSend("calleeHidden|"+this.checked);
 		setTimeout(historyBack,150);
 	});
+
 	autoanswerCheckbox.addEventListener('change', function() {
 		if(this.checked) {
 			if(!gentle) console.log("autoanswerCheckbox checked");
 			isHiddenCheckbox.checked = false;
-			// report new hidden state to server
 			wsSend("calleeHidden|false");
 		}
 		setTimeout(historyBack,150);
 	});
+
 	fullscreenCheckbox.addEventListener('change', function() {
 		if(this.checked) {
-			// user is requesting fullscreen mode
 			if(!mainElement.fullscreenElement) {
 				// not yet in fullscreen-mode: switch to fullscreen mode
 				if(mainElement.requestFullscreen) {
-					// this will trigger fullscreenchange (below)
+					// trigger fullscreenchange (below)
 					mainElement.requestFullscreen();
 				}
 			}
 		} else {
-			// user is requesting end of fullscreen mode
+			// user is requesting fullscreen exit
 			document.exitFullscreen().catch(err => { });
 		}
 		setTimeout(historyBack,150);
 	});
 	document.addEventListener('fullscreenchange', (event) => {
 		if(document.fullscreenElement) {
-			// we have switched to fullscreen mode
 			fullscreenCheckbox.checked = true;
 		} else {
-			// we have left fullscreen mode
 			fullscreenCheckbox.checked = false;
 		}
 	});
@@ -277,19 +270,10 @@ window.onload = function() {
 
 			calleeID = calleeID.toLowerCase();
 			if(!gentle) console.log('onload calleeID lowercase (%s)',calleeID);
-			if(mode==1) {
-				if(!gentle) console.log('onload pw-entry not required with cookie');
+			if(mode==1 || wsSecret!="") {
+				if(!gentle) console.log('onload pw-entry not required with cookie/wsSecret');
 				// we have a cockie, so no manual pw-entry is needed
-				// but let's turn automatic online off, the user needs to interact before we can answer calls
-				onGotStreamGoOnline = false;
-				goOfflineButton.disabled = true;
-				start();
-				return;
-			}
-			if(wsSecret!="") {
-				if(!gentle) console.log('onload pw-entry not required with wsSecret',wsSecret.length);
-				// we have a pw, so manual pw-entry is not needed
-				// but let's turn automatic go online off, the user needs to interact before we can answer calls
+				// turn automatic online off, user needs to interact before we can answer calls
 				onGotStreamGoOnline = false;
 				goOfflineButton.disabled = true;
 				start();
@@ -321,32 +305,31 @@ function videoOn() {
 	if(!gentle) console.log("videoOn");
 	videoEnabled = true;
 	// enable local video
-	if(peerCon && rtcConnect && addLocalVideoEnabled && localStream.getTracks().length>=2 && !videoSendTrack) {
+	if(peerCon && rtcConnect && addLocalVideoEnabled && localStream.getTracks().length>=2 && !addedVideoTrack) {
 		if(localCandidateType=="relay" || remoteCandidateType=="relay") {
 			if(!gentle) console.log('videoOn no addTrack video on relayed con (%s)(%s)',localCandidateType,remoteCandidateType);
 		} else {
 			if(!gentle) console.log('videoOn addTrack vid',localStream.getTracks()[1]);
-			videoSendTrack = peerCon.addTrack(localStream.getTracks()[1],localStream);
+			addedVideoTrack = peerCon.addTrack(localStream.getTracks()[1],localStream);
 		}
 	}
 	localVideoFrame.srcObject = localStream; // see gotStream()
 	localVideoFrame.volume = 0; // avoid audio feedback
-//	localVideoFrame.load();
-	localVideoFrame.play().catch(function(error) {});
 	localVideoDiv.style.visibility = "visible";
 	localVideoDiv.style.height = "";
-
-	cameraElement.src="camera-select.svg";
+	// start localVideoFrame playback, setup the localVideo pane buttons
+	vmonitor();
+	// now that the localVideo pane is shown, hide the camera icon
+	cameraElement.style.display = "none";
 
 	getStream().then(() => navigator.mediaDevices.enumerateDevices())
 	.then((deviceInfos) => {
 		gotDevices(deviceInfos);
 
-		// now switch to the 1st video option
+		// switch to the 1st video option
 		let optionElements = Array.from(avSelect);
 		if(optionElements.length>0) {
 			if(!gentle) console.log("videoOn avSelect.selectedIndex count",optionElements.length);
-			// pre-select the 1st video device
 			for(let i=0; i<optionElements.length; i++) {
 				if(optionElements[i].text.startsWith("Video")) {
 					avSelect.selectedIndex = i;
@@ -354,15 +337,10 @@ function videoOn() {
 					break;
 				}
 			}
-			// activate the selected device
+			// activate selected device
 			getStream();
 		}
 	});
-
-	if(wsConn) {
-		// TODO tmtmtm must implement this on server side
-		wsSend("enableVideo|"+true); // enableVideoCheckbox.checked);
-	}
 }
 
 function videoOff() {
@@ -372,26 +350,19 @@ function videoOff() {
 
 	localVideoDiv.style.visibility = "hidden";
 	localVideoDiv.style.height = "0px";
-	localVideoLabel.innerHTML = "remote cam not streaming";
-	localVideoLabel.style.color = "#fff";
 	if(localStream) {
-		connectLocalVideo(true); // stop video track (peerCon.removeTrack(videoSendTrack))
+		connectLocalVideo(true); // stop video track (peerCon.removeTrack(addedVideoTrack))
 	}
 
 	if(!rtcConnect) {
 		if(localStream) {
-			if(peerCon && audioSendTrack) {
-				if(!gentle) console.log("videoOff !rtcConnect peerCon.removeTrack(audioSendTrack)");
-// TODO Failed to execute 'removeTrack' on 'RTCPeerConnection': 
-// The sender was not created by this peer connection.
-				peerCon.removeTrack(audioSendTrack);
-				audioSendTrack = null;
+			if(peerCon && addedAudioTrack) {
+				if(!gentle) console.log("videoOff !rtcConnect peerCon.removeTrack(addedAudioTrack)");
+				peerCon.removeTrack(addedAudioTrack);
+				addedAudioTrack = null;
 			}
 
 			if(!gentle) console.log("videoOff !rtcConnect localStream stop");
-//			const audioTracks = localStream.getAudioTracks();
-//			audioTracks[0].enabled = false; // mute mic
-//			localStream.removeTrack(audioTracks[0]);
 			localStream.getTracks().forEach(track => { track.stop(); });
 			localStream = null;
 		}
@@ -415,13 +386,13 @@ function videoOff() {
 		}
 	}
 
-	cameraElement.src="camera.svg";
+	// tmtmtm
+	cameraElement.style.display = "block";
 
-	// now switch to the 1st audio option
+	// switch to the 1st audio option
 	let optionElements = Array.from(avSelect);
 	if(optionElements.length>0) {
 		if(!gentle) console.log("videoOff avSelect.selectedIndex len",optionElements.length);
-		// pre-select the 1st video device
 		for(let i=0; i<optionElements.length; i++) {
 			if(optionElements[i].text.startsWith("Audio")) {
 				avSelect.selectedIndex = i;
@@ -430,17 +401,11 @@ function videoOff() {
 			}
 		}
 		if(rtcConnect) {
-			// activate the selected device
+			// activate selected device
 			if(!gentle) console.log("videoOff rtcConnect getStream()");
 			getStream();
 		}
 	}
-/*
-	if(wsConn) {
-// TODO tmtmtm must implement this on server side
-		wsSend("enableVideo|"+false); // enableVideoCheckbox.checked);
-	}
-*/
 }
 
 function checkServerMode(callback) {
@@ -519,7 +484,6 @@ function clearForm() {
 }
 
 function submitFormDone(theForm) {
-	console.log("submitFormDone",theForm);
 	var valuePw = document.getElementById("current-password").value;
 	if(valuePw.length < 6) {
 		formPw.focus();
@@ -590,9 +554,7 @@ function login(retryFlag) {
 				let api = apiPath+"/getsettings?id="+calleeID;
 				if(!gentle) console.log('login getsettings api',api);
 				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-					//if(!gentle) console.log('login getsettings xhr.responseText',xhr.responseText);
 					if(xhr.responseText!="") {
-						// json parse xhr.responseText
 						let serverSettings = JSON.parse(xhr.responseText);
 						if(typeof serverSettings.nickname!=="undefined") {
 							calleeName = serverSettings.nickname;
@@ -721,7 +683,7 @@ function gotStream2() {
 		pickup2();
 	} else {
 		if(localStream && !videoEnabled && !rtcConnect) {
-			// mute (disable) mic until a call comes in
+			// mute (disable) mic until a call
 			if(!gentle) console.log('gotStream2 disable localStream');
 			localStream.getTracks().forEach(track => { track.stop(); });
 			const audioTracks = localStream.getAudioTracks();
@@ -731,8 +693,6 @@ function gotStream2() {
 		if(onGotStreamGoOnline && !rtcConnect) {
 			if(!gentle) console.log('gotStream2 onGotStreamGoOnline goOnline');
 			goOnline();
-		} else {
-			//if(!gentle) console.log('gotStream2 !onGotStreamGoOnline !goOnline');
 		}
 	}
 }
@@ -777,8 +737,7 @@ function delayedWsAutoReconnect(reconPauseSecs) {
 		showStatus("");
 		// don't proceed if the user has clicked on anything; in particular goOnline
 		if(startPauseDate < lastUserActionDate) {
-			// lastUserActionDate is newer (happened later) than startPauseDate
-			// lastUserActionDate is set by goOnline() and goOffline()
+			// lastUserActionDate (set by goOnline() and goOffline()) is newer (happened later) than startPauseDate
 			// user has initiated goOnline or goOffline, so we stop AutoReconnect
 			wsAutoReconnecting = false;
 			// but if we have a connection now, we don't kill it
@@ -815,7 +774,7 @@ function showOnlineReadyMsg(sessionIdPayload) {
 		let callerURL = window.location.href;
 		callerURL = callerURL.replace("/callee/","/user/");
 		var msg = "";
-		msg +=  'You will receive calls made by this link: <a href="'+callerURL+'" target="_blank">'+callerURL+'</a>';
+		msg += 'You will receive calls made by this link: <a href="'+callerURL+'" target="_blank">'+callerURL+'</a>';
 		showStatus(msg,-1);
 	} else {
 		msgbox.style.display = "none";
@@ -944,15 +903,12 @@ function signalingCommand(message) {
 		}
 		if(cmd=="callerOffer") {
 			if(!gentle) console.log('callerOffer (incoming call)');
-		} else { // "callerOfferUpd"
+		} else {
 			if(!gentle) console.log('callerOfferUpd (in-call)');
 		}
 		callerDescription = JSON.parse(payload);
-// failed to set RemoteDescription DOMException: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': 
-// Failed to set remote answer sdp: Called in wrong state: stable
 		peerCon.setRemoteDescription(callerDescription).then(() => {
 			if(!gentle) console.log('callerOffer createAnswer');
-// DOMException: Cannot create answer in stable
 			peerCon.createAnswer().then((desc) => {
 				localDescription = desc;
 				if(!gentle) console.log('callerOffer in, calleeAnswer out');
@@ -984,10 +940,6 @@ function signalingCommand(message) {
 		callerDescription = JSON.parse(payload);
 
 		if(!gentle) console.log("callerAnswer setLocalDescription");
-// TODO tmtmtm
-// callerAnswer setLocalDescription fail DOMException:
-// Failed to execute 'setLocalDescription' on 'RTCPeerConnection':
-// The SDP does not match the previously generated SDP for this type
 		peerCon.setLocalDescription(localDescription).then(() => {
 			if(!gentle) console.log('callerAnswer setRemoteDescription');
 			peerCon.setRemoteDescription(callerDescription).then(() => {
@@ -1095,7 +1047,7 @@ function signalingCommand(message) {
 					busySignalSound.currentTime = 0;
 				},1000);
 			} else {
-				// caller has canceled the call before connect
+				// caller canceled call before connect
 				showStatus("Canceled");
 			}
 			stopAllAudioEffects();
@@ -1170,15 +1122,15 @@ function signalingCommand(message) {
 		remoteVideoDiv.style.height = "0px";
 		remoteVideoLabel.innerHTML = "remote cam not streaming";
 		remoteVideoLabel.style.color = "#fff";
-
-	} else if(cmd=="ping") {
-	} else if(cmd=="calleeDescriptionUpd") {
-	} else if(cmd=="rtcConnect") {
-	} else if(cmd=="confirm") {
-	} else if(cmd=="stop") {
-	} else if(cmd=="pickup") {
-	} else if(cmd=="calleeCandidate") {
-	} else if(cmd=="calleeDescription") {
+// TODO can be removed?
+//	} else if(cmd=="ping") {
+//	} else if(cmd=="calleeDescriptionUpd") {
+//	} else if(cmd=="rtcConnect") {
+//	} else if(cmd=="confirm") {
+//	} else if(cmd=="stop") {
+//	} else if(cmd=="pickup") {
+//	} else if(cmd=="calleeCandidate") {
+//	} else if(cmd=="calleeDescription") {
 	} else {
 		if(!gentle) console.warn('ignore incom cmd',cmd);
 	}
@@ -1202,8 +1154,6 @@ function showWaitingCallers() {
 		for(let i=0; i<waitingCallerSlice.length; i++) {
 			str += "<tr>"
 			let waitingSecs = timeNowSecs - waitingCallerSlice[i].CallTime;
-			//if(!gentle) console.log('showWaitingCallers %d - %d = %d',
-			//	timeNowSecs,waitingCallerSlice[i].CallTime, waitingSecs);
 			let waitingTimeString = ""+waitingSecs+" sec";
 			if(waitingSecs>50) {
 				waitingTimeString = ""+Math.floor((waitingSecs+10)/60)+" min"
@@ -1221,7 +1171,6 @@ function showWaitingCallers() {
 				"connect</a></td></tr>";
 		}
 		str += "</table>";
-		//if(!gentle) console.log('**** waitingCallerSlice str',str);
 		waitingCallersElement.innerHTML = str;
 		if(waitingCallersTitleElement!=null) {
 			waitingCallersTitleElement.style.display = "block";
@@ -1256,8 +1205,6 @@ function showCallsWhileInAbsence() {
 			return;
 		}
 		missedCallsElement.style.display = "block";
-		//if(!gentle) console.log('showWaitingCallers fkt callsWhileInAbsenceSlice.length',
-		//	callsWhileInAbsenceSlice.length);
 		let timeNowSecs = Math.floor((Date.now()+500)/1000);
 		let str = "<table style='width:100%; border-collapse:separate; border-spacing:6px 2px; line-height:1.5em;'>"
 		for(var i=0; i<callsWhileInAbsenceSlice.length; i++) {
@@ -1293,7 +1240,6 @@ function showCallsWhileInAbsence() {
 			}
 			let callerID = callsWhileInAbsenceSlice[i].CallerID;
 			let callerLink = callerID;
-			//if(!gentle) console.log('callerID.length=%d',callerID.length)
 			if(callerID.length>=5) {
 				// TODO here we could also verify if callerID is a valid calleeID
 				//      and we could check if callerID is currently online
@@ -1304,7 +1250,6 @@ function showCallsWhileInAbsence() {
 					// here we hand over calleeID as URL args
 					// caller.js will try to get nickname from server (using cookie)
 					callerLink = callerLink+"?callerId="+calleeID+"&name="+calleeName;
-
 					// open caller in iframe
 					callerLink = "<a onclick='iframeWindowOpen(\""+callerLink+"\")'>"+callerID+"</a>";
 				}
@@ -1318,7 +1263,6 @@ function showCallsWhileInAbsence() {
 				"delete</a></td>";
 		}
 		str += "</table>"
-		///if(!gentle) console.log('callsWhileInAbsenceSlice str',str);
 		missedCallsElement.innerHTML = str;
 		if(missedCallsTitleElement!=null) {
 			missedCallsTitleElement.style.display = "block";
@@ -1326,9 +1270,7 @@ function showCallsWhileInAbsence() {
 
 		if(showCallsWhileInAbsenceCallingItself) {
 			// already updating itself
-			//if(!gentle) console.log('showCallsWhileInAbsence SKIP calling itself in 10s');
 		} else {
-			//console.log('showCallsWhileInAbsence calling itself in 10s');
 			showCallsWhileInAbsenceCallingItself = true;
 			setTimeout(function() {
 				showCallsWhileInAbsenceCallingItself = false;
@@ -1342,7 +1284,6 @@ function halfShowIpAddr(ipAddr) {
 	let idxFirstDot = ipAddr.indexOf(".");
 	if(idxFirstDot>=0) {
 		let idxSecondDot = ipAddr.substring(idxFirstDot+1).indexOf(".")
-		//console.log('halfShowIpAddr idxSecondDot',idxSecondDot);
 		if(idxSecondDot>=0) {
 			return ipAddr.substring(0,idxFirstDot+1+idxSecondDot+1)+"x.x";
 		}
@@ -1407,31 +1348,18 @@ function pickup2() {
 	if(remoteStream) {
 		if(!gentle) console.log('pickup2 peerCon start remoteVideoFrame');
 		remoteVideoFrame.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
-//		remoteVideoFrame.load();
 		var isPlaying = remoteVideoFrame.currentTime > 0 && !remoteVideoFrame.paused && !remoteVideoFrame.ended && remoteVideoFrame.readyState > remoteVideoFrame.HAVE_CURRENT_DATA;
 		if(!isPlaying) {
 			remoteVideoFrame.play().catch(function(error) {
 				if(!gentle) console.log("# remoteVideoFrame error",error);
 			});
 		}
-/*
-		if(videoEnabled) {
-			remoteVideoDiv.style.visibility = "visible";
-			remoteVideoDiv.style.height = "";
-		}
-	} else {
-		if(!gentle) console.log('pickup2 no remoteStream');
-		if(videoEnabled) {
-			remoteVideoDiv.style.visibility = "hidden";
-			remoteVideoDiv.style.height = "0px";
-		}
-*/
 	}
 
 	// before we send "pickup|!" to caller allow some time for onnegotiation to take place
 	setTimeout(function() {
 		if(!gentle) console.log('pickup2: after short delay send pickup to caller');
-		wsSend("pickup|!") // make caller unmute the remote (our) mic
+		wsSend("pickup|!") // make caller unmute our mic on their side
 
 		answerButton.disabled = true;
 		onlineIndicator.src="red-gradient.svg";
@@ -1445,12 +1373,10 @@ function pickup2() {
 		}
 
 		setTimeout(function() {
-			console.log('full mediaConnect, blink localVideoLabel');
-
 			if(videoEnabled && !addLocalVideoEnabled) {
-				localVideoLabel.innerHTML = "--- local cam not streaming ---";
-				localVideoLabel.classList.add('blink_me');
-				setTimeout(function() {localVideoLabel.classList.remove('blink_me')},8000);
+				console.log('full mediaConnect, blink vsendButton');
+				vsendButton.classList.add('blink_me');
+				setTimeout(function() { vsendButton.classList.remove('blink_me') },8000);
 			}
 
 			peerCon.getStats(null)
@@ -1465,6 +1391,8 @@ function hangup() {
 	console.log("hangup");
 	answerButton.style.display = "none";
 	rejectButton.style.display = "none";
+
+	vsendButton.style.color = "#fff";
 
 	remoteVideoFrame.srcObject = null;
 	remoteVideoDiv.style.visibility = "hidden";
@@ -1507,10 +1435,8 @@ function goOnline() {
 	rtcConnectStartDate = 0;
 	mediaConnectStartDate = 0;
 	if(!gentle) console.log('goOnline',calleeID);
-
-	//console.warn("RTCPeerConnection ICE_config",ICE_config);
-	audioSendTrack = null;
-	videoSendTrack = null;
+	addedAudioTrack = null;
+	addedVideoTrack = null;
 	try {
 		peerCon = new RTCPeerConnection(ICE_config);
 	} catch(ex) {
@@ -1522,8 +1448,8 @@ function goOnline() {
 	peerCon.onicecandidate = e => onIceCandidate(e,"calleeCandidate");
 	peerCon.onicecandidateerror = function(e) {
 		if(e.errorCode==701) {
-			// don't use "warn" on 701 chrome "701 STUN allocate request timed out"
-			if(!gentle) console.log("onicecandidateerror", e.errorCode, e.errorText, e.url);
+			// don't warn on 701 (chrome "701 STUN allocate request timed out")
+			if(!gentle) console.log("# onicecandidateerror", e.errorCode, e.errorText, e.url);
 		} else {
 			if(!gentle) console.warn("onicecandidateerror", e.errorCode, e.errorText, e.url);
 			showStatus("iceCandidate error "+e.errorCode+" "+e.errorText,-1);
@@ -1594,7 +1520,6 @@ function goOnline() {
 				if(!gentle) console.log('goOnline have no dataChannel');
 				createDataChannel();
 			}
-
 
 			if(ringtoneSound!=null) {
 				allAudioEffectsStopped = false;
@@ -1749,8 +1674,10 @@ function createDataChannel() {
 		}
 		dataChannel.onerror = event => {
 			if(rtcConnect) {
-				console.warn("dataChannel.onerror",event);
-				showStatus("dataChannel error "+event.error,-1);	// .message ?
+				console.log("# dataChannel.onerror",event);
+				showStatus("dataChannel error "+event.error,-1);
+//TODO only hangup() if channel closed ?
+				hangup();
 			}
 			progressSendElement.style.display = "none";
 			if(mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
@@ -1791,7 +1718,6 @@ function createDataChannel() {
 						}
 					} else if(event.data.startsWith("cmd|")) {
 						let subCmd = event.data.substring(4);
-						//if(!gentle) console.log("dataChannel.onmessage signaling");
 						signalingCommand(subCmd);
 					} else if(event.data.startsWith("file|")) {
 						var fileDescr = event.data.substring(5);
@@ -1984,8 +1910,6 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 		} else {
 			peerConCloseFunc();
 		}
-	} else {
-		//showStatus("endWebRtcSession already peerDisconnected");
 	}
 
 	if(wsConn)
@@ -2085,7 +2009,6 @@ function menuDialogOpen() {
 		if(!gentle) console.log('# menuDialogOpen menuDialogOpenFlag');
 		return;
 	}
-	//if(!gentle) console.log('menuDialogOpen');
 	menuDialogOpenFlag = true;
 
 	hashcounter++;
@@ -2093,13 +2016,11 @@ function menuDialogOpen() {
 
 	fullScreenOverlayElement.style.display = "block";
 	fullScreenOverlayElement.onclick = function() {
-		//if(!gentle) console.log('menuDialogOpen fullScreenOverlay click');
 		historyBack();
 	}
 	containerElement.style.filter = "blur(0.8px) brightness(60%)";
 	if(wsConn && navigator.cookieEnabled && getCookieSupport()!=null) {
 		// cookies avail, "Settings" and "Exit" allowed
-		//if(!gentle) console.log('menuSettingsElement on (cookies enabled)');
 		if(menuContactsElement) {
 			menuContactsElement.style.display = "block";
 		}
@@ -2110,7 +2031,6 @@ function menuDialogOpen() {
 			menuExit.style.display = "block";
 		}
 	} else {
-		//if(!gentle) console.log('menuSettingsElement off (cookies disabled)');
 		if(menuContactsElement) {
 			menuContactsElement.style.display = "none";
 		}
