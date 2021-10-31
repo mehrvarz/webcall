@@ -1,4 +1,7 @@
 // WebCall Copyright 2021 timur.mobi. All rights reserved.
+//
+// wsHub is a holder for two ws-clients: callee and caller.
+
 package main
 
 import (

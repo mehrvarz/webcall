@@ -1,4 +1,9 @@
 // WebCall Copyright 2021 timur.mobi. All rights reserved.
+//
+// Method serve() is the Websocket handler for http-to-ws upgrade.
+// Method receiveProcess() is the Websocket signaling handler.
+// KeepAliveMgr takes care of keeping ws-clients connected.
+
 package main
 
 import (
