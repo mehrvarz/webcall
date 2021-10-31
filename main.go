@@ -1,4 +1,26 @@
 // WebCall Copyright 2021 timur.mobi. All rights reserved.
+//
+// WebCall server is a signaling server for WebRTC clients.
+// It's main task is to connect two clients, so that they
+// can establish a peer-to-peer connection.
+//
+// main.go calls readConfig(), opens the database files,
+// opens the websocket handlers for ws and wss communication,
+// starts the httpServer(), the turnServer() and a couple of
+// background processes (tickers). It then waits for a 
+// SIGTERM event to start the shutdown procedure.
+//
+// Clients connect via XHR requests and once their role 
+// (caller or callee) has been communicated, they switch to 
+// the websocket protocol.
+// Callee clients are initially managed by httpLogin.go. 
+// Caller clients are managed by httpOnline.go.
+// On successful callee login a wsHub object is created
+// and the callee can receive calls.
+// A wsHub object holds two wsClient objects for callee and
+// caller. When a call comes int, wsClient takes care of the 
+// signaling process.
+
 package main
 
 import (
@@ -362,6 +384,9 @@ func main() {
 	os.Exit(0)
 }
 
+// getStats() creates a string with live info about the number of 
+// callees, callers (the number of current calls), how many are p2p,
+// and the total number of calls and call seconds since midnight
 func getStats() string {
 	var numberOfOnlineCallees int64
 	var numberOfOnlineCallers int64
@@ -393,9 +418,12 @@ func getStats() string {
 	return retStr
 }
 
+// if timeLocationString is specified, operationalNow() will return
+// the current time for the given location
+// this is useful if your server is hosted in a timezone diffrent 
+// than you.
 func operationalNow() time.Time {
 	if timeLocationString!="" {
-		// useful if your server is hosted in another country than you are
 		if timeLocation == nil {
 			loc, err := time.LoadLocation(timeLocationString)
 			if err != nil {
@@ -408,6 +436,8 @@ func operationalNow() time.Time {
 	return time.Now()
 }
 
+// logWantedFor(), together with the logevents config keyword, 
+// allows for topic specific logging
 func logWantedFor(topic string) bool {
 	logeventMutex.RLock()
 	if logeventMap[topic] {
@@ -418,6 +448,9 @@ func logWantedFor(topic string) bool {
 	return false
 }
 
+// readConfig() supports two types of config keywords
+// those that are only evaluated once during startup (see "init")
+// and those that are evaluated every time readConfig() is called
 func readConfig(init bool) {
 	//fmt.Printf("readConfig '%s' ...\n", configFileName)
 	configIni, err := ini.LoadSources(ini.LoadOptions{IgnoreInlineComment: true,},configFileName)
@@ -489,6 +522,9 @@ func readConfig(init bool) {
 	readConfigLock.Unlock()
 }
 
+// readStatsFile() reads a file "stats.ini" in which some information
+// ("numberOfCallsToday". "numberOfCallSecondsToday", "lastCurrentDayOfMonth")
+// is kept persisted, so that this info is still available after a restart
 func readStatsFile() {
 	statsIni, err := ini.Load(statsFileName)
 	if err != nil {
@@ -548,6 +584,7 @@ func readStatsFile() {
 	}
 }
 
+// writeStatsFile() writes the file read by readStatsFile()
 func writeStatsFile() {
 	filename := statsFileName
 	os.Remove(filename)

@@ -1,4 +1,23 @@
 // WebCall Copyright 2021 timur.mobi. All rights reserved.
+//
+// WebCall server will send push notifications to callees
+// if they have specified such channels and if they are not online 
+// at the time of a call (or are hidden). Push notifications can be 
+// sent via WebPush and/or Twitter.
+//
+// httpCanbenotified() is called via XHR "/rtcsig/canbenotified".
+// This method checks if the specified callee has at least one 
+// push channel configured. If this is the case, an "OK" string 
+// is returned to the requesting client.
+//
+// httpNotifyCallee() is called via XHR "/rtcsig/notifyCallee".
+// This method is used if the specified callee can be notified, 
+// if the caller wants a push notification to be sent and is willing 
+// to wait for the callee to come online. 
+// httpNotifyCallee() will send the actual push message and will keep 
+// the caller online until the callee picks up the call, or until the 
+// caller disconnects.
+
 package main
 
 import (
@@ -366,7 +385,6 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 	}
 	calleeName := dbUser.Name
 
-	// urlID is a paying user
 	// remoteAddrWithPort of incoming call
 	caller := CallerInfo{remoteAddrWithPort,"unknown",time.Now().Unix(),""}
 

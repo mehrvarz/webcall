@@ -1,4 +1,13 @@
 // WebCall Copyright 2021 timur.mobi. All rights reserved.
+//
+// httpOnline() is called by callers via XHR "/rtcsig/online". 
+// httpAvail() is called via XHR "/rtcsig/avail".
+// httpNewId() is called via XHR "/rtcsig/newid".
+// httpRegister() is called via XHR "/rtcsig/register".
+//
+// These methods provide the functionality for callees to 
+// register new accounts. And for callers to call callees.
+
 package main
 
 import (

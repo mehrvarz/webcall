@@ -1,4 +1,15 @@
 // WebCall Copyright 2021 timur.mobi. All rights reserved.
+//
+// httpLogin() is called by callees via XHR "/rtcsig/login". 
+// httpLogin() makes sure that the given urlID and password 
+// (or the stored cookie) are the same as during registration.
+// Cookie support is not required for a successful login.
+// If cookies are supported by the client, a cookie is stored
+// to allow for convenient reconnect. On successful login, the 
+// callee client will receive a responseString in the form of 
+// "wss://(hostname):(wssPort)/ws|other|parameters|...|..."
+// with which the websocket connection can be established.
+
 package main
 
 import (
@@ -217,9 +228,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			}
 
 			// mark calleeID as busy for a while
-			// 1. so that nobody calls the next guy trying to call the prev guy
-			// 2. so that noone else can pay-subscribe this id but the same guy with the same ip?
-			// 3. so that non-paying subscriber don't get to keep the same ID
 			if rtcdb != "" {
 				err := kvMain.Put(dbBlockedIDs, urlID,
 					DbEntry{dbEntry.StartTime, remoteAddr, ""}, true) // skipConfirm

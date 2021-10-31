@@ -1,4 +1,15 @@
 // WebCall Copyright 2021 timur.mobi. All rights reserved.
+//
+// These methods enable callees to read and modify their 
+// callee specific settings. As well as read and modify their
+// contacts.
+//
+// httpGetSettings() is called via XHR "/rtcsig/getsettings".
+// httpSetSettings() is called via XHR "/rtcsig/setsettings".
+// httpGetContacts() is called via XHR "/rtcsig/getcontacts".
+// httpSetContacts() is called via XHR "/rtcsig/setcontact".
+// httpDeleteContact() is called via XHR "/rtcsig/deletecontact".
+
 package main
 
 import (
