@@ -8,7 +8,7 @@ function maybePreferCodec(sdp, type, dir, codec) {
 		return sdp;
 	}
 	// "prefer audio send codec: opus"
-	console.log(`prefer ${str}: ${codec}`);
+	//console.log(`prefer ${str}: ${codec}`);
 	const sdpLines = sdp.split('\r\n');
 	// Search for m line.
 	const mLineIndex = findLine(sdpLines, 'm=', type);

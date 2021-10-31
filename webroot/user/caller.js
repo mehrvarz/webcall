@@ -1,14 +1,27 @@
 // WebCall Copyright 2021 timur.mobi. All rights reserved.
 'use strict';
-const audioSelect = document.querySelector("select#audioSource");
 const dialButton = document.querySelector('button#callButton');
 const hangupButton = document.querySelector('button#hangupButton');
 const calleeOnlineElement = document.getElementById("calleeOnline");
-const remoteAudio = document.querySelector('audio#remoteAudio');
+
+const avSelect = document.querySelector("select#avSelect");
+const localVideoDiv = document.querySelector('div#localVideoDiv');
+const localVideoFrame = document.querySelector('video#localVideoFrame');
+const localVideoPaused = document.querySelector('span#localVideoPaused');
+const vmonitorButton = document.querySelector('span#vmonitor');
+const vpauseButton = document.querySelector('span#vpause');
+const vsendButton = document.querySelector('span#vsend');
+const remoteVideoDiv = document.querySelector('div#remoteVideoDiv');
+const remoteVideoFrame = document.querySelector('video#remoteVideoFrame');
+const remoteVideoLabel = document.querySelector('div#remoteVideoLabel');
+
 const iframeWindowElement = document.getElementById('iframeWindow');
-const mainElement = document.getElementById('container');
+const fullscreenCheckbox = document.querySelector('input#fullscreen');
+const mainElement = document.getElementById('main');
+const containerElement = document.getElementById('container');
 const menuElement = document.getElementById('menu');
 const menuDialogElement = document.getElementById('menuDialog');
+const cameraElement = document.getElementById('camera');
 const fullScreenOverlayElement = document.getElementById('fullScreenOverlay');
 const progressSendElement = document.getElementById('progressSend'); // switch on and off
 const progressSendLabel = document.getElementById('progressSendLabel');
@@ -22,6 +35,7 @@ const bitrate = 280000;
 const neverAudio = false;
 const playDialSounds = true;
 
+var videoEnabled = false;
 var connectingText = "Connecting...";
 var singleButtonReadyText = "Click to make your order<br>Live operator";
 var singleButtonBusyText = "All lines are busy.<br>Please try again a little later.";
@@ -29,6 +43,7 @@ var singleButtonConnectedText = "You are connected.<br>How can we help you?";
 var ringingText = "Ringing... please be patient, answering a web call may take a bit longer than answering a regular phone call...";
 var dtmfDialingSound = null;
 var dialToneAfterDialingSound = null;
+var pickupAfterLocalStream = false; // not used in caller
 var busySignalSound = null;
 var notificationSound = null;
 var wsConn = null;
@@ -36,7 +51,6 @@ var peerCon = null;
 var localDescription = null;
 var localStream = null;
 var remoteStream = null;
-var hostDescription = null;
 var dialing = false;
 var rtcConnect = false;
 var rtcConnectStartDate = 0;
@@ -46,7 +60,6 @@ var dataChannel = null;
 var doneHangup = false;
 var dialAfterLocalStream = false;
 var dialAfterCalleeOnline = false;
-var onnegotiationneededAllowed = false;
 var lastResult;
 var candidateArray = [];
 var candidateResultGenerated = true;
@@ -114,9 +127,11 @@ window.onload = function() {
 	}
 	if(calleeID=="") {
 		if(!gentle) console.log("onload no calleeID abort");
-		let myMainElement = document.getElementById('container')
-		let mainParent = myMainElement.parentNode;
-		mainParent.removeChild(myMainElement);
+//		let myMainElement = document.getElementById('container')
+//		let mainParent = myMainElement.parentNode;
+//		mainParent.removeChild(myMainElement);
+		let mainParent = containerElement.parentNode;
+		mainParent.removeChild(containerElement);
 		var msgElement = document.createElement("div");
 		msgElement.style = "margin-top:15%; display:flex; flex-direction:column; align-items:center; "+
 						   "justify-content:center; text-align:center; font-size:1.2em; line-height:1.5em;";
@@ -179,6 +194,46 @@ window.onload = function() {
 		//console.log("onhashchange ",hashcounter);
 	}
 
+	localVideoFrame.onresize = function() {
+		if(videoEnabled && localVideoFrame.videoWidth>10 && localVideoFrame.videoHeight>10) {
+			if(!gentle) console.log('local video size changed',
+				localVideoFrame.videoWidth, localVideoFrame.videoHeight);
+		}
+	}
+
+	remoteVideoFrame.onresize = function() {
+		if(videoEnabled && remoteVideoFrame.videoWidth>10 && remoteVideoFrame.videoHeight>10) {
+			if(!gentle) console.log('remote video size changed',
+				remoteVideoFrame.videoWidth, remoteVideoFrame.videoHeight);
+		}
+	}
+
+	fullscreenCheckbox.addEventListener('change', function() {
+		if(this.checked) {
+			// user is requesting fullscreen mode
+			if(!mainElement.fullscreenElement) {
+				// not yet in fullscreen-mode: switch to fullscreen mode
+				if(mainElement.requestFullscreen) {
+					// this will trigger fullscreenchange (below)
+					mainElement.requestFullscreen();
+				}
+			}
+		} else {
+			// user is requesting end of fullscreen mode
+			document.exitFullscreen().catch(err => { });
+		}
+		setTimeout(historyBack,150);
+	});
+	document.addEventListener('fullscreenchange', (event) => {
+		if(document.fullscreenElement) {
+			// we have switched to fullscreen mode
+			fullscreenCheckbox.checked = true;
+		} else {
+			// we have left fullscreen mode
+			fullscreenCheckbox.checked = false;
+		}
+	});
+
 	document.onkeydown = function(evt) {
 		//console.log('menuDialogOpen onkeydown event');
 		evt = evt || window.event;
@@ -214,7 +269,7 @@ window.onload = function() {
 			}
 
 			if(!gentle) console.log('start caller with calleeID',calleeID);
-			audioSelect.onchange = getStream;
+			avSelect.onchange = getStream;
 
 			// we need to know if calleeID is online asap (will switch to callee-online-layout if it is)
 			dialAfterCalleeOnline = false;
@@ -254,7 +309,6 @@ window.onload = function() {
 					} else {
 						dialButton.disabled = true;
 						hangupButton.disabled = false;
-						audioSelect.disabled = true;
 						msgbox.style.display = "none";
 					}
 
@@ -283,9 +337,11 @@ window.onload = function() {
 		}
 		if(mode==1) {
 			// maintenance mode
-			let myMainElement = document.getElementById('container')
-			let mainParent = myMainElement.parentNode;
-			mainParent.removeChild(myMainElement);
+//			let myMainElement = document.getElementById('container')
+//			let mainParent = myMainElement.parentNode;
+//			mainParent.removeChild(myMainElement);
+			let mainParent = containerElement.parentNode;
+			mainParent.removeChild(containerElement);
 			var msgElement = document.createElement("div");
 			msgElement.style = "margin-top:15%; display:flex; flex-direction:column; align-items:center; "+
 							   "justify-content:center; text-align:center; font-size:1.2em; line-height:1.5em;";
@@ -295,6 +351,147 @@ window.onload = function() {
 			return;
 		}
 	});
+}
+
+function videoOn() {
+	// enable local video
+	if(!gentle) console.log("videoOn");
+	videoEnabled = true;
+
+	// add localStream video-track to peerCon
+	if(peerCon && rtcConnect && addLocalVideoEnabled && localStream.getTracks().length>=2 && !addedVideoTrack) {
+		if(localCandidateType=="relay" || remoteCandidateType=="relay") {
+			if(!gentle) console.log('videoOn no addTrack vid on relayed con (%s)(%s)',localCandidateType,remoteCandidateType);
+		} else {
+			console.log('videoOn addTrack local video input',localStream.getTracks()[1]);
+			addedVideoTrack = peerCon.addTrack(localStream.getTracks()[1],localStream);
+		}
+	}
+
+	// activate localStream in localVideoFrame
+	localVideoFrame.volume = 0; // avoid audio feedback
+	localVideoDiv.style.visibility = "visible";
+	localVideoDiv.style.height = "";
+	localVideoDiv.style.display = "block";
+	// start localVideoFrame playback, setup the localVideo pane buttons
+	vmonitor();
+	// now that the localVideo pane is shown, hide the camera icon
+	cameraElement.style.display = "none";
+
+	// switch avSelect.selectedIndex to 1st video option
+	getStream().then(() => navigator.mediaDevices.enumerateDevices()).then((deviceInfos) => {
+		gotDevices(deviceInfos);
+		let optionElements = Array.from(avSelect);
+		if(!gentle) console.log("videoOn avSelect.selectedIndex len",optionElements.length);
+		if(optionElements.length>0) {
+			for(let i=0; i<optionElements.length; i++) {
+				if(optionElements[i].text.startsWith("Video")) {
+					avSelect.selectedIndex = i;
+					if(!gentle) console.log("videoOn avSelect.selectedIndex set",i);
+					break;
+				}
+			}
+		}
+	});
+}
+
+function videoOff() {
+	// disable local video (but if rtcConnect, keep local mic on)
+	if(!gentle) console.log("videoOff");
+	videoEnabled = false;
+
+	// hide localVideoFrame and stop streaming video track
+	localVideoDiv.style.visibility = "hidden";
+	localVideoDiv.style.height = "0px";
+	if(localStream) {
+		connectLocalVideo(true); // stop streaming video track
+	}
+
+	if(!rtcConnect) {
+		if(localStream) {
+			// remove audio track from peerCon (stop streaming local audio)
+			if(peerCon && addedAudioTrack) {
+				if(!gentle) console.log("videoOff !rtcConnect peerCon.removeTrack(addedAudioTrack)");
+				peerCon.removeTrack(addedAudioTrack);
+				addedAudioTrack = null;
+			}
+
+			const audioTracks = localStream.getAudioTracks();
+			if(!gentle) console.log('videoOff removeTrack local mic audioTracks.length',audioTracks.length);
+			if(audioTracks.length>0) {
+				if(!gentle) console.log('videoOff removeTrack local mic',audioTracks[0]);
+				// TODO would it be enough to do this?
+				audioTracks[0].enabled = false;
+				audioTracks[0].stop();
+				localStream.removeTrack(audioTracks[0]);
+			}
+
+			const videoTracks = localStream.getVideoTracks();
+			if(!gentle) console.log('videoOff removeTrack local vid videoTracks.length',videoTracks.length);
+			if(videoTracks.length>0) {
+				if(!gentle) console.log('videoOff removeTrack local vid',videoTracks[0]);
+				// TODO would it be enough to do this?
+				videoTracks[0].enabled = false;
+				videoTracks[0].stop();
+				localStream.removeTrack(videoTracks[0]);
+			}
+
+			// stop all localStream tracks
+			const allTracks = localStream.getTracks();
+			if(!gentle) console.log("videoOff !rtcConnect localStream stop len",allTracks.length);
+			allTracks.forEach(track => {
+				if(!gentle) console.log('videoOff local track.stop()',track);
+				track.stop(); 
+			});
+		}
+
+		// hide and fully deacticate localVideoFrame
+		if(!gentle) console.log("videoOff !rtcConnect shutdown localVideo");
+		localVideoFrame.pause();
+		localVideoFrame.currentTime = 0;
+		localVideoFrame.srcObject = null;
+		localVideoDiv.style.display = "none";
+		localStream = null;
+
+		// hide and fully deacticate remoteVideoFrame + remoteStream
+		if(!gentle) console.log("videoOff !rtcConnect shutdown remoteVideo");
+		remoteVideoFrame.pause();
+		remoteVideoFrame.currentTime = 0;
+		remoteVideoFrame.srcObject = null;
+		remoteVideoDiv.style.visibility = "hidden";
+		remoteVideoDiv.style.height = "0px";
+		remoteVideoDiv.style.display = "none";
+		remoteVideoLabel.innerHTML = "remote cam not streaming";
+		remoteVideoLabel.style.color = "#fff";
+		remoteStream = null;
+
+		// log state of dataChannel
+		if(dataChannel) {
+			if(!gentle) console.log("videoOff !rtcConnect dataChannel state:",dataChannel.readyState);
+			//dataChannel = null;
+		}
+	}
+
+	// now that the localVideo pane is hidden, show the camera icon
+	cameraElement.style.display = "block";
+
+	// switch to the 1st/default audio device
+	let optionElements = Array.from(avSelect);
+	if(optionElements.length>0) {
+		if(!gentle) console.log("videoOff avSelect.selectedIndex len",optionElements.length);
+		// pre-select the 1st video device
+		for(let i=0; i<optionElements.length; i++) {
+			if(optionElements[i].text.startsWith("Audio")) {
+				avSelect.selectedIndex = i;
+				if(!gentle) console.log("videoOff avSelect.selectedIndex set",i);
+				break;
+			}
+		}
+		if(rtcConnect) {
+			// if still peer connected, activate the selected audio device
+			getStream();
+		}
+	}
 }
 
 function checkServerMode(callback) {
@@ -338,7 +535,6 @@ function checkCalleeOnline() {
 	xhrTimeout = 30*1000;
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 		calleeOnlineStatus(xhr.responseText);
-		//setTimeout(checkCalleeOnline,30000);
 	}, errorAction
 		// errorAction will switch back; if we don't want this we should handle err like in notifyConnect()
 	);
@@ -353,8 +549,35 @@ function calleeOnlineStatus(onlineStatus) {
 	if(!gentle) console.log('calleeOnlineStatus',onlineStatus);
 	// wsAddr should be something like "127.0.0.1:8071?wsid=4054932942"
 	if(onlineStatus!="" && onlineStatus.indexOf("wsid=")>=0) {
-		// callee is available
-		wsAddr = onlineStatus;
+		// callee is available/online
+		let tok = onlineStatus.split("|");
+		wsAddr = tok[0];
+/*
+		var calleeVideo = false;
+		for(var i=1; i<tok.length; i++) {
+			let tok2 = tok[i].split("=");
+			if(tok2.length>1) {
+				var cmd = tok2[0];
+				var val = tok2[1];
+				console.log('calleeOnlineStatus cmd=%s val=%s',cmd,val);
+				if(cmd=="video") {
+					if(val=="true" || val=="on") {
+						calleeVideo = true;
+					}
+				}
+			}
+		}
+		if(calleeVideo) {
+			// enable tv icon
+			cameraElement.style.display = "block";
+			setTimeout(videoOn,500);
+		} else {
+			// disable tv icon (leave it disabled)
+			cameraElement.style.display = "none";
+		}
+
+		cameraElement.style.display = "block";
+*/
 		if(singlebutton) {
 			// enable parent iframe (height)
 			if(iframeParent) {
@@ -368,8 +591,9 @@ function calleeOnlineStatus(onlineStatus) {
 		calleeOnlineAction("checkCalleeOnline");
 		return;
 	}
+
 	// callee is not available
-	// TODO here we could act upon "busy" and "notavail"
+	// TODO here we could act on "busy" and "notavail"
 
 	if(singlebutton) {
 		// no free callee available (aka "all lines busy")
@@ -389,7 +613,6 @@ function calleeOnlineStatus(onlineStatus) {
 
 	dialButton.disabled = false;
 	hangupButton.disabled = true;
-	audioSelect.disabled = false;
 	if(!neverAudio) {
 		if(!localStream) {
 			// we need to call mediaDevices.enumerateDevices() anyway
@@ -421,13 +644,13 @@ function calleeOnlineAction(from) {
 		}
 	}
 
-	// switch to callee-is-online layout
+	// switch to callee-is-online layout (call and hangupButton)
 	calleeOnlineElement.style.display = "block";
 	if(!singlebutton) {
 		calleeOfflineElement.style.display = "none";
 	}
 
-	// now that we know callee is online, we lazy load adapter-latest.js
+	// now that we know callee is online, we load adapter-latest.js
 	loadJS("adapter-latest.js",function(){
 		if(!navigator.mediaDevices) {
 			console.warn("navigator.mediaDevices not available");
@@ -445,12 +668,12 @@ function calleeOnlineAction(from) {
 			// normally set by gotStream, if dialAfterLocalStream was set (by dialButton.onclick)
 			dialAfterCalleeOnline = false;
 			if(localStream || neverAudio) {
-				connectSignaling("",dial);
+				connectSignaling("",dial); 
 			} else {
-				console.log('calleeOnlineAction dialAfterLocalStream');
+				if(!gentle) console.log('calleeOnlineAction dialAfter');
 				dialAfterLocalStream = true;
 				getStream().then(() => navigator.mediaDevices.enumerateDevices()).then(gotDevices);
-				// also -> gotStream -> connectSignalling
+				// also -> gotStream -> connectSignaling
 			}
 		} else {
 			// no autodial after we detected callee is online
@@ -711,106 +934,52 @@ function errorAction(errString,errcode) {
 	}
 }
 
-function getStream() {
-	if(neverAudio) {
-		if(dialAfterLocalStream) {
-			dialAfterLocalStream=false;
-			console.log("getStream neverAudio -> dialAfterCalleeOnline");
-			gotStream(); // pretend
-		}
-		return
-	}
-
-	if(localStream) {
-		localStream.getTracks().forEach(track => { track.stop(); });
-	}
-
-	let supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
-	if(!gentle) console.log('getStream supportedConstraints',supportedConstraints);
-
-	const audioSource = audioSelect.value;
-	const constraints = {
-		audio: {
-			deviceId: audioSource ? {exact: audioSource} : undefined,
-			noiseSuppression: true,  // true by default
-			echoCancellation: true,  // true by default
-			autoGainControl: false,
-		}
-	};
-	if(!gentle) console.log('getStream getUserMedia',constraints,audioSource);
-	return navigator.mediaDevices.getUserMedia(constraints)
-		.then(gotStream)
-		.catch(function(err) {
-			// "Permissions policy violation: microphone is not allowed in this document"
-			// happens if caller.js is invoked via insecure http:, so we remove the buttons
-			dialButton.style.display = "none";
-			hangupButton.style.display = "none";
-			console.error('no audio input device found', err);
-			if(singlebutton) {
-				//alert("No audio input device found\n"+err);
-			} else {
-				showStatus("No audio input device found<br>"+err,-1);
-			}
-		});
-}
-
-function gotDevices(deviceInfos) {
-	if(!gentle) console.log('gotDevices',deviceInfos);
-	for(const deviceInfo of deviceInfos) {
-		const option = document.createElement('option');
-		option.value = deviceInfo.deviceId;
-		if(deviceInfo.kind === 'audioinput') {
-			let deviceInfoLabel = deviceInfo.label;
-			if(!gentle) console.log('gotDevices deviceInfoLabel',deviceInfoLabel);
-			if(deviceInfoLabel=="Default") {
-				deviceInfoLabel="Default Audio Input";
-			}
-			option.text = deviceInfoLabel || `Microphone ${audioSelect.length + 1}`;
-			var exists=false
-			var length = audioSelect.options.length;
-			for(var i = length-1; i >= 0; i--) {
-				if(audioSelect.options[i].text == option.text) {
-					exists=true; // don't add again
-					break;
-				}
-			}
-			if(!exists) {
-				audioSelect.appendChild(option);
-			}
-			//console.log('audioinput',option);
-		} else if (deviceInfo.kind === 'videoinput') {
-			// ignore
-		} else if (deviceInfo.kind === "audioouput") {
-			// ignore
-		}
-	}
-}
-
-function gotStream(stream) {
-	if(!gentle) console.log('gotStream -> set localStream', stream.getAudioTracks()[0].label);
-	localStream = stream;
-	audioSelect.selectedIndex = [...audioSelect.options].
-		findIndex(option => option.text === stream.getAudioTracks()[0].label);
-	if(audioSelect.selectedIndex<0) {
-		audioSelect.selectedIndex = 0; // TODO this doesn't seem to work?
-	}
-	if(!gentle) {
-		console.log('gotStream selectedIndex',audioSelect.selectedIndex);
-		stream.getTracks().forEach(function(track) {
-			console.log("gotStream track.getSettings",track.getSettings());
-	    })
-	}
-
+function gotStream2() {
 	if(dialAfterLocalStream) {
-		if(!gentle) console.log("gotStream dialAfterLocalStream");
+		if(!gentle) console.log("gotStream2 dialAfter connectSignaling()");
 		dialAfterLocalStream=false;
 		connectSignaling("",dial);
-	} else if(localStream) {
-		// disable local mic until we start dialing
-		localStream.getTracks().forEach(track => { track.stop(); });
-		const audioTracks = localStream.getAudioTracks();
-		localStream.removeTrack(audioTracks[0]);
-		localStream = null;
+	} else {
+		// in caller we land here after video was enabled
+		if(!gentle) console.log("gotStream2 !dialAfter");
+
+		if(videoEnabled) {
+			if(!gentle) console.log("gotStream2 videoEnabled: no mute mic until dial");
+		} else if(!localStream) {
+			if(!gentle) console.log("# gotStream2 !localStream: no mute mic until dial");
+		} else if(rtcConnect) {
+			if(!gentle) console.log("gotStream2 rtcConnect: no mute mic until dial");
+		} else {
+			if(!gentle) console.log("gotStream2 mute mic until dial");
+
+			// disable local mic until we start dialing
+			localStream.getTracks().forEach(track => {
+				if(!gentle) console.log('gotStream2 local mic track.stop()',track);
+				track.stop(); 
+			});
+
+			const audioTracks = localStream.getAudioTracks();
+			if(!gentle) console.log('gotStream2 removeTrack local mic audioTracks.length',audioTracks.length);
+			if(audioTracks.length>0) {
+				if(!gentle) console.log('gotStream2 removeTrack local mic',audioTracks[0]);
+				// TODO would it be enough to do this?
+				//audioTracks[0].enabled = false;
+				audioTracks[0].stop();
+				localStream.removeTrack(audioTracks[0]);
+			}
+
+			const videoTracks = localStream.getVideoTracks();
+			if(!gentle) console.log('gotStream2 removeTrack local vid videoTracks.length',videoTracks.length);
+			if(videoTracks.length>0) {
+				if(!gentle) console.log('videoOff removeTrack local vid',videoTracks[0]);
+				// TODO would it be enough to do this?
+				//videoTracks[0].enabled = false;
+				videoTracks[0].stop();
+				localStream.removeTrack(videoTracks[0]);
+			}
+
+			localStream = null;
+		}
 	}
 }
 
@@ -846,250 +1015,15 @@ function connectSignaling(message,openedFunc) {
 			console.log('ws message sent');
 		}
 		if(openedFunc) {
-			openedFunc();
+			openedFunc(); // dial()
 		}
 	};
 	wsConn.onmessage = function (evt) {
 		var messages = evt.data.split('\n');
 		for (var i = 0; i < messages.length; i++) {
-			let tok = messages[i].split("|");
-			if(tok.length==2) {
-				let cmd = tok[0];
-				let payload = tok[1];
-
-				if(cmd=="calleeDescription") {
-					if(!peerCon) {
-						console.warn('calleeDescription abort no peerCon');
-						continue;
-					}
-					hostDescription = JSON.parse(payload);
-
-					if(!gentle) console.log("cmd calleeDescription setLocalDescription");
-					peerCon.setLocalDescription(localDescription).then(() => {
-						if(!gentle) console.log('cmd hostDescription setRemoteDescription');
-						peerCon.setRemoteDescription(hostDescription).then(() => {
-							if(!gentle) console.log('cmd hostDescription setRemoteDescription done');
-						}, err => {
-							console.warn(`hostDescription Failed to set RemoteDescription`,err)
-							showStatus("Cannot set remoteDescr "+err);
-						});
-					}, err => {
-						console.warn("hostDescription setLocalDescription fail",err)
-						showStatus("Cannot set localDescr"+err);
-					});
-
-				} else if(cmd=="calleeDescriptionUpd") {
-					hostDescription = JSON.parse(payload);
-					console.log('cmd calleeDescriptionUpd setRemoteDescription');
-					peerCon.setRemoteDescription(hostDescription).then(() => {
-						if(!gentle) console.log('cmd calleeDescriptionUpd setRemoteDescription done');
-
-						if(hostDescription.type == "offer") {
-							console.log('cmd calleeDescriptionUpd received offer createAnswer');
-							peerCon.createAnswer().then((desc) => {
-								localDescription = desc;
-								console.log('calleeDescriptionUpd got localDescription');
-								localDescription.sdp =
-									maybePreferCodec(localDescription.sdp, 'audio', 'send', "opus");
-								localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
-									'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
-								peerCon.setLocalDescription(localDescription).then(() => {
-									if(!gentle) console.log('calleeDescriptionUpd localDescription set -> signal');
-									wsSend("callerDescriptionUpd|"+JSON.stringify(localDescription));
-								}, err => console.error(`Failed to set local descr: ${err.toString()}`));
-							}, err => {
-								console.warn(`Failed to createAnswer`,err)
-								showStatus("Failed to createAnswer",8000);
-							});
-						} else {
-							console.log('cmd calleeDescriptionUpd received no offer');
-						}
-
-					}, err => {
-						console.warn(`calleeDescriptionUpd failed to setRemoteDescription`,err)
-						showStatus("Cannot set remoteDescr "+err);
-					});
-
-				} else if(cmd=="calleeCandidate") {
-					if(!peerCon) {
-						console.warn('cmd calleeCandidate abort no peerCon');
-						hangupWithBusySound(true,"calleeCandidate lost peerCon");
-						break;
-					}
-					var calleeCandidate = JSON.parse(payload);
-					// fix for: AddIceCandidate fail OperationError: Unknown ufrag
-					// see: https://stackoverflow.com/questions/61292934/webrtc-operationerror-unknown-ufrag
-					calleeCandidate.usernameFragment = null;
-
-					var addIceCalleeCandidate = function(calleeCandidate) {
-						if(calleeCandidate.candidate==null) {
-							if(!gentle) console.warn('calleeCandidate.candidate==null');
-							return
-						}
-
-						if(!gentle) console.log('calleeCandidate.candidate',calleeCandidate.candidate);
-						if(!gentle) console.log('calleeCandidate',calleeCandidate);
-
-						let tok = calleeCandidate.candidate.split(' ');
-						if(tok.length>=5) {
-							//console.log('addIceCandidate calleeCandidate',calleeCandidate);
-							let address = tok[4];
-							if(tok.length>=10 && tok[8]=="raddr" && tok[9]!="0.0.0.0") {
-								address = tok[9];
-							}
-							if(!gentle)
-								console.log('cmd calleeCandidate addIce',address,calleeCandidate.candidate);
-							// "Failed to execute 'addIceCandidate' on 'RTCPeerConnection'"
-							// may happen if peerCon.setRemoteDescription is not finished yet
-							if(!peerCon) {
-								console.warn('cmd calleeCandidate abort no peerCon');
-								return;
-							}
-							if(!peerCon.remoteDescription) {
-								// this happens bc setRemoteDescription may take a while
-								console.log("cmd calleeCandidate !peerCon.remoteDescription",
-									calleeCandidate.candidate);
-								setTimeout(addIceCalleeCandidate,100,calleeCandidate);
-								return;
-							}
-							if(!peerCon.remoteDescription.type) {
-								console.log("cmd calleeCandidate !peerCon.remoteDescription.type",
-									calleeCandidate.candidate);
-								setTimeout(addIceCalleeCandidate,100,calleeCandidate);
-								return;
-							}
-							peerCon.addIceCandidate(calleeCandidate).catch(e => {
-								console.error("addIce calleeCandidate",e,payload);
-								showStatus("RTC error "+e);
-							});
-						} else {
-							if(calleeCandidate.candidate!="") {
-								console.warn("cmd calleeCandidate format err",calleeCandidate.candidate);
-							}
-						}
-					}
-					addIceCalleeCandidate(calleeCandidate);
-
-				} else if(cmd=="pickup") {
-					console.log('cmd pickup');
-					if(!rtcConnect) {
-						if(!gentle) console.warn('cmd pickup without rtcConnect; ignored');
-						return
-					}
-
-					var enableRemoteAudio = function(calleeCandidate) {
-						let micStatus = "";
-						if(singlebutton) {
-							hangupButton.innerHTML = singleButtonConnectedText;
-							hangupButton.style.boxShadow = "0px 0px 10px #f00";
-							hangupButton.style.background = 'url("")'; 
-							dialButton.style.backgroundColor = "";
-							hangupButton.style.backgroundColor = "";
-						} else {
-							if(microphoneIsNeeded && !neverAudio) {
-								onlineIndicator.src="red-gradient.svg";
-								micStatus = "Mic is open";
-							} else {
-								// mic not open
-								dialButton.style.boxShadow = "";
-								onlineIndicator.src="green-gradient.svg";
-							}
-						}
-
-						// enable (un-mute) remote audio
-						if(!gentle) console.log('set remoteAudio',remoteStream);
-						remoteAudio.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
-						remoteAudio.load();
-						remoteAudio.play().catch(function(error) {});
-						mediaConnect = true;
-						mediaConnectStartDate = Date.now();
-						if(fileselectLabel!=null && dataChannel!=null && dataChannel.readyState=="open") {
-							if(localCandidateType!="relay" && remoteCandidateType!="relay") {
-								fileselectLabel.style.display = "inline-block";
-							}
-						}
-
-						// getting stats on p2p or relayed connection
-						console.log('full mediaConnect, getting stats...');
-						peerCon.getStats(null)
-							.then((results) => getStatsCandidateTypes(results,"Connected",micStatus),
-							err => console.log(err));
-
-						onnegotiationneededAllowed = true;
-					}
-
-					console.log('callee is answering our call');
-					stopAllAudioEffects();
-
-					if(!singlebutton) {
-						msgbox.style.display = "none";
-					}
-
-					if(!localStream && !neverAudio) {
-						console.warn("cmd pickup no localStream");
-						// I see this when I quickly re-dial while busy signal of last call is still playing
-						// TODO button may now continue to show "Connecting..."
-						// but connection is still established (at least when calling answ)
-						hangupWithBusySound(true,"pickup but no localStream");
-						return;
-					}
-
-					// we now wait up to 6x300ms for remoteStream before we continue with enableRemoteAudio()
-					// remoteStream will arrive via: peerCon.ontrack onunmute
-					var waitLoopCount=0;
-					let waitForRemoteStreamFunc = function() {
-						if(!gentle) console.log('waitForRemoteStreamFunc',remoteStream!=null,waitLoopCount);
-						if(!remoteStream) {
-							waitLoopCount++;
-							if(waitLoopCount<=4) {
-								setTimeout(waitForRemoteStreamFunc, 300);
-								return;
-							}
-						}
-						if(!gentle) console.log('waitForRemoteStreamFunc enableRemoteAudio');
-						enableRemoteAudio();
-					}
-					waitForRemoteStreamFunc();
-
-				} else if(cmd=="cancel") {
-					if(payload!="c") {
-						// this is coming from the callee
-						console.log('callee hang up');
-						showStatus("Callee ended call",8000);
-						if(wsConn!=null) {
-							wsConn.close();
-							// wsConn=null prevents hangup() from generating a return cancel msg
-							wsConn=null;
-						}
-						hangupWithBusySound(false,"Peer hang up");
-					} else {
-						console.log("ignore cancel",payload);
-					}
-
-				} else if(cmd=="sessionDuration") {
-					// the longest possible duration
-					sessionDuration = parseInt(payload);
-					if(!gentle) console.log('sessionDuration',sessionDuration,mediaConnect,timerStartDate);
-					if(localCandidateType!="relay" && remoteCandidateType!="relay") {
-						// no timer
-					} else if(mediaConnect) {
-						if(!timerStartDate) {
-							if(sessionDuration>0) {
-								startTimer(sessionDuration);
-							}
-						}
-					}
-				} else if(cmd=="ua") {
-					otherUA = payload;
-					console.log("otherUA",otherUA);
-
-				} else if(cmd=="callerDescription" || cmd=="callerCandidate" || "callerInfo" ||
-						cmd=="stop" || cmd=="ping" || cmd=="rtcConnect" || cmd=="callerDescriptionUpd") {
-				} else {
-					console.warn('ignore incom cmd',cmd);
-				}
-			} else {
-				console.warn('ws message len/tok.length',messages[i].length,tok.length);
+			signalingCommand(messages[i]);
+			if(!peerCon) {
+				break;
 			}
 		}
 	};
@@ -1101,16 +1035,285 @@ function connectSignaling(message,openedFunc) {
 		if(tryingToOpenWebSocket) {
 			// onclose before a ws-connection could be established
 			tryingToOpenWebSocket = false;
-			console.log('ws close: failed to open');
+			console.log('wsConn.onclose: failed to open');
 			showStatus("No signaling server");
 			hangupWithBusySound(false,"Busy")
 		} else {
 			// onclose after a ws-connection has been established
 			// most likey the callee is busy
-			console.log('ws close: disconnect');
+			if(!gentle) console.log('wsConn.onclose');
 		}
-		wsConn=null;
+		wsConn = null;
 	};
+}
+
+function signalingCommand(message) {
+	let tok = message.split("|");
+	let cmd = tok[0];
+	let payload = "";
+	if(tok.length>=2) {
+		payload = tok[1];
+	}
+	if(!gentle) console.log('signaling cmd',cmd);
+
+	if(cmd=="calleeAnswer") {
+		if(!peerCon) {
+			console.warn('calleeAnswer abort no peerCon');
+			return;
+		}
+		let hostDescription = JSON.parse(payload);
+
+		if(!gentle) console.log("calleeAnswer setLocalDescription");
+		// setLocalDescription will cause "onsignalingstate have-local-offer"
+		peerCon.setLocalDescription(localDescription).then(() => {
+			if(!gentle) console.log('calleeAnswer setRemoteDescription');
+			peerCon.setRemoteDescription(hostDescription).then(() => {
+				if(!gentle) console.log('calleeAnswer setRemoteDescription done');
+			}, err => {
+				console.warn("calleeAnswer setRemoteDescription fail",err)
+				showStatus("Cannot set remoteDescr "+err);
+			});
+		}, err => {
+			console.warn("calleeAnswer setLocalDescription fail",err)
+			showStatus("Cannot set localDescr"+err);
+		});
+
+	} else if(cmd=="calleeOffer") {
+		// calleeOffer is being used when callee wants to deliver a config change
+		let hostDescription = JSON.parse(payload);
+		if(!gentle) console.log('calleeOffer setRemoteDescription');
+		peerCon.setRemoteDescription(hostDescription).then(() => {
+			if(!gentle) console.log('calleeOffer setRemoteDescription done');
+
+			if(hostDescription.type == "offer") {
+				if(!gentle) console.log('calleeOffer received offer createAnswer');
+				peerCon.createAnswer().then((desc) => {
+					localDescription = desc;
+					if(!gentle) console.log('calleeOffer got localDescription');
+					localDescription.sdp =
+						maybePreferCodec(localDescription.sdp, 'audio', 'send', "opus");
+					localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
+						'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
+					peerCon.setLocalDescription(localDescription).then(() => {
+// TODO err: "Failed to set local descr: OperationError: Failed to execute 'setLocalDescription' 
+// on 'RTCPeerConnection': Failed to set local answer sdp: Called in wrong state: stable"
+						if(!gentle) console.log('calleeOffer localDescription set -> signal');
+						if(dataChannel && dataChannel.readyState=="open") {
+							dataChannel.send("cmd|callerAnswer|"+JSON.stringify(localDescription));
+						} else {
+							wsSend("callerAnswer|"+JSON.stringify(localDescription));
+						}
+					}, err => console.error(`Failed to set local descr: ${err.toString()}`));
+				}, err => {
+					console.warn("calleeOffer failed to createAnswer",err)
+					showStatus("Failed to createAnswer",8000);
+				});
+			} else {
+				console.log("calleeOffer received no offer:",hostDescription.type);
+			}
+
+		}, err => {
+			console.warn("calleeOffer setRemoteDescription fail",err)
+			showStatus("Cannot set remoteDescr "+err);
+		});
+
+	} else if(cmd=="calleeCandidate") {
+		if(!peerCon) {
+			console.warn('cmd calleeCandidate abort no peerCon');
+			hangupWithBusySound(true,"calleeCandidate lost peerCon");
+			return;
+		}
+		var calleeCandidate = JSON.parse(payload);
+		// fix for: AddIceCandidate fail OperationError: Unknown ufrag
+		// see: https://stackoverflow.com/questions/61292934/webrtc-operationerror-unknown-ufrag
+		calleeCandidate.usernameFragment = null;
+
+		var addIceCalleeCandidate = function(calleeCandidate) {
+			if(calleeCandidate.candidate==null) {
+				if(!gentle) console.warn('calleeCandidate.candidate==null');
+				return
+			}
+
+			if(!gentle) console.log('calleeCandidate.candidate',calleeCandidate.candidate);
+			if(!gentle) console.log('calleeCandidate',calleeCandidate);
+
+			let tok = calleeCandidate.candidate.split(' ');
+			if(tok.length>=5) {
+				//console.log('addIceCandidate calleeCandidate',calleeCandidate);
+				let address = tok[4];
+				if(tok.length>=10 && tok[8]=="raddr" && tok[9]!="0.0.0.0") {
+					address = tok[9];
+				}
+				if(!gentle) console.log('cmd calleeCandidate addIce',address,calleeCandidate.candidate);
+				// "Failed to execute 'addIceCandidate' on 'RTCPeerConnection'"
+				// may happen if peerCon.setRemoteDescription is not finished yet
+				if(!peerCon) {
+					console.warn('cmd calleeCandidate abort no peerCon');
+					return;
+				}
+				if(!peerCon.remoteDescription) {
+					// this happens bc setRemoteDescription may take a while
+					if(!gentle) console.log("cmd calleeCandidate !peerCon.remoteDescription",
+						calleeCandidate.candidate);
+					setTimeout(addIceCalleeCandidate,100,calleeCandidate);
+					return;
+				}
+				if(!peerCon.remoteDescription.type) {
+					if(!gentle) console.log("cmd calleeCandidate !peerCon.remoteDescription.type",
+						calleeCandidate.candidate);
+					setTimeout(addIceCalleeCandidate,100,calleeCandidate);
+					return;
+				}
+				peerCon.addIceCandidate(calleeCandidate).catch(e => {
+					console.error("addIce calleeCandidate",e,payload);
+					showStatus("RTC error "+e);
+				});
+			} else {
+				if(calleeCandidate.candidate!="") {
+					console.warn("cmd calleeCandidate format err",calleeCandidate.candidate);
+				}
+			}
+		}
+		addIceCalleeCandidate(calleeCandidate);
+
+	} else if(cmd=="pickup") {
+		if(!rtcConnect) {
+			if(!gentle) console.warn('cmd pickup without rtcConnect; ignored');
+			return
+		}
+
+		var enableRemoteStream = function(calleeCandidate) {
+			let micStatus = "";
+			if(singlebutton) {
+				hangupButton.innerHTML = singleButtonConnectedText;
+				hangupButton.style.boxShadow = "0px 0px 10px #f00";
+				hangupButton.style.background = 'url("")'; 
+				dialButton.style.backgroundColor = "";
+				hangupButton.style.backgroundColor = "";
+			} else {
+				if(microphoneIsNeeded && !neverAudio) {
+					onlineIndicator.src="red-gradient.svg";
+					micStatus = "Mic is open";
+				} else {
+					// mic not open
+					dialButton.style.boxShadow = "";
+					onlineIndicator.src="green-gradient.svg";
+				}
+			}
+
+			// enable (un-mute) remoteStream
+			if(!gentle) console.log('set remoteVideoFrame',remoteStream);
+			remoteVideoFrame.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
+			remoteVideoFrame.play().catch(function(error) {
+				if(!gentle) console.log("# remoteVideoFrame error",error);
+			});
+
+			mediaConnect = true;
+			mediaConnectStartDate = Date.now();
+
+			if(fileselectLabel!=null && dataChannel!=null && dataChannel.readyState=="open") {
+				if(localCandidateType!="relay" && remoteCandidateType!="relay") {
+					fileselectLabel.style.display = "inline-block";
+				}
+			}
+
+			// getting stats on p2p or relayed connection
+			console.log('full mediaConnect, getting stats...');
+			peerCon.getStats(null)
+				.then((results) => getStatsCandidateTypes(results,"Connected",micStatus),
+				err => console.log(err));
+
+			// if local video active, blink vsendButton
+			if(videoEnabled && !addLocalVideoEnabled) {
+				console.log('full mediaConnect, blink vsendButton');
+				vsendButton.classList.add('blink_me');
+				setTimeout(function() { vsendButton.classList.remove('blink_me') },8000);
+			} else {
+				if(!gentle) console.log('full mediaConnect, not videoEnabled, no blink vsendButton');
+			}
+		}
+
+		console.log('callee is answering our call');
+		stopAllAudioEffects();
+
+		if(!singlebutton) {
+			msgbox.style.display = "none";
+		}
+
+		if(!localStream && !neverAudio) {
+			console.warn("cmd pickup no localStream");
+			// I see this when I quickly re-dial while busy signal of last call is still playing
+			// TODO button may now continue to show "Connecting..."
+			// but connection is still established (at least when calling answ)
+			hangupWithBusySound(true,"pickup but no localStream");
+			return;
+		}
+
+		// we now wait up to 5x300ms for remoteStream before we continue with enableRemoteStream()
+		// remoteStream will arrive via: peerCon.ontrack onunmute
+		var waitLoopCount=0;
+		let waitForRemoteStreamFunc = function() {
+			if(!gentle) console.log('waitForRemoteStreamFunc',remoteStream!=null,waitLoopCount);
+			if(!remoteStream) {
+				waitLoopCount++;
+				if(waitLoopCount<=4) {
+					setTimeout(waitForRemoteStreamFunc, 300);
+					return;
+				}
+			}
+			if(!gentle) console.log('waitForRemoteStreamFunc enableRemoteStream');
+			enableRemoteStream();
+		}
+		waitForRemoteStreamFunc();
+
+	} else if(cmd=="cancel") {
+		if(payload!="c") {
+			// this is coming from the callee
+			console.log('callee hang up');
+			showStatus("Callee ended call",8000);
+			if(wsConn!=null) {
+				wsConn.close();
+				// wsConn=null prevents hangup() from generating a return cancel msg
+				wsConn=null;
+			}
+			hangupWithBusySound(false,"Peer hang up");
+		} else {
+			console.log("ignore cancel",payload);
+		}
+
+	} else if(cmd=="sessionDuration") {
+		// the longest possible duration
+		sessionDuration = parseInt(payload);
+		if(!gentle) console.log('sessionDuration',sessionDuration,mediaConnect,timerStartDate);
+		if(localCandidateType!="relay" && remoteCandidateType!="relay") {
+			// no timer
+		} else if(mediaConnect) {
+			if(!timerStartDate) {
+				if(sessionDuration>0) {
+					startTimer(sessionDuration);
+				}
+			}
+		}
+	} else if(cmd=="ua") {
+		otherUA = payload;
+		if(!gentle) console.log("otherUA",otherUA);
+
+	} else if(cmd=="rtcVideoOff") {
+		// remote video has ended
+		if(!gentle) console.log("rtcVideoOff");
+		remoteVideoDiv.style.visibility = "hidden";
+		remoteVideoDiv.style.height = "0px";
+		remoteVideoLabel.innerHTML = "remote cam not streaming";
+		remoteVideoLabel.style.color = "#fff";
+
+// TODO
+//	} else if(cmd=="callerDescription" || cmd=="callerCandidate" || "callerInfo" ||
+//			cmd=="stop" || cmd=="ping" || cmd=="rtcConnect" || cmd=="callerDescriptionUpd") {
+//		// ignore without log
+
+	} else {
+		console.warn('ignore incom cmd',cmd);
+	}
 }
 
 function wsSend(message) {
@@ -1145,7 +1348,7 @@ function showStatus(msg,timeoutMs) {
 let dialDate;
 function dial() {
 	if(!localStream && !neverAudio) {
-		console.log('abort dial localStream not set');
+		console.warn('abort dial localStream not set',neverAudio,localStream);
 		showStatus("abort no localStream");
 		hangupWithBusySound(true,"pickup with no localStream");
 		return;
@@ -1181,7 +1384,6 @@ function dial() {
 					hangupWithBusySound(true,"Failed to connect "+candidateResultString);
 				}
 			} else {
-				//console.log("dialing timeout reached after rtcConnect, ignore");
 				if(!mediaConnect) {
 					showStatus(ringingText,-1);
 				}
@@ -1189,63 +1391,52 @@ function dial() {
 		}
 	},20000,dialDate);
 
-	var ICE_config= {
-		"iceServers": [
-			{	'urls': 'stun:'+window.location.hostname+':3739' },
-			{	'urls': 'turn:'+window.location.hostname+':3739',
-				'username': 'c807ec29df3c9ff',
-				'credential': '736518fb4232d44'
-			}
-		]
-	};
-	//console.warn("ICE_config",ICE_config);
+	addedAudioTrack = null;
+	addedVideoTrack = null;
 	try {
+		if(!gentle) console.log("dial peerCon = new RTCPeerConnection");
 		peerCon = new RTCPeerConnection(ICE_config);
 	} catch(ex) {
 		console.error("RTCPeerConnection",ex);
 		showStatus("Dialing error");
 		return
 	};
-	peerCon.onicecandidate = e => onIceCandidate(e);
+	peerCon.onicecandidate = e => onIceCandidate(e,"callerCandidate");
 	peerCon.onicecandidateerror = function(e) {
-		if(!gentle) console.warn("onicecandidateerror", e.errorCode, e.errorText, e.url);
-		// for instance: "Unauthorized turn:..."
-		// or            "701 STUN host lookup received error."
+		if(e.errorCode==701) {
+			if(!gentle) console.log("# onicecandidateerror", e.errorCode, e.errorText, e.url);
+		} else {
+			if(!gentle) console.warn("onicecandidateerror", e.errorCode, e.errorText, e.url);
+			showStatus("iceCandidate error "+e.errorCode+" "+e.errorText,-1);
+		}
 	}
-	peerCon.ontrack = ({track, streams}) => {
-		// once media for a remote track arrives, connect it to the remoteAudio element
-		console.log('peerCon.ontrack');
-		track.onunmute = () => {
-			// TODO remoteAudio undefined
-			if(remoteAudio.srcObject == streams[0]) {
-				console.warn('peerCon.ontrack onunmute was already set');
-				return;
-			}
-			if(!gentle) console.log('peerCon.ontrack onunmute set remoteAudio.srcObject',streams[0]);
-			remoteStream = streams[0];
-		};
-	};
-
+	peerCon.ontrack = ({track, streams}) => peerConOntrack(track, streams);
 	peerCon.onnegotiationneeded = async () => {
 		if(!peerCon) {
-			if(!gentle) console.log('onnegotiationneeded no peerCon');
-			return;
-		}
-		if(!onnegotiationneededAllowed) {
-			if(!gentle) console.log('onnegotiationneeded not allowed');
+			if(!gentle) console.log('# onnegotiationneeded !peerCon');
 			return;
 		}
 		if(!gentle) console.log('onnegotiationneeded');
 		try {
 			// note: this will trigger onIceCandidates and send calleeCandidate's to the client
-			console.log("onnegotiationneeded createOffer");
+			if(!gentle) console.log("onnegotiationneeded createOffer");
 			localDescription = await peerCon.createOffer();
 			localDescription.sdp = maybePreferCodec(localDescription.sdp, 'audio', 'send', "opus");
 			localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
 				'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
+
 			peerCon.setLocalDescription(localDescription).then(() => {
-				console.log('onnegotiationneeded localDescription set -> signal');
-				wsSend("callerDescriptionUpd|"+JSON.stringify(localDescription));
+				if(doneHangup) {
+					if(!gentle) console.log('onnegotiationneeded deny send: doneHangup');
+				} else if(!rtcConnect && !dialing) {
+					console.log('# onnegotiationneeded deny send: !rtcConnect && !dialing');
+				} else if(dataChannel && dataChannel.readyState=="open") {
+					if(!gentle) console.log('onnegotiationneeded send callerOfferUpd via dc');
+					dataChannel.send("cmd|callerOfferUpd|"+JSON.stringify(localDescription));
+				} else {
+					if(!gentle) console.log('onnegotiationneeded send callerOffer via ws');
+					wsSend("callerOffer|"+JSON.stringify(localDescription));
+				}
 			}, err => console.error(`Failed to set local descr: ${err.toString()}`));
 		} catch(err) {
 			console.error("onnegotiationneeded err",err);
@@ -1261,7 +1452,7 @@ function dial() {
 
 	peerCon.onicegatheringstatechange = event => {
 		let connection = event.target;
-		console.log("onicegatheringstatechange", connection.iceGatheringState);
+		if(!gentle) console.log("onicegatheringstatechange", connection.iceGatheringState);
 	}
 	peerCon.onsignalingstatechange = event => {
 		if(!gentle) console.log("onsignalingstate", peerCon.signalingState);
@@ -1270,12 +1461,14 @@ function dial() {
 		if(!gentle) console.log("oniceconnectionstate", peerCon.iceConnectionState);
 	}
 	peerCon.onconnectionstatechange = event => {
+		if(!gentle) console.log("peerCon connectionstatechange", peerCon.connectionState);
 		if(!peerCon) {
 			hangupWithBusySound(true,"Peer disconnected");
 			return;
 		}
-		console.log("onconnectionstate", peerCon.connectionState);
+		if(!gentle) console.log("onconnectionstatechange", peerCon.connectionState);
 		if(peerCon.connectionState=="disconnected") {
+			console.log('peerCon disconnected',rtcConnect,mediaConnect);
 			hangupWithBusySound(true,"Peer disconnected");
 			return;
 		} else if(peerCon.connectionState=="failed") {
@@ -1288,7 +1481,7 @@ function dial() {
 			}
 		} else if(peerCon.connectionState=="connected") {
 			// if we see this despite being mediaConnect already, it is caused by createDataChannel
-			console.log('connected r/m',rtcConnect,mediaConnect);
+			console.log('peerCon connected');
 			if(!rtcConnect && !mediaConnect) {
 				// the caller got peer-connected to the callee; callee now starts ringing
 				stopAllAudioEffects();
@@ -1325,7 +1518,7 @@ function dial() {
 								return;
 							}
 							if(!gentle) console.log('dialToneAfterDialingSound.play()');
-							dialToneAfterDialingSound.play().catch(function(error) { });
+							dialToneAfterDialingSound.play().catch(function(error) {});
 							dialToneAfterDialingSound.onended = playDialToneAfterDialingSound;
 						}
 						playDialToneAfterDialingSound();
@@ -1345,32 +1538,32 @@ function dial() {
 		// add selected local audioTrack (audio input / mic) to peerCon
 		// TODO: an exception here leaves the callee hub "connected"
 		const audioTracks = localStream.getAudioTracks();
-		audioTracks[0].enabled = true; // unmute
-		if(!gentle) console.log('dial addTrack',audioTracks[0],localStream);
-		peerCon.addTrack(audioTracks[0],localStream);
+		if(audioTracks.length>0) {
+			audioTracks[0].enabled = true; // unmute
+			console.log('peerCon addTrack local audio input',audioTracks[0]);
+			addedAudioTrack = peerCon.addTrack(audioTracks[0],localStream);
+		}
 	}
 
 	createDataChannel();
 
-	console.log('dial peerCon.createOffer');
+	if(!gentle) console.log('dial peerCon.createOffer');
 	peerCon.createOffer().then((desc) => {
 		localDescription = desc;
 		localDescription.sdp = maybePreferCodec(localDescription.sdp, 'audio', 'send', "opus");
 		localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
 			'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
-		console.log('got localDescription');
+		// this localDescription will be sent with upcoming calleeAnswer in response to upcoming callerOffer
+		if(!gentle) console.log('dial got localDescription');
 		if(playDialSounds) {
-			dtmfDialingSound.play().catch(function(error) {
-				console.warn('ex dtmfDialingSound.play',error) });
+			dtmfDialingSound.play().catch(function(error) { });
 		}
-		setTimeout(function() {
-			// we do this delay only to hear the dial tone
-			// this check is important bc the caller may have disconnected already
-			if(wsConn!=null) {
-				console.log('signal callerDescription (outgoing call)');
-				wsSend("callerDescription|"+JSON.stringify(localDescription));
-			}
-		},1500);
+		// -> onsignalingstate have-local-offer
+		// -> onnegotiationneeded send callerOffer via ws
+		// -> signaling cmd calleeAnswer -> calleeAnswer setLocalDescription -> calleeAnswer setRemoteDescription
+		// -> onconnectionstate connected
+		// -> signaling cmd calleeOffer -> calleeOffer setRemoteDescription -> onsignalingstate have-remote-offer
+		// -> calleeOffer received offer createAnswer
 	}, err => console.warn(`dial createOffer failed: ${error.toString()}`));
 }
 
@@ -1380,8 +1573,7 @@ function createDataChannel() {
 	dataChannel.onopen = event => {
 		if(!gentle)
 			console.log("dataChannel.onopen",
-				dataChannel.ordered, dataChannel.binaryType,
-				dataChannel.reliable, dataChannel.sctp);
+				dataChannel.ordered, dataChannel.binaryType, dataChannel.reliable, dataChannel.sctp);
 		dataChannel.send("ping");
 		if(dataChannelSendMsg!="") {
 			dataChannel.send("msg|"+dataChannelSendMsg);
@@ -1394,7 +1586,9 @@ function createDataChannel() {
 	dataChannel.onerror = event => {
 		if(rtcConnect) {
 			console.log("dataChannel.onerror",event);
-			showStatus("dataChannel error "+event.error,-1);	// .message ?
+			showStatus("# dataChannel error "+event.error,-1);
+//TODO hangup only if channel closed?
+			hangup();
 		}
 		progressSendElement.style.display = "none";
 		if(fileselectLabel!=null && mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
@@ -1405,34 +1599,40 @@ function createDataChannel() {
 	}
 	dataChannel.onmessage = event => {
 		if(typeof event.data === "string") {
-			if(!gentle) console.debug("dataChannel.onmessage",event.data);
+			if(!gentle) console.debug("dataChannel.onmessage");
 			if(event.data) {
 				if(event.data.startsWith("disconnect")) {
 					console.log("dataChannel.close on 'disconnect'");
 					dataChannel.close();
 					hangupWithBusySound(false,"Peer hang up");
-				} else if(event.data.startsWith("cmd|ledred")) {
-					if(onlineIndicator!=null) {
-						onlineIndicator.src="red-gradient.svg";
-					}
-					microphoneIsNeeded = true;
+				} else if(event.data.startsWith("cmd|")) {
+					let subCmd = event.data.substring(4);
+					if(subCmd.startsWith("ledred")) {
+						if(onlineIndicator!=null) {
+							onlineIndicator.src="red-gradient.svg";
+						}
+						microphoneIsNeeded = true;
 
-					// unmute micro
-					if(localStream!=null) {
-						const audioTracks = localStream.getAudioTracks();
-						audioTracks[0].enabled = true;
-						// localStream.getTracks().forEach(track => { ??? });
-					}
-				} else if(event.data.startsWith("cmd|ledgreen")) {
-					if(onlineIndicator!=null) {
-						onlineIndicator.src="green-gradient.svg";
-					}
-					microphoneIsNeeded = false;
+						// unmute micro
+						if(localStream!=null) {
+							const audioTracks = localStream.getAudioTracks();
+							audioTracks[0].enabled = true;
+							// localStream.getTracks().forEach(track => { ??? });
+						}
+					} else if(subCmd.startsWith("ledgreen")) {
+						if(onlineIndicator!=null) {
+							onlineIndicator.src="green-gradient.svg";
+						}
+						microphoneIsNeeded = false;
 
-					// mute mic
-					if(localStream!=null) {
-						const audioTracks = localStream.getAudioTracks();
-						audioTracks[0].enabled = false;
+						// mute mic
+						if(localStream!=null) {
+							const audioTracks = localStream.getAudioTracks();
+							audioTracks[0].enabled = false;
+						}
+					} else {
+						//if(!gentle) console.log("dataChannel.onmessage signaling");
+						signalingCommand(subCmd);
 					}
 				} else if(event.data.startsWith("file|")) {
 					var fileDescr = event.data.substring(5);
@@ -1500,7 +1700,6 @@ function createDataChannel() {
 				progressRcvLabel.innerHTML = "receiving '"+fileName.substring(0,22)+"' "+kbytesPerSec+" KB/s";
 				fileReceiveSinceStartSecs = sinceStartSecs;
 			}
-			//if(!gentle) console.log("binary chunk", chunkSize, fileReceivedSize, fileSize);
 			if(fileReceivedSize === fileSize) {
 				if(!gentle) console.log("file receive complete");
 				const receivedBlob = new Blob(fileReceiveBuffer);
@@ -1529,28 +1728,6 @@ function createDataChannel() {
 	}
 }
 
-function onIceCandidate(event) {
-	var callerCandidate = event.candidate;
-	if(callerCandidate==null) {
-		// ICE gathering finished
-		if(!gentle) console.log('onIce: end of callerCandidates');
-	} else {
-		//if(!gentle) console.log("onIce",callerCandidate.candidate);
-		//console.log('onIce callerCandidate.address',callerCandidate.address);
-		if(callerCandidate.address==null) {
-			//console.warn('onIce skip callerCandidate.address==null');
-		} else if(wsConn==null) {
-			if(!gentle) console.log('onIce callerCandidate: wsConn==null', callerCandidate.address);
-		} else if(wsConn.readyState!=1) {
-			if(!gentle) console.log('onIce callerCandidate: readyState!=1',
-				callerCandidate.address, wsConn.readyState);
-		} else {
-			if(!gentle) console.log('onIce callerCandidate', callerCandidate.address);
-			wsSend("callerCandidate|"+JSON.stringify(callerCandidate));
-		}
-	}
-}
-
 function stopAllAudioEffects() {
 	if(dtmfDialingSound!=null) {
 		dtmfDialingSound.pause();
@@ -1568,9 +1745,7 @@ function stopAllAudioEffects() {
 
 function hangup(mustDisconnectCallee,message) {
 	dialing = false;
-	remoteStream = null;
-	rtcConnect = false;
-	mediaConnect = false;
+	connectLocalVideo(true); // peerCon.removeTrack(addedVideoTrack); dataChannel.send("cmd|rtcVideoOff");
 	if(fileselectLabel!=null) {
 		fileselectLabel.style.display = "none";
 		progressSendElement.style.display = "none";
@@ -1579,116 +1754,192 @@ function hangup(mustDisconnectCallee,message) {
 	if(!singlebutton) {
 		msgbox.value = "";
 	}
+
 	if(doneHangup) {
 		if(!gentle) console.log('hangup doneHangup');
 		return;
 	}
+	doneHangup = true;
 
 	if(!gentle) console.log('hangup '+message, mustDisconnectCallee);
 	if(message!="") {
 		showStatus(message);
 	}
 
-	doneHangup = true;
 	if(singlebutton) {
 		dialButton.style.boxShadow = "";
 	} else {
 		onlineIndicator.src="";
 	}
 	stopTimer();
-	onnegotiationneededAllowed = false;
 
-	setTimeout(function() {
-		// TODO not sure about this
-		if(!singlebutton) {
-			// show msgbox
-			msgbox.placeholder = "";
-			msgbox.style.display = "block";
-		}
-		calleeOnlineAction("post-hangup");
-	},2000);
-
-	if(localStream!=null) {
-		const audioTracks = localStream.getAudioTracks();
-		audioTracks[0].enabled = false; // mute mic
-		localStream.getTracks().forEach(track => { track.stop(); });
-		localStream.removeTrack(audioTracks[0]);
-		localStream = null;
-	}
-
-	console.log('hangup remoteAudio.pause()');
-	remoteAudio.pause();
-	remoteAudio.currentTime = 0;
-	remoteAudio.srcObject = null;
 	localDescription = null;
 	if(singlebutton) {
 		hangupButton.style.display = "none";
 		hangupButton.innerHTML = "Hang up";
 		hangupButton.style.boxShadow = "";
-		// TODO a transition would be nice
 		setTimeout(function() {
 			dialButton.innerHTML = "<b>W E B C A L L</b><br>"+singleButtonReadyText;
 			dialButton.style.display = "inline-block";
-		// 2500ms is about the time it takes for the busy tone to end
-		},2500);
+		},2500); // about the time it takes for the busy tone to end
 	} else {
 		hangupButton.disabled = true;
 		dialButton.disabled = false;
 		onlineIndicator.src="";
 	}
-	audioSelect.disabled = false;
 
-	if(mustDisconnectCallee) {
-		if(wsConn!=null && wsConn.readyState==1) {
-			// in case we are still ws-connected (if hangup occurs while still "ringing")
-			console.log('hangup wsSend(cancel)');
-			wsSend("cancel|c");
+	if(mustDisconnectCallee && wsConn!=null && wsConn.readyState==1) {
+		// for instance in case we are still ws-connected (if hangup occurs while still "ringing")
+		if(!gentle) console.log('hangup wsSend(cancel)');
+		wsSend("cancel|c");
+	}
+	if(wsConn) {
+		if(!gentle) console.log('hangup wsConn.close');
+		wsConn.close();
+		wsConn=null;
+	}
+
+	if(!gentle) console.log('hangup shutdown remoteAV');
+	remoteVideoFrame.pause();
+	remoteVideoFrame.currentTime = 0;
+	remoteVideoFrame.srcObject = null;
+	remoteVideoDiv.style.visibility = "hidden";
+	remoteVideoDiv.style.height = "0px";
+	remoteVideoDiv.style.display = "none";
+	remoteVideoLabel.innerHTML = "remote cam not streaming";
+	remoteVideoLabel.style.color = "#fff";
+	remoteStream = null;
+
+	if(peerCon) {
+		if(addedAudioTrack) {
+			if(!gentle) console.log("hangup peerCon.removeTrack(addedAudioTrack)");
+			peerCon.removeTrack(addedAudioTrack);
+			addedAudioTrack = null;
+		} else {
+			if(!gentle) console.log("hangup no addedAudioTrack for peerCon.removeTrack()");
 		}
 	}
 
-	if(peerCon!=null) {
-		let peerConCloseFunc = function() {
-			const senders = peerCon.getSenders();
-			if(senders) {
-				try {
-					senders.forEach((sender) => { peerCon.removeTrack(sender) })
-				} catch(ex) {
-					console.warn('hangup removeTrack',ex);
-				}
-			}
-			if(mustDisconnectCallee && (wsConn==null || wsConn.readyState!=1)) {
-				// give cmd:hangup some time to be delivered
-				setTimeout(function() {
-					if(peerCon!=null) {
-						if(dataChannel && dataChannel.readyState=="open") {
-							console.log('hangup dataChannel.close 1');
-							dataChannel.send("disconnect"); // tmtmtm
-							dataChannel.close();
-						}
-						console.log('hangup peerCon.close 1');
-						peerCon.close();
-						peerCon = null;
-					}
-				},300);
+	if(videoEnabled) {
+		if(!gentle) console.log("hangup no shutdown localAV bc videoEnabled",videoEnabled);
+	} else {
+		if(!gentle) console.log("hangup shutdown localAV");
+		if(localStream) {
+			// stop all localStream tracks
+			localStream.getTracks().forEach(track => {
+				if(!gentle) console.log('hangup stop localStream track.stop()',track);
+				track.stop(); 
+			});
 
-			} else if(dataChannel && dataChannel.readyState=="open") {
-				console.log('hangup dataChannel.close 2');
-				dataChannel.send("disconnect"); // tmtmtm
-				dataChannel.close();
-				// in case we get no dataChannel.onclose
-				setTimeout(function() {
-					if(peerCon!=null) {
-						console.log('hangup peerCon.close 2');
-						peerCon.close();
-						peerCon = null;
-					}
-				},1500);
+			// remove local mic from localStream
+			const audioTracks = localStream.getAudioTracks();
+			if(!gentle) console.log('hangup remove local mic audioTracks.length',audioTracks.length);
+			if(audioTracks.length>0) {
+				if(!gentle) console.log('hangup remove local mic localStream.removeTrack',audioTracks[0]);
+				audioTracks[0].stop();
+				localStream.removeTrack(audioTracks[0]);
+			}
+
+			// remove local vid from localStream
+			const videoTracks = localStream.getVideoTracks();
+			if(!gentle) console.log('hangup remove local vid videoTracks.length',videoTracks.length);
+			if(videoTracks.length>0) {
+				if(!gentle) console.log('hangup remove local vid localStream.removeTrack',videoTracks[0]);
+				videoTracks[0].stop();
+				localStream.removeTrack(videoTracks[0]);
+			}
+		}
+		localVideoFrame.pause();
+		localVideoFrame.currentTime = 0;
+		localVideoFrame.srcObject = null;
+		localVideoDiv.style.display = "none";
+		localStream = null;
+	}
+
+	mediaConnect = false;
+	rtcConnect = false;
+	vmonitor();
+	vsendButton.classList.remove('blink_me')
+
+	if(peerCon) {
+		if(!gentle) console.log('hangup peerCon');
+		let peerConCloseFunc = function() {
+			if(!gentle) console.log('hangup peerConCloseFunc');
+			if(mustDisconnectCallee /*&& (wsConn==null || wsConn.readyState!=1)*/) {
+				if(!gentle) console.log('hangup mustDisconnectCallee');
+				if(dataChannel && dataChannel.readyState=="open") {
+					if(!gentle) console.log('hangup dataChannel send disconnect');
+					dataChannel.send("disconnect");
+					// give dataChannel disconnect some time to deliver
+					setTimeout(function() {
+						if(dataChannel) {
+							if(!gentle) console.log('hangup dataChannel.close');
+							dataChannel.close();
+							dataChannel = null;
+						}
+
+						const senders = peerCon.getSenders();
+						if(senders) {
+							if(!gentle) console.log('hangup peerCon.removeTrack senders',senders.length);
+							try {
+								senders.forEach((sender) => {
+									if(!gentle) console.log('hangup peerCon.removeTrack sender',sender);
+									peerCon.removeTrack(sender);
+								})
+							} catch(ex) {
+								console.warn('hangup peerCon.removeTrack sender',ex);
+							}
+						}
+
+						const receivers = peerCon.getReceivers();
+						if(receivers) {
+							if(!gentle) console.log('hangup peerCon.receivers len=%d',receivers.length);
+							try {
+								receivers.forEach((receiver) => {
+									if(!gentle) console.log('hangup receiver.track.stop()',receiver);
+									const tracks = receiver.track.stop();
+								});
+							} catch(ex) {
+								console.warn('hangup receiver.track.stop()',ex);
+							}
+						}
+
+						const transceivers = peerCon.getTransceivers();
+						if(transceivers) {
+							if(!gentle) console.log('hangup peerCon.transceivers len=%d',transceivers.length);
+							try {
+								transceivers.forEach((transceiver) => {
+									if(!gentle) console.log('hangup peerCon.transceiver stop',transceiver);
+									transceiver.stop();
+								})
+							} catch(ex) {
+								console.warn('hangup peerCon.transceiver stop ex',ex);
+							}
+						}
+
+						setTimeout(function() {
+							if(!gentle) console.log('hangup peerCon.close');
+							peerCon.close();
+							if(!gentle) console.log('hangup peerCon.signalingState',peerCon.signalingState); // shd be 'closed'
+							peerCon = null;
+						},500);
+					},500);
+				}
 			} else {
-				console.log('hangup peerCon.close 3',calleeID);
+				if(dataChannel) {
+					if(!gentle) console.log('hangup dataChannel.close');
+					dataChannel.close();
+					dataChannel = null;
+				}
+
+				// TODO peerCon.getSenders().forEach( peerCon.removeTrack(sender) ) etc like above?
+
+				if(!gentle) console.log('hangup peerCon.close 2',calleeID);
 				peerCon.close();
+				if(!gentle) console.log('hangup peerCon.signalingState',peerCon.signalingState); // shd be 'closed'
 				peerCon = null;
 			}
-		};
+		}
 		if(singlebutton) {
 			// no StatsPostCall for you
 			peerConCloseFunc();
@@ -1701,12 +1952,17 @@ function hangup(mustDisconnectCallee,message) {
 				peerConCloseFunc();
 			});
 		}
+	} else {
+		if(!gentle) console.log('hangup !peerCon');
 	}
-	if(wsConn!=null) {
-		wsConn.close();
-		wsConn=null;
+
+	if(!singlebutton) {
+		setTimeout(function() {
+			// show msgbox
+			msgbox.placeholder = "";
+			msgbox.style.display = "block";
+		},2000);
 	}
-	if(!gentle) console.log('hangup end',calleeID);
 }
 
 function hangupWithBusySound(mustDisconnectCallee,message) {
@@ -1728,10 +1984,9 @@ function hangupWithBusySound(mustDisconnectCallee,message) {
 var menuDialogOpenFlag = false;
 function menuDialogOpen() {
 	if(menuDialogOpenFlag) {
-		if(!gentle) console.log('menuDialogOpen menuDialogOpenFlag');
+		if(!gentle) console.log('# menuDialogOpen menuDialogOpenFlag');
 		return;
 	}
-	if(!gentle) console.log('menuDialogOpen');
 	menuDialogOpenFlag = true;
 
 	hashcounter++;
@@ -1739,10 +1994,19 @@ function menuDialogOpen() {
 
 	fullScreenOverlayElement.style.display = "block";
 	fullScreenOverlayElement.onclick = function() {
-		if(!gentle) console.log('fullScreenOverlay click');
 		historyBack();
 	}
-	mainElement.style.filter = "blur(0.8px) brightness(60%)";
+	containerElement.style.filter = "blur(0.8px) brightness(60%)";
+
+	// position menuDialog at mouse coordinate
+    var e = window.event;
+    var posX = e.clientX/8 - 50;
+	if(posX<0) posX=0;
+    var posY = e.clientY;
+	if(posY>50) posY-=50;
+	if(!gentle) console.log('menuDialogOpen x/y',posX,posY);
+	menuDialogElement.style.left = posX+"px";
+	menuDialogElement.style.top = posY+"px";
 	menuDialogElement.style.display = "block";
 }
 

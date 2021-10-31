@@ -2,6 +2,16 @@
 'use strict';
 const fileSelectElement = document.getElementById("fileselect");
 
+var ICE_config = {
+	"iceServers": [
+		{	'urls': 'stun:'+window.location.hostname+':3739' },
+		{	'urls': 'turn:'+window.location.hostname+':3739',
+			'username': 'c807ec29df3c9ff',
+			'credential': '736518fb4232d44'
+		}
+	]
+};
+
 if(fileSelectElement!=null) {
 	fileSelectElement.addEventListener('change', (event) => {
 		if(!gentle) console.log("fileSelect event");
@@ -392,7 +402,7 @@ function menuDialogOpen() {
 		if(!gentle) console.log('fullScreenOverlay click');
 		historyBack();
 	}
-	mainElement.style.filter = "blur(0.8px) brightness(60%)";
+	containerElement.style.filter = "blur(0.8px) brightness(60%)";
 	if(calleeLevel>0 && navigator.cookieEnabled && getCookieSupport()!=null) {
 		// cookies avail, "Settings" and "Exit" allowed
 		if(!gentle) console.log('menuSettingsElement on (cookies enabled)');
@@ -419,9 +429,8 @@ function historyBack() {
 }
 
 function menuDialogClose() {
-	if(!gentle) console.log('menuDialogClose');
 	menuDialogElement.style.display = "none";
-	mainElement.style.filter = "";
+	containerElement.style.filter = "";
 	fullScreenOverlayElement.style.display = "none";
 	fullScreenOverlayElement.onclick = null;
 	menuDialogOpenFlag = false;
@@ -445,7 +454,7 @@ function iframeWindowOpen(url,addStyleString) {
 		historyBack();
 	}
 
-	mainElement.style.filter = "blur(0.8px) brightness(60%)";
+	containerElement.style.filter = "blur(0.8px) brightness(60%)";
 
 	if(!gentle) console.log('iframeWindowOpen', url);
 	iframeWindowOpenFlag = true;
@@ -464,11 +473,361 @@ function iframeWindowOpen(url,addStyleString) {
 
 function iframeWindowClose() {
 	if(!gentle) console.log('iframeWindowClose');
-	mainElement.style.filter="";
+	containerElement.style.filter="";
 	iframeWindowElement.innerHTML = "";
 	iframeWindowElement.style.display = "none";
 	fullScreenOverlayElement.style.display = "none";
 	fullScreenOverlayElement.onclick = null;
 	iframeWindowOpenFlag = false;
 }
+
+function getStream() {
+	if(neverAudio) {
+		if(dialAfterLocalStream) {
+			dialAfterLocalStream=false;
+			console.warn("getStream neverAudio + dialAfter");
+			gotStream(); // pretend
+		}
+		return
+	}
+
+//	let supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
+//	if(!gentle) console.log('getStream supportedConstraints',supportedConstraints);
+
+	var constraints = {
+		audio: {
+//			deviceId: avSelect.value ? {exact: avSelect.value} : undefined,
+			noiseSuppression: true,  // true by default
+			echoCancellation: true,  // true by default
+			autoGainControl: false,
+		}
+		,video: {
+//			deviceId: avSelect.value ? {exact: avSelect.value} : undefined,
+			width: {
+			  min: 480,
+			  ideal: 1280,
+			  max: 1920		// 4096
+			},
+			height: {
+			  min: 360,
+			  ideal: 720,
+			  max: 1080		// 2160
+			},
+		}
+	};
+	if(!gentle) console.log('getStream getUserMedia',videoEnabled);
+	if(!videoEnabled) {
+		constraints.video = false;
+	}
+
+	if(!gentle) console.log('getStream getUserMedia constraints',avSelect.value,constraints);
+	if(!neverAudio) {
+		return navigator.mediaDevices.getUserMedia(constraints)
+			.then(gotStream)
+			.catch(function(err) {
+				if(!videoEnabled) {
+					console.error('audio input error', err);
+					showStatus("audio input error<br>"+err,-1);
+				} else {
+					console.error('audio/video input error', err);
+					showStatus("audio/video input error<br>"+err,-1);
+				}
+			});
+	}
+}
+
+function gotDevices(deviceInfos) {
+	// fill avSelect with the available audio/video input devices (mics and cams)
+	if(!gentle) console.log('gotDevices',deviceInfos);
+	var i, L = avSelect.options.length - 1;
+	for(i = L; i >= 0; i--) {
+		avSelect.remove(i);
+	}
+	for(const deviceInfo of deviceInfos) {
+		const option = document.createElement('option');
+		option.value = deviceInfo.deviceId;
+		if(deviceInfo.kind === 'audioinput') {
+			let deviceInfoLabel = deviceInfo.label;
+			if(deviceInfoLabel=="Default") {
+				deviceInfoLabel="Audio Input Default";
+			} else if(deviceInfoLabel) {
+				deviceInfoLabel = "Audio "+deviceInfoLabel
+			}
+			option.text = deviceInfoLabel || `Audio ${avSelect.length + 1}`;
+			var exists=false
+			var length = avSelect.options.length;
+			for(var i = length-1; i >= 0; i--) {
+				if(avSelect.options[i].text == option.text) {
+					exists=true; // don't add again
+					break;
+				}
+			}
+			if(!exists) {
+				avSelect.appendChild(option);
+			}
+			//console.log('audioinput',option);
+		} else if (deviceInfo.kind === 'videoinput') {
+			if(videoEnabled) {
+				let deviceInfoLabel = deviceInfo.label;
+				if(deviceInfoLabel=="Default") {
+					deviceInfoLabel="Video Input Default";
+				} else if(deviceInfoLabel) {
+					deviceInfoLabel = "Video "+deviceInfoLabel
+				}
+				var exists=false
+				option.text = deviceInfoLabel || `Video ${avSelect.length + 1}`;
+				var length = avSelect.options.length;
+				for(var i = length-1; i >= 0; i--) {
+					if(avSelect.options[i].text == option.text) {
+						exists=true; // don't add again
+						break;
+					}
+				}
+				if(!exists) {
+					avSelect.appendChild(option);
+				}
+			}
+		}
+	}
+}
+
+var addedAudioTrack = null;
+var addedVideoTrack = null;
+function gotStream(stream) {
+	// add localStream audioTrack and (possibly) localStream videoTrack to peerCon using peerCon.addTrack()
+	// then activate localVideoFrame with localStream
+    if(!gentle) console.log("gotStream set localStream");
+	if(localStream) {
+		// stop all tracks on previous localStream
+		const allTracks = localStream.getTracks();
+		if(!gentle) console.log("gotStream previous localStream len",allTracks.length);
+		allTracks.forEach(track => {
+			if(!gentle) console.log('gotStream previous localStream track.stop()',track);
+			track.stop(); 
+		});
+		if(peerCon && addedAudioTrack) {
+			if(!gentle) console.log("gotStream previous localStream peerCon.removeTrack(addedAudioTrack)");
+			peerCon.removeTrack(addedAudioTrack);
+		}
+		addedAudioTrack = null;
+		if(peerCon && addedVideoTrack) {
+			if(!gentle) console.log("gotStream previous localStream peerCon.removeTrack(addedVideoTrack)");
+			peerCon.removeTrack(addedVideoTrack);
+		}
+		addedVideoTrack = null;
+	}
+
+	localStream = stream;
+
+	if(!peerCon) {
+		if(!gentle) console.log('gotStream no peerCon: no peerCon.addTrack');
+	} else if(addedAudioTrack) {
+		if(!gentle) console.log('gotStream addedAudioTrack already set: no peerCon.addTrack');
+	} else {
+		const audioTracks = localStream.getAudioTracks();
+		audioTracks[0].enabled = true;
+		console.log('peerCon addTrack local audio input',audioTracks[0]);
+		addedAudioTrack = peerCon.addTrack(audioTracks[0],localStream);
+	}
+
+	// now let's look at all the reasons why we would NOT add the videoTrack to peerCon
+	if(!videoEnabled) {
+		// disable all video tracks (do not show the video locally)
+		if(!gentle) console.log("gotStream !videoEnabled -> stop video tracks");
+		stream.getVideoTracks().forEach(function(track) {
+			if(!gentle) console.log("gotStream !videoEnabled stop video track",track);
+			track.stop();
+		})
+	} else if(!addLocalVideoEnabled) {
+		// video streaming has not been activated yet
+		if(!gentle) console.log('gotStream videoEnabled but !addLocalVideoEnabled: no addTrack vid');
+	} else if(!peerCon) {
+		if(!gentle) console.log('# gotStream videoEnabled but !peerCon: no addTrack vid');
+	} else if(localCandidateType=="relay" || remoteCandidateType=="relay") {
+		if(!gentle) console.log('gotStream videoEnabled but relayed con: no addTrack vid (%s)(%s)',localCandidateType,remoteCandidateType);
+	} else if(localStream.getTracks().length<2) {
+		if(!gentle) console.log('# gotStream videoEnabled but getTracks().length<2: no addTrack vid',localStream.getTracks().length);
+	} else {
+		console.log('peerCon addTrack local video input',localStream.getTracks()[1]);
+		addedVideoTrack = peerCon.addTrack(localStream.getTracks()[1],localStream);
+	}
+
+	if(!gentle) console.log("gotStream set localVideoFrame");
+	localVideoFrame.srcObject = localStream;
+	localVideoFrame.volume = 0;
+	vmonitor();
+	gotStream2();
+}
+
+function videoSwitch() {
+	if(videoEnabled) {
+		videoOff();
+	} else {
+		videoOn();
+	}
+}
+
+var addLocalVideoEnabled = false; // was sendLocalStream
+function connectLocalVideo(forceOff) {
+	if(vpauseTimer) {
+		clearTimeout(vpauseTimer);
+		vpauseTimer = null;
+	}
+	if(!addLocalVideoEnabled && !forceOff) {
+		// start streaming localVideo to other peer
+		if(dataChannel && dataChannel.readyState=="open") {
+			if(!gentle) console.log("connectLocalVideo set");
+			vsendButton.classList.remove('blink_me')
+			vsendButton.style.color = "#ff0"; // local video is streaming
+
+			addLocalVideoEnabled = true; // will cause: peerCon.addTrack(video)
+			pickupAfterLocalStream = true; // will cause: pickup2()
+			getStream(); // -> gotStream() -> gotStream2() -> pickup2() -> "calleeDescriptionUpd"
+		} else {
+			if(!gentle) console.log("# connectLocalVideo no dataChannel");
+		}
+	} else {
+		// stop streaming localVideo to other peer
+		vsendButton.style.color = "#fff"; // local video is not streaming
+
+		addLocalVideoEnabled = false;
+		if(!addedVideoTrack) {
+			if(!gentle) console.log("connectLocalVideo disconnect !addedVideoTrack !removeTrack");
+		} else if(!peerCon) {
+			if(!gentle) console.log("connectLocalVideo disconnect !peerCon -> !removeTrack");
+		} else  {
+			if(!gentle) console.log("connectLocalVideo disconnect peerCon.removeTrack(addedVideoTrack)");
+			peerCon.removeTrack(addedVideoTrack);
+			addedVideoTrack = null;
+		}
+
+		if(dataChannel && dataChannel.readyState=="open") {
+			// make caller switch to "remote cam not streaming"
+			if(!gentle) console.log("connectLocalVideo disconnect dataChannel.send(rtcVideoOff)");
+			dataChannel.send("cmd|rtcVideoOff");
+		}
+	}
+}
+
+var vpauseTimer = null;
+function vmonitor() {
+	if(!gentle) console.log("vmonitor");
+// TODO this does not activate after call disconnect (so a new timer is started)
+	localVideoPaused.innerHTML = "";
+	vmonitorButton.style.color = "#ff0";
+	vpauseButton.style.color = "#fff";
+	if(videoEnabled) {
+		localVideoFrame.play().catch(function(error) {});
+		if(!mediaConnect) {
+			if(!gentle) console.log("vmonitor !mediaConnect");
+			vsendButton.style.color = "#fff";
+			if(vpauseTimer) {
+				clearTimeout(vpauseTimer);
+				vpauseTimer = null;
+			}
+			vpauseTimer = setTimeout(vpauseByTimer, 30000);
+		} else {
+// TODO unpause microphone if necessary
+		}
+	}
+}
+
+function vpauseByTimer() {
+	if(!gentle) console.log("vpauseByTimer",mediaConnect);
+	if(!mediaConnect) {
+		vpause();
+// TODO also microphone pause, so that there will be no red-tab
+	}
+}
+
+function vpause() {
+	if(!gentle) console.log("vpause");
+	localVideoFrame.pause();
+	vpauseButton.style.color = "#ff0";
+	vmonitorButton.style.color = "#fff";
+	if(vpauseTimer) {
+		clearTimeout(vpauseTimer);
+		vpauseTimer = null;
+	}
+	localVideoPaused.innerHTML = "paused";
+}
+
+function vres() {
+// TODO resolution select popup window
+}
+
+function onIceCandidate(event,myCandidateName) {
+	if(event.candidate==null) {
+		// ICE gathering has finished
+		if(!gentle) console.log('onIce end of candidates');
+	} else if(event.candidate.address==null) {
+		//console.warn('onIce skip event.candidate.address==null');
+	} else if(dataChannel && dataChannel.readyState=="open") {
+		if(!gentle) console.log("onIce "+myCandidateName+" via dataChannel", event.candidate.address);
+		dataChannel.send("cmd|"+myCandidateName+"|"+JSON.stringify(event.candidate));
+	} else if(wsConn==null) {
+		if(!gentle) console.log("onIce "+myCandidateName+": wsConn==null", event.candidate.address);
+	} else if(wsConn.readyState!=1) {
+		if(!gentle) console.log("onIce "+myCandidateName+": readyState!=1",	event.candidate.address, wsConn.readyState);
+	} else {
+		if(!gentle) console.log("onIce "+myCandidateName+" via wsSend", event.candidate.address);
+// TODO support dataChannel delivery?
+		// 300ms delay to prevent "cmd "+myCandidateName+" no peerCon.remoteDescription" on other side
+		setTimeout(function() {
+			wsSend(myCandidateName+"|"+JSON.stringify(event.candidate));
+		},300);
+	}
+}
+
+function peerConOntrack(track, streams) {
+// TODO tmtmtm
+//		track.onunmute = () => {
+//			if(remoteVideoFrame!=null && remoteVideoFrame.srcObject == streams[0]) {
+//				if(!gentle) console.warn('peerCon.ontrack onunmute was already set');
+//				return;
+//			}
+		if(!gentle) console.log('peerCon.ontrack onunmute set remoteVideoFrame.srcObject',streams[0]);
+//		if(remoteStream) {
+//			if(!gentle) console.log('peerCon.ontrack onunmute have prev remoteStream');
+//			// TODO treat like localStream in gotStream() ? apparently not needed
+//		}
+		remoteStream = streams[0];
+//		};
+
+	if(!track.enabled) {
+		if(!gentle) console.log('peerCon.ontrack onunmute !track.enabled: not set remoteVideoFrame');
+	} else {
+		if(!gentle) console.log('peerCon.ontrack onunmute track.enabled: set remoteVideoFrame',track.kind);
+		if(remoteVideoFrame.srcObject == remoteStream) {
+			if(!gentle) console.log('peerCon.ontrack onunmute track.enabled: same remoteStream again');
+		} else {
+			if(!gentle) console.log('peerCon.ontrack onunmute track.enabled: new remoteStream');
+			remoteVideoFrame.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
+			var isPlaying = remoteVideoFrame.currentTime > 0 && !remoteVideoFrame.paused && !remoteVideoFrame.ended && remoteVideoFrame.readyState > remoteVideoFrame.HAVE_CURRENT_DATA;
+			if(!isPlaying) {
+				remoteVideoFrame.play().catch(function(error) {
+					if(!gentle) console.log("# remoteVideoFrame error",error);
+					if(!gentle) console.log("# remoteVideoFrame",remoteVideoFrame.currentTime,remoteVideoFrame.paused,remoteVideoFrame.ended,remoteVideoFrame.readyState,remoteVideoFrame.HAVE_CURRENT_DATA);
+				});
+			}
+		}
+		setTimeout(function() {
+			let videoTracks = remoteStream.getVideoTracks();
+			if(!gentle) console.log('peerCon.ontrack onunmute track.enabled: delayed v-tracks',videoTracks.length);
+			if(videoTracks.length>0) {
+				remoteVideoDiv.style.visibility = "visible";
+				remoteVideoDiv.style.height = "";
+				remoteVideoDiv.style.display = "block";
+				remoteVideoLabel.innerHTML = "remote cam streaming";
+				remoteVideoLabel.style.color = "#ff0";
+			} else {
+				remoteVideoDiv.style.visibility = "hidden";
+				remoteVideoDiv.style.height = "0px";
+				remoteVideoDiv.style.display = "block";
+				remoteVideoLabel.innerHTML = "remote cam not streaming";
+				remoteVideoLabel.style.color = "#fff";
+			}
+		},500);
+	}
+};
 

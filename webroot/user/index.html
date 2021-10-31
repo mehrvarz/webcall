@@ -1,18 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" id="main">
 <head>
 <!-- WebCall Copyright 2021 timur.mobi. All rights reserved. -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1.0">
 <title>WebCall Caller</title>
-<meta property="og:title" content="Audiophile Web-Telephony">
-<meta name="twitter:title" content="Audiophile Web-Telephony">
+<meta property="og:title" content="WebCall Audiophile Telephony">
+<meta name="twitter:title" content="WebCall Audiophile Telephony">
 <meta name="mobile-web-app-capable" content="yes">
 <style>
 ::-webkit-scrollbar { display:none; }
 html {
-	width:100%; min-height:100%; _min-height:900px;
-	background-image:linear-gradient(#003, #46f);
+	width:100%; min-height:100%;
+	background-image:linear-gradient(#004, #139);
 	color:#ddd;
 	scrollbar-width:none;
 }
@@ -24,6 +24,7 @@ body {
 }
 button, button:focus {
 	background-color:#04c;
+	transition: background-color 300ms;
 	border:none;
 	border-radius:3px;
 	color:white;
@@ -51,9 +52,7 @@ button[disabled]:hover {
 }
 
 div#container {
-	_margin: 0 auto 0 auto;
-	_padding: 1em 0.8em 1em 1.5em;
-	padding: 1em 1.5em 1em 1.5em;
+	padding: 0em 1.0em 1em 1.0em;
 	max-width:520px;
 }
 div.outputSelector {
@@ -62,7 +61,7 @@ div.outputSelector {
 h1 {
 	font-size:1.7em;
 	font-weight:600;
-	_opacity:0.9;
+	user-select:none;
 }
 a, a:link, a:visited, a:active {
     color:#ddd;
@@ -75,14 +74,32 @@ a:hover {
     color:#fff;
     text-decoration:underline;
 }
+
+.checkbox {
+	-webkit-appearance: none;
+	background-color:#227;
+	border: 1px solid #cacece;
+	padding: 6px;
+	margin-bottom:-1px;
+	border-radius: 3px;
+	display: inline-block;
+	position: relative;
+	cursor: pointer;
+	user-select:none;
+}
+.checkbox:active, .checkbox:checked:active {
+}
+.checkbox:checked {
+	background-color: #3af;
+}
+
 .status {
-	margin-top:10px;
+	margin-top:18px;
 	margin-bottom:18px;
 	width:98%;
 	max-width:520px;
     font-size:1.1em;
 	line-height:1.3em;
-	_min-height:3.6em;
 	transition:opacity 600ms;
     color:#ddd;
 }
@@ -168,8 +185,33 @@ input[type=submit]:focus {
 	background-color: #9d9;
 	color: #000;
 }
+@media (min-aspect-ratio: 1/1) {
+	.videoframe-r {
+		width:49%; aspect-ratio:16/9; margin-right:6px; float:left; user-select:none;
+	}
+	.videoframe-l {
+		width:49%; aspect-ratio:16/9; margin-right:6px; float:left; user-select:none;
+	}
+}
+@media (max-aspect-ratio: 1/1) {
+	.videoframe-r {
+		width:99%; aspect-ratio:16/9; user-select:none;
+	}
+	.videoframe-l {
+		width:99%; aspect-ratio:16/9; margin-top:8px; user-select:none;
+	}
+}
+.blink_me {
+	animation: blinker 800ms linear infinite;
+}
+@keyframes blinker {
+	50% {
+	    opacity: 0.2;
+	}
+}
 </style>
 </head>
+
 <body>
 <img src="phone.svg"
    style="position:absolute;right:0;top:2vh;width:440px;max-height:80vh;padding:2%;opacity:0.1;z-index:-1;">
@@ -178,52 +220,80 @@ input[type=submit]:focus {
 
 <div id="iframeWindow" style="display:none"></div>
 
-<div id="menuDialog" style="position:relative; max-width:520px; margin-top:2vh; user-select:none; display:none;">
+<div id="menuDialog" style="position:relative; max-width:520px; user-select:none; display:none;">
 	<div style="position:absolute; right:0px; z-index:110; background:#45dd; color:#fff; padding:10px 20px; line-height:2.6em; border-radius:3px; cursor:pointer;">
 		<div onclick="openPostCallStats()">Call Stats</div>
 		<label id="fileselectlabel" style="cursor:pointer; display:none;">
 			Send File
 			<input id="fileselect" type="file" style="display:none"></input>
 		</label>
+		<label id="fullscreenlabel" style="margin-left:-4px; _display:none;">
+			<input type="checkbox" id="fullscreen" class="checkbox"> Full screen</label>
+		</label>
 	</div>
 </div>
 
-<div id="container" style="margin-top:3vh;">
-<img id="menu" src="menu.svg" style="position:relative; float:right; margin-top:23px; margin-right:24px; width:25px; z-index:100; user-select:none; cursor:pointer;" onclick="menuDialogOpen()">
-<h1 id="title">WebCall</h1>
-<div id="calleeOnline" style="display:none">
-	<div style="display:grid; grid-template-columns: 1fr 1fr 40px; list-style-type:none; max-width:320px;">
-		<button id="callButton">Call</button>
-		<button id="hangupButton" disabled>Hang Up</button>
-		<img id="onlineIndicator" src="" style="width:26px; margin:0.6em 0 0 0; user-select:none;">
+<div>
+<div id="remoteVideoDiv" class="videoframe-r" style="visibility:hidden;height:0px;">
+	<video id="remoteVideoFrame" style="width:100%;height:100%;background:#111;" _poster="red-gradient.svg" autoplay></video>
+	<div id="remoteVideoLabel" style="opacity:0.7;text-align:center;margin-top:-2px;">remote cam not streaming</div>
+</div>
+<div id="localVideoDiv" class="videoframe-l" style="cursor:pointer;visibility:hidden;height:0px;">
+	<div style="position:relative; display:inline-block; width:100%; height:100%;">
+		<video id="localVideoFrame" onclick="vmonitor()"
+			  style="width:100%;height:100%;background:#111;" _poster="green-gradient.svg" autoplay></video>
+		<span id="localVideoPaused" onclick="vmonitor()" 
+			  style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50% ); text-align:center; color:white; font-weight:bold;">Paused</span>
+	</div>
+	<div id="localVideoLabel" style="opacity:0.7;text-align:center;margin-top:-2px;">
+		<span id="vmonitor" onclick="vmonitor()" style="margin-right:7px">monitor</span>
+		<span id="vpause" onclick="vpause()" style="margin-right:7px">pause</span>
+		<span id="vsend" onclick="connectLocalVideo(false)" style="margin-right:7px">send</span>
+		<!--span id="vres" onclick="vres()" style="margin-right:7px">res</span-->
+		<span id="vclose" onclick="videoSwitch()">close</span>
+	</div>
+</div>
+<div style="clear:both"></div>
+</div>
+
+
+<div id="container">
+	<img id="menu" onclick="menuDialogOpen()" src="menu.svg" style="position:relative; float:right; width:25px; margin-top:6px; z-index:100; user-select:none; cursor:pointer;">
+	<!--img id="tv" onclick="videoSwitch()" src="tv.svg" style="position:relative; float:right; width:25px; margin-top:6px; margin-right:20px; z-index:100; user-select:none; cursor:pointer; _display:none;"-->
+	<img id="camera" src="camera.svg" style="position:relative; float:right; width:30px; margin-top:5.5px; margin-right:24px; z-index:100; user-select:none; cursor:pointer; _display:none;" onclick="videoSwitch()">
+
+	<h1 id="title">WebCall</h1>
+	<div id="calleeOnline" style="display:none">
+		<div style="display:grid; grid-template-columns: 1fr 1fr 40px; list-style-type:none; max-width:320px;">
+			<button id="callButton">Call</button>
+			<button id="hangupButton" disabled>Hang Up</button>
+			<img id="onlineIndicator" src="" style="width:26px; margin:0.6em 0 0 0; user-select:none;">
+		</div>
+
+		<select id="avSelect" class="select"></select>
+	</div>
+	<div id="calleeOffline" style="display:none">
 	</div>
 
-	<select id="audioSource" class="select"></select>
-</div>
-<div id="calleeOffline" style="display:none">
-</div>
+	<textarea id="msgbox" class="msgbox" placeholder="Hi, this is ..." style="display:none"></textarea>
 
-<textarea id="msgbox" class="msgbox" placeholder="Hi, this is ..." style="display:none"></textarea>
+	<div id="status" class="status"></div>
 
-<div id="status" class="status"></div>
+	<div id="progressSend" style="width:100%;max-width:360px;display:none;">
+		<div id="progressSendLabel">sending:</div>
+		<progress id="fileProgressSend" max="0" value="0" style="width:100%" onclick="stopProgressSend()"></progress>
+	</div>
+	<div id="download" style="margin-bottom:10px;"></div>
+	<div id="progressRcv" style="width:100%;max-width:360px;display:none;">
+		<div id="progressRcvLabel">receiving:</div>
+		<progress id="fileProgressRcv" max="0" value="0" style="width:100%" onclick="stopProgressRcv()"></progress>
+	</div>
 
-<div id="progressSend" style="width:100%;max-width:360px;display:none;">
-	<div id="progressSendLabel">sending:</div>
-	<progress id="fileProgressSend" max="0" value="0" style="width:100%" onclick="stopProgressSend()"></progress>
-</div>
-<div id="download" style="margin-bottom:10px;"></div>
-<div id="progressRcv" style="width:100%;max-width:360px;display:none;">
-	<div id="progressRcvLabel">receiving:</div>
-	<progress id="fileProgressRcv" max="0" value="0" style="width:100%" onclick="stopProgressRcv()"></progress>
-</div>
-
-<div id="timer" class="timer">0:00</div>
-
-<div style="opacity:0.7;margin-top:30px;">WebCall by <a href="https://timur.mobi/webcall">timur.mobi</a></div>
-
-<div id="audio">
+	<div id="timer" class="timer">0:00</div>
+	<!--
 	<audio id="remoteAudio" autoplay></audio>
-</div>
+	-->
+	<div style="opacity:0.7;margin-top:30px;">WebCall by <a href="https://timur.mobi/webcall">timur.mobi</a></div>
 </div>
 <script src="custom.js"></script>
 <script src="client.js"></script>
