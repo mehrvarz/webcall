@@ -7,18 +7,19 @@
 // main.go calls readConfig(), opens the database files,
 // opens the websocket handlers for ws and wss communication,
 // starts the httpServer(), the turnServer() and a couple of
-// background processes (tickers). It then waits for a 
-// SIGTERM event to start the shutdown procedure.
+// background processes (tickers). The server will run until 
+// it receives a SIGTERM event. It will then run the shutdown
+// procedure.
 //
-// Clients connect via XHR requests and once their role 
-// (caller or callee) has been communicated, they switch to 
-// the websocket protocol.
-// Callee clients are initially managed by httpLogin.go. 
-// Caller clients are managed by httpOnline.go.
-// On successful callee login a wsHub object is created
-// and the callee can receive calls.
+// Clients connect via XHR requests in httpServer.go.
+// Callee clients will then be managed by httpLogin.go. 
+// Caller clients will be managed by httpOnline.go.
+// Both clients will then switch to the websocket protocol 
+// (wsClient.go).
+// On successful callee login a wsHub object is created.
+// From that point forward the callee can receive calls.
 // A wsHub object holds two wsClient objects for callee and
-// caller. When a call comes int, wsClient takes care of the 
+// caller. When a call comes in, wsClient takes care of the 
 // signaling process.
 
 package main

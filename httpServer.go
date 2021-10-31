@@ -1,4 +1,11 @@
 // WebCall Copyright 2021 timur.mobi. All rights reserved.
+//
+// All client activity starts in httpServer.go.
+// The handlers "/callee/", "/user/" and "/button/" serve the 
+// client software (HTML + Javascript).
+// Once loaded by the user agent, the clients will send XHR requests
+// to the "/rtcsig/" handler, implemented by httpApiHandler().
+
 package main
 
 import (
