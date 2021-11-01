@@ -404,7 +404,7 @@ function videoOff() {
 	localVideoDiv.style.visibility = "hidden";
 	localVideoDiv.style.height = "0px";
 	if(localStream) {
-		connectLocalVideo(true); // stop streaming video track
+		connectLocalVideo(true);
 	}
 
 	if(!rtcConnect) {
@@ -1587,7 +1587,6 @@ function createDataChannel() {
 		if(rtcConnect) {
 			console.log("dataChannel.onerror",event);
 			showStatus("# dataChannel error "+event.error,-1);
-//TODO hangup only if channel closed?
 			hangup();
 		}
 		progressSendElement.style.display = "none";
@@ -1745,7 +1744,7 @@ function stopAllAudioEffects() {
 
 function hangup(mustDisconnectCallee,message) {
 	dialing = false;
-	connectLocalVideo(true); // peerCon.removeTrack(addedVideoTrack); dataChannel.send("cmd|rtcVideoOff");
+	connectLocalVideo(true);
 	if(fileselectLabel!=null) {
 		fileselectLabel.style.display = "none";
 		progressSendElement.style.display = "none";
@@ -1781,7 +1780,7 @@ function hangup(mustDisconnectCallee,message) {
 		setTimeout(function() {
 			dialButton.innerHTML = "<b>W E B C A L L</b><br>"+singleButtonReadyText;
 			dialButton.style.display = "inline-block";
-		},2500); // about the time it takes for the busy tone to end
+		},2500); // till busy tone ends
 	} else {
 		hangupButton.disabled = true;
 		dialButton.disabled = false;
@@ -1789,7 +1788,7 @@ function hangup(mustDisconnectCallee,message) {
 	}
 
 	if(mustDisconnectCallee && wsConn!=null && wsConn.readyState==1) {
-		// for instance in case we are still ws-connected (if hangup occurs while still "ringing")
+		// if hangup occurs while still ringing
 		if(!gentle) console.log('hangup wsSend(cancel)');
 		wsSend("cancel|c");
 	}
@@ -1835,7 +1834,7 @@ function hangup(mustDisconnectCallee,message) {
 			const audioTracks = localStream.getAudioTracks();
 			if(!gentle) console.log('hangup remove local mic audioTracks.length',audioTracks.length);
 			if(audioTracks.length>0) {
-				if(!gentle) console.log('hangup remove local mic localStream.removeTrack',audioTracks[0]);
+				if(!gentle) console.log('hangup remove local mic removeTrack',audioTracks[0]);
 				audioTracks[0].stop();
 				localStream.removeTrack(audioTracks[0]);
 			}
@@ -1844,7 +1843,7 @@ function hangup(mustDisconnectCallee,message) {
 			const videoTracks = localStream.getVideoTracks();
 			if(!gentle) console.log('hangup remove local vid videoTracks.length',videoTracks.length);
 			if(videoTracks.length>0) {
-				if(!gentle) console.log('hangup remove local vid localStream.removeTrack',videoTracks[0]);
+				if(!gentle) console.log('hangup remove local vid removeTrack',videoTracks[0]);
 				videoTracks[0].stop();
 				localStream.removeTrack(videoTracks[0]);
 			}
@@ -1865,7 +1864,7 @@ function hangup(mustDisconnectCallee,message) {
 		if(!gentle) console.log('hangup peerCon');
 		let peerConCloseFunc = function() {
 			if(!gentle) console.log('hangup peerConCloseFunc');
-			if(mustDisconnectCallee /*&& (wsConn==null || wsConn.readyState!=1)*/) {
+			if(mustDisconnectCallee) {
 				if(!gentle) console.log('hangup mustDisconnectCallee');
 				if(dataChannel && dataChannel.readyState=="open") {
 					if(!gentle) console.log('hangup dataChannel send disconnect');
@@ -1882,10 +1881,7 @@ function hangup(mustDisconnectCallee,message) {
 						if(senders) {
 							if(!gentle) console.log('hangup peerCon.removeTrack senders',senders.length);
 							try {
-								senders.forEach((sender) => {
-									if(!gentle) console.log('hangup peerCon.removeTrack sender',sender);
-									peerCon.removeTrack(sender);
-								})
+								senders.forEach((sender) => { peerCon.removeTrack(sender); })
 							} catch(ex) {
 								console.warn('hangup peerCon.removeTrack sender',ex);
 							}
@@ -1895,10 +1891,7 @@ function hangup(mustDisconnectCallee,message) {
 						if(receivers) {
 							if(!gentle) console.log('hangup peerCon.receivers len=%d',receivers.length);
 							try {
-								receivers.forEach((receiver) => {
-									if(!gentle) console.log('hangup receiver.track.stop()',receiver);
-									const tracks = receiver.track.stop();
-								});
+								receivers.forEach((receiver) => { receiver.track.stop(); });
 							} catch(ex) {
 								console.warn('hangup receiver.track.stop()',ex);
 							}
@@ -1908,10 +1901,7 @@ function hangup(mustDisconnectCallee,message) {
 						if(transceivers) {
 							if(!gentle) console.log('hangup peerCon.transceivers len=%d',transceivers.length);
 							try {
-								transceivers.forEach((transceiver) => {
-									if(!gentle) console.log('hangup peerCon.transceiver stop',transceiver);
-									transceiver.stop();
-								})
+								transceivers.forEach((transceiver) => { transceiver.stop(); })
 							} catch(ex) {
 								console.warn('hangup peerCon.transceiver stop ex',ex);
 							}
@@ -1920,7 +1910,6 @@ function hangup(mustDisconnectCallee,message) {
 						setTimeout(function() {
 							if(!gentle) console.log('hangup peerCon.close');
 							peerCon.close();
-							if(!gentle) console.log('hangup peerCon.signalingState',peerCon.signalingState); // shd be 'closed'
 							peerCon = null;
 						},500);
 					},500);
@@ -1941,7 +1930,6 @@ function hangup(mustDisconnectCallee,message) {
 			}
 		}
 		if(singlebutton) {
-			// no StatsPostCall for you
 			peerConCloseFunc();
 		} else {
 			peerCon.getStats(null).then((results) => { 
@@ -1998,7 +1986,7 @@ function menuDialogOpen() {
 	}
 	containerElement.style.filter = "blur(0.8px) brightness(60%)";
 
-	// position menuDialog at mouse coordinate
+	// menuDialog at mouse coordinate
     var e = window.event;
     var posX = e.clientX/8 - 50;
 	if(posX<0) posX=0;

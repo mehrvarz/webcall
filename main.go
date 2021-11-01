@@ -530,6 +530,7 @@ func readStatsFile() {
 	statsIni, err := ini.Load(statsFileName)
 	if err != nil {
 		//fmt.Printf("# cannot read ini file '%s', err=%v\n", statsFileName, err)
+		// we ignore this; WebCall works fine without a statsFile
 		return
 	}
 

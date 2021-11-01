@@ -351,7 +351,7 @@ function videoOff() {
 	localVideoDiv.style.visibility = "hidden";
 	localVideoDiv.style.height = "0px";
 	if(localStream) {
-		connectLocalVideo(true); // stop video track (peerCon.removeTrack(addedVideoTrack))
+		connectLocalVideo(true);
 	}
 
 	if(!rtcConnect) {
@@ -1409,7 +1409,7 @@ function hangup() {
 		},1000);
 	}
 
-	connectLocalVideo(true); // stop streaming local video
+	connectLocalVideo(true);
 	endWebRtcSession(true,true);
 	vmonitor();
 	vsendButton.classList.remove('blink_me')
@@ -1676,7 +1676,6 @@ function createDataChannel() {
 			if(rtcConnect) {
 				console.log("# dataChannel.onerror",event);
 				showStatus("dataChannel error "+event.error,-1);
-//TODO only hangup() if channel closed ?
 				hangup();
 			}
 			progressSendElement.style.display = "none";
