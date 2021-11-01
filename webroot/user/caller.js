@@ -370,13 +370,13 @@ function videoOn() {
 
 	// activate localStream in localVideoFrame
 	localVideoFrame.volume = 0; // avoid audio feedback
-	localVideoDiv.style.visibility = "visible";
-	localVideoDiv.style.height = "";
-	localVideoDiv.style.display = "block";
+
+	localVideoShow();
+
 	// start localVideoFrame playback, setup the localVideo pane buttons
 	vmonitor();
 	// now that the localVideo pane is shown, hide the camera icon
-	cameraElement.style.display = "none";
+	cameraElement.style.opacity = "0";
 
 	// switch avSelect.selectedIndex to 1st video option
 	getStream().then(() => navigator.mediaDevices.enumerateDevices()).then((deviceInfos) => {
@@ -399,11 +399,9 @@ function videoOff() {
 	// disable local video (but if rtcConnect, keep local mic on)
 	if(!gentle) console.log("videoOff");
 	videoEnabled = false;
-
-	// hide localVideoFrame and stop streaming video track
-	localVideoDiv.style.visibility = "hidden";
-	localVideoDiv.style.height = "0px";
+	localVideoHide();
 	if(localStream) {
+		// stop streaming video track
 		connectLocalVideo(true);
 	}
 
@@ -450,7 +448,7 @@ function videoOff() {
 		localVideoFrame.pause();
 		localVideoFrame.currentTime = 0;
 		localVideoFrame.srcObject = null;
-		localVideoDiv.style.display = "none";
+//		localVideoDiv.style.display = "none";
 		localStream = null;
 
 		// hide and fully deacticate remoteVideoFrame + remoteStream
@@ -458,22 +456,16 @@ function videoOff() {
 		remoteVideoFrame.pause();
 		remoteVideoFrame.currentTime = 0;
 		remoteVideoFrame.srcObject = null;
-		remoteVideoDiv.style.visibility = "hidden";
+//		remoteVideoDiv.style.visibility = "hidden";
 		remoteVideoDiv.style.height = "0px";
-		remoteVideoDiv.style.display = "none";
+//		remoteVideoDiv.style.display = "none";
 		remoteVideoLabel.innerHTML = "remote cam not streaming";
 		remoteVideoLabel.style.color = "#fff";
 		remoteStream = null;
-
-		// log state of dataChannel
-		if(dataChannel) {
-			if(!gentle) console.log("videoOff !rtcConnect dataChannel state:",dataChannel.readyState);
-			//dataChannel = null;
-		}
 	}
 
 	// now that the localVideo pane is hidden, show the camera icon
-	cameraElement.style.display = "block";
+	cameraElement.style.opacity = "1";
 
 	// switch to the 1st/default audio device
 	let optionElements = Array.from(avSelect);
@@ -552,32 +544,7 @@ function calleeOnlineStatus(onlineStatus) {
 		// callee is available/online
 		let tok = onlineStatus.split("|");
 		wsAddr = tok[0];
-/*
-		var calleeVideo = false;
-		for(var i=1; i<tok.length; i++) {
-			let tok2 = tok[i].split("=");
-			if(tok2.length>1) {
-				var cmd = tok2[0];
-				var val = tok2[1];
-				console.log('calleeOnlineStatus cmd=%s val=%s',cmd,val);
-				if(cmd=="video") {
-					if(val=="true" || val=="on") {
-						calleeVideo = true;
-					}
-				}
-			}
-		}
-		if(calleeVideo) {
-			// enable tv icon
-			cameraElement.style.display = "block";
-			setTimeout(videoOn,500);
-		} else {
-			// disable tv icon (leave it disabled)
-			cameraElement.style.display = "none";
-		}
 
-		cameraElement.style.display = "block";
-*/
 		if(singlebutton) {
 			// enable parent iframe (height)
 			if(iframeParent) {
@@ -696,8 +663,7 @@ function calleeOnlineAction(from) {
 				showStatus("Hit the Call button to establish a telephony connection.",-1);
 			} else {
 				if(!singlebutton) {
-					showStatus( "Before you hit the Call button, you can enter a name "+
-								"or a topic for the convenience of the callee.",-1)
+					showStatus( "Before you hit the Call button you can enter a greeting message (optional).",-1)
 					msgbox.style.display = "block";
 					if(!gentle) console.log('callerName',callerName);
 					if(typeof callerName!=="undefined" && callerName!="") {
@@ -1095,8 +1061,6 @@ function signalingCommand(message) {
 					localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
 						'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
 					peerCon.setLocalDescription(localDescription).then(() => {
-// TODO err: "Failed to set local descr: OperationError: Failed to execute 'setLocalDescription' 
-// on 'RTCPeerConnection': Failed to set local answer sdp: Called in wrong state: stable"
 						if(!gentle) console.log('calleeOffer localDescription set -> signal');
 						if(dataChannel && dataChannel.readyState=="open") {
 							dataChannel.send("cmd|callerAnswer|"+JSON.stringify(localDescription));
@@ -1301,18 +1265,13 @@ function signalingCommand(message) {
 	} else if(cmd=="rtcVideoOff") {
 		// remote video has ended
 		if(!gentle) console.log("rtcVideoOff");
-		remoteVideoDiv.style.visibility = "hidden";
+//		remoteVideoDiv.style.visibility = "hidden";
 		remoteVideoDiv.style.height = "0px";
 		remoteVideoLabel.innerHTML = "remote cam not streaming";
 		remoteVideoLabel.style.color = "#fff";
 
-// TODO
-//	} else if(cmd=="callerDescription" || cmd=="callerCandidate" || "callerInfo" ||
-//			cmd=="stop" || cmd=="ping" || cmd=="rtcConnect" || cmd=="callerDescriptionUpd") {
-//		// ignore without log
-
 	} else {
-		console.warn('ignore incom cmd',cmd);
+		console.log('# ignore incom cmd',cmd);
 	}
 }
 
@@ -1802,9 +1761,9 @@ function hangup(mustDisconnectCallee,message) {
 	remoteVideoFrame.pause();
 	remoteVideoFrame.currentTime = 0;
 	remoteVideoFrame.srcObject = null;
-	remoteVideoDiv.style.visibility = "hidden";
+//	remoteVideoDiv.style.visibility = "hidden";
 	remoteVideoDiv.style.height = "0px";
-	remoteVideoDiv.style.display = "none";
+//	remoteVideoDiv.style.display = "none";
 	remoteVideoLabel.innerHTML = "remote cam not streaming";
 	remoteVideoLabel.style.color = "#fff";
 	remoteStream = null;
@@ -1851,7 +1810,7 @@ function hangup(mustDisconnectCallee,message) {
 		localVideoFrame.pause();
 		localVideoFrame.currentTime = 0;
 		localVideoFrame.srcObject = null;
-		localVideoDiv.style.display = "none";
+//		localVideoDiv.style.display = "none";
 		localStream = null;
 	}
 

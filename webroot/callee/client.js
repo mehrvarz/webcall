@@ -771,12 +771,78 @@ function onIceCandidate(event,myCandidateName) {
 		if(!gentle) console.log("onIce "+myCandidateName+": readyState!=1",	event.candidate.address, wsConn.readyState);
 	} else {
 		if(!gentle) console.log("onIce "+myCandidateName+" via wsSend", event.candidate.address);
-// TODO support dataChannel delivery?
 		// 300ms delay to prevent "cmd "+myCandidateName+" no peerCon.remoteDescription" on other side
 		setTimeout(function() {
+// TODO support dataChannel delivery?
 			wsSend(myCandidateName+"|"+JSON.stringify(event.candidate));
 		},300);
 	}
+}
+
+function localVideoDivOnVisible() {
+	localVideoDiv.style.height = "auto";
+	localVideoDiv.removeEventListener('transitionend',localVideoDivOnVisible);
+}
+
+function localVideoShow() {
+	localVideoLabel.style.opacity = "0.7"; // will be transitioned
+	let localVideoDivHeight = parseFloat(getComputedStyle(localVideoFrame).width)/16*9;
+	if(!gentle) console.log("localVideoShow DivHeight",localVideoDivHeight);
+	localVideoDiv.style.height = ""+localVideoDivHeight+"px"; // will be transitioned
+	localVideoDiv.addEventListener('transitionend', localVideoDivOnVisible) // switch to height auto
+	localVideoDiv.style.visibility = "visible";
+}
+
+/*
+function localVideoDivOnHidden() {
+//	localVideoDiv.style.visibility = "hidden";
+	localVideoDiv.removeEventListener('transitionend',localVideoDivOnHidden);
+}
+*/
+function localVideoHide() {
+	localVideoLabel.style.opacity = "0.5"; // will be transitioned
+	let localVideoDivHeight = parseFloat(getComputedStyle(localVideoFrame).width)/16*9;
+	if(!gentle) console.log("localVideoHide DivHeight",localVideoDivHeight);
+	localVideoDiv.style.height = localVideoDivHeight+"px"; // height from auto to fixed
+	window.requestAnimationFrame(function() { // wait for fixed height
+		localVideoDiv.style.height = "0"; // will be transitioned
+//		localVideoDiv.addEventListener('transitionend', localVideoDivOnHidden)
+	});
+}
+
+function remoteVideoDivOnVisible() {
+	remoteVideoDiv.style.height = "auto";
+	remoteVideoDiv.removeEventListener('transitionend',remoteVideoDivOnVisible);
+}
+
+function remoteVideoShow() {
+	let remoteVideoDivHeight = parseFloat(getComputedStyle(remoteVideoFrame).width)/16*9;
+	if(!gentle) console.log("remoteVideoShow DivHeight",remoteVideoDivHeight);
+	remoteVideoDiv.style.height = ""+remoteVideoDivHeight+"px"; // will be transitioned
+	remoteVideoDiv.addEventListener('transitionend', remoteVideoDivOnVisible) // switch to height auto
+//	remoteVideoDiv.style.visibility = "visible";
+
+	remoteVideoLabel.innerHTML = "remote cam streaming";
+	remoteVideoLabel.style.color = "#ff0";
+}
+
+/*
+function remoteVideoDivOnHidden() {
+//	remoteVideoDiv.style.visibility = "hidden";
+	remoteVideoDiv.removeEventListener('transitionend',remoteVideoDivOnHidden);
+}
+*/
+function remoteVideoHide() {
+	let remoteVideoDivHeight = parseFloat(getComputedStyle(remoteVideoFrame).width)/16*9;
+	if(!gentle) console.log("remoteVideoHide DivHeight",remoteVideoDivHeight);
+	remoteVideoDiv.style.height = remoteVideoDivHeight+"px"; // height from auto to fixed
+	window.requestAnimationFrame(function() { // wait for fixed height
+		remoteVideoDiv.style.height = "0"; // will be transitioned
+//		remoteVideoDiv.addEventListener('transitionend', remoteVideoDivOnHidden)
+	});
+
+	remoteVideoLabel.innerHTML = "remote cam not streaming";
+	remoteVideoLabel.style.color = "#fff";
 }
 
 function peerConOntrack(track, streams) {
@@ -797,35 +863,20 @@ function peerConOntrack(track, streams) {
 	if(!track.enabled) {
 		if(!gentle) console.log('peerCon.ontrack onunmute !track.enabled: not set remoteVideoFrame');
 	} else {
-		if(!gentle) console.log('peerCon.ontrack onunmute track.enabled: set remoteVideoFrame',track.kind);
 		if(remoteVideoFrame.srcObject == remoteStream) {
 			if(!gentle) console.log('peerCon.ontrack onunmute track.enabled: same remoteStream again');
-		} else {
-			if(!gentle) console.log('peerCon.ontrack onunmute track.enabled: new remoteStream');
-			remoteVideoFrame.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
-			var isPlaying = remoteVideoFrame.currentTime > 0 && !remoteVideoFrame.paused && !remoteVideoFrame.ended && remoteVideoFrame.readyState > remoteVideoFrame.HAVE_CURRENT_DATA;
-			if(!isPlaying) {
-				remoteVideoFrame.play().catch(function(error) {
-					if(!gentle) console.log("# remoteVideoFrame error",error);
-					if(!gentle) console.log("# remoteVideoFrame",remoteVideoFrame.currentTime,remoteVideoFrame.paused,remoteVideoFrame.ended,remoteVideoFrame.readyState,remoteVideoFrame.HAVE_CURRENT_DATA);
-				});
-			}
+			return;
 		}
+		if(!gentle) console.log('peerCon.ontrack onunmute track.enabled: new remoteStream');
+		remoteVideoFrame.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
+		remoteVideoFrame.play().catch(function(error) { });
 		setTimeout(function() {
 			let videoTracks = remoteStream.getVideoTracks();
 			if(!gentle) console.log('peerCon.ontrack onunmute track.enabled: delayed v-tracks',videoTracks.length);
 			if(videoTracks.length>0) {
-				remoteVideoDiv.style.visibility = "visible";
-				remoteVideoDiv.style.height = "";
-				remoteVideoDiv.style.display = "block";
-				remoteVideoLabel.innerHTML = "remote cam streaming";
-				remoteVideoLabel.style.color = "#ff0";
+				remoteVideoShow();
 			} else {
-				remoteVideoDiv.style.visibility = "hidden";
-				remoteVideoDiv.style.height = "0px";
-				remoteVideoDiv.style.display = "block";
-				remoteVideoLabel.innerHTML = "remote cam not streaming";
-				remoteVideoLabel.style.color = "#fff";
+				remoteVideoHide();
 			}
 		},500);
 	}

@@ -315,12 +315,14 @@ function videoOn() {
 	}
 	localVideoFrame.srcObject = localStream; // see gotStream()
 	localVideoFrame.volume = 0; // avoid audio feedback
-	localVideoDiv.style.visibility = "visible";
-	localVideoDiv.style.height = "";
+
+	localVideoShow();
+
 	// start localVideoFrame playback, setup the localVideo pane buttons
 	vmonitor();
 	// now that the localVideo pane is shown, hide the camera icon
-	cameraElement.style.display = "none";
+//	cameraElement.style.display = "none";
+	cameraElement.style.opacity = "0";
 
 	getStream().then(() => navigator.mediaDevices.enumerateDevices())
 	.then((deviceInfos) => {
@@ -347,9 +349,7 @@ function videoOff() {
 	// hide/close localVideoFrame (not needed anymore)
 	if(!gentle) console.log("videoOff");
 	videoEnabled = false;
-
-	localVideoDiv.style.visibility = "hidden";
-	localVideoDiv.style.height = "0px";
+	localVideoHide();
 	if(localStream) {
 		connectLocalVideo(true);
 	}
@@ -375,10 +375,12 @@ function videoOff() {
 		remoteVideoFrame.pause();
 		remoteVideoFrame.currentTime = 0;
 		remoteVideoFrame.srcObject = null;
-		remoteVideoDiv.style.visibility = "hidden";
-		remoteVideoDiv.style.height = "0px";
-		remoteVideoLabel.innerHTML = "remote cam not streaming";
-		remoteVideoLabel.style.color = "#fff";
+//		remoteVideoDiv.style.visibility = "hidden";
+//		remoteVideoDiv.style.height = "0px";
+//		remoteVideoLabel.innerHTML = "remote cam not streaming";
+//		remoteVideoLabel.style.color = "#fff";
+		remoteVideoHide();
+
 		remoteStream = null;
 
 		if(dataChannel) {
@@ -387,7 +389,8 @@ function videoOff() {
 	}
 
 	// tmtmtm
-	cameraElement.style.display = "block";
+//	cameraElement.style.display = "block";
+	cameraElement.style.opacity = "1";
 
 	// switch to the 1st audio option
 	let optionElements = Array.from(avSelect);
@@ -1118,10 +1121,12 @@ function signalingCommand(message) {
 	} else if(cmd=="rtcVideoOff") {
 		// remote video track removed by other side (hide remoteVideoFrame so that audio can still be received)
 		if(!gentle) console.log("rtcVideoOff");
-		remoteVideoDiv.style.visibility = "hidden";
-		remoteVideoDiv.style.height = "0px";
-		remoteVideoLabel.innerHTML = "remote cam not streaming";
-		remoteVideoLabel.style.color = "#fff";
+//		remoteVideoDiv.style.visibility = "hidden";
+//		remoteVideoDiv.style.height = "0px";
+//		remoteVideoLabel.innerHTML = "remote cam not streaming";
+//		remoteVideoLabel.style.color = "#fff";
+		remoteVideoHide();
+
 // TODO can be removed?
 //	} else if(cmd=="ping") {
 //	} else if(cmd=="calleeDescriptionUpd") {
@@ -1132,7 +1137,7 @@ function signalingCommand(message) {
 //	} else if(cmd=="calleeCandidate") {
 //	} else if(cmd=="calleeDescription") {
 	} else {
-		if(!gentle) console.warn('ignore incom cmd',cmd);
+		if(!gentle) console.log('# ignore incom cmd',cmd);
 	}
 }
 
@@ -1393,10 +1398,11 @@ function hangup() {
 	rejectButton.style.display = "none";
 
 	remoteVideoFrame.srcObject = null;
-	remoteVideoDiv.style.visibility = "hidden";
-	remoteVideoDiv.style.height = "0px";
-	remoteVideoLabel.innerHTML = "remote cam not streaming";
-	remoteVideoLabel.style.color = "#fff";
+//	remoteVideoDiv.style.visibility = "hidden";
+//	remoteVideoDiv.style.height = "0px";
+//	remoteVideoLabel.innerHTML = "remote cam not streaming";
+//	remoteVideoLabel.style.color = "#fff";
+	remoteVideoHide();
 
 	// if mediaConnect -> play short busy tone 
 	if(mediaConnect) {

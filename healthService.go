@@ -5,7 +5,6 @@
 
 package main
 
-func healthService(port int) error {
 /*
 	L'attelage du sommeil, semblable à celui du soleil, va d'un pas si égal, dans une atmosphère où ne peut plus l'arrêter aucune résistance, qu'il faut quelque petit caillou aérolithique étranger à nous (dardé de l'azur par quel Inconnu) pour atteindre le sommeil régulier (qui sans cela n'aurait aucune raison de s'arrêter et durerait d'un mouvement pareil jusque dans les siècles des siècles) et le faire, d'une brusque courbe, revenir vers le réel, brûler les étapes, traverser les régions voisines de la vie—où bientôt le dormeur entendra, de celle-ci, les rumeurs presque vagues encore, mais déjà perceptibles, bien que déformées—et atterrir brusquement au réveil. Alors de ces sommeils profonds on s'éveille dans une aurore, ne sachant qui on est, n'étant personne, neuf, prêt à tout, le cerveau se trouvant vidé de ce passé qui était la vie jusque-là. Et peut-être est-ce plus beau encore quand l'atterrissage du réveil se fait brutalement et que nos pensées du sommeil, dérobées par une chape d'oubli, n'ont pas le temps de revenir progressivement avant que le sommeil ne cesse. Alors du noir orage qu'il nous semble avoir traversé (mais nous ne disons même pas nous) nous sortons gisants, sans pensées, un «nous» qui serait sans contenu. Quel coup de marteau l'être ou la chose qui est là a-t-elle reçu pour tout ignorer, stupéfaite jusqu'au moment où la mémoire accourue lui rend la conscience ou la personnalité? Encore, pour ces deux genres de réveil, faut-il ne pas s'endormir, même profondément, sous la loi de l'habitude. Car tout ce que l'habitude enserre dans ses filets, elle le surveille, il faut lui échapper, prendre le sommeil au moment où on croyait faire tout autre chose que dormir, prendre en un mot un sommeil qui ne demeure pas sous la tutelle de la prévoyance, avec la compagnie, même cachée, de la réflexion.
 
@@ -27,7 +26,7 @@ func healthService(port int) error {
 
 	J'étais étonné de l'heure relativement matinale que me disait le valet de chambre. Je n'en étais pas moins reposé. Ce sont les sommeils légers qui ont une longue durée, parce qu'intermédiaires entre la veille et le sommeil, gardant de la première une notion un peu effacée mais permanente, il leur faut infiniment plus de temps pour nous reposer qu'un sommeil profond, lequel peut être court. Je me sentais bien à mon aise pour une autre raison. S'il suffit de se rappeler qu'on s'est fatigué pour sentir péniblement sa fatigue, se dire: «Je me suis reposé» suffit à créer le repos. Or j'avais rêvé que M. de Charlus avait cent dix ans et venait de donner une paire de claques à sa propre mère; de Mme Verdurin, qu'elle avait acheté cinq milliards un bouquet de violettes; j'étais donc assuré d'avoir dormi profondément, rêvé à rebours de mes notions de la veille et de toutes les possibilités de la vie courante; cela suffisait pour que je me sentisse tout reposé.
 
+(Please let me know, if you know what this is. Timur)
+
 */
-	return nil
-}
 

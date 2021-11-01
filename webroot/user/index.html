@@ -20,7 +20,7 @@ body {
 	font-family:Sans-Serif;
 	font-weight:300;
 	margin:0;
-	padding:0.5em;
+	_padding:0.5em;
 }
 button, button:focus {
 	background-color:#04c;
@@ -52,7 +52,7 @@ button[disabled]:hover {
 }
 
 div#container {
-	padding: 0em 1.0em 1em 1.0em;
+	padding: 0.7em;
 	max-width:520px;
 }
 div.outputSelector {
@@ -62,6 +62,9 @@ h1 {
 	font-size:1.7em;
 	font-weight:600;
 	user-select:none;
+	margin-block-start:0;
+	margin-block-end:0;
+	margin-bottom:10px;
 }
 a, a:link, a:visited, a:active {
     color:#ddd;
@@ -105,7 +108,7 @@ a:hover {
 }
 .msgbox {
 	font-size:1.2em;
-	margin-top:12px;
+	margin-top:6px;
 	width:95%;
 	max-width:550px;
 	height:3.6em;
@@ -185,20 +188,20 @@ input[type=submit]:focus {
 	background-color: #9d9;
 	color: #000;
 }
-@media (min-aspect-ratio: 1/1) {
-	.videoframe-r {
-		width:49%; aspect-ratio:16/9; margin-right:6px; float:left; user-select:none;
+@media (min-aspect-ratio: 12/10) {
+	.videoframe-remote {
+		width:49%; aspect-ratio:16/9; padding-right:2px; float:left; user-select:none;
 	}
-	.videoframe-l {
-		width:49%; aspect-ratio:16/9; margin-right:6px; float:left; user-select:none;
+	.videoframe-local {
+		width:49%; aspect-ratio:16/9; float:left; user-select:none;
 	}
 }
-@media (max-aspect-ratio: 1/1) {
-	.videoframe-r {
-		width:99%; aspect-ratio:16/9; user-select:none;
+@media (max-aspect-ratio: 12/10) {
+	.videoframe-remote {
+		width:99%; aspect-ratio:16/9; padding-bottom:2px; user-select:none;
 	}
-	.videoframe-l {
-		width:99%; aspect-ratio:16/9; margin-top:8px; user-select:none;
+	.videoframe-local {
+		width:99%; aspect-ratio:16/9; user-select:none;
 	}
 }
 .blink_me {
@@ -234,33 +237,34 @@ input[type=submit]:focus {
 </div>
 
 <div>
-<div id="remoteVideoDiv" class="videoframe-r" style="visibility:hidden;height:0px;">
-	<video id="remoteVideoFrame" style="width:100%;height:100%;background:#111;" _poster="red-gradient.svg" autoplay></video>
-	<div id="remoteVideoLabel" style="opacity:0.7;text-align:center;margin-top:-2px;">remote cam not streaming</div>
-</div>
-<div id="localVideoDiv" class="videoframe-l" style="cursor:pointer;visibility:hidden;height:0px;">
-	<div style="position:relative; display:inline-block; width:100%; height:100%;">
-		<video id="localVideoFrame" onclick="vmonitor()"
-			  style="width:100%;height:100%;background:#111;" _poster="green-gradient.svg" autoplay></video>
-		<span id="localVideoPaused" onclick="vmonitor()" 
-			  style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50% ); text-align:center; color:white; font-weight:bold;">Paused</span>
+	<div id="remoteVideoDiv" class="videoframe-remote" style="height:0px; transition:height 500ms; overflow:hidden;">
+		<div style="position:relative; display:inline-block; width:100%; height:100%;">
+			<video id="remoteVideoFrame" style="width:100%; height:100%; background:#111;" _poster="red-gradient.svg" autoplay></video>
+			<div id="remoteVideoLabel" style="position:absolute; bottom:0; width:100%; z-index:10; opacity:0.5; text-align:center; background:#000; transition:opacity 500ms;">remote cam not streaming</div>
+		</div>
 	</div>
-	<div id="localVideoLabel" style="opacity:0.7;text-align:center;margin-top:-2px;">
-		<span id="vmonitor" onclick="vmonitor()" style="margin-right:7px">monitor</span>
-		<span id="vpause" onclick="vpause()" style="margin-right:7px">pause</span>
-		<span id="vsend" onclick="connectLocalVideo(false)" style="margin-right:7px">send</span>
-		<!--span id="vres" onclick="vres()" style="margin-right:7px">res</span-->
-		<span id="vclose" onclick="videoSwitch()">close</span>
+	<div id="localVideoDiv" class="videoframe-local" style="visibility:hidden; height:0px; transition:height 500ms; overflow:hidden; margin-bottom:10px; cursor:pointer;">
+		<div style="position:relative; display:inline-block; width:100%; height:100%;">
+			<video id="localVideoFrame" _onclick="vmonitor()"
+				  style="width:100%; height:100%; background:#111;" _poster="green-gradient.svg" autoplay></video>
+			<span id="localVideoPaused" _onclick="vmonitor()" 
+				  style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50% ); text-align:center; color:white; font-weight:bold; visibility:hidden;">Paused</span>
+			<div id="localVideoLabel" style="position:absolute; bottom:0; width:100%; z-index:10; opacity:0.5; text-align:center; background:#000; transition:opacity 500ms;">
+				<span id="vpause" onclick="vpause()">pause</span>
+				<span id="vmonitor" onclick="vmonitor()" style="margin-left:7px">monitor</span>
+				<span id="vsend" onclick="connectLocalVideo(false)" style="margin-left:7px">send</span>
+				<!--span id="vres" onclick="vres()" style="margin-left:7px">res</span-->
+				<span id="vclose" onclick="videoSwitch()" style="margin-left:7px">close</span>
+			</div>
+		</div>
 	</div>
-</div>
-<div style="clear:both"></div>
+	<div style="clear:both"></div>
 </div>
 
 
 <div id="container">
 	<img id="menu" onclick="menuDialogOpen()" src="menu.svg" style="position:relative; float:right; width:25px; margin-top:6px; z-index:100; user-select:none; cursor:pointer;">
-	<!--img id="tv" onclick="videoSwitch()" src="tv.svg" style="position:relative; float:right; width:25px; margin-top:6px; margin-right:20px; z-index:100; user-select:none; cursor:pointer; _display:none;"-->
-	<img id="camera" src="camera.svg" style="position:relative; float:right; width:30px; margin-top:5.5px; margin-right:24px; z-index:100; user-select:none; cursor:pointer; _display:none;" onclick="videoSwitch()">
+	<img id="camera" src="camera.svg" style="position:relative; float:right; width:30px; margin-top:5.5px; margin-right:24px; z-index:100; user-select:none; cursor:pointer; transition:opacity 500ms;" onclick="videoSwitch()">
 
 	<h1 id="title">WebCall</h1>
 	<div id="calleeOnline" style="display:none">
@@ -275,9 +279,9 @@ input[type=submit]:focus {
 	<div id="calleeOffline" style="display:none">
 	</div>
 
-	<textarea id="msgbox" class="msgbox" placeholder="Hi, this is ..." style="display:none"></textarea>
-
 	<div id="status" class="status"></div>
+
+	<textarea id="msgbox" class="msgbox" placeholder="Hi, this is ..." style="display:none"></textarea>
 
 	<div id="progressSend" style="width:100%;max-width:360px;display:none;">
 		<div id="progressSendLabel">sending:</div>
