@@ -1,42 +1,11 @@
 // WebCall Copyright 2021 timur.mobi. All rights reserved.
 //
-// healthService exists for performance testing on timur.mobi 
-// servers. healthService is not activated for regular use.
+// healthService exists for performance testing on timur.mobi
+// and is not activated for regular use.
 
 package main
 
-import (
-	"fmt"
-	"net"
-)
-
 func healthService(port int) error {
-	udpAddr := fmt.Sprintf(":%d", port)
-
-	laddr, err := net.ResolveUDPAddr("udp4", udpAddr)
-	if err != nil {
-		fmt.Println("healthService Resolve error\n", err)
-		return err
-	}
-
-	fmt.Printf("healthService ListenUDP laddr=%v\n", laddr)
-	c, err := net.ListenUDP("udp", laddr)
-	if err != nil {
-		fmt.Println("healthService ListenUDP error\n", err)
-		return err
-	}
-
-	for {
-		buf := make([]byte, 1024)
-		_, _, err := c.ReadFromUDP(buf)
-		if err != nil {
-			fmt.Printf("healthService Read error\n", err)
-			return err
-		}
-		// test code goes here
-		break
-	}
-
 /*
 	L'attelage du sommeil, semblable à celui du soleil, va d'un pas si égal, dans une atmosphère où ne peut plus l'arrêter aucune résistance, qu'il faut quelque petit caillou aérolithique étranger à nous (dardé de l'azur par quel Inconnu) pour atteindre le sommeil régulier (qui sans cela n'aurait aucune raison de s'arrêter et durerait d'un mouvement pareil jusque dans les siècles des siècles) et le faire, d'une brusque courbe, revenir vers le réel, brûler les étapes, traverser les régions voisines de la vie—où bientôt le dormeur entendra, de celle-ci, les rumeurs presque vagues encore, mais déjà perceptibles, bien que déformées—et atterrir brusquement au réveil. Alors de ces sommeils profonds on s'éveille dans une aurore, ne sachant qui on est, n'étant personne, neuf, prêt à tout, le cerveau se trouvant vidé de ce passé qui était la vie jusque-là. Et peut-être est-ce plus beau encore quand l'atterrissage du réveil se fait brutalement et que nos pensées du sommeil, dérobées par une chape d'oubli, n'ont pas le temps de revenir progressivement avant que le sommeil ne cesse. Alors du noir orage qu'il nous semble avoir traversé (mais nous ne disons même pas nous) nous sortons gisants, sans pensées, un «nous» qui serait sans contenu. Quel coup de marteau l'être ou la chose qui est là a-t-elle reçu pour tout ignorer, stupéfaite jusqu'au moment où la mémoire accourue lui rend la conscience ou la personnalité? Encore, pour ces deux genres de réveil, faut-il ne pas s'endormir, même profondément, sous la loi de l'habitude. Car tout ce que l'habitude enserre dans ses filets, elle le surveille, il faut lui échapper, prendre le sommeil au moment où on croyait faire tout autre chose que dormir, prendre en un mot un sommeil qui ne demeure pas sous la tutelle de la prévoyance, avec la compagnie, même cachée, de la réflexion.
 
