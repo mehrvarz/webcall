@@ -21,6 +21,7 @@ const mainElement = document.getElementById('main');
 const containerElement = document.getElementById('container');
 const menuElement = document.getElementById('menu');
 const menuDialogElement = document.getElementById('menuDialog');
+const menuDialog2Element = document.getElementById('menuDialog2');
 const cameraElement = document.getElementById('camera');
 const fullScreenOverlayElement = document.getElementById('fullScreenOverlay');
 const progressSendElement = document.getElementById('progressSend'); // switch on and off
@@ -1946,15 +1947,21 @@ function menuDialogOpen() {
 	if(posY>50) posY-=50;
 	// menuDialogElement.style.left/top is a document coordinate
 	if(!gentle) console.log('menuDialogOpen x/y',posX,posY,window.scrollY);
-	// add scrollY-offset to posY
-	posY += window.scrollY;
-	// TODO es besteht die gefahr, dass das popup-menu zu weit unten dargestellt wird
-//	while(posY + menuDialogElement.height > screen.height && posY>5) {
-//		posY -= 5;
-//	}
 	menuDialogElement.style.left = posX+"px";
-	menuDialogElement.style.top = posY+"px";
+	menuDialogElement.style.top = (posY+window.scrollY)+"px"; // add scrollY-offset to posY
 	menuDialogElement.style.display = "block";
+
+	// prevent popup-menu to show up cut-off below the page break (if possible on the top side)
+	setTimeout(function() {
+		let menuHeight = menuDialog2Element.clientHeight;
+		let pageHeight = mainElement.clientHeight;
+		//if(!gentle) console.log('menuDialogOpen up',posY, menuHeight, pageHeight);
+		while(posY>10 && posY + menuHeight > pageHeight) {
+			posY -= 10;
+		}
+		if(!gentle) console.log('menuDialogOpen up2',posY, menuHeight, pageHeight);
+		menuDialogElement.style.top = (posY+window.scrollY)+"px"; // add scrollY-offset to posY
+	},100);
 }
 
 
