@@ -615,6 +615,7 @@ function calleeOnlineAction(from) {
 
 	// now that we know callee is online, we load adapter-latest.js
 	loadJS("adapter-latest.js",function(){
+		if(!gentle) console.log('loadJS callback');
 		if(!navigator.mediaDevices) {
 			console.warn("navigator.mediaDevices not available");
 			if(calleeOnlineElement) {
@@ -1898,9 +1899,8 @@ function hangup(mustDisconnectCallee,message) {
 
 	if(!singlebutton) {
 		setTimeout(function() {
-			// show msgbox
-			msgbox.placeholder = "";
-			msgbox.style.display = "block";
+			// show msgbox etc.
+			checkCalleeOnline();
 		},2000);
 	}
 }
