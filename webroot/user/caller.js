@@ -1804,7 +1804,6 @@ function hangup(mustDisconnectCallee,message) {
 		localVideoFrame.pause();
 		localVideoFrame.currentTime = 0;
 		localVideoFrame.srcObject = null;
-//		localVideoDiv.style.display = "none";
 		localStream = null;
 	}
 

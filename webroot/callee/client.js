@@ -716,6 +716,9 @@ function vmonitor() {
 	localVideoPaused.style.visibility = "hidden";
 	vmonitorButton.style.color = "#ff0";
 	vpauseButton.style.color = "#fff";
+	if(mediaConnect) {
+// TODO unpause microphone if necessary
+	}
 	if(videoEnabled) {
 		localVideoFrame.play().catch(function(error) {});
 		if(!mediaConnect) {
@@ -726,8 +729,6 @@ function vmonitor() {
 				vpauseTimer = null;
 			}
 			vpauseTimer = setTimeout(vpauseByTimer, 30000);
-		} else {
-// TODO unpause microphone if necessary
 		}
 	}
 }
@@ -736,7 +737,6 @@ function vpauseByTimer() {
 	if(!gentle) console.log("vpauseByTimer",mediaConnect);
 	if(!mediaConnect) {
 		vpause();
-// TODO also microphone pause, so that there will be no red-tab
 	}
 }
 
@@ -750,6 +750,16 @@ function vpause() {
 		vpauseTimer = null;
 	}
 	localVideoPaused.style.visibility = "visible";
+
+	if(!mediaConnect) {
+		// TODO tmtmtm also microphone pause, so that there will be no red-tab
+/*
+		localStream.getTracks().forEach(track => { track.stop(); });
+		const audioTracks = localStream.getAudioTracks();
+		localStream.removeTrack(audioTracks[0]);
+		localStream = null;
+*/
+	}
 }
 
 function vres() {
