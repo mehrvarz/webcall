@@ -793,20 +793,13 @@ function localVideoShow() {
 	localVideoDiv.style.visibility = "visible";
 }
 
-/*
-function localVideoDivOnHidden() {
-//	localVideoDiv.style.visibility = "hidden";
-	localVideoDiv.removeEventListener('transitionend',localVideoDivOnHidden);
-}
-*/
 function localVideoHide() {
 	localVideoLabel.style.opacity = "0.5"; // will be transitioned
 	let localVideoDivHeight = parseFloat(getComputedStyle(localVideoFrame).width)/16*9;
 	if(!gentle) console.log("localVideoHide DivHeight",localVideoDivHeight);
 	localVideoDiv.style.height = localVideoDivHeight+"px"; // height from auto to fixed
 	window.requestAnimationFrame(function() { // wait for fixed height
-		localVideoDiv.style.height = "0"; // will be transitioned
-//		localVideoDiv.addEventListener('transitionend', localVideoDivOnHidden)
+		localVideoDiv.style.height = "0px"; // will be transitioned
 	});
 }
 
@@ -820,25 +813,17 @@ function remoteVideoShow() {
 	if(!gentle) console.log("remoteVideoShow DivHeight",remoteVideoDivHeight);
 	remoteVideoDiv.style.height = ""+remoteVideoDivHeight+"px"; // will be transitioned
 	remoteVideoDiv.addEventListener('transitionend', remoteVideoDivOnVisible) // switch to height auto
-//	remoteVideoDiv.style.visibility = "visible";
 
 	remoteVideoLabel.innerHTML = "remote cam streaming";
 	remoteVideoLabel.style.color = "#ff0";
 }
 
-/*
-function remoteVideoDivOnHidden() {
-//	remoteVideoDiv.style.visibility = "hidden";
-	remoteVideoDiv.removeEventListener('transitionend',remoteVideoDivOnHidden);
-}
-*/
 function remoteVideoHide() {
 	let remoteVideoDivHeight = parseFloat(getComputedStyle(remoteVideoFrame).width)/16*9;
 	if(!gentle) console.log("remoteVideoHide DivHeight",remoteVideoDivHeight);
 	remoteVideoDiv.style.height = remoteVideoDivHeight+"px"; // height from auto to fixed
 	window.requestAnimationFrame(function() { // wait for fixed height
-		remoteVideoDiv.style.height = "0"; // will be transitioned
-//		remoteVideoDiv.addEventListener('transitionend', remoteVideoDivOnHidden)
+		remoteVideoDiv.style.height = "0px"; // will be transitioned
 	});
 
 	remoteVideoLabel.innerHTML = "remote cam not streaming";

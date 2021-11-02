@@ -1,7 +1,5 @@
-// WebCall Copyright 2021 timur.mobi. All rights reserved.
-//
-// healthService exists for performance testing on timur.mobi
-// and is not activated for regular use.
+// healthService exists for performance testing on timur.mobi.
+// It is not included for regular use.
 
 package main
 

@@ -456,9 +456,7 @@ function videoOff() {
 		remoteVideoFrame.pause();
 		remoteVideoFrame.currentTime = 0;
 		remoteVideoFrame.srcObject = null;
-//		remoteVideoDiv.style.visibility = "hidden";
 		remoteVideoDiv.style.height = "0px";
-//		remoteVideoDiv.style.display = "none";
 		remoteVideoLabel.innerHTML = "remote cam not streaming";
 		remoteVideoLabel.style.color = "#fff";
 		remoteStream = null;
@@ -1265,7 +1263,6 @@ function signalingCommand(message) {
 	} else if(cmd=="rtcVideoOff") {
 		// remote video has ended
 		if(!gentle) console.log("rtcVideoOff");
-//		remoteVideoDiv.style.visibility = "hidden";
 		remoteVideoDiv.style.height = "0px";
 		remoteVideoLabel.innerHTML = "remote cam not streaming";
 		remoteVideoLabel.style.color = "#fff";
@@ -1761,9 +1758,7 @@ function hangup(mustDisconnectCallee,message) {
 	remoteVideoFrame.pause();
 	remoteVideoFrame.currentTime = 0;
 	remoteVideoFrame.srcObject = null;
-//	remoteVideoDiv.style.visibility = "hidden";
 	remoteVideoDiv.style.height = "0px";
-//	remoteVideoDiv.style.display = "none";
 	remoteVideoLabel.innerHTML = "remote cam not streaming";
 	remoteVideoLabel.style.color = "#fff";
 	remoteStream = null;
