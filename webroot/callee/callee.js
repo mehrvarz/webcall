@@ -375,12 +375,7 @@ function videoOff() {
 		remoteVideoFrame.pause();
 		remoteVideoFrame.currentTime = 0;
 		remoteVideoFrame.srcObject = null;
-//		remoteVideoDiv.style.visibility = "hidden";
-//		remoteVideoDiv.style.height = "0px";
-//		remoteVideoLabel.innerHTML = "remote cam not streaming";
-//		remoteVideoLabel.style.color = "#fff";
 		remoteVideoHide();
-
 		remoteStream = null;
 
 		if(dataChannel) {
@@ -1121,11 +1116,11 @@ function signalingCommand(message) {
 	} else if(cmd=="rtcVideoOff") {
 		// remote video track removed by other side (hide remoteVideoFrame so that audio can still be received)
 		if(!gentle) console.log("rtcVideoOff");
-//		remoteVideoDiv.style.visibility = "hidden";
-//		remoteVideoDiv.style.height = "0px";
-//		remoteVideoLabel.innerHTML = "remote cam not streaming";
-//		remoteVideoLabel.style.color = "#fff";
+		remoteVideoFrame.pause();
+		remoteVideoFrame.currentTime = 0;
+		remoteVideoFrame.srcObject = null;
 		remoteVideoHide();
+		remoteStream = null;
 
 // TODO can be removed?
 //	} else if(cmd=="ping") {
@@ -1398,10 +1393,6 @@ function hangup() {
 	rejectButton.style.display = "none";
 
 	remoteVideoFrame.srcObject = null;
-//	remoteVideoDiv.style.visibility = "hidden";
-//	remoteVideoDiv.style.height = "0px";
-//	remoteVideoLabel.innerHTML = "remote cam not streaming";
-//	remoteVideoLabel.style.color = "#fff";
 	remoteVideoHide();
 
 	// if mediaConnect -> play short busy tone 
@@ -1848,6 +1839,7 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 		remoteVideoFrame.pause();
 		remoteVideoFrame.currentTime = 0;
 		remoteVideoFrame.srcObject = null;
+		remoteVideoHide();
 		remoteStream = null;
 	}
 	buttonBlinking = false;
