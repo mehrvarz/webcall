@@ -798,9 +798,12 @@ function localVideoHide() {
 	let localVideoDivHeight = parseFloat(getComputedStyle(localVideoFrame).width)/16*9;
 	if(!gentle) console.log("localVideoHide DivHeight",localVideoDivHeight);
 	localVideoDiv.style.height = localVideoDivHeight+"px"; // height from auto to fixed
-	window.requestAnimationFrame(function() { // wait for fixed height
+//	window.requestAnimationFrame(function() { // wait for fixed height
+//		localVideoDiv.style.height = "0px"; // will be transitioned
+//	});
+	setTimeout(function() { // wait for fixed height (timer works better than requestAnimationFrame on andr)
 		localVideoDiv.style.height = "0px"; // will be transitioned
-	});
+	},100);
 }
 
 function remoteVideoDivOnVisible() {
@@ -808,6 +811,7 @@ function remoteVideoDivOnVisible() {
 	remoteVideoDiv.removeEventListener('transitionend',remoteVideoDivOnVisible);
 }
 
+var remoteVideoShowing = false;
 function remoteVideoShow() {
 	let remoteVideoDivHeight = parseFloat(getComputedStyle(remoteVideoFrame).width)/16*9;
 	if(!gentle) console.log("remoteVideoShow DivHeight",remoteVideoDivHeight);
@@ -816,18 +820,25 @@ function remoteVideoShow() {
 
 	remoteVideoLabel.innerHTML = "remote cam streaming";
 	remoteVideoLabel.style.color = "#ff0";
+	remoteVideoShowing = true;
 }
 
 function remoteVideoHide() {
-	let remoteVideoDivHeight = parseFloat(getComputedStyle(remoteVideoFrame).width)/16*9;
-	if(!gentle) console.log("remoteVideoHide DivHeight",remoteVideoDivHeight);
-	remoteVideoDiv.style.height = remoteVideoDivHeight+"px"; // height from auto to fixed
-	window.requestAnimationFrame(function() { // wait for fixed height
-		remoteVideoDiv.style.height = "0px"; // will be transitioned
-	});
+	if(remoteVideoShowing) {
+		let remoteVideoDivHeight = parseFloat(getComputedStyle(remoteVideoFrame).width)/16*9;
+		if(!gentle) console.log("remoteVideoHide DivHeight",remoteVideoDivHeight);
+		remoteVideoDiv.style.height = remoteVideoDivHeight+"px"; // height from auto to fixed
+	//	window.requestAnimationFrame(function() { // wait for fixed height
+	//		remoteVideoDiv.style.height = "0px"; // will be transitioned
+	//	});
+		setTimeout(function() { // wait for fixed height (timer works better than requestAnimationFrame on andr)
+			remoteVideoDiv.style.height = "0px"; // will be transitioned
+		},100);
 
-	remoteVideoLabel.innerHTML = "remote cam not streaming";
-	remoteVideoLabel.style.color = "#fff";
+		remoteVideoLabel.innerHTML = "remote cam not streaming";
+		remoteVideoLabel.style.color = "#fff";
+		remoteVideoShowing = false;
+	}
 }
 
 function peerConOntrack(track, streams) {

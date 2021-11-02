@@ -443,12 +443,11 @@ function videoOff() {
 			});
 		}
 
-		// hide and fully deacticate localVideoFrame
+		// fully deacticate localVideoFrame + localStream (mic)
 		if(!gentle) console.log("videoOff !rtcConnect shutdown localVideo");
 		localVideoFrame.pause();
 		localVideoFrame.currentTime = 0;
 		localVideoFrame.srcObject = null;
-//		localVideoDiv.style.display = "none";
 		localStream = null;
 
 		// hide and fully deacticate remoteVideoFrame + remoteStream

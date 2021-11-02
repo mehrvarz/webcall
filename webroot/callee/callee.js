@@ -320,8 +320,6 @@ function videoOn() {
 
 	// start localVideoFrame playback, setup the localVideo pane buttons
 	vmonitor();
-	// now that the localVideo pane is shown, hide the camera icon
-//	cameraElement.style.display = "none";
 	cameraElement.style.opacity = "0";
 
 	getStream().then(() => navigator.mediaDevices.enumerateDevices())
@@ -383,8 +381,6 @@ function videoOff() {
 		}
 	}
 
-	// tmtmtm
-//	cameraElement.style.display = "block";
 	cameraElement.style.opacity = "1";
 
 	// switch to the 1st audio option

@@ -204,15 +204,15 @@ input[type=submit]:focus {
 }
 @media (min-aspect-ratio: 12/10) {
 	.videoframe-remote {
-		width:49%; aspect-ratio:16/9; padding-right:2px; float:left; user-select:none;
+		width:49%; aspect-ratio:16/9; padding-bottom:10px; float:left; user-select:none; padding-right:2px;
 	}
 	.videoframe-local {
-		width:49%; aspect-ratio:16/9; float:left; user-select:none;
+		width:49%; aspect-ratio:16/9; padding-bottom:10px; float:left; user-select:none;
 	}
 }
 @media (max-aspect-ratio: 12/10) {
 	.videoframe-remote {
-		width:99%; aspect-ratio:16/9; padding-bottom:2px; user-select:none;
+		width:99%; aspect-ratio:16/9; user-select:none; padding-bottom:2px;
 	}
 	.videoframe-local {
 		width:99%; aspect-ratio:16/9; user-select:none;
@@ -266,12 +266,10 @@ input[type=submit]:focus {
 			<div id="remoteVideoLabel" style="position:absolute; bottom:0; width:100%; z-index:10; opacity:0.5; text-align:center; background:#000; transition:opacity 500ms;">remote cam not streaming</div>
 		</div>
 	</div>
-	<div id="localVideoDiv" class="videoframe-local" style="height:0px; transition:height 500ms; overflow:hidden; margin-bottom:10px; cursor:pointer;">
+	<div id="localVideoDiv" class="videoframe-local" style="height:0px; transition:height 500ms; overflow:hidden; cursor:pointer;">
 		<div style="position:relative; display:inline-block; width:100%; height:100%;">
-			<video id="localVideoFrame" _onclick="vmonitor()"
-				  style="width:100%; height:100%; background:#111;" _poster="green-gradient.svg" autoplay></video>
-			<span id="localVideoPaused" _onclick="vmonitor()" 
-				  style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50% ); text-align:center; color:white; font-weight:bold; visibility:hidden;">Paused</span>
+			<video id="localVideoFrame" style="width:100%; height:100%; background:#111;" _poster="green-gradient.svg" autoplay></video>
+			<span id="localVideoPaused" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50% ); text-align:center; color:white; font-weight:bold; visibility:hidden;">Paused</span>
 			<div id="localVideoLabel" style="position:absolute; bottom:0; width:100%; z-index:10; opacity:0.5; text-align:center; background:#000; transition:opacity 500ms;">
 				<span id="vpause" onclick="vpause()">pause</span>
 				<span id="vmonitor" onclick="vmonitor()" style="margin-left:7px">monitor</span>
