@@ -1937,15 +1937,26 @@ function menuDialogOpen() {
 	}
 	containerElement.style.filter = "blur(0.8px) brightness(60%)";
 
-	// menuDialog at mouse coordinate
+	// show menuDialog at mouse coordinate
     var e = window.event;
+	// e.clientX/Y is a mouse-pointer on screen coordinate
     var posX = e.clientX/8 - 50;
 	if(posX<0) posX=0;
     var posY = e.clientY;
 	if(posY>50) posY-=50;
-	if(!gentle) console.log('menuDialogOpen x/y',posX,posY);
+	// menuDialogElement.style.left/top is a document coordinate
+	if(!gentle) console.log('menuDialogOpen x/y',posX,posY,window.scrollY);
+	// add scrollY-offset to posY
+	posY += window.scrollY;
+	// TODO es besteht die gefahr, dass das popup-menu zu weit unten dargestellt wird
+//	while(posY + menuDialogElement.height > screen.height && posY>5) {
+//		posY -= 5;
+//	}
 	menuDialogElement.style.left = posX+"px";
 	menuDialogElement.style.top = posY+"px";
 	menuDialogElement.style.display = "block";
 }
+
+
+
 

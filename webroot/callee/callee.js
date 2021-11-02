@@ -2033,6 +2033,7 @@ function menuDialogOpen() {
     var posY = e.clientY;
 	if(posY>50) posY-=50;
 	//if(!gentle) console.log('menuDialogOpen x/y',posX,posY);
+	posY += window.scrollY;
 	menuDialogElement.style.left = posX+"px";
 	menuDialogElement.style.top = posY+"px";
 	menuDialogElement.style.display = "block";
