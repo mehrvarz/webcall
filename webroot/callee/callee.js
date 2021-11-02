@@ -1118,15 +1118,6 @@ function signalingCommand(message) {
 		remoteVideoHide();
 		remoteStream = null;
 
-// TODO can be removed?
-//	} else if(cmd=="ping") {
-//	} else if(cmd=="calleeDescriptionUpd") {
-//	} else if(cmd=="rtcConnect") {
-//	} else if(cmd=="confirm") {
-//	} else if(cmd=="stop") {
-//	} else if(cmd=="pickup") {
-//	} else if(cmd=="calleeCandidate") {
-//	} else if(cmd=="calleeDescription") {
 	} else {
 		if(!gentle) console.log('# ignore incom cmd',cmd);
 	}

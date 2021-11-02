@@ -678,7 +678,7 @@ function connectLocalVideo(forceOff) {
 		if(dataChannel && dataChannel.readyState=="open") {
 			if(!gentle) console.log("connectLocalVideo set");
 			vsendButton.classList.remove('blink_me')
-			vsendButton.style.color = "#ff0"; // local video is streaming
+			vsendButton.style.color = "#f55"; // local video is streaming
 
 			addLocalVideoEnabled = true; // will cause: peerCon.addTrack(video)
 			pickupAfterLocalStream = true; // will cause: pickup2()
