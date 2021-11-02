@@ -1356,7 +1356,7 @@ function pickup2() {
 
 		if(dataChannel!=null && dataChannel.readyState=="open") {
 			if(localCandidateType!="relay" && remoteCandidateType!="relay") {
-				fileselectLabel.style.display = "inline-block";
+				fileselectLabel.style.display = "block";
 			}
 		}
 
@@ -1666,7 +1666,7 @@ function createDataChannel() {
 			progressSendElement.style.display = "none";
 			if(mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
 				if(localCandidateType!="relay" && remoteCandidateType!="relay") {
-					fileselectLabel.style.display = "inline-block";
+					fileselectLabel.style.display = "block";
 				}
 			}
 		}
@@ -1723,7 +1723,7 @@ function createDataChannel() {
 							progressSendElement.style.display = "none";
 							if(mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
 								if(localCandidateType!="relay" && remoteCandidateType!="relay") {
-									fileselectLabel.style.display = "inline-block";
+									fileselectLabel.style.display = "block";
 								}
 							}
 							return;

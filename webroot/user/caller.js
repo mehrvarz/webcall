@@ -1173,7 +1173,7 @@ function signalingCommand(message) {
 
 			if(fileselectLabel!=null && dataChannel!=null && dataChannel.readyState=="open") {
 				if(localCandidateType!="relay" && remoteCandidateType!="relay") {
-					fileselectLabel.style.display = "inline-block";
+					fileselectLabel.style.display = "block";
 				}
 			}
 
@@ -1548,7 +1548,7 @@ function createDataChannel() {
 		progressSendElement.style.display = "none";
 		if(fileselectLabel!=null && mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
 			if(localCandidateType!="relay" && remoteCandidateType!="relay") {
-				fileselectLabel.style.display = "inline-block";
+				fileselectLabel.style.display = "block";
 			}
 		}
 	}
@@ -1609,7 +1609,7 @@ function createDataChannel() {
 						progressSendElement.style.display = "none";
 						if(fileselectLabel!=null && mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
 							if(localCandidateType!="relay" && remoteCandidateType!="relay") {
-								fileselectLabel.style.display = "inline-block";
+								fileselectLabel.style.display = "block";
 							}
 						}
 						return;
