@@ -713,7 +713,7 @@ var vpauseTimer = null;
 function vmonitor() {
 	if(!gentle) console.log("vmonitor");
 // TODO this does not activate after call disconnect (so a new timer is started)
-	localVideoPaused.innerHTML = "";
+	localVideoPaused.style.visibility = "hidden";
 	vmonitorButton.style.color = "#ff0";
 	vpauseButton.style.color = "#fff";
 	if(videoEnabled) {
@@ -749,7 +749,7 @@ function vpause() {
 		clearTimeout(vpauseTimer);
 		vpauseTimer = null;
 	}
-	localVideoPaused.innerHTML = "paused";
+	localVideoPaused.style.visibility = "visible";
 }
 
 function vres() {
