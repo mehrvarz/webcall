@@ -98,7 +98,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	globalID := ""
 
 	if strings.HasPrefix(urlID, "random") {
-		// TODO
+		// ignore
 	} else if strings.HasPrefix(urlID, "!") {
 		// create new unique wsClientID
 		wsClientMutex.Lock()
@@ -209,39 +209,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 	exitFunc := func(calleeClient *WsClient, comment string) {
 		// exitFunc: callee is logging out: release hub and port of this session
-
-		/* old "duo" user handling - can be removed
-		if dbEntry.StartTime > 0 && dbEntry.Password == "" {
-			// a callee without a password (single test user) is now being logging out
-			remoteAddr2 := ""
-			if calleeClient!=nil {
-				// calleeClient.remoteAddr is the IP from STUN
-				remoteAddr2 = calleeClient.RemoteAddr
-				// cut off :port from remoteAddr2
-				idxPort := strings.Index(remoteAddr2,":")
-				if idxPort>=0 {
-					remoteAddr2 = remoteAddr2[:idxPort]
-				}
-			}
-			if remoteAddr2!="" {
-				remoteAddr = remoteAddr2
-			}
-
-			// mark calleeID as busy for a while
-			if rtcdb != "" {
-				err := kvMain.Put(dbBlockedIDs, urlID,
-					DbEntry{dbEntry.StartTime, remoteAddr, ""}, true) // skipConfirm
-				if err != nil {
-					fmt.Printf("# exitFunc error db=%s bucket=%s block key=%s err=%v\n",
-						dbMainName, dbBlockedIDs, urlID, err)
-				} else {
-					//fmt.Printf("exitFunc db=%s bucket=%s now blocked key=%s\n",
-					//	dbMainName, dbBlockedIDs, urlID)
-				}
-			}
-		}
-		*/
-
 		myHubMutex.Lock()
 		if hub != nil {
 			if globalID != "" {
