@@ -863,10 +863,19 @@ function peerConOntrack(track, streams) {
 			if(!gentle) console.log('peerCon.ontrack onunmute track.enabled: same remoteStream again');
 			return;
 		}
+		remoteVideoFrame.srcObject = remoteStream;
+		if(remoteStream==null) {
+			remoteVideoHide();
+			return;
+		}
 		if(!gentle) console.log('peerCon.ontrack onunmute track.enabled: new remoteStream');
-		remoteVideoFrame.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
 		remoteVideoFrame.play().catch(function(error) { });
 		setTimeout(function() {
+			if(remoteStream==null) {
+				remoteVideoFrame.srcObject = null;
+				remoteVideoHide();
+				return;
+			}
 			let videoTracks = remoteStream.getVideoTracks();
 			if(!gentle) console.log('peerCon.ontrack onunmute track.enabled: delayed v-tracks',videoTracks.length);
 			if(videoTracks.length>0) {

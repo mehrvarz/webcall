@@ -64,6 +64,7 @@ h1 {
 	user-select:none;
 	margin-block-start:0;
 	margin-block-end:0;
+	margin-top:10px;
 	margin-bottom:10px;
 }
 a, a:link, a:visited, a:active {
@@ -204,10 +205,10 @@ input[type=submit]:focus {
 }
 @media (min-aspect-ratio: 12/10) {
 	.videoframe-remote {
-		width:49%; aspect-ratio:16/9; padding-bottom:10px; float:left; user-select:none; padding-right:2px;
+		width:49%; aspect-ratio:16/9; float:left; user-select:none; padding-right:2px;
 	}
 	.videoframe-local {
-		width:49%; aspect-ratio:16/9; padding-bottom:10px; float:left; user-select:none;
+		width:49%; aspect-ratio:16/9; float:left; user-select:none;
 	}
 }
 @media (max-aspect-ratio: 12/10) {
@@ -259,7 +260,7 @@ input[type=submit]:focus {
 	</div>
 </div>
 
-<div>
+<div style="background:#0005;">
 	<div id="remoteVideoDiv" class="videoframe-remote" style="height:0px; transition:height 500ms; overflow:hidden;">
 		<div style="position:relative; display:inline-block; width:100%; height:100%;">
 			<video id="remoteVideoFrame" style="width:100%; height:100%; background:#111;" _poster="red-gradient.svg" autoplay></video>
