@@ -261,7 +261,7 @@ input[type=submit]:focus {
 				<span id="vmonitor" onclick="vmonitor()" style="margin-left:6px">monitor</span>
 				<span id="vres" onclick="menuDialogOpen(vresDialogElement)" style="margin-left:6px">res</span>
 				<span id="vsend" onclick="connectLocalVideo(false)" style="margin-left:6px">send</span>
-				<span id="vclose" onclick="videoSwitch()" style="margin-left:6px">(x)</span>
+				<span id="vclose" onclick="videoSwitch(true)" style="margin-left:6px">(x)</span>
 			</div>
 		</div>
 	</div>
@@ -271,7 +271,7 @@ input[type=submit]:focus {
 
 <div id="container">
 	<img id="menu" onclick="menuDialogOpen(menuDialogElement)" src="menu.svg" style="position:relative; float:right; width:25px; margin-top:6px; z-index:100; user-select:none; cursor:pointer;">
-	<img id="camera" src="camera.svg" style="position:relative; float:right; width:30px; margin-top:5.5px; margin-right:24px; z-index:100; user-select:none; cursor:pointer; transition:opacity 500ms;" onclick="videoSwitch()">
+	<img id="camera" src="camera.svg" style="position:relative; float:right; width:30px; margin-top:5.5px; margin-right:24px; z-index:100; user-select:none; cursor:pointer; transition:opacity 500ms;" onclick="videoSwitch(false)">
 
 	<h1 id="title">WebCall</h1>
 	<div id="calleeOnline" style="display:none">

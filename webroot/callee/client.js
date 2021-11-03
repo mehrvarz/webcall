@@ -769,10 +769,12 @@ function gotStream(stream) {
 	gotStream2();
 }
 
-function videoSwitch() {
-	if(videoEnabled) {
+function videoSwitch(forceClose) {
+	if(videoEnabled || forceClose) {
+		console.log("videoSwitch videoOff",forceClose);
 		videoOff();
 	} else {
+		console.log("videoSwitch videoOn");
 		videoOn();
 	}
 }
