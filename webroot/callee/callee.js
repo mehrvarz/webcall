@@ -35,7 +35,7 @@ const fullScreenOverlayElement = document.getElementById('fullScreenOverlay');
 const iframeWindowElement = document.getElementById('iframeWindow');
 const menuElement = document.getElementById('menu');
 const menuDialogElement = document.getElementById('menuDialog');
-const menuDialog2Element = document.getElementById('menuDialog2');
+const vresDialogElement = document.getElementById('vresDialog');
 const menuSettingsElement = document.getElementById('menuSettings');
 const menuContactsElement = document.getElementById('menuContacts');
 const menuExitElement = document.getElementById('menuExit');
@@ -53,6 +53,7 @@ const neverAudio = false;
 const autoReconnectDelay = 30;
 const version = "1.16.0";
 const singlebutton = false;
+const calleeMode = true;
 
 var videoEnabled = false;
 var ringtoneSound = null;
@@ -159,7 +160,7 @@ window.onload = function() {
 		if(hashcounter>0 && newhashcounter<hashcounter) {
 			if(iframeWindowOpenFlag) {
 				iframeWindowClose();
-			} else if(menuDialogOpenFlag) {
+			} else if(menuDialogOpenElement) {
 				menuDialogClose();
 			}
 		}
@@ -176,7 +177,7 @@ window.onload = function() {
 		}
 		if(isEscape) {
 			if(!gentle) console.log('callee esc key');
-			if(iframeWindowOpenFlag || menuDialogOpenFlag) {
+			if(iframeWindowOpenFlag || menuDialogOpenElement) {
 				historyBack();
 			}	
 		} else if(evt.key=="!") {
@@ -184,19 +185,8 @@ window.onload = function() {
 		}
 	};
 
-	localVideoFrame.onresize = function() {
-		if(videoEnabled && localVideoFrame.videoWidth>10 && localVideoFrame.videoHeight>10) {
-			if(!gentle) console.log('local video size changed',
-				localVideoFrame.videoWidth, localVideoFrame.videoHeight);
-		}
-	}
-
-	remoteVideoFrame.onresize = function() {
-		if(videoEnabled && remoteVideoFrame.videoWidth>10 && remoteVideoFrame.videoHeight>10) {
-			if(!gentle) console.log('remote video size changed',
-				remoteVideoFrame.videoWidth, remoteVideoFrame.videoHeight);
-		}
-	}
+	localVideoFrame.onresize = showVideoResolutionLocal;
+	remoteVideoFrame.onresize = showVideoResolutionRemote;
 
 	isHiddenCheckbox.addEventListener('change', function() {
 		if(this.checked) {
@@ -1988,69 +1978,6 @@ function goOffline() {
 	}
 }
 
-var menuDialogOpenFlag = false;
-function menuDialogOpen() {
-	if(menuDialogOpenFlag) {
-		if(!gentle) console.log('# menuDialogOpen menuDialogOpenFlag');
-		return;
-	}
-	menuDialogOpenFlag = true;
-
-	hashcounter++;
-	location.hash = hashcounter;
-
-	fullScreenOverlayElement.style.display = "block";
-	fullScreenOverlayElement.onclick = function() {
-		historyBack();
-	}
-	containerElement.style.filter = "blur(0.8px) brightness(60%)";
-	if(wsConn && navigator.cookieEnabled && getCookieSupport()!=null) {
-		// cookies avail, "Settings" and "Exit" allowed
-		if(menuContactsElement) {
-			menuContactsElement.style.display = "block";
-		}
-		if(menuSettingsElement) {
-			menuSettingsElement.style.display = "block";
-		}
-		if(menuExit) {
-			menuExit.style.display = "block";
-		}
-	} else {
-		if(menuContactsElement) {
-			menuContactsElement.style.display = "none";
-		}
-		if(menuSettingsElement) {
-			menuSettingsElement.style.display = "none";
-		}
-		if(menuExit) {
-			menuExit.style.display = "none";
-		}
-	}
-
-	// position menuDialog at mouse coordinate
-    var e = window.event;
-    var posX = e.clientX/8 - 50;
-	if(posX<0) posX=0;
-    var posY = e.clientY;
-	if(posY>50) posY-=50;
-	//if(!gentle) console.log('menuDialogOpen x/y',posX,posY);
-	menuDialogElement.style.left = posX+"px";
-	menuDialogElement.style.top = (posY+window.scrollY)+"px"; // add scrollY-offset to posY
-	menuDialogElement.style.display = "block";
-
-	// prevent popup-menu to show up cut-off below the page break (if possible on the top side)
-	setTimeout(function() {
-		let menuHeight = menuDialog2Element.clientHeight;
-		let pageHeight = mainElement.clientHeight;
-		//if(!gentle) console.log('menuDialogOpen up',posY, menuHeight, pageHeight);
-		while(posY>10 && posY + menuHeight > pageHeight) {
-			posY -= 10;
-		}
-		if(!gentle) console.log('menuDialogOpen up2',posY, menuHeight, pageHeight);
-		menuDialogElement.style.top = (posY+window.scrollY)+"px"; // add scrollY-offset to posY
-	},100);
-}
-
 function getCookieSupport() {
 	// returns: null = no cookies; false = only session cookies; true = all cookies allowed
     var persist= true;
@@ -2083,7 +2010,7 @@ function exit() {
 	containerElement.style.filter = "blur(0.8px) brightness(60%)";
 	goOffline();
 
-	if(iframeWindowOpenFlag || menuDialogOpenFlag) {
+	if(iframeWindowOpenFlag || menuDialogOpenElement) {
 		console.log("exit historyBack");
 		historyBack();
 	}

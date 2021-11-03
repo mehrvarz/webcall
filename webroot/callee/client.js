@@ -12,6 +12,68 @@ var ICE_config = {
 	]
 };
 
+var userMediaConstraints = {
+	audio: {
+//		deviceId: avSelect.value ? {exact: avSelect.value} : undefined,
+		noiseSuppression: true,  // true by default
+		echoCancellation: true,  // true by default
+		autoGainControl: false,
+	},
+	video: {
+//		deviceId: avSelect.value ? {exact: avSelect.value} : undefined,
+		width: {
+		  min: 480,
+		  ideal: 1280,
+		  max: 1920
+		},
+		height: {
+		  min: 360,
+		  ideal: 720,
+		  max: 1080
+		},
+		frameRate: {
+			min: 8, 
+			max:60 
+		},
+	}
+};
+
+function setVideoConstraintsLow() {
+	userMediaConstraints.video = JSON.parse('{ "width":  {"min":320, "ideal":640, "max":800 },'+
+											'  "height": {"min":240, "ideal":480, "max":600 },'+
+											'  "frameRate": { "min":10, "max":30 } }');
+	historyBack();
+	getStream();
+}
+
+function setVideoConstraintsMid() {
+	userMediaConstraints.video = JSON.parse('{ "width":  {"min":480, "ideal":1280, "max":1920 },'+
+											'  "height": {"min":360, "ideal":720,  "max":1080 },'+
+											'  "frameRate": { "min":15, "max":60 }  }');
+	historyBack();
+	getStream();
+}
+
+function setVideoConstraintsHigh() {
+	userMediaConstraints.video = JSON.parse('{ "width":  {"min":1280,"ideal":1920, "max":4096 },'+
+											'  "height": {"min":720, "ideal":1080, "max":2160 },'+
+											'  "frameRate": { "min":20, "max":60 }  }');
+	historyBack();
+	getStream();
+}
+
+function showVideoResolutionLocal() {
+	if(videoEnabled && localVideoFrame.videoWidth>10 && localVideoFrame.videoHeight>10) {
+		console.log('local video size changed', localVideoFrame.videoWidth, localVideoFrame.videoHeight);
+	}
+}
+
+function showVideoResolutionRemote() {
+	if(videoEnabled && remoteVideoFrame.videoWidth>10 && remoteVideoFrame.videoHeight>10) {
+		console.log('remote video size changed', remoteVideoFrame.videoWidth, remoteVideoFrame.videoHeight);
+	}
+}
+
 if(fileSelectElement!=null) {
 	fileSelectElement.addEventListener('change', (event) => {
 		if(!gentle) console.log("fileSelect event");
@@ -19,7 +81,7 @@ if(fileSelectElement!=null) {
 		const files = fileSelectElement.files;
 		const file = files.item(0);
 		if(file==null) {
-			console.log("fileSelect file==nulll");
+			console.log("fileSelect file==null");
 			return;
 		}
 		if(file.name=="") {
@@ -385,55 +447,86 @@ function getStatsCandidateTypesEx(results,eventString1,eventString2) {
 	return eventString1+" "+rtcLink;
 }
 
-var menuDialogOpenFlag = false;
-function menuDialogOpen() {
-	if(menuDialogOpenFlag) {
-		if(!gentle) console.log('menuDialogOpen menuDialogOpenFlag');
+var menuDialogOpenElement = null;
+function menuDialogOpen(menuDialog) {
+	if(menuDialogOpenElement) {
+		if(!gentle) console.log('# menuDialogOpen menuDialogOpenElement');
 		return;
 	}
-	if(!gentle) console.log('menuDialogOpen');
-	menuDialogOpenFlag = true;
+	menuDialogOpenElement = menuDialog;
 
 	hashcounter++;
 	location.hash = hashcounter;
 
 	fullScreenOverlayElement.style.display = "block";
 	fullScreenOverlayElement.onclick = function() {
-		if(!gentle) console.log('fullScreenOverlay click');
 		historyBack();
 	}
 	containerElement.style.filter = "blur(0.8px) brightness(60%)";
-	if(calleeLevel>0 && navigator.cookieEnabled && getCookieSupport()!=null) {
-		// cookies avail, "Settings" and "Exit" allowed
-		if(!gentle) console.log('menuSettingsElement on (cookies enabled)');
-		if(menuSettingsElement) {
-			menuSettingsElement.style.display = "block";
-		}
-		if(menuExit) {
-			menuExit.style.display = "block";
-		}
-	} else {
-		if(!gentle) console.log('menuSettingsElement off (cookies disabled)');
-		if(menuSettingsElement) {
-			menuSettingsElement.style.display = "none";
-		}
-		if(menuExit) {
-			menuExit.style.display = "none";
+	if(calleeMode) { // TODO this is a little quick&dirty
+		if(wsConn && navigator.cookieEnabled && getCookieSupport()!=null) {
+			// cookies avail, "Settings" and "Exit" allowed
+			if(menuContactsElement) {
+				menuContactsElement.style.display = "block";
+			}
+			if(menuSettingsElement) {
+				menuSettingsElement.style.display = "block";
+			}
+			if(menuExit) {
+				menuExit.style.display = "block";
+			}
+		} else {
+			if(menuContactsElement) {
+				menuContactsElement.style.display = "none";
+			}
+			if(menuSettingsElement) {
+				menuSettingsElement.style.display = "none";
+			}
+			if(menuExit) {
+				menuExit.style.display = "none";
+			}
 		}
 	}
-	menuDialogElement.style.display = "block";
+
+	// position menuDialog at mouse coordinate
+    var e = window.event;
+    var posX = e.clientX * 0.7;
+	if(posX<0) posX=0;
+    var posY = e.clientY;
+	if(posY>50) posY-=50;
+	if(!gentle) console.log('menuDialogOpen x/y',posX,e.clientX,posY,e.clientY);
+	const menuDialogOpenChildElement = menuDialogOpenElement.firstElementChild;
+	menuDialogOpenChildElement.style.left = posX+"px";
+	menuDialogOpenChildElement.style.top = (posY+window.scrollY)+"px"; // add scrollY-offset to posY
+	menuDialogOpenElement.style.display = "block";
+
+	// prevent popup-menu to show up cut-off below the page break (if possible on the top side)
+	setTimeout(function() {
+		if(!gentle) console.log('menuDialogOpenChildElement',menuDialogOpenChildElement);
+		let menuHeight = menuDialogOpenChildElement.clientHeight;
+		let pageHeight = mainElement.clientHeight;
+		if(!gentle) console.log('menuDialogOpen up',posY, menuHeight, pageHeight);
+		while(posY>10 && posY + menuHeight > pageHeight) {
+			posY -= 10;
+		}
+		if(!gentle) console.log('menuDialogOpen up2',posY, menuHeight, pageHeight);
+		menuDialogOpenChildElement.style.top = (posY+window.scrollY)+"px"; // add scrollY-offset to posY
+	},100);
+}
+
+
+function menuDialogClose() {
+	if(menuDialogOpenElement) {
+		menuDialogOpenElement.style.display = "none";
+		containerElement.style.filter = "";
+		fullScreenOverlayElement.style.display = "none";
+		fullScreenOverlayElement.onclick = null;
+		menuDialogOpenElement = null;
+	}
 }
 
 function historyBack() {
 	history.back(); // will call closeResults()
-}
-
-function menuDialogClose() {
-	menuDialogElement.style.display = "none";
-	containerElement.style.filter = "";
-	fullScreenOverlayElement.style.display = "none";
-	fullScreenOverlayElement.onclick = null;
-	menuDialogOpenFlag = false;
 }
 
 var iframeWindowOpenFlag = false;
@@ -442,7 +535,7 @@ function iframeWindowOpen(url,addStyleString) {
 		console.log('iframeWindowOpen iframeWindowOpenFlag');
 		return;
 	}
-	if(menuDialogOpenFlag) {
+	if(menuDialogOpenElement) {
 		menuDialogClose();
 	} else {
 		hashcounter++;
@@ -458,7 +551,7 @@ function iframeWindowOpen(url,addStyleString) {
 
 	if(!gentle) console.log('iframeWindowOpen', url);
 	iframeWindowOpenFlag = true;
-	let styleString = "width:90%; max-width:440px; height:94%; position:absolute; left:3.5%; top:1%; padding:10px; z-index:200; _overflow-y:scroll;";
+	let styleString = "width:90%; max-width:440px; height:94%; position:absolute; left:3.5%; top:1%; padding:10px; z-index:200;";
 	if(addStyleString) {
 		styleString += addStyleString;
 	}
@@ -494,35 +587,15 @@ function getStream() {
 //	let supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
 //	if(!gentle) console.log('getStream supportedConstraints',supportedConstraints);
 
-	var constraints = {
-		audio: {
-//			deviceId: avSelect.value ? {exact: avSelect.value} : undefined,
-			noiseSuppression: true,  // true by default
-			echoCancellation: true,  // true by default
-			autoGainControl: false,
-		}
-		,video: {
-//			deviceId: avSelect.value ? {exact: avSelect.value} : undefined,
-			width: {
-			  min: 480,
-			  ideal: 1280,
-			  max: 1920		// 4096
-			},
-			height: {
-			  min: 360,
-			  ideal: 720,
-			  max: 1080		// 2160
-			},
-		}
-	};
-	if(!gentle) console.log('getStream getUserMedia',videoEnabled);
+	let myUserMediaConstraints = JSON.parse(JSON.stringify(userMediaConstraints));
 	if(!videoEnabled) {
-		constraints.video = false;
+		if(!gentle) console.log('getStream getUserMedia NO VIDEO');
+		myUserMediaConstraints.video = false;
 	}
 
-	if(!gentle) console.log('getStream getUserMedia constraints',avSelect.value,constraints);
+	if(!gentle) console.log('getStream getUserMedia constraints',avSelect.value,myUserMediaConstraints);
 	if(!neverAudio) {
-		return navigator.mediaDevices.getUserMedia(constraints)
+		return navigator.mediaDevices.getUserMedia(myUserMediaConstraints)
 			.then(gotStream)
 			.catch(function(err) {
 				if(!videoEnabled) {
@@ -762,10 +835,6 @@ function vpause() {
 	}
 }
 
-function vres() {
-// TODO resolution select popup window
-}
-
 function onIceCandidate(event,myCandidateName) {
 	if(event.candidate==null) {
 		// ICE gathering has finished
@@ -808,9 +877,6 @@ function localVideoHide() {
 	let localVideoDivHeight = parseFloat(getComputedStyle(localVideoFrame).width)/16*9;
 	if(!gentle) console.log("localVideoHide DivHeight",localVideoDivHeight);
 	localVideoDiv.style.height = localVideoDivHeight+"px"; // height from auto to fixed
-//	window.requestAnimationFrame(function() { // wait for fixed height
-//		localVideoDiv.style.height = "0px"; // will be transitioned
-//	});
 	setTimeout(function() { // wait for fixed height (timer works better than requestAnimationFrame on andr)
 		localVideoDiv.style.height = "0px"; // will be transitioned
 	},100);
@@ -838,9 +904,6 @@ function remoteVideoHide() {
 		let remoteVideoDivHeight = parseFloat(getComputedStyle(remoteVideoFrame).width)/16*9;
 		if(!gentle) console.log("remoteVideoHide DivHeight",remoteVideoDivHeight);
 		remoteVideoDiv.style.height = remoteVideoDivHeight+"px"; // height from auto to fixed
-	//	window.requestAnimationFrame(function() { // wait for fixed height
-	//		remoteVideoDiv.style.height = "0px"; // will be transitioned
-	//	});
 		setTimeout(function() { // wait for fixed height (timer works better than requestAnimationFrame on andr)
 			remoteVideoDiv.style.height = "0px"; // will be transitioned
 		},100);

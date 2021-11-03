@@ -238,8 +238,8 @@ input[type=submit]:focus {
 
 <div id="iframeWindow" style="display:none"></div>
 
-<div id="menuDialog" style="position:relative; max-width:520px; user-select:none; display:none;">
-	<div id="menuDialog2" style="position:absolute; right:0px; z-index:110; background:#45dd; color:#fff; padding:10px 20px; line-height:2.6em; border-radius:3px; cursor:pointer;">
+<div id="menuDialog" style="position:relative; max-width:520px; user-select:none;">
+	<div style="position:absolute; left:-999em; top:0px; z-index:110; background:#45dd; color:#fff; padding:10px 20px; line-height:2.6em; border-radius:3px; cursor:pointer;">
 		<div id="menuContacts" style="display:none" onclick="openContacts()">Contacts</div>
 		<div id="menuSettings" style="display:none" onclick="openSettings()">Settings</div>
 		<div onclick="openPostCallStats()">Call Stats</div>
@@ -260,6 +260,14 @@ input[type=submit]:focus {
 	</div>
 </div>
 
+<div id="vresDialog" style="position:relative; max-width:520px; user-select:none;">
+	<div style="position:absolute; left:-999em; top:0px; z-index:110; background:#45dd; color:#fff; padding:10px 20px; line-height:2.6em; border-radius:3px; cursor:pointer;">
+		<div onclick="setVideoConstraintsLow()">Low Resolution</div>
+		<div onclick="setVideoConstraintsMid()">Mid Resolution</div>
+		<div onclick="setVideoConstraintsHigh()">High Resolution</div>
+	</div>
+</div>
+
 <div style="background:#0005;">
 	<div id="remoteVideoDiv" class="videoframe-remote" style="height:0px; transition:height 500ms; overflow:hidden;">
 		<div style="position:relative; display:inline-block; width:100%; height:100%;">
@@ -273,10 +281,10 @@ input[type=submit]:focus {
 			<span id="localVideoPaused" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50% ); text-align:center; color:white; z-index:20; font-weight:bold; visibility:hidden;">paused</span>
 			<div id="localVideoLabel" style="position:absolute; bottom:0; width:100%; z-index:10; opacity:0.5; text-align:center; background:#000; transition:opacity 500ms;">
 				<span id="vpause" onclick="vpause()">pause</span>
-				<span id="vmonitor" onclick="vmonitor()" style="margin-left:7px">monitor</span>
-				<span id="vsend" onclick="connectLocalVideo(false)" style="margin-left:7px">send</span>
-				<!--span id="vres" onclick="vres()" style="margin-left:7px">res</span-->
-				<span id="vclose" onclick="videoSwitch()" style="margin-left:7px">close</span>
+				<span id="vmonitor" onclick="vmonitor()" style="margin-left:5px">monitor</span>
+				<span id="vsend" onclick="connectLocalVideo(false)" style="margin-left:5px">send</span>
+				<span id="vres" onclick="menuDialogOpen(vresDialogElement)" style="margin-left:5px">res</span>
+				<span id="vclose" onclick="videoSwitch()" style="margin-left:5px">(x)</span>
 			</div>
 		</div>
 	</div>
@@ -285,7 +293,7 @@ input[type=submit]:focus {
 
 
 <div id="container">
-	<img id="menu" src="menu.svg" style="position:relative; float:right; width:25px; margin-top:6px; z-index:100; user-select:none; cursor:pointer;" onclick="menuDialogOpen()">
+	<img id="menu" onclick="menuDialogOpen(menuDialogElement)" src="menu.svg" style="position:relative; float:right; width:25px; margin-top:6px; z-index:100; user-select:none; cursor:pointer;">
 	<img id="camera" src="camera.svg" style="position:relative; float:right; width:30px; margin-top:5.5px; margin-right:24px; z-index:100; user-select:none; cursor:pointer; transition:opacity 500ms;" onclick="videoSwitch()">
 
     <h1 id="title">WebCall</h1>
