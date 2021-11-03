@@ -607,16 +607,16 @@ function getStream(selectObject) {
 			if(avSelect.options[i].value == selectObject.value) {
 				// set mediaConstraints.deviceId
 				const str = '{"exact": "'+selectObject.value+'"}';
-				if(!gentle) console.log('getStream getUserMedia set deviceId',str);
+				console.log('getStream getUserMedia set deviceId',str);
 				myUserMediaConstraints.deviceId = JSON.parse(str);
 
 				// if necessary, set/clear videoEnabled
 				if(avSelect.options[i].label.startsWith("Audio")) {
-					if(!gentle) console.log('getStream getUserMedia found kind audio');
+					console.log('getStream getUserMedia found kind audio');
 					videoEnabled = false;
 					break;
 				} else if(avSelect.options[i].label.startsWith("Video")) {
-					if(!gentle) console.log('getStream getUserMedia found kind video');
+					console.log('getStream getUserMedia found kind video');
 					videoEnabled = true;
 					break;
 				}
