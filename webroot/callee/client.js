@@ -627,6 +627,10 @@ function getStream(selectObject) {
 
 	if(!gentle) console.log('getStream getUserMedia constraints',myUserMediaConstraints);
 	if(!neverAudio) {
+		if(!navigator || !navigator.mediaDevices) {
+			alert("cannot access navigator.mediaDevices");
+			return;
+		}
 		return navigator.mediaDevices.getUserMedia(myUserMediaConstraints)
 			.then(function(stream) {
 				lastGoodMediaConstraints = myUserMediaConstraints;
