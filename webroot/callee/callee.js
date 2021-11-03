@@ -494,7 +494,6 @@ function start() {
 		lastUserActionDate = Date.now();
 		goOffline();
 	};
-	avSelect.onchange = getStream;
 	if(calleeID.startsWith("!")) {
 		// auto connect for duo user
 		onGotStreamGoOnline = true;
@@ -1402,7 +1401,7 @@ function hangup() {
 function goOnline() {
 	showStatus("");
 	if(goOnlineButton.disabled) {
-		console.warn('cannot goOnline while being online');
+		console.log('no need to goOnline while being online');
 		return;
 	}
 	goOnlineButton.disabled = true;
