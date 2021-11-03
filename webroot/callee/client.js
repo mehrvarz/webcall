@@ -651,7 +651,8 @@ function getStream(selectObject) {
 				if(lastGoodMediaConstraints) {
 					if(!gentle) console.log('getStream back to lastGoodMediaConstraints',
 						lastGoodMediaConstraints);
-					return navigator.mediaDevices.getUserMedia(lastGoodMediaConstraints)
+					userMediaConstraints = lastGoodMediaConstraints;
+					return navigator.mediaDevices.getUserMedia(userMediaConstraints)
 						.then(gotStream)
 						.catch(function(err) {
 							// here we can ignore the err
