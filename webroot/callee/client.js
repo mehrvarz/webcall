@@ -579,6 +579,7 @@ function iframeWindowClose() {
 	iframeWindowOpenFlag = false;
 }
 
+let lastGoodMediaConstraints;
 function getStream(selectObject) {
 	if(neverAudio) {
 		if(dialAfterLocalStream) {
@@ -633,14 +634,28 @@ function getStream(selectObject) {
 	if(!gentle) console.log('getStream getUserMedia constraints',myUserMediaConstraints);
 	if(!neverAudio) {
 		return navigator.mediaDevices.getUserMedia(myUserMediaConstraints)
-			.then(gotStream)
+//			.then(gotStream)
+			.then(function(stream) {
+				lastGoodMediaConstraints = myUserMediaConstraints;
+				gotStream(stream);
+			})
 			.catch(function(err) {
+// TODO if this happens in response to res-change, we need to switch back to previous constraint
 				if(!videoEnabled) {
 					console.log('# audio input error', err);
 					alert("audio input error", err);
 				} else {
 					console.log('# audio/video input error', err);
 					alert("audio/video input error", err);
+				}
+				if(lastGoodMediaConstraints) {
+					if(!gentle) console.log('getStream back to lastGoodMediaConstraints',
+						lastGoodMediaConstraints);
+					return navigator.mediaDevices.getUserMedia(lastGoodMediaConstraints)
+					.then(gotStream)
+					.catch(function(err) {
+						// here we can ignore the err
+					}
 				}
 			});
 	}
