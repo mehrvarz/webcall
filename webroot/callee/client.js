@@ -590,22 +590,18 @@ function getStream(selectObject) {
 		return
 	}
 
-	let supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
-	if(selectObject) {
-// TODO selectObject.value NOT avSelect.value
-		if(!gentle) console.log('getStream supportedConstraintsX',selectObject,supportedConstraints);
-	} else {
-		if(!gentle) console.log('getStream supportedConstraints',supportedConstraints);
+	if(!gentle) {
+		const supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
+		console.log('getStream supportedConstraints',supportedConstraints);
 	}
 
 	let myUserMediaConstraints = JSON.parse(JSON.stringify(userMediaConstraints));
 
-	if(selectObject /*&& selectObject.value!="default"*/) {
-		// try to find selectObject.value in avSelect.options
-		var i, L = avSelect.options.length - 1;
-		for(i = L; i >= 0; i--) {
+	if(selectObject) {
+		// try to find selectObject.value (deviceId) in avSelect.options
+		for(var i = avSelect.options.length - 1; i >= 0; i--) {
 			if(avSelect.options[i].value == selectObject.value) {
-				// set mediaConstraints.deviceId
+				// found deviceId, set mediaConstraints.deviceId
 				const str = '{"exact": "'+selectObject.value+'"}';
 				console.log('getStream getUserMedia set deviceId',str);
 				myUserMediaConstraints.deviceId = JSON.parse(str);
@@ -614,12 +610,12 @@ function getStream(selectObject) {
 				if(avSelect.options[i].label.startsWith("Audio")) {
 					console.log('getStream getUserMedia found kind audio');
 					videoEnabled = false;
-					break;
+					localVideoHide();
 				} else if(avSelect.options[i].label.startsWith("Video")) {
 					console.log('getStream getUserMedia found kind video');
 					videoEnabled = true;
-					break;
 				}
+				break;
 			}
 		}
 	}
@@ -637,7 +633,6 @@ function getStream(selectObject) {
 				gotStream(stream);
 			})
 			.catch(function(err) {
-// TODO if this happens in response to res-change, we need to switch back to previous constraint
 				if(!videoEnabled) {
 					console.log('# audio input error', err);
 					alert("audio input error " + err);
@@ -649,10 +644,11 @@ function getStream(selectObject) {
 					if(!gentle) console.log('getStream back to lastGoodMediaConstraints',
 						lastGoodMediaConstraints);
 					userMediaConstraints = lastGoodMediaConstraints;
+					// TODO as a result of this, we may also need to localVideoShow()
 					return navigator.mediaDevices.getUserMedia(userMediaConstraints)
 						.then(gotStream)
 						.catch(function(err) {
-							// here we can ignore the err
+							// this err can be ignored
 						});
 				}
 			});
@@ -688,7 +684,6 @@ function gotDevices(deviceInfos) {
 			if(!exists) {
 				avSelect.appendChild(option);
 			}
-			//console.log('audioinput',option);
 		} else if (deviceInfo.kind === 'videoinput') {
 			if(videoEnabled) {
 				let deviceInfoLabel = deviceInfo.label;
