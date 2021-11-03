@@ -643,10 +643,10 @@ function getStream(selectObject) {
 // TODO if this happens in response to res-change, we need to switch back to previous constraint
 				if(!videoEnabled) {
 					console.log('# audio input error', err);
-					alert("audio input error", err);
+					alert("audio input error " + err);
 				} else {
 					console.log('# audio/video input error', err);
-					alert("audio/video input error", err);
+					alert("audio/video input error " + err);
 				}
 				if(lastGoodMediaConstraints) {
 					if(!gentle) console.log('getStream back to lastGoodMediaConstraints',
