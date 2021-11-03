@@ -652,10 +652,10 @@ function getStream(selectObject) {
 					if(!gentle) console.log('getStream back to lastGoodMediaConstraints',
 						lastGoodMediaConstraints);
 					return navigator.mediaDevices.getUserMedia(lastGoodMediaConstraints)
-					.then(gotStream)
-					.catch(function(err) {
-						// here we can ignore the err
-					}
+						.then(gotStream)
+						.catch(function(err) {
+							// here we can ignore the err
+						});
 				}
 			});
 	}
