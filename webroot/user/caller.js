@@ -260,7 +260,7 @@ window.onload = function() {
 			}
 
 			if(!gentle) console.log('start caller with calleeID',calleeID);
-			avSelect.onchange = getStream;
+//			avSelect.onchange = getStream;
 
 			// we need to know if calleeID is online asap (will switch to callee-online-layout if it is)
 			dialAfterCalleeOnline = false;

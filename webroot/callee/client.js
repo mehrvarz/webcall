@@ -13,14 +13,13 @@ var ICE_config = {
 };
 
 var userMediaConstraints = {
+	deviceId: undefined,
 	audio: {
-//		deviceId: avSelect.value ? {exact: avSelect.value} : undefined,
 		noiseSuppression: true,  // true by default
 		echoCancellation: true,  // true by default
 		autoGainControl: false,
 	},
 	video: {
-//		deviceId: avSelect.value ? {exact: avSelect.value} : undefined,
 		width: {
 		  min: 480,
 		  ideal: 1280,
@@ -39,25 +38,31 @@ var userMediaConstraints = {
 };
 
 function setVideoConstraintsLow() {
-	userMediaConstraints.video = JSON.parse('{ "width":  {"min":320, "ideal":640, "max":800 },'+
-											'  "height": {"min":240, "ideal":480, "max":600 },'+
-											'  "frameRate": { "min":10, "max":30 } }');
+	const constraintString =	'{ "width":  {"min":320, "ideal":640, "max":800 },'+
+								'  "height": {"min":240, "ideal":360, "max":600 },'+
+								'  "frameRate": { "min":10, "max":30 } }';
+	if(!gentle) console.log('setVideoConstraintsLow', constraintString);
+	userMediaConstraints.video = JSON.parse(constraintString);
 	historyBack();
 	getStream();
 }
 
 function setVideoConstraintsMid() {
-	userMediaConstraints.video = JSON.parse('{ "width":  {"min":480, "ideal":1280, "max":1920 },'+
-											'  "height": {"min":360, "ideal":720,  "max":1080 },'+
-											'  "frameRate": { "min":15, "max":60 }  }');
+	const constraintString =	'{ "width":  {"min":480, "ideal":1280, "max":1920 },'+
+								'  "height": {"min":360, "ideal":720,  "max":1080 },'+
+								'  "frameRate": { "min":15, "max":60 } }';
+	if(!gentle) console.log('setVideoConstraintsMid', constraintString);
+	userMediaConstraints.video = JSON.parse(constraintString);
 	historyBack();
 	getStream();
 }
 
 function setVideoConstraintsHigh() {
-	userMediaConstraints.video = JSON.parse('{ "width":  {"min":1280,"ideal":1920, "max":4096 },'+
-											'  "height": {"min":720, "ideal":1080, "max":2160 },'+
-											'  "frameRate": { "min":20, "max":60 }  }');
+	const constraintString =	'{ "width":  {"min":1280,"ideal":1920, "max":4096 },'+
+								'  "height": {"min":720, "ideal":1080, "max":2160 },'+
+								'  "frameRate": { "min":15, "max":60 }  }';
+	if(!gentle) console.log('setVideoConstraintsHigh', constraintString);
+	userMediaConstraints.video = JSON.parse(constraintString);
 	historyBack();
 	getStream();
 }
@@ -574,7 +579,7 @@ function iframeWindowClose() {
 	iframeWindowOpenFlag = false;
 }
 
-function getStream() {
+function getStream(selectObject) {
 	if(neverAudio) {
 		if(dialAfterLocalStream) {
 			dialAfterLocalStream=false;
@@ -584,26 +589,58 @@ function getStream() {
 		return
 	}
 
-//	let supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
-//	if(!gentle) console.log('getStream supportedConstraints',supportedConstraints);
+	let supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
+	if(selectObject) {
+// TODO selectObject.value NOT avSelect.value
+		if(!gentle) console.log('getStream supportedConstraintsX',selectObject,supportedConstraints);
+	} else {
+		if(!gentle) console.log('getStream supportedConstraints',supportedConstraints);
+	}
 
 	let myUserMediaConstraints = JSON.parse(JSON.stringify(userMediaConstraints));
+
+	if(selectObject /*&& selectObject.value!="default"*/) {
+		const str = '{"exact": "'+selectObject.value+'"}';
+		if(!gentle) console.log('getStream getUserMedia deviceId',str);
+		myUserMediaConstraints.deviceId = JSON.parse(str);
+
+// TODO find deviceId = selectObject.value
+		//if(!gentle) console.log('getStream avSelect.options',avSelect.options);
+		var foundKind;
+		var i, L = avSelect.options.length - 1;
+		for(i = L; i >= 0; i--) {
+			if(avSelect.options[i].value == selectObject.value) {
+				if(avSelect.options[i].label.startsWith("Audio")) {
+					foundKind = "audio";
+					videoEnabled = false;
+					break;
+				} else if(avSelect.options[i].label.startsWith("Video")) {
+					foundKind = "video";
+					videoEnabled = true;
+					break;
+				}
+			}
+		}
+		if(!gentle) console.log('getStream getUserMedia foundKind',foundKind);
+	}
+
 	if(!videoEnabled) {
 		if(!gentle) console.log('getStream getUserMedia NO VIDEO');
 		myUserMediaConstraints.video = false;
 	}
 
-	if(!gentle) console.log('getStream getUserMedia constraints',avSelect.value,myUserMediaConstraints);
+
+	if(!gentle) console.log('getStream getUserMedia constraints',myUserMediaConstraints);
 	if(!neverAudio) {
 		return navigator.mediaDevices.getUserMedia(myUserMediaConstraints)
 			.then(gotStream)
 			.catch(function(err) {
 				if(!videoEnabled) {
-					console.error('audio input error', err);
-					showStatus("audio input error<br>"+err,-1);
+					console.log('# audio input error', err);
+					alert("audio input error", err);
 				} else {
-					console.error('audio/video input error', err);
-					showStatus("audio/video input error<br>"+err,-1);
+					console.log('# audio/video input error', err);
+					alert("audio/video input error", err);
 				}
 			});
 	}
