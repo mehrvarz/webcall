@@ -1,4 +1,4 @@
-# build script for webcall
+# build script for webcall server copyright 2021 timur.mobi
 export BUILDDATE=`date --rfc-3339=date`
 echo "builddate $BUILDDATE"
 export VERSIONTAG=
