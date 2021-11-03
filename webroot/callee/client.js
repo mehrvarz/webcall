@@ -601,28 +601,27 @@ function getStream(selectObject) {
 	let myUserMediaConstraints = JSON.parse(JSON.stringify(userMediaConstraints));
 
 	if(selectObject /*&& selectObject.value!="default"*/) {
-		const str = '{"exact": "'+selectObject.value+'"}';
-		if(!gentle) console.log('getStream getUserMedia deviceId',str);
-		myUserMediaConstraints.deviceId = JSON.parse(str);
-
-// TODO find deviceId = selectObject.value
-		//if(!gentle) console.log('getStream avSelect.options',avSelect.options);
-		var foundKind;
+		// try to find selectObject.value in avSelect.options
 		var i, L = avSelect.options.length - 1;
 		for(i = L; i >= 0; i--) {
 			if(avSelect.options[i].value == selectObject.value) {
+				// set mediaConstraints.deviceId
+				const str = '{"exact": "'+selectObject.value+'"}';
+				if(!gentle) console.log('getStream getUserMedia set deviceId',str);
+				myUserMediaConstraints.deviceId = JSON.parse(str);
+
+				// if necessary, set/clear videoEnabled
 				if(avSelect.options[i].label.startsWith("Audio")) {
-					foundKind = "audio";
+					if(!gentle) console.log('getStream getUserMedia found kind audio');
 					videoEnabled = false;
 					break;
 				} else if(avSelect.options[i].label.startsWith("Video")) {
-					foundKind = "video";
+					if(!gentle) console.log('getStream getUserMedia found kind video');
 					videoEnabled = true;
 					break;
 				}
 			}
 		}
-		if(!gentle) console.log('getStream getUserMedia foundKind',foundKind);
 	}
 
 	if(!videoEnabled) {
@@ -630,11 +629,9 @@ function getStream(selectObject) {
 		myUserMediaConstraints.video = false;
 	}
 
-
 	if(!gentle) console.log('getStream getUserMedia constraints',myUserMediaConstraints);
 	if(!neverAudio) {
 		return navigator.mediaDevices.getUserMedia(myUserMediaConstraints)
-//			.then(gotStream)
 			.then(function(stream) {
 				lastGoodMediaConstraints = myUserMediaConstraints;
 				gotStream(stream);
