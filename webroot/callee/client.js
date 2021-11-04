@@ -843,7 +843,7 @@ function vmonitor() {
 	if(!localStream) {
 		// re-enable paused video and microphone
 		addLocalVideoEnabled = true; // will cause: peerCon.addTrack(video)
-		pickupAfterLocalStream = true; // will cause: pickup2()
+		pickupAfterLocalStream = false; // don't call pickup2()
 		getStream(); // -> gotStream() -> gotStream2() -> pickup2()
 		// in the end, vmonitor will be called again, but then with localStream set
 	} else if(videoEnabled) {
