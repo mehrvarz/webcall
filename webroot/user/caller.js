@@ -196,8 +196,10 @@ window.onload = function() {
 		//console.log("onhashchange ",hashcounter);
 	}
 
-	localVideoFrame.onresize = showVideoResolutionLocal;
-	remoteVideoFrame.onresize = showVideoResolutionRemote;
+	if(localVideoFrame)
+		localVideoFrame.onresize = showVideoResolutionLocal;
+	if(remoteVideoFrame)
+		remoteVideoFrame.onresize = showVideoResolutionRemote;
 
 	fullscreenCheckbox.addEventListener('change', function() {
 		if(this.checked) {
