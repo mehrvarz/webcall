@@ -495,7 +495,7 @@ function menuDialogOpen(menuDialog) {
 
 	// position menuDialog at mouse coordinate
     var e = window.event;
-    var posX = e.clientX * 0.7;
+    var posX = e.clientX * 0.65;
 	if(posX<0) posX=0;
     var posY = e.clientY;
 	if(posY>50) posY-=50;
@@ -505,7 +505,7 @@ function menuDialogOpen(menuDialog) {
 	menuDialogOpenChildElement.style.top = (posY+window.scrollY)+"px"; // add scrollY-offset to posY
 	menuDialogOpenElement.style.display = "block";
 
-	// prevent popup-menu to show up cut-off below the page break (if possible on the top side)
+	// move popup-menu up to prevent bottom cut-off (if there is room on top)
 	setTimeout(function() {
 		if(!gentle) console.log('menuDialogOpenChildElement',menuDialogOpenChildElement);
 		let menuHeight = menuDialogOpenChildElement.clientHeight;
@@ -516,7 +516,7 @@ function menuDialogOpen(menuDialog) {
 		}
 		if(!gentle) console.log('menuDialogOpen up2',posY, menuHeight, pageHeight);
 		menuDialogOpenChildElement.style.top = (posY+window.scrollY)+"px"; // add scrollY-offset to posY
-	},100);
+	},60);
 }
 
 
@@ -836,7 +836,6 @@ function connectLocalVideo(forceOff) {
 var vpauseTimer = null;
 function vmonitor() {
 	if(!gentle) console.log("vmonitor");
-// TODO this does not activate after call disconnect (so a new timer is started)  ???
 	localVideoPaused.style.visibility = "hidden";
 	vmonitorButton.style.color = "#ff0";
 	vpauseButton.style.color = "#fff";
@@ -845,7 +844,7 @@ function vmonitor() {
 		addLocalVideoEnabled = true; // will cause: peerCon.addTrack(video)
 		pickupAfterLocalStream = false; // don't call pickup2()
 		getStream(); // -> gotStream() -> gotStream2() -> pickup2()
-		// in the end, vmonitor will be called again, but then with localStream set
+		// in the end, vmonitor will be called again, but then with localStream
 	} else if(videoEnabled) {
 		localVideoFrame.play().catch(function(error) {});
 		if(!mediaConnect) {
@@ -855,7 +854,7 @@ function vmonitor() {
 				clearTimeout(vpauseTimer);
 				vpauseTimer = null;
 			}
-			vpauseTimer = setTimeout(vpauseByTimer, 30000);
+			vpauseTimer = setTimeout(vpauseByTimer, 40000);
 		}
 	}
 }
