@@ -662,42 +662,23 @@ function getStream(selectObject) {
 function gotDevices(deviceInfos) {
 	// fill avSelect with the available audio/video input devices (mics and cams)
 	if(!gentle) console.log('gotDevices',deviceInfos);
-	var i, L = avSelect.options.length - 1;
-	for(i = L; i >= 0; i--) {
-		avSelect.remove(i);
-	}
-	for(const deviceInfo of deviceInfos) {
-		const option = document.createElement('option');
-		option.value = deviceInfo.deviceId;
-		if(deviceInfo.kind === 'audioinput') {
-			let deviceInfoLabel = deviceInfo.label;
-			if(deviceInfoLabel=="Default") {
-				deviceInfoLabel="Audio Input Default";
-			} else if(deviceInfoLabel) {
-				deviceInfoLabel = "Audio "+deviceInfoLabel
-			}
-			option.text = deviceInfoLabel || `Audio ${avSelect.length + 1}`;
-			var exists=false
-			var length = avSelect.options.length;
-			for(var i = length-1; i >= 0; i--) {
-				if(avSelect.options[i].text == option.text) {
-					exists=true; // don't add again
-					break;
-				}
-			}
-			if(!exists) {
-				avSelect.appendChild(option);
-			}
-		} else if (deviceInfo.kind === 'videoinput') {
-			if(videoEnabled) {
+	if(avSelect) { // not set in button mode
+		var i, L = avSelect.options.length - 1;
+		for(i = L; i >= 0; i--) {
+			avSelect.remove(i);
+		}
+		for(const deviceInfo of deviceInfos) {
+			const option = document.createElement('option');
+			option.value = deviceInfo.deviceId;
+			if(deviceInfo.kind === 'audioinput') {
 				let deviceInfoLabel = deviceInfo.label;
 				if(deviceInfoLabel=="Default") {
-					deviceInfoLabel="Video Input Default";
+					deviceInfoLabel="Audio Input Default";
 				} else if(deviceInfoLabel) {
-					deviceInfoLabel = "Video "+deviceInfoLabel
+					deviceInfoLabel = "Audio "+deviceInfoLabel
 				}
+				option.text = deviceInfoLabel || `Audio ${avSelect.length + 1}`;
 				var exists=false
-				option.text = deviceInfoLabel || `Video ${avSelect.length + 1}`;
 				var length = avSelect.options.length;
 				for(var i = length-1; i >= 0; i--) {
 					if(avSelect.options[i].text == option.text) {
@@ -707,6 +688,27 @@ function gotDevices(deviceInfos) {
 				}
 				if(!exists) {
 					avSelect.appendChild(option);
+				}
+			} else if (deviceInfo.kind === 'videoinput') {
+				if(videoEnabled) {
+					let deviceInfoLabel = deviceInfo.label;
+					if(deviceInfoLabel=="Default") {
+						deviceInfoLabel="Video Input Default";
+					} else if(deviceInfoLabel) {
+						deviceInfoLabel = "Video "+deviceInfoLabel
+					}
+					var exists=false
+					option.text = deviceInfoLabel || `Video ${avSelect.length + 1}`;
+					var length = avSelect.options.length;
+					for(var i = length-1; i >= 0; i--) {
+						if(avSelect.options[i].text == option.text) {
+							exists=true; // don't add again
+							break;
+						}
+					}
+					if(!exists) {
+						avSelect.appendChild(option);
+					}
 				}
 			}
 		}
