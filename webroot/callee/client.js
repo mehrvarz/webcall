@@ -814,7 +814,8 @@ function connectLocalVideo(forceOff) {
 		}
 	} else {
 		// stop streaming localVideo to other peer
-		vsendButton.style.color = "#fff"; // local video is not streaming
+		if(vsendButton)
+			vsendButton.style.color = "#fff"; // local video is not streaming
 
 		addLocalVideoEnabled = false;
 		if(!addedVideoTrack) {
@@ -838,9 +839,12 @@ function connectLocalVideo(forceOff) {
 var vpauseTimer = null;
 function vmonitor() {
 	if(!gentle) console.log("vmonitor");
-	localVideoPaused.style.visibility = "hidden";
-	vmonitorButton.style.color = "#ff0";
-	vpauseButton.style.color = "#fff";
+	if(localVideoPaused)
+		localVideoPaused.style.visibility = "hidden";
+	if(vmonitorButton) {
+		vmonitorButton.style.color = "#ff0";
+		vpauseButton.style.color = "#fff";
+	}
 	if(!localStream) {
 		// re-enable paused video and microphone
 		addLocalVideoEnabled = true; // will cause: peerCon.addTrack(video)
@@ -983,34 +987,36 @@ function peerConOntrack(track, streams) {
 		remoteStream = streams[0];
 //		};
 
-	if(!track.enabled) {
-		if(!gentle) console.log('peerCon.ontrack onunmute !track.enabled: not set remoteVideoFrame');
-	} else {
-		if(remoteVideoFrame.srcObject == remoteStream) {
-			if(!gentle) console.log('peerCon.ontrack onunmute track.enabled: same remoteStream again');
-			return;
-		}
-		remoteVideoFrame.srcObject = remoteStream;
-		if(remoteStream==null) {
-			remoteVideoHide();
-			return;
-		}
-		if(!gentle) console.log('peerCon.ontrack onunmute track.enabled: new remoteStream');
-		remoteVideoFrame.play().catch(function(error) { });
-		setTimeout(function() {
+	if(remoteVideoFrame) {
+		if(!track.enabled) {
+			if(!gentle) console.log('peerCon.ontrack onunmute !track.enabled: not set remoteVideoFrame');
+		} else {
+			if(remoteVideoFrame.srcObject == remoteStream) {
+				if(!gentle) console.log('peerCon.ontrack onunmute track.enabled: same remoteStream again');
+				return;
+			}
+			remoteVideoFrame.srcObject = remoteStream;
 			if(remoteStream==null) {
-				remoteVideoFrame.srcObject = null;
 				remoteVideoHide();
 				return;
 			}
-			let videoTracks = remoteStream.getVideoTracks();
-			if(!gentle) console.log('peerCon.ontrack onunmute track.enabled: delayed v-tracks',videoTracks.length);
-			if(videoTracks.length>0) {
-				remoteVideoShow();
-			} else {
-				remoteVideoHide();
-			}
-		},500);
+			if(!gentle) console.log('peerCon.ontrack onunmute track.enabled: new remoteStream');
+			remoteVideoFrame.play().catch(function(error) { });
+			setTimeout(function() {
+				if(remoteStream==null) {
+					remoteVideoFrame.srcObject = null;
+					remoteVideoHide();
+					return;
+				}
+				let videoTracks = remoteStream.getVideoTracks();
+				if(!gentle) console.log('peerCon.ontrack onunmute track.enabled: delayed v-tracks',videoTracks.length);
+				if(videoTracks.length>0) {
+					remoteVideoShow();
+				} else {
+					remoteVideoHide();
+				}
+			},500);
+		}
 	}
 };
 

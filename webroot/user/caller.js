@@ -1157,12 +1157,14 @@ function signalingCommand(message) {
 				}
 			}
 
-			// enable (un-mute) remoteStream
-			if(!gentle) console.log('set remoteVideoFrame',remoteStream);
-			remoteVideoFrame.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
-			remoteVideoFrame.play().catch(function(error) {
-				if(!gentle) console.log("# remoteVideoFrame error",error);
-			});
+			if(remoteVideoFrame) {
+				// enable (un-mute) remoteStream
+				if(!gentle) console.log('set remoteVideoFrame',remoteStream);
+				remoteVideoFrame.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
+				remoteVideoFrame.play().catch(function(error) {
+					if(!gentle) console.log("# remoteVideoFrame error",error);
+				});
+			}
 
 			mediaConnect = true;
 			mediaConnectStartDate = Date.now();
@@ -1750,11 +1752,13 @@ function hangup(mustDisconnectCallee,message) {
 		wsConn=null;
 	}
 
-	if(!gentle) console.log('hangup shutdown remoteAV');
-	remoteVideoFrame.pause();
-	remoteVideoFrame.currentTime = 0;
-	remoteVideoFrame.srcObject = null;
-	remoteVideoHide();
+	if(remoteVideoFrame) {
+		if(!gentle) console.log('hangup shutdown remoteAV');
+		remoteVideoFrame.pause();
+		remoteVideoFrame.currentTime = 0;
+		remoteVideoFrame.srcObject = null;
+		remoteVideoHide();
+	}
 	remoteStream = null;
 
 	if(peerCon) {
@@ -1805,7 +1809,8 @@ function hangup(mustDisconnectCallee,message) {
 	mediaConnect = false;
 	rtcConnect = false;
 	vmonitor();
-	vsendButton.classList.remove('blink_me')
+	if(vsendButton)
+		vsendButton.classList.remove('blink_me')
 
 	if(peerCon) {
 		if(!gentle) console.log('hangup peerCon');
