@@ -201,22 +201,25 @@ window.onload = function() {
 	if(remoteVideoFrame)
 		remoteVideoFrame.onresize = showVideoResolutionRemote;
 
-	fullscreenCheckbox.addEventListener('change', function() {
-		if(this.checked) {
-			// user is requesting fullscreen mode
-			if(!mainElement.fullscreenElement) {
-				// not yet in fullscreen-mode: switch to fullscreen mode
-				if(mainElement.requestFullscreen) {
-					// this will trigger fullscreenchange (below)
-					mainElement.requestFullscreen();
+	if(fullscreenCheckbox) {
+		fullscreenCheckbox.addEventListener('change', function() {
+			if(this.checked) {
+				// user is requesting fullscreen mode
+				if(!mainElement.fullscreenElement) {
+					// not yet in fullscreen-mode: switch to fullscreen mode
+					if(mainElement.requestFullscreen) {
+						// this will trigger fullscreenchange (below)
+						mainElement.requestFullscreen();
+					}
 				}
+			} else {
+				// user is requesting end of fullscreen mode
+				document.exitFullscreen().catch(err => { });
 			}
-		} else {
-			// user is requesting end of fullscreen mode
-			document.exitFullscreen().catch(err => { });
-		}
-		setTimeout(historyBack,150);
-	});
+			setTimeout(historyBack,150);
+		});
+	}
+
 	document.addEventListener('fullscreenchange', (event) => {
 		if(document.fullscreenElement) {
 			// we have switched to fullscreen mode
