@@ -78,14 +78,18 @@ function showVideoResolutionLocal() {
 			localVideoRes.style.visibility = "visible";
 			localVideoRes.style.transition = "opacity 500ms";
 			localVideoRes.style.opacity = "1";
-			setTimeout(function() {
-				localVideoRes.style.opacity = "0";
-				setTimeout(function() {
-					localVideoRes.style.visibility = "hidden";
-					localVideoRes.innerHTML = "";
-					localVideoRes.style.transition = "";
-				},500);
-			},1500);
+			setTimeout(function(oldWidth) {
+				if(localVideoFrame.videoWidth==oldWidth) {
+					localVideoRes.style.opacity = "0";
+					setTimeout(function(oldWidth2) {
+						if(localVideoFrame.videoWidth==oldWidth2) {
+							localVideoRes.style.visibility = "hidden";
+							localVideoRes.innerHTML = "";
+							localVideoRes.style.transition = "";
+						}
+					},500,oldWidth);
+				}
+			},1800,localVideoFrame.videoWidth);
 		}
 	}
 }
