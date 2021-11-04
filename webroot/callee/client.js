@@ -70,6 +70,23 @@ function setVideoConstraintsHigh() {
 function showVideoResolutionLocal() {
 	if(videoEnabled && localVideoFrame.videoWidth>10 && localVideoFrame.videoHeight>10) {
 		console.log('local video size changed', localVideoFrame.videoWidth, localVideoFrame.videoHeight);
+		if(localVideoRes) {
+			localVideoRes.style.transition = "";
+			localVideoRes.style.opacity = "0";
+			localVideoRes.innerHTML = 
+				"&nbsp;"+localVideoFrame.videoWidth+" x "+localVideoFrame.videoHeight+"&nbsp;";
+			localVideoRes.style.visibility = "visible";
+			localVideoRes.style.transition = "opacity 500ms";
+			localVideoRes.style.opacity = "1";
+			setTimeout(function() {
+				localVideoRes.style.opacity = "0";
+				setTimeout(function() {
+					localVideoRes.style.visibility = "hidden";
+					localVideoRes.innerHTML = "";
+					localVideoRes.style.transition = "";
+				},500);
+			},1500);
+		}
 	}
 }
 
