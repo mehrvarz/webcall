@@ -742,9 +742,9 @@ function gotStream(stream) {
 	localStream = stream;
 
 	if(!peerCon) {
-		if(!gentle) console.log('gotStream no peerCon: no peerCon.addTrack');
+		if(!gentle) console.log('gotStream no peerCon: no addTrack');
 	} else if(addedAudioTrack) {
-		if(!gentle) console.log('gotStream addedAudioTrack already set: no peerCon.addTrack');
+		if(!gentle) console.log('gotStream addedAudioTrack already set: no addTrack');
 	} else {
 		const audioTracks = localStream.getAudioTracks();
 		audioTracks[0].enabled = true;
@@ -764,7 +764,7 @@ function gotStream(stream) {
 		// video streaming has not been activated yet
 		if(!gentle) console.log('gotStream videoEnabled but !addLocalVideoEnabled: no addTrack vid');
 	} else if(!peerCon) {
-		if(!gentle) console.log('# gotStream videoEnabled but !peerCon: no addTrack vid');
+		//if(!gentle) console.log('gotStream videoEnabled but !peerCon: no addTrack vid');
 	} else if(localCandidateType=="relay" || remoteCandidateType=="relay") {
 		if(!gentle) console.log('gotStream videoEnabled but relayed con: no addTrack vid (%s)(%s)',localCandidateType,remoteCandidateType);
 	} else if(localStream.getTracks().length<2) {
@@ -836,17 +836,20 @@ function connectLocalVideo(forceOff) {
 var vpauseTimer = null;
 function vmonitor() {
 	if(!gentle) console.log("vmonitor");
-// TODO this does not activate after call disconnect (so a new timer is started)
+// TODO this does not activate after call disconnect (so a new timer is started)  ???
 	localVideoPaused.style.visibility = "hidden";
 	vmonitorButton.style.color = "#ff0";
 	vpauseButton.style.color = "#fff";
-	if(mediaConnect) {
-// TODO unpause microphone if necessary
-	}
-	if(videoEnabled) {
+	if(!localStream) {
+		// re-enable paused video and microphone
+		addLocalVideoEnabled = true; // will cause: peerCon.addTrack(video)
+		pickupAfterLocalStream = true; // will cause: pickup2()
+		getStream(); // -> gotStream() -> gotStream2() -> pickup2()
+		// in the end, vmonitor will be called again, but then with localStream set
+	} else if(videoEnabled) {
 		localVideoFrame.play().catch(function(error) {});
 		if(!mediaConnect) {
-			if(!gentle) console.log("vmonitor !mediaConnect");
+			if(!gentle) console.log("vmonitor !mediaConnect new vpauseTimer");
 			vsendButton.style.color = "#fff";
 			if(vpauseTimer) {
 				clearTimeout(vpauseTimer);
@@ -876,13 +879,12 @@ function vpause() {
 	localVideoPaused.style.visibility = "visible";
 
 	if(!mediaConnect) {
-		// TODO tmtmtm also microphone pause, so that there will be no red-tab
-/*
+		// deactivate video + microphone pause, so that there will be no red-tab
 		localStream.getTracks().forEach(track => { track.stop(); });
 		const audioTracks = localStream.getAudioTracks();
 		localStream.removeTrack(audioTracks[0]);
 		localStream = null;
-*/
+		if(!gentle) console.log("vpause localStream-a/v deactivated");
 	}
 }
 
