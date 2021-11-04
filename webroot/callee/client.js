@@ -73,8 +73,7 @@ function showVideoResolutionLocal() {
 		if(localVideoRes) {
 			localVideoRes.style.transition = "";
 			localVideoRes.style.opacity = "0";
-			localVideoRes.innerHTML = 
-				"&nbsp;"+localVideoFrame.videoWidth+" x "+localVideoFrame.videoHeight+"&nbsp;";
+			localVideoRes.innerHTML = localVideoFrame.videoWidth+" x "+localVideoFrame.videoHeight;
 			localVideoRes.style.visibility = "visible";
 			localVideoRes.style.transition = "opacity 500ms";
 			localVideoRes.style.opacity = "1";
