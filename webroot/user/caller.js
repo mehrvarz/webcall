@@ -1090,7 +1090,7 @@ function signalingCommand(message) {
 				return
 			}
 
-			if(!gentle) console.log('calleeCandidate.candidate',calleeCandidate.candidate);
+			//if(!gentle) console.log('calleeCandidate.candidate',calleeCandidate.candidate);
 			if(!gentle) console.log('calleeCandidate',calleeCandidate);
 
 			let tok = calleeCandidate.candidate.split(' ');
@@ -1100,7 +1100,7 @@ function signalingCommand(message) {
 				if(tok.length>=10 && tok[8]=="raddr" && tok[9]!="0.0.0.0") {
 					address = tok[9];
 				}
-				if(!gentle) console.log('cmd calleeCandidate addIce',address,calleeCandidate.candidate);
+				if(!gentle) console.log('calleeCandidate addIce',address,calleeCandidate.candidate);
 				// "Failed to execute 'addIceCandidate' on 'RTCPeerConnection'"
 				// may happen if peerCon.setRemoteDescription is not finished yet
 				if(!peerCon) {
