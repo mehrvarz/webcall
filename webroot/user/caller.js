@@ -348,7 +348,6 @@ window.onload = function() {
 function videoOn() {
 	// enable local video
 	if(!gentle) console.log("videoOn");
-//	videoEnabled = true;
 	localVideoShow();
 
 	// add localStream video-track to peerCon
@@ -387,7 +386,6 @@ function videoOn() {
 function videoOff() {
 	// disable local video (but if rtcConnect, keep local mic on)
 	if(!gentle) console.log("videoOff");
-//	videoEnabled = false;
 	localVideoHide();
 	if(localStream) {
 		// stop streaming video track
@@ -643,7 +641,7 @@ function calleeOnlineAction(from) {
 				showStatus("Hit the Call button to establish a telephony connection.",-1);
 			} else {
 				if(!singlebutton) {
-					showStatus( "Before you hit the Call button you can enter a greeting message (optional).",-1)
+					showStatus( "Enter a greeting message before you hit Call (optional):",-1)
 					msgbox.style.display = "block";
 					if(!gentle) console.log('callerName',callerName);
 					if(typeof callerName!=="undefined" && callerName!="") {
