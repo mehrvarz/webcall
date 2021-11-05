@@ -3,12 +3,10 @@
 const dialButton = document.querySelector('button#callButton');
 const hangupButton = document.querySelector('button#hangupButton');
 const calleeOnlineElement = document.getElementById("calleeOnline");
-
 const avSelect = document.querySelector("select#avSelect");
 const localVideoDiv = document.querySelector('div#localVideoDiv');
 const localVideoFrame = document.querySelector('video#localVideoFrame');
 const localVideoPaused = document.querySelector('span#localVideoPaused');
-const localVideoRes = document.querySelector('span#localVideoRes');
 const vmonitorButton = document.querySelector('span#vmonitor');
 const vpauseButton = document.querySelector('span#vpause');
 const vsendButton = document.querySelector('span#vsend');

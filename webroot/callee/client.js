@@ -1,5 +1,7 @@
 // WebCall Copyright 2021 timur.mobi. All rights reserved.
 'use strict';
+const localVideoRes = document.querySelector('span#localVideoRes');
+const remoteVideoRes = document.querySelector('span#remoteVideoRes');
 const cameraElement = document.getElementById('camera');
 const fileSelectElement = document.getElementById("fileselect");
 
@@ -98,6 +100,27 @@ function showVideoResolutionLocal() {
 function showVideoResolutionRemote() {
 	if(videoEnabled && remoteVideoFrame.videoWidth>10 && remoteVideoFrame.videoHeight>10) {
 		console.log('remote video size changed', remoteVideoFrame.videoWidth, remoteVideoFrame.videoHeight);
+		if(remoteVideoRes) {
+			remoteVideoRes.style.transition = "";
+			remoteVideoRes.style.opacity = 0; // start from 0
+			remoteVideoRes.innerHTML = remoteVideoFrame.videoWidth+" x "+remoteVideoFrame.videoHeight;
+			remoteVideoRes.style.visibility = "visible";
+			remoteVideoRes.style.transition = "opacity 500ms";
+			remoteVideoRes.style.opacity = 1; // transition to 1
+			setTimeout(function(oldWidth) {
+				// time to fade
+				if(remoteVideoFrame.videoWidth==oldWidth) {
+					remoteVideoRes.style.opacity = 0; // transition to 1
+					setTimeout(function(oldWidth2) {
+						if(remoteVideoFrame.videoWidth==oldWidth2) {
+							remoteVideoRes.style.visibility = "hidden";
+							remoteVideoRes.innerHTML = "";
+							remoteVideoRes.style.transition = "";
+						}
+					},500,oldWidth);
+				}
+			},1800,remoteVideoFrame.videoWidth);
+		}
 	}
 }
 
