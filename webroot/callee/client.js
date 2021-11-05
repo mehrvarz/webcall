@@ -601,13 +601,14 @@ function iframeWindowClose() {
 }
 
 let lastGoodMediaConstraints;
+let myUserMediaConstraints;
 function getStream(selectObject) {
 	if(!gentle) {
 		const supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
 		console.log('getStream supportedConstraints',supportedConstraints);
 	}
 
-	let myUserMediaConstraints = JSON.parse(JSON.stringify(userMediaConstraints));
+	myUserMediaConstraints = JSON.parse(JSON.stringify(userMediaConstraints));
 
 	if(selectObject) {
 		// try to find selectObject.value (deviceId) in avSelect.options
@@ -644,7 +645,7 @@ function getStream(selectObject) {
 	}
 	return navigator.mediaDevices.getUserMedia(myUserMediaConstraints)
 		.then(function(stream) {
-			lastGoodMediaConstraints = myUserMediaConstraints;
+//			lastGoodMediaConstraints = myUserMediaConstraints;
 			gotStream(stream);
 		})
 		.catch(function(err) {
@@ -659,6 +660,9 @@ function getStream(selectObject) {
 				if(!gentle) console.log('getStream back to lastGoodMediaConstraints',
 					lastGoodMediaConstraints);
 				userMediaConstraints = lastGoodMediaConstraints;
+				if(userMediaConstraints.video == false) {
+					localVideoHide();
+				}
 				// TODO as a result of this, we may also need to localVideoShow()
 				return navigator.mediaDevices.getUserMedia(userMediaConstraints)
 					.then(gotStream)
@@ -790,6 +794,7 @@ function gotStream(stream) {
 	localVideoFrame.srcObject = localStream;
 	localVideoFrame.volume = 0;
 	vmonitor();
+	lastGoodMediaConstraints = myUserMediaConstraints;
 	gotStream2();
 }
 
