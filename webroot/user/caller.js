@@ -34,7 +34,6 @@ const bitrate = 280000;
 const playDialSounds = true;
 const calleeMode = false;
 
-var videoEnabled = false;
 var connectingText = "Connecting...";
 var singleButtonReadyText = "Click to make your order<br>Live operator";
 var singleButtonBusyText = "All lines are busy.<br>Please try again a little later.";
@@ -349,7 +348,8 @@ window.onload = function() {
 function videoOn() {
 	// enable local video
 	if(!gentle) console.log("videoOn");
-	videoEnabled = true;
+//	videoEnabled = true;
+	localVideoShow();
 
 	// add localStream video-track to peerCon
 	if(peerCon && rtcConnect && addLocalVideoEnabled && localStream.getTracks().length>=2 && !addedVideoTrack) {
@@ -363,8 +363,6 @@ function videoOn() {
 
 	// activate localStream in localVideoFrame
 	localVideoFrame.volume = 0; // avoid audio feedback
-
-	localVideoShow();
 
 	// start localVideoFrame playback, setup the localVideo pane buttons
 	vmonitor();
@@ -389,7 +387,7 @@ function videoOn() {
 function videoOff() {
 	// disable local video (but if rtcConnect, keep local mic on)
 	if(!gentle) console.log("videoOff");
-	videoEnabled = false;
+//	videoEnabled = false;
 	localVideoHide();
 	if(localStream) {
 		// stop streaming video track

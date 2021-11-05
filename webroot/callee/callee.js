@@ -53,7 +53,6 @@ const version = "1.16.0";
 const singlebutton = false;
 const calleeMode = true;
 
-var videoEnabled = false;
 var ringtoneSound = null;
 var ringtoneIsPlaying = false;
 var busySignalSound = null;
@@ -292,7 +291,8 @@ window.onload = function() {
 function videoOn() {
 	// open local video-frame (it is not yet streaming, but locally visible)
 	if(!gentle) console.log("videoOn");
-	videoEnabled = true;
+	localVideoShow();
+
 	// enable local video
 	if(peerCon && rtcConnect && addLocalVideoEnabled && localStream.getTracks().length>=2 && !addedVideoTrack) {
 		if(localCandidateType=="relay" || remoteCandidateType=="relay") {
@@ -305,8 +305,6 @@ function videoOn() {
 	localVideoFrame.srcObject = localStream; // see gotStream()
 	localVideoFrame.volume = 0; // avoid audio feedback
 
-	localVideoShow();
-
 	// start localVideoFrame playback, setup the localVideo pane buttons
 	vmonitor();
 
@@ -314,19 +312,21 @@ function videoOn() {
 	.then((deviceInfos) => {
 		gotDevices(deviceInfos);
 
-		// switch to the 1st video option
-		let optionElements = Array.from(avSelect);
-		if(optionElements.length>0) {
-			if(!gentle) console.log("videoOn avSelect.selectedIndex count",optionElements.length);
-			for(let i=0; i<optionElements.length; i++) {
-				if(optionElements[i].text.startsWith("Video")) {
-					avSelect.selectedIndex = i;
-					if(!gentle) console.log("videoOn avSelect.selectedIndex set",i);
-					break;
+		if(videoEnabled) {
+			// switch to the 1st video option
+			let optionElements = Array.from(avSelect);
+			if(optionElements.length>0) {
+				if(!gentle) console.log("videoOn avSelect.selectedIndex count",optionElements.length);
+				for(let i=0; i<optionElements.length; i++) {
+					if(optionElements[i].text.startsWith("Video")) {
+						avSelect.selectedIndex = i;
+						if(!gentle) console.log("videoOn avSelect.selectedIndex set",i);
+						break;
+					}
 				}
+				// activate selected device
+				getStream();
 			}
-			// activate selected device
-			getStream();
 		}
 	});
 }
@@ -334,7 +334,6 @@ function videoOn() {
 function videoOff() {
 	// hide/close localVideoFrame (not needed anymore)
 	if(!gentle) console.log("videoOff");
-	videoEnabled = false;
 	localVideoHide();
 	if(localStream) {
 		connectLocalVideo(true);
@@ -1382,7 +1381,6 @@ function hangup() {
 
 	connectLocalVideo(true);
 	endWebRtcSession(true,true);
-	vmonitor();
 	vsendButton.classList.remove('blink_me')
 
 	if(localStream && !videoEnabled) {

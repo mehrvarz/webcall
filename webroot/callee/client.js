@@ -5,6 +5,7 @@ const remoteVideoRes = document.querySelector('span#remoteVideoRes');
 const cameraElement = document.getElementById('camera');
 const fileSelectElement = document.getElementById("fileselect");
 
+var videoEnabled = false;
 var ICE_config = {
 	"iceServers": [
 		{	'urls': 'stun:'+window.location.hostname+':3739' },
@@ -14,7 +15,6 @@ var ICE_config = {
 		}
 	]
 };
-
 var userMediaConstraints = {
 	deviceId: undefined,
 	audio: {
@@ -102,7 +102,7 @@ function showVideoResolutionLocal() {
 }
 
 function showVideoResolutionRemote() {
-	if(videoEnabled && remoteVideoFrame.videoWidth>10 && remoteVideoFrame.videoHeight>10) {
+	if(remoteVideoFrame.videoWidth>10 && remoteVideoFrame.videoHeight>10) {
 		console.log('remote video size changed', remoteVideoFrame.videoWidth, remoteVideoFrame.videoHeight);
 		showVideoToast(remoteVideoRes, remoteVideoFrame.videoWidth, remoteVideoFrame.videoHeight);
 	}
@@ -629,12 +629,15 @@ function getStream(selectObject) {
 
 				// if necessary, set/clear videoEnabled
 				if(avSelect.options[i].label.startsWith("Audio")) {
-					console.log('getStream getUserMedia found kind audio');
-					videoEnabled = false;
-					localVideoHide();
+					console.log('getStream avSelect to audio');
+					if(videoEnabled) {
+						videoOff();
+					}
 				} else if(avSelect.options[i].label.startsWith("Video")) {
-					console.log('getStream getUserMedia found kind video');
-					videoEnabled = true;
+					console.log('getStream avSelect to video');
+					if(!videoEnabled) {
+						videoOn();
+					}
 				}
 				break;
 			}
@@ -642,8 +645,12 @@ function getStream(selectObject) {
 	}
 
 	if(!videoEnabled) {
-		if(!gentle) console.log('getStream getUserMedia NO VIDEO');
+		if(!gentle) console.log('getStream !videoEnabled: Constraints.video = false');
 		myUserMediaConstraints.video = false;
+	}
+	if(!myUserMediaConstraints.video && videoEnabled) {
+		if(!gentle) console.log('getStream !myUserMediaConstraints.video + videoEnabled: localVideoHide()');
+		localVideoHide();
 	}
 
 	if(!gentle) console.log('getStream getUserMedia constraints',myUserMediaConstraints);
@@ -653,7 +660,6 @@ function getStream(selectObject) {
 	}
 	return navigator.mediaDevices.getUserMedia(myUserMediaConstraints)
 		.then(function(stream) {
-//			lastGoodMediaConstraints = myUserMediaConstraints;
 			gotStream(stream);
 		})
 		.catch(function(err) {
@@ -663,19 +669,27 @@ function getStream(selectObject) {
 			} else {
 				console.log('# audio/video input error', err);
 				alert("audio/video input error " + err);
+				localVideoHide();
 			}
 			if(lastGoodMediaConstraints) {
-				if(!gentle) console.log('getStream back to lastGoodMediaConstraints',
-					lastGoodMediaConstraints);
+				if(!gentle) console.log('getStream back to lastGoodMediaConstraints',lastGoodMediaConstraints);
 				userMediaConstraints = lastGoodMediaConstraints;
-				if(userMediaConstraints.video == false) {
+				if(!userMediaConstraints.video && videoEnabled) {
+					if(!gentle) console.log('getStream back to lastGoodMediaConstraints !Constraints.video');
 					localVideoHide();
 				}
-				// TODO as a result of this, we may also need to localVideoShow()
+				if(userMediaConstraints.video && !videoEnabled) {
+					if(!gentle) console.log('getStream back to lastGoodMediaConstraints Constraints.video');
+					localVideoShow();
+				}
 				return navigator.mediaDevices.getUserMedia(userMediaConstraints)
 					.then(gotStream)
 					.catch(function(err) {
 						// this err can be ignored
+						if(videoEnabled) {
+							if(!gentle) console.log('getStream backto lastGoodMediaConstraints videoEnabled err');
+							localVideoHide();
+						}
 					});
 			}
 		});
@@ -798,10 +812,12 @@ function gotStream(stream) {
 		addedVideoTrack = peerCon.addTrack(localStream.getTracks()[1],localStream);
 	}
 
-	if(!gentle) console.log("gotStream set localVideoFrame");
+	if(!gentle) console.log("gotStream set localVideoFrame.srcObject");
 	localVideoFrame.srcObject = localStream;
 	localVideoFrame.volume = 0;
-	vmonitor();
+	if(videoEnabled) {
+		vmonitor();
+	}
 	lastGoodMediaConstraints = myUserMediaConstraints;
 	gotStream2();
 }
@@ -824,13 +840,13 @@ function connectLocalVideo(forceOff) {
 	}
 	if(!addLocalVideoEnabled && !forceOff) {
 		// start streaming localVideo to other peer
+		addLocalVideoEnabled = true; // will cause: peerCon.addTrack(video)
 		if(dataChannel && dataChannel.readyState=="open") {
 			if(!gentle) console.log("connectLocalVideo set");
 			vsendButton.classList.remove('blink_me')
 			vsendButton.style.color = "#f55"; // local video is streaming
-			addLocalVideoEnabled = true; // will cause: peerCon.addTrack(video)
 			pickupAfterLocalStream = true; // will cause: pickup2()
-			getStream(); // -> gotStream() -> gotStream2() -> pickup2() -> "calleeDescriptionUpd"
+			getStream(); // -> gotStream() -> gotStream2() -> pickup2(): "calleeDescriptionUpd"
 		} else {
 			if(!gentle) console.log("# connectLocalVideo no dataChannel");
 		}
@@ -843,7 +859,7 @@ function connectLocalVideo(forceOff) {
 		if(!addedVideoTrack) {
 			if(!gentle) console.log("connectLocalVideo disconnect !addedVideoTrack: !removeTrack");
 		} else if(!peerCon) {
-			if(!gentle) console.log("connectLocalVideo disconnect !peerCon -> !removeTrack");
+			if(!gentle) console.log("connectLocalVideo disconnect !peerCon: !removeTrack");
 		} else  {
 			if(!gentle) console.log("connectLocalVideo disconnect peerCon.removeTrack(addedVideoTrack)");
 			peerCon.removeTrack(addedVideoTrack);
@@ -868,7 +884,7 @@ function vmonitor() {
 	}
 	if(!localStream) {
 		// re-enable paused video and microphone
-		if(!gentle) console.log("vmonitor re-enable paused");
+		if(!gentle) console.log("vmonitor !localStream: re-enable");
 		pickupAfterLocalStream = false; // don't call pickup2()
 		getStream(); // -> gotStream() -> gotStream2() -> pickup2()
 		// in the end, vmonitor will be called again, but then with localStream
@@ -945,6 +961,7 @@ function localVideoDivOnVisible() {
 }
 
 function localVideoShow() {
+	videoEnabled = true;
 	localVideoLabel.style.opacity = 0.7; // will be transitioned
 	let localVideoDivHeight = parseFloat(getComputedStyle(localVideoFrame).width)/16*9;
 	if(!gentle) console.log("localVideoShow DivHeight",localVideoDivHeight);
@@ -956,13 +973,17 @@ function localVideoShow() {
 }
 
 function localVideoHide() {
+	videoEnabled = false;
+	lastGoodMediaConstraints = null;
 	localVideoLabel.style.opacity = 0.3; // will be transitioned
 	let localVideoDivHeight = parseFloat(getComputedStyle(localVideoFrame).width)/16*9;
 	if(!gentle) console.log("localVideoHide DivHeight",localVideoDivHeight);
-	localVideoDiv.style.height = localVideoDivHeight+"px"; // height from auto to fixed
+	localVideoDiv.style.height = ""+localVideoDivHeight+"px"; // height from auto to fixed
 	setTimeout(function() { // wait for fixed height (timer works better than requestAnimationFrame on andr)
-		localVideoDiv.style.height = "0px"; // will be transitioned
-	},100);
+		if(!videoEnabled) {
+			localVideoDiv.style.height = "0px"; // will be transitioned
+		}
+	},60);
 	// now that the localVideo pane is hidden, show the camera icon
 	cameraElement.style.opacity = 1;
 }
