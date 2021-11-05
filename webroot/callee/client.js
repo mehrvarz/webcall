@@ -70,57 +70,41 @@ function setVideoConstraintsHigh() {
 	getStream();
 }
 
+function showVideoToast(toastElement,w,h) {
+	if(toastElement) {
+		toastElement.style.transition = "";
+		toastElement.style.opacity = 0; // start from 0
+		toastElement.innerHTML = w+" x "+h;
+		toastElement.style.visibility = "visible";
+		toastElement.style.transition = "opacity 500ms";
+		toastElement.style.opacity = 1; // transition to 1
+		setTimeout(function(oldWidth) {
+			// time to fade
+			if(localVideoFrame.videoWidth==oldWidth) {
+				toastElement.style.opacity = 0; // transition to 1
+				setTimeout(function(oldWidth2) {
+					if(localVideoFrame.videoWidth==oldWidth2) {
+						toastElement.style.visibility = "hidden";
+						toastElement.innerHTML = "";
+						localVideoRes.style.transition = "";
+					}
+				},500,oldWidth);
+			}
+		},1800,localVideoFrame.videoWidth);
+	}
+}
+
 function showVideoResolutionLocal() {
 	if(videoEnabled && localVideoFrame.videoWidth>10 && localVideoFrame.videoHeight>10) {
 		console.log('local video size changed', localVideoFrame.videoWidth, localVideoFrame.videoHeight);
-		if(localVideoRes) {
-			localVideoRes.style.transition = "";
-			localVideoRes.style.opacity = 0; // start from 0
-			localVideoRes.innerHTML = localVideoFrame.videoWidth+" x "+localVideoFrame.videoHeight;
-			localVideoRes.style.visibility = "visible";
-			localVideoRes.style.transition = "opacity 500ms";
-			localVideoRes.style.opacity = 1; // transition to 1
-			setTimeout(function(oldWidth) {
-				// time to fade
-				if(localVideoFrame.videoWidth==oldWidth) {
-					localVideoRes.style.opacity = 0; // transition to 1
-					setTimeout(function(oldWidth2) {
-						if(localVideoFrame.videoWidth==oldWidth2) {
-							localVideoRes.style.visibility = "hidden";
-							localVideoRes.innerHTML = "";
-							localVideoRes.style.transition = "";
-						}
-					},500,oldWidth);
-				}
-			},1800,localVideoFrame.videoWidth);
-		}
+		showVideoToast(localVideoRes, localVideoFrame.videoWidth, localVideoFrame.videoHeight);
 	}
 }
 
 function showVideoResolutionRemote() {
 	if(videoEnabled && remoteVideoFrame.videoWidth>10 && remoteVideoFrame.videoHeight>10) {
 		console.log('remote video size changed', remoteVideoFrame.videoWidth, remoteVideoFrame.videoHeight);
-		if(remoteVideoRes) {
-			remoteVideoRes.style.transition = "";
-			remoteVideoRes.style.opacity = 0; // start from 0
-			remoteVideoRes.innerHTML = remoteVideoFrame.videoWidth+" x "+remoteVideoFrame.videoHeight;
-			remoteVideoRes.style.visibility = "visible";
-			remoteVideoRes.style.transition = "opacity 500ms";
-			remoteVideoRes.style.opacity = 1; // transition to 1
-			setTimeout(function(oldWidth) {
-				// time to fade
-				if(remoteVideoFrame.videoWidth==oldWidth) {
-					remoteVideoRes.style.opacity = 0; // transition to 1
-					setTimeout(function(oldWidth2) {
-						if(remoteVideoFrame.videoWidth==oldWidth2) {
-							remoteVideoRes.style.visibility = "hidden";
-							remoteVideoRes.innerHTML = "";
-							remoteVideoRes.style.transition = "";
-						}
-					},500,oldWidth);
-				}
-			},1800,remoteVideoFrame.videoWidth);
-		}
+		showVideoToast(remoteVideoRes, remoteVideoFrame.videoWidth, remoteVideoFrame.videoHeight);
 	}
 }
 
