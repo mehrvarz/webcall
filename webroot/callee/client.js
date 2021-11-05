@@ -72,14 +72,15 @@ function showVideoResolutionLocal() {
 		console.log('local video size changed', localVideoFrame.videoWidth, localVideoFrame.videoHeight);
 		if(localVideoRes) {
 			localVideoRes.style.transition = "";
-			localVideoRes.style.opacity = "0";
+			localVideoRes.style.opacity = 0; // start from 0
 			localVideoRes.innerHTML = localVideoFrame.videoWidth+" x "+localVideoFrame.videoHeight;
 			localVideoRes.style.visibility = "visible";
 			localVideoRes.style.transition = "opacity 500ms";
-			localVideoRes.style.opacity = "1";
+			localVideoRes.style.opacity = 1; // transition to 1
 			setTimeout(function(oldWidth) {
+				// time to fade
 				if(localVideoFrame.videoWidth==oldWidth) {
-					localVideoRes.style.opacity = "0";
+					localVideoRes.style.opacity = 0; // transition to 1
 					setTimeout(function(oldWidth2) {
 						if(localVideoFrame.videoWidth==oldWidth2) {
 							localVideoRes.style.visibility = "hidden";
@@ -235,7 +236,7 @@ let timerIntervalID=0;
 function startTimer(startDuration) {
 	if(!timerStartDate && startDuration>0) {
 		if(!gentle) console.log('startTimer',startDuration);
-		timerElement.style.opacity = "0.5";
+		timerElement.style.opacity = 0.5;
 		timerStartDate = Date.now();
 		updateClock(startDuration);
 		timerIntervalID = setInterval(updateClock, 999, startDuration);
@@ -247,7 +248,7 @@ function stopTimer() {
 		if(!gentle) console.log('stopTimer');
 		clearInterval(timerIntervalID);
 		timerIntervalID=0;
-		timerElement.style.opacity = "0";
+		timerElement.style.opacity = 0;
 		return;
 	}
 }
@@ -837,7 +838,7 @@ function connectLocalVideo(forceOff) {
 		}
 
 		if(dataChannel && dataChannel.readyState=="open") {
-			// make other side switch to "remote cam paused"
+			// make other side pause our cam (their remote cam)
 			if(!gentle) console.log("connectLocalVideo disconnect dataChannel.send(rtcVideoOff)");
 			dataChannel.send("cmd|rtcVideoOff");
 		}
@@ -931,7 +932,7 @@ function localVideoDivOnVisible() {
 }
 
 function localVideoShow() {
-	localVideoLabel.style.opacity = "0.7"; // will be transitioned
+	localVideoLabel.style.opacity = 0.7; // will be transitioned
 	let localVideoDivHeight = parseFloat(getComputedStyle(localVideoFrame).width)/16*9;
 	if(!gentle) console.log("localVideoShow DivHeight",localVideoDivHeight);
 	localVideoDiv.style.height = ""+localVideoDivHeight+"px"; // will be transitioned
@@ -940,7 +941,7 @@ function localVideoShow() {
 }
 
 function localVideoHide() {
-	localVideoLabel.style.opacity = "0.5"; // will be transitioned
+	localVideoLabel.style.opacity = 0.3; // will be transitioned
 	let localVideoDivHeight = parseFloat(getComputedStyle(localVideoFrame).width)/16*9;
 	if(!gentle) console.log("localVideoHide DivHeight",localVideoDivHeight);
 	localVideoDiv.style.height = localVideoDivHeight+"px"; // height from auto to fixed
@@ -961,7 +962,7 @@ function remoteVideoShow() {
 	remoteVideoDiv.style.height = ""+remoteVideoDivHeight+"px"; // will be transitioned
 	remoteVideoDiv.addEventListener('transitionend', remoteVideoDivOnVisible) // switch to height auto
 
-	remoteVideoLabel.innerHTML = "remote cam streaming";
+	remoteVideoLabel.innerHTML = "remote cam";
 	remoteVideoLabel.style.color = "#ff0";
 	remoteVideoShowing = true;
 }
@@ -975,7 +976,7 @@ function remoteVideoHide() {
 			remoteVideoDiv.style.height = "0px"; // will be transitioned
 		},100);
 
-		remoteVideoLabel.innerHTML = "remote cam paused";
+		remoteVideoLabel.innerHTML = "";
 		remoteVideoLabel.style.color = "#fff";
 		remoteVideoShowing = false;
 	}

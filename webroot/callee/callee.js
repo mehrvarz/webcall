@@ -311,7 +311,7 @@ function videoOn() {
 
 	// start localVideoFrame playback, setup the localVideo pane buttons
 	vmonitor();
-	cameraElement.style.opacity = "0";
+	cameraElement.style.opacity = 0;
 
 	getStream().then(() => navigator.mediaDevices.enumerateDevices())
 	.then((deviceInfos) => {
@@ -372,7 +372,7 @@ function videoOff() {
 		}
 	}
 
-	cameraElement.style.opacity = "1";
+	cameraElement.style.opacity = 1;
 
 	// switch to the 1st audio option
 	let optionElements = Array.from(avSelect);

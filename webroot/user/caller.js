@@ -372,7 +372,7 @@ function videoOn() {
 	// start localVideoFrame playback, setup the localVideo pane buttons
 	vmonitor();
 	// now that the localVideo pane is shown, hide the camera icon
-	cameraElement.style.opacity = "0";
+	cameraElement.style.opacity = 0;
 
 	// switch avSelect.selectedIndex to 1st video option
 	getStream().then(() => navigator.mediaDevices.enumerateDevices()).then((deviceInfos) => {
@@ -456,7 +456,7 @@ function videoOff() {
 	}
 
 	// now that the localVideo pane is hidden, show the camera icon
-	cameraElement.style.opacity = "1";
+	cameraElement.style.opacity = 1;
 
 	// switch to the 1st/default audio device
 	let optionElements = Array.from(avSelect);
@@ -1285,7 +1285,7 @@ function showStatus(msg,timeoutMs) {
 		}
 		statusLine.style.display = "none";
 		statusLine.innerHTML = msg;
-		statusLine.style.opacity = 1.0;
+		statusLine.style.opacity = 1;
 		statusLine.style.display = "block";
 		if(msg!="" && sleepMs>=0) {
 			setTimeout(function(oldMsg) {
