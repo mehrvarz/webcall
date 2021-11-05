@@ -31,7 +31,7 @@ var userMediaConstraints = {
 		  max: 1080
 		},
 		frameRate: {
-			min: 8, 
+			min:10, 
 			max:60 
 		},
 	}
@@ -50,7 +50,7 @@ function setVideoConstraintsLow() {
 function setVideoConstraintsMid() {
 	const constraintString =	'{ "width":  {"min":480, "ideal":1280, "max":1920 },'+
 								'  "height": {"min":360, "ideal":720,  "max":1080 },'+
-								'  "frameRate": { "min":15, "max":60 } }';
+								'  "frameRate": { "min":10, "max":60 } }';
 	if(!gentle) console.log('setVideoConstraintsMid', constraintString);
 	userMediaConstraints.video = JSON.parse(constraintString);
 	historyBack();
@@ -601,15 +601,6 @@ function iframeWindowClose() {
 
 let lastGoodMediaConstraints;
 function getStream(selectObject) {
-	if(neverAudio) {
-		if(dialAfterLocalStream) {
-			dialAfterLocalStream=false;
-			console.warn("getStream neverAudio + dialAfter");
-			gotStream(); // pretend
-		}
-		return
-	}
-
 	if(!gentle) {
 		const supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
 		console.log('getStream supportedConstraints',supportedConstraints);
@@ -646,37 +637,35 @@ function getStream(selectObject) {
 	}
 
 	if(!gentle) console.log('getStream getUserMedia constraints',myUserMediaConstraints);
-	if(!neverAudio) {
-		if(!navigator || !navigator.mediaDevices) {
-			alert("cannot access navigator.mediaDevices");
-			return;
-		}
-		return navigator.mediaDevices.getUserMedia(myUserMediaConstraints)
-			.then(function(stream) {
-				lastGoodMediaConstraints = myUserMediaConstraints;
-				gotStream(stream);
-			})
-			.catch(function(err) {
-				if(!videoEnabled) {
-					console.log('# audio input error', err);
-					alert("audio input error " + err);
-				} else {
-					console.log('# audio/video input error', err);
-					alert("audio/video input error " + err);
-				}
-				if(lastGoodMediaConstraints) {
-					if(!gentle) console.log('getStream back to lastGoodMediaConstraints',
-						lastGoodMediaConstraints);
-					userMediaConstraints = lastGoodMediaConstraints;
-					// TODO as a result of this, we may also need to localVideoShow()
-					return navigator.mediaDevices.getUserMedia(userMediaConstraints)
-						.then(gotStream)
-						.catch(function(err) {
-							// this err can be ignored
-						});
-				}
-			});
+	if(!navigator || !navigator.mediaDevices) {
+		alert("cannot access navigator.mediaDevices");
+		return;
 	}
+	return navigator.mediaDevices.getUserMedia(myUserMediaConstraints)
+		.then(function(stream) {
+			lastGoodMediaConstraints = myUserMediaConstraints;
+			gotStream(stream);
+		})
+		.catch(function(err) {
+			if(!videoEnabled) {
+				console.log('# audio input error', err);
+				alert("audio input error " + err);
+			} else {
+				console.log('# audio/video input error', err);
+				alert("audio/video input error " + err);
+			}
+			if(lastGoodMediaConstraints) {
+				if(!gentle) console.log('getStream back to lastGoodMediaConstraints',
+					lastGoodMediaConstraints);
+				userMediaConstraints = lastGoodMediaConstraints;
+				// TODO as a result of this, we may also need to localVideoShow()
+				return navigator.mediaDevices.getUserMedia(userMediaConstraints)
+					.then(gotStream)
+					.catch(function(err) {
+						// this err can be ignored
+					});
+			}
+		});
 }
 
 function gotDevices(deviceInfos) {
@@ -825,7 +814,6 @@ function connectLocalVideo(forceOff) {
 			if(!gentle) console.log("connectLocalVideo set");
 			vsendButton.classList.remove('blink_me')
 			vsendButton.style.color = "#f55"; // local video is streaming
-
 			addLocalVideoEnabled = true; // will cause: peerCon.addTrack(video)
 			pickupAfterLocalStream = true; // will cause: pickup2()
 			getStream(); // -> gotStream() -> gotStream2() -> pickup2() -> "calleeDescriptionUpd"
@@ -839,7 +827,7 @@ function connectLocalVideo(forceOff) {
 
 		addLocalVideoEnabled = false;
 		if(!addedVideoTrack) {
-			if(!gentle) console.log("connectLocalVideo disconnect !addedVideoTrack !removeTrack");
+			if(!gentle) console.log("connectLocalVideo disconnect !addedVideoTrack: !removeTrack");
 		} else if(!peerCon) {
 			if(!gentle) console.log("connectLocalVideo disconnect !peerCon -> !removeTrack");
 		} else  {
@@ -849,7 +837,7 @@ function connectLocalVideo(forceOff) {
 		}
 
 		if(dataChannel && dataChannel.readyState=="open") {
-			// make caller switch to "remote cam not streaming"
+			// make other side switch to "remote cam paused"
 			if(!gentle) console.log("connectLocalVideo disconnect dataChannel.send(rtcVideoOff)");
 			dataChannel.send("cmd|rtcVideoOff");
 		}
@@ -858,7 +846,6 @@ function connectLocalVideo(forceOff) {
 
 var vpauseTimer = null;
 function vmonitor() {
-	if(!gentle) console.log("vmonitor");
 	if(localVideoPaused)
 		localVideoPaused.style.visibility = "hidden";
 	if(vmonitorButton) {
@@ -867,20 +854,22 @@ function vmonitor() {
 	}
 	if(!localStream) {
 		// re-enable paused video and microphone
-		addLocalVideoEnabled = true; // will cause: peerCon.addTrack(video)
+		if(!gentle) console.log("vmonitor re-enable paused");
 		pickupAfterLocalStream = false; // don't call pickup2()
 		getStream(); // -> gotStream() -> gotStream2() -> pickup2()
 		// in the end, vmonitor will be called again, but then with localStream
 	} else if(videoEnabled) {
 		localVideoFrame.play().catch(function(error) {});
 		if(!mediaConnect) {
-			if(!gentle) console.log("vmonitor !mediaConnect new vpauseTimer");
+			if(!gentle) console.log("vmonitor play new vpauseTimer");
 			vsendButton.style.color = "#fff";
 			if(vpauseTimer) {
 				clearTimeout(vpauseTimer);
 				vpauseTimer = null;
 			}
 			vpauseTimer = setTimeout(vpauseByTimer, 40000);
+		} else {
+			if(!gentle) console.log("vmonitor play");
 		}
 	}
 }
@@ -986,7 +975,7 @@ function remoteVideoHide() {
 			remoteVideoDiv.style.height = "0px"; // will be transitioned
 		},100);
 
-		remoteVideoLabel.innerHTML = "remote cam not streaming";
+		remoteVideoLabel.innerHTML = "remote cam paused";
 		remoteVideoLabel.style.color = "#fff";
 		remoteVideoShowing = false;
 	}

@@ -34,7 +34,6 @@ const progressRcvLabel = document.getElementById('progressRcvLabel');
 const progressRcvBar = document.getElementById('fileProgressRcv'); // actual progress bar
 const fileselectLabel = document.getElementById("fileselectlabel");
 const bitrate = 280000;
-const neverAudio = false;
 const playDialSounds = true;
 const calleeMode = false;
 
@@ -572,19 +571,17 @@ function calleeOnlineStatus(onlineStatus) {
 
 	dialButton.disabled = false;
 	hangupButton.disabled = true;
-	if(!neverAudio) {
-		if(!localStream) {
-			// we need to call mediaDevices.enumerateDevices() anyway
-			loadJS("adapter-latest.js",function() {
-				if(!navigator.mediaDevices) {
-					console.warn("navigator.mediaDevices not available");
-					// TODO no visible warning? also not in singlebutton mode? 
-				} else {
-					getStream().then(() => navigator.mediaDevices.enumerateDevices()).then(gotDevices);
-					// -> getUserMedia -> gotStream -> checkCalleeOnline -> ajax -> calleeOnlineStatus
-				}
-			});
-		}
+	if(!localStream) {
+		// we need to call mediaDevices.enumerateDevices() anyway
+		loadJS("adapter-latest.js",function() {
+			if(!navigator.mediaDevices) {
+				console.warn("navigator.mediaDevices not available");
+				// TODO no visible warning? also not in singlebutton mode? 
+			} else {
+				getStream().then(() => navigator.mediaDevices.enumerateDevices()).then(gotDevices);
+				// -> getUserMedia -> gotStream -> checkCalleeOnline -> ajax -> calleeOnlineStatus
+			}
+		});
 	}
 
 	// calleeOfflineAction: check if calleeID can be notified - random become callee
@@ -627,7 +624,7 @@ function calleeOnlineAction(from) {
 			// autodial after detected callee is online
 			// normally set by gotStream, if dialAfterLocalStream was set (by dialButton.onclick)
 			dialAfterCalleeOnline = false;
-			if(localStream || neverAudio) {
+			if(localStream) {
 				connectSignaling("",dial); 
 			} else {
 				if(!gentle) console.log('calleeOnlineAction dialAfter');
@@ -1148,7 +1145,7 @@ function signalingCommand(message) {
 				dialButton.style.backgroundColor = "";
 				hangupButton.style.backgroundColor = "";
 			} else {
-				if(microphoneIsNeeded && !neverAudio) {
+				if(microphoneIsNeeded) {
 					onlineIndicator.src="red-gradient.svg";
 					micStatus = "Mic is open";
 				} else {
@@ -1199,7 +1196,7 @@ function signalingCommand(message) {
 			msgbox.style.display = "none";
 		}
 
-		if(!localStream && !neverAudio) {
+		if(!localStream) {
 			console.warn("cmd pickup no localStream");
 			// I see this when I quickly re-dial while busy signal of last call is still playing
 			// TODO button may now continue to show "Connecting..."
@@ -1302,10 +1299,10 @@ function showStatus(msg,timeoutMs) {
 
 let dialDate;
 function dial() {
-	if(!localStream && !neverAudio) {
-		console.warn('abort dial localStream not set',neverAudio,localStream);
+	if(!localStream) {
+		console.warn('dial abort no localStream');
 		showStatus("abort no localStream");
-		hangupWithBusySound(true,"pickup with no localStream");
+		hangupWithBusySound(true,"dial no localStream");
 		return;
 	}
 	showStatus(connectingText,-1);
@@ -1483,7 +1480,7 @@ function dial() {
 			dialing = false;
 		}
 	}
-	if(!localStream && !neverAudio) {
+	if(!localStream) {
 		console.log('dial abort localStream not set');
 		showStatus("abort no localStream");
 		return;

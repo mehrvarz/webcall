@@ -189,7 +189,7 @@ input[type=submit]:focus {
 	background-color: #9d9;
 	color: #000;
 }
-@media (min-aspect-ratio: 12/10) {
+@media (min-aspect-ratio: 13/10) {
 	.videoframe-remote {
 		width:49%; aspect-ratio:16/9; float:left; user-select:none; padding-right:2px;
 	}
@@ -197,7 +197,7 @@ input[type=submit]:focus {
 		width:49%; aspect-ratio:16/9; float:left; user-select:none;
 	}
 }
-@media (max-aspect-ratio: 12/10) {
+@media (max-aspect-ratio: 13/10) {
 	.videoframe-remote {
 		width:99%; aspect-ratio:16/9; user-select:none; padding-bottom:2px;
 	}
@@ -245,24 +245,24 @@ input[type=submit]:focus {
 	</div>
 </div>
 
-<div style="background:#0005;">
+<div style="background:#111a;font-size:1.25em;color:#fff;">
 	<div id="remoteVideoDiv" class="videoframe-remote" style="height:0px; transition:height 500ms; overflow:hidden;">
 		<div style="position:relative; display:inline-block; width:100%; height:100%;">
-			<video id="remoteVideoFrame" style="width:100%; height:100%; background:#111;" _poster="red-gradient.svg" autoplay></video>
-			<div id="remoteVideoLabel" style="position:absolute; bottom:0; width:100%; z-index:10; opacity:0.5; text-align:center; background:#000; transition:opacity 500ms;">remote cam not streaming</div>
+			<video id="remoteVideoFrame" style="width:100%; height:100%; background:#000b;" _poster="red-gradient.svg" autoplay></video>
+			<div id="remoteVideoLabel" style="position:absolute; bottom:0; width:100%; z-index:10; opacity:0.5; text-align:center; background:#000b; padding:3px; transition:opacity 500ms;">remote cam paused</div>
 		</div>
 	</div>
 	<div id="localVideoDiv" class="videoframe-local" style="height:0px; transition:height 500ms; overflow:hidden; cursor:pointer;">
-		<div style="position:relative; display:inline-block; width:100%; height:100%; font-size:1.3em;">
-			<video id="localVideoFrame" style="width:100%; height:100%; background:#111;" _poster="green-gradient.svg" autoplay></video>
-			<span id="localVideoPaused" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50% ); text-align:center; color:white; background:#0005; padding:5px 10px; z-index:20; font-weight:bold; visibility:hidden;">paused</span>
-			<span id="localVideoRes" style="position:absolute; bottom:15%; left:50%; transform:translate(-50%,-50% ); text-align:center; color:white; background:#0007; padding:5px 10px; z-index:20; font-weight:bold; visibility:hidden;"></span>
+		<div style="position:relative; display:inline-block; width:100%; height:100%;">
+			<video id="localVideoFrame" style="width:100%; height:100%; background:#000b;" _poster="green-gradient.svg" autoplay></video>
+			<span id="localVideoPaused" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50% ); text-align:center; background:#000b; padding:5px 10px; z-index:20; visibility:hidden;">paused</span>
+			<span id="localVideoRes" style="position:absolute; bottom:15%; left:50%; transform:translate(-50%,-50% ); text-align:center; background:#000b; padding:5px 10px; z-index:20; visibility:hidden;"></span>
 			<div id="localVideoLabel" style="position:absolute; bottom:0; width:100%; z-index:10; opacity:0.5; text-align:center; background:#000b; padding:3px; transition:opacity 500ms;">
 				<span id="vpause" onclick="vpause()">pause</span>
-				<span id="vmonitor" onclick="vmonitor()" style="margin-left:4%">monitor</span>
-				<span id="vres" onclick="menuDialogOpen(vresDialogElement)" style="margin-left:4%">res</span>
-				<span id="vsend" onclick="connectLocalVideo(false)" style="margin-left:4%">send</span>
-				<span id="vclose" onclick="videoSwitch(true)" style="margin-left:4%">close</span>
+				<span id="vmonitor" onclick="vmonitor()" style="margin-left:3%">monitor</span>
+				<span id="vres" onclick="menuDialogOpen(vresDialogElement)" style="margin-left:3%">res</span>
+				<span id="vsend" onclick="connectLocalVideo(false)" style="margin-left:3%">send</span>
+				<span id="vclose" onclick="videoSwitch(true)" style="margin-left:3%">close</span>
 			</div>
 		</div>
 	</div>

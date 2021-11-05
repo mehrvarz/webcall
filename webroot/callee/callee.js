@@ -50,7 +50,6 @@ const progressRcvLabel = document.getElementById('progressRcvLabel');
 const progressRcvBar = document.getElementById('fileProgressRcv');
 const fileselectLabel = document.getElementById("fileselectlabel");
 const bitrate = 280000;
-const neverAudio = false;
 const autoReconnectDelay = 30;
 const version = "1.16.0";
 const singlebutton = false;
@@ -1357,9 +1356,11 @@ function pickup2() {
 				setTimeout(function() { vsendButton.classList.remove('blink_me') },8000);
 			}
 
-			peerCon.getStats(null)
-			.then((results) => getStatsCandidateTypes(results,"Connected","Mic is open"),
-				err => console.log(err));
+			if(peerCon) {
+				peerCon.getStats(null)
+				.then((results) => getStatsCandidateTypes(results,"Connected","Mic is open"),
+					err => console.log(err));
+			}
 		},200);
 	},400);
 }
