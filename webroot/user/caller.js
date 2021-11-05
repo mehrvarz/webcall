@@ -23,7 +23,6 @@ const containerElement = document.getElementById('container');
 const menuElement = document.getElementById('menu');
 const menuDialogElement = document.getElementById('menuDialog');
 const vresDialogElement = document.getElementById('vresDialog');
-const cameraElement = document.getElementById('camera');
 const fullScreenOverlayElement = document.getElementById('fullScreenOverlay');
 const progressSendElement = document.getElementById('progressSend'); // switch on and off
 const progressSendLabel = document.getElementById('progressSendLabel');
@@ -371,8 +370,6 @@ function videoOn() {
 
 	// start localVideoFrame playback, setup the localVideo pane buttons
 	vmonitor();
-	// now that the localVideo pane is shown, hide the camera icon
-	cameraElement.style.opacity = 0;
 
 	// switch avSelect.selectedIndex to 1st video option
 	getStream().then(() => navigator.mediaDevices.enumerateDevices()).then((deviceInfos) => {
@@ -454,9 +451,6 @@ function videoOff() {
 		remoteVideoHide();
 		remoteStream = null;
 	}
-
-	// now that the localVideo pane is hidden, show the camera icon
-	cameraElement.style.opacity = 1;
 
 	// switch to the 1st/default audio device
 	let optionElements = Array.from(avSelect);

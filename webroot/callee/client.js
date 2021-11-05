@@ -1,5 +1,6 @@
 // WebCall Copyright 2021 timur.mobi. All rights reserved.
 'use strict';
+const cameraElement = document.getElementById('camera');
 const fileSelectElement = document.getElementById("fileselect");
 
 var ICE_config = {
@@ -943,6 +944,8 @@ function localVideoShow() {
 	localVideoDiv.style.height = ""+localVideoDivHeight+"px"; // will be transitioned
 	localVideoDiv.addEventListener('transitionend', localVideoDivOnVisible) // switch to height auto
 	localVideoDiv.style.visibility = "visible";
+	// now that the localVideo pane is shown, hide the camera icon
+	cameraElement.style.opacity = 0;
 }
 
 function localVideoHide() {
@@ -953,6 +956,8 @@ function localVideoHide() {
 	setTimeout(function() { // wait for fixed height (timer works better than requestAnimationFrame on andr)
 		localVideoDiv.style.height = "0px"; // will be transitioned
 	},100);
+	// now that the localVideo pane is hidden, show the camera icon
+	cameraElement.style.opacity = 1;
 }
 
 function remoteVideoDivOnVisible() {

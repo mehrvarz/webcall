@@ -40,7 +40,6 @@ const vresDialogElement = document.getElementById('vresDialog');
 const menuSettingsElement = document.getElementById('menuSettings');
 const menuContactsElement = document.getElementById('menuContacts');
 const menuExitElement = document.getElementById('menuExit');
-const cameraElement = document.getElementById('camera');
 const progressSendElement = document.getElementById('progressSend');
 const progressSendLabel = document.getElementById('progressSendLabel');
 const progressSendBar = document.getElementById('fileProgressSend');
@@ -311,7 +310,6 @@ function videoOn() {
 
 	// start localVideoFrame playback, setup the localVideo pane buttons
 	vmonitor();
-	cameraElement.style.opacity = 0;
 
 	getStream().then(() => navigator.mediaDevices.enumerateDevices())
 	.then((deviceInfos) => {
@@ -371,8 +369,6 @@ function videoOff() {
 			if(!gentle) console.log("videoOff !rtcConnect dataChannel still set",dataChannel.readyState);
 		}
 	}
-
-	cameraElement.style.opacity = 1;
 
 	// switch to the 1st audio option
 	let optionElements = Array.from(avSelect);
