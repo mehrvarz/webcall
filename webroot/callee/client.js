@@ -1,5 +1,10 @@
 // WebCall Copyright 2021 timur.mobi. All rights reserved.
 'use strict';
+const avSelect = document.querySelector("select#avSelect");
+const localVideoDiv = document.querySelector('div#localVideoDiv');
+const localVideoFrame = document.querySelector('video#localVideoFrame');
+const remoteVideoDiv = document.querySelector('div#remoteVideoDiv');
+const remoteVideoFrame = document.querySelector('video#remoteVideoFrame');
 const localVideoPausedElement = document.querySelector('span#localVideoPaused');
 const vmonitorButton = document.querySelector('span#vmonitor');
 const vsendButton = document.querySelector('span#vsend');
@@ -8,6 +13,23 @@ const remoteVideoRes = document.querySelector('span#remoteVideoRes');
 const remoteVideoLabel = document.querySelector('div#remoteVideoLabel');
 const cameraElement = document.getElementById('camera');
 const fileSelectElement = document.getElementById("fileselect");
+const iframeWindowElement = document.getElementById('iframeWindow');
+const fullscreenCheckbox = document.querySelector('input#fullscreen');
+
+const mainElement = document.getElementById('main');
+const containerElement = document.getElementById('container');
+const menuElement = document.getElementById('menu');
+const menuDialogElement = document.getElementById('menuDialog');
+const vresDialogElement = document.getElementById('vresDialog');
+const fullScreenOverlayElement = document.getElementById('fullScreenOverlay');
+const progressSendElement = document.getElementById('progressSend'); // switch on and off
+const progressSendLabel = document.getElementById('progressSendLabel');
+const progressSendBar = document.getElementById('fileProgressSend'); // actual progress bar
+const downloadList = document.getElementById('download');
+const progressRcvElement = document.getElementById('progressRcv'); // switch on and off
+const progressRcvLabel = document.getElementById('progressRcvLabel');
+const progressRcvBar = document.getElementById('fileProgressRcv'); // actual progress bar
+const fileselectLabel = document.getElementById("fileselectlabel");
 
 var videoEnabled = false;
 var localVideoMonitorPaused = false;
