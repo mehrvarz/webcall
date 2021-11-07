@@ -25,8 +25,8 @@ with your web server on a very small server.
 
 Keep in mind that all actual data (audio/video/files) is sent directly from 
 device to device. WebCall only connects the clients with each other. This is
-very economical from the point of view of server, with only little traffic 
-and CPU load being generated.
+very economical from the point of view of the server. Only small amounts of traffic 
+and CPU load are being generated.
 
 [https://timur.mobi/webcall/install](https://timur.mobi/webcall/install)
 
