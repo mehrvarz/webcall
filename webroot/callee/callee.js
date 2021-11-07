@@ -273,8 +273,14 @@ function videoOn() {
 						break;
 					}
 				}
-				// activate selected device
-				getStream();
+				// activate selected device - should be called automatically via onchange="getStream(this)"
+				//getStream();
+			}
+
+			if(videoEnabled && mediaConnect && !addLocalVideoEnabled && vsendButton) {
+				console.log('videoOn mediaConnect, blink vsendButton');
+				vsendButton.classList.add('blink_me');
+				setTimeout(function() { vsendButton.classList.remove('blink_me') },10000);
 			}
 		}
 	});

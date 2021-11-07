@@ -330,6 +330,12 @@ function videoOn() {
 				}
 			}
 		}
+
+		if(videoEnabled && mediaConnect && !addLocalVideoEnabled && vsendButton) {
+			console.log('videoOn mediaConnect, blink vsendButton');
+			vsendButton.classList.add('blink_me');
+			setTimeout(function() { vsendButton.classList.remove('blink_me') },10000);
+		}
 	});
 }
 
@@ -1073,6 +1079,7 @@ function signalingCommand(message) {
 		}
 
 		var enableRemoteStream = function(calleeCandidate) {
+			// on peer connect at least an audio stream should arrive
 			let micStatus = "";
 			if(singlebutton) {
 				hangupButton.innerHTML = singleButtonConnectedText;
@@ -1109,19 +1116,17 @@ function signalingCommand(message) {
 				}
 			}
 
-			// getting stats on p2p or relayed connection
+			// getting stats (p2p or relayed connection)
 			console.log('full mediaConnect, getting stats...');
 			peerCon.getStats(null)
 				.then((results) => getStatsCandidateTypes(results,"Connected",micStatus),
 				err => console.log(err));
 
-			// if local video active, blink vsendButton
-			if(videoEnabled && !addLocalVideoEnabled) {
+			// in case local video is active, blink vsendButton
+			if(videoEnabled && vsendButton && !addLocalVideoEnabled) {
 				console.log('full mediaConnect, blink vsendButton');
 				vsendButton.classList.add('blink_me');
 				setTimeout(function() { vsendButton.classList.remove('blink_me') },10000);
-			} else {
-				if(!gentle) console.log('full mediaConnect no videoEnabled: no blink vsendButton');
 			}
 		}
 
