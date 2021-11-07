@@ -137,6 +137,8 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		case "twid":  // not yet used by settings app
 			fmt.Printf("/setsettings (%s) new twid (%s) (old:%s)\n",calleeID,val,dbUser.Str1)
 			dbUser.Str1 = val
+
+/* jwt-go remove
 		case "webPushSubscription1":
 			newVal,err := url.QueryUnescape(val)
 			if err!=nil {
@@ -167,6 +169,7 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 					}
 				}
 			}
+*/
 		case "webPushUA1":
 			dbUser.Str2ua = val
 			newVal,err := url.QueryUnescape(val)
@@ -178,6 +181,7 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 					calleeID, newVal, dbUser.Str2ua)
 				dbUser.Str2ua = newVal
 			}
+/* jwt-go remove
 		case "webPushSubscription2":
 			newVal,err := url.QueryUnescape(val)
 			if err!=nil {
@@ -208,6 +212,7 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 					}
 				}
 			}
+*/
 		case "webPushUA2":
 			newVal,err := url.QueryUnescape(val)
 			if err!=nil {
