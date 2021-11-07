@@ -65,7 +65,6 @@ var fileReceiveBuffer = [];
 var fileReceivedSize = 0;
 var fileName = "";
 var fileSize = 0;
-var hashcounter=0;
 var fileReceiveStartDate=0;
 var fileReceiveSinceStartSecs=0;
 var fileSendAbort=false;
@@ -92,15 +91,22 @@ window.addEventListener('message', extMessage, false);
 console.log("caller client extMessage now listening");
 
 window.onload = function() {
+	if(!navigator.mediaDevices) {
+		console.warn("navigator.mediaDevices not available");
+		goOnlineButton.disabled = true;
+		goOfflineButton.disabled = true;
+		alert("navigator.mediaDevices not available");
+		return;
+	}
+
+	window.onhashchange = hashchange;
+
 	let id = getUrlParams("id");
 	if(typeof id!=="undefined" && id!="") {
 		calleeID = id;
 	}
 	if(calleeID=="") {
 		if(!gentle) console.log("onload no calleeID abort");
-//		let myMainElement = document.getElementById('container')
-//		let mainParent = myMainElement.parentNode;
-//		mainParent.removeChild(myMainElement);
 		let mainParent = containerElement.parentNode;
 		mainParent.removeChild(containerElement);
 		var msgElement = document.createElement("div");
@@ -143,26 +149,6 @@ window.onload = function() {
 		console.log("location.hash.length=%d",location.hash.length);
 		window.location.replace("/user/"+calleeID);
 		return;
-	}
-
-	window.onhashchange = function() {
-		var newhashcounter;
-		if(location.hash.length > 0) {
-			newhashcounter = parseInt(location.hash.replace('#',''),10);
-		} else {
-			newhashcounter = 0;
-		}
-		if(hashcounter>0 && newhashcounter<hashcounter) {
-			if(iframeWindowOpenFlag) {
-				if(!gentle) console.log("onhashchange iframeWindowClose");
-				iframeWindowClose();
-			} else if(menuDialogOpenElement) {
-				if(!gentle) console.log("onhashchange menuDialogClose");
-				menuDialogClose();
-			}
-		}
-		hashcounter = newhashcounter;
-		//console.log("onhashchange ",hashcounter);
 	}
 
 	if(localVideoFrame)
@@ -224,9 +210,6 @@ window.onload = function() {
 		if(mode==0) {
 			// normal mode
 			var calleeIdTitle = calleeID.charAt(0).toUpperCase() + calleeID.slice(1);
-			if(calleeID.startsWith("!")) {
-				calleeIdTitle = "Duo"
-			}
 
 			document.title = "WebCall "+calleeIdTitle;
 			if(titleElement) {
@@ -234,22 +217,19 @@ window.onload = function() {
 			}
 
 			if(!gentle) console.log('start caller with calleeID',calleeID);
-//			avSelect.onchange = getStream;
 
 			// we need to know if calleeID is online asap (will switch to callee-online-layout if it is)
 			dialAfterCalleeOnline = false;
 			checkCalleeOnline();
 
 			if(dialButton!=null) {
-				if(!calleeID.startsWith("!")) {
-					if(singlebutton) {
-						dialButton.innerHTML = "<b>W E B C A L L</b><br>"+singleButtonReadyText;
+				if(singlebutton) {
+					dialButton.innerHTML = "<b>W E B C A L L</b><br>"+singleButtonReadyText;
+				} else {
+					if(calleeID.match(/^[0-9]*$/) != null) {
+						// calleeID is pure numeric - don't show
 					} else {
-						if(calleeID.match(/^[0-9]*$/) != null) {
-							// calleeID is pure numeric - don't show
-						} else {
-							dialButton.innerHTML = "Call "+calleeIdTitle;
-						}
+						dialButton.innerHTML = "Call "+calleeIdTitle;
 					}
 				}
 
@@ -302,9 +282,6 @@ window.onload = function() {
 		}
 		if(mode==1) {
 			// maintenance mode
-//			let myMainElement = document.getElementById('container')
-//			let mainParent = myMainElement.parentNode;
-//			mainParent.removeChild(myMainElement);
 			let mainParent = containerElement.parentNode;
 			mainParent.removeChild(containerElement);
 			var msgElement = document.createElement("div");
@@ -378,7 +355,7 @@ function videoOff() {
 			if(!gentle) console.log('videoOff removeTrack local mic audioTracks.length',audioTracks.length);
 			if(audioTracks.length>0) {
 				if(!gentle) console.log('videoOff removeTrack local mic',audioTracks[0]);
-				// TODO would it be enough to do this?
+				// TODO would it be enough to do only this?
 				audioTracks[0].enabled = false;
 				audioTracks[0].stop();
 				localStream.removeTrack(audioTracks[0]);
@@ -388,7 +365,7 @@ function videoOff() {
 			if(!gentle) console.log('videoOff removeTrack local vid videoTracks.length',videoTracks.length);
 			if(videoTracks.length>0) {
 				if(!gentle) console.log('videoOff removeTrack local vid',videoTracks[0]);
-				// TODO would it be enough to do this?
+				// TODO would it be enough to do only this?
 				videoTracks[0].enabled = false;
 				videoTracks[0].stop();
 				localStream.removeTrack(videoTracks[0]);
@@ -610,8 +587,6 @@ function calleeOnlineAction(from) {
 				showStatus( "Talkback service let's you test your microphone audio quality. "+
 							"The first six seconds of the call will be recorded (red led) "+
 							"and then immediately played back to you (green led).",-1);
-			} else if(calleeID.startsWith("!")) {
-				showStatus("Hit the Call button to establish a telephony connection.",-1);
 			} else {
 				if(!singlebutton) {
 					showStatus( "Enter a greeting message before you hit Call (optional):",-1)

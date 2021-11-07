@@ -67,7 +67,6 @@ var onGotStreamGoOnline = false;
 var autoPlaybackFile = "";
 var waitingCallerSlice = null;
 var callsWhileInAbsenceSlice = null;
-var hashcounter=0;
 var pushRegistration=null;
 var otherUA="";
 var fileReceiveBuffer = [];
@@ -87,6 +86,8 @@ window.onload = function() {
 		alert("navigator.mediaDevices not available");
 		return;
 	}
+
+	window.onhashchange = hashchange;
 
 	let id = getUrlParams("id");
 	if(typeof id!=="undefined" && id!="") {
@@ -108,8 +109,9 @@ window.onload = function() {
 	}
 
 	if(calleeID=="") {
-		// TODO not really sure about this; it might be better to just tell the user about the wrong URL
-		window.location.replace("register");
+		showStatus("CalleeID missing in URL",-1);
+		goOnlineButton.disabled = true;
+		goOfflineButton.disabled = true;
 		return;
 	}
 
@@ -118,23 +120,6 @@ window.onload = function() {
 		if(!gentle) console.log("location.hash.length=%d",location.hash.length);
 		window.location.replace("/callee/"+calleeID);
 		return;
-	}
-
-	window.onhashchange = function() {
-		var newhashcounter;
-		if(location.hash.length > 0) {
-			newhashcounter = parseInt(location.hash.replace('#',''),10);
-		} else {
-			newhashcounter = 0;
-		}
-		if(hashcounter>0 && newhashcounter<hashcounter) {
-			if(iframeWindowOpenFlag) {
-				iframeWindowClose();
-			} else if(menuDialogOpenElement) {
-				menuDialogClose();
-			}
-		}
-		hashcounter = newhashcounter;
 	}
 
 	document.onkeydown = function(evt) {
@@ -214,15 +199,6 @@ window.onload = function() {
 				ringtoneIsPlaying = false;
 			};
 
-			if(calleeID.startsWith("!")) {
-				document.title = "WebCall Duo";
-				if(titleElement) {
-					titleElement.innerHTML = "WebCall Duo";
-				}
-				wsSecret = calleeID;
-				start();
-				return;
-			}
 			var calleeIdTitle = calleeID.charAt(0).toUpperCase() + calleeID.slice(1);
 			document.title = "WebCall Callee "+calleeIdTitle;
 			if(titleElement) {
@@ -461,10 +437,6 @@ function start() {
 		lastUserActionDate = Date.now();
 		goOffline();
 	};
-	if(calleeID.startsWith("!")) {
-		// auto connect for duo user
-		onGotStreamGoOnline = true;
-	}
 	try {
 		getStream().then(() => navigator.mediaDevices.enumerateDevices()).then(gotDevices);
 		//getStream() -> getUserMedia(constraints) -> gotStream() -> goOnline() -> login()
@@ -499,21 +471,19 @@ function login(retryFlag) {
 			}
 			if(!gentle) console.log('outboundIP',outboundIP);
 
-			if(!calleeID.startsWith("!")) {
-				let api = apiPath+"/getsettings?id="+calleeID;
-				if(!gentle) console.log('login getsettings api',api);
-				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-					if(xhr.responseText!="") {
-						let serverSettings = JSON.parse(xhr.responseText);
-						if(typeof serverSettings.nickname!=="undefined") {
-							calleeName = serverSettings.nickname;
-							if(!gentle) console.log('login calleeName',calleeName);
-						}
+			let api = apiPath+"/getsettings?id="+calleeID;
+			if(!gentle) console.log('login getsettings api',api);
+			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+				if(xhr.responseText!="") {
+					let serverSettings = JSON.parse(xhr.responseText);
+					if(typeof serverSettings.nickname!=="undefined") {
+						calleeName = serverSettings.nickname;
+						if(!gentle) console.log('login calleeName',calleeName);
 					}
-				}, function(errString,errcode) {
-					console.log('login xhr error',errString);
-				});
-			}
+				}
+			}, function(errString,errcode) {
+				console.log('login xhr error',errString);
+			});
 
 			if(!pushRegistration) {
 				// we retrieve the pushRegistration here under /callee/(calleeID),
@@ -554,11 +524,6 @@ function login(retryFlag) {
 			showStatus("User ID unknown<br><a href='"+mainLink+"'>Main page</a>",-1);
 			form.style.display = "none";
 		} else if(loginStatus=="busy") {
-			if(calleeID.startsWith("!")) {
-				// become caller
-				window.location.replace("/user/"+calleeID);
-				return;
-			}
 			showStatus("User is busy<br><a href='"+mainLink+"'>Main page</a>",-1);
 			form.style.display = "none";
 		} else if(loginStatus=="error") {
@@ -579,11 +544,6 @@ function login(retryFlag) {
 
 	}, function(errString,err) {
 		console.log('xhr error',errString);
-		if(calleeID.startsWith("!")) {
-			// go to main page // TODO best solution?
-			window.location.replace("");
-			return;
-		}
 		if(err==502 || errString.startsWith("fetch")) {
 			showStatus("No response from signaling server",3000);
 		} else {
@@ -719,25 +679,17 @@ function showOnlineReadyMsg(sessionIdPayload) {
 		return;
 	}
 
-	if(calleeID.startsWith("!")) {
-		let callerURL = window.location.href;
-		callerURL = callerURL.replace("/callee/","/user/");
-		var msg = "";
-		msg += 'You will receive calls made by this link: <a href="'+callerURL+'" target="_blank">'+callerURL+'</a>';
-		showStatus(msg,-1);
-	} else {
-		msgbox.style.display = "none";
-		var calleeLink = window.location.href;
-		calleeLink = calleeLink.replace("callee/","user/");
-		let msg = "";
-		msg += "You will receive calls made by this link:<br>"+
-			"<a target='_blank' href='"+calleeLink+"'>"+calleeLink+"</a><br>";
-		if(!gentle) console.log('showOnlineReadyMsg', clientVersion,sessionIdPayload, sessionIdPayload);
-		if(sessionIdPayload!="" && clientVersion<sessionIdPayload) {
-			msg += "Software update available. Reload to update.<br>";
-		}
-		showStatus(msg,-1);
+	msgbox.style.display = "none";
+	var calleeLink = window.location.href;
+	calleeLink = calleeLink.replace("callee/","user/");
+	let msg = "";
+	msg += "You will receive calls made by this link:<br>"+
+		"<a target='_blank' href='"+calleeLink+"'>"+calleeLink+"</a><br>";
+	if(!gentle) console.log('showOnlineReadyMsg', clientVersion,sessionIdPayload, sessionIdPayload);
+	if(sessionIdPayload!="" && clientVersion<sessionIdPayload) {
+		msg += "Software update available. Reload to update.<br>";
 	}
+	showStatus(msg,-1);
 }
 
 function connectSignaling(message) {
@@ -790,13 +742,6 @@ function connectSignaling(message) {
 		wsConn=null;
 		buttonBlinking=false;
 		stopAllAudioEffects("wsConn.onclose");
-		if(calleeID.startsWith("!")) {
-			setTimeout(function() {
-				// this delay prevents this msg from being shown on page reload
-				showStatus("Lost signaling server");
-			},500);
-			return;
-		}
 		showStatus("disconnected from signaling server");
 		if(!mediaConnect) {
 			onlineIndicator.src="";
@@ -981,15 +926,10 @@ function signalingCommand(message) {
 			rejectButton.style.display = "none";
 			stopAllAudioEffects("incoming cancel");
 			if(mediaConnect) {
-				if(calleeID.startsWith("!")) {
-					showStatus("Caller canceled call ("+
-						localCandidateType+"/"+remoteCandidateType+")",8000);
-				} else {
-					// TODO if callerID and/or callerName are avail we would rather show them
-					// instead of listOfClientIps
-					showStatus("Caller canceled call ("+
-						listOfClientIps+" "+localCandidateType+"/"+remoteCandidateType+")",8000);
-				}
+				// TODO if callerID and/or callerName are avail we would rather show them
+				// instead of listOfClientIps
+				showStatus("Caller canceled call ("+
+					listOfClientIps+" "+localCandidateType+"/"+remoteCandidateType+")",8000);
 				busySignalSound.play().catch(function(error) { });
 				setTimeout(function() {
 					busySignalSound.pause();
@@ -1258,7 +1198,7 @@ function wsSend(message) {
 				console.log('wsSend ws state',wsConn.readyState);
 			}
 		}
-		if(remainingTalkSecs>=0 || calleeID.startsWith("!") || calleeID.startsWith("answie")) {
+		if(remainingTalkSecs>=0 || calleeID.startsWith("answie")) {
 			if(!gentle) console.log('wsSend connectSignaling',message);
 			connectSignaling(message);
 		} else {
@@ -1524,7 +1464,7 @@ function goOnline() {
 				.then((results) => getStatsCandidateTypes(results,"Incoming", ""), err => console.log(err));
 
 				answerButton.disabled = false;
-				if(!calleeID.startsWith("!") && !calleeID.startsWith("answie")){
+				if(!calleeID.startsWith("answie")){
 					// msgbox only if not duo or answie
 					// no msgbox if it is empty
 					if(msgbox.value!="") {
@@ -1571,14 +1511,6 @@ function getStatsCandidateTypes(results,eventString1,eventString2) {
 	let msg = getStatsCandidateTypesEx(results,eventString1,eventString2)
 	wsSend("log|callee "+msg);
 
-	if(calleeID.startsWith("!")) {
-		let showMsg = msg;
-		if(eventString2!="") {
-			showMsg += ". "+eventString2+".";
-		}
-		showStatus(showMsg,-1);
-	}
-
 	// we rather show callerID and/or callerName if they are avail, instead of listOfClientIps
 	if(callerName!="" || callerID!="") {
 		if(callerName.toLowerCase()==callerID.toLowerCase()) {
@@ -1589,16 +1521,15 @@ function getStatsCandidateTypes(results,eventString1,eventString2) {
 	} else if(listOfClientIps!="") {
 		msg += " "+listOfClientIps;
 	}
-	if(!calleeID.startsWith("!")) {
-		let showMsg = msg;
-		if(eventString2!="") {
-			showMsg += ". "+eventString2+".";
-		}
-		if(otherUA!="") {
-			showMsg += "<div style='font-size:0.8em;margin-top:8px;color:#aac;'>"+otherUA+"</div>";
-		}
-		showStatus(showMsg,-1);
+
+	let showMsg = msg;
+	if(eventString2!="") {
+		showMsg += ". "+eventString2+".";
 	}
+	if(otherUA!="") {
+		showMsg += "<div style='font-size:0.8em;margin-top:8px;color:#aac;'>"+otherUA+"</div>";
+	}
+	showStatus(showMsg,-1);
 }
 
 function createDataChannel() {
@@ -1860,12 +1791,6 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 	answerButton.style.display = "none";
 	rejectButton.style.display = "none";
 
-	if(calleeID.startsWith("!")) {
-		// go to main page
-		window.location.replace("");
-		return
-	}
-
 	mediaConnect = false;
 	rtcConnect = false;
 	goOfflineButton.disabled = false;
@@ -1919,11 +1844,6 @@ function goOffline() {
 	}
 	if(missedCallsTitleElement!=null) {
 		missedCallsTitleElement.style.display = "none";
-	}
-	if(calleeID.startsWith("!")) {
-		// go to main page
-		window.location.replace("");
-		return;
 	}
 
 	if(wsConn!=null) {

@@ -33,6 +33,7 @@ const fileselectLabel = document.getElementById("fileselectlabel");
 
 var videoEnabled = false;
 var localVideoMonitorPaused = false;
+var hashcounter=0;
 
 var ICE_config = {
 	"iceServers": [
@@ -520,7 +521,6 @@ function menuDialogOpen(menuDialog) {
 
 	hashcounter++;
 	location.hash = hashcounter;
-
 	fullScreenOverlayElement.style.display = "block";
 	fullScreenOverlayElement.onclick = function() {
 		historyBack();
@@ -528,7 +528,7 @@ function menuDialogOpen(menuDialog) {
 	containerElement.style.filter = "blur(0.8px) brightness(60%)";
 	if(calleeMode) {
 		if(wsConn && navigator.cookieEnabled && getCookieSupport()!=null) {
-			// cookies avail, "Settings" and "Exit" allowed
+			// cookies avail: "Contacts", "Settings" and "Exit" allowed
 			if(menuContactsElement) {
 				menuContactsElement.style.display = "block";
 			}
@@ -565,7 +565,7 @@ function menuDialogOpen(menuDialog) {
 
 	// move popup-menu up to prevent bottom cut-off (if there is room on top)
 	setTimeout(function() {
-		if(!gentle) console.log('menuDialogOpenChildElement',menuDialogOpenChildElement);
+		//if(!gentle) console.log('menuDialogOpenChildElement');
 		let menuHeight = menuDialogOpenChildElement.clientHeight;
 		let pageHeight = mainElement.clientHeight;
 		if(!gentle) console.log('menuDialogOpen up',posY, menuHeight, pageHeight);
@@ -589,7 +589,7 @@ function menuDialogClose() {
 }
 
 function historyBack() {
-	history.back(); // will call closeResults()
+	history.back();
 }
 
 var iframeWindowOpenFlag = false;
@@ -1107,4 +1107,25 @@ function peerConOntrack(track, streams) {
 		}
 	}
 };
+
+function hashchange() {
+	//if(!gentle) console.log("hashchange",location.hash.length);
+	var newhashcounter;
+	if(location.hash.length > 0) {
+		newhashcounter = parseInt(location.hash.replace('#',''),10);
+	} else {
+		newhashcounter = 0;
+	}
+	//if(!gentle) console.log("hashchange hashcounter",hashcounter,newhashcounter);
+	if(hashcounter>0 && newhashcounter<hashcounter) {
+		if(iframeWindowOpenFlag) {
+			if(!gentle) console.log("onhashchange iframeWindowClose");
+			iframeWindowClose();
+		} else if(menuDialogOpenElement) {
+			if(!gentle) console.log("onhashchange menuDialogClose");
+			menuDialogClose();
+		}
+	}
+	hashcounter = newhashcounter;
+}
 
