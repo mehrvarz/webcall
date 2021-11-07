@@ -16,12 +16,12 @@ Get yourself a WebCall phone number and start chatting and sharing right away:
 
 # Installation
 
-A single WebCall server can provide free and secure telephony to 1M users.
-A small server (1-core, shared) can host up to 50K concurrent users in 1GB of RAM.
 Here I describe how you can build WebCall and run it for yourself and all your 
-friends. If you intend to host up to 1000 concurrent users only, you can do so within
-100KB of RAM or less. In other words, you can easily run WebCall as a small 
-daemon along with your web server:
+friends. A single WebCall server can provide free and secure telephony to 1M users.
+A small server (1-core, shared) can host up to 50K concurrent users in 1GB of RAM.
+If you intend to host up to 1000 concurrent users or less, you can do so within
+100KB of RAM. In other words, you can easily run WebCall as a small daemon along 
+with your web server on a very small server:
 
 [https://timur.mobi/webcall/install](https://timur.mobi/webcall/install)
 
