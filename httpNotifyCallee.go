@@ -30,7 +30,7 @@ import (
 	"sync"
 	"github.com/mehrvarz/webcall/twitter"
 	"github.com/mrjones/oauth"
-//	webpush "github.com/SherClockHolmes/webpush-go"		// jwt-go remove
+	webpush "github.com/SherClockHolmes/webpush-go"
 )
 
 var twitterClient *twitter.DesktopClient = nil
@@ -99,7 +99,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		msg := "Caller " + callerName + " is waiting for you to pick up the phone." +
 			" Please open your callee app now."
 		notificationSent := false
-/* jwt-go remove
+
 		if dbUser.Str2 != "" {
 			// web push device 1 subscription is specified
 			// here we use web push to send a notification
@@ -133,7 +133,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 					urlID, statusCode)
 			}
 		}
-*/
+
 		// notify urlID via twitter direct message
 		// here we use twitter message (or twitter direct message) to send a notification
 		if dbUser.Email2 != "" { // twitter handle
@@ -476,7 +476,6 @@ func addContact(calleeID string, callerID string, callerName string, comment str
 	return nil
 }
 
-/* jwt-go remove
 func webpushSend(subscription string, msg string, urlID string) (error,int) {
 	// Decode subscription
 	s := &webpush.Subscription{}
@@ -503,7 +502,6 @@ func webpushSend(subscription string, msg string, urlID string) (error,int) {
 	httpResponse.Body.Close()
 	return err, httpResponse.StatusCode
 }
-*/
 
 func twitterAuth() {
 	// twitterClientLock must be set outside
