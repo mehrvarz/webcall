@@ -22,7 +22,7 @@ const menuContactsElement = document.getElementById('menuContacts');
 const menuExitElement = document.getElementById('menuExit');
 const bitrate = 280000;
 const autoReconnectDelay = 30;
-const version = "1.16.0";
+const clientVersion = "2.0.0";
 const singlebutton = false;
 const calleeMode = true;
 
@@ -732,8 +732,8 @@ function showOnlineReadyMsg(sessionIdPayload) {
 		let msg = "";
 		msg += "You will receive calls made by this link:<br>"+
 			"<a target='_blank' href='"+calleeLink+"'>"+calleeLink+"</a><br>";
-		if(!gentle) console.log('showOnlineReadyMsg',version,sessionIdPayload,version<sessionIdPayload);
-		if(sessionIdPayload!="" && version<sessionIdPayload) {
+		if(!gentle) console.log('showOnlineReadyMsg', clientVersion,sessionIdPayload, sessionIdPayload);
+		if(sessionIdPayload!="" && clientVersion<sessionIdPayload) {
 			msg += "Software update available. Reload to update.<br>";
 		}
 		showStatus(msg,-1);

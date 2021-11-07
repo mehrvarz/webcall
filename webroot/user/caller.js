@@ -3,7 +3,6 @@
 const dialButton = document.querySelector('button#callButton');
 const hangupButton = document.querySelector('button#hangupButton');
 const calleeOnlineElement = document.getElementById("calleeOnline");
-
 const bitrate = 280000;
 const playDialSounds = true;
 const calleeMode = false;
