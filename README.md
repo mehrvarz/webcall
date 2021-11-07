@@ -22,9 +22,11 @@ A small server (1-core, shared) can host up to 50K concurrent users in 1GB of RA
 If you intend to host up to 1000 concurrent users or less, you can do so within
 100KB of RAM. In other words, you can easily run WebCall as a small daemon along 
 with your web server on a very small server.
-Keep in mind that all actual data (voice/video/files) is sent directly from 
+
+Keep in mind that all actual data (audio/video/files) is sent directly from 
 device to device. WebCall only connects the clients with each other. This is
-very economical from the point of view of server traffic and CPU load.
+very economical from the point of view of server, with only little traffic 
+and CPU load being generated.
 
 [https://timur.mobi/webcall/install](https://timur.mobi/webcall/install)
 
