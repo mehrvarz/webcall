@@ -884,7 +884,9 @@ function connectLocalVideo(forceOff) {
 	} else {
 		// stop streaming localVideo to other peer
 		if(vsendButton)
-			vsendButton.style.color = "#fff"; // local video is not streaming
+			vsendButton.style.color = "#fff"; // local video is now not streaming
+		if(videoEnabled)
+			vpauseTimer = setTimeout(vpauseByTimer, 40000);
 
 		addLocalVideoEnabled = false;
 		if(!addedVideoTrack) {

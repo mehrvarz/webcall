@@ -1296,7 +1296,7 @@ function hangup() {
 		},1000);
 	}
 
-	connectLocalVideo(true);
+	connectLocalVideo(true); // force disconnect
 	endWebRtcSession(true,true);
 	vsendButton.classList.remove('blink_me')
 
