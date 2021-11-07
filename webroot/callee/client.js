@@ -1,11 +1,17 @@
 // WebCall Copyright 2021 timur.mobi. All rights reserved.
 'use strict';
+const localVideoPausedElement = document.querySelector('span#localVideoPaused');
+const vmonitorButton = document.querySelector('span#vmonitor');
+const vsendButton = document.querySelector('span#vsend');
 const localVideoRes = document.querySelector('span#localVideoRes');
 const remoteVideoRes = document.querySelector('span#remoteVideoRes');
+const remoteVideoLabel = document.querySelector('div#remoteVideoLabel');
 const cameraElement = document.getElementById('camera');
 const fileSelectElement = document.getElementById("fileselect");
 
 var videoEnabled = false;
+var localVideoMonitorPaused = false;
+
 var ICE_config = {
 	"iceServers": [
 		{	'urls': 'stun:'+window.location.hostname+':3739' },
@@ -15,6 +21,7 @@ var ICE_config = {
 		}
 	]
 };
+
 var userMediaConstraints = {
 	deviceId: undefined,
 	audio: {
@@ -497,7 +504,7 @@ function menuDialogOpen(menuDialog) {
 		historyBack();
 	}
 	containerElement.style.filter = "blur(0.8px) brightness(60%)";
-	if(calleeMode) { // TODO this is a little quick&dirty
+	if(calleeMode) {
 		if(wsConn && navigator.cookieEnabled && getCookieSupport()!=null) {
 			// cookies avail, "Settings" and "Exit" allowed
 			if(menuContactsElement) {
@@ -843,8 +850,10 @@ function connectLocalVideo(forceOff) {
 		addLocalVideoEnabled = true; // will cause: peerCon.addTrack(video)
 		if(dataChannel && dataChannel.readyState=="open") {
 			if(!gentle) console.log("connectLocalVideo set");
-			vsendButton.classList.remove('blink_me')
-			vsendButton.style.color = "#f55"; // local video is streaming
+			if(vsendButton) {
+				vsendButton.classList.remove('blink_me')
+				vsendButton.style.color = "#ff0"; // local video is streaming
+			}
 			pickupAfterLocalStream = true; // will cause: pickup2()
 			getStream(); // -> gotStream() -> gotStream2() -> pickup2(): "calleeDescriptionUpd"
 		} else {
@@ -876,11 +885,10 @@ function connectLocalVideo(forceOff) {
 
 var vpauseTimer = null;
 function vmonitor() {
-	if(localVideoPaused)
-		localVideoPaused.style.visibility = "hidden";
+	if(localVideoPausedElement)
+		localVideoPausedElement.style.visibility = "hidden";
 	if(vmonitorButton) {
 		vmonitorButton.style.color = "#ff0";
-		vpauseButton.style.color = "#fff";
 	}
 	if(!localStream) {
 		// re-enable paused video and microphone
@@ -892,7 +900,8 @@ function vmonitor() {
 		localVideoFrame.play().catch(function(error) {});
 		if(!mediaConnect) {
 			if(!gentle) console.log("vmonitor play new vpauseTimer");
-			vsendButton.style.color = "#fff";
+			if(vsendButton)
+				vsendButton.style.color = "#fff";
 			if(vpauseTimer) {
 				clearTimeout(vpauseTimer);
 				vpauseTimer = null;
@@ -902,6 +911,7 @@ function vmonitor() {
 			if(!gentle) console.log("vmonitor play");
 		}
 	}
+	localVideoMonitorPaused = false;
 }
 
 function vpauseByTimer() {
@@ -914,13 +924,14 @@ function vpauseByTimer() {
 function vpause() {
 	if(!gentle) console.log("vpause");
 	localVideoFrame.pause();
-	vpauseButton.style.color = "#ff0";
-	vmonitorButton.style.color = "#fff";
+	if(vmonitorButton) {
+		vmonitorButton.style.color = "#fff";
+	}
 	if(vpauseTimer) {
 		clearTimeout(vpauseTimer);
 		vpauseTimer = null;
 	}
-	localVideoPaused.style.visibility = "visible";
+	localVideoPausedElement.style.visibility = "visible";
 
 	if(!mediaConnect) {
 		// deactivate video + microphone pause, so that there will be no red-tab
@@ -929,6 +940,15 @@ function vpause() {
 		localStream.removeTrack(audioTracks[0]);
 		localStream = null;
 		if(!gentle) console.log("vpause localStream-a/v deactivated");
+	}
+	localVideoMonitorPaused = true;
+}
+
+function vmonitorSwitch() {
+	if(localVideoMonitorPaused) {
+		vmonitor();
+	} else {
+		vpause();
 	}
 }
 
@@ -1001,7 +1021,6 @@ function remoteVideoShow() {
 	remoteVideoDiv.addEventListener('transitionend', remoteVideoDivOnVisible) // switch to height auto
 
 	remoteVideoLabel.innerHTML = "remote cam";
-	remoteVideoLabel.style.color = "#ff0";
 	remoteVideoShowing = true;
 }
 
@@ -1015,7 +1034,6 @@ function remoteVideoHide() {
 		},100);
 
 		remoteVideoLabel.innerHTML = "";
-		remoteVideoLabel.style.color = "#fff";
 		remoteVideoShowing = false;
 	}
 }

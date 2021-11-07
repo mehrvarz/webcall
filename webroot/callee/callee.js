@@ -3,13 +3,8 @@
 const avSelect = document.querySelector("select#avSelect");
 const localVideoDiv = document.querySelector('div#localVideoDiv');
 const localVideoFrame = document.querySelector('video#localVideoFrame');
-const localVideoPaused = document.querySelector('span#localVideoPaused');
-const vmonitorButton = document.querySelector('span#vmonitor');
-const vpauseButton = document.querySelector('span#vpause');
-const vsendButton = document.querySelector('span#vsend');
 const remoteVideoDiv = document.querySelector('div#remoteVideoDiv');
 const remoteVideoFrame = document.querySelector('video#remoteVideoFrame');
-const remoteVideoLabel = document.querySelector('div#remoteVideoLabel');
 
 const goOnlineButton = document.querySelector('button#onlineButton');
 const goOfflineButton = document.querySelector('button#offlineButton');
@@ -502,7 +497,6 @@ function start() {
 
 function login(retryFlag) {
 	if(!gentle) console.log("login to signaling server...", retryFlag, calleeID, wsSecret.length);
-	menuElement.style.display = "none";
 	let api = apiPath+"/login?id="+calleeID;
 	ajaxFetch(new XMLHttpRequest(), "POST", api, function(xhr) {
 		let loginStatus = xhr.responseText;
@@ -511,7 +505,6 @@ function login(retryFlag) {
 		if(parts.length>=1 && parts[0].indexOf("wsid=")>=0) {
 			wsAddr = parts[0];
 			// we're now a logged-in callee-user
-			menuElement.style.display = "block";
 			if(!gentle) console.log('login success wsAddr',wsAddr);
 
 			// hide the form
@@ -1347,7 +1340,7 @@ function pickup2() {
 			if(videoEnabled && !addLocalVideoEnabled) {
 				console.log('full mediaConnect, blink vsendButton');
 				vsendButton.classList.add('blink_me');
-				setTimeout(function() { vsendButton.classList.remove('blink_me') },8000);
+				setTimeout(function() { vsendButton.classList.remove('blink_me') },10000);
 			}
 
 			if(peerCon) {

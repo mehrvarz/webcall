@@ -20,7 +20,6 @@ body {
 	font-family:Sans-Serif;
 	font-weight:300;
 	margin:0;
-	_padding:0.5em;
 }
 button, button:focus {
 	background-color:#04c;
@@ -55,16 +54,12 @@ div#container {
 	padding: 0.7em;
 	max-width:520px;
 }
-div.outputSelector {
-	margin: -1.3em 0 2em 0;
-}
 h1 {
 	font-size:1.7em;
 	font-weight:600;
 	user-select:none;
 	margin-block-start:0;
 	margin-block-end:0;
-	margin-top:10px;
 	margin-bottom:10px;
 }
 a, a:link, a:visited, a:active {
@@ -246,7 +241,7 @@ input[type=submit]:focus {
 	</div>
 </div>
 
-<div style="background:#111a;font-size:1.25em;color:#fff;">
+<div style="background:#111a;font-size:1.2em;color:#fff;">
 	<div id="remoteVideoDiv" class="videoframe-remote" style="height:0px; transition:height 500ms; overflow:hidden;">
 		<div style="position:relative; display:inline-block; width:100%; height:100%;">
 			<video id="remoteVideoFrame" style="width:100%; height:100%; background:#000b;" _poster="red-gradient.svg" autoplay></video>
@@ -257,12 +252,11 @@ input[type=submit]:focus {
 	<div id="localVideoDiv" class="videoframe-local" style="height:0px; transition:height 500ms; overflow:hidden; cursor:pointer;">
 		<div style="position:relative; display:inline-block; width:100%; height:100%;">
 			<video id="localVideoFrame" style="width:100%; height:100%; background:#000b;" _poster="green-gradient.svg" autoplay></video>
-			<span id="localVideoPaused" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50% ); text-align:center; background:#000b; padding:5px 10px; z-index:20; visibility:hidden;">paused</span>
+			<span id="localVideoPaused" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50% ); text-align:center; background:#000b; padding:5px 10px; z-index:20; visibility:hidden;">monitor paused</span>
 			<span id="localVideoRes" style="position:absolute; bottom:10%; left:50%; transform:translate(-50%,-50% ); text-align:center; background:#000b; padding:5px 10px; z-index:20; visibility:hidden;"></span>
 			<div id="localVideoLabel" style="position:absolute; bottom:0; width:100%; z-index:10; opacity:0.7; text-align:center; background:#000b; padding:3px; transition:opacity 500ms;">
-				<span id="vpause" onclick="vpause()">pause</span>
-				<span id="vmonitor" onclick="vmonitor()" style="margin-left:3%">monitor</span>
-				<span id="vres" onclick="menuDialogOpen(vresDialogElement)" style="margin-left:3%">res</span>
+				<span id="vres" onclick="menuDialogOpen(vresDialogElement)">res</span>
+				<span id="vmonitor" onclick="vmonitorSwitch()" style="margin-left:3%">monitor</span>
 				<span id="vsend" onclick="connectLocalVideo(false)" style="margin-left:3%">send</span>
 				<span id="vclose" onclick="videoSwitch(true)" style="margin-left:3%">close</span>
 			</div>

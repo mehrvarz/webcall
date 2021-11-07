@@ -6,13 +6,8 @@ const calleeOnlineElement = document.getElementById("calleeOnline");
 const avSelect = document.querySelector("select#avSelect");
 const localVideoDiv = document.querySelector('div#localVideoDiv');
 const localVideoFrame = document.querySelector('video#localVideoFrame');
-const localVideoPaused = document.querySelector('span#localVideoPaused');
-const vmonitorButton = document.querySelector('span#vmonitor');
-const vpauseButton = document.querySelector('span#vpause');
-const vsendButton = document.querySelector('span#vsend');
 const remoteVideoDiv = document.querySelector('div#remoteVideoDiv');
 const remoteVideoFrame = document.querySelector('video#remoteVideoFrame');
-const remoteVideoLabel = document.querySelector('div#remoteVideoLabel');
 
 const iframeWindowElement = document.getElementById('iframeWindow');
 const fullscreenCheckbox = document.querySelector('input#fullscreen');
@@ -1171,9 +1166,9 @@ function signalingCommand(message) {
 			if(videoEnabled && !addLocalVideoEnabled) {
 				console.log('full mediaConnect, blink vsendButton');
 				vsendButton.classList.add('blink_me');
-				setTimeout(function() { vsendButton.classList.remove('blink_me') },8000);
+				setTimeout(function() { vsendButton.classList.remove('blink_me') },10000);
 			} else {
-				if(!gentle) console.log('full mediaConnect, not videoEnabled, no blink vsendButton');
+				if(!gentle) console.log('full mediaConnect no videoEnabled: no blink vsendButton');
 			}
 		}
 
