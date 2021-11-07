@@ -17,11 +17,11 @@ github.com/jtolds/gls v4.20.0+incompatible h1:xdiiI2gbIgH/gLH7ADydsJ1uDOEzR8yvV7
 github.com/jtolds/gls v4.20.0+incompatible/go.mod h1:QJZ7F/aHp+rZTRtaJ1ow/lLfFfVYBRgL+9YlvaHOwJU=
 github.com/klauspost/compress v1.10.4 h1:jFzIFaf586tquEB5EhzQG0HwGNSlgAJpG53G6Ss11wc=
 github.com/klauspost/compress v1.10.4/go.mod h1:aoV0uJVorq1K+umq18yTdKaF57EivdYsUV+/s2qKfXs=
-github.com/lesismal/llib v1.0.10/go.mod h1:3vmCrIMrpkaoA3bDu/sI+J7EyEUMPbOvmAxb7PlzilM=
-github.com/lesismal/llib v1.1.0 h1:dpU21CcgQXyY9GW/ibLZhXf46Lst+Y4KhWO5R34FAWk=
 github.com/lesismal/llib v1.1.0/go.mod h1:3vmCrIMrpkaoA3bDu/sI+J7EyEUMPbOvmAxb7PlzilM=
-github.com/lesismal/nbio v1.2.2 h1:phCfn5bu3VaI+a1q5omvImEHEab1iUe+D1pP843rmW8=
-github.com/lesismal/nbio v1.2.2/go.mod h1:ORG1uPZRuFq+7ZrhORVD6c3WsWiLO+t2Ug/7SIsd9ls=
+github.com/lesismal/llib v1.1.4 h1:eixNXLDaikVsrJHk4zMXRt+NvQFBg3b3/FjZb8cWmbI=
+github.com/lesismal/llib v1.1.4/go.mod h1:3vmCrIMrpkaoA3bDu/sI+J7EyEUMPbOvmAxb7PlzilM=
+github.com/lesismal/nbio v1.2.5 h1:TU6Vz1SefWbq+vo44dotm8jrLUHXSuJRkABvp41USDE=
+github.com/lesismal/nbio v1.2.5/go.mod h1:6nVf9c7Y9uEnhsa2djzi6o+naIcI+PJS+Rk5b+QwJrA=
 github.com/mehrvarz/turn/v2 v2.0.8 h1:76MPqxAvoPGKeFwj8c/0JVStSCVVMteFTfSxbyajbCE=
 github.com/mehrvarz/turn/v2 v2.0.8/go.mod h1:PMWy0GUzImOcZoqQ9DK1Xhr3JC/RuX00KY3Vs6UeLG8=
 github.com/mrjones/oauth v0.0.0-20190623134757-126b35219450 h1:j2kD3MT1z4PXCiUllUJF9mWUESr9TWKS7iEKsQ/IipM=

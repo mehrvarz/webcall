@@ -685,7 +685,7 @@ function showOnlineReadyMsg(sessionIdPayload) {
 	let msg = "";
 	msg += "You will receive calls made by this link:<br>"+
 		"<a target='_blank' href='"+calleeLink+"'>"+calleeLink+"</a><br>";
-	if(!gentle) console.log('showOnlineReadyMsg', clientVersion,sessionIdPayload, sessionIdPayload);
+	if(!gentle) console.log('showOnlineReadyMsg', clientVersion, sessionIdPayload);
 	if(sessionIdPayload!="" && clientVersion<sessionIdPayload) {
 		msg += "Software update available. Reload to update.<br>";
 	}
