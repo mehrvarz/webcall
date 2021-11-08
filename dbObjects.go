@@ -11,10 +11,6 @@ type DbUser struct {
 	Name string             // nickname, if given
 	Ip1 string              // used for httpRegister
 	UserAgent string        // used for httpRegister
-	CallCounter int         // incremented by wsHub processTimeValues()
-	ConnectedToPeerSecs int // incremented by wsHub processTimeValues()
-	LocalP2pCounter int     // incremented by wsHub processTimeValues()
-	RemoteP2pCounter int    // incremented by wsHub processTimeValues()
 	Email2 string           // now used as tw_handle
 	Str1 string             // now used as tw_user_id
 	Str2 string             // web push device 1 subscription
@@ -22,6 +18,12 @@ type DbUser struct {
 	Str3 string             // web push device 2 subscription
 	Str3ua string           // web push device 2 user agent
 	Int2 int                // bit 0: hidden callee mode 0/1
+	CallCounter int         // incremented by wsHub processTimeValues()
+	ConnectedToPeerSecs int // incremented by wsHub processTimeValues()
+	LocalP2pCounter int     // incremented by wsHub processTimeValues()
+	RemoteP2pCounter int    // incremented by wsHub processTimeValues()
+	StoreContacts bool
+	StoreMissedCalls bool
 }
 
 type NotifTweet struct { // key = TweetID string

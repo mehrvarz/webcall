@@ -107,6 +107,23 @@ input[type=submit]:focus {
 	background-color: #8c8;
 	color: #000;
 }
+.checkbox {
+	-webkit-appearance: none;
+	background-color:#227;
+	border: 1px solid #cacece;
+	padding: 6px;
+	margin-bottom:-1px;
+	border-radius: 3px;
+	display: inline-block;
+	position: relative;
+	cursor: pointer;
+	user-select:none;
+}
+.checkbox:active, .checkbox:checked:active {
+}
+.checkbox:checked {
+	background-color: #3af;
+}
 </style>
 </head>
 
@@ -126,6 +143,16 @@ input[type=submit]:focus {
 		<span onclick="clearForm(1)" style="margin-left:5px; user-select:none;">X</span><br>
 		<div style="margin-top:6px;font-size:0.90em;">We use this to tweet you in realtime about calls you receive when you are not connected. We ask the caller to wait a few minutes for you to pick up the call. You need to follow our <a href="https://twitter.com/webcall">@WebCall</a> Twitter feed to receive these notifications.</div>
 
+		<br>
+		<label id="storeContactsLabel" style="margin-left:-4px;">
+			<input type="checkbox" id="storeContacts" class="checkbox"> Save contacts</label>
+		</label>
+
+		<br>
+		<label id="storeMissedCallsLabel" style="margin-left:-4px;">
+			<input type="checkbox" id="storeMissedCalls" class="checkbox"> Save missed calls</label>
+		</label>
+
 		<!-- 
 		<br>
 		<label for="twid" style="display:inline-block; padding-bottom:4px;">Your Twitter user ID:</label><br>
@@ -133,6 +160,8 @@ input[type=submit]:focus {
 		<span onclick="clearForm(2)" style="margin-left:5px; user-select:none;">X</span><br>
 		<div style="margin-top:10px;font-size:0.85em;">We use this to DM you in realtime about incoming calls. We also ask the caller to wait a minute or two. For this to work you need to follow our <a href="https://twitter.com/webcall">@WebCall</a> Twitter account. If you don't know your Twitter user ID, visit this site: <a href="https://tweeterid.com">tweeterid.com</a>.</div>
 		-->
+
+		<br>
 		<input type="submit" name="Submit" id="submit" value="Save" style="width:100px; margin-top:20px; border-radius:3px;">
 	</form>
 

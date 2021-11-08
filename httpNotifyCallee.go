@@ -57,9 +57,6 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		callerName = url_arg_array[0]
 	}
 	fmt.Printf("/notifyCallee callerId=(%s) callerName=(%s)\n", callerId, callerName)
-	if callerId != "" {
-		addContact(urlID, callerId, callerName, "/notifyCallee")
-	}
 
 	var dbEntry DbEntry
 	err := kvMain.Get(dbRegisteredIDs, urlID, &dbEntry)
@@ -73,6 +70,10 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	if err != nil {
 		fmt.Printf("# /notifyCallee (%s) failed on dbUserBucket\n", urlID)
 		return
+	}
+
+	if dbUser.StoreContacts && callerId != "" {
+		addContact(urlID, callerId, callerName, "/notifyCallee")
 	}
 
 	// check if callee is hidden online
@@ -193,21 +194,24 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 
 		if !notificationSent {
 			// we couldn't send any notifications: store call as missed call
-			fmt.Printf("# /notifyCallee (%s) no notification sent - store as missed call\n", urlID)
-			caller := CallerInfo{remoteAddrWithPort, callerName, time.Now().Unix(), callerId}
-			var missedCallsSlice []CallerInfo
-			err := kvCalls.Get(dbMissedCalls, urlID, &missedCallsSlice)
-			if err != nil {
-				//fmt.Printf("# /notifyCallee (%s) failed to read dbMissedCalls %v\n", urlID, err)
-			}
-			// make sure we never have more than 10 missed calls
-			if missedCallsSlice != nil && len(missedCallsSlice) >= 10 {
-				missedCallsSlice = missedCallsSlice[1:]
-			}
-			missedCallsSlice = append(missedCallsSlice, caller)
-			err = kvCalls.Put(dbMissedCalls, urlID, missedCallsSlice, false)
-			if err != nil {
-				fmt.Printf("# /notifyCallee (%s) failed to store dbMissedCalls %v\n", urlID, err)
+			fmt.Printf("# /notifyCallee (%s) no notification sent\n", urlID)
+			if(dbUser.StoreMissedCalls) {
+				fmt.Printf("# /notifyCallee (%s) no notification sent - store as missed call\n", urlID)
+				caller := CallerInfo{remoteAddrWithPort, callerName, time.Now().Unix(), callerId}
+				var missedCallsSlice []CallerInfo
+				err := kvCalls.Get(dbMissedCalls, urlID, &missedCallsSlice)
+				if err != nil {
+					//fmt.Printf("# /notifyCallee (%s) failed to read dbMissedCalls %v\n", urlID, err)
+				}
+				// make sure we never have more than 10 missed calls
+				if missedCallsSlice != nil && len(missedCallsSlice) >= 10 {
+					missedCallsSlice = missedCallsSlice[1:]
+				}
+				missedCallsSlice = append(missedCallsSlice, caller)
+				err = kvCalls.Put(dbMissedCalls, urlID, missedCallsSlice, false)
+				if err != nil {
+					fmt.Printf("# /notifyCallee (%s) failed to store dbMissedCalls %v\n", urlID, err)
+				}
 			}
 			// there is no need for the caller to wait, bc we could not send a push notification
 			// by NOT responding "ok" we tell the caller that we were NOT able to reach the callee
@@ -338,19 +342,21 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 
 			if callerGaveUp {
 				// store missed call
-				fmt.Printf("/notifyCallee (%s) store missed call\n", urlID)
-				err = kvCalls.Get(dbMissedCalls, urlID, &missedCallsSlice)
-				if err != nil {
-					fmt.Printf("# /notifyCallee (%s) failed to read dbMissedCalls %v\n", urlID, err)
-				}
-				// make sure we never have more than 10 missed calls
-				if missedCallsSlice != nil && len(missedCallsSlice) >= 10 {
-					missedCallsSlice = missedCallsSlice[1:]
-				}
-				missedCallsSlice = append(missedCallsSlice, waitingCaller)
-				err = kvCalls.Put(dbMissedCalls, urlID, missedCallsSlice, false)
-				if err != nil {
-					fmt.Printf("# /notifyCallee (%s) failed to store dbMissedCalls %v\n", urlID, err)
+				if(dbUser.StoreMissedCalls) {
+					fmt.Printf("/notifyCallee (%s) store missed call\n", urlID)
+					err = kvCalls.Get(dbMissedCalls, urlID, &missedCallsSlice)
+					if err != nil {
+						fmt.Printf("# /notifyCallee (%s) failed to read dbMissedCalls %v\n", urlID, err)
+					}
+					// make sure we never have more than 10 missed calls
+					if missedCallsSlice != nil && len(missedCallsSlice) >= 10 {
+						missedCallsSlice = missedCallsSlice[1:]
+					}
+					missedCallsSlice = append(missedCallsSlice, waitingCaller)
+					err = kvCalls.Put(dbMissedCalls, urlID, missedCallsSlice, false)
+					if err != nil {
+						fmt.Printf("# /notifyCallee (%s) failed to store dbMissedCalls %v\n", urlID, err)
+					}
 				}
 			}
 			break
@@ -412,22 +418,24 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 	if dbUser.Email2=="" && dbUser.Str2=="" && dbUser.Str3=="" {
 		// this user can NOT rcv push msg (not pushable)
 		fmt.Printf("/canbenotified (%s) has no push channel rip=%s\n",urlID,remoteAddr)
-		// store missed call
-		var missedCallsSlice []CallerInfo
-		err := kvCalls.Get(dbMissedCalls,urlID,&missedCallsSlice)
-		if err!=nil {
-			fmt.Printf("# /canbenotified (%s) failed to read dbMissedCalls err=%v rip=%s\n",
-				urlID, err, remoteAddr)
-		}
-		// make sure we never show more than 10 missed calls
-		if missedCallsSlice!=nil && len(missedCallsSlice)>=10 {
-			missedCallsSlice = missedCallsSlice[1:]
-		}
-		missedCallsSlice = append(missedCallsSlice, caller)
-		err = kvCalls.Put(dbMissedCalls, urlID, missedCallsSlice, true) // skipConfirm
-		if err!=nil {
-			fmt.Printf("# /canbenotified (%s) failed to store dbMissedCalls err=%v rip=%s\n",
-				urlID, err, remoteAddr)
+		if(dbUser.StoreMissedCalls) {
+			// store missed call
+			var missedCallsSlice []CallerInfo
+			err := kvCalls.Get(dbMissedCalls,urlID,&missedCallsSlice)
+			if err!=nil {
+				fmt.Printf("# /canbenotified (%s) failed to read dbMissedCalls err=%v rip=%s\n",
+					urlID, err, remoteAddr)
+			}
+			// make sure we never show more than 10 missed calls
+			if missedCallsSlice!=nil && len(missedCallsSlice)>=10 {
+				missedCallsSlice = missedCallsSlice[1:]
+			}
+			missedCallsSlice = append(missedCallsSlice, caller)
+			err = kvCalls.Put(dbMissedCalls, urlID, missedCallsSlice, true) // skipConfirm
+			if err!=nil {
+				fmt.Printf("# /canbenotified (%s) failed to store dbMissedCalls err=%v rip=%s\n",
+					urlID, err, remoteAddr)
+			}
 		}
 		return
 	}

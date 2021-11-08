@@ -18,6 +18,7 @@ import (
 	"net/url"
 	"encoding/json"
 	"io"
+	"strconv"
 )
 
 func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calleeID string, cookie *http.Cookie, remoteAddr string) {
@@ -57,6 +58,8 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		"nickname": calleeName,
 		"twname": dbUser.Email2, // twitter handle (starting with @)
 		"twid": dbUser.Str1, // twitter user_id  // not yet used by settings app
+		"storeContacts": strconv.FormatBool(dbUser.StoreContacts),
+		"storeMissedCalls": strconv.FormatBool(dbUser.StoreMissedCalls),
 		"webPushSubscription1": dbUser.Str2,
 		"webPushUA1": dbUser.Str2ua,
 		"webPushSubscription2": dbUser.Str3,
@@ -138,6 +141,20 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 			fmt.Printf("/setsettings (%s) new twid (%s) (old:%s)\n",calleeID,val,dbUser.Str1)
 			dbUser.Str1 = val
 
+		case "storeContacts":
+			fmt.Printf("/setsettings (%s) new storeContacts (%s) (old:%v)\n",calleeID,val,dbUser.StoreContacts)
+			if(val=="true") {
+				dbUser.StoreContacts = true
+			} else {
+				dbUser.StoreContacts = false
+			}
+		case "storeMissedCalls":
+			fmt.Printf("/setsettings (%s) new storeMissedCalls (%s) old:%v\n",calleeID,val,dbUser.StoreMissedCalls)
+			if(val=="true") {
+				dbUser.StoreMissedCalls = true
+			} else {
+				dbUser.StoreMissedCalls = false
+			}
 		case "webPushSubscription1":
 			newVal,err := url.QueryUnescape(val)
 			if err!=nil {

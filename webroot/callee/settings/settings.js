@@ -70,6 +70,22 @@ function prepareSettings(xhrresponse) {
 		if(!gentle) console.log('serverSettings.twid',serverSettings.twid);
 		//document.getElementById("twid").value = serverSettings.twid;
 	}
+	if(typeof serverSettings.storeContacts!=="undefined") {
+		if(!gentle) console.log('serverSettings.storeContacts',serverSettings.storeContacts);
+		if(serverSettings.storeContacts=="true") {
+			document.getElementById("storeContacts").checked = true;
+		} else {
+			document.getElementById("storeContacts").checked = false;
+		}
+	}
+	if(typeof serverSettings.storeMissedCalls!=="undefined") {
+		if(!gentle) console.log('serverSettings.storeMissedCalls',serverSettings.storeMissedCalls);
+		if(serverSettings.storeMissedCalls=="true") {
+			document.getElementById("storeMissedCalls").checked = true;
+		} else {
+			document.getElementById("storeMissedCalls").checked = false;
+		}
+	}
 	if(typeof serverSettings.webPushSubscription1!=="undefined") {
 		//if(!gentle) console.log('serverSettings.webPushSubscription1',serverSettings.webPushSubscription1);
 		if(serverSettings.webPushSubscription1=="") {
@@ -364,6 +380,8 @@ function submitForm(autoclose) {
 	var newSettings = '{ "nickname":"'+document.getElementById("nickname").value+'",'+
 		'"twname":"'+document.getElementById("twname").value+'",'+
 		//'" "twid":"'+ document.getElementById("twid").value+
+		'"storeContacts":"'+document.getElementById("storeContacts").checked+'",'+
+		'"storeMissedCalls":"'+document.getElementById("storeMissedCalls").checked+'",'+
 		'"webPushSubscription1":"'+encodeURI(serverSettings.webPushSubscription1)+'",'+
 		'"webPushUA1":"'+encodeURI(serverSettings.webPushUA1)+'",'+
 		'"webPushSubscription2":"'+encodeURI(serverSettings.webPushSubscription2)+'",'+
