@@ -10,7 +10,7 @@ Run the server yourself.
 
 Video telephony is coming with release 2.0 in Nov. 2021. Here, caller and callee are able to turn video on and off individually at any time during a call. You can use this, for instance, to make sure you are sending your sensitive files only to the person you want to share them with. Your files will be delivered over the same encrypted P2P-link used for audio and video. To make use of WebCall, neither you, nor the other party needs to install any software. All you need is a 2020+ browser.
 
-Audio and video are better in WebCall than in your conferencing app. Strict use of P2P offers lower latency, higher picture resolution and more frames over the same internet connection.
+Audio and video are better in WebCall compare to conferencing apps. Strict use of P2P offers higher resolution, lower latency and more frames over the same internet connection.
 
 Get a WebCall phone number here:
 
