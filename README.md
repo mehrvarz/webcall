@@ -4,13 +4,15 @@
 
 # WebCall WebRTC Telephony Server
 
-Hifi audio telephony, video telephony plus bidirectional file transfer.
-No tracking. No logging. All data delivered over E2E-encrypted P2P.
-You can run the server yourself.
+Hifi audio telephony + video telephony + bidirectional file transfer.
+No tracking. No logging. All data is delivered over E2E-encrypted P2P.
+Run the server yourself.
 
-Video telephony is coming in Nov. 2021 with release 2.0. Here, caller and callee are able to turn their video on and off individually at any time during a call. You can use this, for instance, to make sure you are sending your sensitive files only to the right person. Your files will be delivered over the same P2P-link used for audio and video streaming. To use the full functionality, neither you, nor the other party has to install any software. All you need is a 2020+ browser running on any device.
+Video telephony is coming with release 2.0 in Nov. 2021. Here, caller and callee are able to turn video on and off individually at any time during a call. You can use this, for instance, to make sure you are sending your sensitive files only to the person you want to share them with. Your files will be delivered over the same encrypted P2P-link used for audio and video. To make use of WebCall, neither you, nor the other party needs to install any software. All you need is a 2020+ browser.
 
-Get yourself a WebCall phone number and start chatting and sharing right away:
+Audio and video are better in WebCall than in your conferencing app. Strict use of P2P offers lower latency, higher picture resolution and more frames over the same internet connection.
+
+Get a WebCall phone number here:
 
 [https://timur.mobi/webcall](https://timur.mobi/webcall)
 
@@ -23,10 +25,9 @@ If you intend to host up to 1000 concurrent users or less, you can do so within
 100KB of RAM. In other words, you can easily run WebCall as a small daemon along 
 with your web server on a very small server.
 
-Keep in mind that all actual data (audio/video/files) is sent directly from 
-device to device. WebCall only connects the clients with each other. This is
-very economical from the point of view of the server. Only small amounts of traffic 
-and CPU load are being generated.
+Keep in mind that WebCall is only assisting the clients to connects to each other.
+All data (audio/video/files) is then sent directly from device to device. From the 
+point of view of the server this is very economical.
 
 [https://timur.mobi/webcall/install](https://timur.mobi/webcall/install)
 
