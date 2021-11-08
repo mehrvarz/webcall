@@ -873,7 +873,7 @@ function connectLocalVideo(forceOff) {
 		if(dataChannel && dataChannel.readyState=="open") {
 			if(!gentle) console.log("connectLocalVideo set");
 			if(vsendButton) {
-				vsendButton.classList.remove('blink_me')
+				vsendButton.classList.remove('blink_me');
 				vsendButton.style.color = "#ff0"; // local video is streaming
 			}
 			pickupAfterLocalStream = true; // will cause: pickup2()
@@ -883,11 +883,12 @@ function connectLocalVideo(forceOff) {
 		}
 	} else {
 		// stop streaming localVideo to other peer
-		if(vsendButton)
+		if(vsendButton) {
 			vsendButton.style.color = "#fff"; // local video is now not streaming
-		if(videoEnabled)
+		}
+		if(videoEnabled) {
 			vpauseTimer = setTimeout(vpauseByTimer, 40000);
-
+		}
 		addLocalVideoEnabled = false;
 		if(!addedVideoTrack) {
 			if(!gentle) console.log("connectLocalVideo disconnect !addedVideoTrack: !removeTrack");

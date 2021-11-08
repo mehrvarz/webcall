@@ -1252,6 +1252,9 @@ function pickup2() {
 		answerButton.disabled = true;
 		onlineIndicator.src="red-gradient.svg";
 		mediaConnect = true;
+		if(vsendButton) {
+			vsendButton.style.display = "inline-block";
+		}
 		mediaConnectStartDate = Date.now();
 
 		if(dataChannel!=null && dataChannel.readyState=="open") {
@@ -1799,6 +1802,9 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 
 	mediaConnect = false;
 	rtcConnect = false;
+	if(vsendButton) {
+		vsendButton.style.display = "none";
+	}
 	goOfflineButton.disabled = false;
 	goOnlineButton.style.display = "inline-block";
 	goOfflineButton.style.display = "inline-block";

@@ -1108,6 +1108,9 @@ function signalingCommand(message) {
 			}
 
 			mediaConnect = true;
+			if(vsendButton) {
+				vsendButton.style.display = "inline-block";
+			}
 			mediaConnectStartDate = Date.now();
 
 			if(fileselectLabel!=null && dataChannel!=null && dataChannel.readyState=="open") {
@@ -1249,8 +1252,13 @@ function dial() {
 	showStatus(connectingText,-1);
 	otherUA = "";
 	dialing = true;
+/*
 	rtcConnect = false;
 	mediaConnect = false;
+	if(vsendButton) {
+		vsendButton.style.display = "none";
+	}
+*/
 	if(fileselectLabel!=null) {
 		fileselectLabel.style.display = "none";
 		progressSendElement.style.display = "none";
@@ -1747,6 +1755,9 @@ function hangup(mustDisconnectCallee,message) {
 
 	mediaConnect = false;
 	rtcConnect = false;
+	if(vsendButton) {
+		vsendButton.style.display = "none";
+	}
 	vmonitor();
 	if(vsendButton)
 		vsendButton.classList.remove('blink_me')
