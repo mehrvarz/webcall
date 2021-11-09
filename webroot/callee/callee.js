@@ -1010,14 +1010,11 @@ function signalingCommand(message) {
 			pickupAfterLocalStream = true;
 			getStream(); // -> pickup2() -> "calleeDescriptionUpd"
 		}
+
 	} else if(cmd=="rtcVideoOff") {
 		// remote video track removed by other side (hide remoteVideoFrame so that audio can still be received)
 		if(!gentle) console.log("rtcVideoOff");
-		//remoteVideoFrame.pause();
-		//remoteVideoFrame.currentTime = 0;
-		//remoteVideoFrame.srcObject = null;
 		remoteVideoHide();
-		//remoteStream = null;
 
 	} else {
 		if(!gentle) console.log('# ignore incom cmd',cmd);

@@ -1201,11 +1201,7 @@ function signalingCommand(message) {
 	} else if(cmd=="rtcVideoOff") {
 		// remote video has ended
 		if(!gentle) console.log("rtcVideoOff");
-		//remoteVideoFrame.pause();
-		//remoteVideoFrame.currentTime = 0;
-		//remoteVideoFrame.srcObject = null;
 		remoteVideoHide();
-		//remoteStream = null;
 
 	} else {
 		console.log('# ignore incom cmd',cmd);
