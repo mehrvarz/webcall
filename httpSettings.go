@@ -151,9 +151,17 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		case "storeMissedCalls":
 			fmt.Printf("/setsettings (%s) new storeMissedCalls (%s) old:%v\n",calleeID,val,dbUser.StoreMissedCalls)
 			if(val=="true") {
-				dbUser.StoreMissedCalls = true
+				if !dbUser.StoreMissedCalls {
+					dbUser.StoreMissedCalls = true
+					// TODO show missedCalls on callee web client
+					// c.hub.CalleeClient.Write([]byte("missedCalls|"+TODO)) // need websocket
+				}
 			} else {
-				dbUser.StoreMissedCalls = false
+				if dbUser.StoreMissedCalls {
+					dbUser.StoreMissedCalls = false
+					// TODO hide missedCalls on callee web client
+					// c.hub.CalleeClient.Write([]byte("missedCalls|")) // need websocket
+				}
 			}
 		case "webPushSubscription1":
 			newVal,err := url.QueryUnescape(val)
