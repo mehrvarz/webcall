@@ -69,6 +69,7 @@ var fileReceiveStartDate=0;
 var fileReceiveSinceStartSecs=0;
 var fileSendAbort=false;
 var fileReceiveAbort=false;
+var needToStoreMissedCall="";
 
 var extMessage = function(e) {
 	var data = e.data.split(':')
@@ -100,6 +101,9 @@ window.onload = function() {
 	}
 
 	window.onhashchange = hashchange;
+	window.onload = goodby;
+	window.onbeforeunload = goodby;
+	needToStoreMissedCall = "";
 
 	let id = getUrlParams("id");
 	if(typeof id!=="undefined" && id!="") {
@@ -432,7 +436,7 @@ function checkServerMode(callback) {
 		// normal mode
 		callback(0);
 	}, function(errString,err) {
-		console.log('xhr error',errString);
+		console.log('# xhr error',errString);
 		callback(2);
 	});
 }
@@ -678,6 +682,9 @@ function calleeOfflineAction() {
 				var msg = calleeName+" is currently not online.<br><br>"+
 					"We can try to get "+calleeName+" on the phone. Can you wait a few minutes while we try to establish a connection?<br><br><a onclick='confirmNotifyConnect()'>Yes, please try</a><br><br><a href='..'>No, I have to go</a>";
 				showStatus(msg,-1);
+				needToStoreMissedCall = calleeID+"|"+callerName+"|"+callerId;
+				// needToStoreMissedCall will be cleared by a successful call
+				// if it is still set in goodby(), we will ask server to store this as a missed call
 				return;
 			}
 			// calleeID can NOT be notified
@@ -692,6 +699,20 @@ function calleeOfflineAction() {
 	if(!gentle) console.log('calleeOfflineAction done');
 }
 
+function goodby() {
+	if(needToStoreMissedCall) {
+		if(!gentle) console.log('goodby needToStoreMissedCall',needToStoreMissedCall);
+		// tell server to store this as missed call
+		let api = apiPath+"/missedCall?id="+needToStoreMissedCall;
+		xhrTimeout = 3*1000;
+		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+			console.log('goodby /missedCall success',needToStoreMissedCall);
+		}, function(errString,err) {
+			console.log('# goodby xhr error',errString);
+		});
+	}
+}
+
 var calleeName = "";
 var confirmValue = "";
 var confirmWord = "123";
@@ -700,7 +721,7 @@ function confirmNotifyConnect() {
 	// offer caller to enter own name and ask to confirm with a specific word ("yes")
 	// using a form with two text fields
 
-	// TODO change confirmWord randomly
+	// TODO change confirmWord ("123") randomly
 
 	if(typeof callerName=="undefined") {
 		callerName = "";
@@ -723,7 +744,7 @@ function confirmNotifyConnect() {
 			}
 			confirmNotifyConnect();
 		}, function(errString,err) {
-			console.log('xhr error',errString);
+			console.log('# xhr error',errString);
 			confirmNotifyConnect();
 		});
 		return;
@@ -733,7 +754,7 @@ function confirmNotifyConnect() {
 	About to get `+calleeName+` on the phone.<br>
 	<form action="javascript:;" onsubmit="confirmNotifyConnect2(this)" style="max-width:550px;" id="confirmNotify">
 
-	<label for="nickname" style="display:inline-block; padding-bottom:4px;">Please enter your first name:</label><br>
+	<label for="nickname" style="display:inline-block; padding-bottom:4px;">Please enter your nickname:</label><br>
 	<input name="nickname" id="nickname" type="text" class="formtext" maxlength="25" value="`+callerName+`" autofocus required>
 	<span onclick="clearForm(0)" style="margin-left:5px; user-select:none;">X</span><br>
 	<br>
@@ -794,7 +815,11 @@ function confirmNotifyConnect2() {
 	if(callerId.length>10) {
 		callerId = callerName.substring(0,10);
 	}
-	notifyConnect(callerName,callerId);
+
+	// this short delay prevents "Form submission canceled because the form is not connected" in chrome 56+
+	setTimeout(function() {
+		notifyConnect(callerName,callerId);
+	},200);
 }
 
 function notifyConnect(callerName,callerId) {
@@ -814,12 +839,13 @@ function notifyConnect(callerName,callerId) {
 			dialButton.click();
 			return;
 		}
-		if(!gentle) console.log('callee could not be reached');
-		showStatus("Sorry! I was not able to reach "+calleeID+".<br>Please try again a little later.",-1);
+		if(!gentle) console.log('callee could not be reached (%s)',xhr.responseText);
+		showStatus("Sorry! I was unable to reach "+calleeID+".<br>Please try again a little later.",-1);
+		needToStoreMissedCall = "";
 	}, function(errString,errcode) {
 		//errorAction(errString)
 		if(!gentle) console.log('callee could not be reached. xhr err',errString,errcode);
-		showStatus("Sorry! I was not able to reach "+calleeID+".<br>Please try again a little later.",-1);
+		showStatus("Sorry! I was unable to reach "+calleeID+".<br>Please try again a little later.",-1);
 	});
 }
 
@@ -1112,6 +1138,7 @@ function signalingCommand(message) {
 				vsendButton.style.display = "inline-block";
 			}
 			mediaConnectStartDate = Date.now();
+			needToStoreMissedCall = false;
 
 			if(fileselectLabel!=null && dataChannel!=null && dataChannel.readyState=="open") {
 				if(localCandidateType!="relay" && remoteCandidateType!="relay") {
@@ -1248,13 +1275,7 @@ function dial() {
 	showStatus(connectingText,-1);
 	otherUA = "";
 	dialing = true;
-/*
-	rtcConnect = false;
-	mediaConnect = false;
-	if(vsendButton) {
-		vsendButton.style.display = "none";
-	}
-*/
+
 	if(fileselectLabel!=null) {
 		fileselectLabel.style.display = "none";
 		progressSendElement.style.display = "none";
