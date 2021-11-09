@@ -595,7 +595,7 @@ function calleeOnlineAction(from) {
 							"and then immediately played back to you (green led).",-1);
 			} else {
 				if(!singlebutton) {
-					showStatus( "Enter a greeting message before you hit Call (optional):",-1)
+					showStatus( "You can enter a greeting message before you hit Call (optional):",-1)
 					msgbox.style.display = "block";
 					if(!gentle) console.log('callerName',callerName);
 					if(typeof callerName!=="undefined" && callerName!="") {
