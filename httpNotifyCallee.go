@@ -212,7 +212,6 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 				if err != nil {
 					fmt.Printf("# /notifyCallee (%s) failed to store dbMissedCalls %v\n", urlID, err)
 				}
-tmtmtm
 			}
 			// there is no need for the caller to wait, bc we could not send a push notification
 			// by NOT responding "ok" we tell the caller that we were NOT able to reach the callee
