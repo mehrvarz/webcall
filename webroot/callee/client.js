@@ -1047,7 +1047,6 @@ function remoteVideoShow() {
 	if(!gentle) console.log("remoteVideoShow DivHeight",remoteVideoDivHeight);
 	remoteVideoDiv.style.height = ""+remoteVideoDivHeight+"px"; // will be transitioned
 	remoteVideoDiv.addEventListener('transitionend', remoteVideoDivOnVisible) // switch to height auto
-
 	remoteVideoLabel.innerHTML = "remote cam";
 	remoteVideoShowing = true;
 }
@@ -1055,13 +1054,12 @@ function remoteVideoShow() {
 function remoteVideoHide() {
 	if(remoteVideoShowing) {
 		let remoteVideoDivHeight = parseFloat(getComputedStyle(remoteVideoFrame).width)/16*9;
-		if(!gentle) console.log("remoteVideoHide DivHeight",remoteVideoDivHeight);
 		remoteVideoDiv.style.height = remoteVideoDivHeight+"px"; // height from auto to fixed
+		if(!gentle) console.log("remoteVideoHide DivHeight",remoteVideoDivHeight);
+		remoteVideoLabel.innerHTML = "";
 		setTimeout(function() { // wait for fixed height (timer works better than requestAnimationFrame on andr)
 			remoteVideoDiv.style.height = "0px"; // will be transitioned
-		},100);
-
-		remoteVideoLabel.innerHTML = "";
+		},200);
 		remoteVideoShowing = false;
 	}
 }
