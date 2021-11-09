@@ -153,14 +153,37 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 			if(val=="true") {
 				if !dbUser.StoreMissedCalls {
 					dbUser.StoreMissedCalls = true
-					// TODO show missedCalls on callee web client
-					// c.hub.CalleeClient.Write([]byte("missedCalls|"+TODO)) // need websocket
+					// show missedCalls on callee web client
+					hubMapMutex.RLock()
+					hub := hubMap[calleeID]
+					hubMapMutex.RUnlock()
+					if hub!=nil && hub.CalleeClient!=nil {
+						var callsWhileInAbsence []CallerInfo
+						err := kvCalls.Get(dbMissedCalls,calleeID,&callsWhileInAbsence)
+						if err!=nil {
+							fmt.Printf("# /setsettings (%s) storeMissedCalls kvCalls.Get fail err=%v\n",
+								calleeID, err)
+						} else {
+							json, err := json.Marshal(callsWhileInAbsence)
+							if err != nil {
+								fmt.Printf("# /setsettings (%s) storeMissedCalls json.Marshal fail err=%v\n",
+									calleeID, err)
+							} else {
+								hub.CalleeClient.Write([]byte("missedCalls|"+string(json)))
+							}
+						}
+					}
 				}
 			} else {
 				if dbUser.StoreMissedCalls {
 					dbUser.StoreMissedCalls = false
-					// TODO hide missedCalls on callee web client
-					// c.hub.CalleeClient.Write([]byte("missedCalls|")) // need websocket
+					// hide missedCalls on callee web client
+					hubMapMutex.RLock()
+					hub := hubMap[calleeID]
+					hubMapMutex.RUnlock()
+					if hub!=nil && hub.CalleeClient!=nil {
+						hub.CalleeClient.Write([]byte("missedCalls|")) // need websocket
+					}
 				}
 			}
 		case "webPushSubscription1":
