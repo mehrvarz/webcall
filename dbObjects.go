@@ -22,8 +22,8 @@ type DbUser struct {
 	ConnectedToPeerSecs int // incremented by wsHub processTimeValues()
 	LocalP2pCounter int     // incremented by wsHub processTimeValues()
 	RemoteP2pCounter int    // incremented by wsHub processTimeValues()
-	StoreContacts bool
-	StoreMissedCalls bool
+	StoreContacts bool      // TODO could also be encoded in Int2
+	StoreMissedCalls bool	// TODO could also be encoded in Int2
 }
 
 type NotifTweet struct { // key = TweetID string

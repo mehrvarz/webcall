@@ -117,6 +117,7 @@ type wsClientDataType struct {
 	dbUser DbUser
 	calleeID string
 }
+// wsClientMap[wsid] contains wsClientDataType at the moment of a callee login
 var wsClientMap map[uint64]wsClientDataType
 var wsClientMutex sync.RWMutex
 var pingSentCounter int64 = 0

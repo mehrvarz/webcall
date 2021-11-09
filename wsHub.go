@@ -18,7 +18,7 @@ type Hub struct {
 	calleeHostStr string // set by the callee; will be handed over to the caller via /online
 
 	CalleeClient *WsClient
-	calleeID string	// this is the global id (unlike CalleeClient.calleeID)
+	GlobalCalleeID string	// this is the global id (unlike CalleeClient.calleeID)
 	CalleeLogin atombool.AtomBool // connected to signaling server
 
 	CallerClient *WsClient
@@ -46,7 +46,7 @@ type Hub struct {
 func newHub(calleeID string, maxRingSecs int, maxTalkSecsIfNoP2p int, startTime int64) *Hub {
 	return &Hub{
 		registrationStartTime:  startTime,
-		calleeID:               calleeID,
+		GlobalCalleeID:         calleeID, // we use CalleeClient.calleeID everywhere now
 		maxRingSecs:            maxRingSecs,
 		maxTalkSecsIfNoP2p:     maxTalkSecsIfNoP2p,
 		dontCancel:             false,
@@ -62,8 +62,6 @@ func (h *Hub) setDeadline(secs int, comment string) {
 		}
 		h.dontCancel = true
 		h.timer.Stop()
-		//time.Sleep(100 * time.Millisecond)
-		//h.timer = nil
 	}
 
 	if(secs>0) {
@@ -130,7 +128,7 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 	if client.isCallee && !client.clearOnCloseDone {
 		if logWantedFor("hub") {
 			fmt.Printf("hub client unregister (%s) isCallee=%v (%s)\n",
-				client.hub.calleeID, client.isCallee, comment)
+				client.calleeID, client.isCallee, comment)
 		}
 		h.setDeadline(-1,"doUnregister "+comment)
 		h.HubMutex.Lock()
@@ -165,7 +163,7 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 
 	if logWantedFor("hub") {
 		fmt.Printf("hub client unregister done %s isCallee=%v %s\n",
-			client.hub.calleeID, client.isCallee, comment)
+			client.calleeID, client.isCallee, comment)
 	}
 }
 

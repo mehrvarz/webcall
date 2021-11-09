@@ -107,7 +107,11 @@ func locSearchCallerIpInHubMap(ip string) (bool,string,error) {
 			if logWantedFor("ipinhub") {
 				fmt.Printf("SearchCallerIpInHubMap ip=%s found\n",ip)
 			}
-			return true,hub.calleeID,nil
+			//return true,hub.GlobalCalleeID,nil
+			if hub.CalleeClient!=nil {
+				return true,hub.CalleeClient.calleeID,nil
+			}
+			return true,"",nil
 		}
 	}
 	if logWantedFor("ipinhub") {

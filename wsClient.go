@@ -44,7 +44,6 @@ type WsClient struct {
 	calleeID string
 	clearOnCloseDone bool
 	connType string
-	dbUser DbUser
 }
 
 func serveWs(w http.ResponseWriter, r *http.Request) {
@@ -80,24 +79,24 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	var wsClientID64 uint64 = 0
 	var wsClientData wsClientDataType
 	url_arg_array, ok := r.URL.Query()["wsid"]
-	if ok && len(url_arg_array[0]) > 0 {
-		wsClientIDstr := strings.ToLower(url_arg_array[0])
-		wsClientID64, _ = strconv.ParseUint(wsClientIDstr, 10, 64)
-		if wsClientID64<=0 {
-			// not valid
-			fmt.Printf("# serveWs upgrade error wsCliID=%d rip=%s url=%s\n",
-				wsClientID64, remoteAddr, r.URL.String())
-			return
-		}
-		var ok bool 
-		wsClientMutex.RLock()
-		wsClientData,ok = wsClientMap[wsClientID64]
-		wsClientMutex.RUnlock()
-		if !ok {
-			fmt.Printf("# serveWs upgrade error wsCliID=%d does not exist rip=%s url=%s\n",
-				wsClientID64, remoteAddr, r.URL.String())
-			return
-		}
+	if !ok || len(url_arg_array[0]) <= 0{
+		return
+	}
+	wsClientIDstr := strings.ToLower(url_arg_array[0])
+	wsClientID64, _ = strconv.ParseUint(wsClientIDstr, 10, 64)
+	if wsClientID64<=0 {
+		// not valid
+		fmt.Printf("# serveWs upgrade error wsCliID=%d rip=%s url=%s\n",
+			wsClientID64, remoteAddr, r.URL.String())
+		return
+	}
+	wsClientMutex.RLock()
+	wsClientData,ok = wsClientMap[wsClientID64]
+	wsClientMutex.RUnlock()
+	if !ok {
+		fmt.Printf("# serveWs upgrade error wsCliID=%d does not exist rip=%s url=%s\n",
+			wsClientID64, remoteAddr, r.URL.String())
+		return
 	}
 
 	calleeHostStr := ""
@@ -130,6 +129,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	keepAliveMgr.SetPingDeadline(wsConn, pingPeriod)
 
 	client := &WsClient{wsConn:wsConn}
+	client.calleeID = wsClientData.calleeID // this is the local ID
 	if tls {
 		client.connType = "serveWss"
 	} else {
@@ -152,7 +152,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				if logWantedFor("wsreceive") {
 					max := n; if max>10 { max = 10 }
 					fmt.Printf("%s received n=%d isCallee=%v calleeID=(%s) (%s)\n",
-						client.connType, n, client.isCallee, client.hub.calleeID, data[:max])
+						client.connType, n, client.isCallee, client.calleeID, data[:max])
 				}
 				client.receiveProcess(data)
 			}
@@ -175,10 +175,10 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			hub.HubMutex.RLock()
 			if err!=nil {
 				fmt.Printf("%s onclose %s isCallee=%v %d err=%v\n",
-					client.connType, hub.calleeID, client.isCallee, atomic.LoadInt64(&OnCloseCount), err)
+					client.connType, client.calleeID, client.isCallee, atomic.LoadInt64(&OnCloseCount), err)
 			} else {
 				fmt.Printf("%s onclose %s isCallee=%v %d noerr\n",
-					client.connType, hub.calleeID, client.isCallee, atomic.LoadInt64(&OnCloseCount))
+					client.connType, client.calleeID, client.isCallee, atomic.LoadInt64(&OnCloseCount))
 			}
 			hub.HubMutex.RUnlock()
 		}
@@ -195,25 +195,23 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	client.RemoteAddr = remoteAddr
 	client.userAgent = r.UserAgent()
 	client.authenticationShown = false // being used to make sure 'TURN auth SUCCESS' is only shown 1x per client
-	client.calleeID = wsClientData.calleeID // this is the local ID
 
 	if hub.CalleeClient==nil {
 		// callee client (1st client)
 		if logWantedFor("wsclient") {
 			fmt.Printf("%s con callee id=%s wsCliID=%d rip=%s\n", client.connType,
-				hub.calleeID, wsClientID64, client.RemoteAddr)
+				client.calleeID, wsClientID64, client.RemoteAddr)
 		}
 		client.isCallee = true
 		client.isHiddenCallee = wsClientData.dbUser.Int2&1!=0
 		client.unHiddenForCaller = ""
-		client.dbUser = wsClientData.dbUser
 
 		hub.WsClientID = wsClientID64
 		hub.calleeHostStr = calleeHostStr
 		hub.CalleeClient = client
 		hub.ServiceStartTime = time.Now().Unix()
 		hub.ConnectedToPeerSecs = 0
-		if !strings.HasPrefix(hub.calleeID,"random") {
+		if !strings.HasPrefix(client.calleeID,"random") {
 			// get values related to talk- and service-time for this callee from the db
 			// so that 1s-ticker can calculate the live remaining time
 			hub.ServiceStartTime = wsClientData.dbEntry.StartTime // race?
@@ -225,11 +223,11 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		// caller client (2nd client)
 		if logWantedFor("wsclient") {
 			fmt.Printf("%s con caller id=%s wsCliID=%d rip=%s\n",
-				client.connType, hub.calleeID, wsClientID64, client.RemoteAddr)
+				client.connType, client.calleeID, wsClientID64, client.RemoteAddr)
 		}
 
 		hub.CallerClient = client
-		err := StoreCallerIpInHubMap(hub.calleeID,wsConn.RemoteAddr().String(), false)
+		err := StoreCallerIpInHubMap(client.calleeID,wsConn.RemoteAddr().String(), false)
 		if err!=nil {
 			fmt.Printf("# %s StoreCallerIpInHubMap err=%v\n", client.connType, err)
 		}
@@ -272,7 +270,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 		c.hub.HubMutex.Unlock()
 		if logWantedFor("wscall") {
 			fmt.Printf("%s connect %s callee=%v wsID=%d rip=%s\n",
-				c.connType, c.hub.calleeID, c.isCallee, c.hub.WsClientID, c.RemoteAddr)
+				c.connType, c.calleeID, c.isCallee, c.hub.WsClientID, c.RemoteAddr)
 		}
 		// deliver the callee client version number
 		readConfigLock.RLock()
@@ -308,13 +306,18 @@ func (c *WsClient) receiveProcess(message []byte) {
 				fmt.Printf("# %s (id=%s) failed to store dbWaitingCaller\n",c.connType,c.calleeID)
 			}
 		}
+
+		// read dbUser for StoreMissedCalls flag
 		var missedCallsSlice []CallerInfo
-		if(c.dbUser.StoreMissedCalls) {
+		userKey := c.calleeID + "_" + strconv.FormatInt(int64(c.hub.registrationStartTime),10)
+		var dbUser DbUser
+		err = kvMain.Get(dbUserBucket, userKey, &dbUser)
+		if err!=nil {
+			fmt.Printf("# %s (id=%s) failed to get dbUser\n",c.connType,c.calleeID)
+		} else if(dbUser.StoreMissedCalls) {
 			err = kvCalls.Get(dbMissedCalls,c.calleeID,&missedCallsSlice)
 			if err!=nil {
-				// we can ignore this
-				//fmt.Printf("# %s (id=%s) failed to read dbMissedCalls %v\n",
-				//	c.connType, c.calleeID, err)
+				missedCallsSlice = nil
 			}
 		}
 		//fmt.Printf("%s waitingCallerToCallee\n",c.connType)
@@ -378,16 +381,15 @@ func (c *WsClient) receiveProcess(message []byte) {
 		}
 
 		// forward state of c.isHiddenCallee to globalHubMap
-		err := SetCalleeHiddenState(c.hub.calleeID, c.isHiddenCallee)
+		err := SetCalleeHiddenState(c.calleeID, c.isHiddenCallee)
 		if err != nil {
-			fmt.Printf("# serveWs SetCalleeHiddenState id=%s %v err=%v\n",c.hub.calleeID,c.isHiddenCallee,err)
+			fmt.Printf("# serveWs SetCalleeHiddenState id=%s %v err=%v\n",c.calleeID,c.isHiddenCallee,err)
 		}
 
+		// read dbUser for isHiddenCallee flag
 		// store dbUser after set/clear isHiddenCallee in dbUser.Int2&1
+		userKey := c.calleeID + "_" + strconv.FormatInt(int64(c.hub.registrationStartTime),10)
 		var dbUser DbUser
-		//userKey := fmt.Sprintf("%s_%d",c.hub.calleeID,c.hub.registrationStartTime)
-		userKey := c.hub.calleeID + "_" + strconv.FormatInt(int64(c.hub.registrationStartTime),10)
-
 		err = kvMain.Get(dbUserBucket, userKey, &dbUser)
 		if err!=nil {
 			fmt.Printf("# serveWs calleeHidden db=%s bucket=%s getX key=%v err=%v\n",
@@ -399,7 +401,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 				dbUser.Int2 &= ^1
 			}
 			fmt.Printf("%s calleeHidden store dbUser calleeID=%s isHiddenCallee=%v (%d)\n",
-				c.connType, c.hub.calleeID, c.isHiddenCallee, dbUser.Int2)
+				c.connType, c.calleeID, c.isHiddenCallee, dbUser.Int2)
 			err := kvMain.Put(dbUserBucket, userKey, dbUser, true) // skipConfirm
 			if err!=nil {
 				fmt.Printf("# serveWs calleeHidden db=%s bucket=%s put key=%v err=%v\n",
@@ -422,17 +424,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 		}
 		return
 	}
-/*
-	if cmd=="enableVideo" {
-		fmt.Printf("%s enableVideo from %s (%s)\n",c.connType,c.RemoteAddr,payload)
-		if(payload=="true") {
-			c.videoEnabled = true
-		} else {
-			c.videoEnabled = false
-		}
-		return
-	}
-*/
+
 	if cmd=="pickupWaitingCaller" {
 		// for callee only
 		// payload = ip:port
@@ -447,42 +439,47 @@ func (c *WsClient) receiveProcess(message []byte) {
 		// for callee only: payload = ip:port:callTime
 		callerAddrPortPlusCallTime := payload
 		fmt.Printf("%s deleteCallWhileInAbsence from %s callee=%s (payload=%s)\n",
-			c.connType, c.RemoteAddr, c.hub.calleeID, callerAddrPortPlusCallTime)
+			c.connType, c.RemoteAddr, c.calleeID, callerAddrPortPlusCallTime)
 
-		// remove this call from dbMissedCalls for c.hub.calleeID
-		// first: load dbMissedCalls for c.hub.calleeID
-		var callsWhileInAbsence []CallerInfo
-		if(c.dbUser.StoreMissedCalls) {
-			err := kvCalls.Get(dbMissedCalls,c.hub.calleeID,&callsWhileInAbsence)
+		// remove this call from dbMissedCalls for c.calleeID
+		// first: load dbMissedCalls for c.calleeID
+		var missedCallsSlice []CallerInfo
+		userKey := c.calleeID + "_" + strconv.FormatInt(int64(c.hub.registrationStartTime),10)
+		var dbUser DbUser
+		err := kvMain.Get(dbUserBucket, userKey, &dbUser)
+		if err!=nil {
+			fmt.Printf("# %s (id=%s) failed to get dbUser\n",c.connType,c.calleeID)
+		} else if(dbUser.StoreMissedCalls) {
+			err = kvCalls.Get(dbMissedCalls,c.calleeID,&missedCallsSlice)
 			if err!=nil {
-				fmt.Printf("# serveWs deleteCallWhileInAbsence (%s) failed to read dbMissedCalls\n",c.hub.calleeID)
+				missedCallsSlice = nil
+				fmt.Printf("# serveWs deleteCallWhileInAbsence (%s) failed to read dbMissedCalls\n",c.calleeID)
 			}
 		}
-		if callsWhileInAbsence!=nil {
+		if missedCallsSlice!=nil {
 			//fmt.Printf("serveWs deleteCallWhileInAbsence (%s) found %d entries\n",
-			//	c.hub.calleeID, len(callsWhileInAbsence))
+			//	c.calleeID, len(missedCallsSlice))
 			// search for callerIP:port + CallTime == callerAddrPortPlusCallTime
-			for idx := range callsWhileInAbsence {
-				//id := fmt.Sprintf("%s_%d",callsWhileInAbsence[idx].AddrPort,callsWhileInAbsence[idx].CallTime)
-				id := callsWhileInAbsence[idx].AddrPort + "_" +
-					 strconv.FormatInt(int64(callsWhileInAbsence[idx].CallTime),10)
+			for idx := range missedCallsSlice {
+				//id := fmt.Sprintf("%s_%d",missedCallsSlice[idx].AddrPort,missedCallsSlice[idx].CallTime)
+				id := missedCallsSlice[idx].AddrPort + "_" +
+					 strconv.FormatInt(int64(missedCallsSlice[idx].CallTime),10)
 				//fmt.Printf("deleteCallWhileInAbsence %s compare (%s==%s)\n", callerAddrPortPlusCallTime, id)
 				if id == callerAddrPortPlusCallTime {
 					//fmt.Printf("serveWs deleteCallWhileInAbsence idx=%d\n",idx)
-					callsWhileInAbsence = append(callsWhileInAbsence[:idx], callsWhileInAbsence[idx+1:]...)
-					// store modified dbMissedCalls for c.hub.calleeID
-					err := kvCalls.Put(dbMissedCalls, c.hub.calleeID, callsWhileInAbsence, false)
+					missedCallsSlice = append(missedCallsSlice[:idx], missedCallsSlice[idx+1:]...)
+					// store modified dbMissedCalls for c.calleeID
+					err := kvCalls.Put(dbMissedCalls, c.calleeID, missedCallsSlice, false)
 					if err!=nil {
 						fmt.Printf("# serveWs deleteCallWhileInAbsence (%s) fail store dbMissedCalls\n",
-							c.hub.calleeID)
+							c.calleeID)
 					}
-					// send modified callsWhileInAbsence to callee
-					json, err := json.Marshal(callsWhileInAbsence)
+					// send modified missedCallsSlice to callee
+					json, err := json.Marshal(missedCallsSlice)
 					if err != nil {
-						fmt.Printf("# serveWs deleteCallWhileInAbsence (%s) failed json.Marshal\n",
-							c.hub.calleeID)
+						fmt.Printf("# serveWs deleteCallWhileInAbsence (%s) failed json.Marshal\n", c.calleeID)
 					} else {
-						//fmt.Printf("deleteCallWhileInAbsence send callsWhileInAbsence %s\n", c.hub.calleeID)
+						//fmt.Printf("deleteCallWhileInAbsence send missedCallsSlice %s\n", c.calleeID)
 						c.hub.CalleeClient.Write([]byte("missedCalls|"+string(json)))
 					}
 					break
@@ -506,7 +503,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 		if c.hub.CallerClient!=nil {
 			// deliver "pickup" to the caller
 			if logWantedFor("wscall") {
-				fmt.Printf("%s forward pickup to caller %s\n", c.connType, c.hub.calleeID)
+				fmt.Printf("%s forward pickup to caller %s\n", c.connType, c.calleeID)
 			}
 			c.hub.CallerClient.Write(message)
 		}
@@ -541,7 +538,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 	}
 
 	if cmd=="log" {
-		fmt.Printf("%s log %s %s rip=%s\n", c.connType, payload, c.hub.calleeID, c.RemoteAddr)
+		fmt.Printf("%s log %s %s rip=%s\n", c.connType, payload, c.calleeID, c.RemoteAddr)
 		tok := strings.Split(payload, " ")
 		if len(tok)>=3 {
 			// callee Connected p2p/p2p port=10001 id=3949620073
@@ -577,13 +574,13 @@ func (c *WsClient) receiveProcess(message []byte) {
 							}
 							if myDisconCalleeOnPeerConnected {
 								fmt.Printf("%s disconCalleeOnPeerConnected %s rip=%s\n",
-									c.connType, c.hub.calleeID, c.RemoteAddr)
+									c.connType, c.calleeID, c.RemoteAddr)
 								c.hub.CalleeClient.Close("disconCalleeOnPeerConnected")
 							}
 							if myDisconCallerOnPeerConnected {
 								if c.hub.CallerClient != nil {
 									fmt.Printf("%s disconCallerOnPeerConnected %s rip=%s\n",
-										c.connType, c.hub.calleeID, c.RemoteAddr)
+										c.connType, c.calleeID, c.RemoteAddr)
 									c.hub.CallerClient.Close("disconCallerOnPeerConnected")
 								}
 							}
@@ -637,12 +634,12 @@ func (c *WsClient) Write(b []byte) error {
 	max := len(b); if max>22 { max = 22 }
 	if !c.isOnline.Get() {
 		//fmt.Printf("# %s Write (%s) to %s callee=%v peerCon=%v NOT ONLINE\n",
-		//	c.connType, b[:max], c.hub.calleeID, c.isCallee, c.isConnectedToPeer.Get())
+		//	c.connType, b[:max], c.calleeID, c.isCallee, c.isConnectedToPeer.Get())
 		return ErrWriteNotConnected
 	}
 	if logWantedFor("wswrite") {
 		fmt.Printf("%s Write (%s) to %s callee=%v peerCon=%v\n",
-			c.connType, b[:max], c.hub.calleeID, c.isCallee, c.isConnectedToPeer.Get())
+			c.connType, b[:max], c.calleeID, c.isCallee, c.isConnectedToPeer.Get())
 	}
 
 	c.wsConn.WriteMessage(websocket.TextMessage, b)
@@ -656,7 +653,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 	// or bc callee has unregistered
 	c.hub.setDeadline(0,comment)
 	if c.isConnectedToPeer.Get() {
-		fmt.Printf("%s peerConHasEnded %s rip=%s (%s)\n", c.connType, c.hub.calleeID, c.RemoteAddr, comment)
+		fmt.Printf("%s peerConHasEnded %s rip=%s (%s)\n", c.connType, c.calleeID, c.RemoteAddr, comment)
 		c.isConnectedToPeer.Set(false)
 		if c.isCallee {
 			if c.hub.CallerClient!=nil {
@@ -677,17 +674,15 @@ func (c *WsClient) peerConHasEnded(comment string) {
 	}
 	c.hub.HubMutex.Unlock()
 
-	err := StoreCallerIpInHubMap(c.hub.calleeID, "", false)
+	err := StoreCallerIpInHubMap(c.calleeID, "", false)
 	if err!=nil {
 		// err "key not found" means: callee has already signed off - can be ignored
 		if strings.Index(err.Error(),"key not found")<0 {
-			fmt.Printf("# %s peerConHasEnded %s clear callerIpInHub err=%v\n",
-				c.connType, c.hub.calleeID, err)
+			fmt.Printf("# %s peerConHasEnded %s clear callerIpInHub err=%v\n", c.connType, c.calleeID, err)
 		}
 	} else {
 		if logWantedFor("hub") {
-			fmt.Printf("%s peerConHasEnded %s clear callerIpInHub no err\n",
-				c.connType, c.hub.calleeID)
+			fmt.Printf("%s peerConHasEnded %s clear callerIpInHub no err\n", c.connType, c.calleeID)
 		}
 	}
 }
@@ -695,7 +690,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 func (c *WsClient) Close(reason string) {
 	if c.isOnline.Get() {
 		if logWantedFor("wsclose") {
-			fmt.Printf("wsclient Close %s callee=%v %s\n", c.hub.calleeID, c.isCallee, reason)
+			fmt.Printf("wsclient Close %s callee=%v %s\n", c.calleeID, c.isCallee, reason)
 		}
 		c.wsConn.WriteMessage(websocket.CloseMessage, nil)
 		c.wsConn.Close()
