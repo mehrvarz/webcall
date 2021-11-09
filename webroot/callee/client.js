@@ -910,11 +910,13 @@ function connectLocalVideo(forceOff) {
 
 var vpauseTimer = null;
 function vmonitor() {
-	if(localVideoPausedElement)
+	if(localVideoPausedElement) {
 		localVideoPausedElement.style.visibility = "hidden";
+	}
 	if(vmonitorButton) {
 		vmonitorButton.style.color = "#ff0";
 	}
+	localVideoFrame.style.opacity = 1;
 	if(!localStream) {
 		// re-enable paused video and microphone
 		if(!gentle) console.log("vmonitor !localStream: re-enable");
@@ -949,6 +951,7 @@ function vpauseByTimer() {
 function vpause() {
 	if(!gentle) console.log("vpause");
 	localVideoFrame.pause();
+	localVideoFrame.style.opacity = 0.4;
 	if(vmonitorButton) {
 		vmonitorButton.style.color = "#fff";
 	}
