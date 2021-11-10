@@ -1149,7 +1149,9 @@ function hashchange() {
 
 function showStatus(msg,timeoutMs) {
 	// TODO msg may contain html code which we might want to filter out for console.log()
-	if(!gentle) console.log('showStatus: %s',msg);
+	if(msg!="") {
+		if(!gentle) console.log('showStatus: %s',msg);
+	}
 	if(!singlebutton) {
 		let sleepMs = 3000;
 		if(typeof timeoutMs!=="undefined") {
