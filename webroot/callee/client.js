@@ -145,102 +145,116 @@ if(fileSelectElement!=null) {
 		const files = fileSelectElement.files;
 		const file = files.item(0);
 		if(file==null) {
-			console.log("fileSelect file==null");
-			return;
-		}
-		if(file.name=="") {
-			console.log("fileSelect file.name is empty");
-			return;
-		}
-		if(file.size<=0) {
-			console.log("fileSelect file.size <= 0");
+			showStatus("error: file==null",-1);
 			return;
 		}
 		if(dataChannel==null || dataChannel.readyState!="open") {
-			console.log("fileSelect no dataChannel");
+			showStatus("error: no dataChannel",-1);
 			return;
 		}
-		console.log("fileSelect: "+file.name, file.size, file.type, file.lastModified);
-		dataChannel.send("file|"+file.name+","+file.size+","+file.type+","+file.lastModified);
-		fileselectLabel.style.display = "none";
-		showStatus("",-1);
-
-		const chunkSize = 16*1024;
-		let fileReader = new FileReader();
-		let offset = 0;
-		let fileSendStartDate = Date.now();
-		let fileSendLastSinceStartSecs = 0;
-		fileSendAbort = false;
-		progressSendBar.max = file.size;
-		progressSendElement.style.display = "block";
-		progressSendLabel.innerHTML = "Sending: "+file.name.substring(0,25);
-		fileReader.addEventListener('error', error => console.error('Error reading file:', error));
-		fileReader.addEventListener('abort', event => console.log('File reading aborted:', event));
-		fileReader.addEventListener('load', e => {
-			if(fileSendAbort) {
-				console.log('file send user abort');
-				fileReader.abort();
-				return;
-			}
-			if(dataChannel==null || dataChannel.readyState!="open") {
-				console.log('file send no dataChannel');
-				fileReader.abort();
-				return;
-			}
-			dataChannel.send(e.target.result);
-			offset += e.target.result.byteLength;
-			//if(!gentle) console.log('file send', offset, file.size, dataChannel.bufferedAmount);
-			progressSendBar.value = offset;
-			let sinceStartSecs = Math.floor((Date.now() - fileSendStartDate + 500)/1000);
-			if(sinceStartSecs!=fileSendLastSinceStartSecs && sinceStartSecs!=0) {
-				let kbytesPerSec = Math.floor(offset/1000/sinceStartSecs);
-				progressSendLabel.innerHTML = "sending '"+file.name.substring(0,22)+"' "+kbytesPerSec+" KB/s";
-				fileSendLastSinceStartSecs = sinceStartSecs;
-			}
-			if (offset < file.size) {
-				readSlice(offset);
+		if(file.name=="") {
+			showStatus("error: empty file.name",-1);
+			return;
+		}
+		if(file.size<=0) {
+			showStatus("error: file.size <= 0",-1);
+			return;
+		}
+		if(file.size>=500*1024*1024) {
+			console.log("fileSelect warn file.size %d > 500MB",file.size);
+			if(confirm("The selected file may be too big for the receiving device. "+
+					   "Are you sure you want to send it?")) {
+				sendFile(file);
 			} else {
-				let sendComplete = function() {
-					if(dataChannel!=null && dataChannel.bufferedAmount > 0) {
-						console.log('file send flushing buffered...');
-						setTimeout(sendComplete,200);
-						return;
-					}
-					console.log('file send complete', file.size);
-					offset = 0;
-					progressSendElement.style.display = "none";
-					showStatus("sent '"+file.name.substring(0,25)+"' "+Math.floor(file.size/1000)+" KB",-1);
-					if(mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
-						if(localCandidateType!="relay" && remoteCandidateType!="relay") {
-							fileselectLabel.style.display = "inline-block";
-						}
-					}
-				};
-				sendComplete();
+				console.log("fileSelect transfer aborted by user");
 			}
-		});
-		const readSlice = o => {
-			if(fileSendAbort) {
-				console.log('file send user abort');
-				fileReader.abort();
-				return;
-			}
-			if(dataChannel==null || dataChannel.readyState!="open") {
-				console.log('file send abort on dataChannel');
-				return;
-			}
-			if(dataChannel.bufferedAmount > 10*chunkSize) {
-				// file send delay
-				setTimeout(function() {
-					readSlice(o);
-				},50);
-				return;
-			}
-			const slice = file.slice(offset, o + chunkSize);
-			fileReader.readAsArrayBuffer(slice);
-		};
-		readSlice(0);
+		} else {
+			sendFile(file);
+		}
 	});
+}
+
+function sendFile(file) {
+	console.log("fileSelect: "+file.name, file.size, file.type, file.lastModified);
+	dataChannel.send("file|"+file.name+","+file.size+","+file.type+","+file.lastModified);
+	fileselectLabel.style.display = "none";
+	showStatus("",-1);
+
+	const chunkSize = 16*1024;
+	let fileReader = new FileReader();
+	let offset = 0;
+	let fileSendStartDate = Date.now();
+	let fileSendLastSinceStartSecs = 0;
+	fileSendAbort = false;
+	progressSendBar.max = file.size;
+	progressSendElement.style.display = "block";
+	progressSendLabel.innerHTML = "Sending: "+file.name.substring(0,25);
+	fileReader.addEventListener('error', error => console.error('Error reading file:', error));
+	fileReader.addEventListener('abort', event => console.log('File reading aborted:', event));
+	fileReader.addEventListener('load', e => {
+		if(fileSendAbort) {
+			console.log('file send user abort');
+			fileReader.abort();
+			return;
+		}
+		if(dataChannel==null || dataChannel.readyState!="open") {
+			console.log('file send no dataChannel');
+			fileReader.abort();
+			return;
+		}
+		dataChannel.send(e.target.result);
+		offset += e.target.result.byteLength;
+		//if(!gentle) console.log('file send', offset, file.size, dataChannel.bufferedAmount);
+		progressSendBar.value = offset;
+		let sinceStartSecs = Math.floor((Date.now() - fileSendStartDate + 500)/1000);
+		if(sinceStartSecs!=fileSendLastSinceStartSecs && sinceStartSecs!=0) {
+			let kbytesPerSec = Math.floor(offset/1000/sinceStartSecs);
+			progressSendLabel.innerHTML = "sending '"+file.name.substring(0,22)+"' "+kbytesPerSec+" KB/s";
+			fileSendLastSinceStartSecs = sinceStartSecs;
+		}
+		if (offset < file.size) {
+			readSlice(offset);
+		} else {
+			let sendComplete = function() {
+				if(dataChannel!=null && dataChannel.bufferedAmount > 0) {
+					console.log('file send flushing buffered...');
+					setTimeout(sendComplete,200);
+					return;
+				}
+				console.log('file send complete', file.size);
+				offset = 0;
+				progressSendElement.style.display = "none";
+				showStatus("sent '"+file.name.substring(0,25)+"' "+Math.floor(file.size/1000)+" KB",-1);
+				if(mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
+					if(localCandidateType!="relay" && remoteCandidateType!="relay") {
+						fileselectLabel.style.display = "inline-block";
+					}
+				}
+			};
+			sendComplete();
+		}
+	});
+	const readSlice = o => {
+		if(fileSendAbort) {
+			console.log('file send user abort');
+			fileReader.abort();
+			return;
+		}
+		if(dataChannel==null || dataChannel.readyState!="open") {
+			console.log('file send abort on dataChannel');
+			return;
+		}
+		if(dataChannel.bufferedAmount > 10*chunkSize) {
+			// file send delay
+			setTimeout(function() {
+				readSlice(o);
+			},50);
+			return;
+		}
+		const slice = file.slice(offset, o + chunkSize);
+		fileReader.readAsArrayBuffer(slice);
+	};
+	readSlice(0);
 }
 
 var xhrTimeout = 30000;
@@ -1131,5 +1145,27 @@ function hashchange() {
 		}
 	}
 	hashcounter = newhashcounter;
+}
+
+function showStatus(msg,timeoutMs) {
+	if(!gentle) console.log('showStatus %s',msg);
+	if(!singlebutton) {
+		let sleepMs = 3000;
+		if(typeof timeoutMs!=="undefined") {
+			sleepMs = timeoutMs;
+		}
+		statusLine.style.display = "none";
+		statusLine.style.opacity = 0;
+		statusLine.innerHTML = msg;
+		statusLine.style.opacity = 1;
+		statusLine.style.display = "block";
+		if(msg!="" && sleepMs>=0) {
+			setTimeout(function(oldMsg) {
+				if(statusLine.innerHTML==oldMsg) {
+					statusLine.style.opacity = 0;
+				}
+			},sleepMs,msg);
+		}
+	}
 }
 

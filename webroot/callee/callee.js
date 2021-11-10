@@ -612,25 +612,6 @@ function gotStream2() {
 	}
 }
 
-function showStatus(msg,timeoutMs) {
-	let sleepMs = 3000;
-	if(typeof timeoutMs!=="undefined") {
-		sleepMs = timeoutMs;
-	}
-	statusLine.style.display = "none";
-	statusLine.style.opacity = 0;
-	statusLine.innerHTML = msg;
-	statusLine.style.opacity = 1;
-	statusLine.style.display = "block";
-	if(msg!="" && sleepMs>=0) {
-		setTimeout(function(oldMsg) {
-			if(statusLine.innerHTML==oldMsg) {
-				statusLine.style.opacity = 0;
-			}
-		},sleepMs,msg);
-	}
-}
-
 let wsAutoReconnecting = false;
 function delayedWsAutoReconnect(reconPauseSecs) {
 	// delayedWsAutoReconnect can only succeed if a previous login attemt was successful

@@ -1243,27 +1243,6 @@ function wsSend(message) {
 	}
 }
 
-function showStatus(msg,timeoutMs) {
-	//if(!gentle) console.log('showStatus(%s)',msg);
-	if(!singlebutton) {
-		let sleepMs = 3000;
-		if(typeof timeoutMs!=="undefined") {
-			sleepMs = timeoutMs;
-		}
-		statusLine.style.display = "none";
-		statusLine.innerHTML = msg;
-		statusLine.style.opacity = 1;
-		statusLine.style.display = "block";
-		if(msg!="" && sleepMs>=0) {
-			setTimeout(function(oldMsg) {
-				if(statusLine.innerHTML==oldMsg) {
-					statusLine.style.opacity = 0;
-				}
-			},sleepMs,msg);
-		}
-	}
-}
-
 let dialDate;
 function dial() {
 	if(!localStream) {
