@@ -181,7 +181,7 @@ func (c *Client) QueryFollowerById(id int) (UserDetail, []byte, error) {
 
 func (c *Client) SendTweet(msg string) ([]byte, error) {
 	requesURL := fmt.Sprintf("%s?status=%s", API_TWEET, url.QueryEscape(msg))
-	respdata, err := c.PostQuery(requesURL,"application/x-www-form-urlencoded")
+	respdata, err := c.PostQuery(requesURL,"") //"application/x-www-form-urlencoded")
 	//	fmt.Printf("SendTweet requesURL=(%v) response=[%s]\n",requesURL,respdata)
 	if err==nil {
 		// err==nil does not mean everything has worked 

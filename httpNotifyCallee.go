@@ -264,7 +264,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	}
 
 	// let caller wait (let it's xhr stand) until callee picks up the call
-	fmt.Printf("/notifyCallee (%s/%d) waiting for callee online notification\n", urlID, notificationSent)
+	fmt.Printf("/notifyCallee waiting for callee (%s) to come online (%d)\n", urlID, notificationSent)
 	if cli != nil {
 		cli.unHiddenForCaller = "" // TODO ???
 	}
