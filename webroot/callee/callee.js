@@ -955,10 +955,10 @@ function signalingCommand(message) {
 			}
 		}
 
-	} else if(cmd=="calleeInfo") {
-		// TODO this is text-info to be shown
-		// maybe the best way to present this, is to put it on top of the current statusMsg
-		// or maybe just put a link there, saying "click here to see new info for you!"
+//	} else if(cmd=="calleeInfo") {
+//		// this is text-info to be shown (not yet implemented)
+//		// maybe the best way to present this, is to put it on top of the current statusMsg
+//		// or maybe just put a link there, saying "click here to see new info for you!"
 
 	} else if(cmd=="waitingCallers") {
 		waitingCallerSlice = null;
@@ -966,7 +966,7 @@ function signalingCommand(message) {
 			waitingCallerSlice = JSON.parse(payload);
 			//console.log('showWaitingCallers msg',waitingCallerSlice.length);
 			if(waitingCallerSlice!=null && waitingCallerSlice.length>0) {
-				// TODO would be good to use a different sound here
+				// TODO would be nice to use a different sound here
 				notificationSound.play().catch(function(error) { });
 			}
 		}
