@@ -613,7 +613,7 @@ func twitterAuth() {
 			twitterClient = nil
 			twitterAuthFailedCount++
 		} else {
-			fmt.Printf("twitter auth success\n")
+			fmt.Printf("OAuth twitterClient ready\n")
 		}
 	}
 }
