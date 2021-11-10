@@ -227,7 +227,7 @@ function sendFile(file) {
 				showStatus("sent '"+file.name.substring(0,25)+"' "+Math.floor(file.size/1000)+" KB",-1);
 				if(mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
 					if(localCandidateType!="relay" && remoteCandidateType!="relay") {
-						fileselectLabel.style.display = "inline-block";
+						fileselectLabel.style.display = "block";
 					}
 				}
 			};
@@ -431,7 +431,7 @@ function stopProgressSend() {
 		dataChannel.send("file|end-send");
 		if(fileselectLabel!=null && mediaConnect) {
 			if(localCandidateType!="relay" && remoteCandidateType!="relay") {
-				fileselectLabel.style.display = "inline-block";
+				fileselectLabel.style.display = "block";
 			}
 		}
 	}
