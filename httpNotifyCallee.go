@@ -254,7 +254,6 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 			fmt.Printf("# /notifyCallee json.Marshal(waitingCallerSlice) err=%v\n", err)
 		} else {
 			fmt.Printf("/notifyCallee send waitingCallers (%s)\n", urlID)
-
 			if cli != nil {
 				cli.Write([]byte("waitingCallers|" + string(json)))
 			}
@@ -365,7 +364,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		// send updated waitingCallerSlice + missedCalls
 		waitingCallerToCallee(urlID, waitingCallerSlice, missedCallsSlice, cli)
 	} else {
-		fmt.Printf("# /notifyCallee (%s) cli==nil\n", urlID)
+		//fmt.Printf("/notifyCallee (%s) cli==nil\n", urlID)
 	}
 	return
 }
@@ -428,8 +427,7 @@ func httpMissedCall(w http.ResponseWriter, r *http.Request, urlID string, remote
 	if err!=nil {
 		fmt.Printf("# /httpMissedCall (%s) fail store dbMissedCalls err=%v rip=%s\n", calleeId, err, remoteAddr)
 	}
-	fmt.Printf("/httpMissedCall (%s) stored dbMissedCalls caller=%v rip=%s %v\n",
-		calleeId, caller, remoteAddr, missedCallsSlice)
+	fmt.Printf("/httpMissedCall (%s) stored dbMissedCalls caller=%v rip=%s\n", calleeId, caller, remoteAddr)
 }
 
 func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr string, remoteAddrWithPort string) {
