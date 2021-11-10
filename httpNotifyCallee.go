@@ -94,12 +94,11 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		}
 	}
 
+	notificationSent := 0
 	if globalID == "" {
-		// callee (urlID) is really offline - send push notification(s)
-		// NOTE: on Chromium/Mac this msg is cut off after "the phone." (with callerName="Dave")
+		// callee is offline - send push notification(s)
 		msg := "Caller " + callerName + " is waiting for you to pick up the phone." +
 			" Please open your callee app now."
-		notificationSent := false
 
 		if dbUser.Str2 != "" {
 			// web push device 1 subscription is specified
@@ -108,13 +107,12 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 			if err != nil {
 				fmt.Printf("# /notifyCallee (%s) webpush fail device1 err=%v\n", urlID, err)
 			} else if statusCode == 201 {
-				notificationSent = true
+				notificationSent |= 1
 			} else if statusCode == 410 {
 				fmt.Printf("# /notifyCallee (%s) webpush fail device1 delete subscr\n", urlID)
 				dbUser.Str2 = ""
 			} else {
-				fmt.Printf("# /notifyCallee (%s) webpush fail device1 status=%d\n",
-					urlID, statusCode)
+				fmt.Printf("# /notifyCallee (%s) webpush fail device1 status=%d\n",	urlID, statusCode)
 			}
 		}
 
@@ -125,7 +123,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 			if err != nil {
 				fmt.Printf("# /notifyCallee (%s) webpush fail device2 err=%v\n", urlID, err)
 			} else if statusCode == 201 {
-				notificationSent = true
+				notificationSent |= 2
 			} else if statusCode == 410 {
 				fmt.Printf("# /notifyCallee (%s) webpush fail device2 delete subscr\n", urlID)
 				dbUser.Str3 = ""
@@ -164,7 +162,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 						urlID, dbUser.Email2[:maxlen], err)
 					// script will tell caller: could not reach urlID
 					// TODO: but if the err is caused by the callee entering a faulty tw_user_id
-					//       how will this callee find out about the issue?
+					//       how will the callee find out about the issue?
 				} else {
 					tweet := twitter.TimelineTweet{}
 					err = json.Unmarshal(respdata, &tweet)
@@ -172,7 +170,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 						fmt.Printf("# SendTweet cannot parse respdata err=%v\n", err)
 					} else {
 						// twitter notification succesfully sent
-						notificationSent = true
+						notificationSent |= 4
 						maxlen := 30
 						if len(dbUser.Email2) < 30 {
 							maxlen = len(dbUser.Email2)
@@ -192,7 +190,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 			}
 		}
 
-		if !notificationSent {
+		if notificationSent==0 {
 			// we couldn't send any notifications: store call as missed call
 			fmt.Printf("# /notifyCallee (%s) no notification sent\n", urlID)
 			if(dbUser.StoreMissedCalls) {
@@ -264,7 +262,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	}
 
 	// let caller wait (let it's xhr stand) until callee picks up the call
-	fmt.Printf("/notifyCallee (%s) waiting for callee online notification\n", urlID)
+	fmt.Printf("/notifyCallee (%s/%d) waiting for callee online notification\n", urlID, notificationSent)
 	if cli != nil {
 		cli.unHiddenForCaller = "" // TODO ???
 	}
@@ -568,7 +566,7 @@ func webpushSend(subscription string, msg string, urlID string) (error,int) {
 		return err, 0
 	}
 	// httpResponse.StatusCode should be 201
-	fmt.Printf("webpush.SendNotif OK (id=%s) (httpRespCode=%v)\n",	urlID, httpResponse.StatusCode)
+	fmt.Printf("webpush.SendNotif OK id=%s (httpRespCode=%v) (%s)\n", urlID, httpResponse.StatusCode, subscription)
 	httpResponse.Body.Close()
 	return err, httpResponse.StatusCode
 }
