@@ -190,6 +190,7 @@ func (c *Client) SendTweet(msg string) ([]byte, error) {
 		// "message":"event.message_create.target.recipient_id: 'falafelxxl' is not a valid Long"
 		// json parse
 		if strings.Index(string(respdata),"\"errors\"")>=0 {
+			fmt.Printf("# SendTweet respdata err [%s]\n",respdata)
 			var ret ErrorsTweet
 			err = json.Unmarshal(respdata, &ret)
 			if err==nil {
