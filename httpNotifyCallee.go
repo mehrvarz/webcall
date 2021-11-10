@@ -97,8 +97,12 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	notificationSent := 0
 	if globalID == "" {
 		// callee is offline - send push notification(s)
-		msg := "Caller " + callerName + " is waiting for you to pick up the phone." +
-			" Please open your callee app now."
+		msg := "Unknown caller is waiting for you to pick up the phone."
+		if callerName!="" {
+			msg = callerName + " is waiting for you to pick up the phone."
+		} else if callerId!="" {
+			msg = callerId + " is waiting for you to pick up the phone."
+		}
 
 		if dbUser.Str2 != "" {
 			// web push device 1 subscription is specified
@@ -145,7 +149,6 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 				fmt.Printf("# /notifyCallee (%s) failed no twitterClient\n", urlID)
 				// script will tell caller: could not reach urlID
 			} else {
-				//_,err = twitterClient.SendDirect(dbUser.Email2, msg)
 				if strings.HasPrefix(dbUser.Email2, "@") {
 					msg = dbUser.Email2 + " " + msg
 				} else {
@@ -158,7 +161,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 					if len(dbUser.Email2) < 30 {
 						maxlen = len(dbUser.Email2)
 					}
-					fmt.Printf("# /notifyCallee (%s/%s) SendDirect err=%v msg=%s\n",
+					fmt.Printf("# /notifyCallee (%s/%s) SendTweet err=%v msg=%s\n",
 						urlID, dbUser.Email2[:maxlen], err, msg)
 					// script will tell caller: could not reach urlID
 					// TODO: but if the err is caused by the callee entering a faulty tw_user_id
@@ -591,8 +594,8 @@ func twitterAuth() {
 		twitterClient = nil
 	} else {
 		fmt.Printf("twitter auth using accessToken.txt (%s)\n",accessTokenFile)
-		str := string(b)
-		linetokens := strings.SplitN(str, "\n", 4)
+		accessTokenContent := string(b)
+		linetokens := strings.SplitN(accessTokenContent, "\n", 4)
 		//log.Println("linetokens[0]="+linetokens[0])
 		//log.Println("linetokens[1]="+linetokens[1])
 		fmt.Printf("twitter auth linetokens[2]=%s\n", linetokens[2])
