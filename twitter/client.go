@@ -77,13 +77,12 @@ func (c *Client) BasicQuery(queryString string) ([]byte, error) {
 	return nil, err
 }
 
-func (c *Client) PostQuery(queryString string) ([]byte, error) {
+func (c *Client) PostQuery(queryString string, contentType string) ([]byte, error) {
 	if c.HttpConn == nil {
 		return nil, errors.New("No Client OAuth")
 	}
 
 	//fmt.Printf("PostQuery queryString=%s\r\n",queryString)
-	contentType := ""
 	response, err := c.HttpConn.Post(queryString,contentType,nil)
 
 	if err == nil {
@@ -182,7 +181,7 @@ func (c *Client) QueryFollowerById(id int) (UserDetail, []byte, error) {
 
 func (c *Client) SendTweet(msg string) ([]byte, error) {
 	requesURL := fmt.Sprintf("%s?status=%s", API_TWEET, url.QueryEscape(msg))
-	respdata, err := c.PostQuery(requesURL)
+	respdata, err := c.PostQuery(requesURL,"application/x-www-form-urlencoded")
 	//	fmt.Printf("SendTweet requesURL=(%v) response=[%s]\n",requesURL,respdata)
 	if err==nil {
 		// err==nil does not mean everything has worked 
@@ -255,7 +254,7 @@ response=[{"errors":[{"code":214,"message":"event.message_create.target.recipien
 func (c *Client) DeleteTweet(id string) ([]byte, error) {
 	requesURL := fmt.Sprintf("%sstatuses/destroy/%s.json", API_BASE, id)
 	fmt.Printf("DeleteTweet requesURL=(%s)\n",requesURL)
-	respdata, err := c.PostQuery(requesURL)
+	respdata, err := c.PostQuery(requesURL,"")
 	//fmt.Printf("DeleteTweet respdata=[%s]\n",respdata)
 	if err==nil {
 		// err==nil does not mean everything has worked 

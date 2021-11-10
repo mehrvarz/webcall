@@ -38,7 +38,7 @@ var twitterClientLock sync.RWMutex
 var twitterAuthFailedCount = 0
 
 func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr string, remoteAddrWithPort string) {
-	// caller wants to wait for callee to come online to answer call
+	// caller wants to wait for callee (urlID) to come online to answer call
 	if urlID == "" {
 		fmt.Printf("# /notifyCallee failed no urlID\n")
 		// JS will tell caller: could not reach urlID
@@ -56,7 +56,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	if ok && len(url_arg_array[0]) >= 1 {
 		callerName = url_arg_array[0]
 	}
-	fmt.Printf("/notifyCallee callerId=(%s) callerName=(%s)\n", callerId, callerName)
+	fmt.Printf("/notifyCallee (%s) for callerId=(%s) callerName=(%s)\n", urlID, callerId, callerName)
 
 	var dbEntry DbEntry
 	err := kvMain.Get(dbRegisteredIDs, urlID, &dbEntry)
@@ -158,8 +158,8 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 					if len(dbUser.Email2) < 30 {
 						maxlen = len(dbUser.Email2)
 					}
-					fmt.Printf("# /notifyCallee (%s/%s) SendDirect err=%v\n",
-						urlID, dbUser.Email2[:maxlen], err)
+					fmt.Printf("# /notifyCallee (%s/%s) SendDirect err=%v msg=%s\n",
+						urlID, dbUser.Email2[:maxlen], err, msg)
 					// script will tell caller: could not reach urlID
 					// TODO: but if the err is caused by the callee entering a faulty tw_user_id
 					//       how will the callee find out about the issue?
