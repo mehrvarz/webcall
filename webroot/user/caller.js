@@ -706,9 +706,9 @@ function goodby() {
 		let api = apiPath+"/missedCall?id="+needToStoreMissedCall;
 		xhrTimeout = 3*1000;
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-			console.log('goodby /missedCall success',needToStoreMissedCall);
+			if(!gentle) console.log('goodby /missedCall success',needToStoreMissedCall);
 		}, function(errString,err) {
-			console.log('# goodby xhr error',errString);
+			if(!gentle) console.log('# goodby xhr error',errString);
 		});
 	}
 }
