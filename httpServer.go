@@ -186,17 +186,16 @@ func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 	if logWantedFor("http") {
 		fmt.Printf("substituteUserNameHandler (%s) try (%s)\n", r.URL.Path, fullpath)
 	}
-	if strings.HasSuffix(r.URL.Path,".js") {
-		readConfigLock.RLock()
-		myCspString := cspString
-		readConfigLock.RUnlock()
-		if myCspString!="" {
-			if logWantedFor("csp") {
-				fmt.Printf("csp sub (%s) (%s)\n", r.URL.Path, myCspString)
-			}
-			header := w.Header()
-			header.Set("Content-Security-Policy", myCspString)
+
+	readConfigLock.RLock()
+	myCspString := cspString
+	readConfigLock.RUnlock()
+	if myCspString!="" {
+		if logWantedFor("csp") {
+			fmt.Printf("csp sub (%s) (%s)\n", r.URL.Path, myCspString)
 		}
+		header := w.Header()
+		header.Set("Content-Security-Policy", myCspString)
 	}
 	http.ServeFile(w, r, fullpath)
 }
