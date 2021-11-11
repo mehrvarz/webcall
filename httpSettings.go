@@ -161,9 +161,10 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 				}
 			}
 		case "storeMissedCalls":
-			fmt.Printf("/setsettings (%s) new storeMissedCalls (%s) old:%v\n",calleeID,val,dbUser.StoreMissedCalls)
 			if(val=="true") {
 				if !dbUser.StoreMissedCalls {
+					fmt.Printf("/setsettings (%s) new storeMissedCalls (%s) old:%v\n",
+						calleeID,val,dbUser.StoreMissedCalls)
 					dbUser.StoreMissedCalls = true
 					// show missedCalls on callee web client
 					hubMapMutex.RLock()
@@ -188,6 +189,8 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 				}
 			} else {
 				if dbUser.StoreMissedCalls {
+					fmt.Printf("/setsettings (%s) new storeMissedCalls (%s) old:%v\n",
+						calleeID,val,dbUser.StoreMissedCalls)
 					dbUser.StoreMissedCalls = false
 					// hide missedCalls on callee web client
 					hubMapMutex.RLock()
