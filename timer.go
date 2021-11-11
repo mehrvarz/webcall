@@ -66,7 +66,7 @@ func ticker3min() {
 							if err!=nil {
 								fmt.Printf("# ticker3min DeleteTweet %s err=%v (%s)\n", idStr, err, respdata)
 							} else {
-								fmt.Printf("ticker3min DeleteTweet %s OK\n", idStr)
+								//fmt.Printf("ticker3min DeleteTweet %s OK\n", idStr)
 								err := c.Delete()
 								if err!=nil {
 									fmt.Printf("# ticker3min error db=%s bucket=%s delete id=%s err=%v\n",
@@ -78,8 +78,8 @@ func ticker3min() {
 						}
 					}
 					if deleteCount>0 {
-						fmt.Printf("ticker3min db=%s bucket=%s deleted %d entries\n",
-							dbNotifName, dbSentNotifTweets, deleteCount)
+						//fmt.Printf("ticker3min db=%s bucket=%s deleted %d entries\n",
+						//	dbNotifName, dbSentNotifTweets, deleteCount)
 					}
 					return nil
 				})

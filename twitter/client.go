@@ -254,7 +254,7 @@ response=[{"errors":[{"code":214,"message":"event.message_create.target.recipien
 
 func (c *Client) DeleteTweet(id string) ([]byte, error) {
 	requesURL := fmt.Sprintf("%sstatuses/destroy/%s.json", API_BASE, id)
-	fmt.Printf("DeleteTweet requesURL=(%s)\n",requesURL)
+	//fmt.Printf("DeleteTweet requesURL=(%s)\n",requesURL)
 	respdata, err := c.PostQuery(requesURL,"")
 	//fmt.Printf("DeleteTweet respdata=[%s]\n",respdata)
 	if err==nil {

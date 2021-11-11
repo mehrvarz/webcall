@@ -600,12 +600,12 @@ func twitterAuth() {
 		fmt.Printf("# twitter auth cannot read accessTokenFile=%s\n", accessTokenFile)
 		twitterClient = nil
 	} else {
-		fmt.Printf("twitter auth using accessToken.txt (%s)\n",accessTokenFile)
+		//fmt.Printf("twitter auth using accessToken.txt (%s)\n",accessTokenFile)
 		accessTokenContent := string(b)
 		linetokens := strings.SplitN(accessTokenContent, "\n", 4)
 		//log.Println("linetokens[0]="+linetokens[0])
 		//log.Println("linetokens[1]="+linetokens[1])
-		fmt.Printf("twitter auth linetokens[2]=%s\n", linetokens[2])
+		//fmt.Printf("twitter auth linetokens[2]=%s\n", linetokens[2])
 		//log.Println("linetokens[3]="+linetokens[3])
 		var accessToken oauth.AccessToken
 		accessToken.Token = linetokens[0]
@@ -614,13 +614,13 @@ func twitterAuth() {
 		accessToken.AdditionalData["screen_name"] = linetokens[2]
 		accessToken.AdditionalData["user_id"] = linetokens[3]
 		accessTokenPtr, err := twitterClient.DoAuth(&accessToken)
-		fmt.Printf("twitter auth accessToken=%v err=%v\n", accessTokenPtr, err)
+		//fmt.Printf("twitter auth accessToken=%v err=%v\n", accessTokenPtr, err)
 		if err != nil {
-			fmt.Printf("# twitter auth failed err=%v\n", err)
+			fmt.Printf("# twitter auth %v err=%v\n", accessTokenPtr, err)
 			twitterClient = nil
 			twitterAuthFailedCount++
 		} else {
-			fmt.Printf("OAuth twitterClient ready\n")
+			//fmt.Printf("OAuth twitterClient ready\n")
 		}
 	}
 }
