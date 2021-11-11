@@ -154,7 +154,6 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 				} else {
 					msg = "@" + dbUser.Email2 + " " + msg
 				}
-				msg = "@falafelxxl test123"
 				msg = msg + " " + operationalNow().Format("2006-01-02 15:04:05")
 				respdata, err := twitterClient.SendTweet(msg)
 				if err != nil {

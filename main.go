@@ -482,7 +482,7 @@ func readConfig(init bool) {
 		wssUrl = readIniString(configIni, "wssUrl", wssUrl, "")
 
 		twitterKey = readIniString(configIni, "twitterKey", twitterKey, "")
-		twitterSecret = readIniString(configIni, "twitterKey", twitterKey, "")
+		twitterSecret = readIniString(configIni, "twitterSecret", twitterSecret, "")
 
 		vapidPublicKey = readIniString(configIni, "vapidPublicKey", vapidPublicKey, "")
 		vapidPrivateKey = readIniString(configIni, "vapidPrivateKey", vapidPrivateKey, "")
