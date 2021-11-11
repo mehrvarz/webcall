@@ -273,7 +273,7 @@ function ajaxFetch(xhr, type, api, processData, errorFkt, postData) {
 	xhr.onerror= function(e) {
 		errorFkt("fetching",xhr.status);
 	};
-	if(!gentle) console.log('xhr send',api);
+	if(!gentle) console.log('xhr send(%s) timeout=%d',api,xhrTimeout);
 	xhr.open(type, api, true);
 	xhr.setRequestHeader("Content-type", "text/plain; charset=utf-8");
 	if(postData) {
@@ -1148,9 +1148,14 @@ function hashchange() {
 }
 
 function showStatus(msg,timeoutMs) {
-	// TODO msg may contain html code which we might want to filter out for console.log()
-	if(msg!="") {
-		if(!gentle) console.log('showStatus: %s',msg);
+	if(!gentle && msg!="") {
+		// msg may contain html, which we don't want to console.log
+		let idx = msg.indexOf("<");
+		if(idx>=0) {
+			console.log('showStatus: %s',msg.substring(0,idx));
+		} else {
+			console.log('showStatus: %s',msg);
+		}
 	}
 	if(!singlebutton) {
 		let sleepMs = 3000;

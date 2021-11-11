@@ -824,11 +824,9 @@ function confirmNotifyConnect2() {
 
 function notifyConnect(callerName,callerId) {
 	showStatus("Trying to get "+calleeID+" on the phone now. Please wait...<br><br><img src='preloader-circles.svg' style='width:95%;max-height:450px;margin-top:-20%;'>",-1);
-
-	// extend xhr timeout
-	xhrTimeout = 600*1000; // 10 min
 	let api = apiPath+"/notifyCallee?id="+calleeID+"&callerName="+callerName+"&callerId="+callerId;
-	if(!gentle) console.log('notifyCallee api',api);
+	xhrTimeout = 600*1000; // 10 min extended xhr timeout
+	if(!gentle) console.log('notifyCallee api %s timeout %d',api,xhrTimeout);
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 		if(xhr.responseText=="ok") {
 			if(!gentle) console.log('callee is now online. switching to call layout.');

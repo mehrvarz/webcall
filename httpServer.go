@@ -96,7 +96,7 @@ func httpServer() {
 				Addr: addrPort,
 				ReadHeaderTimeout: 2 * time.Second,
 				ReadTimeout: 5 * time.Second,
-				WriteTimeout: 10 * time.Second,	// includes the header read and the first byte wait
+				WriteTimeout: 600 * time.Second,	// includes the header read and the first byte wait
 				IdleTimeout: 30 * time.Second,
 				//IdleConnTimeout: 60 * time.Second,
 				//MaxIdleConns: 100, // TODO
@@ -141,7 +141,7 @@ func httpServer() {
 				Addr: addrPort,
 				ReadHeaderTimeout: 2 * time.Second,
 				ReadTimeout: 5 * time.Second,
-				WriteTimeout: 10 * time.Second,	// from end of req header read to the end of the response write
+				WriteTimeout: 600 * time.Second,	// from end of req header read to the end of the response write
 				IdleTimeout: 30 * time.Second,
 				//IdleConnTimeout: 60 * time.Second,
 				//MaxIdleConns: 100, // TODO
@@ -536,29 +536,29 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 func waitingCallerToCallee(calleeID string, waitingCallerSlice []CallerInfo, missedCalls []CallerInfo, hubclient *WsClient) {
 	// TODO before we send the waitingCallerSlice, we should remove all elements that are older than 10min
 	if waitingCallerSlice!=nil {
-		//fmt.Printf("notifyCallee json.Marshal(waitingCallerSlice)...\n")
+		//fmt.Printf("waitingCallerToCallee json.Marshal(waitingCallerSlice)...\n")
 		jsonStr, err := json.Marshal(waitingCallerSlice)
 		if err != nil {
-			fmt.Printf("# notifyCallee (%s) failed on json.Marshal err=%v\n", calleeID,err)
+			fmt.Printf("# waitingCallerToCallee (%s) failed on json.Marshal err=%v\n", calleeID,err)
 		} else if hubclient==nil {
-				fmt.Printf("# notifyCallee cannot send waitingCallers (%s) hubclient==nil\n", calleeID)
+				fmt.Printf("# waitingCallerToCallee cannot send waitingCallers (%s) hubclient==nil\n", calleeID)
 		} else {
-			//fmt.Printf("notifyCallee send waitingCallers (%s) (%s) (%s)\n",
-			//	calleeID, hubclient.unHiddenForCaller, string(jsonStr))
+			fmt.Printf("waitingCallerToCallee send waitingCallers (%s) (%s) (%s)\n",
+				calleeID, hubclient.unHiddenForCaller, string(jsonStr))
 			hubclient.Write([]byte("waitingCallers|"+string(jsonStr)))
 		}
 	}
 
 	if missedCalls!=nil {
-		//fmt.Printf("notifyCallee json.Marshal(missedCalls)...\n")
+		//fmt.Printf("waitingCallerToCallee json.Marshal(missedCalls)...\n")
 		jsonStr, err := json.Marshal(missedCalls)
 		if err != nil {
-			fmt.Printf("# notifyCallee (%s) failed on json.Marshal err=%v\n", calleeID,err)
+			fmt.Printf("# waitingCallerToCallee (%s) failed on json.Marshal err=%v\n", calleeID,err)
 		} else if hubclient==nil {
-			fmt.Printf("# notifyCallee cannot send missedCalls (%s) hubclient==nil\n", calleeID)
+			fmt.Printf("# waitingCallerToCallee cannot send missedCalls (%s) hubclient==nil\n", calleeID)
 		} else {
-			//fmt.Printf("notifyCallee send missedCalls (callee=%s) (unHidden=%s)\n",
-			//	calleeID, hubclient.unHiddenForCaller)
+			fmt.Printf("waitingCallerToCallee send missedCalls (callee=%s) (unHidden=%s)\n",
+				calleeID, hubclient.unHiddenForCaller)
 			hubclient.Write([]byte("missedCalls|"+string(jsonStr)))
 		}
 	}

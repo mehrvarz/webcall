@@ -291,6 +291,10 @@ func (c *WsClient) receiveProcess(message []byte) {
 		// we remove all entries that are older than 10min
 		countOutdated:=0
 		for idx := range waitingCallerSlice {
+			//fmt.Printf("%s (idx=%d of %d)\n", c.connType,idx,len(waitingCallerSlice))
+			if idx >= len(waitingCallerSlice) {
+				break
+			}
 			if time.Now().Unix() - waitingCallerSlice[idx].CallTime > 10*60 {
 				// remove outdated caller from waitingCallerSlice
 				waitingCallerSlice = append(waitingCallerSlice[:idx],
@@ -320,8 +324,13 @@ func (c *WsClient) receiveProcess(message []byte) {
 				missedCallsSlice = nil
 			}
 		}
-		//fmt.Printf("%s waitingCallerToCallee\n",c.connType)
-		waitingCallerToCallee(c.calleeID, waitingCallerSlice, missedCallsSlice, c)
+
+		if len(waitingCallerSlice)>0 || len(missedCallsSlice)>0 {
+			// this may hubclient.Write() from httpServer
+			fmt.Printf("%s waitingCallerToCallee (%s) %d %d\n",c.connType,c.calleeID,
+				len(waitingCallerSlice),len(missedCallsSlice))
+			waitingCallerToCallee(c.calleeID, waitingCallerSlice, missedCallsSlice, c)
+		}
 		return
 	}
 

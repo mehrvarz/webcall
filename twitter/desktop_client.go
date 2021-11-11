@@ -16,8 +16,7 @@ func NewDesktopClient(consumerKey, consumerSecret string) *DesktopClient {
 			AccessTokenUrl:    OAUTH_ACCESS_TOKEN,
 		},
 	)
-	//Enable debug
-	newDesktop.OAuthConsumer.Debug(true)
+	newDesktop.OAuthConsumer.Debug(false)
 	return newDesktop
 }
 

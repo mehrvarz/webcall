@@ -1566,7 +1566,7 @@ function createDataChannel() {
 								let curDate = new Date().toString();
 								// cut off trailing " (Central European Summer Time)" from date
 								let bracketIdx = curDate.indexOf(" (");
-								if(bracketIdx>0) {
+								if(bracketIdx>=0) {
 									curDate = curDate.substring(0,bracketIdx);
 								}
 								let msg = "--- "+curDate+" ---\n" + cleanString + "\n";
