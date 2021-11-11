@@ -51,11 +51,11 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		return
 	}
 
-	calleeName := dbUser.Name
+//	calleeName := dbUser.Name
 	var reqBody []byte
 	readConfigLock.RLock() // for vapidPublicKey
 	reqBody, err = json.Marshal(map[string]string{
-		"nickname": calleeName,
+		"nickname": dbUser.Name,
 		"twname": dbUser.Email2, // twitter handle (starting with @)
 		"twid": dbUser.Str1, // twitter user_id  // not yet used by settings app
 		"storeContacts": strconv.FormatBool(dbUser.StoreContacts),
@@ -131,22 +131,33 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 	for key,val := range newSettingsMap {
 		switch(key) {
 		case "nickname":
-			fmt.Printf("/setsettings (%s) new nickname (%s) (old:%s)\n",calleeID,val,dbUser.Name)
-			dbUser.Name = val
-// TODO		calleeName = dbUser.Name
+			if val != dbUser.Name {
+				fmt.Printf("/setsettings (%s) new nickname (%s) (old:%s)\n",calleeID,val,dbUser.Name)
+				dbUser.Name = val
+			}
 		case "twname":
-			fmt.Printf("/setsettings (%s) new twname (%s) (old:%s)\n",calleeID,val,dbUser.Email2)
-			dbUser.Email2 = val
+			if val != dbUser.Email2 {
+				fmt.Printf("/setsettings (%s) new twname (%s) (old:%s)\n",calleeID,val,dbUser.Email2)
+				dbUser.Email2 = val
+			}
 		case "twid":  // not yet used by settings app
-			fmt.Printf("/setsettings (%s) new twid (%s) (old:%s)\n",calleeID,val,dbUser.Str1)
-			dbUser.Str1 = val
-
+			if val != dbUser.Str1 {
+				fmt.Printf("/setsettings (%s) new twid (%s) (old:%s)\n",calleeID,val,dbUser.Str1)
+				dbUser.Str1 = val
+			}
 		case "storeContacts":
-			fmt.Printf("/setsettings (%s) new storeContacts (%s) (old:%v)\n",calleeID,val,dbUser.StoreContacts)
 			if(val=="true") {
-				dbUser.StoreContacts = true
+				if dbUser.StoreContacts != true {
+					fmt.Printf("/setsettings (%s) new storeContacts (%s) (old:%v)\n",
+						calleeID,val,dbUser.StoreContacts)
+					dbUser.StoreContacts = true
+				}
 			} else {
-				dbUser.StoreContacts = false
+				if dbUser.StoreContacts != false {
+					fmt.Printf("/setsettings (%s) new storeContacts (%s) (old:%v)\n",
+						calleeID,val,dbUser.StoreContacts)
+					dbUser.StoreContacts = false
+				}
 			}
 		case "storeMissedCalls":
 			fmt.Printf("/setsettings (%s) new storeMissedCalls (%s) old:%v\n",calleeID,val,dbUser.StoreMissedCalls)
@@ -191,7 +202,7 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 			if err!=nil {
 				fmt.Printf("# /setsettings (%s) url.QueryUnescape webPushSubscription1 err=%v\n",
 					calleeID, err)
-			} else {
+			} else if newVal != dbUser.Str2 {
 				fmt.Printf("/setsettings (%s) new webPushSubscription1 (%s) (old:%s)\n",
 					calleeID, newVal, dbUser.Str2)
 				if dbUser.Str2 != newVal {
@@ -223,7 +234,7 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 			if err!=nil {
 				fmt.Printf("# /setsettings (%s) url.QueryUnescape webPushUA1 err=%v\n",
 					calleeID, err)
-			} else {
+			} else if newVal != dbUser.Str2ua {
 				fmt.Printf("/setsettings (%s) new webPushUA1 (%s) (old:%s)\n",
 					calleeID, newVal, dbUser.Str2ua)
 				dbUser.Str2ua = newVal
@@ -234,7 +245,7 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 			if err!=nil {
 				fmt.Printf("# /setsettings (%s) url.QueryUnescape webPushSubscription2 err=%v\n",
 					calleeID, err)
-			} else {
+			} else if newVal != dbUser.Str3 {
 				fmt.Printf("/setsettings (%s) new webPushSubscription2 (%s) (old:%s)\n",
 					calleeID, newVal, dbUser.Str3)
 				if dbUser.Str3 != newVal {
@@ -265,7 +276,7 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 			if err!=nil {
 				fmt.Printf("# /setsettings (%s) url.QueryUnescape webPushUA2 err=%v\n",
 					calleeID, err)
-			} else {
+			} else if newVal != dbUser.Str3ua {
 				fmt.Printf("/setsettings (%s) new webPushUA2 (%s) (old:%s)\n",
 					calleeID, newVal, dbUser.Str3ua)
 				dbUser.Str3ua = newVal
