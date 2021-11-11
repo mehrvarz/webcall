@@ -444,10 +444,10 @@ func (c *WsClient) receiveProcess(message []byte) {
 		return
 	}
 
-	if cmd=="deleteCallWhileInAbsence" {
+	if cmd=="deleteMissedCall" {
 		// for callee only: payload = ip:port:callTime
 		callerAddrPortPlusCallTime := payload
-		fmt.Printf("%s deleteCallWhileInAbsence from %s callee=%s (payload=%s)\n",
+		fmt.Printf("%s deleteMissedCall from %s callee=%s (payload=%s)\n",
 			c.connType, c.RemoteAddr, c.calleeID, callerAddrPortPlusCallTime)
 
 		// remove this call from dbMissedCalls for c.calleeID
@@ -462,33 +462,33 @@ func (c *WsClient) receiveProcess(message []byte) {
 			err = kvCalls.Get(dbMissedCalls,c.calleeID,&missedCallsSlice)
 			if err!=nil {
 				missedCallsSlice = nil
-				fmt.Printf("# serveWs deleteCallWhileInAbsence (%s) failed to read dbMissedCalls\n",c.calleeID)
+				fmt.Printf("# serveWs deleteMissedCall (%s) failed to read dbMissedCalls\n",c.calleeID)
 			}
 		}
 		if missedCallsSlice!=nil {
-			//fmt.Printf("serveWs deleteCallWhileInAbsence (%s) found %d entries\n",
+			//fmt.Printf("serveWs deleteMissedCall (%s) found %d entries\n",
 			//	c.calleeID, len(missedCallsSlice))
 			// search for callerIP:port + CallTime == callerAddrPortPlusCallTime
 			for idx := range missedCallsSlice {
 				//id := fmt.Sprintf("%s_%d",missedCallsSlice[idx].AddrPort,missedCallsSlice[idx].CallTime)
 				id := missedCallsSlice[idx].AddrPort + "_" +
 					 strconv.FormatInt(int64(missedCallsSlice[idx].CallTime),10)
-				//fmt.Printf("deleteCallWhileInAbsence %s compare (%s==%s)\n", callerAddrPortPlusCallTime, id)
+				//fmt.Printf("deleteMissedCall %s compare (%s==%s)\n", callerAddrPortPlusCallTime, id)
 				if id == callerAddrPortPlusCallTime {
-					//fmt.Printf("serveWs deleteCallWhileInAbsence idx=%d\n",idx)
+					//fmt.Printf("serveWs deleteMissedCall idx=%d\n",idx)
 					missedCallsSlice = append(missedCallsSlice[:idx], missedCallsSlice[idx+1:]...)
 					// store modified dbMissedCalls for c.calleeID
 					err := kvCalls.Put(dbMissedCalls, c.calleeID, missedCallsSlice, false)
 					if err!=nil {
-						fmt.Printf("# serveWs deleteCallWhileInAbsence (%s) fail store dbMissedCalls\n",
+						fmt.Printf("# serveWs deleteMissedCall (%s) fail store dbMissedCalls\n",
 							c.calleeID)
 					}
 					// send modified missedCallsSlice to callee
 					json, err := json.Marshal(missedCallsSlice)
 					if err != nil {
-						fmt.Printf("# serveWs deleteCallWhileInAbsence (%s) failed json.Marshal\n", c.calleeID)
+						fmt.Printf("# serveWs deleteMissedCall (%s) failed json.Marshal\n", c.calleeID)
 					} else {
-						//fmt.Printf("deleteCallWhileInAbsence send missedCallsSlice %s\n", c.calleeID)
+						//fmt.Printf("deleteMissedCall send missedCallsSlice %s\n", c.calleeID)
 						c.hub.CalleeClient.Write([]byte("missedCalls|"+string(json)))
 					}
 					break

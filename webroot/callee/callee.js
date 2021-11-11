@@ -1124,7 +1124,7 @@ function showCallsWhileInAbsence() {
 			    callerLink + "</td><td>"+
 				halfShowIpAddr(callerIp) + "</td><td style='text-align:right;'>"+
 				waitingTimeString + " ago</td><td>"+
-				"<a onclick='deleteCallWhileInAbsence(\""+
+				"<a onclick='deleteMissedCall(\""+
 					callsWhileInAbsenceSlice[i].AddrPort+"_"+callsWhileInAbsenceSlice[i].CallTime+"\")'>"+
 				"delete</a></td>";
 		}
@@ -1157,9 +1157,9 @@ function halfShowIpAddr(ipAddr) {
 	return ipAddr
 }
 
-function deleteCallWhileInAbsence(callerAddrPortPlusCallTime) {
-	console.log('deleteCallWhileInAbsence',callerAddrPortPlusCallTime);
-	wsSend("deleteCallWhileInAbsence|"+callerAddrPortPlusCallTime);
+function deleteMissedCall(callerAddrPortPlusCallTime) {
+	console.log('deleteMissedCall',callerAddrPortPlusCallTime);
+	wsSend("deleteMissedCall|"+callerAddrPortPlusCallTime);
 }
 
 function wsSend(message) {
