@@ -154,6 +154,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 				} else {
 					msg = "@" + dbUser.Email2 + " " + msg
 				}
+				msg = "@falafelxxl test123"
 				msg = msg + " " + operationalNow().Format("2006-01-02 15:04:05")
 				respdata, err := twitterClient.SendTweet(msg)
 				if err != nil {
@@ -163,9 +164,8 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 					}
 					fmt.Printf("# /notifyCallee (%s/%s) SendTweet err=%v msg=%s\n",
 						urlID, dbUser.Email2[:maxlen], err, msg)
-					// script will tell caller: could not reach urlID
-					// TODO: but if the err is caused by the callee entering a faulty tw_user_id
-					//       how will the callee find out about the issue?
+					// TODO if err is caused by a faulty tw_user_id, entered by callee,
+					// how will callee find out about this issue?
 				} else {
 					tweet := twitter.TimelineTweet{}
 					err = json.Unmarshal(respdata, &tweet)
