@@ -290,11 +290,9 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 	// store data
 	err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
 	if err!=nil {
-		fmt.Printf("# /setsettings error db=%s bucket=%s put key=%s err=%v\n",
-			dbMainName,dbUserBucket,calleeID,err)
+		fmt.Printf("# /setsettings (%s) store db=%s bucket=%s err=%v\n", calleeID, dbMainName, dbUserBucket, err)
 	} else {
-		fmt.Printf("/setsettings db=%s bucket=%s put key=%s\n",
-			dbMainName,dbUserBucket,calleeID)
+		fmt.Printf("/setsettings (%s) stored db=%s bucket=%s\n", calleeID, dbMainName, dbUserBucket)
 	}
 	return
 }
