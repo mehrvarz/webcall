@@ -104,7 +104,8 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		fmt.Printf("# /setsettings (%s) failed on io.ReadFull body rip=%s\n",calleeID, remoteAddr)
 		return
 	}
-	fmt.Printf("/setsettings (%s) body (%s) %d rip=%s\n", calleeID, data, len(data), remoteAddr)
+//	fmt.Printf("/setsettings (%s) body (%s) %d rip=%s\n", calleeID, data, len(data), remoteAddr)
+	fmt.Printf("/setsettings (%s) len=%d rip=%s\n", calleeID, len(data), remoteAddr)
 
 	var newSettingsMap map[string]string
 	err := json.Unmarshal([]byte(data), &newSettingsMap)
@@ -229,7 +230,6 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 			}
 
 		case "webPushUA1":
-			dbUser.Str2ua = val
 			newVal,err := url.QueryUnescape(val)
 			if err!=nil {
 				fmt.Printf("# /setsettings (%s) url.QueryUnescape webPushUA1 err=%v\n",
