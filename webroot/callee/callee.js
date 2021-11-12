@@ -66,7 +66,7 @@ var buttonBlinking = true;
 var onGotStreamGoOnline = false;
 var autoPlaybackFile = "";
 var waitingCallerSlice = null;
-var callsWhileInAbsenceSlice = null;
+var missedCallsSlice = null;
 var pushRegistration=null;
 var otherUA="";
 var fileReceiveBuffer = [];
@@ -556,7 +556,7 @@ function login(retryFlag) {
 			showStatus("XHR error "+err,3000);
 		}
 		waitingCallerSlice = null;
-		callsWhileInAbsenceSlice = null;
+		missedCallsSlice = null;
 		var waitingCallersElement = document.getElementById('waitingCallers');
 		if(waitingCallersElement!=null) {
 			waitingCallersElement.innerHTML = "";
@@ -633,12 +633,13 @@ function delayedWsAutoReconnect(reconPauseSecs) {
 		showStatus("");
 		// don't proceed if the user has clicked on anything; in particular goOnline
 		if(startPauseDate < lastUserActionDate) {
-			// lastUserActionDate (set by goOnline() and goOffline()) is newer (happened later) than startPauseDate
+			// lastUserActionDate set by goOnline() and goOffline() is newer (happened later) than startPauseDate
 			// user has initiated goOnline or goOffline, so we stop AutoReconnect
 			wsAutoReconnecting = false;
 			// but if we have a connection now, we don't kill it
 			if(!wsConn) {
-				if(!gentle) console.log('delayedWsAutoReconnect aborted on user action',startPauseDate,lastUserActionDate);
+				if(!gentle) console.log('delayedWsAutoReconnect aborted on user action',
+					startPauseDate,lastUserActionDate);
 				offlineAction();
 			}
 		} else if(!wsAutoReconnecting) {
@@ -973,12 +974,12 @@ function signalingCommand(message) {
 		showWaitingCallers();
 
 	} else if(cmd=="missedCalls") {
-		if(!gentle) console.log('showCallsWhileInAbsence msg',payload.length);
-		callsWhileInAbsenceSlice = null;
+		if(!gentle) console.log('showmissedCalls msg',payload.length);
+		missedCallsSlice = null;
 		if(payload.length>0) {
-			callsWhileInAbsenceSlice = JSON.parse(payload);
+			missedCallsSlice = JSON.parse(payload);
 		}
-		showCallsWhileInAbsence();
+		showMissedCalls();
 
 	} else if(cmd=="ua") {
 		otherUA = payload;
@@ -1053,16 +1054,15 @@ function pickupWaitingCaller(addrPort) {
 	wsSend("pickupWaitingCaller|"+addrPort);
 }
 
-// show missedCalls
 var showCallsWhileInAbsenceCallingItself = false;
-function showCallsWhileInAbsence() {
+function showMissedCalls() {
 	if(wsConn==null) {
 		// don't execute if client is disconnected 
 		return;
 	}
 	if(missedCallsElement!=null) {
-		if(callsWhileInAbsenceSlice==null || callsWhileInAbsenceSlice.length<=0) {
-			if(!gentle) console.log('showWaitingCallers fkt callsWhileInAbsenceSlice == null');
+		if(missedCallsSlice==null || missedCallsSlice.length<=0) {
+			if(!gentle) console.log('showWaitingCallers fkt missedCallsSlice == null');
 			missedCallsElement.style.display = "none";
 			missedCallsElement.innerHTML = "";
 			if(missedCallsTitleElement!=null) {
@@ -1073,9 +1073,9 @@ function showCallsWhileInAbsence() {
 		missedCallsElement.style.display = "block";
 		let timeNowSecs = Math.floor((Date.now()+500)/1000);
 		let str = "<table style='width:100%; border-collapse:separate; border-spacing:6px 2px; line-height:1.5em;'>"
-		for(var i=0; i<callsWhileInAbsenceSlice.length; i++) {
+		for(var i=0; i<missedCallsSlice.length; i++) {
 			str += "<tr>"
-			let waitingSecs = timeNowSecs - callsWhileInAbsenceSlice[i].CallTime;
+			let waitingSecs = timeNowSecs - missedCallsSlice[i].CallTime;
 
 			// split waitingTimeString by days, hours, min
 			let waitingTimeString = ""+waitingSecs+" sec";
@@ -1099,12 +1099,12 @@ function showCallsWhileInAbsence() {
 					waitingTimeString = ""+waitingMins+" min";
 				}
 			}
-			let callerIp = callsWhileInAbsenceSlice[i].AddrPort;
+			let callerIp = missedCallsSlice[i].AddrPort;
 			let callerIpIdxPort = callerIp.indexOf(":");
 			if(callerIpIdxPort>0) {
 				callerIp = callerIp.substring(0,callerIpIdxPort);
 			}
-			let callerID = callsWhileInAbsenceSlice[i].CallerID;
+			let callerID = missedCallsSlice[i].CallerID;
 			let callerLink = callerID;
 			if(callerID.length>=5) {
 				// TODO here we could also verify if callerID is a valid calleeID
@@ -1120,12 +1120,12 @@ function showCallsWhileInAbsence() {
 					callerLink = "<a onclick='iframeWindowOpen(\""+callerLink+"\")'>"+callerID+"</a>";
 				}
 			}
-			str += "<td>"+callsWhileInAbsenceSlice[i].CallerName + "</td><td>"+
+			str += "<td>"+missedCallsSlice[i].CallerName + "</td><td>"+
 			    callerLink + "</td><td>"+
 				halfShowIpAddr(callerIp) + "</td><td style='text-align:right;'>"+
 				waitingTimeString + " ago</td><td>"+
 				"<a onclick='deleteMissedCall(\""+
-					callsWhileInAbsenceSlice[i].AddrPort+"_"+callsWhileInAbsenceSlice[i].CallTime+"\")'>"+
+					missedCallsSlice[i].AddrPort+"_"+missedCallsSlice[i].CallTime+"\")'>"+
 				"delete</a></td>";
 		}
 		str += "</table>"
@@ -1140,7 +1140,7 @@ function showCallsWhileInAbsence() {
 			showCallsWhileInAbsenceCallingItself = true;
 			setTimeout(function() {
 				showCallsWhileInAbsenceCallingItself = false;
-				showCallsWhileInAbsence();
+				showMissedCalls();
 			},10000);
 		}
 	}

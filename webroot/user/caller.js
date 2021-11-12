@@ -70,6 +70,7 @@ var fileReceiveSinceStartSecs=0;
 var fileSendAbort=false;
 var fileReceiveAbort=false;
 var needToStoreMissedCall="";
+var missedCallTime=0;
 
 var extMessage = function(e) {
 	var data = e.data.split(':')
@@ -104,6 +105,7 @@ window.onload = function() {
 	window.onload = goodby;
 	window.onbeforeunload = goodby;
 	needToStoreMissedCall = "";
+	missedCallTime = 0;
 
 	let id = getUrlParams("id");
 	if(typeof id!=="undefined" && id!="") {
@@ -685,6 +687,7 @@ function calleeOfflineAction() {
 				needToStoreMissedCall = calleeID+"|"+callerName+"|"+callerId;
 				// needToStoreMissedCall will be cleared by a successful call
 				// if it is still set in goodby(), we will ask server to store this as a missed call
+				missedCallTime = Date.now();
 				return;
 			}
 			// calleeID can NOT be notified
@@ -701,6 +704,10 @@ function calleeOfflineAction() {
 
 function goodby() {
 	if(needToStoreMissedCall) {
+		if(missedCallTime>0) {
+			let ageSecs = Math.floor((Date.now()-missedCallTime)/1000);
+			needToStoreMissedCall = needToStoreMissedCall+"|"+ageSecs;
+		}
 		if(!gentle) console.log('goodby needToStoreMissedCall',needToStoreMissedCall);
 		// tell server to store this as missed call
 		let api = apiPath+"/missedCall?id="+needToStoreMissedCall;

@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"time"
 	"strings"
+	"strconv"
 	"fmt"
 	"encoding/json"
 	"io/ioutil"
@@ -391,26 +392,37 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	return
 }
 
-func httpMissedCall(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr string, remoteAddrWithPort string) {
-	// called by caller.js goodby() via "/missedCall?id=(urlID)"
-	// urlID is encoded: calleeId+"|"+callerName+"|"+callerId
-	// TODO need to use the time/date of the original call to httpOnline() (/online GetOnlineCallee())
-	fmt.Printf("/httpMissedCall (%s) rip=%s\n", urlID, remoteAddrWithPort)
-	tok := strings.Split(urlID, "|")
-	if len(tok) != 3 {
-		fmt.Printf("# /httpMissedCall (%s) failed len(tok)=%d rip=%s\n",urlID,len(tok),remoteAddr)
+func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, remoteAddr string, remoteAddrWithPort string) {
+	// called by caller.js goodby() via "/missedCall?id=(callerInfo)"
+	// callerInfo is encoded: calleeId+"|"+callerName+"|"+callerId (plus optional: "|"+ageSecs
+	fmt.Printf("/httpMissedCall (%s) rip=%s\n", callerInfo, remoteAddrWithPort)
+	tok := strings.Split(callerInfo, "|")
+	if len(tok) < 3 {
+		fmt.Printf("# /httpMissedCall (%s) failed len(tok)=%d<3 rip=%s\n",callerInfo,len(tok),remoteAddr)
 		return
 	}
-	if tok[0]=="" {
-		fmt.Printf("# /httpMissedCall (%s) failed no calleeId rip=%s\n",urlID,remoteAddr)
+	if tok[0]=="" || tok[0]=="undefined" {
+		fmt.Printf("# /httpMissedCall (%s) failed no calleeId rip=%s\n",callerInfo,remoteAddr)
 		return
 	}
-	if tok[1]=="" && tok[2]=="" {
-		fmt.Printf("# /httpMissedCall (%s) failed no callerName + no callerId rip=%s\n",urlID,remoteAddr)
-		return
+	calleeId := tok[0]
+
+	var ageSecs64 int64 = 1
+	if len(tok) >= 4 {
+		// the age of the call is given in number of seconds; below we will substract this from the current time
+		var err error
+		ageSecs64, err = strconv.ParseInt(tok[3], 10, 64)
+		if err!=nil {
+			//fmt.Printf("# /httpMissedCall (%s) ParseInt err=%v\n",calleeId,err)
+			ageSecs64 = 0
+		} else if ageSecs64<0 {
+			//fmt.Printf("# /httpMissedCall (%s) ageSecs64=%d < 0\n",calleeId,ageSecs64)
+			ageSecs64 = 0
+		} else {
+			//fmt.Printf("/httpMissedCall (%s) ageSecs64=%d\n",calleeId,ageSecs64)
+		}
 	}
 	// find current state of dbUser.StoreMissedCalls via calleeId
-	calleeId := tok[0]
 	var dbEntry DbEntry
 	err := kvMain.Get(dbRegisteredIDs,calleeId,&dbEntry)
 	if err!=nil {
@@ -439,21 +451,61 @@ func httpMissedCall(w http.ResponseWriter, r *http.Request, urlID string, remote
 	if missedCallsSlice!=nil && len(missedCallsSlice)>=10 {
 		missedCallsSlice = missedCallsSlice[1:]
 	}
-	// TODO here time.Now() is wrong: need to use time/date of the original call to httpOnline()
-	caller := CallerInfo{remoteAddrWithPort,tok[1],time.Now().Unix(),""}
+	//fmt.Printf("/httpMissedCall (%s) missedCall arrived %ds ago\n", calleeId, ageSecs64)
+	callerName := tok[1] // callerName
 	if tok[1]=="" || tok[1]=="undefined" {
 		if tok[2]=="" || tok[2]=="undefined" {
-			caller = CallerInfo{remoteAddrWithPort,"unknown",time.Now().Unix(),""}
+			callerName = "unknown"
 		} else {
-			caller = CallerInfo{remoteAddrWithPort,tok[2],time.Now().Unix(),""}
+			callerName = tok[2] // use callerId instead
 		}
 	}
+	// the actual call occured ageSecs64 ago (may be a big number, if caller waits long before aborting the page)
+	timeOfCall := time.Now().Unix() - ageSecs64
+	caller := CallerInfo{remoteAddrWithPort,callerName,timeOfCall,""}
 	missedCallsSlice = append(missedCallsSlice, caller)
 	err = kvCalls.Put(dbMissedCalls, calleeId, missedCallsSlice, true) // skipConfirm
 	if err!=nil {
 		fmt.Printf("# /httpMissedCall (%s) fail store dbMissedCalls err=%v rip=%s\n", calleeId, err, remoteAddr)
+	} else {
+		fmt.Printf("/httpMissedCall (%s) stored dbMissedCalls caller=%v rip=%s\n", calleeId, caller, remoteAddr)
+
+		// send updated waitingCallerSlice + missedCalls to callee (if (hidden) online)
+		// check if callee is (hidden) online
+		calleeIsHiddenOnline := false
+		ejectOn1stFound := true
+		reportHiddenCallee := true
+		occupy := false
+		glCalleeId, locHub, globHub, err := GetOnlineCallee(calleeId, ejectOn1stFound, reportHiddenCallee,
+			remoteAddr, occupy, "/httpMissedCall")
+		if err != nil {
+			//fmt.Printf("# /httpMissedCall GetOnlineCallee() err=%v\n", err)
+			return
+		}
+		if glCalleeId != "" {
+			if (locHub!=nil && locHub.IsCalleeHidden) || (globHub!=nil && globHub.IsCalleeHidden) {
+				fmt.Printf("/httpMissedCall (%s) isHiddenOnline\n", glCalleeId)
+				calleeIsHiddenOnline = true
+			}
+		}
+		if calleeIsHiddenOnline {
+			var calleeWsClient *WsClient = nil
+			hubMapMutex.RLock()
+			myhub := hubMap[calleeId]
+			hubMapMutex.RUnlock()
+			if myhub!=nil {
+				calleeWsClient = myhub.CalleeClient
+			}
+			if calleeWsClient != nil {
+				var waitingCallerSlice []CallerInfo
+				err = kvCalls.Get(dbWaitingCaller, calleeId, &waitingCallerSlice)
+				if err != nil {
+					// we can ignore this
+				}
+				waitingCallerToCallee(calleeId, waitingCallerSlice, missedCallsSlice, calleeWsClient)
+			}
+		}
 	}
-	fmt.Printf("/httpMissedCall (%s) stored dbMissedCalls caller=%v rip=%s\n", calleeId, caller, remoteAddr)
 }
 
 func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr string, remoteAddrWithPort string) {

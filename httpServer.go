@@ -544,7 +544,6 @@ func waitingCallerToCallee(calleeID string, waitingCallerSlice []CallerInfo, mis
 				fmt.Printf("# waitingCallerToCallee cannot send waitingCallers (%s) hubclient==nil\n", calleeID)
 		} else {
 			fmt.Printf("waitingCallerToCallee send waitingCallers (%s) (%s) (%s)\n",
-//				calleeID, hubclient.unHiddenForCaller, string(jsonStr))
 				calleeID, hubclient.hub.IsUnHiddenForCallerAddr, string(jsonStr))
 			hubclient.Write([]byte("waitingCallers|"+string(jsonStr)))
 		}
@@ -559,7 +558,6 @@ func waitingCallerToCallee(calleeID string, waitingCallerSlice []CallerInfo, mis
 			fmt.Printf("# waitingCallerToCallee cannot send missedCalls (%s) hubclient==nil\n", calleeID)
 		} else {
 			fmt.Printf("waitingCallerToCallee send missedCalls (callee=%s) (unHidden=%s)\n",
-//				calleeID, hubclient.unHiddenForCaller)
 				calleeID, hubclient.hub.IsUnHiddenForCallerAddr)
 			hubclient.Write([]byte("missedCalls|"+string(jsonStr)))
 		}
