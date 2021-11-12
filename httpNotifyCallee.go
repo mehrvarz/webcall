@@ -294,24 +294,23 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 				go func() {
 					time.Sleep(60 * time.Second)
 					// in the mean time callee may have gone offline (and is now back online)
-					// so we assume calleeWsClient invalid and re-obtain it
-					calleeWsClient = nil
+					// this is why we check if callee is online now
 					glUrlID, _, _, err := GetOnlineCallee(urlID, ejectOn1stFound, reportHiddenCallee,
 						remoteAddr, occupy, "/notifyCallee")
 					if err != nil {
 						return
-					} else if glUrlID == "" {
+					}
+					if glUrlID == "" {
 						return
-					} else {
-						hubMapMutex.RLock()
-						myhub := hubMap[glUrlID]
-						hubMapMutex.RUnlock()
-						if myhub!=nil {
-							if myhub.IsUnHiddenForCallerAddr == remoteAddr {
-								myhub.IsUnHiddenForCallerAddr = ""
-								fmt.Printf("/notifyCallee clear callee %s HiddenForCallerAddr=%s\n",
-									glUrlID, remoteAddr)
-							}
+					}
+					hubMapMutex.RLock()
+					myhub := hubMap[glUrlID]
+					hubMapMutex.RUnlock()
+					if myhub!=nil {
+						if myhub.IsUnHiddenForCallerAddr == remoteAddr {
+							myhub.IsUnHiddenForCallerAddr = ""
+							fmt.Printf("/notifyCallee clear HiddenForCallerAddr=%s of callee %s\n",
+								remoteAddr, glUrlID)
 						}
 					}
 				}()
