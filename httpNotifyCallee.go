@@ -292,7 +292,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 
 				// clear unHiddenForCaller after a while, say, after 3 min
 				go func() {
-					time.Sleep(180 * time.Second)
+					time.Sleep(60 * time.Second)
 					// in the mean time callee may have gone offline (and is now back online)
 					// so we assume calleeWsClient invalid and re-obtain it
 					calleeWsClient = nil
