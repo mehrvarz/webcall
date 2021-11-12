@@ -37,21 +37,21 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 	if logWantedFor("online") {
 		fmt.Printf("/online urlID=%s rip=%s\n", urlID, remoteAddr)
 	}
-	globalID, locHub, globHub, err := GetOnlineCallee(urlID, ejectOn1stFound, reportHiddenCallee,
+	glUrlID, locHub, globHub, err := GetOnlineCallee(urlID, ejectOn1stFound, reportHiddenCallee,
 		remoteAddr, occupy, "/online")
 	if err != nil {
 		// error
-		fmt.Printf("# /online GetOnlineCallee(%s/%s) err=%v rip=%s\n", urlID, globalID, err, remoteAddr)
+		fmt.Printf("# /online GetOnlineCallee(%s/%s) err=%v rip=%s\n", urlID, glUrlID, err, remoteAddr)
 		fmt.Fprintf(w, "error")
 		return
 	}
 	if locHub == nil && globHub == nil {
 		// unknown urlID
-		fmt.Printf("/online GetOnlineCallee(%s/%s) no hub rip=%s\n", urlID, globalID, remoteAddr)
+		fmt.Printf("/online GetOnlineCallee(%s/%s) no hub rip=%s\n", urlID, glUrlID, remoteAddr)
 		fmt.Fprintf(w, "unknown")
 		return
 	}
-	if globalID == "" {
+	if glUrlID == "" {
 		// callee urlID is currently NOT online (this is not an error)
 		fmt.Printf("/online callee %s is cur NOT online rip=%s\n", urlID, remoteAddr)
 		fmt.Fprintf(w, "notavail")
@@ -65,7 +65,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		if wsClientID == 0 {
 			// something has gone wrong
 			fmt.Printf("# /online loc wsClientID==0 id=(%s/%s) rip=%s\n",
-				urlID, globalID, remoteAddr)
+				urlID, glUrlID, remoteAddr)
 			// clear local ConnectedCallerIp
 			locHub.HubMutex.Lock()
 			locHub.ConnectedCallerIp = ""
@@ -90,9 +90,9 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		readConfigLock.RUnlock()
 		wsAddr = fmt.Sprintf("%s?wsid=%d", wsAddr, wsClientID)
 		if logWantedFor("wsAddr") {
-			fmt.Printf("/online id=%s onl/avail %s rip=%s\n", globalID, wsAddr, remoteAddr)
+			fmt.Printf("/online id=%s onl/avail %s rip=%s\n", glUrlID, wsAddr, remoteAddr)
 		} else {
-			fmt.Printf("/online id=%s onl/avail rip=%s\n", globalID, remoteAddr)
+			fmt.Printf("/online id=%s onl/avail rip=%s\n", glUrlID, remoteAddr)
 		}
 		fmt.Fprintf(w, wsAddr)
 		return
@@ -100,9 +100,9 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 	if globHub != nil {
 		// callee is managed by a remote server
 		if globHub.ConnectedCallerIp != "" {
-			// this callee (urlID/globalID) is online but currently busy
+			// this callee (urlID/glUrlID) is online but currently busy
 			fmt.Printf("/online busy for (%s/%s) callerIp=(%s) rip=%s\n",
-				urlID, globalID, globHub.ConnectedCallerIp, remoteAddr)
+				urlID, glUrlID, globHub.ConnectedCallerIp, remoteAddr)
 			fmt.Fprintf(w, "busy")
 			return
 		}
@@ -111,9 +111,9 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		if wsClientID == 0 {
 			// something has gone wrong
 			fmt.Printf("# /online glob wsClientID==0 (%s) for id=(%s/%s) rip=%s\n",
-				globalID, urlID, globalID, remoteAddr)
+				glUrlID, urlID, glUrlID, remoteAddr)
 			// clear global ConnectedCallerIp
-			err := StoreCallerIpInHubMap(globalID, "", false)
+			err := StoreCallerIpInHubMap(glUrlID, "", false)
 			if err!=nil {
 				fmt.Printf("# /online rkv.StoreCallerIpInHubMap err=%v\n", err)
 			}
@@ -128,19 +128,19 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		wsAddr = fmt.Sprintf("%s?wsid=%d", wsAddr, wsClientID)
 
 		if logWantedFor("wsAddr") {
-			fmt.Printf("/online id=%s onl/avail wsAddr=%s rip=%s\n", globalID, wsAddr, remoteAddr)
+			fmt.Printf("/online id=%s onl/avail wsAddr=%s rip=%s\n", glUrlID, wsAddr, remoteAddr)
 		} else {
-			fmt.Printf("/online id=%s onl/avail rip=%s\n", globalID, remoteAddr)
+			fmt.Printf("/online id=%s onl/avail rip=%s\n", glUrlID, remoteAddr)
 		}
 		fmt.Fprintf(w, wsAddr)
 		return
 	}
 
 	// something has gone wrong - callee not found anywhere
-	fmt.Printf("# /online no hub found for id=(%s/%s) rip=%s\n", urlID, globalID, remoteAddr)
+	fmt.Printf("# /online no hub found for id=(%s/%s) rip=%s\n", urlID, glUrlID, remoteAddr)
 
 	// clear ConnectedCallerIp
-	StoreCallerIpInHubMap(globalID, "", false)
+	StoreCallerIpInHubMap(glUrlID, "", false)
 	fmt.Fprintf(w, "error")
 	return
 }

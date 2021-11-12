@@ -380,8 +380,10 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 }
 
 func httpMissedCall(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr string, remoteAddrWithPort string) {
-	fmt.Printf("/httpMissedCall (%s) rip=%s\n", urlID, remoteAddrWithPort)
+	// called by caller.js goodby() via "/missedCall?id=(urlID)"
 	// urlID is encoded: calleeId+"|"+callerName+"|"+callerId
+	// TODO need to use the time/date of the original call to httpOnline() (/online GetOnlineCallee())
+	fmt.Printf("/httpMissedCall (%s) rip=%s\n", urlID, remoteAddrWithPort)
 	tok := strings.Split(urlID, "|")
 	if len(tok) != 3 {
 		fmt.Printf("# /httpMissedCall (%s) failed len(tok)=%d rip=%s\n",urlID,len(tok),remoteAddr)
@@ -395,6 +397,7 @@ func httpMissedCall(w http.ResponseWriter, r *http.Request, urlID string, remote
 		fmt.Printf("# /httpMissedCall (%s) failed no callerName + no callerId rip=%s\n",urlID,remoteAddr)
 		return
 	}
+	// find current state of dbUser.StoreMissedCalls via calleeId
 	calleeId := tok[0]
 	var dbEntry DbEntry
 	err := kvMain.Get(dbRegisteredIDs,calleeId,&dbEntry)
@@ -413,7 +416,7 @@ func httpMissedCall(w http.ResponseWriter, r *http.Request, urlID string, remote
 		fmt.Printf("/httpMissedCall (%s) no StoreMissedCalls rip=%s\n",dbUserKey,remoteAddr)
 		return
 	}
-	// store missed call
+	// load, add, store missedCalls
 	var missedCallsSlice []CallerInfo
 	err = kvCalls.Get(dbMissedCalls,calleeId,&missedCallsSlice)
 	if err!=nil {
@@ -424,9 +427,10 @@ func httpMissedCall(w http.ResponseWriter, r *http.Request, urlID string, remote
 	if missedCallsSlice!=nil && len(missedCallsSlice)>=10 {
 		missedCallsSlice = missedCallsSlice[1:]
 	}
+	// TODO here time.Now() is wrong: need to use time/date of the original call to httpOnline()
 	caller := CallerInfo{remoteAddrWithPort,tok[1],time.Now().Unix(),""}
 	if tok[1]=="" || tok[1]=="undefined" {
-		if tok[2]=="undefined" {
+		if tok[2]=="" || tok[2]=="undefined" {
 			caller = CallerInfo{remoteAddrWithPort,"unknown",time.Now().Unix(),""}
 		} else {
 			caller = CallerInfo{remoteAddrWithPort,tok[2],time.Now().Unix(),""}
@@ -463,9 +467,7 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 	}
 	calleeName := dbUser.Name
 
-	// remoteAddrWithPort of incoming call
-	caller := CallerInfo{remoteAddrWithPort,"unknown",time.Now().Unix(),""}
-
+/* removed to fix caller getting "xxx is not online at this time" when callee is in hidden mode
 	// check if hidden online, if so skip pushable check
 	ejectOn1stFound := true
 	reportHiddenCallee := true
@@ -476,13 +478,14 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 		fmt.Printf("# /canbenotified GetOnlineCallee() err=%v\n",err)
 		return
 	}
+
 	if key!="" {
 		if (locHub!=nil && locHub.IsCalleeHidden) || (globHub!=nil && globHub.IsCalleeHidden) {
 			fmt.Printf("/canbenotified (%s) isHiddenOnline rip=%s\n",urlID,remoteAddr)
 			return
 		}
 	}
-
+*/
 	if dbUser.Email2=="" && dbUser.Str2=="" && dbUser.Str3=="" {
 		// this user can NOT rcv push msg (not pushable)
 		fmt.Printf("/canbenotified (%s) has no push channel rip=%s\n",urlID,remoteAddr)
@@ -498,6 +501,7 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 			if missedCallsSlice!=nil && len(missedCallsSlice)>=10 {
 				missedCallsSlice = missedCallsSlice[1:]
 			}
+			caller := CallerInfo{remoteAddrWithPort,"unknown",time.Now().Unix(),""}
 			missedCallsSlice = append(missedCallsSlice, caller)
 			err = kvCalls.Put(dbMissedCalls, urlID, missedCallsSlice, true) // skipConfirm
 			if err!=nil {
