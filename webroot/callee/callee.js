@@ -668,16 +668,32 @@ function showOnlineReadyMsg(sessionIdPayload) {
 	}
 
 	msgbox.style.display = "none";
-	var calleeLink = window.location.href;
-	calleeLink = calleeLink.replace("callee/","user/");
-	let msg = "";
-	msg += "You will receive calls made by this link:<br>"+
-		"<a target='_blank' href='"+calleeLink+"'>"+calleeLink+"</a><br>";
-	if(!gentle) console.log('showOnlineReadyMsg', clientVersion, sessionIdPayload);
-	if(sessionIdPayload!="" && clientVersion<sessionIdPayload) {
-		msg += "Software update available. Reload to update.<br>";
+
+	let msg1 = "";
+	if(isHiddenCheckbox.checked) {
+		msg1 =  "Your online status is hidden. "+
+				"Go to Menu to turn this off.<br>"
 	}
-	showStatus(msg,-1);
+//	if(!gentle) console.log('showOnlineReadyMsg', clientVersion, sessionIdPayload);
+//	if(sessionIdPayload!="" && clientVersion<sessionIdPayload) {
+//		msg1 += "Software update available. Reload to update.<br>";
+//	}
+
+	var calleeLink = window.location.href;
+	var userLink = calleeLink.replace("callee/","user/");
+	let msg2 = "You will receive calls made by this link:<br>"+
+		"<a target='_blank' href='"+userLink+"'>"+userLink+"</a><br>";
+
+	if(msg1!="") {
+		// show 2 msgs after another
+		showStatus(msg1,2500);
+		setTimeout(function() {
+			showStatus(msg2,-1);
+		},2800);
+	} else {
+		// show 1 msg
+		showStatus(msg2,-1);
+	}
 }
 
 function connectSignaling(message) {
