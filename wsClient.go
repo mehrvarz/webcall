@@ -37,8 +37,6 @@ type WsClient struct {
 	isCallee bool
 	isOnline atombool.AtomBool	// connected to signaling server
 	isConnectedToPeer atombool.AtomBool
-	isHiddenCallee bool // if set, we don't report callee as online; see: getOnlinePort()
-	unHiddenForCaller string
 	RemoteAddr string // without port
 	userAgent string
 	calleeID string
@@ -203,8 +201,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				client.calleeID, wsClientID64, client.RemoteAddr)
 		}
 		client.isCallee = true
-		client.isHiddenCallee = wsClientData.dbUser.Int2&1!=0
-		client.unHiddenForCaller = ""
+		hub.IsCalleeHidden = wsClientData.dbUser.Int2&1!=0
+		hub.IsUnHiddenForCallerAddr = ""
 
 		hub.WsClientID = wsClientID64
 		hub.calleeHostStr = calleeHostStr
@@ -383,20 +381,20 @@ func (c *WsClient) receiveProcess(message []byte) {
 	if cmd=="calleeHidden" {
 		fmt.Printf("%s calleeHidden from %s (%s)\n",c.connType,c.RemoteAddr,payload)
 		if(payload=="true") {
-			c.isHiddenCallee = true
-			c.unHiddenForCaller = ""
+			c.hub.IsCalleeHidden = true
 		} else {
-			c.isHiddenCallee = false
+			c.hub.IsCalleeHidden = false
 		}
+		c.hub.IsUnHiddenForCallerAddr = ""
 
 		// forward state of c.isHiddenCallee to globalHubMap
-		err := SetCalleeHiddenState(c.calleeID, c.isHiddenCallee)
+		err := SetCalleeHiddenState(c.calleeID, c.hub.IsCalleeHidden)
 		if err != nil {
-			fmt.Printf("# serveWs SetCalleeHiddenState id=%s %v err=%v\n",c.calleeID,c.isHiddenCallee,err)
+			fmt.Printf("# serveWs SetCalleeHiddenState id=%s %v err=%v\n",c.calleeID,c.hub.IsCalleeHidden,err)
 		}
 
-		// read dbUser for isHiddenCallee flag
-		// store dbUser after set/clear isHiddenCallee in dbUser.Int2&1
+		// read dbUser for IsCalleeHidden flag
+		// store dbUser after set/clear IsCalleeHidden in dbUser.Int2&1
 		userKey := c.calleeID + "_" + strconv.FormatInt(int64(c.hub.registrationStartTime),10)
 		var dbUser DbUser
 		err = kvMain.Get(dbUserBucket, userKey, &dbUser)
@@ -404,13 +402,13 @@ func (c *WsClient) receiveProcess(message []byte) {
 			fmt.Printf("# serveWs calleeHidden db=%s bucket=%s getX key=%v err=%v\n",
 				dbMainName, dbUserBucket, userKey, err)
 		} else {
-			if c.isHiddenCallee {
+			if c.hub.IsCalleeHidden {
 				dbUser.Int2 |= 1
 			} else {
 				dbUser.Int2 &= ^1
 			}
 			fmt.Printf("%s calleeHidden store dbUser calleeID=%s isHiddenCallee=%v (%d)\n",
-				c.connType, c.calleeID, c.isHiddenCallee, dbUser.Int2)
+				c.connType, c.calleeID, c.hub.IsCalleeHidden, dbUser.Int2)
 			err := kvMain.Put(dbUserBucket, userKey, dbUser, true) // skipConfirm
 			if err!=nil {
 				fmt.Printf("# serveWs calleeHidden db=%s bucket=%s put key=%v err=%v\n",
@@ -427,7 +425,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 				//		dbMainName, dbUserBucket, userKey, err)
 				//} else {
 				//	fmt.Printf("serveWs calleeHidden verify userKey=%v isHiddenCallee=%v (%d)\n",
-				//		userKey, c.isHiddenCallee, dbUser2.Int2)
+				//		userKey, c.hub.IsCalleeHidden, dbUser2.Int2)
 				//}
 			}
 		}

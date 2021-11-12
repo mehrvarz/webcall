@@ -228,35 +228,34 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 
 	waitingCaller := CallerInfo{remoteAddrWithPort, callerName, time.Now().Unix(), callerId}
 	var waitingCallerSlice []CallerInfo
-	err = kvCalls.Get(dbWaitingCaller, urlID, &waitingCallerSlice)
-	if err != nil {
-		// we can ignore this
-	}
-	waitingCallerSlice = append(waitingCallerSlice, waitingCaller)
-	err = kvCalls.Put(dbWaitingCaller, urlID, waitingCallerSlice, false)
-	if err != nil {
-		fmt.Printf("# /notifyCallee (%s) failed to store dbWaitingCaller\n", urlID)
-	}
-
-	var cli *WsClient = nil
+	var calleeWsClient *WsClient = nil
 	if calleeIsHiddenOnline {
-		// send an updated json to callee-client
+		// send a waitingCaller json-update (containing remoteAddrWithPort + callerName) to hidden callee
+		err = kvCalls.Get(dbWaitingCaller, urlID, &waitingCallerSlice)
+		if err != nil {
+			// we can ignore this
+		}
+		waitingCallerSlice = append(waitingCallerSlice, waitingCaller)
+		err = kvCalls.Put(dbWaitingCaller, urlID, waitingCallerSlice, false)
+		if err != nil {
+			fmt.Printf("# /notifyCallee (%s) failed to store dbWaitingCaller\n", urlID)
+		}
+
 		hubMapMutex.RLock()
 		myhub := hubMap[urlID]
 		hubMapMutex.RUnlock()
 		if myhub!=nil {
-			cli = myhub.CalleeClient
+			calleeWsClient = myhub.CalleeClient
 		}
-		if cli != nil {
+		if calleeWsClient != nil {
+			calleeWsClient.hub.IsUnHiddenForCallerAddr = ""
 			fmt.Printf("/notifyCallee (%s) send waitingCallerSlice len=%d\n", urlID, len(waitingCallerSlice))
 			json, err := json.Marshal(waitingCallerSlice)
 			if err != nil {
 				fmt.Printf("# /notifyCallee json.Marshal(waitingCallerSlice) err=%v\n", err)
 			} else {
-				cli.Write([]byte("waitingCallers|" + string(json)))
+				calleeWsClient.Write([]byte("waitingCallers|" + string(json)))
 			}
-
-			cli.unHiddenForCaller = "" // TODO ???
 		}
 	}
 
@@ -268,113 +267,127 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		// callee is allowing caller to connect
 		// coming from callee.js: function pickupWaitingCaller(callerID)
 		//             client.go: if cmd=="pickupWaitingCaller"
+
 		// in the mean time callee may have gone offline (and is now back online)
+		// so we assume calleeWsClient invalid and re-obtain it
+		calleeWsClient = nil
 		glUrlID, _, _, err := GetOnlineCallee(urlID, ejectOn1stFound, reportHiddenCallee,
 			remoteAddr, occupy, "/notifyCallee")
 		if err != nil {
 			fmt.Printf("# /notifyCallee GetOnlineCallee() err=%v\n", err)
 			return
 		}
-		if glUrlID != "" {
-			fmt.Printf("/notifyCallee callee (%s/%s) wants caller (%s) to connect\n", urlID, glUrlID, remoteAddr)
-			// this will make the hidden callee "visible" for the caller
-			if cli != nil {
-				cli.unHiddenForCaller = remoteAddr
-			}
-			if err := SetUnHiddenForCaller(glUrlID, remoteAddr); err != nil {
-				fmt.Printf("# /notifyCallee SetUnHiddenForCaller id=%s ip=%s err=%v\n",
-					glUrlID, remoteAddr, err)
-			}
-
-			hubMapMutex.RLock()
-			cli = hubMap[glUrlID].CalleeClient
-			hubMapMutex.RUnlock()
-		} else {
+		if glUrlID == "" {
 			fmt.Printf("# /notifyCallee callee (%s/%s) wants caller (%s) to connect - but not online\n",
 				urlID, glUrlID, remoteAddr)
-			cli = nil
+		} else {
+			// make the hidden callee "visible" for this particular caller
+			fmt.Printf("/notifyCallee callee (%s/%s) wants caller (%s) to connect\n", urlID, glUrlID, remoteAddr)
+			if err := SetUnHiddenForCaller(glUrlID, remoteAddr); err != nil {
+				fmt.Printf("# /notifyCallee SetUnHiddenForCaller id=%s ip=%s err=%v\n", glUrlID, remoteAddr, err)
+			} else {
+				hubMapMutex.RLock()
+				calleeWsClient = hubMap[glUrlID].CalleeClient
+				hubMapMutex.RUnlock()
+
+				// clear unHiddenForCaller after a while, say, after 3 min
+				go func() {
+					time.Sleep(180 * time.Second)
+					// in the mean time callee may have gone offline (and is now back online)
+					// so we assume calleeWsClient invalid and re-obtain it
+					calleeWsClient = nil
+					glUrlID, _, _, err := GetOnlineCallee(urlID, ejectOn1stFound, reportHiddenCallee,
+						remoteAddr, occupy, "/notifyCallee")
+					if err != nil {
+						return
+					} else if glUrlID == "" {
+						return
+					} else {
+						hubMapMutex.RLock()
+						myhub := hubMap[glUrlID]
+						hubMapMutex.RUnlock()
+						if myhub!=nil {
+							if myhub.IsUnHiddenForCallerAddr == remoteAddr {
+								myhub.IsUnHiddenForCallerAddr = ""
+								fmt.Printf("/notifyCallee clear callee %s HiddenForCallerAddr=%s\n",
+									glUrlID, remoteAddr)
+							}
+						}
+					}
+				}()
+			}
 		}
 		// caller receiving this "ok" will automatically attempt to make a call now
 		fmt.Fprintf(w, "ok")
 	case <-r.Context().Done():
 		// caller has disconnected (before callee could wake this channel to answer the call)
+		// in the mean time callee may have gone offline (and is now back online)
+		// so we assume calleeWsClient invalid and re-obtain it
+		calleeWsClient = nil
 		fmt.Printf("/notifyCallee (%s) caller disconnected\n", urlID)
 		callerGaveUp = true
-
-		// callee may have gone offline in the mean time - and may be back online now
-		// so it only helps if we retrieve hubclient before we hubclient.send below
 		glUrlID, _, _, err := GetOnlineCallee(urlID, ejectOn1stFound, reportHiddenCallee,
 			remoteAddr, occupy, "/notifyCallee")
 		if err != nil {
 			fmt.Printf("# /notifyCallee GetOnlineCallee() id=%s/%s err=%v\n", urlID, glUrlID, err)
-		}
-		if glUrlID != "" {
-			hubMapMutex.RLock()
-			cli = hubMap[glUrlID].CalleeClient
-			hubMapMutex.RUnlock()
+		} else if glUrlID == "" {
+			fmt.Printf("# /notifyCallee GetOnlineCallee() id=%s/%s is empty\n", urlID, glUrlID)
 		} else {
-			cli = nil
+			hubMapMutex.RLock()
+			calleeWsClient = hubMap[glUrlID].CalleeClient
+			hubMapMutex.RUnlock()
 		}
 	}
 
-	fmt.Printf("/notifyCallee (%s) delete callee online-notification chan\n", urlID)
+	//fmt.Printf("/notifyCallee (%s) delete callee online-notification chan\n", urlID)
 	waitingCallerChanLock.Lock()
 	delete(waitingCallerChanMap, remoteAddrWithPort)
 	waitingCallerChanLock.Unlock()
 
-	err = kvCalls.Get(dbWaitingCaller, urlID, &waitingCallerSlice)
-	if err != nil {
-		// we can ignore this
-	}
+	if calleeWsClient==nil {
+		fmt.Printf("# /notifyCallee (%s/%s) calleeWsClient==nil cannot update dbWaitingCaller\n", urlID, glUrlID)
+	} else {
+		err = kvCalls.Get(dbWaitingCaller, urlID, &waitingCallerSlice)
+		if err != nil {
+			// we can ignore this
+		}
 
-	var missedCallsSlice []CallerInfo
+		var missedCallsSlice []CallerInfo
 
-	// remove this caller from waitingCallerSlice
-	for idx := range waitingCallerSlice {
-		if waitingCallerSlice[idx].AddrPort == remoteAddrWithPort {
-			fmt.Printf("/notifyCallee (%s) remove caller from waitingCallerSlice + store\n", urlID)
-			waitingCallerSlice = append(waitingCallerSlice[:idx], waitingCallerSlice[idx+1:]...)
-			err = kvCalls.Put(dbWaitingCaller, urlID, waitingCallerSlice, false)
-			if err != nil {
-				fmt.Printf("# /notifyCallee (%s) failed to store dbWaitingCaller\n", urlID)
-			}
+		// remove this caller from waitingCallerSlice
+		for idx := range waitingCallerSlice {
+			if waitingCallerSlice[idx].AddrPort == remoteAddrWithPort {
+				fmt.Printf("/notifyCallee (%s) remove caller from waitingCallerSlice + store\n", urlID)
+				waitingCallerSlice = append(waitingCallerSlice[:idx], waitingCallerSlice[idx+1:]...)
+				err = kvCalls.Put(dbWaitingCaller, urlID, waitingCallerSlice, false)
+				if err != nil {
+					fmt.Printf("# /notifyCallee (%s) failed to store dbWaitingCaller\n", urlID)
+				}
 
-			if callerGaveUp {
-				// store missed call
-				if(dbUser.StoreMissedCalls) {
-					fmt.Printf("/notifyCallee (%s) store missed call\n", urlID)
-					err = kvCalls.Get(dbMissedCalls, urlID, &missedCallsSlice)
-					if err != nil {
-						fmt.Printf("# /notifyCallee (%s) failed to read dbMissedCalls %v\n", urlID, err)
-					}
-					// make sure we never have more than 10 missed calls
-					if missedCallsSlice != nil && len(missedCallsSlice) >= 10 {
-						missedCallsSlice = missedCallsSlice[1:]
-					}
-					missedCallsSlice = append(missedCallsSlice, waitingCaller)
-					err = kvCalls.Put(dbMissedCalls, urlID, missedCallsSlice, false)
-					if err != nil {
-						fmt.Printf("# /notifyCallee (%s) failed to store dbMissedCalls %v\n", urlID, err)
+				if callerGaveUp {
+					// store missed call
+					if(dbUser.StoreMissedCalls) {
+						fmt.Printf("/notifyCallee (%s) store missed call\n", urlID)
+						err = kvCalls.Get(dbMissedCalls, urlID, &missedCallsSlice)
+						if err != nil {
+							fmt.Printf("# /notifyCallee (%s) failed to read dbMissedCalls %v\n", urlID, err)
+						}
+						// make sure we never have more than 10 missed calls
+						if missedCallsSlice != nil && len(missedCallsSlice) >= 10 {
+							missedCallsSlice = missedCallsSlice[1:]
+						}
+						missedCallsSlice = append(missedCallsSlice, waitingCaller)
+						err = kvCalls.Put(dbMissedCalls, urlID, missedCallsSlice, false)
+						if err != nil {
+							fmt.Printf("# /notifyCallee (%s) failed to store dbMissedCalls %v\n", urlID, err)
+						}
 					}
 				}
+				break
 			}
-			break
 		}
-	}
-
-	if cli==nil {
-		hubMapMutex.RLock()
-		myhub := hubMap[urlID]
-		hubMapMutex.RUnlock()
-		if myhub!=nil {
-			cli = myhub.CalleeClient
-		}
-	}
-	if cli != nil {
 		// send updated waitingCallerSlice + missedCalls
-		waitingCallerToCallee(urlID, waitingCallerSlice, missedCallsSlice, cli)
-	} else {
-		//fmt.Printf("/notifyCallee (%s) cli==nil\n", urlID)
+		waitingCallerToCallee(urlID, waitingCallerSlice, missedCallsSlice, calleeWsClient)
 	}
 	return
 }
