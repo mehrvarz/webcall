@@ -326,12 +326,12 @@ function videoOn() {
 	getStream().then(() => navigator.mediaDevices.enumerateDevices()).then((deviceInfos) => {
 		gotDevices(deviceInfos);
 		let optionElements = Array.from(avSelect);
-		if(!gentle) console.log("videoOn avSelect.selectedIndex len",optionElements.length);
+		if(!gentle) console.log("videoOn avSelect len",optionElements.length);
 		if(optionElements.length>0) {
 			for(let i=0; i<optionElements.length; i++) {
 				if(optionElements[i].text.startsWith("Video")) {
 					avSelect.selectedIndex = i;
-					if(!gentle) console.log("videoOn avSelect.selectedIndex set",i);
+					if(!gentle) console.log("videoOn avSelect idx",i);
 					break;
 				}
 			}
@@ -393,14 +393,14 @@ function videoOff() {
 		}
 
 		// fully deacticate localVideoFrame + localStream (mic)
-		if(!gentle) console.log("videoOff !rtcConnect shutdown localVideo");
+		if(!gentle) console.log("videoOff !rtcConnect shut localVideo");
 		localVideoFrame.pause();
 		localVideoFrame.currentTime = 0;
 		localVideoFrame.srcObject = null;
 		localStream = null;
 
 		// hide and fully deacticate remoteVideoFrame + remoteStream
-		if(!gentle) console.log("videoOff !rtcConnect shutdown remoteVideo");
+		if(!gentle) console.log("videoOff !rtcConnect shut remoteVideo");
 		remoteVideoFrame.pause();
 		remoteVideoFrame.currentTime = 0;
 		remoteVideoFrame.srcObject = null;
@@ -411,12 +411,12 @@ function videoOff() {
 	// switch to the 1st/default audio device
 	let optionElements = Array.from(avSelect);
 	if(optionElements.length>0) {
-		if(!gentle) console.log("videoOff avSelect.selectedIndex len",optionElements.length);
+		if(!gentle) console.log("videoOff avSelect len",optionElements.length);
 		// pre-select the 1st video device
 		for(let i=0; i<optionElements.length; i++) {
 			if(optionElements[i].text.startsWith("Audio")) {
 				avSelect.selectedIndex = i;
-				if(!gentle) console.log("videoOff avSelect.selectedIndex set",i);
+				if(!gentle) console.log("videoOff avSelect idx",i);
 				break;
 			}
 		}

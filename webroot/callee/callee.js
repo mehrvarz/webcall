@@ -306,12 +306,12 @@ function videoOff() {
 			localStream.getTracks().forEach(track => { track.stop(); });
 			localStream = null;
 		}
-		if(!gentle) console.log("videoOff !rtcConnect shutdown localVideo");
+		if(!gentle) console.log("videoOff !rtcConnect shut localVideo");
 		localVideoFrame.pause();
 		localVideoFrame.currentTime = 0;
 		localVideoFrame.srcObject = null;
 
-		if(!gentle) console.log("videoOff !rtcConnect shutdown remoteVideo");
+		if(!gentle) console.log("videoOff !rtcConnect shut remoteVideo");
 		remoteVideoFrame.pause();
 		remoteVideoFrame.currentTime = 0;
 		remoteVideoFrame.srcObject = null;
@@ -326,11 +326,11 @@ function videoOff() {
 	// switch to the 1st audio option
 	let optionElements = Array.from(avSelect);
 	if(optionElements.length>0) {
-		if(!gentle) console.log("videoOff avSelect.selectedIndex len",optionElements.length);
+		if(!gentle) console.log("videoOff avSelect len",optionElements.length);
 		for(let i=0; i<optionElements.length; i++) {
 			if(optionElements[i].text.startsWith("Audio")) {
 				avSelect.selectedIndex = i;
-				if(!gentle) console.log("videoOff avSelect.selectedIndex set",i);
+				if(!gentle) console.log("videoOff avSelect idx",i);
 				break;
 			}
 		}

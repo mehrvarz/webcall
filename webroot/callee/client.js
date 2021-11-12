@@ -126,14 +126,14 @@ function showVideoToast(toastElement,w,h) {
 
 function showVideoResolutionLocal() {
 	if(videoEnabled && localVideoFrame.videoWidth>10 && localVideoFrame.videoHeight>10) {
-		console.log('local video size changed', localVideoFrame.videoWidth, localVideoFrame.videoHeight);
+		console.log('localVideo size change', localVideoFrame.videoWidth, localVideoFrame.videoHeight);
 		showVideoToast(localVideoRes, localVideoFrame.videoWidth, localVideoFrame.videoHeight);
 	}
 }
 
 function showVideoResolutionRemote() {
 	if(remoteVideoFrame.videoWidth>10 && remoteVideoFrame.videoHeight>10) {
-		console.log('remote video size changed', remoteVideoFrame.videoWidth, remoteVideoFrame.videoHeight);
+		console.log('remoteVideo size change', remoteVideoFrame.videoWidth, remoteVideoFrame.videoHeight);
 		showVideoToast(remoteVideoRes, remoteVideoFrame.videoWidth, remoteVideoFrame.videoHeight);
 	}
 }
@@ -571,7 +571,7 @@ function menuDialogOpen(menuDialog) {
 	if(posX<0) posX=0;
     var posY = e.clientY;
 	if(posY>50) posY-=50;
-	if(!gentle) console.log('menuDialogOpen x/y',posX,e.clientX,posY,e.clientY);
+	//if(!gentle) console.log('menuDialogOpen x/y',posX,e.clientX,posY,e.clientY);
 	const menuDialogOpenChildElement = menuDialogOpenElement.firstElementChild;
 	menuDialogOpenChildElement.style.left = posX+"px";
 	menuDialogOpenChildElement.style.top = (posY+window.scrollY)+"px"; // add scrollY-offset to posY
@@ -582,11 +582,11 @@ function menuDialogOpen(menuDialog) {
 		//if(!gentle) console.log('menuDialogOpenChildElement');
 		let menuHeight = menuDialogOpenChildElement.clientHeight;
 		let pageHeight = mainElement.clientHeight;
-		if(!gentle) console.log('menuDialogOpen up',posY, menuHeight, pageHeight);
+		//if(!gentle) console.log('menuDialogOpen up',posY, menuHeight, pageHeight);
 		while(posY>10 && posY + menuHeight > pageHeight) {
 			posY -= 10;
 		}
-		if(!gentle) console.log('menuDialogOpen up2',posY, menuHeight, pageHeight);
+		//if(!gentle) console.log('menuDialogOpen up2',posY, menuHeight, pageHeight);
 		menuDialogOpenChildElement.style.top = (posY+window.scrollY)+"px"; // add scrollY-offset to posY
 	},60);
 }
@@ -1039,13 +1039,13 @@ function localVideoHide() {
 	lastGoodMediaConstraints = null;
 	localVideoLabel.style.opacity = 0.3; // will be transitioned
 	let localVideoDivHeight = parseFloat(getComputedStyle(localVideoFrame).width)/16*9;
-	if(!gentle) console.log("localVideoHide DivHeight",localVideoDivHeight);
+	//if(!gentle) console.log("localVideoHide DivHeight",localVideoDivHeight);
 	localVideoDiv.style.height = ""+localVideoDivHeight+"px"; // height from auto to fixed
 	setTimeout(function() { // wait for fixed height (timer works better than requestAnimationFrame on andr)
 		if(!videoEnabled) {
 			localVideoDiv.style.height = "0px"; // will be transitioned
 		}
-	},60);
+	},200);
 	// now that the localVideo pane is hidden, show the camera icon
 	cameraElement.style.opacity = 1;
 }
@@ -1137,10 +1137,10 @@ function hashchange() {
 	//if(!gentle) console.log("hashchange hashcounter",hashcounter,newhashcounter);
 	if(hashcounter>0 && newhashcounter<hashcounter) {
 		if(iframeWindowOpenFlag) {
-			if(!gentle) console.log("onhashchange iframeWindowClose");
+			//if(!gentle) console.log("onhashchange iframeWindowClose");
 			iframeWindowClose();
 		} else if(menuDialogOpenElement) {
-			if(!gentle) console.log("onhashchange menuDialogClose");
+			//if(!gentle) console.log("onhashchange menuDialogClose");
 			menuDialogClose();
 		}
 	}
