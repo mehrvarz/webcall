@@ -21,7 +21,7 @@ import (
 	"os"
 	"math/rand"
 	"sync"
-	"runtime"
+	//"runtime"
 )
 
 func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *http.Cookie, pw string, remoteAddr string, remoteAddrWithPort string, myRequestCount int, nocookie bool, startRequestTime time.Time, pwIdCombo PwIdCombo) {
