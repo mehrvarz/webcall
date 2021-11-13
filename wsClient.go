@@ -324,9 +324,9 @@ func (c *WsClient) receiveProcess(message []byte) {
 		}
 
 		if len(waitingCallerSlice)>0 || len(missedCallsSlice)>0 {
-			// this may hubclient.Write() from httpServer
-			fmt.Printf("%s waitingCallerToCallee (%s) %d %d\n",c.connType,c.calleeID,
-				len(waitingCallerSlice),len(missedCallsSlice))
+			//fmt.Printf("%s waitingCallerToCallee (%s) %d %d\n",c.connType,c.calleeID,
+			//	len(waitingCallerSlice),len(missedCallsSlice))
+			// -> httpServer hubclient.Write()
 			waitingCallerToCallee(c.calleeID, waitingCallerSlice, missedCallsSlice, c)
 		}
 		return
@@ -379,7 +379,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 	}
 
 	if cmd=="calleeHidden" {
-		fmt.Printf("%s calleeHidden from %s (%s)\n",c.connType,c.RemoteAddr,payload)
+		//fmt.Printf("%s cmd=calleeHidden from %s (%s)\n",c.connType,c.RemoteAddr,payload)
 		if(payload=="true") {
 			c.hub.IsCalleeHidden = true
 		} else {
@@ -399,7 +399,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 		var dbUser DbUser
 		err = kvMain.Get(dbUserBucket, userKey, &dbUser)
 		if err!=nil {
-			fmt.Printf("# serveWs calleeHidden db=%s bucket=%s getX key=%v err=%v\n",
+			fmt.Printf("# serveWs cmd=calleeHidden db=%s bucket=%s getX key=%v err=%v\n",
 				dbMainName, dbUserBucket, userKey, err)
 		} else {
 			if c.hub.IsCalleeHidden {
@@ -407,15 +407,15 @@ func (c *WsClient) receiveProcess(message []byte) {
 			} else {
 				dbUser.Int2 &= ^1
 			}
-			fmt.Printf("%s calleeHidden store dbUser calleeID=%s isHiddenCallee=%v (%d)\n",
+			fmt.Printf("%s calleeHidden store calleeID=%s isHiddenCallee=%v (%d)\n",
 				c.connType, c.calleeID, c.hub.IsCalleeHidden, dbUser.Int2)
 			err := kvMain.Put(dbUserBucket, userKey, dbUser, true) // skipConfirm
 			if err!=nil {
 				fmt.Printf("# serveWs calleeHidden db=%s bucket=%s put key=%v err=%v\n",
 					dbMainName, dbUserBucket, userKey, err)
 			} else {
-				fmt.Printf("%s calleeHidden db=%s bucket=%s put key=%v OK\n",
-					c.connType, dbMainName, dbUserBucket, userKey)
+				//fmt.Printf("%s calleeHidden db=%s bucket=%s put key=%v OK\n",
+				//	c.connType, dbMainName, dbUserBucket, userKey)
 
 				// this was used for verification only
 				//var dbUser2 DbUser

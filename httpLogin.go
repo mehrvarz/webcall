@@ -265,16 +265,9 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	//	fmt.Printf("/login wsAddr=%s\n",wsAddr)
 	//}
 
-	hubMapMutex.RLock()
-	fmt.Printf("/login %s %d/%d %d go=%d rt=%v rip=%s\n",
-		urlID,
-		len(hubMap),
-		lenGlobalHubMap,
-		myRequestCount,
-		runtime.NumGoroutine(),
-		time.Since(startRequestTime),
-		remoteAddrWithPort)
-	hubMapMutex.RUnlock()
+	//hubMapMutex.RLock()
+	fmt.Printf("/login %s reqtime=%v rip=%s\n", urlID, time.Since(startRequestTime), remoteAddrWithPort)
+	//hubMapMutex.RUnlock()
 
 	responseString := fmt.Sprintf("%s|%d|%s|%d|%v",
 		wsAddr,                     // 0
