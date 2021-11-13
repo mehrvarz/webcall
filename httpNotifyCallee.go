@@ -395,7 +395,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, remoteAddr string, remoteAddrWithPort string) {
 	// called by caller.js goodby() via "/missedCall?id=(callerInfo)"
 	// callerInfo is encoded: calleeId+"|"+callerName+"|"+callerId (plus optional: "|"+ageSecs
-	fmt.Printf("/httpMissedCall (%s) rip=%s\n", callerInfo, remoteAddrWithPort)
+	//fmt.Printf("/httpMissedCall (%s) rip=%s\n", callerInfo, remoteAddrWithPort)
 	tok := strings.Split(callerInfo, "|")
 	if len(tok) < 3 {
 		fmt.Printf("# /httpMissedCall (%s) failed len(tok)=%d<3 rip=%s\n",callerInfo,len(tok),remoteAddr)
@@ -437,7 +437,7 @@ func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, r
 		return
 	}
 	if(!dbUser.StoreMissedCalls) {
-		fmt.Printf("/httpMissedCall (%s) no StoreMissedCalls rip=%s\n",dbUserKey,remoteAddr)
+		//fmt.Printf("/httpMissedCall (%s) no StoreMissedCalls rip=%s\n",dbUserKey,remoteAddr)
 		return
 	}
 	// load, add, store missedCalls
@@ -468,7 +468,7 @@ func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, r
 	if err!=nil {
 		fmt.Printf("# /httpMissedCall (%s) fail store dbMissedCalls err=%v rip=%s\n", calleeId, err, remoteAddr)
 	} else {
-		fmt.Printf("/httpMissedCall (%s) stored dbMissedCalls caller=%v rip=%s\n", calleeId, caller, remoteAddr)
+		//fmt.Printf("/httpMissedCall (%s) stored dbMissedCalls caller=%v rip=%s\n", calleeId, caller, remoteAddr)
 
 		// send updated waitingCallerSlice + missedCalls to callee (if (hidden) online)
 		// check if callee is (hidden) online
@@ -484,7 +484,7 @@ func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, r
 		}
 		if glCalleeId != "" {
 			if (locHub!=nil && locHub.IsCalleeHidden) || (globHub!=nil && globHub.IsCalleeHidden) {
-				fmt.Printf("/httpMissedCall (%s) isHiddenOnline\n", glCalleeId)
+				//fmt.Printf("/httpMissedCall (%s) isHiddenOnline\n", glCalleeId)
 				calleeIsHiddenOnline = true
 			}
 		}
