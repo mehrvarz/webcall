@@ -557,8 +557,8 @@ func waitingCallerToCallee(calleeID string, waitingCallerSlice []CallerInfo, mis
 		} else if hubclient==nil {
 			fmt.Printf("# waitingCallerToCallee cannot send missedCalls (%s) hubclient==nil\n", calleeID)
 		} else {
-			fmt.Printf("waitingCallerToCallee send missedCalls (callee=%s) (unHidden=%s)\n",
-				calleeID, hubclient.hub.IsUnHiddenForCallerAddr)
+			//fmt.Printf("waitingCallerToCallee send missedCalls (callee=%s) (unHidden=%s)\n",
+			//	calleeID, hubclient.hub.IsUnHiddenForCallerAddr)
 			hubclient.Write([]byte("missedCalls|"+string(jsonStr)))
 		}
 	}

@@ -445,8 +445,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 	if cmd=="deleteMissedCall" {
 		// for callee only: payload = ip:port:callTime
 		callerAddrPortPlusCallTime := payload
-		fmt.Printf("%s deleteMissedCall from %s callee=%s (payload=%s)\n",
-			c.connType, c.RemoteAddr, c.calleeID, callerAddrPortPlusCallTime)
+		//fmt.Printf("%s deleteMissedCall from %s callee=%s (payload=%s)\n",
+		//	c.connType, c.RemoteAddr, c.calleeID, callerAddrPortPlusCallTime)
 
 		// remove this call from dbMissedCalls for c.calleeID
 		// first: load dbMissedCalls for c.calleeID
@@ -478,8 +478,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 					// store modified dbMissedCalls for c.calleeID
 					err := kvCalls.Put(dbMissedCalls, c.calleeID, missedCallsSlice, false)
 					if err!=nil {
-						fmt.Printf("# serveWs deleteMissedCall (%s) fail store dbMissedCalls\n",
-							c.calleeID)
+						fmt.Printf("# serveWs deleteMissedCall (%s) fail store dbMissedCalls\n", c.calleeID)
 					}
 					// send modified missedCallsSlice to callee
 					json, err := json.Marshal(missedCallsSlice)
@@ -545,7 +544,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 	}
 
 	if cmd=="log" {
-		fmt.Printf("%s log %s %s rip=%s\n", c.connType, payload, c.calleeID, c.RemoteAddr)
+		fmt.Printf("%s peer %s %s rip=%s\n", c.connType, payload, c.calleeID, c.RemoteAddr)
 		tok := strings.Split(payload, " ")
 		if len(tok)>=3 {
 			// callee Connected p2p/p2p port=10001 id=3949620073
@@ -580,13 +579,13 @@ func (c *WsClient) receiveProcess(message []byte) {
 								time.Sleep(20 * time.Millisecond)
 							}
 							if myDisconCalleeOnPeerConnected {
-								fmt.Printf("%s disconCalleeOnPeerConnected %s rip=%s\n",
+								fmt.Printf("%s onPeerConnect disconnect callee %s rip=%s\n",
 									c.connType, c.calleeID, c.RemoteAddr)
 								c.hub.CalleeClient.Close("disconCalleeOnPeerConnected")
 							}
 							if myDisconCallerOnPeerConnected {
 								if c.hub.CallerClient != nil {
-									fmt.Printf("%s disconCallerOnPeerConnected %s rip=%s\n",
+									fmt.Printf("%s onPeerConnect disconnect caller %s rip=%s\n",
 										c.connType, c.calleeID, c.RemoteAddr)
 									c.hub.CallerClient.Close("disconCallerOnPeerConnected")
 								}
