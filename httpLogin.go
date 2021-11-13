@@ -218,8 +218,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		myHubMutex.Unlock()
 
 		hubMapMutex.RLock()
-		fmt.Printf("exithub %s wsID=%d %d/%d %s rip=%s\n",
-			globalID, wsClientID, len(hubMap), lenGlobalHubMap, comment, remoteAddrWithPort)
+		fmt.Printf("exithub callee=%s wsID=%d %s rip=%s\n", globalID, wsClientID, comment, remoteAddrWithPort)
 		hubMapMutex.RUnlock()
 
 		wsClientMutex.Lock()
