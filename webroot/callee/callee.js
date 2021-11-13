@@ -93,7 +93,7 @@ window.onload = function() {
 	if(typeof id!=="undefined" && id!="") {
 		calleeID = id;
 	}
-	if(!gentle) console.log("calleeID (%s)",calleeID);
+	gentleLog("calleeID (%s)",calleeID);
 
 	if(calleeID=="") {
 		// if callee was started without a calleeID, reload with calleeID from cookie
@@ -117,7 +117,7 @@ window.onload = function() {
 
 	// remote on start fragment/hash ('#') in URL
 	if(location.hash.length > 0) {
-		if(!gentle) console.log("location.hash.length=%d",location.hash.length);
+		gentleLog("location.hash.length=%d",location.hash.length);
 		window.location.replace("/callee/"+calleeID);
 		return;
 	}
@@ -131,7 +131,7 @@ window.onload = function() {
 			isEscape = (evt.keyCode === 27);
 		}
 		if(isEscape) {
-			if(!gentle) console.log('callee esc key');
+			gentleLog('callee esc key');
 			if(iframeWindowOpenFlag || menuDialogOpenElement) {
 				historyBack();
 			}	
@@ -145,7 +145,7 @@ window.onload = function() {
 
 	isHiddenCheckbox.addEventListener('change', function() {
 		if(this.checked) {
-			if(!gentle) console.log("isHiddenCheckbox checked");
+			gentleLog("isHiddenCheckbox checked");
 			autoanswerCheckbox.checked = false;
 		}
 		wsSend("calleeHidden|"+this.checked);
@@ -154,7 +154,7 @@ window.onload = function() {
 
 	autoanswerCheckbox.addEventListener('change', function() {
 		if(this.checked) {
-			if(!gentle) console.log("autoanswerCheckbox checked");
+			gentleLog("autoanswerCheckbox checked");
 			isHiddenCheckbox.checked = false;
 			wsSend("calleeHidden|false");
 		}
@@ -206,9 +206,9 @@ window.onload = function() {
 			}
 
 			calleeID = calleeID.toLowerCase();
-			if(!gentle) console.log('onload calleeID lowercase (%s)',calleeID);
+			gentleLog('onload calleeID lowercase (%s)',calleeID);
 			if(mode==1 || wsSecret!="") {
-				if(!gentle) console.log('onload pw-entry not required with cookie/wsSecret');
+				gentleLog('onload pw-entry not required with cookie/wsSecret');
 				// we have a cockie, so no manual pw-entry is needed
 				// turn automatic online off, user needs to interact before we can answer calls
 				onGotStreamGoOnline = false;
@@ -217,7 +217,7 @@ window.onload = function() {
 				return;
 			}
 
-			if(!gentle) console.log('onload pw-entry is needed');
+			gentleLog('onload pw-entry is needed');
 			onGotStreamGoOnline = true;
 			goOnlineButton.disabled = true;
 			goOfflineButton.disabled = true;
@@ -239,15 +239,15 @@ window.onload = function() {
 
 function videoOn() {
 	// open local video-frame (it is not yet streaming, but locally visible)
-	if(!gentle) console.log("videoOn");
+	gentleLog("videoOn");
 	localVideoShow();
 
 	// enable local video
 	if(peerCon && rtcConnect && addLocalVideoEnabled && localStream.getTracks().length>=2 && !addedVideoTrack) {
 		if(localCandidateType=="relay" || remoteCandidateType=="relay") {
-			if(!gentle) console.log('videoOn no addTrack video on relayed con (%s)(%s)',localCandidateType,remoteCandidateType);
+			gentleLog('videoOn no addTrack video on relayed con (%s)(%s)',localCandidateType,remoteCandidateType);
 		} else {
-			if(!gentle) console.log('videoOn addTrack vid',localStream.getTracks()[1]);
+			gentleLog('videoOn addTrack vid',localStream.getTracks()[1]);
 			addedVideoTrack = peerCon.addTrack(localStream.getTracks()[1],localStream);
 		}
 	}
@@ -265,18 +265,18 @@ function videoOn() {
 			// switch to the 1st video option
 			let optionElements = Array.from(avSelect);
 			if(optionElements.length>0) {
-				if(!gentle) console.log("videoOn avSelect.selectedIndex count",optionElements.length);
+				gentleLog("videoOn avSelect.selectedIndex count",optionElements.length);
 				for(let i=0; i<optionElements.length; i++) {
 					if(optionElements[i].text.startsWith("Video")) {
 						avSelect.selectedIndex = i;
-						if(!gentle) console.log("videoOn avSelect.selectedIndex set",i);
+						gentleLog("videoOn avSelect.selectedIndex set",i);
 						break;
 					}
 				}
 			}
 
 			if(videoEnabled && mediaConnect && !addLocalVideoEnabled && vsendButton) {
-				if(!gentle) console.log('videoOn mediaConnect, blink vsendButton');
+				gentleLog('videoOn mediaConnect, blink vsendButton');
 				vsendButton.classList.add('blink_me');
 				setTimeout(function() { vsendButton.classList.remove('blink_me') },10000);
 			}
@@ -286,7 +286,7 @@ function videoOn() {
 
 function videoOff() {
 	// hide/close localVideoFrame (not needed anymore)
-	if(!gentle) console.log("videoOff");
+	gentleLog("videoOff");
 	localVideoHide();
 	if(localStream) {
 		connectLocalVideo(true);
@@ -295,21 +295,21 @@ function videoOff() {
 	if(!rtcConnect) {
 		if(localStream) {
 			if(peerCon && addedAudioTrack) {
-				if(!gentle) console.log("videoOff !rtcConnect peerCon.removeTrack(addedAudioTrack)");
+				gentleLog("videoOff !rtcConnect peerCon.removeTrack(addedAudioTrack)");
 				peerCon.removeTrack(addedAudioTrack);
 				addedAudioTrack = null;
 			}
 
-			if(!gentle) console.log("videoOff !rtcConnect localStream stop");
+			gentleLog("videoOff !rtcConnect localStream stop");
 			localStream.getTracks().forEach(track => { track.stop(); });
 			localStream = null;
 		}
-		if(!gentle) console.log("videoOff !rtcConnect shut localVideo");
+		gentleLog("videoOff !rtcConnect shut localVideo");
 		localVideoFrame.pause();
 		localVideoFrame.currentTime = 0;
 		localVideoFrame.srcObject = null;
 
-		if(!gentle) console.log("videoOff !rtcConnect shut remoteVideo");
+		gentleLog("videoOff !rtcConnect shut remoteVideo");
 		remoteVideoFrame.pause();
 		remoteVideoFrame.currentTime = 0;
 		remoteVideoFrame.srcObject = null;
@@ -317,24 +317,24 @@ function videoOff() {
 		remoteStream = null;
 
 		if(dataChannel) {
-			if(!gentle) console.log("videoOff !rtcConnect dataChannel still set",dataChannel.readyState);
+			gentleLog("videoOff !rtcConnect dataChannel still set",dataChannel.readyState);
 		}
 	}
 
 	// switch to the 1st audio option
 	let optionElements = Array.from(avSelect);
 	if(optionElements.length>0) {
-		if(!gentle) console.log("videoOff avSelect len",optionElements.length);
+		gentleLog("videoOff avSelect len",optionElements.length);
 		for(let i=0; i<optionElements.length; i++) {
 			if(optionElements[i].text.startsWith("Audio")) {
 				avSelect.selectedIndex = i;
-				if(!gentle) console.log("videoOff avSelect idx",i);
+				gentleLog("videoOff avSelect idx",i);
 				break;
 			}
 		}
 		if(rtcConnect) {
 			// activate selected device
-			if(!gentle) console.log("videoOff rtcConnect getStream()");
+			gentleLog("videoOff rtcConnect getStream()");
 			getStream();
 		}
 	}
@@ -364,14 +364,14 @@ function checkServerMode(callback) {
 
 function getUrlParams(param) {
 	if(window.location.search!="") {
-		//console.log("getUrlParams search=%s",window.location.search);
+		//gentleLog("getUrlParams search=%s",window.location.search);
 		var query = window.location.search.substring(1);
 		var parts = query.split("&");
 		for (var i=0;i<parts.length;i++) {
-			//console.log("getUrlParams part(%d)=%s",i,parts[i]);
+			//gentleLog("getUrlParams part(%d)=%s",i,parts[i]);
 			var seg = parts[i].split("=");
 			if (seg[0] == param) {
-				//console.log("getUrlParams found=(%s)",seg[1]);
+				//gentleLog("getUrlParams found=(%s)",seg[1]);
 				if(typeof seg[1]!=="undefined" && seg[1]!="" && seg[1]!="undefined") {
 					return decodeURI(seg[1]);
 				}
@@ -382,7 +382,7 @@ function getUrlParams(param) {
 	let path = window.location.pathname;
 	let lastSlash = path.lastIndexOf("/");
 	let value = path.substring(lastSlash+1);
-	if(!gentle) console.log("getUrlParams val=%s",value);
+	gentleLog("getUrlParams val=%s",value);
 	return value;
 }
 
@@ -395,12 +395,12 @@ function showPw() {
 }
 
 function enablePasswordForm() {
-	console.log('enter password for calleeID',calleeID);
+	gentleLog('enter password for calleeID',calleeID);
 	showStatus("Login calleeID: "+calleeID,-1);
 	document.getElementById("current-password").value = "";
 	form.style.display = "block";
 	document.getElementById("username").focus();
-	console.log("form username",document.getElementById("username").value);
+	gentleLog("form username",document.getElementById("username").value);
 	goOfflineButton.disabled = true;
 	missedCallsElement.style.display = "none";
 	missedCallsTitleElement.style.display = "none";
@@ -431,7 +431,7 @@ function submitFormDone(theForm) {
 
 function start() {
 	// setup buttons, get audio input stream, then login
-	if(!gentle) console.log('start callee with ID',calleeID);
+	gentleLog('start callee with ID',calleeID);
 
 	goOnlineButton.onclick = function() {
 		lastUserActionDate = Date.now();
@@ -450,16 +450,16 @@ function start() {
 }
 
 function login(retryFlag) {
-	if(!gentle) console.log("login to signaling server...", retryFlag, calleeID, wsSecret.length);
+	gentleLog("login to signaling server...", retryFlag, calleeID, wsSecret.length);
 	let api = apiPath+"/login?id="+calleeID;
 	ajaxFetch(new XMLHttpRequest(), "POST", api, function(xhr) {
 		let loginStatus = xhr.responseText;
-		if(!gentle) console.log('loginStatus (%s)',loginStatus);
+		gentleLog('loginStatus (%s)',loginStatus);
 		var parts = loginStatus.split("|");
 		if(parts.length>=1 && parts[0].indexOf("wsid=")>=0) {
 			wsAddr = parts[0];
 			// we're now a logged-in callee-user
-			if(!gentle) console.log('login success wsAddr',wsAddr);
+			gentleLog('login success wsAddr',wsAddr);
 
 			// hide the form
 			form.style.display = "none";
@@ -473,16 +473,16 @@ function login(retryFlag) {
 			if(parts.length>=4) {
 				serviceSecs = parseInt(parts[3], 10);
 			}
-			if(!gentle) console.log('outboundIP',outboundIP);
+			gentleLog('outboundIP',outboundIP);
 
 			let api = apiPath+"/getsettings?id="+calleeID;
-			if(!gentle) console.log('login getsettings api',api);
+			gentleLog('login getsettings api',api);
 			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 				if(xhr.responseText!="") {
 					let serverSettings = JSON.parse(xhr.responseText);
 					if(typeof serverSettings.nickname!=="undefined") {
 						calleeName = serverSettings.nickname;
-						if(!gentle) console.log('login calleeName',calleeName);
+						gentleLog('login calleeName',calleeName);
 					}
 				}
 			}, function(errString,errcode) {
@@ -493,14 +493,14 @@ function login(retryFlag) {
 				// we retrieve the pushRegistration here under /callee/(calleeID),
 				// so that the pushRegistration.scope will also be /callee/(calleeID)
 				// so that settings.js will later make use of the correct pushRegistration
-				if(!gentle) console.log("serviceWorker.register...");
+				gentleLog("serviceWorker.register...");
 				let ret = navigator.serviceWorker.register('service-worker.js');
-				if(!gentle) console.log("/callee/serviceWorker.ready...",ret);
+				gentleLog("/callee/serviceWorker.ready...",ret);
 				// get access to the registration (and registration.pushManager) object
 				navigator.serviceWorker.ready.then(function(registration) {
-					if(!gentle) console.log("serviceWorker.ready promise",ret);
+					gentleLog("serviceWorker.ready promise",ret);
 					pushRegistration = registration;
-					if(!gentle) console.log("serviceWorker.ready got pushRegistration",pushRegistration);
+					gentleLog("serviceWorker.ready got pushRegistration",pushRegistration);
 				}).catch(err => {
 					console.log("serviceWorker.ready err",err);
 				});
@@ -509,7 +509,7 @@ function login(retryFlag) {
 				isHiddenCheckbox.checked = true;
 				autoanswerCheckbox.checked = false;
 			}
-			if(!gentle) console.log('isHiddenCheckbox.checked',isHiddenCheckbox.checked);
+			gentleLog('isHiddenCheckbox.checked',isHiddenCheckbox.checked);
 			wsSend("init|!"); // -> connectSignaling()
 			return;
 		}
@@ -533,7 +533,7 @@ function login(retryFlag) {
 		} else if(loginStatus=="error") {
 			// loginStatus "error" = "wrong pw", "pw has less than 6 chars" or "empty pw"
 			// offer pw entry again
-			if(!gentle) console.log('login error - try again');
+			gentleLog('login error - try again');
 			goOnlineButton.disabled = true;
 			enablePasswordForm();
 		} else {
@@ -566,7 +566,7 @@ function login(retryFlag) {
 		if(retryFlag) {
 			setTimeout(function() {
 				let delay = autoReconnectDelay + Math.floor(Math.random() * 10) - 5;
-				if(!gentle) console.log('reconnecting to signaling server in %ds...', delay);
+				gentleLog('reconnecting to signaling server in %ds...', delay);
 				showStatus("Reconnecting to signaling server...",-1);
 				missedCallsElement.style.display = "none";
 				missedCallsTitleElement.style.display = "none";
@@ -584,7 +584,7 @@ function login(retryFlag) {
 
 function offlineAction() {
 	// make buttons reflect offline state
-	if(!gentle) console.log('offlineAction');
+	gentleLog('offlineAction');
 	goOnlineButton.disabled = false;
 	goOfflineButton.disabled = true;
 }
@@ -592,19 +592,19 @@ function offlineAction() {
 function gotStream2() {
 	if(pickupAfterLocalStream) {
 		pickupAfterLocalStream = false;
-		if(!gentle) console.log('gotStream2 -> auto pickup2()');
+		gentleLog('gotStream2 -> auto pickup2()');
 		pickup2();
 	} else {
 		if(localStream && !videoEnabled && !rtcConnect) {
 			// mute (disable) mic until a call
-			if(!gentle) console.log('gotStream2 disable localStream');
+			gentleLog('gotStream2 disable localStream');
 			localStream.getTracks().forEach(track => { track.stop(); });
 			const audioTracks = localStream.getAudioTracks();
 			localStream.removeTrack(audioTracks[0]);
 			localStream = null;
 		}
 		if(onGotStreamGoOnline && !rtcConnect) {
-			if(!gentle) console.log('gotStream2 onGotStreamGoOnline goOnline');
+			gentleLog('gotStream2 onGotStreamGoOnline goOnline');
 			goOnline();
 		}
 	}
@@ -636,24 +636,24 @@ function delayedWsAutoReconnect(reconPauseSecs) {
 			wsAutoReconnecting = false;
 			// but if we have a connection now, we don't kill it
 			if(!wsConn) {
-				if(!gentle) console.log('delayedWsAutoReconnect aborted on user action',
+				gentleLog('delayedWsAutoReconnect aborted on user action',
 					startPauseDate,lastUserActionDate);
 				offlineAction();
 			}
 		} else if(!wsAutoReconnecting) {
-			if(!gentle) console.log('delayedWsAutoReconnect aborted on !wsAutoReconnecting');
+			gentleLog('delayedWsAutoReconnect aborted on !wsAutoReconnecting');
 			wsAutoReconnecting = false;
 			//offlineAction();
 		} else if(remainingTalkSecs<0 && !calleeID.startsWith("answie")) {
-			if(!gentle) console.log('delayedWsAutoReconnect aborted on no talk time');
+			gentleLog('delayedWsAutoReconnect aborted on no talk time');
 			wsAutoReconnecting = false;
 			offlineAction();
 		} else if(remainingServiceSecs<0 && !calleeID.startsWith("answie")) {
-			if(!gentle) console.log('delayedWsAutoReconnect aborted on no service time');
+			gentleLog('delayedWsAutoReconnect aborted on no service time');
 			wsAutoReconnecting = false;
 			offlineAction();
 		} else {
-			if(!gentle) console.log('delayedWsAutoReconnect login...');
+			gentleLog('delayedWsAutoReconnect login...');
 			login(true); // -> connectSignaling("init|")
 		}
 	},reconPauseSecs*1000);
@@ -672,7 +672,7 @@ function showOnlineReadyMsg(sessionIdPayload) {
 		msg1 =  "Your online status is hidden. "+
 				"Go to Menu to turn this off.<br>"
 	}
-//	if(!gentle) console.log('showOnlineReadyMsg', clientVersion, sessionIdPayload);
+//	gentleLog('showOnlineReadyMsg', clientVersion, sessionIdPayload);
 //	if(sessionIdPayload!="" && clientVersion<sessionIdPayload) {
 //		msg1 += "Software update available. Reload to update.<br>";
 //	}
@@ -706,10 +706,10 @@ function connectSignaling(message) {
 	}
 	let tryingToOpenWebSocket = true;
     var wsUrl = wsAddr;
-    if(!gentle) console.log('connectSignaling: open ws connection...',calleeID,wsUrl);
+    gentleLog('connectSignaling: open ws connection...',calleeID,wsUrl);
 	wsConn = new WebSocket(wsUrl);
 	wsConn.onopen = function () {
-		if(!gentle) console.log('ws connection',calleeID,wsUrl);
+		gentleLog('ws connection',calleeID,wsUrl);
 		tryingToOpenWebSocket = false;
 		wsAutoReconnecting = false;
 		if(!mediaConnect) {
@@ -721,7 +721,7 @@ function connectSignaling(message) {
 			goOnlineButton.disabled = false;
 		});
 		if(message!="") {
-			if(!gentle) console.log('ws connection send',message);
+			gentleLog('ws connection send',message);
 			wsSend(message);
 		}
 		// logged in callee (not a duo callee)
@@ -750,14 +750,14 @@ function connectSignaling(message) {
 		}
 		if(tryingToOpenWebSocket) {
 			// onclose occured before a ws-connection could be established
-			if(!gentle) console.log('wsConn.onclose failed to open');
+			gentleLog('wsConn.onclose failed to open');
 		} else {
-			if(!gentle) console.log('wsConn.onclose after being connected');
+			gentleLog('wsConn.onclose after being connected');
 		}
 		if(goOnlineButton.disabled) {
 			// this is not a user-intended offline; we should be online
 			let delay = autoReconnectDelay + Math.floor(Math.random() * 10) - 5;
-			if(!gentle) console.log('reconnecting to signaling server in %ds...', delay);
+			gentleLog('reconnecting to signaling server in %ds...', delay);
 			showStatus("Reconnecting to signaling server...",-1);
 			missedCallsElement.style.display = "none";
 			missedCallsTitleElement.style.display = "none";
@@ -783,7 +783,7 @@ function signalingCommand(message) {
 	if(tok.length>=2) {
 		payload = tok[1];
 	}
-	if(!gentle) console.log('signaling cmd',cmd);
+	gentleLog('signaling cmd',cmd);
 
 	if(cmd=="init") {
 
@@ -798,22 +798,22 @@ function signalingCommand(message) {
 			callerName = "";
 		}
 		if(cmd=="callerOffer") {
-			if(!gentle) console.log('callerOffer (incoming call)');
+			gentleLog('callerOffer (incoming call)');
 		} else {
-			if(!gentle) console.log('callerOfferUpd (in-call)');
+			gentleLog('callerOfferUpd (in-call)');
 		}
 		callerDescription = JSON.parse(payload);
 		peerCon.setRemoteDescription(callerDescription).then(() => {
-			if(!gentle) console.log('callerOffer createAnswer');
+			gentleLog('callerOffer createAnswer');
 			peerCon.createAnswer().then((desc) => {
 				localDescription = desc;
-				if(!gentle) console.log('callerOffer in, calleeAnswer out');
+				gentleLog('callerOffer in, calleeAnswer out');
 				localDescription.sdp =
 					maybePreferCodec(localDescription.sdp, 'audio', 'send', "opus");
 				localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
 					'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
 				peerCon.setLocalDescription(localDescription).then(() => {
-					if(!gentle) console.log('calleeAnswer localDescription set -> signal');
+					gentleLog('calleeAnswer localDescription set -> signal');
 					if(isDataChlOpen()) {
 						dataChannel.send("cmd|calleeAnswer|"+JSON.stringify(localDescription));
 					} else {
@@ -835,11 +835,11 @@ function signalingCommand(message) {
 		}
 		callerDescription = JSON.parse(payload);
 
-		if(!gentle) console.log("callerAnswer setLocalDescription");
+		gentleLog("callerAnswer setLocalDescription");
 		peerCon.setLocalDescription(localDescription).then(() => {
-			if(!gentle) console.log('callerAnswer setRemoteDescription');
+			gentleLog('callerAnswer setRemoteDescription');
 			peerCon.setRemoteDescription(callerDescription).then(() => {
-				if(!gentle) console.log('callerAnswer setRemoteDescription done');
+				gentleLog('callerAnswer setRemoteDescription done');
 			}, err => {
 				console.warn(`callerAnswer Failed to set RemoteDescription`,err)
 				showStatus("Cannot set remoteDescr "+err);
@@ -854,9 +854,9 @@ function signalingCommand(message) {
 		if(idxColon>=0) {
 			callerID = payload.substring(0,idxColon);
 			callerName = payload.substring(idxColon+1);
-			if(!gentle) console.log('cmd callerInfo (%s) (%s)',callerID,callerName);
+			gentleLog('cmd callerInfo (%s) (%s)',callerID,callerName);
 		} else {
-			if(!gentle) console.log('cmd callerInfo payload=(%s)',payload);
+			gentleLog('cmd callerInfo payload=(%s)',payload);
 		}
 
 	} else if(cmd=="callerCandidate") {
@@ -866,7 +866,7 @@ function signalingCommand(message) {
 		}
 		var callerCandidate = JSON.parse(payload);
 		if(callerCandidate.candidate=="") {
-			if(!gentle) console.log('skip empty callerCandidate');
+			gentleLog('skip empty callerCandidate');
 			return;
 		}
 		callerCandidate.usernameFragment = null;
@@ -898,7 +898,7 @@ function signalingCommand(message) {
 				return;
 			}
 
-			if(!gentle) console.log("! peerCon.addIceCandidate accept address",
+			gentleLog("! peerCon.addIceCandidate accept address",
 				address,callerCandidate.candidate);
 			if(address.indexOf(":")>=0
 					|| address==outboundIP 
@@ -956,13 +956,13 @@ function signalingCommand(message) {
 		} else if(mediaConnect) {
 			var sessionDuration = parseInt(payload,10); // maxTalkSecsIfNoP2p
 			if(sessionDuration>0 && !timerStartDate) {
-				if(!gentle) console.log('sessionDuration',sessionDuration);
+				gentleLog('sessionDuration',sessionDuration);
 				startTimer(sessionDuration);
 			}
 		}
 
 	} else if(cmd=="serviceData") { // post call
-		//console.log('serviceData (%s) tok.length=%d',messages[i],tok.length);
+		//gentleLog('serviceData (%s) tok.length=%d',messages[i],tok.length);
 		if(tok.length>=2) {
 			talkSecs = parseInt(tok[1], 10);
 			if(tok.length>=3) {
@@ -979,7 +979,7 @@ function signalingCommand(message) {
 		waitingCallerSlice = null;
 		if(payload.length>0) {
 			waitingCallerSlice = JSON.parse(payload);
-			//console.log('showWaitingCallers msg',waitingCallerSlice.length);
+			//gentleLog('showWaitingCallers msg',waitingCallerSlice.length);
 			if(waitingCallerSlice && waitingCallerSlice.length>0) {
 				// TODO would be nice to use a different sound here
 				notificationSound.play().catch(function(error) { });
@@ -988,7 +988,7 @@ function signalingCommand(message) {
 		showWaitingCallers();
 
 	} else if(cmd=="missedCalls") {
-		if(!gentle) console.log('showmissedCalls msg',payload.length);
+		gentleLog('showmissedCalls msg',payload.length);
 		missedCallsSlice = null;
 		if(payload.length>0) {
 			missedCallsSlice = JSON.parse(payload);
@@ -997,11 +997,11 @@ function signalingCommand(message) {
 
 	} else if(cmd=="ua") {
 		otherUA = payload;
-		if(!gentle) console.log("otherUA",otherUA);
+		gentleLog("otherUA",otherUA);
 
 	} else if(cmd=="rtcNegotiate") {
 		// remote video track added by caller
-		if(!gentle) console.log("rtcNegotiate");
+		gentleLog("rtcNegotiate");
 		if(isDataChlOpen()) {
 			pickupAfterLocalStream = true;
 			getStream(); // -> pickup2() -> "calleeDescriptionUpd"
@@ -1009,11 +1009,11 @@ function signalingCommand(message) {
 
 	} else if(cmd=="rtcVideoOff") {
 		// remote video track removed by other side (hide remoteVideoFrame so that audio can still be received)
-		if(!gentle) console.log("rtcVideoOff");
+		gentleLog("rtcVideoOff");
 		remoteVideoHide();
 
 	} else {
-		if(!gentle) console.log('# ignore incom cmd',cmd);
+		gentleLog('# ignore incom cmd',cmd);
 	}
 }
 
@@ -1029,7 +1029,7 @@ function showWaitingCallers() {
 			return;
 		}
 
-		if(!gentle) console.log('showWaitingCallers fkt waitingCallerSlice.length',waitingCallerSlice.length);
+		gentleLog('showWaitingCallers fkt waitingCallerSlice.length',waitingCallerSlice.length);
 		let timeNowSecs = Math.floor((Date.now()+500)/1000);
 		let str = "<table style='width:100%; border-collapse:separate; border-spacing:6px 2px; line-height:1.5em;'>"
 		for(let i=0; i<waitingCallerSlice.length; i++) {
@@ -1076,7 +1076,7 @@ function showMissedCalls() {
 	}
 	if(missedCallsElement) {
 		if(missedCallsSlice==null || missedCallsSlice.length<=0) {
-			if(!gentle) console.log('showWaitingCallers fkt missedCallsSlice == null');
+			gentleLog('showWaitingCallers fkt missedCallsSlice == null');
 			missedCallsElement.style.display = "none";
 			missedCallsElement.innerHTML = "";
 			if(missedCallsTitleElement) {
@@ -1172,7 +1172,7 @@ function halfShowIpAddr(ipAddr) {
 }
 
 function deleteMissedCall(callerAddrPortPlusCallTime) {
-	if(!gentle) console.log('deleteMissedCall',callerAddrPortPlusCallTime);
+	gentleLog('deleteMissedCall',callerAddrPortPlusCallTime);
 	wsSend("deleteMissedCall|"+callerAddrPortPlusCallTime);
 }
 
@@ -1180,24 +1180,24 @@ function wsSend(message) {
 	if(wsConn==null || wsConn.readyState!=1) {
 		if(wsConn) {
 			if(wsConn.readyState==0) {
-				console.log('wsSend (state 0 = connecting)');
+				gentleLog('wsSend (state 0 = connecting)');
 				wsConn.close();
 				wsConn=null;
 				offlineAction();
 			} else if(wsConn.readyState==2) {
-				console.log('wsSend (state 2 = closing)');
+				gentleLog('wsSend (state 2 = closing)');
 				wsConn=null;
 				offlineAction();
 			} else if(wsConn.readyState==3) {
-				console.log('wsSend (state 3 = closed)');
+				gentleLog('wsSend (state 3 = closed)');
 				wsConn=null;
 				offlineAction();
 			} else {
-				console.log('wsSend ws state',wsConn.readyState);
+				gentleLog('wsSend ws state',wsConn.readyState);
 			}
 		}
 		if(remainingTalkSecs>=0 || calleeID.startsWith("answie")) {
-			if(!gentle) console.log('wsSend connectSignaling',message);
+			gentleLog('wsSend connectSignaling',message);
 			connectSignaling(message);
 		} else {
 			if(!gentle) console.warn('wsSend no connectSignaling',
@@ -1217,7 +1217,7 @@ function pickup() {
 }
 
 function pickup2() {
-	if(!gentle) console.log('pickup2');
+	gentleLog('pickup2');
 	showStatus("");
 	stopAllAudioEffects("pickup2");
 	if(!localStream) {
@@ -1226,14 +1226,14 @@ function pickup2() {
 	}
 
 	if(remoteStream) {
-		if(!gentle) console.log('pickup2 peerCon start remoteVideoFrame');
+		gentleLog('pickup2 peerCon start remoteVideoFrame');
 		remoteVideoFrame.srcObject = remoteStream;
 		remoteVideoFrame.play().catch(function(error) {	});
 	}
 
 	// before we send "pickup|!" to caller allow some time for onnegotiation to take place
 	setTimeout(function() {
-		if(!gentle) console.log('pickup2: after short delay send pickup to caller');
+		gentleLog('pickup2: after short delay send pickup to caller');
 		wsSend("pickup|!") // make caller unmute our mic on their side
 
 		answerButton.disabled = true;
@@ -1250,7 +1250,7 @@ function pickup2() {
 
 		setTimeout(function() {
 			if(videoEnabled && !addLocalVideoEnabled) {
-				console.log('full mediaConnect, blink vsendButton');
+				gentleLog('full mediaConnect, blink vsendButton');
 				vsendButton.classList.add('blink_me');
 				setTimeout(function() { vsendButton.classList.remove('blink_me') },10000);
 			}
@@ -1275,7 +1275,7 @@ function hangup(dummy,message) {
 
 	// if mediaConnect -> play short busy tone 
 	if(mediaConnect) {
-		if(!gentle) console.log("hangup: mediaConnect -> short busy sound");
+		gentleLog("hangup: mediaConnect -> short busy sound");
 		busySignalSound.play().catch(function(error) { });
 		setTimeout(function() {
 			busySignalSound.pause();
@@ -1289,7 +1289,7 @@ function hangup(dummy,message) {
 	vsendButton.classList.remove('blink_me')
 
 	if(localStream && !videoEnabled) {
-		if(!gentle) console.log('videoOff clear localStream');
+		gentleLog('videoOff clear localStream');
 		const audioTracks = localStream.getAudioTracks();
 		audioTracks[0].enabled = false; // mute mic
 		localStream.getTracks().forEach(track => { track.stop(); });
@@ -1301,14 +1301,14 @@ function hangup(dummy,message) {
 function goOnline() {
 	showStatus("");
 	if(goOnlineButton.disabled) {
-		console.log('no need to goOnline while being online');
+		gentleLog('no need to goOnline while being online');
 		return;
 	}
 	goOnlineButton.disabled = true;
 	goOfflineButton.disabled = false;
 	rtcConnectStartDate = 0;
 	mediaConnectStartDate = 0;
-	if(!gentle) console.log('goOnline',calleeID);
+	gentleLog('goOnline',calleeID);
 	addedAudioTrack = null;
 	addedVideoTrack = null;
 	try {
@@ -1323,7 +1323,7 @@ function goOnline() {
 	peerCon.onicecandidateerror = function(e) {
 		if(e.errorCode==701) {
 			// don't warn on 701 (chrome "701 STUN allocate request timed out")
-			if(!gentle) console.log("# onicecandidateerror", e.errorCode, e.errorText, e.url);
+			gentleLog("# onicecandidateerror", e.errorCode, e.errorText, e.url);
 		} else {
 			if(!gentle) console.warn("onicecandidateerror", e.errorCode, e.errorText, e.url);
 			showStatus("iceCandidate error "+e.errorCode+" "+e.errorText,-1);
@@ -1332,26 +1332,26 @@ function goOnline() {
 	peerCon.ontrack = ({track, streams}) => peerConOntrack(track, streams);
 	peerCon.onicegatheringstatechange = event => {
 		let connection = event.target;
-		if(!gentle) console.log("onicegatheringstatechange", connection.iceGatheringState);
+		gentleLog("onicegatheringstatechange", connection.iceGatheringState);
 	}
 	peerCon.onnegotiationneeded = async () => {
 		if(!peerCon) {
-			if(!gentle) console.log('# onnegotiationneeded deny: no peerCon');
+			gentleLog('# onnegotiationneeded deny: no peerCon');
 			return;
 		}
 		if(!rtcConnect) {
-			if(!gentle) console.log('# onnegotiationneeded deny: no rtcConnect');
+			gentleLog('# onnegotiationneeded deny: no rtcConnect');
 			return;
 		}
 		try {
 			// this will trigger onIceCandidates and send hostCandidate's to the client
-			if(!gentle) console.log("onnegotiationneeded createOffer");
+			gentleLog("onnegotiationneeded createOffer");
 			localDescription = await peerCon.createOffer();
 			localDescription.sdp = maybePreferCodec(localDescription.sdp, 'audio', 'send', "opus");
 			localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
 				'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
 			peerCon.setLocalDescription(localDescription).then(() => {
-				if(!gentle) console.log('onnegotiationneeded localDescription set -> signal');
+				gentleLog('onnegotiationneeded localDescription set -> signal');
 				if(isDataChlOpen()) {
 					dataChannel.send("cmd|calleeOffer|"+JSON.stringify(localDescription));
 				} else {
@@ -1363,13 +1363,13 @@ function goOnline() {
 		}
 	};
 	peerCon.onsignalingstatechange = event => {
-		if(!gentle) console.log("signalingstatechange", peerCon.signalingState);
+		gentleLog("signalingstatechange", peerCon.signalingState);
 	}
 	peerCon.oniceconnectionstatechange = event => {
-		if(!gentle) console.log("oniceconnectionstatechange", peerCon.iceConnectionState);
+		gentleLog("oniceconnectionstatechange", peerCon.iceConnectionState);
 	}
 	peerCon.onconnectionstatechange = event => {
-		if(!gentle) console.log("peerCon connectionstatechange", peerCon.connectionState);
+		gentleLog("peerCon connectionstatechange", peerCon.connectionState);
 		if(!peerCon) {
 			hangup();
 			return;
@@ -1386,11 +1386,11 @@ function goOnline() {
 			goOfflineButton.disabled = true;
 			rtcConnectStartDate = Date.now();
 			mediaConnectStartDate = 0;
-			if(!gentle) console.log("rtcConnect");
+			gentleLog("rtcConnect");
 			wsSend("rtcConnect|")
 
 			if(!dataChannel) {
-				if(!gentle) console.log('goOnline have no dataChannel');
+				gentleLog('goOnline have no dataChannel');
 				createDataChannel();
 			}
 
@@ -1399,11 +1399,11 @@ function goOnline() {
 				var playRingtoneSound = function() {
 					if(allAudioEffectsStopped) {
 						if(!ringtoneSound.paused && ringtoneIsPlaying) {
-							if(!gentle) console.log('playRingtoneSound ringtoneSound.pause');
+							gentleLog('playRingtoneSound ringtoneSound.pause');
 							ringtoneSound.pause();
 							ringtoneSound.currentTime = 0;
 						} else {
-							if(!gentle) console.log('playRingtoneSound NO ringtoneSound.pause',
+							gentleLog('playRingtoneSound NO ringtoneSound.pause',
 								ringtoneSound.paused, ringtoneIsPlaying);
 						}
 						return;
@@ -1411,12 +1411,12 @@ function goOnline() {
 					ringtoneSound.onended = playRingtoneSound;
 
 					if(ringtoneSound.paused && !ringtoneIsPlaying) {
-						if(!gentle) console.log('ringtone play will be started...');
+						gentleLog('ringtone play will be started...');
 						ringtoneSound.play().catch(error => {
-							if(!gentle) console.log('ringtone play',error);
+							gentleLog('ringtone play',error);
 						});
 					} else {
-						if(!gentle) console.log('ringtone play NOT started',
+						gentleLog('ringtone play NOT started',
 							ringtoneSound.paused,ringtoneIsPlaying);
 					}
 				}
@@ -1435,11 +1435,11 @@ function goOnline() {
 					answerButton.style.background = "#04c";
 					buttonBgHighlighted = false;
 					if(!buttonBlinking || wsConn==null) {
-						if(!gentle) console.log("buttonBlinking stop");
+						gentleLog("buttonBlinking stop");
 						answerButton.style.background = "#04c";
 						return;
 					}
-					if(!gentle) console.log("buttonBlinking...");
+					gentleLog("buttonBlinking...");
 					setTimeout(blinkButtonFunc, 500);
 				}
 			}
@@ -1452,7 +1452,7 @@ function goOnline() {
 				}
 				// TODO if callerID and/or callerName are avail we would rather show them
 				// instead of listOfClientIps
-				console.log('accept incoming call?',listOfClientIps);
+				gentleLog('accept incoming call?',listOfClientIps);
 				peerCon.getStats(null)
 				.then((results) => getStatsCandidateTypes(results,"Incoming", ""), err => console.log(err));
 
@@ -1475,12 +1475,12 @@ function goOnline() {
 				}
 
 				answerButton.onclick = function() {
-					if(!gentle) console.log("answer button");
+					gentleLog("answer button");
 					buttonBlinking = false;
 					pickup();
 				}
 				rejectButton.onclick = function() {
-					if(!gentle) console.log("hangup button");
+					gentleLog("hangup button");
 					buttonBlinking = false;
 					hangup();
 				}
@@ -1489,10 +1489,10 @@ function goOnline() {
 	}
 
 	if(!wsConn) {
-		if(!gentle) console.log('goOnline have no wsConn');
+		gentleLog('goOnline have no wsConn');
 		login(false);
 	} else {
-		if(!gentle) console.log('goOnline have wsConn send init');
+		gentleLog('goOnline have wsConn send init');
 		wsSend("init|!");
 	}
 }
@@ -1523,11 +1523,11 @@ function getStatsCandidateTypes(results,eventString1,eventString2) {
 }
 
 function createDataChannel() {
-	if(!gentle) console.log('createDataChannel...');
+	gentleLog('createDataChannel...');
 	peerCon.ondatachannel = event => {
 		dataChannel = event.channel;
 		dataChannel.onopen = event => {
-			if(!gentle) console.log("dataChannel.onopen");
+			gentleLog("dataChannel.onopen");
 		};
 		dataChannel.onclose = event => dataChannelOnclose(event);
 		dataChannel.onerror = event => dataChannelOnerror(event);
@@ -1537,10 +1537,10 @@ function createDataChannel() {
 
 function dataChannelOnmessage(event) {
 	if(typeof event.data === "string") {
-		if(!gentle) console.log("dataChannel.onmessage");
+		gentleLog("dataChannel.onmessage");
 		if(event.data) {
 			if(event.data.startsWith("disconnect")) {
-				if(!gentle) console.log("dataChannel.onmessage on 'disconnect'");
+				gentleLog("dataChannel.onmessage on 'disconnect'");
 				dataChannel.close();
 				dataChannel = null;
 				hangupWithBusySound(false,"dataChannel.close");
@@ -1548,7 +1548,7 @@ function dataChannelOnmessage(event) {
 				// sanitize incoming data
 				let cleanString = event.data.substring(4).replace(/<(?:.|\n)*?>/gm, "...");
 				if(cleanString!="") {
-					console.log("dataChannel.onmessage msg",cleanString);
+					gentleLog("dataChannel.onmessage msg",cleanString);
 					if(msgbox) {
 						let curDate = new Date().toString();
 						// cut off trailing " (Central European Summer Time)" from date
@@ -1567,7 +1567,7 @@ function dataChannelOnmessage(event) {
 				var fileDescr = event.data.substring(5);
 
 				if(fileDescr=="end-send") {
-					if(!gentle) console.log("file transmit aborted by sender");
+					gentleLog("file transmit aborted by sender");
 					progressRcvElement.style.display = "none";
 					if(fileReceivedSize < fileSize) {
 						showStatus("file transmit aborted by sender");
@@ -1577,7 +1577,7 @@ function dataChannelOnmessage(event) {
 					return;
 				}
 				if(fileDescr=="end-rcv") {
-					if(!gentle) console.log("file send aborted by receiver");
+					gentleLog("file send aborted by receiver");
 					showStatus("file send aborted by receiver");
 					fileSendAbort = true;
 					progressSendElement.style.display = "none";
@@ -1606,7 +1606,7 @@ function dataChannelOnmessage(event) {
 		}
 	} else {
 		if(fileReceiveAbort) {
-			if(!gentle) console.log("file receive abort");
+			gentleLog("file receive abort");
 			fileReceivedSize = 0;
 			fileReceiveBuffer = [];
 			return;
@@ -1626,9 +1626,9 @@ function dataChannelOnmessage(event) {
 			progressRcvLabel.innerHTML = "receiving '"+fileName.substring(0,22)+"' "+kbytesPerSec+" KB/s";
 			fileReceiveSinceStartSecs = sinceStartSecs;
 		}
-		//if(!gentle) console.log("binary chunk", chunkSize, fileReceivedSize, fileSize);
+		//gentleLog("binary chunk", chunkSize, fileReceivedSize, fileSize);
 		if(fileReceivedSize === fileSize) {
-			if(!gentle) console.log("file receive complete");
+			gentleLog("file receive complete");
 			const receivedBlob = new Blob(fileReceiveBuffer);
 			fileReceiveBuffer = [];
 			progressRcvElement.style.display = "none";
@@ -1656,15 +1656,15 @@ function dataChannelOnmessage(event) {
 
 var allAudioEffectsStopped = false;
 function stopAllAudioEffects(comment) {
-	if(!gentle) console.log('stopAllAudioEffects',comment);
+	gentleLog('stopAllAudioEffects',comment);
 	allAudioEffectsStopped = true;
 	try {
 		if(!ringtoneSound.paused && ringtoneIsPlaying) {
-			if(!gentle) console.log('stopAllAudioEffects ringtoneSound.pause');
+			gentleLog('stopAllAudioEffects ringtoneSound.pause');
 			ringtoneSound.pause();
 			ringtoneSound.currentTime = 0;
 		} else {
-			if(!gentle) console.log('stopAllAudioEffects NO ringtoneSound.pause',
+			gentleLog('stopAllAudioEffects NO ringtoneSound.pause',
 				ringtoneSound.paused, ringtoneIsPlaying);
 		}
 
@@ -1673,12 +1673,12 @@ function stopAllAudioEffects(comment) {
 	} catch(ex) {
 		console.log('ex stopAllAudioEffects',ex);
 	}
-	if(!gentle) console.log('stopAllAudioEffects done');
+	gentleLog('stopAllAudioEffects done');
 }
 
 var goOnlinePending = false;
 function endWebRtcSession(disconnectCaller,goOnlineAfter) {
-	console.log('endWebRtcSession',disconnectCaller,goOnlineAfter);
+	gentleLog('endWebRtcSession',disconnectCaller,goOnlineAfter);
 	if(remoteVideoFrame) {
 		remoteVideoFrame.pause();
 		remoteVideoFrame.currentTime = 0;
@@ -1694,7 +1694,7 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 	if(autoPlaybackAudioSource) {
 		autoPlaybackAudioSource.disconnect();
 		if(autoPlaybackAudioSourceStarted) {
-			if(!gentle) console.log("endWebRtcSession autoPlayback stop",autoPlaybackFile);
+			gentleLog("endWebRtcSession autoPlayback stop",autoPlaybackFile);
 			autoPlaybackAudioSource.stop();
 			autoPlaybackAudioSourceStarted = false;
 		}
@@ -1705,25 +1705,25 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 		let peerConCloseFunc = function() {
 			// rtcConnect && peerCon may be cleared by now
 			if(disconnectCaller) {
-				if(!gentle) console.log('endWebRtcSession disconnectCaller');
+				gentleLog('endWebRtcSession disconnectCaller');
 				if(wsConn) {
-					if(!gentle) console.log('endWebRtcSession wsSend(cancel)');
+					gentleLog('endWebRtcSession wsSend(cancel)');
 					wsSend("cancel|disconnect"); // important
 				}
 				if(isDataChlOpen()) {
-					if(!gentle) console.log('endWebRtcSession dataChannel.send(disconnect)');
+					gentleLog('endWebRtcSession dataChannel.send(disconnect)');
 					dataChannel.send("disconnect");
 				} else {
-					if(!gentle) console.log('endWebRtcSession cannot send disconnect to peer');
+					gentleLog('endWebRtcSession cannot send disconnect to peer');
 				}
 			}
 			if(dataChannel) {
-				if(!gentle) console.log('endWebRtcSession dataChannel.close');
+				gentleLog('endWebRtcSession dataChannel.close');
 				dataChannel.close();
 				dataChannel = null;
 			}
 			if(peerCon) {
-				if(!gentle) console.log('endWebRtcSession peerConCloseFunc remove sender tracks');
+				gentleLog('endWebRtcSession peerConCloseFunc remove sender tracks');
 				const senders = peerCon.getSenders();
 				if(senders) {
 					try {
@@ -1732,15 +1732,15 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 						console.warn('endWebRtcSession removeTrack',ex);
 					}
 				}
-				if(!gentle) console.log('endWebRtcSession peerCon.close');
+				gentleLog('endWebRtcSession peerCon.close');
 				peerCon.close();
 				peerCon = null;
-				if(!gentle) console.log('endWebRtcSession peerCon cleared');
+				gentleLog('endWebRtcSession peerCon cleared');
 			}
 		};
 
 		if(rtcConnect && peerCon) {
-			if(!gentle) console.log('endWebRtcSession getStatsPostCall');
+			gentleLog('endWebRtcSession getStatsPostCall');
 			peerCon.getStats(null).then((results) => { 
 				getStatsPostCall(results);
 				peerConCloseFunc();
@@ -1779,9 +1779,9 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 		// however, bc we keep our wsConn as is, no new login will be executed
 		// so no new ws-hib will be created on the server side
 		goOnlinePending = true;
-		if(!gentle) console.log('endWebRtcSession delayed auto goOnline()...');
+		gentleLog('endWebRtcSession delayed auto goOnline()...');
 		setTimeout(function() {
-			if(!gentle) console.log('endWebRtcSession auto goOnline()');
+			gentleLog('endWebRtcSession auto goOnline()');
 			goOnlinePending = false;
 			goOnlineButton.disabled = false;
 			// get peerCon ready for the next incoming call
@@ -1853,23 +1853,23 @@ function getCookieSupport() {
 var counter=0;
 function openContacts() {
 	let url = "/callee/contacts?callerId="+calleeID+"&name="+calleeName+"&i="+counter++;
-	if(!gentle) console.log('openContacts',url);
+	gentleLog('openContacts',url);
 	iframeWindowOpen(url);
 }
 
 function openSettings() {
 	let url = "/callee/settings?id="+calleeID+"&i="+counter++;
-	if(!gentle) console.log('openSettings',url);
+	gentleLog('openSettings',url);
 	iframeWindowOpen(url);
 }
 
 function exit() {
-	console.log("exit (id=%s)",calleeID);
+	gentleLog("exit (id=%s)",calleeID);
 	containerElement.style.filter = "blur(0.8px) brightness(60%)";
 	goOffline();
 
 	if(iframeWindowOpenFlag || menuDialogOpenElement) {
-		console.log("exit historyBack");
+		gentleLog("exit historyBack");
 		historyBack();
 	}
 
@@ -1878,19 +1878,19 @@ function exit() {
 		let api = apiPath+"/logout?id="+calleeID;
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 			let logoutStatus = xhr.responseText;
-			if(!gentle) console.log('exit logoutStatus (%s)',logoutStatus);
+			gentleLog('exit logoutStatus (%s)',logoutStatus);
 		}, function(errString,err) {
 			console.log('exit xhr error',errString);
 		});
 
 		if(pushRegistration) {
-			console.log('exit delete serviceWorker');
+			gentleLog('exit delete serviceWorker');
 			pushRegistration.unregister();
 			pushRegistration = null;
 		}
 
 		setTimeout(function() {
-			console.log("exit reload");
+			gentleLog("exit reload");
 			window.location.reload(false);
 		},1000);
 	},1000);
