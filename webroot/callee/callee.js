@@ -1898,19 +1898,3 @@ function exit() {
 	},1000);
 }
 
-function hangupWithBusySound(mustDisconnectCallee,message) {
-	stopAllAudioEffects(message);
-/*
-	dialing = false;
-	if(peerCon) {
-		if(!gentle) console.log(`hangupWithBusySound `+message);
-		busySignalSound.play().catch(function(error) { });
-		setTimeout(function() {
-			if(!gentle) console.log(`hangupWithBusySound stopAllAudioEffects`);
-			stopAllAudioEffects();
-		},2500);
-	}
-*/
-	hangup(mustDisconnectCallee,message);
-}
-

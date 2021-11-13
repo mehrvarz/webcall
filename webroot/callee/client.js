@@ -32,6 +32,7 @@ const fileselectLabel = document.getElementById("fileselectlabel");
 var videoEnabled = false;
 var localVideoMonitorPaused = false;
 var hashcounter=0;
+var dialing = false;
 
 var ICE_config = {
 	"iceServers": [
@@ -1188,5 +1189,19 @@ function dataChannelOnerror(event) {
 	if(fileselectLabel && mediaConnect && isDataChlOpen() && isP2pCon()) {
 		fileselectLabel.style.display = "block";
 	}
+}
+
+function hangupWithBusySound(mustDisconnectCallee,message) {
+	dialing = false;
+	stopAllAudioEffects();
+	if(peerCon) {
+		if(!gentle) console.log(`hangupWithBusySound `+message);
+		busySignalSound.play().catch(function(error) { });
+		setTimeout(function() {
+			if(!gentle) console.log(`hangupWithBusySound stopAllAudioEffects`);
+			stopAllAudioEffects();
+		},2500);
+	}
+	hangup(mustDisconnectCallee,message);
 }
 

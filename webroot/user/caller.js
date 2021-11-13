@@ -22,7 +22,6 @@ var peerCon = null;
 var localDescription = null;
 var localStream = null;
 var remoteStream = null;
-var dialing = false;
 var rtcConnect = false;
 var rtcConnectStartDate = 0;
 var mediaConnect = false;
@@ -1807,19 +1806,5 @@ function hangup(mustDisconnectCallee,message) {
 			checkCalleeOnline();
 		},2000);
 	}
-}
-
-function hangupWithBusySound(mustDisconnectCallee,message) {
-	dialing = false;
-	stopAllAudioEffects();
-	if(peerCon) {
-		if(!gentle) console.log(`hangupWithBusySound `+message);
-		busySignalSound.play().catch(function(error) { });
-		setTimeout(function() {
-			if(!gentle) console.log(`hangupWithBusySound stopAllAudioEffects`);
-			stopAllAudioEffects();
-		},2500);
-	}
-	hangup(mustDisconnectCallee,message);
 }
 
