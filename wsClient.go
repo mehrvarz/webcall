@@ -407,8 +407,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 			} else {
 				dbUser.Int2 &= ^1
 			}
-			fmt.Printf("%s callee=%s set hidden=%v (%d)\n",
-				c.connType, c.calleeID, c.hub.IsCalleeHidden, dbUser.Int2)
+			fmt.Printf("%s callee=%s set hidden=%v\n", c.connType, c.calleeID, c.hub.IsCalleeHidden)
 			err := kvMain.Put(dbUserBucket, userKey, dbUser, true) // skipConfirm
 			if err!=nil {
 				fmt.Printf("# serveWs calleeHidden db=%s bucket=%s put key=%v err=%v\n",
