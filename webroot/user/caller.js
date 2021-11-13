@@ -1447,152 +1447,141 @@ function createDataChannel() {
 	if(!gentle) console.log('createDataChannel...');
 	dataChannel = peerCon.createDataChannel("datachannel");
 	dataChannel.onopen = event => {
-		if(!gentle) console.log("dataChannel.onopen",
-			dataChannel.ordered, dataChannel.binaryType, dataChannel.reliable, dataChannel.sctp);
-		dataChannel.send("ping");
+		if(!gentle) console.log("dataChannel.onopen");
 		if(dataChannelSendMsg!="") {
 			dataChannel.send("msg|"+dataChannelSendMsg);
 			dataChannelSendMsg = "";
 		}
 	};
-	dataChannel.onclose = event => {
-		if(!gentle) console.log("dataChannel.onclose");
-	}
-	dataChannel.onerror = event => {
-		if(rtcConnect) {
-			console.log("dataChannel.onerror",event);
-			showStatus("# dataChannel error "+event.error,-1);
-			hangup();
-		}
-		progressSendElement.style.display = "none";
-		if(fileselectLabel && mediaConnect && isDataChlOpen() && isP2pCon()) {
-			fileselectLabel.style.display = "block";
-		}
-	}
-	dataChannel.onmessage = event => {
-		if(typeof event.data === "string") {
-			if(!gentle) console.debug("dataChannel.onmessage");
-			if(event.data) {
-				if(event.data.startsWith("disconnect")) {
-					console.log("dataChannel.close on 'disconnect'");
-					dataChannel.close();
-					hangupWithBusySound(false,"Peer hang up");
-				} else if(event.data.startsWith("cmd|")) {
-					let subCmd = event.data.substring(4);
-					if(subCmd.startsWith("ledred")) {
-						if(onlineIndicator) {
-							onlineIndicator.src="red-gradient.svg";
-						}
-						microphoneIsNeeded = true;
+	dataChannel.onclose = event => dataChannelOnclose(event);
+	dataChannel.onerror = event => dataChannelOnerror(event);
+	dataChannel.onmessage = event => dataChannelOnmessage(event);
+}
 
-						// unmute micro
-						if(localStream) {
-							const audioTracks = localStream.getAudioTracks();
-							audioTracks[0].enabled = true;
-							// localStream.getTracks().forEach(track => { ??? });
-						}
-					} else if(subCmd.startsWith("ledgreen")) {
-						if(onlineIndicator) {
-							onlineIndicator.src="green-gradient.svg";
-						}
-						microphoneIsNeeded = false;
+function dataChannelOnmessage(event) {
+	if(typeof event.data === "string") {
+		if(!gentle) console.log("dataChannel.onmessage");
+		if(event.data) {
+			if(event.data.startsWith("disconnect")) {
+				console.log("dataChannel.close on 'disconnect'");
+				dataChannel.close();
+				dataChannel = null;
+				hangupWithBusySound(false,"dataChannel.close");
+			} else if(event.data.startsWith("cmd|")) {
+				let subCmd = event.data.substring(4);
+				if(subCmd.startsWith("ledred")) {
+					if(onlineIndicator) {
+						onlineIndicator.src="red-gradient.svg";
+					}
+					microphoneIsNeeded = true;
 
-						// mute mic
-						if(localStream) {
-							const audioTracks = localStream.getAudioTracks();
-							audioTracks[0].enabled = false;
-						}
-					} else {
-						signalingCommand(subCmd);
+					// unmute micro
+					if(localStream) {
+						const audioTracks = localStream.getAudioTracks();
+						audioTracks[0].enabled = true;
+						// localStream.getTracks().forEach(track => { ??? });
 					}
-				} else if(event.data.startsWith("file|")) {
-					var fileDescr = event.data.substring(5);
+				} else if(subCmd.startsWith("ledgreen")) {
+					if(onlineIndicator) {
+						onlineIndicator.src="green-gradient.svg";
+					}
+					microphoneIsNeeded = false;
 
-					if(fileDescr=="end-send") {
-						if(!gentle) console.log("file transmit aborted by sender");
-						progressRcvElement.style.display = "none";
-						if(fileReceivedSize < fileSize) {
-							showStatus("file transmit aborted by sender");
-						}
-						fileReceivedSize = 0;
-						fileReceiveBuffer = [];
-						return;
+					// mute mic
+					if(localStream) {
+						const audioTracks = localStream.getAudioTracks();
+						audioTracks[0].enabled = false;
 					}
-					if(fileDescr=="end-rcv") {
-						if(!gentle) console.log("file send aborted by receiver");
-						showStatus("file send aborted by receiver");
-						fileSendAbort = true;
-						progressSendElement.style.display = "none";
-						if(fileselectLabel && mediaConnect && isDataChlOpen() && isP2pCon()) {
-							fileselectLabel.style.display = "block";
-						}
-						return;
-					}
+				} else {
+					signalingCommand(subCmd);
+				}
+			} else if(event.data.startsWith("file|")) {
+				var fileDescr = event.data.substring(5);
 
-					showStatus("",-1);
-					fileReceiveAbort = false;
-					// parse: "file|"+file.name+","+file.size+","+file.type+","+file.lastModified);
-					let tok = fileDescr.split(",");
-					fileName = tok[0];
-					fileSize = 0;
-					if(tok.length>=2) {
-						fileSize = parseInt(tok[1]);
-						progressRcvBar.max = fileSize;
-						progressRcvElement.style.display = "block";
+				if(fileDescr=="end-send") {
+					if(!gentle) console.log("file transmit aborted by sender");
+					progressRcvElement.style.display = "none";
+					if(fileReceivedSize < fileSize) {
+						showStatus("file transmit aborted by sender");
 					}
-					if(!gentle) console.log("file receive",fileName,fileSize);
 					fileReceivedSize = 0;
 					fileReceiveBuffer = [];
-					fileReceiveStartDate = Date.now();
-					fileReceiveSinceStartSecs=0;
+					return;
 				}
-			}
-		} else {
-			if(fileReceiveAbort) {
-				if(!gentle) console.log("file receive abort");
+				if(fileDescr=="end-rcv") {
+					if(!gentle) console.log("file send aborted by receiver");
+					showStatus("file send aborted by receiver");
+					fileSendAbort = true;
+					progressSendElement.style.display = "none";
+					if(fileselectLabel && mediaConnect && isDataChlOpen() && isP2pCon()) {
+						fileselectLabel.style.display = "block";
+					}
+					return;
+				}
+
+				showStatus("",-1);
+				fileReceiveAbort = false;
+				// parse: "file|"+file.name+","+file.size+","+file.type+","+file.lastModified);
+				let tok = fileDescr.split(",");
+				fileName = tok[0];
+				fileSize = 0;
+				if(tok.length>=2) {
+					fileSize = parseInt(tok[1]);
+					progressRcvBar.max = fileSize;
+					progressRcvElement.style.display = "block";
+				}
+				if(!gentle) console.log("file receive",fileName,fileSize);
 				fileReceivedSize = 0;
 				fileReceiveBuffer = [];
-				return;
+				fileReceiveStartDate = Date.now();
+				fileReceiveSinceStartSecs=0;
 			}
+		}
+	} else {
+		if(fileReceiveAbort) {
+			if(!gentle) console.log("file receive abort");
+			fileReceivedSize = 0;
+			fileReceiveBuffer = [];
+			return;
+		}
 
-			fileReceiveBuffer.push(event.data);
-			var chunkSize = event.data.size; // ff
-			if(isNaN(chunkSize)) {
-				chunkSize = event.data.byteLength; // chrome
-			}
+		fileReceiveBuffer.push(event.data);
+		var chunkSize = event.data.size; // ff
+		if(isNaN(chunkSize)) {
+			chunkSize = event.data.byteLength; // chrome
+		}
 
-			fileReceivedSize += chunkSize;
-			progressRcvBar.value = fileReceivedSize;
-			let sinceStartSecs = Math.floor((Date.now() - fileReceiveStartDate + 500)/1000);
-			if(sinceStartSecs!=fileReceiveSinceStartSecs && sinceStartSecs!=0) {
-				let kbytesPerSec = Math.floor(fileReceivedSize/1000/sinceStartSecs);
-				progressRcvLabel.innerHTML = "receiving '"+fileName.substring(0,22)+"' "+kbytesPerSec+" KB/s";
-				fileReceiveSinceStartSecs = sinceStartSecs;
-			}
-			if(fileReceivedSize === fileSize) {
-				if(!gentle) console.log("file receive complete");
-				const receivedBlob = new Blob(fileReceiveBuffer);
-				fileReceiveBuffer = [];
-				progressRcvElement.style.display = "none";
+		fileReceivedSize += chunkSize;
+		progressRcvBar.value = fileReceivedSize;
+		let sinceStartSecs = Math.floor((Date.now() - fileReceiveStartDate + 500)/1000);
+		if(sinceStartSecs!=fileReceiveSinceStartSecs && sinceStartSecs!=0) {
+			let kbytesPerSec = Math.floor(fileReceivedSize/1000/sinceStartSecs);
+			progressRcvLabel.innerHTML = "receiving '"+fileName.substring(0,22)+"' "+kbytesPerSec+" KB/s";
+			fileReceiveSinceStartSecs = sinceStartSecs;
+		}
+		if(fileReceivedSize === fileSize) {
+			if(!gentle) console.log("file receive complete");
+			const receivedBlob = new Blob(fileReceiveBuffer);
+			fileReceiveBuffer = [];
+			progressRcvElement.style.display = "none";
 
-				let randId = ""+Math.random()*100000000;
-				var aDivElement = document.createElement("div");
-				aDivElement.id = randId;
-				downloadList.appendChild(aDivElement);
+			let randId = ""+Math.random()*100000000;
+			var aDivElement = document.createElement("div");
+			aDivElement.id = randId;
+			downloadList.appendChild(aDivElement);
 
-				var aElement = document.createElement("a");
-				aElement.href = URL.createObjectURL(receivedBlob);
-				aElement.download = fileName;
-				let kbytes = Math.floor(fileReceivedSize/1000);
-				aElement.textContent = `received '${fileName.substring(0,25)}' ${kbytes} KB`;
-				aDivElement.appendChild(aElement);
+			var aElement = document.createElement("a");
+			aElement.href = URL.createObjectURL(receivedBlob);
+			aElement.download = fileName;
+			let kbytes = Math.floor(fileReceivedSize/1000);
+			aElement.textContent = `received '${fileName.substring(0,25)}' ${kbytes} KB`;
+			aDivElement.appendChild(aElement);
 
-				var aDeleteElement = document.createElement("a");
-				aDeleteElement.style = "margin-left:10px;";
-				aDeleteElement.onclick = function(){ downloadList.removeChild(aDivElement); }
-				aDeleteElement.textContent = `[x]`;
-				aDivElement.appendChild(aDeleteElement);
-			}
+			var aDeleteElement = document.createElement("a");
+			aDeleteElement.style = "margin-left:10px;";
+			aDeleteElement.onclick = function(){ downloadList.removeChild(aDivElement); }
+			aDeleteElement.textContent = `[x]`;
+			aDivElement.appendChild(aDeleteElement);
 		}
 	}
 }

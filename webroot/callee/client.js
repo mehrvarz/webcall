@@ -17,17 +17,16 @@ const iframeWindowElement = document.getElementById('iframeWindow');
 const fullscreenCheckbox = document.querySelector('input#fullscreen');
 const mainElement = document.getElementById('main');
 const containerElement = document.getElementById('container');
-const menuElement = document.getElementById('menu');
 const menuDialogElement = document.getElementById('menuDialog');
 const vresDialogElement = document.getElementById('vresDialog');
 const fullScreenOverlayElement = document.getElementById('fullScreenOverlay');
-const progressSendElement = document.getElementById('progressSend'); // switch on and off
+const progressSendElement = document.getElementById('progressSend');
 const progressSendLabel = document.getElementById('progressSendLabel');
-const progressSendBar = document.getElementById('fileProgressSend'); // actual progress bar
+const progressSendBar = document.getElementById('fileProgressSend');
 const downloadList = document.getElementById('download');
-const progressRcvElement = document.getElementById('progressRcv'); // switch on and off
+const progressRcvElement = document.getElementById('progressRcv');
 const progressRcvLabel = document.getElementById('progressRcvLabel');
-const progressRcvBar = document.getElementById('fileProgressRcv'); // actual progress bar
+const progressRcvBar = document.getElementById('fileProgressRcv');
 const fileselectLabel = document.getElementById("fileselectlabel");
 
 var videoEnabled = false;
@@ -70,9 +69,10 @@ var userMediaConstraints = {
 };
 
 function setVideoConstraintsLow() {
-	const constraintString =	'{ "width":  {"min":320, "ideal":640, "max":800 },'+
-								'  "height": {"min":240, "ideal":360, "max":600 },'+
-								'  "frameRate": { "min":10, "max":30 } }';
+	const constraintString =
+		'{ "width":  {"min":320, "ideal":640, "max":800 },'+
+		'  "height": {"min":240, "ideal":360, "max":600 },'+
+		'  "frameRate": { "min":10, "max":30 } }';
 	if(!gentle) console.log('setVideoConstraintsLow', constraintString);
 	userMediaConstraints.video = JSON.parse(constraintString);
 	historyBack();
@@ -80,9 +80,10 @@ function setVideoConstraintsLow() {
 }
 
 function setVideoConstraintsMid() {
-	const constraintString =	'{ "width":  {"min":480, "ideal":1280, "max":1920 },'+
-								'  "height": {"min":360, "ideal":720,  "max":1080 },'+
-								'  "frameRate": { "min":10, "max":60 } }';
+	const constraintString =
+		'{ "width":  {"min":480, "ideal":1280, "max":1920 },'+
+		'  "height": {"min":360, "ideal":720,  "max":1080 },'+
+		'  "frameRate": { "min":10, "max":60 } }';
 	if(!gentle) console.log('setVideoConstraintsMid', constraintString);
 	userMediaConstraints.video = JSON.parse(constraintString);
 	historyBack();
@@ -90,9 +91,10 @@ function setVideoConstraintsMid() {
 }
 
 function setVideoConstraintsHigh() {
-	const constraintString =	'{ "width":  {"min":1280,"ideal":1920, "max":4096 },'+
-								'  "height": {"min":720, "ideal":1080, "max":2160 },'+
-								'  "frameRate": { "min":15, "max":60 }  }';
+	const constraintString =
+		'{ "width":  {"min":1280,"ideal":1920, "max":4096 },'+
+		'  "height": {"min":720, "ideal":1080, "max":2160 },'+
+		'  "frameRate": { "min":15, "max":60 } }';
 	if(!gentle) console.log('setVideoConstraintsHigh', constraintString);
 	userMediaConstraints.video = JSON.parse(constraintString);
 	historyBack();
@@ -266,7 +268,7 @@ function ajaxFetch(xhr, type, api, processData, errorFkt, postData) {
 		}
 	}
 	xhr.timeout = xhrTimeout;
-	xhr.ontimeout = function () {
+	xhr.ontimeout = function() {
 		errorFkt("timeout",0);
 	}
 	xhr.onerror= function(e) {
@@ -585,7 +587,6 @@ function menuDialogOpen(menuDialog) {
 	},60);
 }
 
-
 function menuDialogClose() {
 	if(menuDialogOpenElement) {
 		menuDialogOpenElement.style.display = "none";
@@ -722,7 +723,6 @@ function getStream(selectObject) {
 				return navigator.mediaDevices.getUserMedia(userMediaConstraints)
 					.then(gotStream)
 					.catch(function(err) {
-						// this err can be ignored
 						if(videoEnabled) {
 							if(!gentle) console.log('getStream backto lastGoodMediaConstraints videoEnabled err');
 							localVideoHide();
@@ -827,7 +827,7 @@ function gotStream(stream) {
 		addedAudioTrack = peerCon.addTrack(audioTracks[0],localStream);
 	}
 
-	// now let's look at all the reasons why we would NOT add the videoTrack to peerCon
+	// now let's look at all the reasons NOT to add the videoTrack to peerCon
 	if(!videoEnabled) {
 		// disable all video tracks (do not show the video locally)
 		if(!gentle) console.log("gotStream !videoEnabled -> stop video tracks");
@@ -882,7 +882,7 @@ function connectLocalVideo(forceOff) {
 			if(!gentle) console.log("connectLocalVideo set");
 			if(vsendButton) {
 				vsendButton.classList.remove('blink_me');
-				vsendButton.style.color = "#ff0"; // local video is streaming
+				vsendButton.style.color = "#ff0";
 			}
 			pickupAfterLocalStream = true; // will cause: pickup2()
 			getStream(); // -> gotStream() -> gotStream2() -> pickup2(): "calleeDescriptionUpd"
@@ -892,7 +892,7 @@ function connectLocalVideo(forceOff) {
 	} else {
 		// stop streaming localVideo to other peer
 		if(vsendButton) {
-			vsendButton.style.color = "#fff"; // local video is now not streaming
+			vsendButton.style.color = "#fff";
 		}
 		if(videoEnabled) {
 			vpauseTimer = setTimeout(vpauseByTimer, 40000);
@@ -927,8 +927,8 @@ function vmonitor() {
 	if(!localStream) {
 		// re-enable paused video and microphone
 		if(!gentle) console.log("vmonitor !localStream: re-enable");
-		pickupAfterLocalStream = false; // don't call pickup2()
-		getStream(); // -> gotStream() -> gotStream2() -> pickup2()
+		pickupAfterLocalStream = false;
+		getStream(); // -> gotStream() -> gotStream2()
 		// in the end, vmonitor will be called again, but then with localStream
 	} else if(videoEnabled) {
 		localVideoFrame.play().catch(function(error) {});
@@ -1029,13 +1029,12 @@ function localVideoShow() {
 function localVideoHide() {
 	videoEnabled = false;
 	lastGoodMediaConstraints = null;
-	localVideoLabel.style.opacity = 0.3; // will be transitioned
+	localVideoLabel.style.opacity = 0.3;
 	let localVideoDivHeight = parseFloat(getComputedStyle(localVideoFrame).width)/16*9;
-	//if(!gentle) console.log("localVideoHide DivHeight",localVideoDivHeight);
-	localVideoDiv.style.height = ""+localVideoDivHeight+"px"; // height from auto to fixed
+	localVideoDiv.style.height = ""+localVideoDivHeight+"px"; // from auto to fixed
 	setTimeout(function() { // wait for fixed height
 		if(!videoEnabled) {
-			localVideoDiv.style.height = "0px"; // will be transitioned
+			localVideoDiv.style.height = "0px";
 		}
 	},200);
 	cameraElement.style.opacity = 1;
@@ -1049,8 +1048,7 @@ function remoteVideoDivOnVisible() {
 var remoteVideoShowing = false;
 function remoteVideoShow() {
 	let remoteVideoDivHeight = parseFloat(getComputedStyle(remoteVideoFrame).width)/16*9;
-	//if(!gentle) console.log("remoteVideoShow DivHeight",remoteVideoDivHeight);
-	remoteVideoDiv.style.height = ""+remoteVideoDivHeight+"px"; // will be transitioned
+	remoteVideoDiv.style.height = ""+remoteVideoDivHeight+"px";
 	remoteVideoDiv.addEventListener('transitionend', remoteVideoDivOnVisible) // switch to height auto
 	remoteVideoLabel.innerHTML = "remote cam";
 	remoteVideoShowing = true;
@@ -1060,10 +1058,9 @@ function remoteVideoHide() {
 	if(remoteVideoShowing) {
 		let remoteVideoDivHeight = parseFloat(getComputedStyle(remoteVideoFrame).width)/16*9;
 		remoteVideoDiv.style.height = remoteVideoDivHeight+"px"; // height from auto to fixed
-		//if(!gentle) console.log("remoteVideoHide DivHeight",remoteVideoDivHeight);
 		remoteVideoLabel.innerHTML = "";
 		setTimeout(function() { // wait for fixed height
-			remoteVideoDiv.style.height = "0px"; // will be transitioned
+			remoteVideoDiv.style.height = "0px";
 		},200);
 		remoteVideoShowing = false;
 	}
@@ -1118,7 +1115,6 @@ function peerConOntrack(track, streams) {
 };
 
 function hashchange() {
-	//if(!gentle) console.log("hashchange",location.hash.length);
 	var newhashcounter;
 	if(location.hash.length > 0) {
 		newhashcounter = parseInt(location.hash.replace('#',''),10);
@@ -1128,10 +1124,8 @@ function hashchange() {
 	//if(!gentle) console.log("hashchange hashcounter",hashcounter,newhashcounter);
 	if(hashcounter>0 && newhashcounter<hashcounter) {
 		if(iframeWindowOpenFlag) {
-			//if(!gentle) console.log("onhashchange iframeWindowClose");
 			iframeWindowClose();
 		} else if(menuDialogOpenElement) {
-			//if(!gentle) console.log("onhashchange menuDialogClose");
 			menuDialogClose();
 		}
 	}
@@ -1178,5 +1172,21 @@ function isP2pCon() {
 	if(localCandidateType!="relay" && remoteCandidateType!="relay")
 		return true;
 	return false;
+}
+
+function dataChannelOnclose(event) {
+	if(!gentle) console.log("dataChannel.onclose",event);
+}
+
+function dataChannelOnerror(event) {
+	if(rtcConnect) {
+		console.log("dataChannel.onerror",event);
+		showStatus("# dataChannel error "+event.error,-1);
+		hangup();
+	}
+	progressSendElement.style.display = "none";
+	if(fileselectLabel && mediaConnect && isDataChlOpen() && isP2pCon()) {
+		fileselectLabel.style.display = "block";
+	}
 }
 

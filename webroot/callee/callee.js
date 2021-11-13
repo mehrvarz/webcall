@@ -1246,10 +1246,8 @@ function pickup2() {
 		}
 		mediaConnectStartDate = Date.now();
 
-		if(dataChannel && dataChannel.readyState=="open") {
-			if(isP2pCon()) {
-				fileselectLabel.style.display = "block";
-			}
+		if(isDataChlOpen() && isP2pCon()) {
+			fileselectLabel.style.display = "block";
 		}
 
 		setTimeout(function() {
@@ -1268,7 +1266,7 @@ function pickup2() {
 	},400);
 }
 
-function hangup() {
+function hangup(dummy,message) {
 	showStatus("Hang up",4000);
 	console.log("hangup");
 	answerButton.style.display = "none";
@@ -1531,151 +1529,131 @@ function createDataChannel() {
 	peerCon.ondatachannel = event => {
 		dataChannel = event.channel;
 		dataChannel.onopen = event => {
-			if(!gentle) console.log("dataChannel.onopen", dataChannel.protocol,
-				dataChannel.ordered, dataChannel.binaryType, dataChannel.reliable);
+			if(!gentle) console.log("dataChannel.onopen");
 		};
-		dataChannel.onclose = event => {
-			if(!gentle) console.log("dataChannel.onclose");
-		}
-		dataChannel.onerror = event => {
-			if(rtcConnect) {
-				console.log("# dataChannel.onerror",event);
-				showStatus("dataChannel error "+event.error,-1);
-				hangup();
-			}
-			progressSendElement.style.display = "none";
-			if(mediaConnect && dataChannel && dataChannel.readyState=="open") {
-				if(isP2pCon()) {
-					fileselectLabel.style.display = "block";
-				}
-			}
-		}
-		dataChannel.onmessage = event => {
-			if(typeof event.data === "string") {
-				if(!gentle) console.log("dataChannel.onmessage");
-				if(event.data) {
-					if(event.data=="ping") {
-						if(isDataChlOpen()) {
-							dataChannel.send(event.data+" response");
-						}
-					} else if(event.data.startsWith("disconnect")) {
-						console.log("dataChannel.onmessage on 'disconnect'");
-						dataChannel.close();
-						dataChannel = null;
-						stopAllAudioEffects("dataChannel disconnect");
-						hangup();
-					} else if(event.data.startsWith("msg|")) {
-						// sanitize incoming data
-						let cleanString = event.data.substring(4).replace(/<(?:.|\n)*?>/gm, "...");
-						if(cleanString!="") {
-							console.log("dataChannel.onmessage msg",cleanString);
-							if(msgbox) {
-								let curDate = new Date().toString();
-								// cut off trailing " (Central European Summer Time)" from date
-								let bracketIdx = curDate.indexOf(" (");
-								if(bracketIdx>=0) {
-									curDate = curDate.substring(0,bracketIdx);
-								}
-								let msg = "--- "+curDate+" ---\n" + cleanString + "\n";
-								msgbox.value = msg;
-							}
-						}
-					} else if(event.data.startsWith("cmd|")) {
-						let subCmd = event.data.substring(4);
-						signalingCommand(subCmd);
-					} else if(event.data.startsWith("file|")) {
-						var fileDescr = event.data.substring(5);
+		dataChannel.onclose = event => dataChannelOnclose(event);
+		dataChannel.onerror = event => dataChannelOnerror(event);
+		dataChannel.onmessage = event => dataChannelOnmessage(event);
+	};
+}
 
-						if(fileDescr=="end-send") {
-							if(!gentle) console.log("file transmit aborted by sender");
-							progressRcvElement.style.display = "none";
-							if(fileReceivedSize < fileSize) {
-								showStatus("file transmit aborted by sender");
-							}
-							fileReceivedSize = 0;
-							fileReceiveBuffer = [];
-							return;
+function dataChannelOnmessage(event) {
+	if(typeof event.data === "string") {
+		if(!gentle) console.log("dataChannel.onmessage");
+		if(event.data) {
+			if(event.data.startsWith("disconnect")) {
+				console.log("dataChannel.onmessage on 'disconnect'");
+				dataChannel.close();
+				dataChannel = null;
+				hangupWithBusySound(false,"dataChannel.close");
+			} else if(event.data.startsWith("msg|")) {
+				// sanitize incoming data
+				let cleanString = event.data.substring(4).replace(/<(?:.|\n)*?>/gm, "...");
+				if(cleanString!="") {
+					console.log("dataChannel.onmessage msg",cleanString);
+					if(msgbox) {
+						let curDate = new Date().toString();
+						// cut off trailing " (Central European Summer Time)" from date
+						let bracketIdx = curDate.indexOf(" (");
+						if(bracketIdx>=0) {
+							curDate = curDate.substring(0,bracketIdx);
 						}
-						if(fileDescr=="end-rcv") {
-							if(!gentle) console.log("file send aborted by peer");
-							showStatus("file send aborted by peer");
-							fileSendAbort = true;
-							progressSendElement.style.display = "none";
-							if(mediaConnect && dataChannel && dataChannel.readyState=="open") {
-								if(isP2pCon()) {
-									fileselectLabel.style.display = "block";
-								}
-							}
-							return;
-						}
-
-						showStatus("",-1);
-						fileReceiveAbort = false;
-						// parse: "file|"+file.name+","+file.size+","+file.type+","+file.lastModified);
-						let tok = fileDescr.split(",");
-						fileName = tok[0];
-						fileSize = 0;
-						if(tok.length>=2) {
-							fileSize = parseInt(tok[1]);
-							progressRcvBar.max = fileSize;
-							progressRcvElement.style.display = "block";
-						}
-						fileReceivedSize = 0;
-						fileReceiveBuffer = [];
-						fileReceiveStartDate = Date.now();
-						fileReceiveSinceStartSecs=0;
+						let msg = "--- "+curDate+" ---\n" + cleanString + "\n";
+						msgbox.value = msg;
 					}
 				}
-			} else {
-				if(fileReceiveAbort) {
-					if(!gentle) console.log("file receive abort");
+			} else if(event.data.startsWith("cmd|")) {
+				let subCmd = event.data.substring(4);
+				signalingCommand(subCmd);
+			} else if(event.data.startsWith("file|")) {
+				var fileDescr = event.data.substring(5);
+
+				if(fileDescr=="end-send") {
+					if(!gentle) console.log("file transmit aborted by sender");
+					progressRcvElement.style.display = "none";
+					if(fileReceivedSize < fileSize) {
+						showStatus("file transmit aborted by sender");
+					}
 					fileReceivedSize = 0;
 					fileReceiveBuffer = [];
 					return;
 				}
-
-				fileReceiveBuffer.push(event.data);
-				var chunkSize = event.data.size; // ff
-				if(isNaN(chunkSize)) {
-					chunkSize = event.data.byteLength; // chrome
+				if(fileDescr=="end-rcv") {
+					if(!gentle) console.log("file send aborted by receiver");
+					showStatus("file send aborted by receiver");
+					fileSendAbort = true;
+					progressSendElement.style.display = "none";
+					if(fileselectLabel && mediaConnect && isDataChlOpen() && isP2pCon()) {
+						fileselectLabel.style.display = "block";
+					}
+					return;
 				}
 
-				fileReceivedSize += chunkSize;
-				progressRcvBar.value = fileReceivedSize;
-				let sinceStartSecs = Math.floor((Date.now() - fileReceiveStartDate + 500)/1000);
-				if(sinceStartSecs!=fileReceiveSinceStartSecs && sinceStartSecs!=0) {
-					let kbytesPerSec = Math.floor(fileReceivedSize/1000/sinceStartSecs);
-					progressRcvLabel.innerHTML = "receiving '"+fileName.substring(0,22)+"' "+kbytesPerSec+" KB/s";
-					fileReceiveSinceStartSecs = sinceStartSecs;
+				showStatus("",-1);
+				fileReceiveAbort = false;
+				// parse: "file|"+file.name+","+file.size+","+file.type+","+file.lastModified);
+				let tok = fileDescr.split(",");
+				fileName = tok[0];
+				fileSize = 0;
+				if(tok.length>=2) {
+					fileSize = parseInt(tok[1]);
+					progressRcvBar.max = fileSize;
+					progressRcvElement.style.display = "block";
 				}
-				//if(!gentle) console.log("binary chunk", chunkSize, fileReceivedSize, fileSize);
-				if(fileReceivedSize === fileSize) {
-					if(!gentle) console.log("file receive complete");
-					const receivedBlob = new Blob(fileReceiveBuffer);
-					fileReceiveBuffer = [];
-					progressRcvElement.style.display = "none";
-
-					let randId = ""+Math.random()*100000000;
-					var aDivElement = document.createElement("div");
-					aDivElement.id = randId;
-					downloadList.appendChild(aDivElement);
-
-					var aElement = document.createElement("a");
-					aElement.href = URL.createObjectURL(receivedBlob);
-					aElement.download = fileName;
-					let kbytes = Math.floor(fileReceivedSize/1000);
-					aElement.textContent = `received '${fileName.substring(0,25)}' ${kbytes} KB`;
-					aDivElement.appendChild(aElement);
-
-					var aDeleteElement = document.createElement("a");
-					aDeleteElement.style = "margin-left:10px;";
-					aDeleteElement.onclick = function(){ downloadList.removeChild(aDivElement); }
-					aDeleteElement.textContent = `[x]`;
-					aDivElement.appendChild(aDeleteElement);
-				}
+				fileReceivedSize = 0;
+				fileReceiveBuffer = [];
+				fileReceiveStartDate = Date.now();
+				fileReceiveSinceStartSecs=0;
 			}
 		}
-	};
+	} else {
+		if(fileReceiveAbort) {
+			if(!gentle) console.log("file receive abort");
+			fileReceivedSize = 0;
+			fileReceiveBuffer = [];
+			return;
+		}
+
+		fileReceiveBuffer.push(event.data);
+		var chunkSize = event.data.size; // ff
+		if(isNaN(chunkSize)) {
+			chunkSize = event.data.byteLength; // chrome
+		}
+
+		fileReceivedSize += chunkSize;
+		progressRcvBar.value = fileReceivedSize;
+		let sinceStartSecs = Math.floor((Date.now() - fileReceiveStartDate + 500)/1000);
+		if(sinceStartSecs!=fileReceiveSinceStartSecs && sinceStartSecs!=0) {
+			let kbytesPerSec = Math.floor(fileReceivedSize/1000/sinceStartSecs);
+			progressRcvLabel.innerHTML = "receiving '"+fileName.substring(0,22)+"' "+kbytesPerSec+" KB/s";
+			fileReceiveSinceStartSecs = sinceStartSecs;
+		}
+		//if(!gentle) console.log("binary chunk", chunkSize, fileReceivedSize, fileSize);
+		if(fileReceivedSize === fileSize) {
+			if(!gentle) console.log("file receive complete");
+			const receivedBlob = new Blob(fileReceiveBuffer);
+			fileReceiveBuffer = [];
+			progressRcvElement.style.display = "none";
+
+			let randId = ""+Math.random()*100000000;
+			var aDivElement = document.createElement("div");
+			aDivElement.id = randId;
+			downloadList.appendChild(aDivElement);
+
+			var aElement = document.createElement("a");
+			aElement.href = URL.createObjectURL(receivedBlob);
+			aElement.download = fileName;
+			let kbytes = Math.floor(fileReceivedSize/1000);
+			aElement.textContent = `received '${fileName.substring(0,25)}' ${kbytes} KB`;
+			aDivElement.appendChild(aElement);
+
+			var aDeleteElement = document.createElement("a");
+			aDeleteElement.style = "margin-left:10px;";
+			aDeleteElement.onclick = function(){ downloadList.removeChild(aDivElement); }
+			aDeleteElement.textContent = `[x]`;
+			aDivElement.appendChild(aDeleteElement);
+		}
+	}
 }
 
 var allAudioEffectsStopped = false;
@@ -1918,5 +1896,21 @@ function exit() {
 			window.location.reload(false);
 		},1000);
 	},1000);
+}
+
+function hangupWithBusySound(mustDisconnectCallee,message) {
+	stopAllAudioEffects(message);
+/*
+	dialing = false;
+	if(peerCon) {
+		if(!gentle) console.log(`hangupWithBusySound `+message);
+		busySignalSound.play().catch(function(error) { });
+		setTimeout(function() {
+			if(!gentle) console.log(`hangupWithBusySound stopAllAudioEffects`);
+			stopAllAudioEffects();
+		},2500);
+	}
+*/
+	hangup(mustDisconnectCallee,message);
 }
 
