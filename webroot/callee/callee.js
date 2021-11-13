@@ -724,7 +724,6 @@ function connectSignaling(message) {
 			gentleLog('ws connection send',message);
 			wsSend(message);
 		}
-		// logged in callee (not a duo callee)
 		isHiddenlabel.style.display = "block";
 		autoanswerlabel.style.display = "block";
 		menuSettingsElement.style.display = "block";
