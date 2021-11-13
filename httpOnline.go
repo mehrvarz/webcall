@@ -90,9 +90,9 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		readConfigLock.RUnlock()
 		wsAddr = fmt.Sprintf("%s?wsid=%d", wsAddr, wsClientID)
 		if logWantedFor("wsAddr") {
-			fmt.Printf("/online id=%s onl/avail %s rip=%s\n", glUrlID, wsAddr, remoteAddr)
+			fmt.Printf("/online callee=%s onl/avail %s rip=%s\n", glUrlID, wsAddr, remoteAddr)
 		} else {
-			fmt.Printf("/online id=%s onl/avail rip=%s\n", glUrlID, remoteAddr)
+			fmt.Printf("/online callee=%s onl/avail rip=%s\n", glUrlID, remoteAddr)
 		}
 		fmt.Fprintf(w, wsAddr)
 		return
