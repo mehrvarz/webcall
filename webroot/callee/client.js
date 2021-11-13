@@ -15,7 +15,6 @@ const cameraElement = document.getElementById('camera');
 const fileSelectElement = document.getElementById("fileselect");
 const iframeWindowElement = document.getElementById('iframeWindow');
 const fullscreenCheckbox = document.querySelector('input#fullscreen');
-
 const mainElement = document.getElementById('main');
 const containerElement = document.getElementById('container');
 const menuElement = document.getElementById('menu');
@@ -138,7 +137,7 @@ function showVideoResolutionRemote() {
 	}
 }
 
-if(fileSelectElement!=null) {
+if(fileSelectElement) {
 	fileSelectElement.addEventListener('change', (event) => {
 		if(!gentle) console.log("fileSelect event");
 		historyBack();
@@ -216,7 +215,7 @@ function sendFile(file) {
 			readSlice(offset);
 		} else {
 			let sendComplete = function() {
-				if(dataChannel!=null && dataChannel.bufferedAmount > 0) {
+				if(dataChannel && dataChannel.bufferedAmount > 0) {
 					console.log('file send flushing buffered...');
 					setTimeout(sendComplete,200);
 					return;
@@ -225,8 +224,8 @@ function sendFile(file) {
 				offset = 0;
 				progressSendElement.style.display = "none";
 				showStatus("sent '"+file.name.substring(0,25)+"' "+Math.floor(file.size/1000)+" KB",-1);
-				if(mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
-					if(localCandidateType!="relay" && remoteCandidateType!="relay") {
+				if(mediaConnect && isDataChlOpen()) {
+					if(isP2pCon()) {
 						fileselectLabel.style.display = "block";
 					}
 				}
@@ -301,7 +300,6 @@ function stopTimer() {
 		clearInterval(timerIntervalID);
 		timerIntervalID=0;
 		timerElement.style.opacity = 0;
-		return;
 	}
 }
 
@@ -314,7 +312,7 @@ function updateClock(startDuration) {
 	if(countDownSecs==60 || countDownSecs==30 || countDownSecs==15) {
 		notificationSound.play().catch(function(error) { });
 	}
-	if(timerElement!=null) {
+	if(timerElement) {
 		let timerMin = Math.floor(countDownSecs/60);
 		let timerSec = countDownSecs - timerMin*60;
 		let timerSecStr = ""+timerSec;
@@ -370,10 +368,6 @@ function getStatsPostCall(results) {
 			retransmittedPacketsSent = res.retransmittedPacketsSent; // FF: undefined
 		} else if(res.type=="remote-inbound-rtp") {
 			roundTripTime = res.roundTripTime; // FF: undefined
-		} else if(res.type=="remote-outbound-rtp") {
-			//console.log("statsPostCall remote-outbound-rtp",res);
-		} else {
-			//console.log("statsPostCall type",res.type);
 		}
 	});
 	let durationSecs = Math.floor((statsPostCallDurationMS+500)/1000);
@@ -427,10 +421,10 @@ function stopProgressSend() {
 	showStatus("file send aborted");
 	fileSendAbort = true;
 	progressSendElement.style.display = "none";
-	if(dataChannel!=null && dataChannel.readyState=="open") {
+	if(isDataChlOpen()) {
 		dataChannel.send("file|end-send");
-		if(fileselectLabel!=null && mediaConnect) {
-			if(localCandidateType!="relay" && remoteCandidateType!="relay") {
+		if(fileselectLabel && mediaConnect) {
+			if(isP2pCon()) {
 				fileselectLabel.style.display = "block";
 			}
 		}
@@ -442,7 +436,7 @@ function stopProgressRcv() {
 	showStatus("file receive aborted");
 	fileReceiveAbort = true;
 	progressRcvElement.style.display = "none";
-	if(dataChannel!=null && dataChannel.readyState=="open") {
+	if(isDataChlOpen()) {
 		dataChannel.send("file|end-rcv");
 	}
 }
@@ -541,7 +535,7 @@ function menuDialogOpen(menuDialog) {
 	}
 	containerElement.style.filter = "blur(0.8px) brightness(60%)";
 	if(calleeMode) {
-		if(wsConn && navigator.cookieEnabled && getCookieSupport()!=null) {
+		if(wsConn && navigator.cookieEnabled && getCookieSupport()) {
 			// cookies avail: "Contacts", "Settings" and "Exit" allowed
 			if(menuContactsElement) {
 				menuContactsElement.style.display = "block";
@@ -875,7 +869,7 @@ function videoSwitch(forceClose) {
 	}
 }
 
-var addLocalVideoEnabled = false; // was sendLocalStream
+var addLocalVideoEnabled = false;
 function connectLocalVideo(forceOff) {
 	if(vpauseTimer) {
 		clearTimeout(vpauseTimer);
@@ -905,18 +899,17 @@ function connectLocalVideo(forceOff) {
 		}
 		addLocalVideoEnabled = false;
 		if(!addedVideoTrack) {
-			if(!gentle) console.log("connectLocalVideo disconnect !addedVideoTrack: !removeTrack");
+			if(!gentle) console.log("connectLocalVideo discon !addedVideoTrack: !removeTrack");
 		} else if(!peerCon) {
-			if(!gentle) console.log("connectLocalVideo disconnect !peerCon: !removeTrack");
+			if(!gentle) console.log("connectLocalVideo discon !peerCon: !removeTrack");
 		} else  {
-			if(!gentle) console.log("connectLocalVideo disconnect peerCon.removeTrack(addedVideoTrack)");
+			if(!gentle) console.log("connectLocalVideo discon peerCon.removeTrack(addedVideoTrack)");
 			peerCon.removeTrack(addedVideoTrack);
 			addedVideoTrack = null;
 		}
 
 		if(dataChannel && dataChannel.readyState=="open") {
 			// make other side pause our cam (their remote cam)
-			if(!gentle) console.log("connectLocalVideo disconnect dataChannel.send(rtcVideoOff)");
 			dataChannel.send("cmd|rtcVideoOff");
 		}
 	}
@@ -1011,7 +1004,7 @@ function onIceCandidate(event,myCandidateName) {
 		if(!gentle) console.log("onIce "+myCandidateName+" via wsSend", event.candidate.address);
 		// 300ms delay to prevent "cmd "+myCandidateName+" no peerCon.remoteDescription" on other side
 		setTimeout(function() {
-// TODO support dataChannel delivery?
+			// TODO support dataChannel delivery?
 			wsSend(myCandidateName+"|"+JSON.stringify(event.candidate));
 		},300);
 	}
@@ -1030,7 +1023,6 @@ function localVideoShow() {
 	localVideoDiv.style.height = ""+localVideoDivHeight+"px"; // will be transitioned
 	localVideoDiv.addEventListener('transitionend', localVideoDivOnVisible) // switch to height auto
 	localVideoDiv.style.visibility = "visible";
-	// now that the localVideo pane is shown, hide the camera icon
 	cameraElement.style.opacity = 0;
 }
 
@@ -1041,12 +1033,11 @@ function localVideoHide() {
 	let localVideoDivHeight = parseFloat(getComputedStyle(localVideoFrame).width)/16*9;
 	//if(!gentle) console.log("localVideoHide DivHeight",localVideoDivHeight);
 	localVideoDiv.style.height = ""+localVideoDivHeight+"px"; // height from auto to fixed
-	setTimeout(function() { // wait for fixed height (timer works better than requestAnimationFrame on andr)
+	setTimeout(function() { // wait for fixed height
 		if(!videoEnabled) {
 			localVideoDiv.style.height = "0px"; // will be transitioned
 		}
 	},200);
-	// now that the localVideo pane is hidden, show the camera icon
 	cameraElement.style.opacity = 1;
 }
 
@@ -1058,7 +1049,7 @@ function remoteVideoDivOnVisible() {
 var remoteVideoShowing = false;
 function remoteVideoShow() {
 	let remoteVideoDivHeight = parseFloat(getComputedStyle(remoteVideoFrame).width)/16*9;
-	if(!gentle) console.log("remoteVideoShow DivHeight",remoteVideoDivHeight);
+	//if(!gentle) console.log("remoteVideoShow DivHeight",remoteVideoDivHeight);
 	remoteVideoDiv.style.height = ""+remoteVideoDivHeight+"px"; // will be transitioned
 	remoteVideoDiv.addEventListener('transitionend', remoteVideoDivOnVisible) // switch to height auto
 	remoteVideoLabel.innerHTML = "remote cam";
@@ -1069,9 +1060,9 @@ function remoteVideoHide() {
 	if(remoteVideoShowing) {
 		let remoteVideoDivHeight = parseFloat(getComputedStyle(remoteVideoFrame).width)/16*9;
 		remoteVideoDiv.style.height = remoteVideoDivHeight+"px"; // height from auto to fixed
-		if(!gentle) console.log("remoteVideoHide DivHeight",remoteVideoDivHeight);
+		//if(!gentle) console.log("remoteVideoHide DivHeight",remoteVideoDivHeight);
 		remoteVideoLabel.innerHTML = "";
-		setTimeout(function() { // wait for fixed height (timer works better than requestAnimationFrame on andr)
+		setTimeout(function() { // wait for fixed height
 			remoteVideoDiv.style.height = "0px"; // will be transitioned
 		},200);
 		remoteVideoShowing = false;
@@ -1081,7 +1072,7 @@ function remoteVideoHide() {
 function peerConOntrack(track, streams) {
 // TODO tmtmtm
 //		track.onunmute = () => {
-//			if(remoteVideoFrame!=null && remoteVideoFrame.srcObject == streams[0]) {
+//			if(remoteVideoFrame && remoteVideoFrame.srcObject == streams[0]) {
 //				if(!gentle) console.warn('peerCon.ontrack onunmute was already set');
 //				return;
 //			}
@@ -1175,5 +1166,17 @@ function showStatus(msg,timeoutMs) {
 			},sleepMs,msg);
 		}
 	}
+}
+
+function isDataChlOpen() {
+	if(dataChannel && dataChannel.readyState=="open")
+		return true;
+	return false;
+}
+
+function isP2pCon() {
+	if(localCandidateType!="relay" && remoteCandidateType!="relay")
+		return true;
+	return false;
 }
 

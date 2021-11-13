@@ -558,11 +558,11 @@ function login(retryFlag) {
 		waitingCallerSlice = null;
 		missedCallsSlice = null;
 		var waitingCallersElement = document.getElementById('waitingCallers');
-		if(waitingCallersElement!=null) {
+		if(waitingCallersElement) {
 			waitingCallersElement.innerHTML = "";
 		}
 		var waitingCallersTitleElement = document.getElementById('waitingCallersTitle');
-		if(waitingCallersTitleElement!=null) {
+		if(waitingCallersTitleElement) {
 			waitingCallersTitleElement.style.display = "none";
 		}
 		if(retryFlag) {
@@ -816,7 +816,7 @@ function signalingCommand(message) {
 					'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
 				peerCon.setLocalDescription(localDescription).then(() => {
 					if(!gentle) console.log('calleeAnswer localDescription set -> signal');
-					if(dataChannel && dataChannel.readyState=="open") {
+					if(isDataChlOpen()) {
 						dataChannel.send("cmd|calleeAnswer|"+JSON.stringify(localDescription));
 					} else {
 						wsSend("calleeAnswer|"+JSON.stringify(localDescription));
@@ -953,7 +953,7 @@ function signalingCommand(message) {
 		showOnlineReadyMsg(payload);
 
 	} else if(cmd=="sessionDuration") { // in call
-		if(localCandidateType!="relay" && remoteCandidateType!="relay") {
+		if(isP2pCon()) {
 			// do not show the timer
 		} else if(mediaConnect) {
 			var sessionDuration = parseInt(payload,10); // maxTalkSecsIfNoP2p
@@ -982,7 +982,7 @@ function signalingCommand(message) {
 		if(payload.length>0) {
 			waitingCallerSlice = JSON.parse(payload);
 			//console.log('showWaitingCallers msg',waitingCallerSlice.length);
-			if(waitingCallerSlice!=null && waitingCallerSlice.length>0) {
+			if(waitingCallerSlice && waitingCallerSlice.length>0) {
 				// TODO would be nice to use a different sound here
 				notificationSound.play().catch(function(error) { });
 			}
@@ -1004,7 +1004,7 @@ function signalingCommand(message) {
 	} else if(cmd=="rtcNegotiate") {
 		// remote video track added by caller
 		if(!gentle) console.log("rtcNegotiate");
-		if(dataChannel && dataChannel.readyState=="open") {
+		if(isDataChlOpen()) {
 			pickupAfterLocalStream = true;
 			getStream(); // -> pickup2() -> "calleeDescriptionUpd"
 		}
@@ -1021,11 +1021,11 @@ function signalingCommand(message) {
 
 function showWaitingCallers() {
 	let waitingCallersElement = document.getElementById('waitingCallers');
-	if(waitingCallersElement!=null) {
+	if(waitingCallersElement) {
 		let waitingCallersTitleElement = document.getElementById('waitingCallersTitle');
 		if(waitingCallerSlice==null || waitingCallerSlice.length<=0) {
 			waitingCallersElement.innerHTML = "";
-			if(waitingCallersTitleElement!=null) {
+			if(waitingCallersTitleElement) {
 				waitingCallersTitleElement.style.display = "none";
 			}
 			return;
@@ -1055,7 +1055,7 @@ function showWaitingCallers() {
 		}
 		str += "</table>";
 		waitingCallersElement.innerHTML = str;
-		if(waitingCallersTitleElement!=null) {
+		if(waitingCallersTitleElement) {
 			waitingCallersTitleElement.style.display = "block";
 		}
 
@@ -1076,12 +1076,12 @@ function showMissedCalls() {
 		// don't execute if client is disconnected 
 		return;
 	}
-	if(missedCallsElement!=null) {
+	if(missedCallsElement) {
 		if(missedCallsSlice==null || missedCallsSlice.length<=0) {
 			if(!gentle) console.log('showWaitingCallers fkt missedCallsSlice == null');
 			missedCallsElement.style.display = "none";
 			missedCallsElement.innerHTML = "";
-			if(missedCallsTitleElement!=null) {
+			if(missedCallsTitleElement) {
 				missedCallsTitleElement.style.display = "none";
 			}
 			return;
@@ -1146,7 +1146,7 @@ function showMissedCalls() {
 		}
 		str += "</table>"
 		missedCallsElement.innerHTML = str;
-		if(missedCallsTitleElement!=null) {
+		if(missedCallsTitleElement) {
 			missedCallsTitleElement.style.display = "block";
 		}
 
@@ -1180,7 +1180,7 @@ function deleteMissedCall(callerAddrPortPlusCallTime) {
 
 function wsSend(message) {
 	if(wsConn==null || wsConn.readyState!=1) {
-		if(wsConn!=null) {
+		if(wsConn) {
 			if(wsConn.readyState==0) {
 				console.log('wsSend (state 0 = connecting)');
 				wsConn.close();
@@ -1221,7 +1221,7 @@ function pickup() {
 function pickup2() {
 	console.log('pickup2');
 	showStatus("");
-	stopAllAudioEffects("pickup");
+	stopAllAudioEffects("pickup2");
 	if(!localStream) {
 		console.warn('pickup2 no localStream');
 		return;
@@ -1229,13 +1229,8 @@ function pickup2() {
 
 	if(remoteStream) {
 		if(!gentle) console.log('pickup2 peerCon start remoteVideoFrame');
-		remoteVideoFrame.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
-		var isPlaying = remoteVideoFrame.currentTime > 0 && !remoteVideoFrame.paused && !remoteVideoFrame.ended && remoteVideoFrame.readyState > remoteVideoFrame.HAVE_CURRENT_DATA;
-		if(!isPlaying) {
-			remoteVideoFrame.play().catch(function(error) {
-				if(!gentle) console.log("# remoteVideoFrame error",error);
-			});
-		}
+		remoteVideoFrame.srcObject = remoteStream;
+		remoteVideoFrame.play().catch(function(error) {	});
 	}
 
 	// before we send "pickup|!" to caller allow some time for onnegotiation to take place
@@ -1251,8 +1246,8 @@ function pickup2() {
 		}
 		mediaConnectStartDate = Date.now();
 
-		if(dataChannel!=null && dataChannel.readyState=="open") {
-			if(localCandidateType!="relay" && remoteCandidateType!="relay") {
+		if(dataChannel && dataChannel.readyState=="open") {
+			if(isP2pCon()) {
 				fileselectLabel.style.display = "block";
 			}
 		}
@@ -1361,7 +1356,7 @@ function goOnline() {
 				'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
 			peerCon.setLocalDescription(localDescription).then(() => {
 				if(!gentle) console.log('onnegotiationneeded localDescription set -> signal');
-				if(dataChannel && dataChannel.readyState=="open") {
+				if(isDataChlOpen()) {
 					dataChannel.send("cmd|calleeOffer|"+JSON.stringify(localDescription));
 				} else {
 					wsSend("calleeOffer|"+JSON.stringify(localDescription));
@@ -1380,10 +1375,9 @@ function goOnline() {
 	peerCon.onconnectionstatechange = event => {
 		if(!gentle) console.log("peerCon connectionstatechange", peerCon.connectionState);
 		if(!peerCon) {
-			hangupWithBusySound(true,"Peer disconnected");
+			hangup();
 			return;
 		}
-		if(!gentle) console.log("onconnectionstatechange", peerCon.connectionState);
 		if(peerCon.connectionState=="disconnected") {
 			console.log('peerCon disconnected',rtcConnect,mediaConnect);
 			stopAllAudioEffects();
@@ -1404,7 +1398,7 @@ function goOnline() {
 				createDataChannel();
 			}
 
-			if(ringtoneSound!=null) {
+			if(ringtoneSound) {
 				allAudioEffectsStopped = false;
 				var playRingtoneSound = function() {
 					if(allAudioEffectsStopped) {
@@ -1467,12 +1461,9 @@ function goOnline() {
 				.then((results) => getStatsCandidateTypes(results,"Incoming", ""), err => console.log(err));
 
 				answerButton.disabled = false;
-				if(!calleeID.startsWith("answie")){
-					// msgbox only if not duo or answie
-					// no msgbox if it is empty
-					if(msgbox.value!="") {
-						msgbox.style.display = "block";
-					}
+				// only show msgbox if not empty
+				if(msgbox.value!="" && !calleeID.startsWith("answie")) {
+					msgbox.style.display = "block";
 				}
 
 				goOnlineButton.style.display = "none";
@@ -1553,8 +1544,8 @@ function createDataChannel() {
 				hangup();
 			}
 			progressSendElement.style.display = "none";
-			if(mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
-				if(localCandidateType!="relay" && remoteCandidateType!="relay") {
+			if(mediaConnect && dataChannel && dataChannel.readyState=="open") {
+				if(isP2pCon()) {
 					fileselectLabel.style.display = "block";
 				}
 			}
@@ -1564,7 +1555,7 @@ function createDataChannel() {
 				if(!gentle) console.log("dataChannel.onmessage");
 				if(event.data) {
 					if(event.data=="ping") {
-						if(dataChannel && dataChannel.readyState=="open") {
+						if(isDataChlOpen()) {
 							dataChannel.send(event.data+" response");
 						}
 					} else if(event.data.startsWith("disconnect")) {
@@ -1610,8 +1601,8 @@ function createDataChannel() {
 							showStatus("file send aborted by peer");
 							fileSendAbort = true;
 							progressSendElement.style.display = "none";
-							if(mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
-								if(localCandidateType!="relay" && remoteCandidateType!="relay") {
+							if(mediaConnect && dataChannel && dataChannel.readyState=="open") {
+								if(isP2pCon()) {
 									fileselectLabel.style.display = "block";
 								}
 							}
@@ -1712,7 +1703,7 @@ function stopAllAudioEffects(comment) {
 var goOnlinePending = false;
 function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 	console.log('endWebRtcSession',disconnectCaller,goOnlineAfter);
-	if(remoteVideoFrame!=null) {
+	if(remoteVideoFrame) {
 		remoteVideoFrame.pause();
 		remoteVideoFrame.currentTime = 0;
 		remoteVideoFrame.srcObject = null;
@@ -1743,7 +1734,7 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 					if(!gentle) console.log('endWebRtcSession wsSend(cancel)');
 					wsSend("cancel|disconnect"); // important
 				}
-				if(dataChannel && dataChannel.readyState=="open") {
+				if(isDataChlOpen()) {
 					if(!gentle) console.log('endWebRtcSession dataChannel.send(disconnect)');
 					dataChannel.send("disconnect");
 				} else {
@@ -1838,21 +1829,21 @@ function goOffline() {
 	isHiddenlabel.style.display = "none";
 	autoanswerlabel.style.display = "none";
 	var waitingCallersLine = document.getElementById('waitingCallers');
-	if(waitingCallersLine!=null) {
+	if(waitingCallersLine) {
 		waitingCallersLine.innerHTML = "";
 	}
 	var waitingCallersTitleElement = document.getElementById('waitingCallersTitle');
-	if(waitingCallersTitleElement!=null) {
+	if(waitingCallersTitleElement) {
 		waitingCallersTitleElement.style.display = "none";
 	}
-	if(missedCallsElement!=null) {
+	if(missedCallsElement) {
 		missedCallsElement.style.display = "none";
 	}
-	if(missedCallsTitleElement!=null) {
+	if(missedCallsTitleElement) {
 		missedCallsTitleElement.style.display = "none";
 	}
 
-	if(wsConn!=null) {
+	if(wsConn) {
 		// callee going offline
 		console.log('wsConn.close()');
 		wsConn.close();

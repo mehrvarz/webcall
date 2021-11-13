@@ -228,7 +228,7 @@ window.onload = function() {
 			dialAfterCalleeOnline = false;
 			checkCalleeOnline();
 
-			if(dialButton!=null) {
+			if(dialButton) {
 				if(singlebutton) {
 					dialButton.innerHTML = "<b>W E B C A L L</b><br>"+singleButtonReadyText;
 				} else {
@@ -240,7 +240,6 @@ window.onload = function() {
 				}
 
 				dialButton.onclick = function() {
-					console.log("connecting...");
 					showStatus(connectingText,-1);
 
 					rtcConnectStartDate = 0;
@@ -268,7 +267,7 @@ window.onload = function() {
 					checkCalleeOnline();
 				};
 			}
-			if(hangupButton!=null) {
+			if(hangupButton) {
 				hangupButton.onclick = function() {
 					dialButton.style.backgroundColor = "";
 					hangupButton.style.backgroundColor = "";
@@ -691,11 +690,10 @@ function calleeOfflineAction() {
 				return;
 			}
 			// calleeID can NOT be notified
-			var msg = calleeID+" is not online at this time. Please try again a little later.";
-			showStatus(msg,-1);
+			showStatus(calleeID+" is not online at this time. Please try again a little later.",-1);
 		}, // xhr error
 			errorAction
-		// TODO errorAction will switch back; if we don't want this we should handle err like in notifyConnect()
+			// TODO errorAction will switch back; if we don't want this we shd handle err like in notifyConnect()
 		);
 	}
 
@@ -1025,7 +1023,7 @@ function signalingCommand(message) {
 						'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
 					peerCon.setLocalDescription(localDescription).then(() => {
 						if(!gentle) console.log('calleeOffer localDescription set -> signal');
-						if(dataChannel && dataChannel.readyState=="open") {
+						if(isDataChlOpen()) {
 							dataChannel.send("cmd|callerAnswer|"+JSON.stringify(localDescription));
 						} else {
 							wsSend("callerAnswer|"+JSON.stringify(localDescription));
@@ -1051,7 +1049,7 @@ function signalingCommand(message) {
 			return;
 		}
 		var calleeCandidate = JSON.parse(payload);
-		// fix for: AddIceCandidate fail OperationError: Unknown ufrag
+
 		// see: https://stackoverflow.com/questions/61292934/webrtc-operationerror-unknown-ufrag
 		calleeCandidate.usernameFragment = null;
 
@@ -1061,12 +1059,10 @@ function signalingCommand(message) {
 				return
 			}
 
-			//if(!gentle) console.log('calleeCandidate.candidate',calleeCandidate.candidate);
 			if(!gentle) console.log('calleeCandidate',calleeCandidate);
 
 			let tok = calleeCandidate.candidate.split(' ');
 			if(tok.length>=5) {
-				//console.log('addIceCandidate calleeCandidate',calleeCandidate);
 				let address = tok[4];
 				if(tok.length>=10 && tok[8]=="raddr" && tok[9]!="0.0.0.0") {
 					address = tok[9];
@@ -1123,7 +1119,7 @@ function signalingCommand(message) {
 					onlineIndicator.src="red-gradient.svg";
 					micStatus = "Mic is open";
 				} else {
-					// mic not open
+					// mic NOT open
 					dialButton.style.boxShadow = "";
 					onlineIndicator.src="green-gradient.svg";
 				}
@@ -1132,10 +1128,8 @@ function signalingCommand(message) {
 			if(remoteVideoFrame) {
 				// enable (un-mute) remoteStream
 				if(!gentle) console.log('set remoteVideoFrame',remoteStream);
-				remoteVideoFrame.srcObject = remoteStream; // see 'peerCon.ontrack onunmute'
-				remoteVideoFrame.play().catch(function(error) {
-					if(!gentle) console.log("# remoteVideoFrame error",error);
-				});
+				remoteVideoFrame.srcObject = remoteStream;
+				remoteVideoFrame.play().catch(function(error) {	});
 			}
 
 			mediaConnect = true;
@@ -1145,8 +1139,8 @@ function signalingCommand(message) {
 			mediaConnectStartDate = Date.now();
 			needToStoreMissedCall = false;
 
-			if(fileselectLabel!=null && dataChannel!=null && dataChannel.readyState=="open") {
-				if(localCandidateType!="relay" && remoteCandidateType!="relay") {
+			if(fileselectLabel && isDataChlOpen()) {
+				if(isP2pCon()) {
 					fileselectLabel.style.display = "block";
 				}
 			}
@@ -1165,7 +1159,7 @@ function signalingCommand(message) {
 			}
 		}
 
-		console.log('callee is answering our call');
+		console.log('callee is answering call');
 		stopAllAudioEffects();
 
 		if(!singlebutton) {
@@ -1185,7 +1179,7 @@ function signalingCommand(message) {
 		// remoteStream will arrive via: peerCon.ontrack onunmute
 		var waitLoopCount=0;
 		let waitForRemoteStreamFunc = function() {
-			if(!gentle) console.log('waitForRemoteStreamFunc',remoteStream!=null,waitLoopCount);
+			if(!gentle) console.log('waitForRemoteStreamFunc',remoteStream,waitLoopCount);
 			if(!remoteStream) {
 				waitLoopCount++;
 				if(waitLoopCount<=4) {
@@ -1203,7 +1197,7 @@ function signalingCommand(message) {
 			// this is coming from the callee
 			console.log('callee hang up');
 			showStatus("Callee ended call",8000);
-			if(wsConn!=null) {
+			if(wsConn) {
 				wsConn.close();
 				// wsConn=null prevents hangup() from generating a return cancel msg
 				wsConn=null;
@@ -1214,17 +1208,11 @@ function signalingCommand(message) {
 		}
 
 	} else if(cmd=="sessionDuration") {
-		// the longest possible duration
+		// longest possible duration
 		sessionDuration = parseInt(payload);
-		if(!gentle) console.log('sessionDuration',sessionDuration,mediaConnect,timerStartDate);
-		if(localCandidateType!="relay" && remoteCandidateType!="relay") {
-			// no timer
-		} else if(mediaConnect) {
-			if(!timerStartDate) {
-				if(sessionDuration>0) {
-					startTimer(sessionDuration);
-				}
-			}
+		if(!gentle) console.log('sessionDuration',sessionDuration);
+		if(sessionDuration>0 && mediaConnect && !isP2pCon() && !timerStartDate) {
+			startTimer(sessionDuration);
 		}
 	} else if(cmd=="ua") {
 		otherUA = payload;
@@ -1260,7 +1248,7 @@ function dial() {
 	otherUA = "";
 	dialing = true;
 
-	if(fileselectLabel!=null) {
+	if(fileselectLabel) {
 		fileselectLabel.style.display = "none";
 		progressSendElement.style.display = "none";
 		progressRcvElement.style.display = "none";
@@ -1332,7 +1320,7 @@ function dial() {
 					if(!gentle) console.log('onnegotiationneeded deny send: doneHangup');
 				} else if(!rtcConnect && !dialing) {
 					console.log('# onnegotiationneeded deny send: !rtcConnect && !dialing');
-				} else if(dataChannel && dataChannel.readyState=="open") {
+				} else if(isDataChlOpen()) {
 					if(!gentle) console.log('onnegotiationneeded send callerOfferUpd via dc');
 					dataChannel.send("cmd|callerOfferUpd|"+JSON.stringify(localDescription));
 				} else {
@@ -1344,14 +1332,6 @@ function dial() {
 			console.error("onnegotiationneeded err",err);
 		}
 	};
-
-	/* TODO
-	peerCon.processSdp = function(sdp) {
-		return sdp; // return unchanged SDP
-	};
-	peerCon.optionalArgument = {}; // ignore all DTLS/ipv6 parameters
-	*/
-
 	peerCon.onicegatheringstatechange = event => {
 		let connection = event.target;
 		if(!gentle) console.log("onicegatheringstatechange", connection.iceGatheringState);
@@ -1393,7 +1373,6 @@ function dial() {
 
 				if(!singlebutton) {
 					let msgboxText = msgbox.value.substring(0,300);
-					if(!gentle) console.log('msgboxText',msgboxText);
 					if(msgboxText!="") {
 						if(dataChannel) {
 							if(dataChannel.readyState=="open") {
@@ -1431,20 +1410,15 @@ function dial() {
 		}
 	}
 	if(!localStream) {
-		console.log('dial abort localStream not set');
 		showStatus("abort no localStream");
 		return;
 	}
-
-	if(localStream) {
-		// add selected local audioTrack (audio input / mic) to peerCon
-		// TODO: an exception here leaves the callee hub "connected"
-		const audioTracks = localStream.getAudioTracks();
-		if(audioTracks.length>0) {
-			audioTracks[0].enabled = true; // unmute
-			console.log('peerCon addTrack local audio input',audioTracks[0]);
-			addedAudioTrack = peerCon.addTrack(audioTracks[0],localStream);
-		}
+	// add selected local audioTrack (audio input / mic) to peerCon
+	const audioTracks = localStream.getAudioTracks();
+	if(audioTracks.length>0) {
+		audioTracks[0].enabled = true; // unmute
+		console.log('peerCon addTrack local audio input',audioTracks[0]);
+		addedAudioTrack = peerCon.addTrack(audioTracks[0],localStream);
 	}
 
 	createDataChannel();
@@ -1473,9 +1447,8 @@ function createDataChannel() {
 	if(!gentle) console.log('createDataChannel...');
 	dataChannel = peerCon.createDataChannel("datachannel");
 	dataChannel.onopen = event => {
-		if(!gentle)
-			console.log("dataChannel.onopen",
-				dataChannel.ordered, dataChannel.binaryType, dataChannel.reliable, dataChannel.sctp);
+		if(!gentle) console.log("dataChannel.onopen",
+			dataChannel.ordered, dataChannel.binaryType, dataChannel.reliable, dataChannel.sctp);
 		dataChannel.send("ping");
 		if(dataChannelSendMsg!="") {
 			dataChannel.send("msg|"+dataChannelSendMsg);
@@ -1492,10 +1465,8 @@ function createDataChannel() {
 			hangup();
 		}
 		progressSendElement.style.display = "none";
-		if(fileselectLabel!=null && mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
-			if(localCandidateType!="relay" && remoteCandidateType!="relay") {
-				fileselectLabel.style.display = "block";
-			}
+		if(fileselectLabel && mediaConnect && isDataChlOpen() && isP2pCon()) {
+			fileselectLabel.style.display = "block";
 		}
 	}
 	dataChannel.onmessage = event => {
@@ -1509,30 +1480,29 @@ function createDataChannel() {
 				} else if(event.data.startsWith("cmd|")) {
 					let subCmd = event.data.substring(4);
 					if(subCmd.startsWith("ledred")) {
-						if(onlineIndicator!=null) {
+						if(onlineIndicator) {
 							onlineIndicator.src="red-gradient.svg";
 						}
 						microphoneIsNeeded = true;
 
 						// unmute micro
-						if(localStream!=null) {
+						if(localStream) {
 							const audioTracks = localStream.getAudioTracks();
 							audioTracks[0].enabled = true;
 							// localStream.getTracks().forEach(track => { ??? });
 						}
 					} else if(subCmd.startsWith("ledgreen")) {
-						if(onlineIndicator!=null) {
+						if(onlineIndicator) {
 							onlineIndicator.src="green-gradient.svg";
 						}
 						microphoneIsNeeded = false;
 
 						// mute mic
-						if(localStream!=null) {
+						if(localStream) {
 							const audioTracks = localStream.getAudioTracks();
 							audioTracks[0].enabled = false;
 						}
 					} else {
-						//if(!gentle) console.log("dataChannel.onmessage signaling");
 						signalingCommand(subCmd);
 					}
 				} else if(event.data.startsWith("file|")) {
@@ -1553,10 +1523,8 @@ function createDataChannel() {
 						showStatus("file send aborted by receiver");
 						fileSendAbort = true;
 						progressSendElement.style.display = "none";
-						if(fileselectLabel!=null && mediaConnect && dataChannel!=null && dataChannel.readyState=="open") {
-							if(localCandidateType!="relay" && remoteCandidateType!="relay") {
-								fileselectLabel.style.display = "block";
-							}
+						if(fileselectLabel && mediaConnect && isDataChlOpen() && isP2pCon()) {
+							fileselectLabel.style.display = "block";
 						}
 						return;
 					}
@@ -1630,15 +1598,15 @@ function createDataChannel() {
 }
 
 function stopAllAudioEffects() {
-	if(dtmfDialingSound!=null) {
+	if(dtmfDialingSound) {
 		dtmfDialingSound.pause();
 		dtmfDialingSound.currentTime = 0;
 	}
-	if(dialToneAfterDialingSound!=null) {
+	if(dialToneAfterDialingSound) {
 		dialToneAfterDialingSound.pause();
 		dialToneAfterDialingSound.currentTime = 0;
 	}
-	if(busySignalSound!=null) {
+	if(busySignalSound) {
 		busySignalSound.pause();
 		busySignalSound.currentTime = 0;
 	}
@@ -1647,7 +1615,7 @@ function stopAllAudioEffects() {
 function hangup(mustDisconnectCallee,message) {
 	dialing = false;
 	connectLocalVideo(true);
-	if(fileselectLabel!=null) {
+	if(fileselectLabel) {
 		fileselectLabel.style.display = "none";
 		progressSendElement.style.display = "none";
 		progressRcvElement.style.display = "none";
@@ -1689,13 +1657,12 @@ function hangup(mustDisconnectCallee,message) {
 		onlineIndicator.src="";
 	}
 
-	if(mustDisconnectCallee && wsConn!=null && wsConn.readyState==1) {
+	if(mustDisconnectCallee && wsConn && wsConn.readyState==1) {
 		// if hangup occurs while still ringing
 		if(!gentle) console.log('hangup wsSend(cancel)');
 		wsSend("cancel|c");
 	}
 	if(wsConn) {
-		if(!gentle) console.log('hangup wsConn.close');
 		wsConn.close();
 		wsConn=null;
 	}
@@ -1769,12 +1736,12 @@ function hangup(mustDisconnectCallee,message) {
 			if(!gentle) console.log('hangup peerConCloseFunc');
 			if(mustDisconnectCallee) {
 				if(!gentle) console.log('hangup mustDisconnectCallee');
-				if(dataChannel && dataChannel.readyState=="open") {
+				if(isDataChlOpen()) {
 					if(!gentle) console.log('hangup dataChannel send disconnect');
 					dataChannel.send("disconnect");
 					// give dataChannel disconnect some time to deliver
 					setTimeout(function() {
-						if(dataChannel) {
+						if(isDataChlOpen()) {
 							if(!gentle) console.log('hangup dataChannel.close');
 							dataChannel.close();
 							dataChannel = null;
@@ -1818,7 +1785,7 @@ function hangup(mustDisconnectCallee,message) {
 					},500);
 				}
 			} else {
-				if(dataChannel) {
+				if(isDataChlOpen()) {
 					if(!gentle) console.log('hangup dataChannel.close');
 					dataChannel.close();
 					dataChannel = null;
@@ -1828,7 +1795,7 @@ function hangup(mustDisconnectCallee,message) {
 
 				if(!gentle) console.log('hangup peerCon.close 2',calleeID);
 				peerCon.close();
-				if(!gentle) console.log('hangup peerCon.signalingState',peerCon.signalingState); // shd be 'closed'
+				if(!gentle) console.log('hangup peerCon.signalingState',peerCon.signalingState);
 				peerCon = null;
 			}
 		}
@@ -1843,8 +1810,6 @@ function hangup(mustDisconnectCallee,message) {
 				peerConCloseFunc();
 			});
 		}
-	} else {
-		if(!gentle) console.log('hangup !peerCon');
 	}
 
 	if(!singlebutton) {
@@ -1858,15 +1823,13 @@ function hangup(mustDisconnectCallee,message) {
 function hangupWithBusySound(mustDisconnectCallee,message) {
 	dialing = false;
 	stopAllAudioEffects();
-	if(peerCon!=null) {
+	if(peerCon) {
 		if(!gentle) console.log(`hangupWithBusySound `+message);
 		busySignalSound.play().catch(function(error) { });
 		setTimeout(function() {
 			if(!gentle) console.log(`hangupWithBusySound stopAllAudioEffects`);
 			stopAllAudioEffects();
 		},2500);
-	} else {
-		if(!gentle) console.log(`hangupWithBusySound no peerCon `+message);
 	}
 	hangup(mustDisconnectCallee,message);
 }
