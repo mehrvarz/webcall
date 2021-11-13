@@ -578,7 +578,7 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 
 	// yes, urlID can be notified
 	// problem is that we don't get any event if the caller gives up at this point (TODO still true?)
-	fmt.Printf("/canbenotified urlID=(%s) return (ok|%s) rip=%s\n",urlID,calleeName,remoteAddr)
+	fmt.Printf("/canbenotified ok calleeId=%s name=%s rip=%s\n",urlID,calleeName,remoteAddr)
 	fmt.Fprintf(w,"ok|"+calleeName)
 	return
 }
