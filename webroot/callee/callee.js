@@ -273,12 +273,10 @@ function videoOn() {
 						break;
 					}
 				}
-				// activate selected device - should be called automatically via onchange="getStream(this)"
-				//getStream();
 			}
 
 			if(videoEnabled && mediaConnect && !addLocalVideoEnabled && vsendButton) {
-				console.log('videoOn mediaConnect, blink vsendButton');
+				if(!gentle) console.log('videoOn mediaConnect, blink vsendButton');
 				vsendButton.classList.add('blink_me');
 				setTimeout(function() { vsendButton.classList.remove('blink_me') },10000);
 			}
@@ -1174,7 +1172,7 @@ function halfShowIpAddr(ipAddr) {
 }
 
 function deleteMissedCall(callerAddrPortPlusCallTime) {
-	console.log('deleteMissedCall',callerAddrPortPlusCallTime);
+	if(!gentle) console.log('deleteMissedCall',callerAddrPortPlusCallTime);
 	wsSend("deleteMissedCall|"+callerAddrPortPlusCallTime);
 }
 
@@ -1219,7 +1217,7 @@ function pickup() {
 }
 
 function pickup2() {
-	console.log('pickup2');
+	if(!gentle) console.log('pickup2');
 	showStatus("");
 	stopAllAudioEffects("pickup2");
 	if(!localStream) {
@@ -1347,7 +1345,7 @@ function goOnline() {
 		}
 		try {
 			// this will trigger onIceCandidates and send hostCandidate's to the client
-			console.log("onnegotiationneeded createOffer");
+			if(!gentle) console.log("onnegotiationneeded createOffer");
 			localDescription = await peerCon.createOffer();
 			localDescription.sdp = maybePreferCodec(localDescription.sdp, 'audio', 'send', "opus");
 			localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
@@ -1542,7 +1540,7 @@ function dataChannelOnmessage(event) {
 		if(!gentle) console.log("dataChannel.onmessage");
 		if(event.data) {
 			if(event.data.startsWith("disconnect")) {
-				console.log("dataChannel.onmessage on 'disconnect'");
+				if(!gentle) console.log("dataChannel.onmessage on 'disconnect'");
 				dataChannel.close();
 				dataChannel = null;
 				hangupWithBusySound(false,"dataChannel.close");

@@ -336,7 +336,7 @@ function videoOn() {
 		}
 
 		if(videoEnabled && mediaConnect && !addLocalVideoEnabled && vsendButton) {
-			console.log('videoOn mediaConnect, blink vsendButton');
+			if(!gentle) console.log('videoOn mediaConnect, blink vsendButton');
 			vsendButton.classList.add('blink_me');
 			setTimeout(function() { vsendButton.classList.remove('blink_me') },10000);
 		}
@@ -1362,7 +1362,7 @@ function dial() {
 			}
 		} else if(peerCon.connectionState=="connected") {
 			// if we see this despite being mediaConnect already, it is caused by createDataChannel
-			console.log('peerCon connected');
+			if(!gentle) console.log('peerCon connected');
 			if(!rtcConnect && !mediaConnect) {
 				// the caller got peer-connected to the callee; callee now starts ringing
 				stopAllAudioEffects();
@@ -1462,7 +1462,7 @@ function dataChannelOnmessage(event) {
 		if(!gentle) console.log("dataChannel.onmessage");
 		if(event.data) {
 			if(event.data.startsWith("disconnect")) {
-				console.log("dataChannel.close on 'disconnect'");
+				if(!gentle) console.log("dataChannel.close on 'disconnect'");
 				dataChannel.close();
 				dataChannel = null;
 				hangupWithBusySound(false,"dataChannel.close");
