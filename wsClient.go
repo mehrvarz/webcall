@@ -585,7 +585,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 							}
 							if myDisconCallerOnPeerConnected {
 								if c.hub.CallerClient != nil {
-									fmt.Printf("%s onPeerConnect disconnect caller %s rip=%s\n",
+									fmt.Printf("%s peerConnect callee %s: disconnect caller rip=%s\n",
 										c.connType, c.calleeID, c.RemoteAddr)
 									c.hub.CallerClient.Close("disconCallerOnPeerConnected")
 								}
@@ -659,7 +659,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 	// or bc callee has unregistered
 	c.hub.setDeadline(0,comment)
 	if c.isConnectedToPeer.Get() {
-		fmt.Printf("%s peerConHasEnded %s rip=%s (%s)\n", c.connType, c.calleeID, c.RemoteAddr, comment)
+		fmt.Printf("%s peerDisconnect callee %s rip=%s (%s)\n", c.connType, c.calleeID, c.RemoteAddr, comment)
 		c.isConnectedToPeer.Set(false)
 		if c.isCallee {
 			if c.hub.CallerClient!=nil {
