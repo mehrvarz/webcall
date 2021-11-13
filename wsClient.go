@@ -227,7 +227,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		hub.CallerClient = client
 		err := StoreCallerIpInHubMap(client.calleeID,wsConn.RemoteAddr().String(), false)
 		if err!=nil {
-			fmt.Printf("# %s StoreCallerIpInHubMap err=%v\n", client.connType, err)
+			fmt.Printf("# %s StoreCallerIpInHubMap (%s) err=%v\n", client.connType, client.calleeID, err)
 		}
 	}
 	hub.HubMutex.Unlock()
