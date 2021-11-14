@@ -74,7 +74,7 @@ function setVideoConstraintsLow() {
 		'{ "width":  {"min":320, "ideal":640, "max":800 },'+
 		'  "height": {"min":240, "ideal":360, "max":600 },'+
 		'  "frameRate": { "min":10, "max":30 } }';
-	gentleLog('setVideoConstraintsLow', constraintString);
+	gLog('setVideoConstraintsLow', constraintString);
 	userMediaConstraints.video = JSON.parse(constraintString);
 	historyBack();
 	getStream();
@@ -85,7 +85,7 @@ function setVideoConstraintsMid() {
 		'{ "width":  {"min":480, "ideal":1280, "max":1920 },'+
 		'  "height": {"min":360, "ideal":720,  "max":1080 },'+
 		'  "frameRate": { "min":10, "max":60 } }';
-	gentleLog('setVideoConstraintsMid', constraintString);
+	gLog('setVideoConstraintsMid', constraintString);
 	userMediaConstraints.video = JSON.parse(constraintString);
 	historyBack();
 	getStream();
@@ -96,7 +96,7 @@ function setVideoConstraintsHigh() {
 		'{ "width":  {"min":1280,"ideal":1920, "max":4096 },'+
 		'  "height": {"min":720, "ideal":1080, "max":2160 },'+
 		'  "frameRate": { "min":15, "max":60 } }';
-	gentleLog('setVideoConstraintsHigh', constraintString);
+	gLog('setVideoConstraintsHigh', constraintString);
 	userMediaConstraints.video = JSON.parse(constraintString);
 	historyBack();
 	getStream();
@@ -128,21 +128,21 @@ function showVideoToast(toastElement,w,h) {
 
 function showVideoResolutionLocal() {
 	if(videoEnabled && localVideoFrame.videoWidth>10 && localVideoFrame.videoHeight>10) {
-		gentleLog('localVideo size change', localVideoFrame.videoWidth, localVideoFrame.videoHeight);
+		gLog('localVideo size change', localVideoFrame.videoWidth, localVideoFrame.videoHeight);
 		showVideoToast(localVideoRes, localVideoFrame.videoWidth, localVideoFrame.videoHeight);
 	}
 }
 
 function showVideoResolutionRemote() {
 	if(remoteVideoFrame.videoWidth>10 && remoteVideoFrame.videoHeight>10) {
-		gentleLog('remoteVideo size change', remoteVideoFrame.videoWidth, remoteVideoFrame.videoHeight);
+		gLog('remoteVideo size change', remoteVideoFrame.videoWidth, remoteVideoFrame.videoHeight);
 		showVideoToast(remoteVideoRes, remoteVideoFrame.videoWidth, remoteVideoFrame.videoHeight);
 	}
 }
 
 if(fileSelectElement) {
 	fileSelectElement.addEventListener('change', (event) => {
-		gentleLog("fileSelect event");
+		gLog("fileSelect event");
 		historyBack();
 		const files = fileSelectElement.files;
 		const file = files.item(0);
@@ -206,7 +206,7 @@ function sendFile(file) {
 		}
 		dataChannel.send(e.target.result);
 		offset += e.target.result.byteLength;
-		//gentleLog('file send', offset, file.size, dataChannel.bufferedAmount);
+		//gLog('file send', offset, file.size, dataChannel.bufferedAmount);
 		progressSendBar.value = offset;
 		let sinceStartSecs = Math.floor((Date.now() - fileSendStartDate + 500)/1000);
 		if(sinceStartSecs!=fileSendLastSinceStartSecs && sinceStartSecs!=0) {
@@ -219,7 +219,7 @@ function sendFile(file) {
 		} else {
 			let sendComplete = function() {
 				if(dataChannel && dataChannel.bufferedAmount > 0) {
-					gentleLog('file send flushing buffered...');
+					gLog('file send flushing buffered...');
 					setTimeout(sendComplete,200);
 					return;
 				}
@@ -275,7 +275,7 @@ function ajaxFetch(xhr, type, api, processData, errorFkt, postData) {
 	xhr.onerror= function(e) {
 		errorFkt("fetching",xhr.status);
 	};
-	gentleLog('xhr send(%s) timeout=%d',api,xhrTimeout);
+	gLog('xhr send(%s) timeout=%d',api,xhrTimeout);
 	xhr.open(type, api, true);
 	xhr.setRequestHeader("Content-type", "text/plain; charset=utf-8");
 	if(postData) {
@@ -289,7 +289,7 @@ let timerStartDate=0;
 let timerIntervalID=0;
 function startTimer(startDuration) {
 	if(!timerStartDate && startDuration>0) {
-		gentleLog('startTimer',startDuration);
+		gLog('startTimer',startDuration);
 		timerElement.style.opacity = 0.5;
 		timerStartDate = Date.now();
 		updateClock(startDuration);
@@ -299,7 +299,7 @@ function startTimer(startDuration) {
 function stopTimer() {
 	timerStartDate = null
 	if(timerIntervalID && timerIntervalID>0) {
-		gentleLog('stopTimer');
+		gLog('stopTimer');
 		clearInterval(timerIntervalID);
 		timerIntervalID=0;
 		timerElement.style.opacity = 0;
@@ -325,7 +325,7 @@ function updateClock(startDuration) {
 		timerElement.innerHTML = ""+timerMin+":"+timerSecStr;
 	}
 	if(countDownSecs<=0) {
-		gentleLog('updateClock countDownSecs<=0 stopTimer',countDownSecs);
+		gLog('updateClock countDownSecs<=0 stopTimer',countDownSecs);
 		stopTimer();
 	}
 }
@@ -333,7 +333,7 @@ function updateClock(startDuration) {
 var statsPostCallString = "";
 var statsPostCallDurationMS = 0;
 function getStatsPostCall(results) {
-	gentleLog('statsPostCall start');
+	gLog('statsPostCall start');
 	// RTCInboundRTPAudioStream "inbound-rtp" https://www.w3.org/TR/webrtc-stats/#dom-rtcinboundrtpstreamstats
 	// RTCOutboundRTPAudioStream "outbound-rtp" https://www.w3.org/TR/webrtc-stats/#dom-rtcoutboundrtpstreamstats
 	// RTCAudioReceiverStats "receiver" 
@@ -354,7 +354,7 @@ function getStatsPostCall(results) {
 		statsPostCallDurationMS = 0;
 	}
 	if(rtcConnectStartDate==0) {
-		gentleLog('statsPostCall rtcConnectStartDate==0');
+		gLog('statsPostCall rtcConnectStartDate==0');
 		durationRtcMS = 0;
 	}
 		
@@ -402,7 +402,7 @@ function getStatsPostCall(results) {
 		"retransmittedPacketsSent: "+retransmittedPacketsSent+"\n"+
 		"roundTripTime: "+roundTripTime+"\n"+
 		"connection: "+rtcLink+"\n";
-	gentleLog("statsPostCall",statsPostCallString);
+	gLog("statsPostCall",statsPostCallString);
 }
 
 function showStatsPostCall() {
@@ -415,7 +415,7 @@ function showStatsPostCall() {
 
 function openPostCallStats() {
 	let str = "string:<h2>Call Statistics</h2>"+showStatsPostCall();
-	gentleLog('openPostCallStats');
+	gLog('openPostCallStats');
 	iframeWindowOpen(str,"background:#33ad; color:#eee; padding:20px; max-width:400px; left:5.0%; top:3%; font-size:1.1em; line-height:1.4em;");
 }
 
@@ -448,7 +448,7 @@ var rtcLink = "";
 var localCandidateType = "";
 var remoteCandidateType = "";
 function getStatsCandidateTypesEx(results,eventString1,eventString2) {
-	gentleLog('getStatsCandidateTypes start');
+	gLog('getStatsCandidateTypes start');
 	rtcLink = "unknown";
 	let localCandidateId = "";
 	let remoteCandidateId = "";
@@ -459,29 +459,29 @@ function getStatsCandidateTypesEx(results,eventString1,eventString2) {
 			if(res.selected) {
 				localCandidateId = res.localCandidateId;
 				remoteCandidateId = res.remoteCandidateId;
-				gentleLog("getStatsCandidateTypes 1st", localCandidateId,remoteCandidateId);
+				gLog("getStatsCandidateTypes 1st", localCandidateId,remoteCandidateId);
 			}
 		}
 	});
-	gentleLog("getStatsCandidateTypes candidateId's A", localCandidateId,remoteCandidateId);
+	gLog("getStatsCandidateTypes candidateId's A", localCandidateId,remoteCandidateId);
 	if(localCandidateId=="" || remoteCandidateId=="") {
 		// for chrome
 		results.forEach(res => {
 			if(res.type=="transport" && res.selectedCandidatePairId!="") {
 				let selectedCandidatePairId = res.selectedCandidatePairId;
-				gentleLog('getStatsCandidateTypes PairId',selectedCandidatePairId);
+				gLog('getStatsCandidateTypes PairId',selectedCandidatePairId);
 				results.forEach(res => {
 					if(res.id==selectedCandidatePairId) {
 						localCandidateId = res.localCandidateId;
 						remoteCandidateId = res.remoteCandidateId
-						gentleLog("getStatsCandidateTypes 2nd",localCandidateId,remoteCandidateId);
+						gLog("getStatsCandidateTypes 2nd",localCandidateId,remoteCandidateId);
 					}
 				});
 			}
 		});
 	}
 
-	gentleLog("getStatsCandidateTypes candidateId's B",localCandidateId,remoteCandidateId);
+	gLog("getStatsCandidateTypes candidateId's B",localCandidateId,remoteCandidateId);
 	if(localCandidateId!="") {
 		results.forEach(res => {
 			if(res.id==localCandidateId) {
@@ -518,14 +518,14 @@ function getStatsCandidateTypesEx(results,eventString1,eventString2) {
 	}
 	rtcLink = localPeerConType+"/"+remotePeerConType;
 
-	gentleLog('getStatsCandidateTypes',rtcLink,localCandidateType,remoteCandidateType);
+	gLog('getStatsCandidateTypes',rtcLink,localCandidateType,remoteCandidateType);
 	return eventString1+" "+rtcLink;
 }
 
 var menuDialogOpenElement = null;
 function menuDialogOpen(menuDialog) {
 	if(menuDialogOpenElement) {
-		gentleLog('# menuDialogOpen menuDialogOpenElement');
+		gLog('# menuDialogOpen menuDialogOpenElement');
 		return;
 	}
 	menuDialogOpenElement = menuDialog;
@@ -568,7 +568,7 @@ function menuDialogOpen(menuDialog) {
 	if(posX<0) posX=0;
     var posY = e.clientY;
 	if(posY>50) posY-=50;
-	//gentleLog('menuDialogOpen x/y',posX,e.clientX,posY,e.clientY);
+	//gLog('menuDialogOpen x/y',posX,e.clientX,posY,e.clientY);
 	const menuDialogOpenChildElement = menuDialogOpenElement.firstElementChild;
 	menuDialogOpenChildElement.style.left = posX+"px";
 	menuDialogOpenChildElement.style.top = (posY+window.scrollY)+"px"; // add scrollY-offset to posY
@@ -576,14 +576,14 @@ function menuDialogOpen(menuDialog) {
 
 	// move popup-menu up to prevent bottom cut-off (if there is room on top)
 	setTimeout(function() {
-		//gentleLog('menuDialogOpenChildElement');
+		//gLog('menuDialogOpenChildElement');
 		let menuHeight = menuDialogOpenChildElement.clientHeight;
 		let pageHeight = mainElement.clientHeight;
-		//gentleLog('menuDialogOpen up',posY, menuHeight, pageHeight);
+		//gLog('menuDialogOpen up',posY, menuHeight, pageHeight);
 		while(posY>10 && posY + menuHeight > pageHeight) {
 			posY -= 10;
 		}
-		//gentleLog('menuDialogOpen up2',posY, menuHeight, pageHeight);
+		//gLog('menuDialogOpen up2',posY, menuHeight, pageHeight);
 		menuDialogOpenChildElement.style.top = (posY+window.scrollY)+"px"; // add scrollY-offset to posY
 	},60);
 }
@@ -605,7 +605,7 @@ function historyBack() {
 var iframeWindowOpenFlag = false;
 function iframeWindowOpen(url,addStyleString) {
 	if(iframeWindowOpenFlag) {
-		gentleLog('iframeWindowOpen iframeWindowOpenFlag');
+		gLog('iframeWindowOpen iframeWindowOpenFlag');
 		return;
 	}
 	if(menuDialogOpenElement) {
@@ -622,7 +622,7 @@ function iframeWindowOpen(url,addStyleString) {
 
 	containerElement.style.filter = "blur(0.8px) brightness(60%)";
 
-	gentleLog('iframeWindowOpen', url);
+	gLog('iframeWindowOpen', url);
 	iframeWindowOpenFlag = true;
 	let styleString = "width:90%; max-width:440px; height:94%; position:absolute; left:3.5%; top:1%; padding:10px; z-index:200;";
 	if(addStyleString) {
@@ -638,7 +638,7 @@ function iframeWindowOpen(url,addStyleString) {
 }
 
 function iframeWindowClose() {
-	gentleLog('iframeWindowClose');
+	gLog('iframeWindowClose');
 	containerElement.style.filter="";
 	iframeWindowElement.innerHTML = "";
 	iframeWindowElement.style.display = "none";
@@ -652,7 +652,7 @@ let myUserMediaConstraints;
 function getStream(selectObject) {
 	if(!gentle) {
 		const supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
-		gentleLog('getStream supportedConstraints',supportedConstraints);
+		gLog('getStream supportedConstraints',supportedConstraints);
 	}
 
 	myUserMediaConstraints = JSON.parse(JSON.stringify(userMediaConstraints));
@@ -663,17 +663,17 @@ function getStream(selectObject) {
 			if(avSelect.options[i].value == selectObject.value) {
 				// found deviceId, set mediaConstraints.deviceId
 				const str = '{"exact": "'+selectObject.value+'"}';
-				gentleLog('getStream getUserMedia set deviceId',str);
+				gLog('getStream getUserMedia set deviceId',str);
 				myUserMediaConstraints.deviceId = JSON.parse(str);
 
 				// if necessary, set/clear videoEnabled
 				if(avSelect.options[i].label.startsWith("Audio")) {
-					gentleLog('getStream avSelect to audio');
+					gLog('getStream avSelect to audio');
 					if(videoEnabled) {
 						videoOff();
 					}
 				} else if(avSelect.options[i].label.startsWith("Video")) {
-					gentleLog('getStream avSelect to video');
+					gLog('getStream avSelect to video');
 					if(!videoEnabled) {
 						videoOn();
 					}
@@ -684,15 +684,15 @@ function getStream(selectObject) {
 	}
 
 	if(!videoEnabled) {
-		gentleLog('getStream !videoEnabled: Constraints.video = false');
+		gLog('getStream !videoEnabled: Constraints.video = false');
 		myUserMediaConstraints.video = false;
 	}
 	if(!myUserMediaConstraints.video && videoEnabled) {
-		gentleLog('getStream !myUserMediaConstraints.video + videoEnabled: localVideoHide()');
+		gLog('getStream !myUserMediaConstraints.video + videoEnabled: localVideoHide()');
 		localVideoHide();
 	}
 
-	gentleLog('getStream getUserMedia constraints',myUserMediaConstraints);
+	gLog('getStream getUserMedia constraints',myUserMediaConstraints);
 	if(!navigator || !navigator.mediaDevices) {
 		alert("cannot access navigator.mediaDevices");
 		return;
@@ -711,21 +711,21 @@ function getStream(selectObject) {
 				localVideoHide();
 			}
 			if(lastGoodMediaConstraints) {
-				gentleLog('getStream back to lastGoodMediaConstraints',lastGoodMediaConstraints);
+				gLog('getStream back to lastGoodMediaConstraints',lastGoodMediaConstraints);
 				userMediaConstraints = lastGoodMediaConstraints;
 				if(!userMediaConstraints.video && videoEnabled) {
-					gentleLog('getStream back to lastGoodMediaConstraints !Constraints.video');
+					gLog('getStream back to lastGoodMediaConstraints !Constraints.video');
 					localVideoHide();
 				}
 				if(userMediaConstraints.video && !videoEnabled) {
-					gentleLog('getStream back to lastGoodMediaConstraints Constraints.video');
+					gLog('getStream back to lastGoodMediaConstraints Constraints.video');
 					localVideoShow();
 				}
 				return navigator.mediaDevices.getUserMedia(userMediaConstraints)
 					.then(gotStream)
 					.catch(function(err) {
 						if(videoEnabled) {
-							gentleLog('getStream backto lastGoodMediaConstraints videoEnabled err');
+							gLog('getStream backto lastGoodMediaConstraints videoEnabled err');
 							localVideoHide();
 						}
 					});
@@ -735,7 +735,7 @@ function getStream(selectObject) {
 
 function gotDevices(deviceInfos) {
 	// fill avSelect with the available audio/video input devices (mics and cams)
-	gentleLog('gotDevices',deviceInfos);
+	gLog('gotDevices',deviceInfos);
 	if(avSelect) { // not set in button mode
 		var i, L = avSelect.options.length - 1;
 		for(i = L; i >= 0; i--) {
@@ -794,22 +794,22 @@ var addedVideoTrack = null;
 function gotStream(stream) {
 	// add localStream audioTrack and (possibly) localStream videoTrack to peerCon using peerCon.addTrack()
 	// then activate localVideoFrame with localStream
-    gentleLog("gotStream set localStream");
+    gLog("gotStream set localStream");
 	if(localStream) {
 		// stop all tracks on previous localStream
 		const allTracks = localStream.getTracks();
-		gentleLog("gotStream previous localStream len",allTracks.length);
+		gLog("gotStream previous localStream len",allTracks.length);
 		allTracks.forEach(track => {
-			gentleLog('gotStream previous localStream track.stop()',track);
+			gLog('gotStream previous localStream track.stop()',track);
 			track.stop(); 
 		});
 		if(peerCon && addedAudioTrack) {
-			gentleLog("gotStream previous localStream peerCon.removeTrack(addedAudioTrack)");
+			gLog("gotStream previous localStream peerCon.removeTrack(addedAudioTrack)");
 			peerCon.removeTrack(addedAudioTrack);
 		}
 		addedAudioTrack = null;
 		if(peerCon && addedVideoTrack) {
-			gentleLog("gotStream previous localStream peerCon.removeTrack(addedVideoTrack)");
+			gLog("gotStream previous localStream peerCon.removeTrack(addedVideoTrack)");
 			peerCon.removeTrack(addedVideoTrack);
 		}
 		addedVideoTrack = null;
@@ -818,39 +818,39 @@ function gotStream(stream) {
 	localStream = stream;
 
 	if(!peerCon) {
-		gentleLog('gotStream no peerCon: no addTrack');
+		gLog('gotStream no peerCon: no addTrack');
 	} else if(addedAudioTrack) {
-		gentleLog('gotStream addedAudioTrack already set: no addTrack');
+		gLog('gotStream addedAudioTrack already set: no addTrack');
 	} else {
 		const audioTracks = localStream.getAudioTracks();
 		audioTracks[0].enabled = true;
-		gentleLog('peerCon addTrack local audio input',audioTracks[0]);
+		gLog('peerCon addTrack local audio input',audioTracks[0]);
 		addedAudioTrack = peerCon.addTrack(audioTracks[0],localStream);
 	}
 
 	// now let's look at all the reasons NOT to add the videoTrack to peerCon
 	if(!videoEnabled) {
 		// disable all video tracks (do not show the video locally)
-		gentleLog("gotStream !videoEnabled -> stop video tracks");
+		gLog("gotStream !videoEnabled -> stop video tracks");
 		stream.getVideoTracks().forEach(function(track) {
-			gentleLog("gotStream !videoEnabled stop video track",track);
+			gLog("gotStream !videoEnabled stop video track",track);
 			track.stop();
 		})
 	} else if(!addLocalVideoEnabled) {
 		// video streaming has not been activated yet
-		gentleLog('gotStream videoEnabled but !addLocalVideoEnabled: no addTrack vid');
+		gLog('gotStream videoEnabled but !addLocalVideoEnabled: no addTrack vid');
 	} else if(!peerCon) {
-		//gentleLog('gotStream videoEnabled but !peerCon: no addTrack vid');
+		//gLog('gotStream videoEnabled but !peerCon: no addTrack vid');
 	} else if(localCandidateType=="relay" || remoteCandidateType=="relay") {
-		gentleLog('gotStream videoEnabled but relayed con: no addTrack vid (%s)(%s)',localCandidateType,remoteCandidateType);
+		gLog('gotStream videoEnabled but relayed con: no addTrack vid (%s)(%s)',localCandidateType,remoteCandidateType);
 	} else if(localStream.getTracks().length<2) {
-		gentleLog('# gotStream videoEnabled but getTracks().length<2: no addTrack vid',localStream.getTracks().length);
+		gLog('# gotStream videoEnabled but getTracks().length<2: no addTrack vid',localStream.getTracks().length);
 	} else {
-		gentleLog('peerCon addTrack local video input',localStream.getTracks()[1]);
+		gLog('peerCon addTrack local video input',localStream.getTracks()[1]);
 		addedVideoTrack = peerCon.addTrack(localStream.getTracks()[1],localStream);
 	}
 
-	gentleLog("gotStream set localVideoFrame.srcObject");
+	gLog("gotStream set localVideoFrame.srcObject");
 	localVideoFrame.srcObject = localStream;
 	localVideoFrame.volume = 0;
 	if(videoEnabled) {
@@ -862,10 +862,10 @@ function gotStream(stream) {
 
 function videoSwitch(forceClose) {
 	if(videoEnabled || forceClose) {
-		gentleLog("videoSwitch videoOff",forceClose);
+		gLog("videoSwitch videoOff",forceClose);
 		videoOff();
 	} else {
-		gentleLog("videoSwitch videoOn");
+		gLog("videoSwitch videoOn");
 		videoOn();
 	}
 }
@@ -880,7 +880,7 @@ function connectLocalVideo(forceOff) {
 		// start streaming localVideo to other peer
 		addLocalVideoEnabled = true; // will cause: peerCon.addTrack(video)
 		if(dataChannel && dataChannel.readyState=="open") {
-			gentleLog("connectLocalVideo set");
+			gLog("connectLocalVideo set");
 			if(vsendButton) {
 				vsendButton.classList.remove('blink_me');
 				vsendButton.style.color = "#ff0";
@@ -888,7 +888,7 @@ function connectLocalVideo(forceOff) {
 			pickupAfterLocalStream = true; // will cause: pickup2()
 			getStream(); // -> gotStream() -> gotStream2() -> pickup2(): "calleeDescriptionUpd"
 		} else {
-			gentleLog("# connectLocalVideo no dataChannel");
+			gLog("# connectLocalVideo no dataChannel");
 		}
 	} else {
 		// stop streaming localVideo to other peer
@@ -900,11 +900,11 @@ function connectLocalVideo(forceOff) {
 		}
 		addLocalVideoEnabled = false;
 		if(!addedVideoTrack) {
-			gentleLog("connectLocalVideo discon !addedVideoTrack: !removeTrack");
+			gLog("connectLocalVideo discon !addedVideoTrack: !removeTrack");
 		} else if(!peerCon) {
-			gentleLog("connectLocalVideo discon !peerCon: !removeTrack");
+			gLog("connectLocalVideo discon !peerCon: !removeTrack");
 		} else  {
-			gentleLog("connectLocalVideo discon peerCon.removeTrack(addedVideoTrack)");
+			gLog("connectLocalVideo discon peerCon.removeTrack(addedVideoTrack)");
 			peerCon.removeTrack(addedVideoTrack);
 			addedVideoTrack = null;
 		}
@@ -927,14 +927,14 @@ function vmonitor() {
 	localVideoFrame.style.opacity = 1;
 	if(!localStream) {
 		// re-enable paused video and microphone
-		gentleLog("vmonitor !localStream: re-enable");
+		gLog("vmonitor !localStream: re-enable");
 		pickupAfterLocalStream = false;
 		getStream(); // -> gotStream() -> gotStream2()
 		// in the end, vmonitor will be called again, but then with localStream
 	} else if(videoEnabled) {
 		localVideoFrame.play().catch(function(error) {});
 		if(!mediaConnect) {
-			gentleLog("vmonitor play new vpauseTimer");
+			gLog("vmonitor play new vpauseTimer");
 			if(vsendButton)
 				vsendButton.style.color = "#fff";
 			if(vpauseTimer) {
@@ -943,21 +943,21 @@ function vmonitor() {
 			}
 			vpauseTimer = setTimeout(vpauseByTimer, 40000);
 		} else {
-			gentleLog("vmonitor play");
+			gLog("vmonitor play");
 		}
 	}
 	localVideoMonitorPaused = false;
 }
 
 function vpauseByTimer() {
-	gentleLog("vpauseByTimer",mediaConnect);
+	gLog("vpauseByTimer",mediaConnect);
 	if(!mediaConnect) {
 		vpause();
 	}
 }
 
 function vpause() {
-	gentleLog("vpause");
+	gLog("vpause");
 	localVideoFrame.pause();
 	localVideoFrame.style.opacity = 0.4;
 	if(vmonitorButton) {
@@ -975,7 +975,7 @@ function vpause() {
 		const audioTracks = localStream.getAudioTracks();
 		localStream.removeTrack(audioTracks[0]);
 		localStream = null;
-		gentleLog("vpause localStream-a/v deactivated");
+		gLog("vpause localStream-a/v deactivated");
 	}
 	localVideoMonitorPaused = true;
 }
@@ -991,18 +991,18 @@ function vmonitorSwitch() {
 function onIceCandidate(event,myCandidateName) {
 	if(event.candidate==null) {
 		// ICE gathering has finished
-		gentleLog('onIce end of candidates');
+		gLog('onIce end of candidates');
 	} else if(event.candidate.address==null) {
 		//console.warn('onIce skip event.candidate.address==null');
 	} else if(dataChannel && dataChannel.readyState=="open") {
-		gentleLog("onIce "+myCandidateName+" via dataChannel", event.candidate.address);
+		gLog("onIce "+myCandidateName+" via dataChannel", event.candidate.address);
 		dataChannel.send("cmd|"+myCandidateName+"|"+JSON.stringify(event.candidate));
 	} else if(wsConn==null) {
-		gentleLog("onIce "+myCandidateName+": wsConn==null", event.candidate.address);
+		gLog("onIce "+myCandidateName+": wsConn==null", event.candidate.address);
 	} else if(wsConn.readyState!=1) {
-		gentleLog("onIce "+myCandidateName+": readyState!=1",	event.candidate.address, wsConn.readyState);
+		gLog("onIce "+myCandidateName+": readyState!=1",	event.candidate.address, wsConn.readyState);
 	} else {
-		gentleLog("onIce "+myCandidateName+" via wsSend", event.candidate.address);
+		gLog("onIce "+myCandidateName+" via wsSend", event.candidate.address);
 		// 300ms delay to prevent "cmd "+myCandidateName+" no peerCon.remoteDescription" on other side
 		setTimeout(function() {
 			// TODO support dataChannel delivery?
@@ -1020,7 +1020,7 @@ function localVideoShow() {
 	videoEnabled = true;
 	localVideoLabel.style.opacity = 0.7; // will be transitioned
 	let localVideoDivHeight = parseFloat(getComputedStyle(localVideoFrame).width)/16*9;
-	gentleLog("localVideoShow DivHeight",localVideoDivHeight);
+	gLog("localVideoShow DivHeight",localVideoDivHeight);
 	localVideoDiv.style.height = ""+localVideoDivHeight+"px"; // will be transitioned
 	localVideoDiv.addEventListener('transitionend', localVideoDivOnVisible) // switch to height auto
 	localVideoDiv.style.visibility = "visible";
@@ -1074,9 +1074,9 @@ function peerConOntrack(track, streams) {
 //				if(!gentle) console.warn('peerCon.ontrack onunmute was already set');
 //				return;
 //			}
-		gentleLog('peerCon.ontrack onunmute set remoteVideoFrame.srcObject',streams[0]);
+		gLog('peerCon.ontrack onunmute set remoteVideoFrame.srcObject',streams[0]);
 //		if(remoteStream) {
-//			gentleLog('peerCon.ontrack onunmute have prev remoteStream');
+//			gLog('peerCon.ontrack onunmute have prev remoteStream');
 //			// TODO treat like localStream in gotStream() ? apparently not needed
 //		}
 		remoteStream = streams[0];
@@ -1084,10 +1084,10 @@ function peerConOntrack(track, streams) {
 
 	if(remoteVideoFrame) {
 		if(!track.enabled) {
-			gentleLog('peerCon.ontrack onunmute !track.enabled: not set remoteVideoFrame');
+			gLog('peerCon.ontrack onunmute !track.enabled: not set remoteVideoFrame');
 		} else {
 			if(remoteVideoFrame.srcObject == remoteStream) {
-				gentleLog('peerCon.ontrack onunmute track.enabled: same remoteStream again');
+				gLog('peerCon.ontrack onunmute track.enabled: same remoteStream again');
 				return;
 			}
 			remoteVideoFrame.srcObject = remoteStream;
@@ -1095,7 +1095,7 @@ function peerConOntrack(track, streams) {
 				remoteVideoHide();
 				return;
 			}
-			gentleLog('peerCon.ontrack onunmute track.enabled: new remoteStream');
+			gLog('peerCon.ontrack onunmute track.enabled: new remoteStream');
 			remoteVideoFrame.play().catch(function(error) { });
 			setTimeout(function() {
 				if(remoteStream==null) {
@@ -1104,7 +1104,7 @@ function peerConOntrack(track, streams) {
 					return;
 				}
 				let videoTracks = remoteStream.getVideoTracks();
-				gentleLog('peerCon.ontrack onunmute track.enabled: delayed v-tracks',videoTracks.length);
+				gLog('peerCon.ontrack onunmute track.enabled: delayed v-tracks',videoTracks.length);
 				if(videoTracks.length>0) {
 					remoteVideoShow();
 				} else {
@@ -1122,7 +1122,7 @@ function hashchange() {
 	} else {
 		newhashcounter = 0;
 	}
-	//gentleLog("hashchange hashcounter",hashcounter,newhashcounter);
+	//gLog("hashchange hashcounter",hashcounter,newhashcounter);
 	if(hashcounter>0 && newhashcounter<hashcounter) {
 		if(iframeWindowOpenFlag) {
 			iframeWindowClose();
@@ -1138,9 +1138,9 @@ function showStatus(msg,timeoutMs) {
 		// msg may contain html, which we don't want to console.log
 		let idx = msg.indexOf("<");
 		if(idx>=0) {
-			gentleLog('showStatus: %s',msg.substring(0,idx));
+			gLog('showStatus: %s',msg.substring(0,idx));
 		} else {
-			gentleLog('showStatus: %s',msg);
+			gLog('showStatus: %s',msg);
 		}
 	}
 	if(!singlebutton) {
@@ -1176,7 +1176,7 @@ function isP2pCon() {
 }
 
 function dataChannelOnclose(event) {
-	gentleLog("dataChannel.onclose",event);
+	gLog("dataChannel.onclose",event);
 }
 
 function dataChannelOnerror(event) {
@@ -1195,17 +1195,17 @@ function hangupWithBusySound(mustDisconnectCallee,message) {
 	dialing = false;
 	stopAllAudioEffects();
 	if(peerCon) {
-		gentleLog(`hangupWithBusySound `+message);
+		gLog(`hangupWithBusySound `+message);
 		busySignalSound.play().catch(function(error) { });
 		setTimeout(function() {
-			gentleLog(`hangupWithBusySound stopAllAudioEffects`);
+			gLog(`hangupWithBusySound stopAllAudioEffects`);
 			stopAllAudioEffects();
 		},2500);
 	}
 	hangup(mustDisconnectCallee,message);
 }
 
-function gentleLog(...args) {
+function gLog(...args) {
 	if(!gentle) console.log(...args);
 }
 
