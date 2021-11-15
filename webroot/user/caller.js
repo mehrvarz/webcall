@@ -303,7 +303,8 @@ function videoOn() {
 	// enable local video
 	gLog("videoOn");
 	constraintString = defaultConstraintString;
-	userMediaConstraints.video = JSON.parse("{"+constraintString+"}");
+//	userMediaConstraints.video = JSON.parse("{"+constraintString+"}");
+	setVideoConstraintsGiven();
 	localVideoShow();
 
 	// add localStream video-track to peerCon

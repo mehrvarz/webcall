@@ -57,12 +57,8 @@ var userMediaConstraints = {
 		noiseSuppression: true,  // true by default
 		echoCancellation: true,  // true by default
 		autoGainControl: false,
-	},
-	video: {
-		width:  { min: 480, ideal: 1280, max: 1920 },
-		height: { min: 360, ideal:  720, max: 1080 },
-		frameRate: { min:10, max:60 },
 	}
+	// videoOn() will add defaultConstraintString
 };
 
 let myUserMediaDeviceId;
@@ -81,10 +77,11 @@ function setVideoConstraintsGiven() {
 }
 
 function setVideoConstraintsLow() {
+	gLog('setVideoConstraintsLow');
 	constraintString = `
-"width":  {"min":320, "ideal":640, "max":800 },
-"height": {"min":240, "ideal":360, "max":600 },
-"frameRate": { "min":10, "max":30 }
+"width":  {"min":320, "ideal":640, "max":800 }
+,"height": {"min":240, "ideal":360, "max":600 }
+,"frameRate": { "min":10, "max":30 }
 `;
 	let tmpConstraints = setVideoConstraintsGiven();
 	gLog('setVideoConstraintsLow', tmpConstraints);
@@ -94,10 +91,11 @@ function setVideoConstraintsLow() {
 }
 
 function setVideoConstraintsMid() {
+	gLog('setVideoConstraintsMid');
 	constraintString = `
-"width":  {"min":480, "ideal":1280, "max":1920 },
-"height": {"min":360, "ideal":720,  "max":1080 },
-"frameRate": { "min":10, "max":60 }
+"width":  {"min":480, "ideal":1280, "max":1920 }
+,"height": {"min":360, "ideal":720,  "max":1080 }
+,"frameRate": { "min":10, "max":60 }
 `;
 	let tmpConstraints = setVideoConstraintsGiven();
 	gLog('setVideoConstraintsMid', tmpConstraints);
@@ -107,10 +105,11 @@ function setVideoConstraintsMid() {
 }
 
 function setVideoConstraintsHigh() {
+	gLog('setVideoConstraintsHigh');
 	constraintString = `
-"width":  {"min":1280,"ideal":1920, "max":4096 },
-"height": {"min":720, "ideal":720, "max":2160 },
-"frameRate": { "min":10, "max":60 }
+"width":  {"min":1280,"ideal":1920, "max":4096 }
+,"height": {"min":720, "ideal":720, "max":2160 }
+,"frameRate": { "min":10, "max":60 }
 `;
 	let tmpConstraints = setVideoConstraintsGiven();
 	gLog('setVideoConstraintsHigh', tmpConstraints);
@@ -120,10 +119,11 @@ function setVideoConstraintsHigh() {
 }
 
 function setVideoConstraintsHD() {
+	gLog('setVideoConstraintsHD');
 	constraintString = `
-"width":  {"min":1920,"ideal":1920, "max":4096 },
-"height": {"min":720, "ideal":720, "max":2160 },
-"frameRate": { "min":10, "max":60 }
+"width":  {"min":1920,"ideal":1920, "max":4096 }
+,"height": {"min":720, "ideal":1080, "max":2160 }
+,"frameRate": { "min":10, "max":60 }
 `;
 	let tmpConstraints = setVideoConstraintsGiven();
 	gLog('setVideoConstraintsHD', tmpConstraints);
@@ -690,7 +690,6 @@ function getStream(selectObject) {
 //		gLog('getStream supportedConstraints',supportedConstraints);
 //	}
 
-
 	if(selectObject) {
 		gLog('getStream avSelect');
 		// selectObject is (only) set if user operates avSelect manually
@@ -732,7 +731,7 @@ function getStream(selectObject) {
 
 	if(videoEnabled) {
 		if(!myUserMediaConstraints.video) {
-			gLog('getStream !myUserMediaConstraints.video + videoEnabled: localVideoHide()');
+			gLog('getStream videoEnabled but !myUserMediaConstraints.video: localVideoHide()');
 			localVideoHide();
 		} else {
 			//videoOn();
@@ -743,6 +742,9 @@ function getStream(selectObject) {
 	return navigator.mediaDevices.getUserMedia(myUserMediaConstraints)
 		.then(function(stream) {
 			gotStream(stream);
+			// no error: full copy
+			lastGoodMediaConstraints = JSON.parse(JSON.stringify(myUserMediaConstraints));
+			console.log('set lastGoodMediaConstraints',lastGoodMediaConstraints);
 		})
 		.catch(function(err) {
 			if(!videoEnabled) {
@@ -864,7 +866,7 @@ function gotStream(stream) {
 	localStream = stream;
 
 	if(!peerCon) {
-		gLog('gotStream no peerCon: no addTrack');
+		//gLog('gotStream no peerCon: no addTrack');
 	} else if(addedAudioTrack) {
 		gLog('gotStream addedAudioTrack already set: no addTrack');
 	} else {
@@ -902,7 +904,6 @@ function gotStream(stream) {
 	if(videoEnabled) {
 		vmonitor();
 	}
-	lastGoodMediaConstraints = myUserMediaConstraints;
 	gotStream2();
 }
 
@@ -1074,6 +1075,7 @@ function localVideoShow() {
 }
 
 function localVideoHide() {
+	gLog('localVideoHide()');
 	videoEnabled = false;
 	lastGoodMediaConstraints = null;
 	localVideoLabel.style.opacity = 0.3;
