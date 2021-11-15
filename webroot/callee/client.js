@@ -72,7 +72,8 @@ function setVideoConstraintsGiven() {
 	let tmpConstraints = constraintString;
 	if(myUserMediaDeviceId) {
 		gLog('setVideoConstraintsGiven myUserMediaDeviceId',myUserMediaDeviceId);
-		tmpConstraints += ","+myUserMediaDeviceId;
+//		tmpConstraints += ","+myUserMediaDeviceId;
+		tmpConstraints += ',"deviceId": { "exact": "'+myUserMediaDeviceId+'" }';
 	} else {
 		//gLog('setVideoConstraintsGiven no myUserMediaDeviceId');
 	}
@@ -695,7 +696,8 @@ function getStream(selectObject) {
 		for(var i = avSelect.options.length - 1; i >= 0; i--) {
 			if(avSelect.options[i].value == selectObject.value) {
 				// found deviceId
-				myUserMediaDeviceId = '"exact": "'+selectObject.value+'"';
+//				myUserMediaDeviceId = '"exact": "'+selectObject.value+'"';
+				myUserMediaDeviceId = selectObject.value;
 				gLog('getStream avSelect deviceId',myUserMediaDeviceId);
 
 				if(avSelect.options[i].label.startsWith("Audio")) {
@@ -708,7 +710,7 @@ function getStream(selectObject) {
 				} else if(avSelect.options[i].label.startsWith("Video")) {
 					let tmpConstraints = constraintString;
 					if(myUserMediaDeviceId) {
-						tmpConstraints += ","+myUserMediaDeviceId;
+						tmpConstraints += ',"deviceId": { "exact": "'+myUserMediaDeviceId+'" }';
 					}
 					tmpConstraints = "{"+tmpConstraints+"}";
 					gLog('getStream avSelect video',tmpConstraints);
