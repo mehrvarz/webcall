@@ -696,7 +696,6 @@ function getStream(selectObject) {
 		for(var i = avSelect.options.length - 1; i >= 0; i--) {
 			if(avSelect.options[i].value == selectObject.value) {
 				// found deviceId
-//				myUserMediaDeviceId = '"exact": "'+selectObject.value+'"';
 				myUserMediaDeviceId = selectObject.value;
 				gLog('getStream avSelect deviceId',myUserMediaDeviceId);
 
@@ -708,7 +707,7 @@ function getStream(selectObject) {
 						//gLog('getStream avSelect audio: video was off');
 					}
 				} else if(avSelect.options[i].label.startsWith("Video")) {
-					let tmpConstraints = constraintString;
+					let tmpConstraints = defaultConstraintString;
 					if(myUserMediaDeviceId) {
 						tmpConstraints += ',"deviceId": { "exact": "'+myUserMediaDeviceId+'" }';
 					}
