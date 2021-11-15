@@ -240,6 +240,8 @@ window.onload = function() {
 function videoOn() {
 	// open local video-frame (it is not yet streaming, but locally visible)
 	gLog("videoOn");
+	constraintString = defaultConstraintString;
+	userMediaConstraints.video = JSON.parse("{"+constraintString+"}");
 	localVideoShow();
 
 	// enable local video
@@ -251,12 +253,14 @@ function videoOn() {
 			addedVideoTrack = peerCon.addTrack(localStream.getTracks()[1],localStream);
 		}
 	}
-	localVideoFrame.srcObject = localStream; // see gotStream()
+
+//	localVideoFrame.srcObject = localStream; // see gotStream()
 	localVideoFrame.volume = 0; // avoid audio feedback
 
 	// start localVideoFrame playback, setup the localVideo pane buttons
 	vmonitor();
 
+	// switch avSelect.selectedIndex to 1st video option
 	getStream().then(() => navigator.mediaDevices.enumerateDevices())
 	.then((deviceInfos) => {
 		gotDevices(deviceInfos);
@@ -287,6 +291,7 @@ function videoOn() {
 function videoOff() {
 	// hide/close localVideoFrame (not needed anymore)
 	gLog("videoOff");
+	myUserMediaDeviceId = null;
 	localVideoHide();
 	if(localStream) {
 		connectLocalVideo(true);

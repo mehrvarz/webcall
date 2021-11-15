@@ -44,60 +44,89 @@ var ICE_config = {
 	]
 };
 
+var defaultConstraintString = `
+"width":  {"min":480, "ideal":1280, "max":1920 },
+"height": {"min":360, "ideal":720,  "max":1080 },
+"frameRate": { "min":10, "max":60 }
+`;
+
+var constraintString = defaultConstraintString;
+
 var userMediaConstraints = {
-	deviceId: undefined,
 	audio: {
 		noiseSuppression: true,  // true by default
 		echoCancellation: true,  // true by default
 		autoGainControl: false,
 	},
 	video: {
-		width: {
-		  min: 480,
-		  ideal: 1280,
-		  max: 1920
-		},
-		height: {
-		  min: 360,
-		  ideal: 720,
-		  max: 1080
-		},
-		frameRate: {
-			min:10, 
-			max:60 
-		},
+		width:  { min: 480, ideal: 1280, max: 1920 },
+		height: { min: 360, ideal:  720, max: 1080 },
+		frameRate: { min:10, max:60 },
 	}
 };
 
+function setVideoConstraintsGiven() {
+	// build userMediaConstraints.video from constraintString + myUserMediaDeviceId
+	let tmpConstraints = constraintString;
+	if(myUserMediaDeviceId) {
+		gLog('setVideoConstraintsGiven myUserMediaDeviceId',myUserMediaDeviceId);
+		tmpConstraints += ","+myUserMediaDeviceId;
+	} else {
+		gLog('setVideoConstraintsGiven no myUserMediaDeviceId');
+	}
+	tmpConstraints = "{"+tmpConstraints+"}";
+	userMediaConstraints.video = JSON.parse(tmpConstraints);
+	return tmpConstraints;
+}
+
 function setVideoConstraintsLow() {
-	const constraintString =
-		'{ "width":  {"min":320, "ideal":640, "max":800 },'+
-		'  "height": {"min":240, "ideal":360, "max":600 },'+
-		'  "frameRate": { "min":10, "max":30 } }';
-	gLog('setVideoConstraintsLow', constraintString);
-	userMediaConstraints.video = JSON.parse(constraintString);
+	constraintString = `
+"width":  {"min":320, "ideal":640, "max":800 },
+"height": {"min":240, "ideal":360, "max":600 },
+"frameRate": { "min":10, "max":30 }
+`;
+	let tmpConstraints = setVideoConstraintsGiven();
+	gLog('setVideoConstraintsLow', tmpConstraints);
+	userMediaConstraints.video = JSON.parse(tmpConstraints);
 	historyBack();
 	getStream();
 }
 
 function setVideoConstraintsMid() {
-	const constraintString =
-		'{ "width":  {"min":480, "ideal":1280, "max":1920 },'+
-		'  "height": {"min":360, "ideal":720,  "max":1080 },'+
-		'  "frameRate": { "min":10, "max":60 } }';
-	gLog('setVideoConstraintsMid', constraintString);
-	userMediaConstraints.video = JSON.parse(constraintString);
+	constraintString = `
+"width":  {"min":480, "ideal":1280, "max":1920 },
+"height": {"min":360, "ideal":720,  "max":1080 },
+"frameRate": { "min":10, "max":60 }
+`;
+	let tmpConstraints = setVideoConstraintsGiven();
+	gLog('setVideoConstraintsMid', tmpConstraints);
+	userMediaConstraints.video = JSON.parse(tmpConstraints);
 	historyBack();
 	getStream();
 }
 
 function setVideoConstraintsHigh() {
-	const constraintString =
-		'{ "width":  {"min":1280,"ideal":1920, "max":4096 },'+
-		'  "height": {"min":720, "ideal":1080, "max":2160 },'+
-		'  "frameRate": { "min":15, "max":60 } }';
-	gLog('setVideoConstraintsHigh', constraintString);
-	userMediaConstraints.video = JSON.parse(constraintString);
+	constraintString = `
+"width":  {"min":1280,"ideal":1920, "max":4096 },
+"height": {"min":720, "ideal":720, "max":2160 },
+"frameRate": { "min":10, "max":60 }
+`;
+	let tmpConstraints = setVideoConstraintsGiven();
+	gLog('setVideoConstraintsHigh', tmpConstraints);
+	userMediaConstraints.video = JSON.parse(tmpConstraints);
+	historyBack();
+	getStream();
+}
+
+function setVideoConstraintsHD() {
+	constraintString = `
+"width":  {"min":1920,"ideal":1920, "max":4096 },
+"height": {"min":720, "ideal":720, "max":2160 },
+"frameRate": { "min":10, "max":60 }
+`;
+	let tmpConstraints = setVideoConstraintsGiven();
+	gLog('setVideoConstraintsHD', tmpConstraints);
+	userMediaConstraints.video = JSON.parse(tmpConstraints);
 	historyBack();
 	getStream();
 }
@@ -649,33 +678,51 @@ function iframeWindowClose() {
 
 let lastGoodMediaConstraints;
 let myUserMediaConstraints;
+let myUserMediaDeviceId;
 function getStream(selectObject) {
-	if(!gentle) {
-		const supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
-		gLog('getStream supportedConstraints',supportedConstraints);
+	if(!navigator || !navigator.mediaDevices) {
+		alert("getStream no access navigator.mediaDevices");
+		return;
 	}
 
-	myUserMediaConstraints = JSON.parse(JSON.stringify(userMediaConstraints));
+//	if(!gentle) {
+//		const supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
+//		gLog('getStream supportedConstraints',supportedConstraints);
+//	}
 
+
+	let mustTurnVideoOn = false;
 	if(selectObject) {
-		// try to find selectObject.value (deviceId) in avSelect.options
+		gLog('getStream avSelect');
+		// selectObject is (only) set if user operates avSelect manually
+		// parse for deviceId (selectObject.value in avSelect.options)
 		for(var i = avSelect.options.length - 1; i >= 0; i--) {
 			if(avSelect.options[i].value == selectObject.value) {
-				// found deviceId, set mediaConstraints.deviceId
-				const str = '{"exact": "'+selectObject.value+'"}';
-				gLog('getStream getUserMedia set deviceId',str);
-				myUserMediaConstraints.deviceId = JSON.parse(str);
+				// found deviceId
+				myUserMediaDeviceId = '"exact": "'+selectObject.value+'"';
+				gLog('getStream avSelect deviceId',myUserMediaDeviceId);
 
-				// if necessary, set/clear videoEnabled
 				if(avSelect.options[i].label.startsWith("Audio")) {
-					gLog('getStream avSelect to audio');
+					mustTurnVideoOn = false;
 					if(videoEnabled) {
+						gLog('getStream avSelect audio: videoOff');
 						videoOff();
+					} else {
+						gLog('getStream avSelect audio: video was off');
 					}
 				} else if(avSelect.options[i].label.startsWith("Video")) {
-					gLog('getStream avSelect to video');
 					if(!videoEnabled) {
-						videoOn();
+						let tmpConstraints = constraintString;
+						if(myUserMediaDeviceId) {
+							tmpConstraints += ","+myUserMediaDeviceId;
+						}
+						tmpConstraints = "{"+tmpConstraints+"}";
+						gLog('getStream avSelect video',tmpConstraints);
+						userMediaConstraints.video = JSON.parse(tmpConstraints);
+						mustTurnVideoOn = true;
+					} else {
+						gLog('getStream avSelect video: was on');
+						mustTurnVideoOn = false;
 					}
 				}
 				break;
@@ -683,20 +730,22 @@ function getStream(selectObject) {
 		}
 	}
 
+	myUserMediaConstraints = JSON.parse(JSON.stringify(userMediaConstraints));
+	if(mustTurnVideoOn) {
+		videoOn();
+	}
+
 	if(!videoEnabled) {
 		gLog('getStream !videoEnabled: Constraints.video = false');
 		myUserMediaConstraints.video = false;
 	}
+
 	if(!myUserMediaConstraints.video && videoEnabled) {
 		gLog('getStream !myUserMediaConstraints.video + videoEnabled: localVideoHide()');
 		localVideoHide();
 	}
 
-	gLog('getStream getUserMedia constraints',myUserMediaConstraints);
-	if(!navigator || !navigator.mediaDevices) {
-		alert("cannot access navigator.mediaDevices");
-		return;
-	}
+	gLog('getStream set getUserMedia',myUserMediaConstraints);
 	return navigator.mediaDevices.getUserMedia(myUserMediaConstraints)
 		.then(function(stream) {
 			gotStream(stream);
@@ -708,7 +757,9 @@ function getStream(selectObject) {
 			} else {
 				console.log('# audio/video input error', err);
 				alert("audio/video input error " + err);
-				localVideoHide();
+				if(!lastGoodMediaConstraints) {
+					localVideoHide();
+				}
 			}
 			if(lastGoodMediaConstraints) {
 				gLog('getStream back to lastGoodMediaConstraints',lastGoodMediaConstraints);
@@ -742,6 +793,7 @@ function gotDevices(deviceInfos) {
 			avSelect.remove(i);
 		}
 		for(const deviceInfo of deviceInfos) {
+			//gLog('gotDevices',deviceInfo);
 			const option = document.createElement('option');
 			option.value = deviceInfo.deviceId;
 			if(deviceInfo.kind === 'audioinput') {
@@ -798,18 +850,18 @@ function gotStream(stream) {
 	if(localStream) {
 		// stop all tracks on previous localStream
 		const allTracks = localStream.getTracks();
-		gLog("gotStream previous localStream len",allTracks.length);
+		//gLog("gotStream stop previous localStream len",allTracks.length);
 		allTracks.forEach(track => {
-			gLog('gotStream previous localStream track.stop()',track);
+			//gLog('gotStream previous localStream track.stop()',track);
 			track.stop(); 
 		});
 		if(peerCon && addedAudioTrack) {
-			gLog("gotStream previous localStream peerCon.removeTrack(addedAudioTrack)");
+			//gLog("gotStream previous localStream peerCon.removeTrack(addedAudioTrack)");
 			peerCon.removeTrack(addedAudioTrack);
 		}
 		addedAudioTrack = null;
 		if(peerCon && addedVideoTrack) {
-			gLog("gotStream previous localStream peerCon.removeTrack(addedVideoTrack)");
+			//gLog("gotStream previous localStream peerCon.removeTrack(addedVideoTrack)");
 			peerCon.removeTrack(addedVideoTrack);
 		}
 		addedVideoTrack = null;
@@ -1020,7 +1072,7 @@ function localVideoShow() {
 	videoEnabled = true;
 	localVideoLabel.style.opacity = 0.7; // will be transitioned
 	let localVideoDivHeight = parseFloat(getComputedStyle(localVideoFrame).width)/16*9;
-	gLog("localVideoShow DivHeight",localVideoDivHeight);
+	//gLog("localVideoShow DivHeight",localVideoDivHeight);
 	localVideoDiv.style.height = ""+localVideoDivHeight+"px"; // will be transitioned
 	localVideoDiv.addEventListener('transitionend', localVideoDivOnVisible) // switch to height auto
 	localVideoDiv.style.visibility = "visible";
@@ -1134,7 +1186,7 @@ function hashchange() {
 }
 
 function showStatus(msg,timeoutMs) {
-	if(!gentle && msg!="") {
+	if(!gentle && msg && msg!="") {
 		// msg may contain html, which we don't want to console.log
 		let idx = msg.indexOf("<");
 		if(idx>=0) {

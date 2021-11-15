@@ -302,6 +302,8 @@ window.onload = function() {
 function videoOn() {
 	// enable local video
 	gLog("videoOn");
+	constraintString = defaultConstraintString;
+	userMediaConstraints.video = JSON.parse("{"+constraintString+"}");
 	localVideoShow();
 
 	// add localStream video-track to peerCon
@@ -346,6 +348,7 @@ function videoOn() {
 function videoOff() {
 	// disable local video (but if rtcConnect, keep local mic on)
 	gLog("videoOff");
+	myUserMediaDeviceId = null;
 	localVideoHide();
 	if(localStream) {
 		// stop streaming video track
