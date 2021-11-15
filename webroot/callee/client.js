@@ -52,7 +52,7 @@ var ICE_config = {
 
 var defaultConstraintString = `
 "width":  {"min":320, "ideal":640, "max":800 },
-"height": {"min":240, "ideal":360, "max":600 }
+"height": {"min":240, "ideal":480, "max":600 }
 `;
 
 var constraintString = defaultConstraintString;
@@ -83,11 +83,7 @@ function setVideoConstraintsGiven() {
 
 function setVideoConstraintsLow() {
 	gLog('===setVideoConstraintsLow===');
-	constraintString = `
-"width":  {"min":320, "ideal":640, "max":800 }
-,"height": {"min":240, "ideal":360, "max":600 }
-,"frameRate": { "min":10, "max":30 }
-`;
+	constraintString = defaultConstraintString;
 	let tmpConstraints = setVideoConstraintsGiven();
 	gLog('setVideoConstraintsLow', tmpConstraints);
 	userMediaConstraints.video = JSON.parse(tmpConstraints);
@@ -97,10 +93,10 @@ function setVideoConstraintsLow() {
 function setVideoConstraintsMid() {
 	gLog('===setVideoConstraintsMid===');
 	constraintString = `
-"width":  {"min":480, "ideal":1280, "max":1920 }
-,"height": {"min":360, "ideal":720,  "max":1080 }
-,"frameRate": { "min":10, "max":60 }
+"width":  {"min":640, "ideal":1280, "max":1920 }
+,"height": {"min":480, "ideal":720,  "max":1080 }
 `;
+//,"frameRate": { "min":10, "max":60 }
 	let tmpConstraints = setVideoConstraintsGiven();
 	gLog('setVideoConstraintsMid', tmpConstraints);
 	userMediaConstraints.video = JSON.parse(tmpConstraints);
@@ -110,10 +106,10 @@ function setVideoConstraintsMid() {
 function setVideoConstraintsHigh() {
 	gLog('===setVideoConstraintsHigh===');
 	constraintString = `
-"width":  {"min":1280,"ideal":1920, "max":4096 }
-,"height": {"min":720, "ideal":720, "max":2160 }
-,"frameRate": { "min":10, "max":60 }
+"width":  {"min":1280,"ideal":1920, "max":2560 }
+,"height": {"min":720, "ideal":720, "max":1200 }
 `;
+//,"frameRate": { "min":10, "max":30 }
 	let tmpConstraints = setVideoConstraintsGiven();
 	gLog('setVideoConstraintsHigh', tmpConstraints);
 	userMediaConstraints.video = JSON.parse(tmpConstraints);
@@ -679,9 +675,9 @@ function iframeWindowClose() {
 }
 
 let lastGoodMediaConstraints;
+let lastGoodAvSelectIndex;
 let myUserMediaConstraints;
 function getStream(selectObject) {
-	gLog('getStream');
 	if(!navigator || !navigator.mediaDevices) {
 		alert("getStream no access navigator.mediaDevices");
 		return;
@@ -693,7 +689,7 @@ function getStream(selectObject) {
 //	}
 
 	if(selectObject) {
-		gLog('getStream avSelect');
+		gLog('===getStream avSelect===');
 		// selectObject is (only) set if user operates avSelect manually
 		// parse for deviceId (selectObject.value in avSelect.options)
 		for(var i = avSelect.options.length - 1; i >= 0; i--) {
@@ -749,15 +745,18 @@ function getStream(selectObject) {
 			gotStream(stream);
 			// no error: from now on, use saveWorkingConstraints as lastGoodMediaConstraints
 			lastGoodMediaConstraints = JSON.parse(JSON.stringify(saveWorkingConstraints));
+			lastGoodAvSelectIndex = avSelect.selectedIndex;
 			console.log('set lastGoodMediaConstraints',lastGoodMediaConstraints);
 		})
 		.catch(function(err) {
 			if(!videoEnabled) {
 				console.log('# audio input error', err);
-				alert("audio input error " + err);
+				//alert("audio input error " + err);
+				showStatus("error audio " + err,2000);
 			} else {
 				console.log('# audio/video input error', err);
-				alert("audio/video input error " + err);
+				//alert("audio/video input error " + err);
+				showStatus("error audio/video " + err,2000);
 				if(!lastGoodMediaConstraints) {
 					localVideoHide();
 				}
@@ -766,6 +765,7 @@ function getStream(selectObject) {
 				gLog('getStream back to lastGoodMediaConstraints',lastGoodMediaConstraints);
 				//full copy
 				userMediaConstraints = JSON.parse(JSON.stringify(lastGoodMediaConstraints));
+				avSelect.selectedIndex = lastGoodAvSelectIndex;
 				if(!userMediaConstraints.video && videoEnabled) {
 					gLog('getStream back to lastGoodMediaConstraints !Constraints.video');
 					localVideoHide();
@@ -1089,6 +1089,7 @@ function localVideoHide() {
 	gLog('localVideoHide()');
 	videoEnabled = false;
 	lastGoodMediaConstraints = null;
+	lastGoodAvSelectIndex = 0;
 	localVideoLabel.style.opacity = 0.3;
 	let localVideoDivHeight = parseFloat(getComputedStyle(localVideoFrame).width)/16*9;
 	localVideoDiv.style.height = ""+localVideoDivHeight+"px"; // from auto to fixed
