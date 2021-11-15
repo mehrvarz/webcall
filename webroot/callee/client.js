@@ -5,7 +5,7 @@ const localVideoDiv = document.querySelector('div#localVideoDiv');
 const localVideoFrame = document.querySelector('video#localVideoFrame');
 const remoteVideoDiv = document.querySelector('div#remoteVideoDiv');
 const remoteVideoFrame = document.querySelector('video#remoteVideoFrame');
-const localVideoPausedElement = document.querySelector('span#localVideoPaused');
+const localVideoMsgElement = document.querySelector('span#localVideoMsg');
 const vmonitorButton = document.querySelector('span#vmonitor');
 const vsendButton = document.querySelector('span#vsend');
 const localVideoRes = document.querySelector('span#localVideoRes');
@@ -731,7 +731,9 @@ function getStream(selectObject) {
 	if(videoEnabled) {
 		if(!myUserMediaConstraints.video) {
 			gLog('getStream videoEnabled but !myUserMediaConstraints.video: localVideoHide()');
-			localVideoHide();
+			//localVideoHide();
+			localVideoMsgElement.innerHTML = "no video device";
+			localVideoMsgElement.style.opacity = 0.9;
 		} else {
 			//videoOn();
 		}
@@ -752,15 +754,14 @@ function getStream(selectObject) {
 		.catch(function(err) {
 			if(!videoEnabled) {
 				console.log('# audio input error', err);
-				//alert("audio input error " + err);
-				showStatus("error audio " + err,2000);
+				alert("audio input error " + err);
+				//showStatus("error audio " + err,2000);
+
 			} else {
 				console.log('# audio/video input error', err);
 				//alert("audio/video input error " + err);
-				showStatus("error audio/video " + err,2000);
-				if(!lastGoodMediaConstraints) {
-					localVideoHide();
-				}
+				localVideoMsgElement.innerHTML = "no video device";
+				localVideoMsgElement.style.opacity = 0.9;
 			}
 			if(lastGoodMediaConstraints) {
 				gLog('getStream back to lastGoodMediaConstraints',lastGoodMediaConstraints);
@@ -769,18 +770,25 @@ function getStream(selectObject) {
 				avSelect.selectedIndex = lastGoodAvSelectIndex;
 				if(!userMediaConstraints.video && videoEnabled) {
 					gLog('getStream back to lastGoodMediaConstraints !Constraints.video');
-					localVideoHide();
+					//localVideoHide();
 				}
 				if(userMediaConstraints.video && !videoEnabled) {
 					gLog('getStream back to lastGoodMediaConstraints Constraints.video');
 					localVideoShow();
 				}
 				return navigator.mediaDevices.getUserMedia(userMediaConstraints)
-					.then(gotStream)
+					.then(function(stream) {
+						gotStream(stream);
+						if(!videoEnabled) {
+							localVideoMsgElement.innerHTML = "";
+							localVideoMsgElement.style.opacity = 0;
+						}
+					})
 					.catch(function(err) {
 						if(videoEnabled) {
 							gLog('getStream backto lastGoodMediaConstraints videoEnabled err');
-							localVideoHide();
+							localVideoMsgElement.innerHTML = "no video device";
+							localVideoMsgElement.style.opacity = 0.9;
 						}
 					});
 			}
@@ -973,9 +981,6 @@ function connectLocalVideo(forceOff) {
 var vpauseTimer = null;
 function vmonitor() {
 	gLog("vmonitor");
-	if(localVideoPausedElement) {
-		localVideoPausedElement.style.visibility = "hidden";
-	}
 	if(vmonitorButton) {
 		vmonitorButton.style.color = "#ff0";
 	}
@@ -1024,7 +1029,8 @@ function vpause() {
 		clearTimeout(vpauseTimer);
 		vpauseTimer = null;
 	}
-	localVideoPausedElement.style.visibility = "visible";
+	localVideoMsgElement.innerHTML = "monitor paused";
+	localVideoMsgElement.style.opacity = 0.9;
 
 	if(!mediaConnect) {
 		// deactivate video + microphone pause, so that there will be no red-tab
@@ -1091,6 +1097,7 @@ function localVideoHide() {
 	videoEnabled = false;
 	lastGoodMediaConstraints = null;
 	lastGoodAvSelectIndex = 0;
+	localVideoMsgElement.style.opacity = 0;
 	localVideoLabel.style.opacity = 0.3;
 	let localVideoDivHeight = parseFloat(getComputedStyle(localVideoFrame).width)/16*9;
 	localVideoDiv.style.height = ""+localVideoDivHeight+"px"; // from auto to fixed
