@@ -65,6 +65,7 @@ var userMediaConstraints = {
 	}
 };
 
+let myUserMediaDeviceId;
 function setVideoConstraintsGiven() {
 	// build userMediaConstraints.video from constraintString + myUserMediaDeviceId
 	let tmpConstraints = constraintString;
@@ -72,7 +73,7 @@ function setVideoConstraintsGiven() {
 		gLog('setVideoConstraintsGiven myUserMediaDeviceId',myUserMediaDeviceId);
 		tmpConstraints += ","+myUserMediaDeviceId;
 	} else {
-		gLog('setVideoConstraintsGiven no myUserMediaDeviceId');
+		//gLog('setVideoConstraintsGiven no myUserMediaDeviceId');
 	}
 	tmpConstraints = "{"+tmpConstraints+"}";
 	userMediaConstraints.video = JSON.parse(tmpConstraints);
@@ -678,7 +679,6 @@ function iframeWindowClose() {
 
 let lastGoodMediaConstraints;
 let myUserMediaConstraints;
-let myUserMediaDeviceId;
 function getStream(selectObject) {
 	if(!navigator || !navigator.mediaDevices) {
 		alert("getStream no access navigator.mediaDevices");
@@ -691,7 +691,6 @@ function getStream(selectObject) {
 //	}
 
 
-	let mustTurnVideoOn = false;
 	if(selectObject) {
 		gLog('getStream avSelect');
 		// selectObject is (only) set if user operates avSelect manually
@@ -703,46 +702,41 @@ function getStream(selectObject) {
 				gLog('getStream avSelect deviceId',myUserMediaDeviceId);
 
 				if(avSelect.options[i].label.startsWith("Audio")) {
-					mustTurnVideoOn = false;
 					if(videoEnabled) {
 						gLog('getStream avSelect audio: videoOff');
 						videoOff();
 					} else {
-						gLog('getStream avSelect audio: video was off');
+						//gLog('getStream avSelect audio: video was off');
 					}
 				} else if(avSelect.options[i].label.startsWith("Video")) {
-					if(!videoEnabled) {
-						let tmpConstraints = constraintString;
-						if(myUserMediaDeviceId) {
-							tmpConstraints += ","+myUserMediaDeviceId;
-						}
-						tmpConstraints = "{"+tmpConstraints+"}";
-						gLog('getStream avSelect video',tmpConstraints);
-						userMediaConstraints.video = JSON.parse(tmpConstraints);
-						mustTurnVideoOn = true;
-					} else {
-						gLog('getStream avSelect video: was on');
-						mustTurnVideoOn = false;
+					let tmpConstraints = constraintString;
+					if(myUserMediaDeviceId) {
+						tmpConstraints += ","+myUserMediaDeviceId;
 					}
+					tmpConstraints = "{"+tmpConstraints+"}";
+					gLog('getStream avSelect video',tmpConstraints);
+					userMediaConstraints.video = JSON.parse(tmpConstraints);
 				}
 				break;
 			}
 		}
 	}
 
+	// full copy
 	myUserMediaConstraints = JSON.parse(JSON.stringify(userMediaConstraints));
-	if(mustTurnVideoOn) {
-		videoOn();
-	}
 
 	if(!videoEnabled) {
 		gLog('getStream !videoEnabled: Constraints.video = false');
 		myUserMediaConstraints.video = false;
 	}
 
-	if(!myUserMediaConstraints.video && videoEnabled) {
-		gLog('getStream !myUserMediaConstraints.video + videoEnabled: localVideoHide()');
-		localVideoHide();
+	if(videoEnabled) {
+		if(!myUserMediaConstraints.video) {
+			gLog('getStream !myUserMediaConstraints.video + videoEnabled: localVideoHide()');
+			localVideoHide();
+		} else {
+			//videoOn();
+		}
 	}
 
 	gLog('getStream set getUserMedia',myUserMediaConstraints);
@@ -786,56 +780,56 @@ function getStream(selectObject) {
 
 function gotDevices(deviceInfos) {
 	// fill avSelect with the available audio/video input devices (mics and cams)
-	gLog('gotDevices',deviceInfos);
+	//gLog('gotDevices',deviceInfos);
 	if(avSelect) { // not set in button mode
 		var i, L = avSelect.options.length - 1;
 		for(i = L; i >= 0; i--) {
 			avSelect.remove(i);
 		}
+
 		for(const deviceInfo of deviceInfos) {
-			//gLog('gotDevices',deviceInfo);
+			if(deviceInfo.kind=="audioinput" || deviceInfo.kind=="videoinput") {
+				gLog('gotDevices',deviceInfo.kind,deviceInfo.label,deviceInfo.deviceId);
+			}
+
 			const option = document.createElement('option');
 			option.value = deviceInfo.deviceId;
+
 			if(deviceInfo.kind === 'audioinput') {
 				let deviceInfoLabel = deviceInfo.label;
 				if(deviceInfoLabel=="Default") {
-					deviceInfoLabel="Audio Input Default";
+//					deviceInfoLabel="Audio Input Default";
+					continue;
 				} else if(deviceInfoLabel) {
 					deviceInfoLabel = "Audio "+deviceInfoLabel
 				}
 				option.text = deviceInfoLabel || `Audio ${avSelect.length + 1}`;
-				var exists=false
-				var length = avSelect.options.length;
-				for(var i = length-1; i >= 0; i--) {
-					if(avSelect.options[i].text == option.text) {
-						exists=true; // don't add again
-						break;
-					}
-				}
-				if(!exists) {
-					avSelect.appendChild(option);
-				}
 			} else if (deviceInfo.kind === 'videoinput') {
-				if(videoEnabled) {
-					let deviceInfoLabel = deviceInfo.label;
-					if(deviceInfoLabel=="Default") {
-						deviceInfoLabel="Video Input Default";
-					} else if(deviceInfoLabel) {
-						deviceInfoLabel = "Video "+deviceInfoLabel
-					}
-					var exists=false
-					option.text = deviceInfoLabel || `Video ${avSelect.length + 1}`;
-					var length = avSelect.options.length;
-					for(var i = length-1; i >= 0; i--) {
-						if(avSelect.options[i].text == option.text) {
-							exists=true; // don't add again
-							break;
-						}
-					}
-					if(!exists) {
-						avSelect.appendChild(option);
-					}
+				if(!videoEnabled) {
+					continue;
 				}
+				let deviceInfoLabel = deviceInfo.label;
+				if(deviceInfoLabel=="Default") {
+//					deviceInfoLabel="Video Input Default";
+					continue;
+				} else if(deviceInfoLabel) {
+					deviceInfoLabel = "Video "+deviceInfoLabel
+				}
+				option.text = deviceInfoLabel || `Video ${avSelect.length + 1}`;
+			} else {
+				continue;
+			}
+
+			var exists=false
+			var length = avSelect.options.length;
+			for(var i = length-1; i >= 0; i--) {
+				if(avSelect.options[i].text == option.text) {
+					exists=true; // don't add again
+					break;
+				}
+			}
+			if(!exists) {
+				avSelect.appendChild(option);
 			}
 		}
 	}

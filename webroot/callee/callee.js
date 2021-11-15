@@ -272,8 +272,9 @@ function videoOn() {
 				gLog("videoOn avSelect.selectedIndex count",optionElements.length);
 				for(let i=0; i<optionElements.length; i++) {
 					if(optionElements[i].text.startsWith("Video")) {
-						avSelect.selectedIndex = i;
 						gLog("videoOn avSelect.selectedIndex set",i);
+						avSelect.selectedIndex = i;
+						getStream(optionElements[i]);
 						break;
 					}
 				}
@@ -332,8 +333,9 @@ function videoOff() {
 		gLog("videoOff avSelect len",optionElements.length);
 		for(let i=0; i<optionElements.length; i++) {
 			if(optionElements[i].text.startsWith("Audio")) {
-				avSelect.selectedIndex = i;
 				gLog("videoOff avSelect idx",i);
+				avSelect.selectedIndex = i;
+				getStream(optionElements[i]);
 				break;
 			}
 		}

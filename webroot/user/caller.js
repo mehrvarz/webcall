@@ -328,10 +328,12 @@ function videoOn() {
 		let optionElements = Array.from(avSelect);
 		gLog("videoOn avSelect len",optionElements.length);
 		if(optionElements.length>0) {
+			// avSelect.selectedIndex <- 1st video device
 			for(let i=0; i<optionElements.length; i++) {
 				if(optionElements[i].text.startsWith("Video")) {
-					avSelect.selectedIndex = i;
 					gLog("videoOn avSelect idx",i);
+					avSelect.selectedIndex = i;
+					getStream(optionElements[i]);
 					break;
 				}
 			}
@@ -413,11 +415,12 @@ function videoOff() {
 	let optionElements = Array.from(avSelect);
 	if(optionElements.length>0) {
 		gLog("videoOff avSelect len",optionElements.length);
-		// pre-select the 1st video device
+		// avSelect.selectedIndex <- 1st audio device
 		for(let i=0; i<optionElements.length; i++) {
 			if(optionElements[i].text.startsWith("Audio")) {
-				avSelect.selectedIndex = i;
 				gLog("videoOff avSelect idx",i);
+				avSelect.selectedIndex = i;
+				getStream(optionElements[i]);
 				break;
 			}
 		}
