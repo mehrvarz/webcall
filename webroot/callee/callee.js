@@ -241,7 +241,6 @@ function videoOn() {
 	// open local video-frame (it is not yet streaming, but locally visible)
 	gLog("videoOn");
 	constraintString = defaultConstraintString;
-//	userMediaConstraints.video = JSON.parse("{"+constraintString+"}");
 	setVideoConstraintsGiven();
 	localVideoShow();
 
@@ -255,7 +254,6 @@ function videoOn() {
 		}
 	}
 
-//	localVideoFrame.srcObject = localStream; // see gotStream()
 	localVideoFrame.volume = 0; // avoid audio feedback
 
 	// start localVideoFrame playback, setup the localVideo pane buttons

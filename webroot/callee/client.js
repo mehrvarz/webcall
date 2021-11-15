@@ -47,7 +47,7 @@ var ICE_config = {
 var defaultConstraintString = `
 "width":  {"min":480, "ideal":1280, "max":1920 },
 "height": {"min":360, "ideal":720,  "max":1080 },
-"frameRate": { "min":10, "max":60 }
+"frameRate": { "min":10, "max":30 }
 `;
 
 var constraintString = defaultConstraintString;
@@ -77,7 +77,7 @@ function setVideoConstraintsGiven() {
 }
 
 function setVideoConstraintsLow() {
-	gLog('setVideoConstraintsLow');
+	gLog('===setVideoConstraintsLow===');
 	constraintString = `
 "width":  {"min":320, "ideal":640, "max":800 }
 ,"height": {"min":240, "ideal":360, "max":600 }
@@ -86,12 +86,11 @@ function setVideoConstraintsLow() {
 	let tmpConstraints = setVideoConstraintsGiven();
 	gLog('setVideoConstraintsLow', tmpConstraints);
 	userMediaConstraints.video = JSON.parse(tmpConstraints);
-	historyBack();
 	getStream();
 }
 
 function setVideoConstraintsMid() {
-	gLog('setVideoConstraintsMid');
+	gLog('===setVideoConstraintsMid===');
 	constraintString = `
 "width":  {"min":480, "ideal":1280, "max":1920 }
 ,"height": {"min":360, "ideal":720,  "max":1080 }
@@ -100,12 +99,11 @@ function setVideoConstraintsMid() {
 	let tmpConstraints = setVideoConstraintsGiven();
 	gLog('setVideoConstraintsMid', tmpConstraints);
 	userMediaConstraints.video = JSON.parse(tmpConstraints);
-	historyBack();
 	getStream();
 }
 
 function setVideoConstraintsHigh() {
-	gLog('setVideoConstraintsHigh');
+	gLog('===setVideoConstraintsHigh===');
 	constraintString = `
 "width":  {"min":1280,"ideal":1920, "max":4096 }
 ,"height": {"min":720, "ideal":720, "max":2160 }
@@ -114,12 +112,11 @@ function setVideoConstraintsHigh() {
 	let tmpConstraints = setVideoConstraintsGiven();
 	gLog('setVideoConstraintsHigh', tmpConstraints);
 	userMediaConstraints.video = JSON.parse(tmpConstraints);
-	historyBack();
 	getStream();
 }
 
 function setVideoConstraintsHD() {
-	gLog('setVideoConstraintsHD');
+	gLog('===setVideoConstraintsHD===');
 	constraintString = `
 "width":  {"min":1920,"ideal":1920, "max":4096 }
 ,"height": {"min":720, "ideal":1080, "max":2160 }
@@ -128,7 +125,6 @@ function setVideoConstraintsHD() {
 	let tmpConstraints = setVideoConstraintsGiven();
 	gLog('setVideoConstraintsHD', tmpConstraints);
 	userMediaConstraints.video = JSON.parse(tmpConstraints);
-	historyBack();
 	getStream();
 }
 
@@ -680,6 +676,7 @@ function iframeWindowClose() {
 let lastGoodMediaConstraints;
 let myUserMediaConstraints;
 function getStream(selectObject) {
+	gLog('getStream');
 	if(!navigator || !navigator.mediaDevices) {
 		alert("getStream no access navigator.mediaDevices");
 		return;
@@ -739,11 +736,14 @@ function getStream(selectObject) {
 	}
 
 	gLog('getStream set getUserMedia',myUserMediaConstraints);
+	// full copy (in case it works)
+	let saveWorkingConstraints = JSON.parse(JSON.stringify(myUserMediaConstraints));
 	return navigator.mediaDevices.getUserMedia(myUserMediaConstraints)
 		.then(function(stream) {
+			gLog('getStream success -> gotStream');
 			gotStream(stream);
-			// no error: full copy
-			lastGoodMediaConstraints = JSON.parse(JSON.stringify(myUserMediaConstraints));
+			// no error: from now on, use saveWorkingConstraints as lastGoodMediaConstraints
+			lastGoodMediaConstraints = JSON.parse(JSON.stringify(saveWorkingConstraints));
 			console.log('set lastGoodMediaConstraints',lastGoodMediaConstraints);
 		})
 		.catch(function(err) {
@@ -759,7 +759,8 @@ function getStream(selectObject) {
 			}
 			if(lastGoodMediaConstraints) {
 				gLog('getStream back to lastGoodMediaConstraints',lastGoodMediaConstraints);
-				userMediaConstraints = lastGoodMediaConstraints;
+				//full copy
+				userMediaConstraints = JSON.parse(JSON.stringify(lastGoodMediaConstraints));
 				if(!userMediaConstraints.video && videoEnabled) {
 					gLog('getStream back to lastGoodMediaConstraints !Constraints.video');
 					localVideoHide();
@@ -909,10 +910,10 @@ function gotStream(stream) {
 
 function videoSwitch(forceClose) {
 	if(videoEnabled || forceClose) {
-		gLog("videoSwitch videoOff",forceClose);
+		gLog("===videoSwitch videoOff===",forceClose);
 		videoOff();
 	} else {
-		gLog("videoSwitch videoOn");
+		gLog("===videoSwitch videoOn===");
 		videoOn();
 	}
 }
@@ -965,6 +966,7 @@ function connectLocalVideo(forceOff) {
 
 var vpauseTimer = null;
 function vmonitor() {
+	gLog("vmonitor");
 	if(localVideoPausedElement) {
 		localVideoPausedElement.style.visibility = "hidden";
 	}
@@ -977,8 +979,10 @@ function vmonitor() {
 		gLog("vmonitor !localStream: re-enable");
 		pickupAfterLocalStream = false;
 		getStream(); // -> gotStream() -> gotStream2()
+		return
 		// in the end, vmonitor will be called again, but then with localStream
-	} else if(videoEnabled) {
+	}
+	if(videoEnabled) {
 		localVideoFrame.play().catch(function(error) {});
 		if(!mediaConnect) {
 			gLog("vmonitor play new vpauseTimer");
@@ -1064,6 +1068,7 @@ function localVideoDivOnVisible() {
 }
 
 function localVideoShow() {
+	// expand local video frame/div
 	videoEnabled = true;
 	localVideoLabel.style.opacity = 0.7; // will be transitioned
 	let localVideoDivHeight = parseFloat(getComputedStyle(localVideoFrame).width)/16*9;
@@ -1075,6 +1080,7 @@ function localVideoShow() {
 }
 
 function localVideoHide() {
+	// shrink local video frame/div
 	gLog('localVideoHide()');
 	videoEnabled = false;
 	lastGoodMediaConstraints = null;

@@ -303,7 +303,6 @@ function videoOn() {
 	// enable local video
 	gLog("videoOn");
 	constraintString = defaultConstraintString;
-//	userMediaConstraints.video = JSON.parse("{"+constraintString+"}");
 	setVideoConstraintsGiven();
 	localVideoShow();
 
@@ -320,9 +319,6 @@ function videoOn() {
 	// activate localStream in localVideoFrame
 	localVideoFrame.volume = 0; // avoid audio feedback
 
-	// start localVideoFrame playback, setup the localVideo pane buttons
-	vmonitor();
-
 	// switch avSelect.selectedIndex to 1st video option
 	getStream().then(() => navigator.mediaDevices.enumerateDevices()).then((deviceInfos) => {
 		gotDevices(deviceInfos);
@@ -338,6 +334,11 @@ function videoOn() {
 					break;
 				}
 			}
+		}
+
+		if(videoEnabled) {
+			// start localVideoFrame playback, setup the localVideo pane buttons
+			vmonitor();
 		}
 
 		if(videoEnabled && mediaConnect && !addLocalVideoEnabled && vsendButton) {
