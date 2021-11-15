@@ -359,13 +359,6 @@ function videoOff() {
 		connectLocalVideo(true);
 	}
 
-	// remove all video devices from avSelect
-	for(var i = avSelect.options.length - 1; i >= 0; i--) {
-		if(avSelect.options[i].label.startsWith("Video")) {
-			avSelect.remove(i);
-		}
-	}
-
 	if(!rtcConnect) {
 		if(localStream) {
 			// remove audio track from peerCon (stop streaming local audio)

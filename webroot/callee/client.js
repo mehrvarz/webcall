@@ -44,10 +44,15 @@ var ICE_config = {
 	]
 };
 
+//var defaultConstraintString = `
+//"width":  {"min":480, "ideal":1280, "max":1920 },
+//"height": {"min":360, "ideal":720,  "max":1080 },
+//"frameRate": { "min":10, "max":30 }
+//`;
+
 var defaultConstraintString = `
-"width":  {"min":480, "ideal":1280, "max":1920 },
-"height": {"min":360, "ideal":720,  "max":1080 },
-"frameRate": { "min":10, "max":30 }
+"width":  {"min":320, "ideal":640, "max":800 },
+"height": {"min":240, "ideal":360, "max":600 }
 `;
 
 var constraintString = defaultConstraintString;
@@ -1093,6 +1098,13 @@ function localVideoHide() {
 		}
 	},200);
 	cameraElement.style.opacity = 1;
+
+	// remove all video devices from avSelect
+	for(var i = avSelect.options.length - 1; i >= 0; i--) {
+		if(avSelect.options[i].label.startsWith("Video")) {
+			avSelect.remove(i);
+		}
+	}
 }
 
 function remoteVideoDivOnVisible() {
