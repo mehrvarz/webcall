@@ -993,8 +993,11 @@ function vmonitor() {
 		// re-enable paused video and microphone
 		gLog("vmonitor !localStream: re-enable");
 		pickupAfterLocalStream = false;
+
+		// we set defaultConstraintString, so that after video is enabled, we have access to the highest resol.
 		constraintString = defaultConstraintString;
 		setVideoConstraintsGiven();
+
 		getStream(); // -> gotStream() -> gotStream2()
 		return
 		// vmonitor will be called again, but then with localStream
