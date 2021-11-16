@@ -44,16 +44,10 @@ var ICE_config = {
 	]
 };
 
-//var defaultConstraintString = `
-//"width":  {"min":480, "ideal":1280, "max":1920 },
-//"height": {"min":360, "ideal":720,  "max":1080 },
-//"frameRate": { "min":10, "max":30 }
-//`;
+//var defaultConstraintString = '"width": {"min":320, "ideal":640, "max":800 },"height": {"min":240, "ideal":480, "max":600 }';
+//var defaultConstraintString = '"width": {"min":1920,"ideal":1920, "max":4096 },"height": {"min":720, "ideal":1080, "max":2160 },"frameRate": { "min":10, "max":30 }';
+var defaultConstraintString = '"width": {"min":320,"ideal":1920, "max":4096 },"height": {"min":240, "ideal":1080, "max":2160 },"frameRate": { "min":10, "max":30 }';
 
-var defaultConstraintString = `
-"width":  {"min":320, "ideal":640, "max":800 },
-"height": {"min":240, "ideal":480, "max":600 }
-`;
 
 var constraintString = defaultConstraintString;
 
@@ -63,7 +57,7 @@ var userMediaConstraints = {
 		echoCancellation: true,  // true by default
 		autoGainControl: false,
 	}
-	// videoOn() will add defaultConstraintString
+	// videoOn() will set userMediaConstraints.video
 };
 
 let myUserMediaDeviceId;
@@ -72,7 +66,6 @@ function setVideoConstraintsGiven() {
 	let tmpConstraints = constraintString;
 	if(myUserMediaDeviceId) {
 		gLog('setVideoConstraintsGiven myUserMediaDeviceId',myUserMediaDeviceId);
-//		tmpConstraints += ","+myUserMediaDeviceId;
 		tmpConstraints += ',"deviceId": { "exact": "'+myUserMediaDeviceId+'" }';
 	} else {
 		//gLog('setVideoConstraintsGiven no myUserMediaDeviceId');
@@ -84,7 +77,10 @@ function setVideoConstraintsGiven() {
 
 function setVideoConstraintsLow() {
 	gLog('===setVideoConstraintsLow===');
-	constraintString = defaultConstraintString;
+	constraintString = `
+"width":  {"min":320, "ideal":640, "max":800 }
+,"height": {"min":240, "ideal":480,  "max":600 }
+`;
 	let tmpConstraints = setVideoConstraintsGiven();
 	gLog('setVideoConstraintsLow', tmpConstraints);
 	userMediaConstraints.video = JSON.parse(tmpConstraints);
@@ -97,7 +93,6 @@ function setVideoConstraintsMid() {
 "width":  {"min":640, "ideal":1280, "max":1920 }
 ,"height": {"min":480, "ideal":720,  "max":1080 }
 `;
-//,"frameRate": { "min":10, "max":60 }
 	let tmpConstraints = setVideoConstraintsGiven();
 	gLog('setVideoConstraintsMid', tmpConstraints);
 	userMediaConstraints.video = JSON.parse(tmpConstraints);
@@ -110,7 +105,6 @@ function setVideoConstraintsHigh() {
 "width":  {"min":1280,"ideal":1920, "max":2560 }
 ,"height": {"min":720, "ideal":720, "max":1200 }
 `;
-//,"frameRate": { "min":10, "max":30 }
 	let tmpConstraints = setVideoConstraintsGiven();
 	gLog('setVideoConstraintsHigh', tmpConstraints);
 	userMediaConstraints.video = JSON.parse(tmpConstraints);
@@ -731,7 +725,6 @@ function getStream(selectObject) {
 	if(videoEnabled) {
 		if(!myUserMediaConstraints.video) {
 			gLog('getStream videoEnabled but !myUserMediaConstraints.video: localVideoHide()');
-			//localVideoHide();
 			localVideoMsgElement.innerHTML = "no video device";
 			localVideoMsgElement.style.opacity = 0.9;
 		} else {
@@ -760,7 +753,7 @@ function getStream(selectObject) {
 			} else {
 				console.log('# audio/video input error', err);
 				//alert("audio/video input error " + err);
-				localVideoMsgElement.innerHTML = "no video device";
+				localVideoMsgElement.innerHTML = "video device error";
 				localVideoMsgElement.style.opacity = 0.9;
 			}
 			if(lastGoodMediaConstraints) {
@@ -779,9 +772,11 @@ function getStream(selectObject) {
 				return navigator.mediaDevices.getUserMedia(userMediaConstraints)
 					.then(function(stream) {
 						gotStream(stream);
-						if(!videoEnabled) {
-							localVideoMsgElement.innerHTML = "";
-							localVideoMsgElement.style.opacity = 0;
+						if(videoEnabled) {
+							setTimeout(function() {
+								localVideoMsgElement.innerHTML = "";
+								localVideoMsgElement.style.opacity = 0;
+							},1000);
 						}
 					})
 					.catch(function(err) {
@@ -804,6 +799,7 @@ function gotDevices(deviceInfos) {
 			avSelect.remove(i);
 		}
 
+		let countVideoDevices = 0;
 		for(const deviceInfo of deviceInfos) {
 			if(deviceInfo.kind=="audioinput" || deviceInfo.kind=="videoinput") {
 				gLog('gotDevices',deviceInfo.kind,deviceInfo.label,deviceInfo.deviceId);
@@ -815,8 +811,7 @@ function gotDevices(deviceInfos) {
 			if(deviceInfo.kind === 'audioinput') {
 				let deviceInfoLabel = deviceInfo.label;
 				if(deviceInfoLabel=="Default") {
-//					deviceInfoLabel="Audio Input Default";
-					continue;
+					deviceInfoLabel="Audio Default";
 				} else if(deviceInfoLabel) {
 					deviceInfoLabel = "Audio "+deviceInfoLabel
 				}
@@ -825,11 +820,18 @@ function gotDevices(deviceInfos) {
 				if(!videoEnabled) {
 					continue;
 				}
+				if(countVideoDevices==0) {
+					// the 1st video device shows up, therefore we create a default video device entry before it
+					// this entry has no deviceId
+					const defaultVideoOption = document.createElement('option');
+					defaultVideoOption.text = "Video Default";
+					defaultVideoOption.value = ""; // empty deviceId
+					avSelect.appendChild(defaultVideoOption);
+				}
+				countVideoDevices++;
+
 				let deviceInfoLabel = deviceInfo.label;
-				if(deviceInfoLabel=="Default") {
-//					deviceInfoLabel="Video Input Default";
-					continue;
-				} else if(deviceInfoLabel) {
+				if(deviceInfoLabel) {
 					deviceInfoLabel = "Video "+deviceInfoLabel
 				}
 				option.text = deviceInfoLabel || `Video ${avSelect.length + 1}`;
@@ -932,6 +934,7 @@ function videoSwitch(forceClose) {
 	}
 }
 
+var vpauseTimer = null;
 var addLocalVideoEnabled = false;
 function connectLocalVideo(forceOff) {
 	if(vpauseTimer) {
@@ -978,9 +981,10 @@ function connectLocalVideo(forceOff) {
 	}
 }
 
-var vpauseTimer = null;
 function vmonitor() {
 	gLog("vmonitor");
+	localVideoMsgElement.innerHTML = "";
+	localVideoMsgElement.style.opacity = 0;
 	if(vmonitorButton) {
 		vmonitorButton.style.color = "#ff0";
 	}
@@ -989,9 +993,11 @@ function vmonitor() {
 		// re-enable paused video and microphone
 		gLog("vmonitor !localStream: re-enable");
 		pickupAfterLocalStream = false;
+		constraintString = defaultConstraintString;
+		setVideoConstraintsGiven();
 		getStream(); // -> gotStream() -> gotStream2()
 		return
-		// in the end, vmonitor will be called again, but then with localStream
+		// vmonitor will be called again, but then with localStream
 	}
 	if(videoEnabled) {
 		localVideoFrame.play().catch(function(error) {});
@@ -1003,7 +1009,7 @@ function vmonitor() {
 				clearTimeout(vpauseTimer);
 				vpauseTimer = null;
 			}
-			vpauseTimer = setTimeout(vpauseByTimer, 40000);
+			vpauseTimer = setTimeout(vpauseByTimer, 45000);
 		} else {
 			gLog("vmonitor play");
 		}
@@ -1282,5 +1288,26 @@ function hangupWithBusySound(mustDisconnectCallee,message) {
 
 function gLog(...args) {
 	if(!gentle) console.log(...args);
+}
+
+function onkeydownFunc(evt) {
+	//gLog('menuDialogOpen onkeydown event');
+	evt = evt || window.event;
+	var isEscape = false;
+	if("key" in evt) {
+		isEscape = (evt.key === "Escape" || evt.key === "Esc");
+	} else {
+		isEscape = (evt.keyCode === 27);
+	}
+	if(isEscape) {
+		if(iframeWindowOpenFlag || menuDialogOpenElement) {
+			gLog('esc key -> historyBack()');
+			historyBack();
+		} else {
+			gLog('esc key -> no action');
+		}
+	} else if(evt.key=="!") {
+		menuDialogOpen();
+	}
 }
 

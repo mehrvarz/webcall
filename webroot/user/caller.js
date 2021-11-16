@@ -190,26 +190,7 @@ window.onload = function() {
 		}
 	});
 
-	document.onkeydown = function(evt) {
-		//gLog('menuDialogOpen onkeydown event');
-		evt = evt || window.event;
-		var isEscape = false;
-		if("key" in evt) {
-			isEscape = (evt.key === "Escape" || evt.key === "Esc");
-		} else {
-			isEscape = (evt.keyCode === 27);
-		}
-		if(isEscape) {
-			gLog('callee esc key');
-			if(iframeWindowOpenFlag || menuDialogOpenElement) {
-				historyBack();
-			}	
-		} else if(evt.key=="!") {
-			menuDialogOpen();
-		} else {
-			//gLog('callee key',evt.key);
-		}
-	};
+	document.onkeydown = (evt) => onkeydownFunc(evt);
 
 	checkServerMode(function(mode) {
 		if(mode==0) {
@@ -330,7 +311,6 @@ function videoOn() {
 				if(optionElements[i].text.startsWith("Video")) {
 					gLog("videoOn avSelect idx",i);
 					avSelect.selectedIndex = i;
-					getStream(optionElements[i]);
 					break;
 				}
 			}
@@ -422,12 +402,14 @@ function videoOff() {
 			if(optionElements[i].text.startsWith("Audio")) {
 				gLog("videoOff avSelect idx",i);
 				avSelect.selectedIndex = i;
-				getStream(optionElements[i]);
+// TODO tmtmtm not sure this is really required
+//				getStream(optionElements[i]);
 				break;
 			}
 		}
 		if(rtcConnect) {
 			// if still peer connected, activate the selected audio device
+// TODO tmtmtm not sure this is really required
 			getStream();
 		}
 	}
