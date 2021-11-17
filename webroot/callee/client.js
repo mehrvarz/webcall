@@ -2,7 +2,7 @@
 'use strict';
 const avSelect = document.querySelector("select#avSelect");
 const localVideoDiv = document.querySelector('div#localVideoDiv');
-const localVideoFrame = document.querySelector('video#localVideoFrame');
+const localVideoFrame = document.getElementById("localVideoFrame");
 const remoteVideoDiv = document.querySelector('div#remoteVideoDiv');
 const remoteVideoFrame = document.querySelector('video#remoteVideoFrame');
 const localVideoMsgElement = document.querySelector('span#localVideoMsg');
@@ -924,6 +924,29 @@ function gotStream(stream) {
 	gotStream2();
 }
 
+function onIceCandidate(event,myCandidateName) {
+	if(event.candidate==null) {
+		// ICE gathering has finished
+		gLog('onIce end of candidates');
+	} else if(event.candidate.address==null) {
+		//console.warn('onIce skip event.candidate.address==null');
+	} else if(dataChannel && dataChannel.readyState=="open") {
+		gLog("onIce "+myCandidateName+" via dataChannel", event.candidate.address);
+		dataChannel.send("cmd|"+myCandidateName+"|"+JSON.stringify(event.candidate));
+	} else if(wsConn==null) {
+		gLog("onIce "+myCandidateName+": wsConn==null", event.candidate.address);
+	} else if(wsConn.readyState!=1) {
+		gLog("onIce "+myCandidateName+": readyState!=1",	event.candidate.address, wsConn.readyState);
+	} else {
+		gLog("onIce "+myCandidateName+" via wsSend", event.candidate.address);
+		// 300ms delay to prevent "cmd "+myCandidateName+" no peerCon.remoteDescription" on other side
+		setTimeout(function() {
+			// TODO support dataChannel delivery?
+			wsSend(myCandidateName+"|"+JSON.stringify(event.candidate));
+		},300);
+	}
+}
+
 function videoSwitch(forceClose) {
 	if(videoEnabled || forceClose) {
 		gLog("===videoSwitch videoOff===",forceClose);
@@ -1060,43 +1083,27 @@ function vmonitorSwitch() {
 	}
 }
 
-function onIceCandidate(event,myCandidateName) {
-	if(event.candidate==null) {
-		// ICE gathering has finished
-		gLog('onIce end of candidates');
-	} else if(event.candidate.address==null) {
-		//console.warn('onIce skip event.candidate.address==null');
-	} else if(dataChannel && dataChannel.readyState=="open") {
-		gLog("onIce "+myCandidateName+" via dataChannel", event.candidate.address);
-		dataChannel.send("cmd|"+myCandidateName+"|"+JSON.stringify(event.candidate));
-	} else if(wsConn==null) {
-		gLog("onIce "+myCandidateName+": wsConn==null", event.candidate.address);
-	} else if(wsConn.readyState!=1) {
-		gLog("onIce "+myCandidateName+": readyState!=1",	event.candidate.address, wsConn.readyState);
-	} else {
-		gLog("onIce "+myCandidateName+" via wsSend", event.candidate.address);
-		// 300ms delay to prevent "cmd "+myCandidateName+" no peerCon.remoteDescription" on other side
-		setTimeout(function() {
-			// TODO support dataChannel delivery?
-			wsSend(myCandidateName+"|"+JSON.stringify(event.candidate));
-		},300);
-	}
-}
-
-function localVideoDivOnVisible() {
-	localVideoDiv.style.height = "auto";
-	localVideoDiv.removeEventListener('transitionend',localVideoDivOnVisible);
+function getLocalVideoDivHeight() {
+	// localVideoShow() and localVideoHide() must use the same height calc formular
+	let localVideoDivHeight = parseFloat(getComputedStyle(localVideoFrame).width)/16*9;
+	localVideoDivHeight += 22; // height of localVideoLabel
+	return localVideoDivHeight;
 }
 
 function localVideoShow() {
 	// expand local video frame/div
 	videoEnabled = true;
 	localVideoLabel.style.opacity = 0.7; // will be transitioned
-	let localVideoDivHeight = parseFloat(getComputedStyle(localVideoFrame).width)/16*9;
-	//gLog("localVideoShow DivHeight",localVideoDivHeight);
+	let localVideoDivHeight = getLocalVideoDivHeight();
+	gLog("localVideoShow DivHeight",localVideoDivHeight);
 	localVideoDiv.style.height = ""+localVideoDivHeight+"px"; // will be transitioned
-	localVideoDiv.addEventListener('transitionend', localVideoDivOnVisible) // switch to height auto
+	let localVideoDivOnVisible = function() {
+		localVideoDiv.style.height = "auto";
+		localVideoDiv.removeEventListener('transitionend',localVideoDivOnVisible);
+	}
+	localVideoDiv.addEventListener('transitionend', localVideoDivOnVisible);
 	localVideoDiv.style.visibility = "visible";
+
 	cameraElement.style.opacity = 0;
 }
 
@@ -1108,7 +1115,7 @@ function localVideoHide() {
 	lastGoodAvSelectIndex = 0;
 	localVideoMsgElement.style.opacity = 0;
 	localVideoLabel.style.opacity = 0.3;
-	let localVideoDivHeight = parseFloat(getComputedStyle(localVideoFrame).width)/16*9;
+	let localVideoDivHeight = getLocalVideoDivHeight();
 	localVideoDiv.style.height = ""+localVideoDivHeight+"px"; // from auto to fixed
 	setTimeout(function() { // wait for fixed height
 		if(!videoEnabled) {
