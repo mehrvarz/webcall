@@ -45,10 +45,7 @@ var ICE_config = {
 	]
 };
 
-//var defaultConstraintString = '"width": {"min":320, "ideal":640, "max":800 },"height": {"min":240, "ideal":480, "max":600 }';
-//var defaultConstraintString = '"width": {"min":1920,"ideal":1920, "max":4096 },"height": {"min":720, "ideal":1080, "max":2160 },"frameRate": { "min":10, "max":30 }';
 var defaultConstraintString = '"width": {"min":320,"ideal":1920, "max":4096 },"height": {"min":240, "ideal":1080, "max":2160 },"frameRate": { "min":10, "max":30 }';
-
 
 var constraintString = defaultConstraintString;
 
@@ -734,7 +731,7 @@ function getStream(selectObject) {
 	}
 
 	if(localStream) {
-		// stop all tracks on previous localStream
+		// stop all localStream tracks before mediaDevices.getUserMedia()
 		const allTracks = localStream.getTracks();
 		//gLog("gotStream stop previous localStream len",allTracks.length);
 		allTracks.forEach(track => {
@@ -770,11 +767,8 @@ function getStream(selectObject) {
 			if(!videoEnabled) {
 				console.log('# audio input error', err);
 				alert("audio input error " + err);
-				//showStatus("error audio " + err,2000);
-
 			} else {
 				console.log('# audio/video input error', err);
-				//alert("audio/video input error " + err);
 				localVideoMsgElement.innerHTML = "video device error";
 				localVideoMsgElement.style.opacity = 0.9;
 			}
@@ -795,6 +789,7 @@ function getStream(selectObject) {
 					.then(function(stream) {
 						gotStream(stream);
 						if(videoEnabled) {
+							// remove error msg
 							setTimeout(function() {
 								localVideoMsgElement.innerHTML = "";
 								localVideoMsgElement.style.opacity = 0;
@@ -1106,10 +1101,10 @@ function vmonitorSwitch() {
 }
 
 function getLocalVideoDivHeight() {
-	// localVideoShow() and localVideoHide() must use the same height calc formular
+	// localVideoShow() and localVideoHide() use the same height calc formular
 	let localVideoDivHeight = parseFloat(getComputedStyle(localVideoFrame).width)/16*9;
 	let localVideoLabelHeight = parseFloat(getComputedStyle(localVideoLabel).height);
-//	gLog("localVideoLabelHeight",localVideoLabelHeight);
+	//gLog("getLocalVideoDivHeight %d + %d",localVideoDivHeight,localVideoLabelHeight);
 	return localVideoDivHeight + localVideoLabelHeight;
 }
 
@@ -1319,10 +1314,6 @@ function hangupWithBusySound(mustDisconnectCallee,message) {
 	hangup(mustDisconnectCallee,message);
 }
 
-function gLog(...args) {
-	if(!gentle) console.log(...args);
-}
-
 function onkeydownFunc(evt) {
 	//gLog('menuDialogOpen onkeydown event');
 	evt = evt || window.event;
@@ -1342,5 +1333,9 @@ function onkeydownFunc(evt) {
 	} else if(evt.key=="!") {
 		menuDialogOpen();
 	}
+}
+
+function gLog(...args) {
+	if(!gentle) console.log(...args);
 }
 
