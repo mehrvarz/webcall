@@ -733,6 +733,27 @@ function getStream(selectObject) {
 		}
 	}
 
+	if(localStream) {
+		// stop all tracks on previous localStream
+		const allTracks = localStream.getTracks();
+		//gLog("gotStream stop previous localStream len",allTracks.length);
+		allTracks.forEach(track => {
+			//gLog('gotStream previous localStream track.stop()',track);
+			track.stop(); 
+		});
+		if(peerCon && addedAudioTrack) {
+			//gLog("gotStream previous localStream peerCon.removeTrack(addedAudioTrack)");
+			peerCon.removeTrack(addedAudioTrack);
+		}
+		addedAudioTrack = null;
+		if(peerCon && addedVideoTrack) {
+			//gLog("gotStream previous localStream peerCon.removeTrack(addedVideoTrack)");
+			peerCon.removeTrack(addedVideoTrack);
+		}
+		addedVideoTrack = null;
+		localStream = null;
+	}
+
 	gLog('getStream set getUserMedia',myUserMediaConstraints);
 	// full copy (in case it works)
 	let saveWorkingConstraints = JSON.parse(JSON.stringify(myUserMediaConstraints));
