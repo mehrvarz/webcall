@@ -9,6 +9,7 @@ const localVideoMsgElement = document.querySelector('span#localVideoMsg');
 const vmonitorButton = document.querySelector('span#vmonitor');
 const vsendButton = document.querySelector('span#vsend');
 const localVideoRes = document.querySelector('span#localVideoRes');
+const localVideoLabel = document.querySelector('div#localVideoLabel');
 const remoteVideoRes = document.querySelector('span#remoteVideoRes');
 const remoteVideoLabel = document.querySelector('div#remoteVideoLabel');
 const cameraElement = document.getElementById('camera');
@@ -1086,8 +1087,9 @@ function vmonitorSwitch() {
 function getLocalVideoDivHeight() {
 	// localVideoShow() and localVideoHide() must use the same height calc formular
 	let localVideoDivHeight = parseFloat(getComputedStyle(localVideoFrame).width)/16*9;
-	localVideoDivHeight += 22; // height of localVideoLabel
-	return localVideoDivHeight;
+	let localVideoLabelHeight = parseFloat(getComputedStyle(localVideoLabel).height);
+//	gLog("localVideoLabelHeight",localVideoLabelHeight);
+	return localVideoDivHeight + localVideoLabelHeight;
 }
 
 function localVideoShow() {
