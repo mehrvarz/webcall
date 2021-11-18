@@ -1175,7 +1175,7 @@ function remoteVideoShow() {
 	let remoteVideoDivHeight = parseFloat(getComputedStyle(remoteVideoFrame).width)/16*9;
 	remoteVideoDiv.style.height = ""+remoteVideoDivHeight+"px";
 	remoteVideoDiv.addEventListener('transitionend', remoteVideoDivOnVisible) // switch to height auto
-	remoteVideoLabel.innerHTML = 'remote-cam <span id="remotefullscreen" onclick="removeFullScreen()" style="margin-left:3%">full-screen</span>';
+	remoteVideoLabel.innerHTML = 'remote-cam <span id="remotefullscreen" onclick="removeFullScreen()" style="margin-left:3%">fullscreen</span> <span onclick="closeRemoteVideo()" style="margin-left:3%">close</span>';
 	remoteVideoShowing = true;
 }
 
@@ -1191,6 +1191,8 @@ function removeFullScreen() {
 			if(remotefullscreenLabel) {
 				remotefullscreenLabel.style.color = "#ff0";
 			}
+			// TODO we don't yet catch the user disabling fullscreen-mode using the browser UI
+			// this can result in remotefullscreenLabel staying yellow
 		}
 	} else {
 		// exit remoteVideoDiv fullscreen mode
@@ -1201,6 +1203,13 @@ function removeFullScreen() {
 		if(remotefullscreenLabel) {
 			remotefullscreenLabel.style.color = "#fff";
 		}
+	}
+}
+
+function closeRemoteVideo() {
+	if(isDataChlOpen()) {
+		// make other side stop their cam delivery
+		dataChannel.send("cmd|stopCamDelivery");
 	}
 }
 

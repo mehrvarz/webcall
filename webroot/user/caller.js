@@ -1212,6 +1212,10 @@ function signalingCommand(message) {
 		gLog("rtcVideoOff");
 		remoteVideoHide();
 
+	} else if(cmd=="stopCamDelivery") {
+		gLog("stopCamDelivery");
+		connectLocalVideo(true);
+
 	} else {
 		gLog('# ignore incom cmd',cmd);
 	}
