@@ -1157,15 +1157,15 @@ function remoteVideoShow() {
 	let remoteVideoDivHeight = parseFloat(getComputedStyle(remoteVideoFrame).width)/16*9;
 	remoteVideoDiv.style.height = ""+remoteVideoDivHeight+"px";
 	remoteVideoDiv.addEventListener('transitionend', remoteVideoDivOnVisible) // switch to height auto
-	remoteVideoLabel.innerHTML = 'remote-cam <span id="remotefullscreen" onclick="removeFullScreen()" style="margin-left:3%">fullscreen</span> <span onclick="closeRemoteVideo()" style="margin-left:3%">close</span>';
+	remoteVideoLabel.innerHTML = 'remote-cam <span id="remotefullscreen" onclick="remoteFullScreen(false)" style="margin-left:3%">fullscreen</span> <span onclick="closeRemoteVideo()" style="margin-left:3%">close</span>';
 	remoteVideoShowing = true;
 }
 
 var remoteVideoFullscreen = false;
-function removeFullScreen() {
-	if(!remoteVideoFullscreen) {
+function remoteFullScreen(forceClose) {
+	if(!remoteVideoFullscreen && !forceClose) {
 		// switch to remoteVideoDiv fullscreen mode
-		gLog('removeFullScreen start');
+		gLog('remoteFullScreen start');
 		if(remoteVideoDiv.requestFullscreen) {
 			remoteVideoDiv.requestFullscreen();
 			remoteVideoFullscreen = true;
@@ -1176,7 +1176,7 @@ function removeFullScreen() {
 		}
 	} else {
 		// exit remoteVideoDiv fullscreen mode
-		gLog('removeFullScreen end');
+		gLog('remoteFullScreen end');
 		document.exitFullscreen().catch(err => { });
 		remoteVideoFullscreen = false;
 		let remotefullscreenLabel = document.getElementById("remotefullscreen");
@@ -1191,6 +1191,7 @@ function closeRemoteVideo() {
 		// make other side stop their cam delivery
 		dataChannel.send("cmd|stopCamDelivery");
 	}
+	remoteFullScreen(true); // force end
 }
 
 function remoteVideoHide() {
@@ -1203,6 +1204,7 @@ function remoteVideoHide() {
 		},200);
 		remoteVideoShowing = false;
 	}
+	remoteFullScreen(true); // force end
 }
 
 function peerConOntrack(track, streams) {
