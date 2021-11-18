@@ -13,7 +13,6 @@ var singleButtonBusyText = "All lines are busy.<br>Please try again a little lat
 var singleButtonConnectedText = "You are connected.<br>How can we help you?";
 var ringingText = "Ringing... please be patient, answering a web call may take a bit longer than answering a regular phone call...";
 var dtmfDialingSound = null;
-var dialToneAfterDialingSound = null;
 var pickupAfterLocalStream = false; // not used in caller
 var busySignalSound = null;
 var notificationSound = null;
@@ -533,8 +532,7 @@ function calleeOnlineAction(from) {
 		busySignalSound = new Audio('busy-signal.mp3');
 		notificationSound = new Audio("notification.mp3");
 		if(playDialSounds) {
-			dtmfDialingSound = new Audio('dialtone-plus-dtmf-dialing.mp3');
-			dialToneAfterDialingSound = new Audio('dial-tone-after-dialing.mp3');
+			dtmfDialingSound = new Audio('dtmf-dial.mp3');
 		}
 	}
 
@@ -1122,6 +1120,7 @@ function signalingCommand(message) {
 			}
 
 			mediaConnect = true;
+			stopAllAudioEffects();
 			if(vsendButton) {
 				vsendButton.style.display = "inline-block";
 			}
@@ -1149,7 +1148,6 @@ function signalingCommand(message) {
 		}
 
 		console.log('callee is answering call');
-		stopAllAudioEffects();
 
 		if(!singlebutton) {
 			msgbox.style.display = "none";
@@ -1241,6 +1239,37 @@ function dial() {
 	otherUA = "";
 	dialing = true;
 
+	gLog('dial got localDescription');
+	if(playDialSounds) {
+		setTimeout(function() {
+			let loop = 0;
+			var playDialSound = function() {
+				if(!wsConn || mediaConnect) {
+					console.log('abort DialSound');
+					return;
+				}
+				gLog('DialSound play()');
+				if(loop>0) {
+					dtmfDialingSound.currentTime = 2;
+				}
+				loop++;
+				dtmfDialingSound.play().catch(function(error) {
+					gLog('# DialSound err',error);
+				});
+				dtmfDialingSound.onended = playDialSound;
+			}
+			playDialSound();
+		},1500);
+
+		setTimeout(function() {
+			dial2();
+		},3300);
+	} else {
+		dial2();
+	}
+}
+
+function dial2() {
 	if(fileselectLabel) {
 		fileselectLabel.style.display = "none";
 		progressSendElement.style.display = "none";
@@ -1359,7 +1388,6 @@ function dial() {
 			gLog('peerCon connected');
 			if(!rtcConnect && !mediaConnect) {
 				// the caller got peer-connected to the callee; callee now starts ringing
-				stopAllAudioEffects();
 				rtcConnect = true;
 				rtcConnectStartDate = Date.now();
 				mediaConnectStartDate = 0;
@@ -1377,25 +1405,6 @@ function dial() {
 						} else {
 							console.warn('no dataChannel, cannot send msgbox (%s)'+msgboxText);
 						}
-					}
-				}
-
-				if(!mediaConnect) {
-					// now we need the callee to cmd="pickup" for mediaConnect to become true
-					// play never ending dialTone; until interrupted by pickup or hangup
-					if(playDialSounds) {
-						var playDialToneAfterDialingSound = function() {
-							// abort if wsCon lost
-							if(wsConn==null) {
-								console.log('abort DialSounds on wsConn==null');
-								hangupWithBusySound(false,"Hang up");
-								return;
-							}
-							gLog('dialToneAfterDialingSound.play()');
-							dialToneAfterDialingSound.play().catch(function(error) {});
-							dialToneAfterDialingSound.onended = playDialToneAfterDialingSound;
-						}
-						playDialToneAfterDialingSound();
 					}
 				}
 			}
@@ -1423,10 +1432,7 @@ function dial() {
 		localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
 			'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
 		// this localDescription will be sent with upcoming calleeAnswer in response to upcoming callerOffer
-		gLog('dial got localDescription');
-		if(playDialSounds) {
-			dtmfDialingSound.play().catch(function(error) { });
-		}
+
 		// -> onsignalingstate have-local-offer
 		// -> onnegotiationneeded send callerOffer via ws
 		// -> signaling cmd calleeAnswer -> calleeAnswer setLocalDescription -> calleeAnswer setRemoteDescription
@@ -1580,13 +1586,9 @@ function dataChannelOnmessage(event) {
 }
 
 function stopAllAudioEffects() {
+	gLog('stopAllAudioEffects DialSound stop');
 	if(dtmfDialingSound) {
-		dtmfDialingSound.pause();
-		dtmfDialingSound.currentTime = 0;
-	}
-	if(dialToneAfterDialingSound) {
-		dialToneAfterDialingSound.pause();
-		dialToneAfterDialingSound.currentTime = 0;
+		dtmfDialingSound.currentTime = 100000;
 	}
 	if(busySignalSound) {
 		busySignalSound.pause();
