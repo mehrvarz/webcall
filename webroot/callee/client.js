@@ -66,7 +66,8 @@ function setVideoConstraintsGiven() {
 		gLog('setVideoConstraintsGiven myUserMediaDeviceId',myUserMediaDeviceId);
 		tmpConstraints += ',"deviceId": { "exact": "'+myUserMediaDeviceId+'" }';
 	} else {
-		tmpConstraints += ',"facingMode": { "exact": "user" }';
+		// desktop chromium doesn't like 'exact' 'user'
+		tmpConstraints += ',"facingMode": { "ideal": "user" }';
 	}
 	tmpConstraints = "{"+tmpConstraints+"}";
 	userMediaConstraints.video = JSON.parse(tmpConstraints);
