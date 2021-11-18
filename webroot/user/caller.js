@@ -1755,11 +1755,9 @@ function hangup(mustDisconnectCallee,message) {
 							}
 						}
 
-						setTimeout(function() {
-							gLog('hangup peerCon.close');
-							peerCon.close();
-							peerCon = null;
-						},500);
+						gLog('hangup peerCon.close');
+						peerCon.close();
+						peerCon = null;
 					},500);
 				}
 			} else {

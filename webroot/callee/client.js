@@ -171,7 +171,7 @@ if(fileSelectElement) {
 			showStatus("error: file==null",-1);
 			return;
 		}
-		if(dataChannel==null || dataChannel.readyState!="open") {
+		if(!isDataChlOpen()) {
 			showStatus("error: no dataChannel",-1);
 			return;
 		}
@@ -220,7 +220,7 @@ function sendFile(file) {
 			fileReader.abort();
 			return;
 		}
-		if(dataChannel==null || dataChannel.readyState!="open") {
+		if(!isDataChlOpen()) {
 			console.log('file send no dataChannel');
 			fileReader.abort();
 			return;
@@ -263,7 +263,7 @@ function sendFile(file) {
 			fileReader.abort();
 			return;
 		}
-		if(dataChannel==null || dataChannel.readyState!="open") {
+		if(!isDataChlOpen()) {
 			console.log('file send abort on dataChannel');
 			return;
 		}
@@ -956,7 +956,7 @@ function onIceCandidate(event,myCandidateName) {
 		gLog('onIce end of candidates');
 	} else if(event.candidate.address==null) {
 		//console.warn('onIce skip event.candidate.address==null');
-	} else if(dataChannel && dataChannel.readyState=="open") {
+	} else if(isDataChlOpen()) {
 		gLog("onIce "+myCandidateName+" via dataChannel", event.candidate.address);
 		dataChannel.send("cmd|"+myCandidateName+"|"+JSON.stringify(event.candidate));
 	} else if(wsConn==null) {
@@ -993,7 +993,7 @@ function connectLocalVideo(forceOff) {
 	if(!addLocalVideoEnabled && !forceOff) {
 		// start streaming localVideo to other peer
 		addLocalVideoEnabled = true; // will cause: peerCon.addTrack(video)
-		if(dataChannel && dataChannel.readyState=="open") {
+		if(isDataChlOpen()) {
 			gLog("connectLocalVideo set");
 			if(vsendButton) {
 				vsendButton.classList.remove('blink_me');
@@ -1023,7 +1023,7 @@ function connectLocalVideo(forceOff) {
 			addedVideoTrack = null;
 		}
 
-		if(dataChannel && dataChannel.readyState=="open") {
+		if(isDataChlOpen()) {
 			// make other side pause our cam (their remote cam)
 			dataChannel.send("cmd|rtcVideoOff");
 		}
@@ -1118,7 +1118,7 @@ function getLocalVideoDivHeight() {
 	let localVideoDivHeight = parseFloat(getComputedStyle(localVideoFrame).width)/16*9;
 	let localVideoLabelHeight = parseFloat(getComputedStyle(localVideoLabel).height);
 	//gLog("getLocalVideoDivHeight %d + %d",localVideoDivHeight,localVideoLabelHeight);
-	return localVideoDivHeight + localVideoLabelHeight;
+	return localVideoDivHeight + localVideoLabelHeight - 6;
 }
 
 function localVideoShow() {
@@ -1175,8 +1175,33 @@ function remoteVideoShow() {
 	let remoteVideoDivHeight = parseFloat(getComputedStyle(remoteVideoFrame).width)/16*9;
 	remoteVideoDiv.style.height = ""+remoteVideoDivHeight+"px";
 	remoteVideoDiv.addEventListener('transitionend', remoteVideoDivOnVisible) // switch to height auto
-	remoteVideoLabel.innerHTML = "remote cam";
+	remoteVideoLabel.innerHTML = 'remote-cam <span id="remotefullscreen" onclick="removeFullScreen()" style="margin-left:3%">full-screen</span>';
 	remoteVideoShowing = true;
+}
+
+var remoteVideoFullscreen = false;
+function removeFullScreen() {
+	if(!remoteVideoFullscreen) {
+		// switch to remoteVideoDiv fullscreen mode
+		gLog('removeFullScreen start');
+		if(remoteVideoDiv.requestFullscreen) {
+			remoteVideoDiv.requestFullscreen();
+			remoteVideoFullscreen = true;
+			let remotefullscreenLabel = document.getElementById("remotefullscreen");
+			if(remotefullscreenLabel) {
+				remotefullscreenLabel.style.color = "#ff0";
+			}
+		}
+	} else {
+		// exit remoteVideoDiv fullscreen mode
+		gLog('removeFullScreen end');
+		document.exitFullscreen().catch(err => { });
+		remoteVideoFullscreen = false;
+		let remotefullscreenLabel = document.getElementById("remotefullscreen");
+		if(remotefullscreenLabel) {
+			remotefullscreenLabel.style.color = "#fff";
+		}
+	}
 }
 
 function remoteVideoHide() {
@@ -1301,6 +1326,7 @@ function isP2pCon() {
 
 function dataChannelOnclose(event) {
 	gLog("dataChannel.onclose",event);
+	dataChannel = null;
 }
 
 function dataChannelOnerror(event) {
