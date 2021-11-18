@@ -723,8 +723,10 @@ function getStream(selectObject) {
 	if(videoEnabled) {
 		if(!myUserMediaConstraints.video) {
 			gLog('getStream videoEnabled but !myUserMediaConstraints.video: localVideoHide()');
-			localVideoMsgElement.innerHTML = "no video device";
-			localVideoMsgElement.style.opacity = 0.9;
+			if(localVideoMsgElement) {
+				localVideoMsgElement.innerHTML = "no video device";
+				localVideoMsgElement.style.opacity = 0.9;
+			}
 		} else {
 			//videoOn();
 		}
@@ -760,7 +762,9 @@ function getStream(selectObject) {
 			gotStream(stream);
 			// no error: from now on, use saveWorkingConstraints as lastGoodMediaConstraints
 			lastGoodMediaConstraints = JSON.parse(JSON.stringify(saveWorkingConstraints));
-			lastGoodAvSelectIndex = avSelect.selectedIndex;
+			if(avSelect) {
+				lastGoodAvSelectIndex = avSelect.selectedIndex;
+			}
 			console.log('set lastGoodMediaConstraints',lastGoodMediaConstraints);
 		})
 		.catch(function(err) {
@@ -769,14 +773,18 @@ function getStream(selectObject) {
 				alert("audio input error " + err);
 			} else {
 				console.log('# audio/video input error', err);
-				localVideoMsgElement.innerHTML = "video device error";
-				localVideoMsgElement.style.opacity = 0.9;
+				if(localVideoMsgElement) {
+					localVideoMsgElement.innerHTML = "video device error";
+					localVideoMsgElement.style.opacity = 0.9;
+				}
 			}
 			if(lastGoodMediaConstraints) {
 				gLog('getStream back to lastGoodMediaConstraints',lastGoodMediaConstraints);
 				//full copy
 				userMediaConstraints = JSON.parse(JSON.stringify(lastGoodMediaConstraints));
-				avSelect.selectedIndex = lastGoodAvSelectIndex;
+				if(avSelect) {
+					avSelect.selectedIndex = lastGoodAvSelectIndex;
+				}
 				if(!userMediaConstraints.video && videoEnabled) {
 					gLog('getStream back to lastGoodMediaConstraints !Constraints.video');
 					//localVideoHide();
@@ -788,7 +796,7 @@ function getStream(selectObject) {
 				return navigator.mediaDevices.getUserMedia(userMediaConstraints)
 					.then(function(stream) {
 						gotStream(stream);
-						if(videoEnabled) {
+						if(videoEnabled && localVideoMsgElement) {
 							// remove error msg
 							setTimeout(function() {
 								localVideoMsgElement.innerHTML = "";
@@ -797,7 +805,7 @@ function getStream(selectObject) {
 						}
 					})
 					.catch(function(err) {
-						if(videoEnabled) {
+						if(videoEnabled && localVideoMsgElement) {
 							gLog('getStream backto lastGoodMediaConstraints videoEnabled err');
 							localVideoMsgElement.innerHTML = "no video device";
 							localVideoMsgElement.style.opacity = 0.9;
@@ -1023,8 +1031,10 @@ function connectLocalVideo(forceOff) {
 
 function vmonitor() {
 	gLog("vmonitor");
-	localVideoMsgElement.innerHTML = "";
-	localVideoMsgElement.style.opacity = 0;
+	if(localVideoMsgElement) {
+		localVideoMsgElement.innerHTML = "";
+		localVideoMsgElement.style.opacity = 0;
+	}
 	if(vmonitorButton) {
 		vmonitorButton.style.color = "#ff0";
 	}
@@ -1078,8 +1088,10 @@ function vpause() {
 		clearTimeout(vpauseTimer);
 		vpauseTimer = null;
 	}
-	localVideoMsgElement.innerHTML = "monitor paused";
-	localVideoMsgElement.style.opacity = 0.9;
+	if(localVideoMsgElement) {
+		localVideoMsgElement.innerHTML = "monitor paused";
+		localVideoMsgElement.style.opacity = 0.9;
+	}
 
 	if(!mediaConnect) {
 		// deactivate video + microphone pause, so that there will be no red-tab
@@ -1131,7 +1143,9 @@ function localVideoHide() {
 	videoEnabled = false;
 	lastGoodMediaConstraints = null;
 	lastGoodAvSelectIndex = 0;
-	localVideoMsgElement.style.opacity = 0;
+	if(localVideoMsgElement) {
+		localVideoMsgElement.style.opacity = 0;
+	}
 	localVideoLabel.style.opacity = 0.3;
 	let localVideoDivHeight = getLocalVideoDivHeight();
 	localVideoDiv.style.height = ""+localVideoDivHeight+"px"; // from auto to fixed
