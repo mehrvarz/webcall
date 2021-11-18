@@ -66,7 +66,7 @@ function setVideoConstraintsGiven() {
 		gLog('setVideoConstraintsGiven myUserMediaDeviceId',myUserMediaDeviceId);
 		tmpConstraints += ',"deviceId": { "exact": "'+myUserMediaDeviceId+'" }';
 	} else {
-		//gLog('setVideoConstraintsGiven no myUserMediaDeviceId');
+		tmpConstraints += ',"facingMode": { "exact": "user" }';
 	}
 	tmpConstraints = "{"+tmpConstraints+"}";
 	userMediaConstraints.video = JSON.parse(tmpConstraints);
