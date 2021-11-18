@@ -597,7 +597,6 @@ function menuDialogOpen(menuDialog) {
 
 	// move popup-menu up to prevent bottom cut-off (if there is room on top)
 	setTimeout(function() {
-		//gLog('menuDialogOpenChildElement');
 		let menuHeight = menuDialogOpenChildElement.clientHeight;
 		let pageHeight = mainElement.clientHeight;
 		//gLog('menuDialogOpen up',posY, menuHeight, pageHeight);
@@ -696,8 +695,6 @@ function getStream(selectObject) {
 					if(videoEnabled) {
 						gLog('getStream avSelect audio: videoOff');
 						videoOff();
-					} else {
-						//gLog('getStream avSelect audio: video was off');
 					}
 				} else if(avSelect.options[i].label.startsWith("Video")) {
 					let tmpConstraints = defaultConstraintString;
@@ -713,7 +710,6 @@ function getStream(selectObject) {
 		}
 	}
 
-	// full copy
 	myUserMediaConstraints = JSON.parse(JSON.stringify(userMediaConstraints));
 
 	if(!videoEnabled) {
@@ -728,26 +724,20 @@ function getStream(selectObject) {
 				localVideoMsgElement.innerHTML = "no video device";
 				localVideoMsgElement.style.opacity = 0.9;
 			}
-		} else {
-			//videoOn();
 		}
 	}
 
 	if(localStream) {
-		// stop all localStream tracks before mediaDevices.getUserMedia()
-		const allTracks = localStream.getTracks();
 		//gLog("gotStream stop previous localStream len",allTracks.length);
+		const allTracks = localStream.getTracks();
 		allTracks.forEach(track => {
-			//gLog('gotStream previous localStream track.stop()',track);
 			track.stop(); 
 		});
 		if(peerCon && addedAudioTrack) {
-			//gLog("gotStream previous localStream peerCon.removeTrack(addedAudioTrack)");
 			peerCon.removeTrack(addedAudioTrack);
 		}
 		addedAudioTrack = null;
 		if(peerCon && addedVideoTrack) {
-			//gLog("gotStream previous localStream peerCon.removeTrack(addedVideoTrack)");
 			peerCon.removeTrack(addedVideoTrack);
 		}
 		addedVideoTrack = null;
@@ -755,33 +745,31 @@ function getStream(selectObject) {
 	}
 
 	gLog('getStream set getUserMedia',myUserMediaConstraints);
-	// full copy (in case it works)
 	let saveWorkingConstraints = JSON.parse(JSON.stringify(myUserMediaConstraints));
 	return navigator.mediaDevices.getUserMedia(myUserMediaConstraints)
 		.then(function(stream) {
 			gLog('getStream success -> gotStream');
 			gotStream(stream);
-			// no error: from now on, use saveWorkingConstraints as lastGoodMediaConstraints
+			// no error: use this as lastGoodMediaConstraints
 			lastGoodMediaConstraints = JSON.parse(JSON.stringify(saveWorkingConstraints));
 			if(avSelect) {
 				lastGoodAvSelectIndex = avSelect.selectedIndex;
 			}
-			console.log('set lastGoodMediaConstraints',lastGoodMediaConstraints);
+			//console.log('set lastGoodMediaConstraints',lastGoodMediaConstraints);
 		})
 		.catch(function(err) {
 			if(!videoEnabled) {
 				console.log('# audio input error', err);
 				alert("audio input error " + err);
 			} else {
-				console.log('# audio/video input error', err);
+				console.log('# audio/video error', err);
 				if(localVideoMsgElement) {
-					localVideoMsgElement.innerHTML = "video device error";
+					localVideoMsgElement.innerHTML = "video mode error";
 					localVideoMsgElement.style.opacity = 0.9;
 				}
 			}
 			if(lastGoodMediaConstraints) {
 				gLog('getStream back to lastGoodMediaConstraints',lastGoodMediaConstraints);
-				//full copy
 				userMediaConstraints = JSON.parse(JSON.stringify(lastGoodMediaConstraints));
 				if(avSelect) {
 					avSelect.selectedIndex = lastGoodAvSelectIndex;
@@ -818,8 +806,7 @@ function getStream(selectObject) {
 
 function gotDevices(deviceInfos) {
 	// fill avSelect with the available audio/video input devices (mics and cams)
-	//gLog('gotDevices',deviceInfos);
-	if(avSelect) { // not set in button mode
+	if(avSelect) {
 		var i, L = avSelect.options.length - 1;
 		for(i = L; i >= 0; i--) {
 			avSelect.remove(i);
@@ -891,16 +878,13 @@ function gotStream(stream) {
 		const allTracks = localStream.getTracks();
 		//gLog("gotStream stop previous localStream len",allTracks.length);
 		allTracks.forEach(track => {
-			//gLog('gotStream previous localStream track.stop()',track);
 			track.stop(); 
 		});
 		if(peerCon && addedAudioTrack) {
-			//gLog("gotStream previous localStream peerCon.removeTrack(addedAudioTrack)");
 			peerCon.removeTrack(addedAudioTrack);
 		}
 		addedAudioTrack = null;
 		if(peerCon && addedVideoTrack) {
-			//gLog("gotStream previous localStream peerCon.removeTrack(addedVideoTrack)");
 			peerCon.removeTrack(addedVideoTrack);
 		}
 		addedVideoTrack = null;
@@ -1045,7 +1029,7 @@ function vmonitor() {
 		gLog("vmonitor !localStream: re-enable");
 		pickupAfterLocalStream = false;
 
-		// we set defaultConstraintString, so that after video is enabled, we have access to the highest resol.
+		// we set defaultConstraintString, so that when video is enabled, we have access to the highest resol.
 		constraintString = defaultConstraintString;
 		setVideoConstraintsGiven();
 
@@ -1114,7 +1098,6 @@ function vmonitorSwitch() {
 }
 
 function getLocalVideoDivHeight() {
-	// localVideoShow() and localVideoHide() use the same height calc formular
 	let localVideoDivHeight = parseFloat(getComputedStyle(localVideoFrame).width)/16*9;
 	let localVideoLabelHeight = parseFloat(getComputedStyle(localVideoLabel).height);
 	//gLog("getLocalVideoDivHeight %d + %d",localVideoDivHeight,localVideoLabelHeight);
@@ -1126,7 +1109,6 @@ function localVideoShow() {
 	videoEnabled = true;
 	localVideoLabel.style.opacity = 0.7; // will be transitioned
 	let localVideoDivHeight = getLocalVideoDivHeight();
-	gLog("localVideoShow DivHeight",localVideoDivHeight);
 	localVideoDiv.style.height = ""+localVideoDivHeight+"px"; // will be transitioned
 	let localVideoDivOnVisible = function() {
 		localVideoDiv.style.height = "auto";
@@ -1191,8 +1173,6 @@ function removeFullScreen() {
 			if(remotefullscreenLabel) {
 				remotefullscreenLabel.style.color = "#ff0";
 			}
-			// TODO we don't yet catch the user disabling fullscreen-mode using the browser UI
-			// this can result in remotefullscreenLabel staying yellow
 		}
 	} else {
 		// exit remoteVideoDiv fullscreen mode
