@@ -1100,10 +1100,7 @@ function vmonitorSwitch() {
 }
 
 function getLocalVideoDivHeight() {
-	let localVideoDivHeight = parseFloat(getComputedStyle(localVideoFrame).width)/16*9;
-	//let localVideoLabelHeight = parseFloat(getComputedStyle(localVideoLabel).height);
-	//gLog("getLocalVideoDivHeight %d + %d",localVideoDivHeight,localVideoLabelHeight);
-	return localVideoDivHeight; // + localVideoLabelHeight - 16;
+	return parseFloat(getComputedStyle(localVideoFrame).width)/16*9;
 }
 
 function localVideoShow() {
