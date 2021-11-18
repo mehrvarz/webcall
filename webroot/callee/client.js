@@ -622,6 +622,29 @@ function historyBack() {
 	history.back();
 }
 
+function onIceCandidate(event,myCandidateName) {
+	if(event.candidate==null) {
+		// ICE gathering has finished
+		gLog('onIce end of candidates');
+	} else if(event.candidate.address==null) {
+		//console.warn('onIce skip event.candidate.address==null');
+	} else if(isDataChlOpen()) {
+		gLog("onIce "+myCandidateName+" via dataChannel", event.candidate.address);
+		dataChannel.send("cmd|"+myCandidateName+"|"+JSON.stringify(event.candidate));
+	} else if(wsConn==null) {
+		gLog("onIce "+myCandidateName+": wsConn==null", event.candidate.address);
+	} else if(wsConn.readyState!=1) {
+		gLog("onIce "+myCandidateName+": readyState!=1",	event.candidate.address, wsConn.readyState);
+	} else {
+		gLog("onIce "+myCandidateName+" via wsSend", event.candidate.address);
+		// 300ms delay to prevent "cmd "+myCandidateName+" no peerCon.remoteDescription" on other side
+		setTimeout(function() {
+			// TODO support dataChannel delivery?
+			wsSend(myCandidateName+"|"+JSON.stringify(event.candidate));
+		},300);
+	}
+}
+
 var iframeWindowOpenFlag = false;
 function iframeWindowOpen(url,addStyleString) {
 	if(iframeWindowOpenFlag) {
@@ -934,29 +957,6 @@ function gotStream(stream) {
 	gotStream2();
 }
 
-function onIceCandidate(event,myCandidateName) {
-	if(event.candidate==null) {
-		// ICE gathering has finished
-		gLog('onIce end of candidates');
-	} else if(event.candidate.address==null) {
-		//console.warn('onIce skip event.candidate.address==null');
-	} else if(isDataChlOpen()) {
-		gLog("onIce "+myCandidateName+" via dataChannel", event.candidate.address);
-		dataChannel.send("cmd|"+myCandidateName+"|"+JSON.stringify(event.candidate));
-	} else if(wsConn==null) {
-		gLog("onIce "+myCandidateName+": wsConn==null", event.candidate.address);
-	} else if(wsConn.readyState!=1) {
-		gLog("onIce "+myCandidateName+": readyState!=1",	event.candidate.address, wsConn.readyState);
-	} else {
-		gLog("onIce "+myCandidateName+" via wsSend", event.candidate.address);
-		// 300ms delay to prevent "cmd "+myCandidateName+" no peerCon.remoteDescription" on other side
-		setTimeout(function() {
-			// TODO support dataChannel delivery?
-			wsSend(myCandidateName+"|"+JSON.stringify(event.candidate));
-		},300);
-	}
-}
-
 function videoSwitch(forceClose) {
 	if(videoEnabled || forceClose) {
 		gLog("===videoSwitch videoOff===",forceClose);
@@ -1008,9 +1008,11 @@ function connectLocalVideo(forceOff) {
 		}
 
 		if(isDataChlOpen()) {
-			// make other side pause our cam (their remote cam)
+			// make other side stop our cam (their remote cam)
 			dataChannel.send("cmd|rtcVideoOff");
 		}
+
+		remoteFullScreen(true); // force end
 	}
 }
 
@@ -1167,6 +1169,7 @@ function remoteFullScreen(forceClose) {
 		// switch to remoteVideoDiv fullscreen mode
 		gLog('remoteFullScreen start');
 		if(remoteVideoDiv.requestFullscreen) {
+			vpause();
 			remoteVideoDiv.requestFullscreen();
 			remoteVideoFullscreen = true;
 			let remotefullscreenLabel = document.getElementById("remotefullscreen");
