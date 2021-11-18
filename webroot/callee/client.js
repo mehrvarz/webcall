@@ -62,7 +62,7 @@ let myUserMediaDeviceId;
 function setVideoConstraintsGiven() {
 	// build userMediaConstraints.video from constraintString + myUserMediaDeviceId
 	let tmpConstraints = constraintString;
-	if(myUserMediaDeviceId) {
+	if(myUserMediaDeviceId && myUserMediaDeviceId!="default") {
 		gLog('setVideoConstraintsGiven myUserMediaDeviceId',myUserMediaDeviceId);
 		tmpConstraints += ',"deviceId": { "exact": "'+myUserMediaDeviceId+'" }';
 	} else {
@@ -1099,9 +1099,9 @@ function vmonitorSwitch() {
 
 function getLocalVideoDivHeight() {
 	let localVideoDivHeight = parseFloat(getComputedStyle(localVideoFrame).width)/16*9;
-	let localVideoLabelHeight = parseFloat(getComputedStyle(localVideoLabel).height);
+	//let localVideoLabelHeight = parseFloat(getComputedStyle(localVideoLabel).height);
 	//gLog("getLocalVideoDivHeight %d + %d",localVideoDivHeight,localVideoLabelHeight);
-	return localVideoDivHeight + localVideoLabelHeight - 6;
+	return localVideoDivHeight; // + localVideoLabelHeight - 16;
 }
 
 function localVideoShow() {
