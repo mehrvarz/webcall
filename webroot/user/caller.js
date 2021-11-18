@@ -1259,11 +1259,11 @@ function dial() {
 				dtmfDialingSound.onended = playDialSound;
 			}
 			playDialSound();
-		},1000);
+		},100);
 
 		setTimeout(function() {
 			dial2();
-		},2800);
+		},1800);
 	} else {
 		dial2();
 	}
