@@ -1165,12 +1165,12 @@ function remoteFullScreen(forceClose) {
 	if(document.fullscreenElement) {
 		fullScreenId = document.fullscreenElement.id;
 	}
-	gLog('remoteFullScreen',fullScreenId);
+	//gLog('remoteFullScreen',fullScreenId);
 	if(fullScreenId!="remoteVideoDiv" && !forceClose) {
 		// not yet in remoteVideoDiv fullscreen mode
 		if(remoteVideoDiv.requestFullscreen) {
 			// switch to remoteVideoDiv fullscreen mode
-			gLog('remoteFullScreen start');
+			//gLog('remoteFullScreen start');
 			remoteVideoDiv.requestFullscreen();
 			vpause();
 			// make remotefullscreen label yellow
@@ -1181,7 +1181,7 @@ function remoteFullScreen(forceClose) {
 		}
 	} else {
 		// exit remoteVideoDiv fullscreen mode
-		gLog('remoteFullScreen end');
+		//gLog('remoteFullScreen end');
 		document.exitFullscreen().catch(err => { });
 		// make remotefullscreen label white
 		let remotefullscreenLabel = document.getElementById("remotefullscreen");
