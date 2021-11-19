@@ -1160,15 +1160,20 @@ function remoteVideoShow() {
 	remoteVideoShowing = true;
 }
 
-var remoteVideoFullscreen = false;
 function remoteFullScreen(forceClose) {
-	if(!remoteVideoFullscreen && !forceClose) {
-		// switch to remoteVideoDiv fullscreen mode
-		gLog('remoteFullScreen start');
+	let fullScreenId = "";
+	if(document.fullscreenElement) {
+		fullScreenId = document.fullscreenElement.id;
+	}
+	gLog('remoteFullScreen',fullScreenId);
+	if(fullScreenId!="remoteVideoDiv" && !forceClose) {
+		// not yet in remoteVideoDiv fullscreen mode
 		if(remoteVideoDiv.requestFullscreen) {
-			vpause();
+			// switch to remoteVideoDiv fullscreen mode
+			gLog('remoteFullScreen start');
 			remoteVideoDiv.requestFullscreen();
-			remoteVideoFullscreen = true;
+			vpause();
+			// make remotefullscreen label yellow
 			let remotefullscreenLabel = document.getElementById("remotefullscreen");
 			if(remotefullscreenLabel) {
 				remotefullscreenLabel.style.color = "#ff0";
@@ -1178,7 +1183,7 @@ function remoteFullScreen(forceClose) {
 		// exit remoteVideoDiv fullscreen mode
 		gLog('remoteFullScreen end');
 		document.exitFullscreen().catch(err => { });
-		remoteVideoFullscreen = false;
+		// make remotefullscreen label white
 		let remotefullscreenLabel = document.getElementById("remotefullscreen");
 		if(remotefullscreenLabel) {
 			remotefullscreenLabel.style.color = "#fff";

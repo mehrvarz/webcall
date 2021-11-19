@@ -164,15 +164,15 @@ window.onload = function() {
 		fullscreenCheckbox.addEventListener('change', function() {
 			if(this.checked) {
 				// user is requesting fullscreen mode
-				if(!mainElement.fullscreenElement) {
-					// not yet in fullscreen-mode: switch to fullscreen mode
+				if(!document.fullscreenElement) {
+					// not yet in fullscreen mode
 					if(mainElement.requestFullscreen) {
-						// this will trigger fullscreenchange (below)
+						// trigger fullscreen mode
 						mainElement.requestFullscreen();
 					}
 				}
 			} else {
-				// user is requesting end of fullscreen mode
+				// user is requesting fullscreen exit
 				document.exitFullscreen().catch(err => { });
 			}
 			setTimeout(historyBack,150);

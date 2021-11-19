@@ -147,10 +147,11 @@ window.onload = function() {
 
 	fullscreenCheckbox.addEventListener('change', function() {
 		if(this.checked) {
-			if(!mainElement.fullscreenElement) {
-				// not yet in fullscreen-mode: switch to fullscreen mode
+			// user is requesting fullscreen mode
+			if(!document.fullscreenElement) {
+				// not yet in fullscreen-mode
 				if(mainElement.requestFullscreen) {
-					// trigger fullscreenchange (below)
+					// switch to fullscreen mode
 					mainElement.requestFullscreen();
 				}
 			}
