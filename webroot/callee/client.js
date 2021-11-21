@@ -1180,6 +1180,7 @@ function remoteFullScreen(forceClose) {
 		if(remoteVideoDiv.requestFullscreen) {
 			// switch to remoteVideoDiv fullscreen mode
 			//gLog('remoteFullScreen start');
+			remoteVideoFrame.style.aspectRatio = "auto";
 			remoteVideoDiv.requestFullscreen();
 			vpause();
 			// make remotefullscreen label yellow
@@ -1191,6 +1192,7 @@ function remoteFullScreen(forceClose) {
 	} else {
 		// exit remoteVideoDiv fullscreen mode
 		//gLog('remoteFullScreen end');
+		remoteVideoFrame.style.aspectRatio = "16/9";
 		document.exitFullscreen().catch(err => { });
 		// make remotefullscreen label white
 		let remotefullscreenLabel = document.getElementById("remotefullscreen");
