@@ -149,14 +149,14 @@ function showVideoToast(toastElement,w,h) {
 
 function showVideoResolutionLocal() {
 	if(videoEnabled && localVideoFrame.videoWidth>10 && localVideoFrame.videoHeight>10) {
-		gLog('localVideo size change', localVideoFrame.videoWidth, localVideoFrame.videoHeight);
+		gLog('localVideo size', localVideoFrame.videoWidth, localVideoFrame.videoHeight);
 		showVideoToast(localVideoRes, localVideoFrame.videoWidth, localVideoFrame.videoHeight);
 	}
 }
 
 function showVideoResolutionRemote() {
 	if(remoteVideoFrame.videoWidth>10 && remoteVideoFrame.videoHeight>10) {
-		gLog('remoteVideo size change', remoteVideoFrame.videoWidth, remoteVideoFrame.videoHeight);
+		gLog('remoteVideo size', remoteVideoFrame.videoWidth, remoteVideoFrame.videoHeight);
 		showVideoToast(remoteVideoRes, remoteVideoFrame.videoWidth, remoteVideoFrame.videoHeight);
 	}
 }
@@ -1135,7 +1135,7 @@ function localVideoHide() {
 		if(!videoEnabled) {
 			localVideoDiv.style.height = "0px";
 		}
-	},200);
+	},100);
 	cameraElement.style.opacity = 1;
 
 	// remove all video devices from avSelect
@@ -1146,18 +1146,27 @@ function localVideoHide() {
 	}
 }
 
-function remoteVideoDivOnVisible() {
-	remoteVideoDiv.style.height = "auto";
-	remoteVideoDiv.removeEventListener('transitionend',remoteVideoDivOnVisible);
+function remoteVideoDivTransitioned() {
+	gLog('remoteVideo transitioned',remoteVideoDiv.style.height);
+	if(remoteVideoDiv.style.height != "0px") {
+		remoteVideoDiv.style.height = "auto";
+	}
+	remoteVideoDiv.removeEventListener('transitionend',remoteVideoDivTransitioned);
 }
 
 var remoteVideoShowing = false;
 function remoteVideoShow() {
-	let remoteVideoDivHeight = parseFloat(getComputedStyle(remoteVideoFrame).width)/16*9;
-	remoteVideoDiv.style.height = ""+remoteVideoDivHeight+"px";
-	remoteVideoDiv.addEventListener('transitionend', remoteVideoDivOnVisible) // switch to height auto
-	remoteVideoLabel.innerHTML = 'remote-cam <span id="remotefullscreen" onclick="remoteFullScreen(false)" style="margin-left:3%">fullscreen</span> <span onclick="closeRemoteVideo()" style="margin-left:3%">close</span>';
-	remoteVideoShowing = true;
+	gLog('remoteVideoShow',remoteVideoShowing);
+	window.requestAnimationFrame(function(){
+		if(!remoteVideoShowing) {
+			let remoteVideoDivHeight = parseFloat(getComputedStyle(remoteVideoFrame).width)/16*9;
+			gLog('remoteVideoShow',remoteVideoShowing,remoteVideoDivHeight);
+			remoteVideoDiv.style.height = ""+remoteVideoDivHeight+"px";
+			remoteVideoDiv.addEventListener('transitionend', remoteVideoDivTransitioned) // when done: height auto
+			remoteVideoLabel.innerHTML = 'remote-cam <span id="remotefullscreen" onclick="remoteFullScreen(false)" style="margin-left:3%">fullscreen</span> <span onclick="closeRemoteVideo()" style="margin-left:3%">close</span>';
+			remoteVideoShowing = true;
+		}
+	});
 }
 
 function remoteFullScreen(forceClose) {
@@ -1165,7 +1174,7 @@ function remoteFullScreen(forceClose) {
 	if(document.fullscreenElement) {
 		fullScreenId = document.fullscreenElement.id;
 	}
-	//gLog('remoteFullScreen',fullScreenId);
+	gLog('remoteFullScreen',fullScreenId,forceClose);
 	if(fullScreenId!="remoteVideoDiv" && !forceClose) {
 		// not yet in remoteVideoDiv fullscreen mode
 		if(remoteVideoDiv.requestFullscreen) {
@@ -1200,15 +1209,23 @@ function closeRemoteVideo() {
 }
 
 function remoteVideoHide() {
-	if(remoteVideoShowing) {
-		let remoteVideoDivHeight = parseFloat(getComputedStyle(remoteVideoFrame).width)/16*9;
-		remoteVideoDiv.style.height = remoteVideoDivHeight+"px"; // height from auto to fixed
-		remoteVideoLabel.innerHTML = "";
-		setTimeout(function() { // wait for fixed height
-			remoteVideoDiv.style.height = "0px";
-		},200);
-		remoteVideoShowing = false;
-	}
+	gLog('remoteVideoHide',remoteVideoShowing);
+	window.requestAnimationFrame(function(){
+		if(remoteVideoShowing) {
+			let remoteVideoDivHeight = parseFloat(getComputedStyle(remoteVideoFrame).width)/16*9;
+			gLog('remoteVideoHide',remoteVideoDiv.style.height,remoteVideoDivHeight);
+			remoteVideoDiv.style.height = remoteVideoDivHeight+"px"; // height from auto to fixed
+			//gLog('remoteVideoHide',remoteVideoDiv.style.height);
+			window.requestAnimationFrame(function(){
+				if(remoteVideoShowing) {
+					gLog('remoteVideoHide set 0px');
+					remoteVideoDiv.style.height = "0px";
+					remoteVideoLabel.innerHTML = "";
+					remoteVideoShowing = false;
+				}
+			});
+		}
+	});
 	remoteFullScreen(true); // force end
 }
 
