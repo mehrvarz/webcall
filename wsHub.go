@@ -46,7 +46,7 @@ type Hub struct {
 func newHub(calleeID string, maxRingSecs int, maxTalkSecsIfNoP2p int, startTime int64) *Hub {
 	return &Hub{
 		registrationStartTime:  startTime,
-		GlobalCalleeID:         calleeID, // we use CalleeClient.calleeID everywhere now
+		GlobalCalleeID:         calleeID,
 		maxRingSecs:            maxRingSecs,
 		maxTalkSecsIfNoP2p:     maxTalkSecsIfNoP2p,
 		dontCancel:             false,
