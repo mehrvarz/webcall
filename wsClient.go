@@ -33,16 +33,16 @@ var OnCloseCount int64 = 0
 type WsClient struct {
 	hub *Hub
 	wsConn *websocket.Conn
-	authenticationShown bool // whether to show "pion auth for client (%v) SUCCESS"
-	isCallee bool
 	isOnline atombool.AtomBool	// connected to signaling server
 	isConnectedToPeer atombool.AtomBool
 	RemoteAddr string // no port
 	userAgent string
 	calleeID string
 	globalCalleeID string // unique calleeID for multiCallees as key for hubMap[]
-	clearOnCloseDone bool
 	connType string
+	authenticationShown bool // whether to show "pion auth for client (%v) SUCCESS"
+	isCallee bool
+	clearOnCloseDone bool
 }
 
 func serveWs(w http.ResponseWriter, r *http.Request) {
@@ -97,7 +97,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			wsClientID64, remoteAddr, r.URL.String())
 		return
 	}
-
+/*
 	calleeHostStr := ""
 	url_arg_array, ok = r.URL.Query()["xhost"]
 	if ok && len(url_arg_array[0]) > 0 {
@@ -108,7 +108,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			calleeHostStr = strings.ToLower(url_arg_array[0])
 		}
 	}
-
+*/
 	upgrader := websocket.NewUpgrader()
 	//upgrader.EnableCompression = true
 	upgrader.CheckOrigin = func(r *http.Request) bool {
@@ -207,7 +207,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		hub.IsUnHiddenForCallerAddr = ""
 
 		hub.WsClientID = wsClientID64
-		hub.calleeHostStr = calleeHostStr
+//		hub.calleeHostStr = calleeHostStr
 		hub.CalleeClient = client
 		hub.ServiceStartTime = time.Now().Unix()
 		hub.ConnectedToPeerSecs = 0

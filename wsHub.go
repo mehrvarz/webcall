@@ -12,34 +12,30 @@ import (
 )
 
 type Hub struct {
-	HubMutex sync.RWMutex
-
-	WsClientID uint64 // set by the callee; will be handed over to the caller via /online
-	calleeHostStr string // set by the callee; will be handed over to the caller via /online
-
 	CalleeClient *WsClient
-	CalleeLogin atombool.AtomBool // connected to signaling server
-
 	CallerClient *WsClient
-	//callerID string // id of the caller (may not be avail)
-	//callerNickname string // nickname of the caller (may not be avail)
-
-	registrationStartTime int64 // this is the callees registration starttime; may be 0 for testuser
-	maxRingSecs int //durationSecs1 int // max wait secs till caller arrives
-	maxTalkSecsIfNoP2p int // durationSecs2
 	timer *time.Timer // expires when durationSecs ends; terminates session
-	dontCancel bool // set to prevent timer from calling cancelFunc() // TODO atomic?
-	lastCallStartTime int64
-	LocalP2p bool
-	RemoteP2p bool
-	ConnectedToPeerSecs int
-	ServiceStartTime int64
-	IsCalleeHidden bool
+	exitFunc func(*WsClient, string)
 	IsUnHiddenForCallerAddr string
 	ConnectedCallerIp string
 	WsUrl string
 	WssUrl string
-	exitFunc func(*WsClient, string)
+	HubMutex sync.RWMutex
+	CalleeLogin atombool.AtomBool // callee is connected to signaling server
+	WsClientID uint64 // set by the callee; will be handed over to the caller via /online
+	registrationStartTime int64 // this is the callees registration starttime; may be 0 for testuser
+	lastCallStartTime int64
+	ServiceStartTime int64
+	maxRingSecs int //durationSecs1 int // max wait secs till caller arrives
+	maxTalkSecsIfNoP2p int // durationSecs2
+	ConnectedToPeerSecs int
+	dontCancel bool // set to prevent timer from calling cancelFunc() // TODO atomic?
+	IsCalleeHidden bool
+	LocalP2p bool
+	RemoteP2p bool
+	//callerID string // id of the caller (may not be avail)
+	//callerNickname string // nickname of the caller (may not be avail)
+	//calleeHostStr string // set by the callee; will be handed over to the caller via /online
 }
 
 func newHub(maxRingSecs int, maxTalkSecsIfNoP2p int, startTime int64) *Hub {
