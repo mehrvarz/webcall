@@ -116,6 +116,7 @@ type wsClientDataType struct {
 	dbEntry DbEntry
 	dbUser DbUser
 	calleeID string
+	globalID string
 }
 // wsClientMap[wsid] contains wsClientDataType at the moment of a callee login
 var wsClientMap map[uint64]wsClientDataType

@@ -37,9 +37,10 @@ type WsClient struct {
 	isCallee bool
 	isOnline atombool.AtomBool	// connected to signaling server
 	isConnectedToPeer atombool.AtomBool
-	RemoteAddr string // without port
+	RemoteAddr string // no port
 	userAgent string
 	calleeID string
+	globalCalleeID string // unique calleeID for multiCallees as key for hubMap[]
 	clearOnCloseDone bool
 	connType string
 }
@@ -128,6 +129,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 	client := &WsClient{wsConn:wsConn}
 	client.calleeID = wsClientData.calleeID // this is the local ID
+	client.globalCalleeID = wsClientData.globalID
 	if tls {
 		client.connType = "serveWss"
 	} else {
@@ -225,9 +227,9 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		}
 
 		hub.CallerClient = client
-		err := StoreCallerIpInHubMap(hub.GlobalCalleeID,wsConn.RemoteAddr().String(), false)
+		err := StoreCallerIpInHubMap(client.globalCalleeID,wsConn.RemoteAddr().String(), false)
 		if err!=nil {
-			fmt.Printf("# %s StoreCallerIpInHubMap (%s) err=%v\n", client.connType, hub.GlobalCalleeID, err)
+			fmt.Printf("# %s StoreCallerIpInHubMap (%s) err=%v\n", client.connType, client.globalCalleeID, err)
 		}
 	}
 	hub.HubMutex.Unlock()
@@ -679,9 +681,9 @@ func (c *WsClient) peerConHasEnded(comment string) {
 	}
 	c.hub.HubMutex.Unlock()
 
-	err := StoreCallerIpInHubMap(c.calleeID, "", false)
+	err := StoreCallerIpInHubMap(c.globalCalleeID, "", false)
 	if err!=nil {
-		// err "key not found" means: callee has already signed off - can be ignored
+		// err "key not found": callee has already signed off - can be ignored
 		if strings.Index(err.Error(),"key not found")<0 {
 			fmt.Printf("# %s peerConHasEnded %s clear callerIpInHub err=%v\n", c.connType, c.calleeID, err)
 		}

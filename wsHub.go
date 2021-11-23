@@ -18,7 +18,6 @@ type Hub struct {
 	calleeHostStr string // set by the callee; will be handed over to the caller via /online
 
 	CalleeClient *WsClient
-	GlobalCalleeID string	// this is the global id (unlike CalleeClient.calleeID)
 	CalleeLogin atombool.AtomBool // connected to signaling server
 
 	CallerClient *WsClient
@@ -43,12 +42,11 @@ type Hub struct {
 	exitFunc func(*WsClient, string)
 }
 
-func newHub(calleeID string, maxRingSecs int, maxTalkSecsIfNoP2p int, startTime int64) *Hub {
+func newHub(maxRingSecs int, maxTalkSecsIfNoP2p int, startTime int64) *Hub {
 	return &Hub{
-		registrationStartTime:  startTime,
-		GlobalCalleeID:         calleeID,
 		maxRingSecs:            maxRingSecs,
 		maxTalkSecsIfNoP2p:     maxTalkSecsIfNoP2p,
+		registrationStartTime:  startTime,
 		dontCancel:             false,
 		LocalP2p:               false,
 		RemoteP2p:              false,

@@ -202,7 +202,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	myMaxTalkSecsIfNoP2p := maxTalkSecsIfNoP2p
 	readConfigLock.RUnlock()
 	var myHubMutex sync.RWMutex
-	hub := newHub(globalID, myMaxRingSecs, myMaxTalkSecsIfNoP2p, dbEntry.StartTime)
+	hub := newHub(myMaxRingSecs, myMaxTalkSecsIfNoP2p, dbEntry.StartTime)
 	//fmt.Printf("/login newHub urlID=%s duration %d/%d id=%d rt=%v\n",
 	//	urlID, maxRingSecs, maxTalkSecsIfNoP2p, myRequestCount, time.Since(startRequestTime))
 
@@ -230,7 +230,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 	wsClientMutex.Lock()
 	myHubMutex.RLock()
-	wsClientMap[wsClientID] = wsClientDataType{hub, dbEntry, dbUser, urlID}
+	wsClientMap[wsClientID] = wsClientDataType{hub, dbEntry, dbUser, urlID, globalID}
 	myHubMutex.RUnlock()
 	wsClientMutex.Unlock()
 
@@ -372,7 +372,7 @@ func createCookie(w http.ResponseWriter, urlID string, pw string, pwIdCombo *PwI
 	}
 
 	pwIdCombo.Pw = pw
-	pwIdCombo.CalleeId = urlID // TODO or globalID?
+	pwIdCombo.CalleeId = urlID
 	pwIdCombo.Created = time.Now().Unix()
 	pwIdCombo.Expiration = expiration.Unix()
 
