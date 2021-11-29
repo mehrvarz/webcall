@@ -2,42 +2,44 @@
   <a href="https://timur.mobi/webcall"><img src="webroot/webcall-logo.png" alt="WebCall"></a>
 </div>
 
-# WebCall WebRTC Telephony Server
+# WebCall WebRTC Telephony
 
-Hifi audio telephony + video telephony + bidirectional file transfer.
-No tracking. No logging. All data delivered over E2E-encrypted P2P.
-All features available to clients without software installation. 
-All you need is a 2020+ browser.
+v2.0 Nov 29 2021
 
-Video telephony is coming with release 2.0 in Nov. 2021. You can use this, for instance, to make sure you don't share your sensitive files with the wrong person. Your files will be delivered over the same encrypted P2P-link used for audio/video.
+HQ audio/video telephony with bidirectional file transfer
 
-You get better audio and video than in any conferencing app. Strict use of P2P offers lower latency and more frames over the same up-link. Participants can turn their video on and off at any time during the call.
+WebCall video delivers the best picture quality on top of your internet connection. Strict use of P2P connectivity results in lower latency and higher frame rates. Audio + video + two-way file transfer can all be used at the same time. Video delivery can be turned on and off at any time during the call. Audio stays in place for the duration of the call. 
 
-Here you can get a WebCall phone number to play around with:
+You may want to use video just briefly and continue audio-only for the rest of your conversation. Maybe you want to use video to make sure you are connected to the right person, before you start exchanging some sensitive files. Turning video off can also result in faster file delivery.
+
+WebCall offers super high audio quality. With a 20-280 bps adaptive bitrate (Opus codec) it offers better audio quality than even the best internet radio stations. It is a joy to use, especially for long distance telephony.
+
+WebCall links are always end-to-end encrypted. This prevents others from listening in on your calls. It also guarantees that your data can not be altered on the fly.
+
+WebCall server operates fully self-contained. It does not depend on 3rd party services (say, for STUN or TURN). This means that no big internet company will be able to track what you do. This is true when you use my server at timur.mobi. This server exists only to showcase WebCall in the best possible way. It is also true if you run your own WebCall server.
+
+WebCall work on iPhone, Android, Linux, Mac and Windows. All you need is a 2020+ web browser.
 
 [https://timur.mobi/webcall](https://timur.mobi/webcall)
 
+
 # Installation
 
-Here I describe how you can run WebCall for yourself and for all your friends.
-A single WebCall server can provide free and secure telephony for 1M users.
-A small server (1-core, shared) can host up to 50K concurrent users in 1GB of RAM.
-If you intend to host only 1000 users (or less), you can do so within 100KB of RAM.
-In other words, you can easily run WebCall as a small daemon along side your web 
-server on a very small server.
-
-Keep in mind that WebCall is basically only assisting clients to connect to each other.
-All data (audio/video/files) is sent directly from device to device. From the point 
-of view of the server this is very economical.
+A single WebCall server can provide free and secure telephony for up to 1M concurrent users.
+You can run a small server for up to 1000 concurrent users within 100KB of RAM! 
+In other words, you can run WebCall server as a small daemon along side your web server. 
+And because all data (audio/video/files) is sent directly from client to client, 
+you will see practically no additional CPU load.
 
 [https://timur.mobi/webcall/install](https://timur.mobi/webcall/install)
 
+
 # Decentral WebCall
 
-We can build a network of telephony servers, offering completely free and
-boundless audio and video telephony for everyone. This is possible because anyone can
-run a WebCall server. And because, as a user, you can connect to any other WebCall user, 
-regardless of who is doing the hosting.
+We can build a network of telephony servers, offering free and boundless audio and video 
+telephony for everyone. This is possible because anyone can run a WebCall server. And 
+because, as a user, you can connect to any other WebCall user, regardless of who is doing 
+the hosting. 
 All of this is possible with no central coordination and without any server-to-server
 communication.
 
