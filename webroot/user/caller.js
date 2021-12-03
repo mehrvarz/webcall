@@ -925,7 +925,7 @@ function connectSignaling(message,openedFunc) {
 		gLog('ws connection open',calleeID);
 		tryingToOpenWebSocket = false;
 		if(message!="") {
-			wsSend(message); // most likely "callerDescription"
+			wsSend(message); // most likely "callerOffer" with localDescription
 			gLog('ws message sent');
 		}
 		if(openedFunc) {
@@ -1239,7 +1239,7 @@ function dial() {
 	otherUA = "";
 	dialing = true;
 
-	gLog('dial got localDescription');
+	gLog('dial');
 	if(playDialSounds) {
 		setTimeout(function() {
 			let loop = 0;

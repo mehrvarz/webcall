@@ -172,7 +172,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		keepAliveMgr.Delete(c)
 		client.isOnline.Set(false) // prevents doUnregister() from closing this already closed connection
 		if logWantedFor("wsclose") {
-			hub.HubMutex.RLock()
+			//hub.HubMutex.RLock()
 			if err!=nil {
 				fmt.Printf("%s onclose %s isCallee=%v %d err=%v\n",
 					client.connType, client.calleeID, client.isCallee, atomic.LoadInt64(&OnCloseCount), err)
@@ -180,7 +180,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				fmt.Printf("%s onclose %s isCallee=%v %d noerr\n",
 					client.connType, client.calleeID, client.isCallee, atomic.LoadInt64(&OnCloseCount))
 			}
-			hub.HubMutex.RUnlock()
+			//hub.HubMutex.RUnlock()
 		}
 		if err!=nil {
 			client.hub.doUnregister(client, "OnClose "+err.Error())
