@@ -65,6 +65,7 @@ func locGetOnlineCallee(calleeID string, ejectOn1stFound bool, reportHiddenCalle
 		// found a fitting calleeID but we are not supposed to report this callee
 		//fmt.Printf("cmdDo GetOnlineCallee callee %s not supposed to be reported\n",key)
 	}
+	//fmt.Printf("GetLocalCallee nothing found\n")
 	return "", nil, nil
 }
 

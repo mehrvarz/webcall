@@ -1174,7 +1174,7 @@ function remoteFullScreen(forceClose) {
 	if(document.fullscreenElement) {
 		fullScreenId = document.fullscreenElement.id;
 	}
-	gLog('remoteFullScreen',fullScreenId,forceClose);
+	gLog("remoteFullScreen "+fullScreenId+" "+forceClose);
 	if(fullScreenId!="remoteVideoDiv" && !forceClose) {
 		// not yet in remoteVideoDiv fullscreen mode
 		if(remoteVideoDiv.requestFullscreen) {

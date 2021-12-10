@@ -70,10 +70,10 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		remoteAddr = realIpFromRevProxy
 	}
 
-	idxPort := strings.Index(remoteAddr,":")
-	if idxPort>=0 {
-		remoteAddr = remoteAddr[:idxPort]
-	}
+//	idxPort := strings.Index(remoteAddr,":")
+//	if idxPort>=0 {
+//		remoteAddr = remoteAddr[:idxPort]
+//	}
 
 	var wsClientID64 uint64 = 0
 	var wsClientData wsClientDataType
@@ -89,9 +89,14 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			wsClientID64, remoteAddr, r.URL.String())
 		return
 	}
-	wsClientMutex.RLock()
+	wsClientMutex.Lock()
 	wsClientData,ok = wsClientMap[wsClientID64]
-	wsClientMutex.RUnlock()
+	if(ok) {
+		// ensure wsClientMap[wsClientID64] will not be removed
+		wsClientData.removeFlag = false
+		wsClientMap[wsClientID64] = wsClientData
+	}
+	wsClientMutex.Unlock()
 	if !ok {
 		fmt.Printf("# serveWs upgrade error wsCliID=%d does not exist rip=%s url=%s\n",
 			wsClientID64, remoteAddr, r.URL.String())

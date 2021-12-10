@@ -63,23 +63,24 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		}
 	}
 
-	if cookie == nil || pw == "" {
-		// get callee-pw from post
-		cookie = nil
-		pw = ""
-		postBuf := make([]byte, 128)
-		length, _ := io.ReadFull(r.Body, postBuf)
-		if length > 0 {
-			var pwData = string(postBuf[:length])
-			pwData = strings.ToLower(pwData)
-			pwData = strings.TrimSpace(pwData)
-			if strings.HasPrefix(pwData, "pw=") {
-				pwData = strings.TrimRight(pwData, "\r\n")
-				pwData = strings.TrimRight(pwData, "\n")
-				pw = pwData[3:]
+	//fmt.Printf("/login pw before httpPost (%s)\n", pw)
+	postBuf := make([]byte, 128)
+	length, _ := io.ReadFull(r.Body, postBuf)
+	if length > 0 {
+		var pwData = string(postBuf[:length])
+		pwData = strings.ToLower(pwData)
+		pwData = strings.TrimSpace(pwData)
+		if strings.HasPrefix(pwData, "pw=") {
+			pwData = strings.TrimRight(pwData, "\r\n")
+			pwData = strings.TrimRight(pwData, "\n")
+			pwFromPost := pwData[3:]
+			if(pwFromPost!="") {
+				pw = pwFromPost
+				//fmt.Printf("/login pw from httpPost (%s)\n", pw)
 			}
 		}
 	}
+
 	// pw must be available now
 	if pw == "" {
 		fmt.Printf("/login no pw urlID=%s rip=%s ua=%s\n", urlID, remoteAddr, r.UserAgent())
@@ -221,16 +222,32 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		fmt.Printf("exithub callee=%s wsID=%d %s rip=%s\n", globalID, wsClientID, comment, remoteAddrWithPort)
 		hubMapMutex.RUnlock()
 
+		// mark wsClientMap[wsClientID] for removal
 		wsClientMutex.Lock()
-		delete(wsClientMap, wsClientID)
+		wsClientData,ok := wsClientMap[wsClientID]
+		if(ok) {
+			wsClientData.removeFlag = true
+			wsClientMap[wsClientID] = wsClientData
+		}
 		wsClientMutex.Unlock()
+
+		// start wsClientMap[wsClientID] removal thread
+		go func() {
+			time.Sleep(60 * time.Second)
+			wsClientMutex.Lock()
+			wsClientData,ok := wsClientMap[wsClientID]
+			if(ok && wsClientData.removeFlag) {
+				delete(wsClientMap, wsClientID)
+			}
+			wsClientMutex.Unlock()
+		}()
 	}
 
 	hub.exitFunc = exitFunc
 
 	wsClientMutex.Lock()
 	myHubMutex.RLock()
-	wsClientMap[wsClientID] = wsClientDataType{hub, dbEntry, dbUser, urlID, globalID}
+	wsClientMap[wsClientID] = wsClientDataType{hub, dbEntry, dbUser, urlID, globalID, false}
 	myHubMutex.RUnlock()
 	wsClientMutex.Unlock()
 

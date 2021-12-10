@@ -811,11 +811,11 @@ function signalingCommand(message) {
 					}
 				}, err => console.error(`Failed to set local descr: ${err.toString()}`));
 			}, err => {
-				console.warn("failed to createAnswer",err)
+				console.warn("failed to createAnswer",err.message)
 				showStatus("Failed to createAnswer",8000);
 			});
 		}, err => {
-			console.warn(`failed to set RemoteDescription`,err,callerDescription)
+			console.warn(`failed to set RemoteDescription`,err.message,callerDescription)
 			showStatus("Failed to set RemoteDescription",8000);
 		});
 	} else if(cmd=="callerAnswer") {
@@ -831,12 +831,12 @@ function signalingCommand(message) {
 			peerCon.setRemoteDescription(callerDescription).then(() => {
 				gLog('callerAnswer setRemoteDescription done');
 			}, err => {
-				console.warn(`callerAnswer Failed to set RemoteDescription`,err)
-				showStatus("Cannot set remoteDescr "+err);
+				console.warn(`callerAnswer Failed to set RemoteDescription`,err.message)
+				showStatus("Cannot set remoteDescr "+err.message);
 			});
 		}, err => {
-			console.warn("callerAnswer setLocalDescription fail",err)
-			showStatus("Cannot set localDescr"+err);
+			console.warn("callerAnswer setLocalDescription fail",err.message)
+			showStatus("Cannot set localDescr"+err.message);
 		});
 
 	} else if(cmd=="callerInfo") {
@@ -1252,7 +1252,7 @@ function pickup2() {
 			if(peerCon) {
 				peerCon.getStats(null)
 				.then((results) => getStatsCandidateTypes(results,"Connected","Mic is open"),
-					err => console.log(err));
+					err => console.log(err.message));
 			}
 		},200);
 	},400);
@@ -1276,6 +1276,8 @@ function hangup(dummy,message) {
 			busySignalSound.currentTime = 0;
 			stopAllAudioEffects();
 		},1000);
+	} else {
+		stopAllAudioEffects("hangup no mediaConnect");
 	}
 
 	connectLocalVideo(true); // force disconnect
@@ -1326,7 +1328,7 @@ function goOnline() {
 	peerCon.ontrack = ({track, streams}) => peerConOntrack(track, streams);
 	peerCon.onicegatheringstatechange = event => {
 		let connection = event.target;
-		gLog("onicegatheringstatechange", connection.iceGatheringState);
+		gLog("onicegatheringstatechange "+connection.iceGatheringState);
 	}
 	peerCon.onnegotiationneeded = async () => {
 		if(!peerCon) {
@@ -1357,7 +1359,7 @@ function goOnline() {
 		}
 	};
 	peerCon.onsignalingstatechange = event => {
-		gLog("signalingstatechange", peerCon.signalingState);
+		gLog("signalingstatechange "+peerCon.signalingState);
 	}
 	peerCon.oniceconnectionstatechange = event => {
 		gLog("oniceconnectionstatechange", peerCon.iceConnectionState);
@@ -1407,7 +1409,7 @@ function goOnline() {
 					if(ringtoneSound.paused && !ringtoneIsPlaying) {
 						gLog('ringtone play will be started...');
 						ringtoneSound.play().catch(error => {
-							gLog('ringtone play',error);
+							gLog('ringtone play',error.message);
 						});
 					} else {
 						gLog('ringtone play NOT started',
@@ -1448,7 +1450,8 @@ function goOnline() {
 				// instead of listOfClientIps
 				gLog('accept incoming call?',listOfClientIps);
 				peerCon.getStats(null)
-				.then((results) => getStatsCandidateTypes(results,"Incoming", ""), err => console.log(err));
+				.then((results) => getStatsCandidateTypes(results,"Incoming", ""), 
+					err => console.log(err.message));
 
 				answerButton.disabled = false;
 				// only show msgbox if not empty
