@@ -218,9 +218,9 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		}
 		myHubMutex.Unlock()
 
-		hubMapMutex.RLock()
+		//hubMapMutex.RLock()
 		fmt.Printf("exithub callee=%s wsID=%d %s rip=%s\n", globalID, wsClientID, comment, remoteAddrWithPort)
-		hubMapMutex.RUnlock()
+		//hubMapMutex.RUnlock()
 
 		// mark wsClientMap[wsClientID] for removal
 		wsClientMutex.Lock()
@@ -230,14 +230,21 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			wsClientMap[wsClientID] = wsClientData
 		}
 		wsClientMutex.Unlock()
-
 		// start wsClientMap[wsClientID] removal thread
 		go func() {
 			time.Sleep(60 * time.Second)
 			wsClientMutex.Lock()
 			wsClientData,ok := wsClientMap[wsClientID]
-			if(ok && wsClientData.removeFlag) {
+			if !ok {
+				fmt.Printf("exithub callee=%s wsClientMap[wsID=%d] fail rip=%s\n",
+					globalID, wsClientID, remoteAddrWithPort)
+			} else if wsClientData.removeFlag {
+				fmt.Printf("exithub callee=%s wsClientMap[wsID=%d] del rip=%s\n",
+					globalID, wsClientID, remoteAddrWithPort)
 				delete(wsClientMap, wsClientID)
+			} else {
+				fmt.Printf("exithub callee=%s wsClientMap[wsID=%d] not rip=%s\n",
+					globalID, wsClientID, remoteAddrWithPort)
 			}
 			wsClientMutex.Unlock()
 		}()

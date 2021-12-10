@@ -445,7 +445,7 @@ function login(retryFlag) {
 	let api = apiPath+"/login?id="+calleeID;
 	ajaxFetch(new XMLHttpRequest(), "POST", api, function(xhr) {
 		let loginStatus = xhr.responseText;
-		gLog('loginStatus (%s)',loginStatus);
+		gLog('loginStatus "+loginStatus);
 		var parts = loginStatus.split("|");
 		if(parts.length>=1 && parts[0].indexOf("wsid=")>=0) {
 			wsAddr = parts[0];
