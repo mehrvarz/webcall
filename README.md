@@ -4,7 +4,7 @@
 
 # WebCall WebRTC Telephony
 
-v2.0 Nov 29 2021
+v2.0.1 Dec 11 2021
 
 HQ audio/video telephony with bidirectional file transfer
 
@@ -51,7 +51,7 @@ communication.
 AGPL3.0 - see: [LICENSE](LICENSE)
 
 
-# 3rd party code (external)
+## 3rd party code (external)
 
 - github.com/lesismal/nbio
 - go.etcd.io/bbolt
@@ -61,7 +61,7 @@ AGPL3.0 - see: [LICENSE](LICENSE)
 - gopkg.in/ini
 - github.com/webrtcHacks/adapter.js
 
-# 3rd party code (embedded/modified)
+## 3rd party code (embedded/modified)
 
 - github.com/RapidLoop: skv
 - github.com/ChimeraCoder: Twitter
