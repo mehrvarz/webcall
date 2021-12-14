@@ -280,7 +280,7 @@ function sendFile(file) {
 	readSlice(0);
 }
 
-var xhrTimeout = 30000;
+var xhrTimeout = 20000;
 function ajaxFetch(xhr, type, api, processData, errorFkt, postData) {
 	xhr.onreadystatechange = function() {
 		if(xhr.readyState == 4 && (xhr.status==200 || xhr.status==0)) {
@@ -296,7 +296,7 @@ function ajaxFetch(xhr, type, api, processData, errorFkt, postData) {
 	xhr.onerror= function(e) {
 		errorFkt("fetching",xhr.status);
 	};
-	gLog('xhr send(%s) timeout=%d',api,xhrTimeout);
+	gLog('xhr send('+api+') timeout='+xhrTimeout);
 	xhr.open(type, api, true);
 	xhr.setRequestHeader("Content-type", "text/plain; charset=utf-8");
 	if(postData) {
@@ -310,7 +310,7 @@ let timerStartDate=0;
 let timerIntervalID=0;
 function startTimer(startDuration) {
 	if(!timerStartDate && startDuration>0) {
-		gLog('startTimer',startDuration);
+		gLog('startTimer '+startDuration);
 		timerElement.style.opacity = 0.5;
 		timerStartDate = Date.now();
 		updateClock(startDuration);
@@ -346,7 +346,7 @@ function updateClock(startDuration) {
 		timerElement.innerHTML = ""+timerMin+":"+timerSecStr;
 	}
 	if(countDownSecs<=0) {
-		gLog('updateClock countDownSecs<=0 stopTimer',countDownSecs);
+		gLog('updateClock countDownSecs<=0 stopTimer '+countDownSecs);
 		stopTimer();
 	}
 }
@@ -357,7 +357,7 @@ function getStatsPostCall(results) {
 	gLog('statsPostCall start');
 	// RTCInboundRTPAudioStream "inbound-rtp" https://www.w3.org/TR/webrtc-stats/#dom-rtcinboundrtpstreamstats
 	// RTCOutboundRTPAudioStream "outbound-rtp" https://www.w3.org/TR/webrtc-stats/#dom-rtcoutboundrtpstreamstats
-	// RTCAudioReceiverStats "receiver" 
+	// RTCAudioReceiverStats "receiver"
 	let timeNowMs = Date.now(),
 		durationRtcMS = timeNowMs - rtcConnectStartDate,
 		bytesReceived = 0,
@@ -378,7 +378,7 @@ function getStatsPostCall(results) {
 		gLog('statsPostCall rtcConnectStartDate==0');
 		durationRtcMS = 0;
 	}
-		
+
 	results.forEach(res => {
 		if(res.type=="inbound-rtp") {
 			bytesReceived = res.bytesReceived;
@@ -423,7 +423,7 @@ function getStatsPostCall(results) {
 		"retransmittedPacketsSent: "+retransmittedPacketsSent+"\n"+
 		"roundTripTime: "+roundTripTime+"\n"+
 		"connection: "+rtcLink+"\n";
-	gLog("statsPostCall",statsPostCallString);
+	gLog("statsPostCall "+statsPostCallString);
 }
 
 function showStatsPostCall() {
@@ -480,29 +480,29 @@ function getStatsCandidateTypesEx(results,eventString1,eventString2) {
 			if(res.selected) {
 				localCandidateId = res.localCandidateId;
 				remoteCandidateId = res.remoteCandidateId;
-				gLog("getStatsCandidateTypes 1st", localCandidateId,remoteCandidateId);
+				gLog("getStatsCandidateTypes 1st "+localCandidateId,remoteCandidateId);
 			}
 		}
 	});
-	gLog("getStatsCandidateTypes candidateId's A", localCandidateId,remoteCandidateId);
+	gLog("getStatsCandidateTypes candidateId's A "+localCandidateId+" "+remoteCandidateId);
 	if(localCandidateId=="" || remoteCandidateId=="") {
 		// for chrome
 		results.forEach(res => {
 			if(res.type=="transport" && res.selectedCandidatePairId!="") {
 				let selectedCandidatePairId = res.selectedCandidatePairId;
-				gLog('getStatsCandidateTypes PairId',selectedCandidatePairId);
+				gLog('getStatsCandidateTypes PairId '+selectedCandidatePairId);
 				results.forEach(res => {
 					if(res.id==selectedCandidatePairId) {
 						localCandidateId = res.localCandidateId;
 						remoteCandidateId = res.remoteCandidateId
-						gLog("getStatsCandidateTypes 2nd",localCandidateId,remoteCandidateId);
+						gLog("getStatsCandidateTypes 2nd "+localCandidateId+" "+remoteCandidateId);
 					}
 				});
 			}
 		});
 	}
 
-	gLog("getStatsCandidateTypes candidateId's B",localCandidateId,remoteCandidateId);
+	gLog("getStatsCandidateTypes candidateId's B "+localCandidateId+" "+remoteCandidateId);
 	if(localCandidateId!="") {
 		results.forEach(res => {
 			if(res.id==localCandidateId) {
@@ -539,7 +539,7 @@ function getStatsCandidateTypesEx(results,eventString1,eventString2) {
 	}
 	rtcLink = localPeerConType+"/"+remotePeerConType;
 
-	gLog('getStatsCandidateTypes',rtcLink,localCandidateType,remoteCandidateType);
+	gLog('getStatsCandidateTypes '+rtcLink+" "+localCandidateType+" "+remoteCandidateType);
 	return eventString1+" "+rtcLink;
 }
 
@@ -567,9 +567,9 @@ function menuDialogOpen(menuDialog) {
 			if(menuSettingsElement) {
 				menuSettingsElement.style.display = "block";
 			}
-			if(menuExit) {
-				menuExit.style.display = "block";
-			}
+//			if(menuExit) {
+//				menuExit.style.display = "block";
+//			}
 		} else {
 			if(menuContactsElement) {
 				menuContactsElement.style.display = "none";
@@ -577,9 +577,9 @@ function menuDialogOpen(menuDialog) {
 			if(menuSettingsElement) {
 				menuSettingsElement.style.display = "none";
 			}
-			if(menuExit) {
-				menuExit.style.display = "none";
-			}
+//			if(menuExit) {
+//				menuExit.style.display = "none";
+//			}
 		}
 	}
 
@@ -629,14 +629,14 @@ function onIceCandidate(event,myCandidateName) {
 	} else if(event.candidate.address==null) {
 		//console.warn('onIce skip event.candidate.address==null');
 	} else if(isDataChlOpen()) {
-		gLog("onIce "+myCandidateName+" via dataChannel", event.candidate.address);
+		gLog("onIce "+myCandidateName+" via dataChannel "+event.candidate.address);
 		dataChannel.send("cmd|"+myCandidateName+"|"+JSON.stringify(event.candidate));
 	} else if(wsConn==null) {
-		gLog("onIce "+myCandidateName+": wsConn==null", event.candidate.address);
+		gLog("onIce "+myCandidateName+": wsConn==null "+event.candidate.address);
 	} else if(wsConn.readyState!=1) {
-		gLog("onIce "+myCandidateName+": readyState!=1",	event.candidate.address, wsConn.readyState);
+		gLog("onIce "+myCandidateName+": readyState!=1 "+event.candidate.address+" "+wsConn.readyState);
 	} else {
-		gLog("onIce "+myCandidateName+" via wsSend", event.candidate.address);
+		gLog("onIce "+myCandidateName+" via wsSend "+event.candidate.address);
 		// 300ms delay to prevent "cmd "+myCandidateName+" no peerCon.remoteDescription" on other side
 		setTimeout(function() {
 			// TODO support dataChannel delivery?
@@ -665,7 +665,7 @@ function iframeWindowOpen(url,addStyleString) {
 
 	containerElement.style.filter = "blur(0.8px) brightness(60%)";
 
-	gLog('iframeWindowOpen', url);
+	gLog('iframeWindowOpen '+url);
 	iframeWindowOpenFlag = true;
 	let styleString = "width:90%; max-width:440px; height:94%; position:absolute; left:3.5%; top:1%; padding:10px; z-index:200;";
 	if(addStyleString) {
@@ -712,7 +712,7 @@ function getStream(selectObject) {
 			if(avSelect.options[i].value == selectObject.value) {
 				// found deviceId
 				myUserMediaDeviceId = selectObject.value;
-				gLog('getStream avSelect deviceId',myUserMediaDeviceId);
+				gLog('getStream avSelect deviceId '+myUserMediaDeviceId);
 
 				if(avSelect.options[i].label.startsWith("Audio")) {
 					if(videoEnabled) {
@@ -725,7 +725,7 @@ function getStream(selectObject) {
 						tmpConstraints += ',"deviceId": { "exact": "'+myUserMediaDeviceId+'" }';
 					}
 					tmpConstraints = "{"+tmpConstraints+"}";
-					gLog('getStream avSelect video',tmpConstraints);
+					gLog('getStream avSelect video '+tmpConstraints);
 					userMediaConstraints.video = JSON.parse(tmpConstraints);
 				}
 				break;
@@ -754,7 +754,7 @@ function getStream(selectObject) {
 		//gLog("gotStream stop previous localStream len",allTracks.length);
 		const allTracks = localStream.getTracks();
 		allTracks.forEach(track => {
-			track.stop(); 
+			track.stop();
 		});
 		if(peerCon && addedAudioTrack) {
 			peerCon.removeTrack(addedAudioTrack);
@@ -767,7 +767,7 @@ function getStream(selectObject) {
 		localStream = null;
 	}
 
-	gLog('getStream set getUserMedia',myUserMediaConstraints);
+	gLog('getStream set getUserMedia '+myUserMediaConstraints);
 	let saveWorkingConstraints = JSON.parse(JSON.stringify(myUserMediaConstraints));
 	return navigator.mediaDevices.getUserMedia(myUserMediaConstraints)
 		.then(function(stream) {
@@ -782,17 +782,17 @@ function getStream(selectObject) {
 		})
 		.catch(function(err) {
 			if(!videoEnabled) {
-				console.log('# audio input error', err);
-				alert("audio input error " + err);
+				console.log('# audio input error', err.message);
+				alert("audio input error " + err.message);
 			} else {
-				console.log('# audio/video error', err);
+				console.log('# audio/video error', err.message);
 				if(localVideoMsgElement) {
 					localVideoMsgElement.innerHTML = "video mode error";
 					localVideoMsgElement.style.opacity = 0.9;
 				}
 			}
 			if(lastGoodMediaConstraints) {
-				gLog('getStream back to lastGoodMediaConstraints',lastGoodMediaConstraints);
+				gLog('getStream back to lastGoodMediaConstraints '+lastGoodMediaConstraints);
 				userMediaConstraints = JSON.parse(JSON.stringify(lastGoodMediaConstraints));
 				if(avSelect) {
 					avSelect.selectedIndex = lastGoodAvSelectIndex;
@@ -838,7 +838,11 @@ function gotDevices(deviceInfos) {
 		let countVideoDevices = 0;
 		for(const deviceInfo of deviceInfos) {
 			if(deviceInfo.kind=="audioinput" || deviceInfo.kind=="videoinput") {
-				gLog('gotDevices',deviceInfo.kind,deviceInfo.label,deviceInfo.deviceId);
+				let deviceId = deviceInfo.deviceId;
+				if(deviceId.length>20) {
+					deviceId = deviceId.substring(0,20)+"...";
+				}
+				gLog('gotDevices '+deviceInfo.kind+","+deviceInfo.label+","+deviceId);
 			}
 
 			const option = document.createElement('option');
@@ -901,7 +905,7 @@ function gotStream(stream) {
 		const allTracks = localStream.getTracks();
 		//gLog("gotStream stop previous localStream len",allTracks.length);
 		allTracks.forEach(track => {
-			track.stop(); 
+			track.stop();
 		});
 		if(peerCon && addedAudioTrack) {
 			peerCon.removeTrack(addedAudioTrack);
@@ -922,7 +926,7 @@ function gotStream(stream) {
 	} else {
 		const audioTracks = localStream.getAudioTracks();
 		audioTracks[0].enabled = true;
-		gLog('peerCon addTrack local audio input',audioTracks[0]);
+		gLog('peerCon addTrack local audio input '+audioTracks[0]);
 		addedAudioTrack = peerCon.addTrack(audioTracks[0],localStream);
 	}
 
@@ -931,7 +935,7 @@ function gotStream(stream) {
 		// disable all video tracks (do not show the video locally)
 		gLog("gotStream !videoEnabled -> stop video tracks");
 		stream.getVideoTracks().forEach(function(track) {
-			gLog("gotStream !videoEnabled stop video track",track);
+			gLog("gotStream !videoEnabled stop video track "+track);
 			track.stop();
 		})
 	} else if(!addLocalVideoEnabled) {
@@ -940,11 +944,12 @@ function gotStream(stream) {
 	} else if(!peerCon) {
 		//gLog('gotStream videoEnabled but !peerCon: no addTrack vid');
 	} else if(localCandidateType=="relay" || remoteCandidateType=="relay") {
-		gLog('gotStream videoEnabled but relayed con: no addTrack vid (%s)(%s)',localCandidateType,remoteCandidateType);
+		gLog('gotStream videoEnabled but relayed con: no addTrack vid (%s)(%s) '+
+			localCandidateType+" "+remoteCandidateType);
 	} else if(localStream.getTracks().length<2) {
-		gLog('# gotStream videoEnabled but getTracks().length<2: no addTrack vid',localStream.getTracks().length);
+		gLog('# gotStream videoEnabled but getTracks().length<2: no addTrack vid '+localStream.getTracks().length);
 	} else {
-		gLog('peerCon addTrack local video input',localStream.getTracks()[1]);
+		gLog('peerCon addTrack local video input '+localStream.getTracks()[1]);
 		addedVideoTrack = peerCon.addTrack(localStream.getTracks()[1],localStream);
 	}
 
@@ -959,7 +964,7 @@ function gotStream(stream) {
 
 function videoSwitch(forceClose) {
 	if(videoEnabled || forceClose) {
-		gLog("===videoSwitch videoOff===",forceClose);
+		gLog("===videoSwitch videoOff==="+forceClose);
 		videoOff();
 	} else {
 		gLog("===videoSwitch videoOn===");
@@ -1058,7 +1063,7 @@ function vmonitor() {
 }
 
 function vpauseByTimer() {
-	gLog("vpauseByTimer",mediaConnect);
+	gLog("vpauseByTimer"+mediaConnect);
 	if(!mediaConnect) {
 		vpause();
 	}
@@ -1147,7 +1152,7 @@ function localVideoHide() {
 }
 
 function remoteVideoDivTransitioned() {
-	gLog('remoteVideo transitioned',remoteVideoDiv.style.height);
+	gLog('remoteVideo transitioned'+remoteVideoDiv.style.height);
 	if(remoteVideoDiv.style.height != "0px") {
 		remoteVideoDiv.style.height = "auto";
 	}
@@ -1156,11 +1161,11 @@ function remoteVideoDivTransitioned() {
 
 var remoteVideoShowing = false;
 function remoteVideoShow() {
-	gLog('remoteVideoShow',remoteVideoShowing);
+	gLog('remoteVideoShow '+remoteVideoShowing);
 	window.requestAnimationFrame(function(){
 		if(!remoteVideoShowing) {
 			let remoteVideoDivHeight = parseFloat(getComputedStyle(remoteVideoFrame).width)/16*9;
-			gLog('remoteVideoShow',remoteVideoShowing,remoteVideoDivHeight);
+			gLog('remoteVideoShow '+remoteVideoShowing+" "+remoteVideoDivHeight);
 			remoteVideoDiv.style.height = ""+remoteVideoDivHeight+"px";
 			remoteVideoDiv.addEventListener('transitionend', remoteVideoDivTransitioned) // when done: height auto
 			remoteVideoLabel.innerHTML = 'remote-cam <span id="remotefullscreen" onclick="remoteFullScreen(false)" style="margin-left:3%">fullscreen</span> <span onclick="closeRemoteVideo()" style="margin-left:3%">close</span>';
@@ -1302,9 +1307,9 @@ function showStatus(msg,timeoutMs) {
 		// msg may contain html, which we don't want to console.log
 		let idx = msg.indexOf("<");
 		if(idx>=0) {
-			gLog('showStatus: %s',msg.substring(0,idx));
+			gLog('showStatus: '+msg.substring(0,idx));
 		} else {
-			gLog('showStatus: %s',msg);
+			gLog('showStatus: '+msg);
 		}
 	}
 	if(!singlebutton) {
