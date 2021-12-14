@@ -150,6 +150,7 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 		}
 		// remove callee from hubMap; delete wsClientID from wsClientMap
 		h.exitFunc(client,comment)
+		h.CalleeClient = nil
 	} else {
 		// clear caller peer-connection flag and callerIp in HubMap
 		//client.peerConHasEnded("unregister "+comment)

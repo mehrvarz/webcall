@@ -68,15 +68,18 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	length, _ := io.ReadFull(r.Body, postBuf)
 	if length > 0 {
 		var pwData = string(postBuf[:length])
+		//fmt.Printf("/login pwData (%s)\n", pwData)
 		pwData = strings.ToLower(pwData)
 		pwData = strings.TrimSpace(pwData)
-		if strings.HasPrefix(pwData, "pw=") {
-			pwData = strings.TrimRight(pwData, "\r\n")
-			pwData = strings.TrimRight(pwData, "\n")
-			pwFromPost := pwData[3:]
-			if(pwFromPost!="") {
-				pw = pwFromPost
-				//fmt.Printf("/login pw from httpPost (%s)\n", pw)
+		tokenSlice := strings.Split(pwData, "&")
+		for _, tok := range tokenSlice {
+			if strings.HasPrefix(tok, "pw=") {
+				pwFromPost := tok[3:]
+				if(pwFromPost!="") {
+					pw = pwFromPost
+					//fmt.Printf("/login pw from httpPost (%s)\n", pw)
+					break
+				}
 			}
 		}
 	}
@@ -218,10 +221,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		}
 		myHubMutex.Unlock()
 
-		//hubMapMutex.RLock()
 		fmt.Printf("exithub callee=%s wsID=%d %s rip=%s\n", globalID, wsClientID, comment, remoteAddrWithPort)
-		//hubMapMutex.RUnlock()
-
+/*
 		// mark wsClientMap[wsClientID] for removal
 		wsClientMutex.Lock()
 		wsClientData,ok := wsClientMap[wsClientID]
@@ -236,18 +237,34 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			wsClientMutex.Lock()
 			wsClientData,ok := wsClientMap[wsClientID]
 			if !ok {
+				wsClientMutex.Unlock()
 				fmt.Printf("exithub callee=%s wsClientMap[wsID=%d] fail rip=%s\n",
 					globalID, wsClientID, remoteAddrWithPort)
+
 			} else if wsClientData.removeFlag {
-				fmt.Printf("exithub callee=%s wsClientMap[wsID=%d] del rip=%s\n",
-					globalID, wsClientID, remoteAddrWithPort)
+				//fmt.Printf("exithub callee=%s wsClientMap[wsID=%d] del rip=%s\n",
+				//	globalID, wsClientID, remoteAddrWithPort)
 				delete(wsClientMap, wsClientID)
+				wsClientMutex.Unlock()
+
 			} else {
-				fmt.Printf("exithub callee=%s wsClientMap[wsID=%d] not rip=%s\n",
-					globalID, wsClientID, remoteAddrWithPort)
+				wsClientMutex.Unlock()
+				var err error
+                globalID,_,err = StoreCalleeInHubMap(urlID, myMultiCallees, remoteAddrWithPort, wsClientID, false)
+                if err != nil {
+                   fmt.Printf("exithub callee=%s wsClientMap[wsID=%d] undo err=%s rip=%s\n",
+                        globalID, wsClientID, err, remoteAddrWithPort)
+                } else {
+                    fmt.Printf("exithub callee=%s wsClientMap[wsID=%d] undo rip=%s\n",
+                        globalID, wsClientID, remoteAddrWithPort)
+                }
 			}
-			wsClientMutex.Unlock()
 		}()
+        //fmt.Printf("exithub callee=%s wsID=%d done rip=%s\n", globalID, wsClientID, remoteAddrWithPort)
+*/
+        wsClientMutex.Lock()
+        delete(wsClientMap, wsClientID)
+        wsClientMutex.Unlock()
 	}
 
 	hub.exitFunc = exitFunc
@@ -347,8 +364,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			myHubMutex.RLock()
 			if hub != nil && !hub.CalleeLogin.Get() {
 				myHubMutex.RUnlock()
-				fmt.Printf("# /login ws-connect timeout %ds removing %s/%s rip=%s\n",
-					waitedFor, urlID, globalID, remoteAddrWithPort)
+				fmt.Printf("# /login ws-connect timeout %ds removing %s/%s %s rip=%s\n",
+					waitedFor, urlID, globalID, wsClientID, remoteAddrWithPort)
 				if globalID != "" {
 					//_,lenGlobalHubMap = 
 						DeleteFromHubMap(globalID)
