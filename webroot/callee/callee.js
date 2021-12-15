@@ -200,8 +200,8 @@ window.onload = function() {
 				onGotStreamGoOnline = false;
 
 				if(!wsConn) {
-					goOfflineButton.disabled = true; // can't go offline if already offline
-					showStatus("You need to go online to receive calls. A green LED will be shown when you are connected to the WebCall server.",-1);
+					goOfflineButton.disabled = true; // can't go offline if currently not connected
+//					showStatus("You need to go online to receive calls. A green LED will be shown when you are connected to the WebCall server.",-1);
 				}
 				start();
 				return;
