@@ -32,6 +32,7 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		return
 	}
 	if calleeID!=urlID {
+		// TODO this sometimes happens unexpectedly
 		fmt.Printf("# /getsettings fail calleeID(%s) != urlID(%s) rip=%s\n", calleeID, urlID, remoteAddr)
 		return
 	}
