@@ -58,7 +58,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		if key != "" {
 			fmt.Fprintf(w, "fatal")
 			httpResponseCount++
-			fmt.Printf("/login key=(%s) is already logged in rip=%s\n", key, remoteAddr)
+			fmt.Printf("# /login key=(%s) is already logged in rip=%s\n", key, remoteAddr)
 			return
 		}
 	}
@@ -304,9 +304,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	//	fmt.Printf("/login wsAddr=%s\n",wsAddr)
 	//}
 
-	//hubMapMutex.RLock()
-	fmt.Printf("/login callee=%s reqtime=%v rip=%s\n", urlID, time.Since(startRequestTime), remoteAddrWithPort)
-	//hubMapMutex.RUnlock()
+	fmt.Printf("/login callee=%s %v reqtime=%v rip=%s\n",
+		urlID, wsClientID, time.Since(startRequestTime), remoteAddrWithPort)
 
 	responseString := fmt.Sprintf("%s|%d|%s|%d|%v",
 		wsAddr,                     // 0
@@ -364,7 +363,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			myHubMutex.RLock()
 			if hub != nil && !hub.CalleeLogin.Get() {
 				myHubMutex.RUnlock()
-				fmt.Printf("# /login ws-connect timeout %ds removing %s/%s %s rip=%s\n",
+				fmt.Printf("# /login ws-connect timeout %ds removing %s/%s %v rip=%s\n",
 					waitedFor, urlID, globalID, wsClientID, remoteAddrWithPort)
 				if globalID != "" {
 					//_,lenGlobalHubMap = 
