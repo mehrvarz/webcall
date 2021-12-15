@@ -89,17 +89,6 @@ window.onload = function() {
 
 	window.onhashchange = hashchange;
 
-/*
-	if(navigator.permissions) {
-		navigator.permissions.query({ name: "nfc" }).then(permissionStatus => {
-			gLog(`NFC user permission: ${permissionStatus.state}`);
-			permissionStatus.onchange = _ => {
-				gLog(`NFC user permission changed: ${permissionStatus.state}`);
-			};
-		});
-	}
-*/
-
 	let id = getUrlParams("id");
 	if(typeof id!=="undefined" && id!="") {
 		calleeID = id;
@@ -692,7 +681,7 @@ function showOnlineReadyMsg(sessionIdPayload) {
 
 	var calleeLink = window.location.href;
 	var userLink = calleeLink.replace("callee/","user/");
-	userLink = userLink.replace("calle2/","user/");
+	//userLink = userLink.replace("calle2/","user/");
 	let msg2 = "You will receive calls made by this link:<br>"+
 		"<a target='_blank' href='"+userLink+"'>"+userLink+"</a><br>";
 
@@ -1378,75 +1367,9 @@ function hangup(dummy,message) {
 function goOnline() {
 	showStatus("");
 	if(goOnlineButton.disabled) {
-		gLog('no need to goOnline while being online');
+		gLog('goOnline() goOnlineButton.disabled');
 		return;
 	}
-
-/*
-	if('NDEFReader' in window) {
-		gLog("NDEFReader available");
-
-//		const ndef = new NDEFReader();
-//		ndef.scan().then(() => {
-//			gLog("NDEF Scan started successfully.");
-//			ndef.onreadingerror = () => {
-//				gLog("## NDEF Cannot read data from the NFC tag. Try another one?");
-//			};
-//			ndef.onreading = event => {
-//				gLog("NDEF message read.");
-//			};
-//		}).catch(error => {
-//			gLog(`## NDEF Error!! Scan failed to start: ${error}.`);
-//		});
-
-		try {
-		  let f1 = async () => {
-		    gLog("async f1");
-
-			const ndef = new NDEFReader();
-			await ndef.scan();
-			gLog("> Scan started");
-			ndef.addEventListener("readingerror", () => {
-			  gLog(	"# Cannot read data from the NFC tag. Try another one?");
-			});
-
-			ndef.addEventListener("reading", ({ message, serialNumber }) => {
-			  gLog(`> Serial Number: ${serialNumber}`);
-			  gLog(`> Records: (${message.records.length})`);
-
-			  const decoder = new TextDecoder();
-			  for (const record of message.records) {
-				switch (record.recordType) {
-				  case "text":
-					const textDecoder = new TextDecoder(record.encoding);
-					gLog(`Text: ${textDecoder.decode(record.data)} (${record.lang})`);
-					break;
-				  case "url":
-					gLog(`URL: ${decoder.decode(record.data)}`);
-					break;
-				  case "mime":
-					if (record.mediaType === "application/json") {
-					  gLog(`JSON: ${JSON.parse(decoder.decode(record.data))}`);
-					} else {
-					  gLog(`Media not handled`);
-					}
-					break;
-				  default:
-					gLog(`Record not handled`);
-				}
-			  }
-			});
-		  };
-		  f1();
-	  } catch(error) {
-		gLog(`## NDEF Error!! Scan failed to start: ${error}.`);
-	  };
-
-	} else {
-		gLog("## NDEFReader not available");
-	}
-*/
-
 
 	goOnlineButton.disabled = true;
 	goOfflineButton.disabled = false;
