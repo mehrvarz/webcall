@@ -839,10 +839,13 @@ function confirmNotifyConnect2() {
 	if(callerName.length>25) {
 		callerName = callerName.substring(0,25);
 	}
+	console.log("confirmNotifyConnect2 callerName="+callerName);
+
 	callerId = callerId.replace(/[^a-zA-Z0-9 ]/g, "");
 	if(callerId.length>10) {
 		callerId = callerName.substring(0,10);
 	}
+	console.log("confirmNotifyConnect2 callerId="+callerId);
 
 	// this short delay prevents "Form submission canceled because the form is not connected" in chrome 56+
 	setTimeout(function() {
