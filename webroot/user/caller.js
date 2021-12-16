@@ -826,8 +826,10 @@ function submitForm(theForm) {
 
 function confirmNotifyConnect2() {
 	callerName = document.getElementById("nickname").value;
+//TODO auf android wird für callerId der callerName zurückgegeben
 	callerId = document.getElementById("callerID").value;
 	confirmValue = document.getElementById("confirm").value;
+	console.log("confirmNotifyConnect2 callerName="+callerName+" callerId="+callerId);
 	// if confirmValue == confirmWord -> notifyConnect()
 	//                           else -> confirmNotifyConnect()
 	if(confirmValue != confirmWord) {
