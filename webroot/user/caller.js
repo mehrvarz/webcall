@@ -843,8 +843,8 @@ function confirmNotifyConnect2() {
 	//console.log("confirmNotifyConnect2 callerName="+callerName);
 
 	callerId = callerId.replace(/[^a-zA-Z0-9 ]/g, "");
-	if(callerId.length>10) {
-		callerId = callerId.substring(0,10);
+	if(callerId.length>11) {
+		callerId = callerId.substring(0,11);
 	}
 	//console.log("confirmNotifyConnect2 callerId="+callerId);
 
