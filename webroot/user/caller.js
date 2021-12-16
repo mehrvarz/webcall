@@ -826,10 +826,9 @@ function submitForm(theForm) {
 
 function confirmNotifyConnect2() {
 	callerName = document.getElementById("nickname").value;
-//TODO auf android wird für callerId der callerName zurückgegeben
 	callerId = document.getElementById("callerID").value;
 	confirmValue = document.getElementById("confirm").value;
-	console.log("confirmNotifyConnect2 callerName="+callerName+" callerId="+callerId);
+	//console.log("confirmNotifyConnect2 callerName="+callerName+" callerId="+callerId);
 	// if confirmValue == confirmWord -> notifyConnect()
 	//                           else -> confirmNotifyConnect()
 	if(confirmValue != confirmWord) {
@@ -841,13 +840,13 @@ function confirmNotifyConnect2() {
 	if(callerName.length>25) {
 		callerName = callerName.substring(0,25);
 	}
-	console.log("confirmNotifyConnect2 callerName="+callerName);
+	//console.log("confirmNotifyConnect2 callerName="+callerName);
 
 	callerId = callerId.replace(/[^a-zA-Z0-9 ]/g, "");
 	if(callerId.length>10) {
-		callerId = callerName.substring(0,10);
+		callerId = callerId.substring(0,10);
 	}
-	console.log("confirmNotifyConnect2 callerId="+callerId);
+	//console.log("confirmNotifyConnect2 callerId="+callerId);
 
 	// this short delay prevents "Form submission canceled because the form is not connected" in chrome 56+
 	setTimeout(function() {
