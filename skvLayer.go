@@ -17,9 +17,14 @@ func locGetOnlineCallee(calleeID string, ejectOn1stFound bool, reportHiddenCalle
 	hubMapMutex.RLock()
 	defer hubMapMutex.RUnlock()
 
-	//fmt.Printf("GetLocalCallee %s (%s)\n",calleeID,comment)
+	if logWantedFor("searchhub") {
+		fmt.Printf("GetOnlineCallee %s (%s) ejectOn1stFound=%v reportHiddenCallee=%v callerIpAddr=%s\n",
+			calleeID,comment,ejectOn1stFound,reportHiddenCallee,callerIpAddr)
+	}
 	calleeIdPlusExcl := calleeID+"!"
+	count:=0
 	for key := range hubMap {
+		count++
 		if key!=calleeID && !strings.HasPrefix(key,calleeIdPlusExcl) {
 			continue
 		}
@@ -68,7 +73,9 @@ func locGetOnlineCallee(calleeID string, ejectOn1stFound bool, reportHiddenCalle
 		// found a fitting calleeID but we are not supposed to report this callee
 		//fmt.Printf("GetOnlineCallee callee %s not supposed to be reported\n",key)
 	}
-	//fmt.Printf("GetLocalCallee nothing found\n")
+	if logWantedFor("searchhub") {
+		fmt.Printf("GetOnlineCallee nothing found for calleeID=%s count=%d\n",calleeID,count)
+	}
 	return "", nil, nil
 }
 
