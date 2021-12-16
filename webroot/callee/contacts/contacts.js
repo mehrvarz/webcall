@@ -135,7 +135,7 @@ function editSubmit(formElement,id) {
 	let oldName = obj[id];
 	let newName = formtextElement.value;
 	console.log('editSubmit value',oldName,newName,id);
-	if(newName=="delete") {
+	if(newName.toLowerCase()=="delete") {
 		// special case
 		let api = apiPath+"/deletecontact?id="+callerID+"&contactID="+id;
 		if(!gentle) console.log('request api',api);
