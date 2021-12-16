@@ -53,7 +53,10 @@ button[disabled]:hover {
 div#container {
 	padding: 1em 2%;
 	max-width:520px;
-	_margin: 0 auto;
+}
+div#enterId {
+	padding: 1em 2%;
+	max-width:520px;
 }
 h1 {
 	font-size:1.7em;
@@ -161,7 +164,7 @@ form {
 	border-radius:4px;
 	border:none;
 	width:86%;
-	max-width:360px;
+	max-width:320px;
 	font-size:1.2em;
 	color:#000;
 	padding:4px 4px; box-sizing:border-box;
@@ -210,6 +213,14 @@ input[type=submit]:focus {
 	    opacity: 0.2;
 	}
 }
+.lbutton {
+    font-size:0.85em;
+	margin-left:8px;
+	user-select:none;
+	padding:0.25em;
+	border:solid 0.08em; border-radius:4px; border-color:#888;
+}
+
 </style>
 </head>
 
@@ -302,6 +313,17 @@ input[type=submit]:focus {
 
 	<div id="timer" class="timer">0:00</div>
 	<div style="opacity:0.7;margin-top:30px;user-select:none;">WebCall by <a href="https://timur.mobi/webcall">timur.mobi</a></div>
+</div>
+<div id="enterId" style="display:none">
+	<h1>WebCall Dial</h1>
+	<div id="status" class="status"></div>
+	<form action="javascript:;" onsubmit="submitForm(this)" _style="display:none;" id="mnumber">
+		<label for="mnumber" style="display:inline-block; padding-bottom:4px;">Enter ID:</label><br>
+		<input name="mnumber" id="enterIdVal" type="text" class="formtext" autofocus required>
+		<span class="lbutton" onclick="clearForm(3)">Clear</span>
+		<br>
+		<input type="submit" name="Submit" id="submit" value="Dial" style="width:100px; margin-top:12px;">
+	</form>
 </div>
 <script src="custom.js"></script>
 <script src="client.js"></script>

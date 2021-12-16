@@ -3,6 +3,7 @@
 const dialButton = document.querySelector('button#callButton');
 const hangupButton = document.querySelector('button#hangupButton');
 const calleeOnlineElement = document.getElementById("calleeOnline");
+const enterIdElement = document.getElementById('enterId');
 const bitrate = 280000;
 const playDialSounds = true;
 const calleeMode = false;
@@ -109,16 +110,10 @@ window.onload = function() {
 	if(typeof id!=="undefined" && id!="") {
 		calleeID = id;
 	}
-	if(calleeID=="") {
-		gLog("onload no calleeID abort");
-		let mainParent = containerElement.parentNode;
-		mainParent.removeChild(containerElement);
-		var msgElement = document.createElement("div");
-		msgElement.style = "margin-top:15%; display:flex; flex-direction:column; align-items:center; "+
-						   "justify-content:center; text-align:center; font-size:1.2em; line-height:1.5em;";
-		msgElement.innerHTML =
-			"<div>Callee ID missing in link<br><br><a href='..'>Main page</a></div>";
-		mainParent.appendChild(msgElement);
+	// if on start there is a fragment/hash ('#') in the URL, remove it
+	if(location.hash.length > 0) {
+		gLog("location.hash.length=%d",location.hash.length);
+		window.location.replace("/user/"+calleeID);
 		return;
 	}
 	// the following args may be used in confirmNotifyConnect()
@@ -146,13 +141,6 @@ window.onload = function() {
 	if(typeof text!=="undefined" && text!="") {
 		singleButtonConnectedText = decodeURI(text);
 		gLog("onload url arg connectedText",singleButtonConnectedText);
-	}
-
-	// if on start there is a fragment/hash ('#') in the URL, remove it
-	if(location.hash.length > 0) {
-		gLog("location.hash.length=%d",location.hash.length);
-		window.location.replace("/user/"+calleeID);
-		return;
 	}
 
 	if(localVideoFrame)
@@ -189,8 +177,31 @@ window.onload = function() {
 		}
 	});
 
-	document.onkeydown = (evt) => onkeydownFunc(evt);
+	if(window.self == window.top) {
+		// not running in iframe mode
+		gLog("onload setup onkeydownFunc");
+		document.onkeydown = (evt) => onkeydownFunc(evt);
+	} else {
+		// running in iframe mode
+		gLog("onload no onkeydownFunc in iframe mode");
+	}
 
+	if(calleeID=="") {
+		gLog("onload no calleeID; switch to enterId");
+		containerElement.style.display = "none";
+		enterIdElement.style.display = "block";
+		var formEnterId = document.getElementById("enterIdVal");
+		setTimeout(function() {
+			formEnterId.focus();
+		},400);
+		// will continue in submitForm()
+		return;
+	}
+
+	onload2(true);
+}
+
+function onload2(checkFlag) {
 	checkServerMode(function(mode) {
 		if(mode==0) {
 			// normal mode
@@ -203,9 +214,11 @@ window.onload = function() {
 
 			gLog('start caller with calleeID',calleeID);
 
-			// we need to know if calleeID is online asap (will switch to callee-online-layout if it is)
-			dialAfterCalleeOnline = false;
-			checkCalleeOnline();
+			if(checkFlag) {
+				// need to know if calleeID is online asap (will switch to callee-online-layout if it is)
+				dialAfterCalleeOnline = false;
+				checkCalleeOnline();
+			}
 
 			if(dialButton) {
 				if(singlebutton) {
@@ -218,33 +231,7 @@ window.onload = function() {
 					}
 				}
 
-				dialButton.onclick = function() {
-					showStatus(connectingText,-1);
-
-					rtcConnectStartDate = 0;
-					mediaConnectStartDate = 0;
-
-					if(singlebutton) {
-						// switch from dialButton to hangupButton "Connecting..."
-						//hangupButton.style.backgroundColor = "#d33"; // color from button:active
-						hangupButton.innerHTML = connectingText;
-						dialButton.style.display = "none";
-						hangupButton.style.display = "inline-block";
-						// animate hangupButton background
-						hangupButton.style.background = 'url("bg-anim.jpg"), linear-gradient(-45deg, #002c22, #102070, #2613c5, #1503ab)';
-						hangupButton.style.backgroundSize = "400% 400%";
-						hangupButton.style.animation = "gradientBG 30s ease infinite";
-						//gLog("hangupButton.style",hangupButton.style);
-					} else {
-						dialButton.disabled = true;
-						hangupButton.disabled = false;
-						msgbox.style.display = "none";
-					}
-
-					// -> checkCalleeOnline -> ajax -> calleeOnlineAction -> gotStream -> connectSignaling
-					dialAfterCalleeOnline = true;
-					checkCalleeOnline();
-				};
+				dialButton.onclick = dialButtonClick;
 			}
 			if(hangupButton) {
 				hangupButton.onclick = function() {
@@ -277,6 +264,36 @@ window.onload = function() {
 			return;
 		}
 	});
+}
+
+function dialButtonClick() {
+	gLog("dialButtonClick");
+	showStatus(connectingText,-1);
+
+	rtcConnectStartDate = 0;
+	mediaConnectStartDate = 0;
+
+	if(singlebutton) {
+		// switch from dialButton to hangupButton "Connecting..."
+		//hangupButton.style.backgroundColor = "#d33"; // color from button:active
+		hangupButton.innerHTML = connectingText;
+		dialButton.style.display = "none";
+		hangupButton.style.display = "inline-block";
+		// animate hangupButton background
+		hangupButton.style.background = 'url("bg-anim.jpg"), linear-gradient(-45deg, #002c22, #102070, #2613c5, #1503ab)';
+		hangupButton.style.backgroundSize = "400% 400%";
+		hangupButton.style.animation = "gradientBG 30s ease infinite";
+		//gLog("hangupButton.style",hangupButton.style);
+	} else {
+		dialButton.disabled = true;
+		hangupButton.disabled = false;
+		msgbox.style.display = "none";
+	}
+
+	// -> checkCalleeOnline -> ajax -> calleeOnlineAction -> gotStream -> connectSignaling
+	gLog("dialButtonClick set dialAfterCalleeOnline");
+	dialAfterCalleeOnline = true;
+	checkCalleeOnline();
 }
 
 function videoOn() {
@@ -450,6 +467,7 @@ function getUrlParams(param) {
 }
 
 function checkCalleeOnline() {
+// todo: use callerId + callerName
 	let api = apiPath+"/online?id="+calleeID;
 	gLog('checkCalleeOnline api',api);
 	xhrTimeout = 30*1000;
@@ -626,7 +644,7 @@ function loadJS(jsFile,callback) {
 	}
 
 	loadJsBusy++;
-	gLog('loadJS %s ...',jsFile);
+	gLog('loadJS jsFile='+jsFile);
 	var script = document.createElement('script');
 	script.setAttribute('src', jsFile);
 	script.setAttribute('type', 'text/javascript');
@@ -781,12 +799,30 @@ function clearForm(idx) {
 		var formCallerID = document.querySelector('input#callerID');
 		formCallerID.value = "";
 		formCallerID.focus();
-	} else {
+	} else if(idx==2) {
 		var formConfirm = document.querySelector('input#confirm');
 		formConfirm.value = "";
 		formConfirm.focus();
+	} else if(idx==3) {
+		var formEnterId = document.getElementById("enterIdVal");
+		formEnterId.value = "";
+		setTimeout(function() {
+			formEnterId.focus();
+		},400);
 	}
 }
+
+function submitForm(theForm) {
+	// switch back to default container
+	var enterIdVal = document.getElementById("enterIdVal").value;
+	enterIdElement.style.display = "none";
+	containerElement.style.display = "block";
+	calleeID = enterIdVal;
+	gLog('submitForm set calleeID='+calleeID);
+	onload2(false);
+	dialButtonClick();
+}
+
 
 function confirmNotifyConnect2() {
 	callerName = document.getElementById("nickname").value;
