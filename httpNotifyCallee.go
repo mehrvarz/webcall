@@ -46,6 +46,8 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		return
 	}
 
+	fmt.Printf("/notifyCallee (%s) r.URL.Query()=(%v)\n", urlID, r.URL.Query())
+
 	// get callerId + callerName from url-args
 	callerId := ""
 	url_arg_array, ok := r.URL.Query()["callerId"]
