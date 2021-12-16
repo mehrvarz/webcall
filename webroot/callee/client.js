@@ -567,9 +567,6 @@ function menuDialogOpen(menuDialog) {
 			if(menuSettingsElement) {
 				menuSettingsElement.style.display = "block";
 			}
-//			if(menuExit) {
-//				menuExit.style.display = "block";
-//			}
 		} else {
 			if(menuContactsElement) {
 				menuContactsElement.style.display = "none";
@@ -577,9 +574,6 @@ function menuDialogOpen(menuDialog) {
 			if(menuSettingsElement) {
 				menuSettingsElement.style.display = "none";
 			}
-//			if(menuExit) {
-//				menuExit.style.display = "none";
-//			}
 		}
 	}
 
@@ -699,10 +693,10 @@ function getStream(selectObject) {
 		return;
 	}
 
-//	if(!gentle) {
-//		const supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
-//		gLog('getStream supportedConstraints',supportedConstraints);
-//	}
+	//if(!gentle) {
+	//	const supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
+	//	gLog('getStream supportedConstraints',supportedConstraints);
+	//}
 
 	if(selectObject) {
 		gLog('===getStream avSelect===');

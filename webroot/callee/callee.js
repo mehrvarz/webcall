@@ -110,7 +110,7 @@ window.onload = function() {
 	}
 
 	if(calleeID=="") {
-// TODO: allow user to enter a username
+// TODO: allow user to enter a username?
 		showStatus("CalleeID missing in URL",-1);
 		goOnlineButton.disabled = true;
 		goOfflineButton.disabled = true;
@@ -201,8 +201,7 @@ window.onload = function() {
 				onGotStreamGoOnline = false;
 
 				if(!wsConn) {
-					goOfflineButton.disabled = true; // can't go offline if currently not connected
-//					showStatus("You need to go online to receive calls. A green LED will be shown when you are connected to the WebCall server.",-1);
+					goOfflineButton.disabled = true; // can't go offline if not connected
 				}
 				start();
 				return;
@@ -800,25 +799,9 @@ function wsOnMessage(evt) {
 	wsOnMessage2(evt.data);
 }
 
-//function wsOnMessage1(str) {
-//	wsOnMessage2(str.replace(/\\/g, ""));
-//	wsOnMessage2(str);
-//}
-
 function wsOnMessage2(str) {
-/*
-	let messages = str.split('\n');
-	for (var i = 0; i < messages.length; i++) {
-		signalingCommand(messages[i]);
-// TODO is peerCon really relevant here?
-		if(!peerCon) {
-			break;
-		}
-	}
-*/
 	signalingCommand(str);
 }
-
 
 function signalingCommand(message) {
 	//gLog('signalingCommand '+message);

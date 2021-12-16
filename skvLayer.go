@@ -24,12 +24,15 @@ func locGetOnlineCallee(calleeID string, ejectOn1stFound bool, reportHiddenCalle
 			continue
 		}
 		// found a fitting calleeID
-		//fmt.Printf("cmdDo GetOnlineCallee id=%s ejectOn1st=%v reportHiddenCallee=%v key=(%s)\n",
+		//fmt.Printf("GetOnlineCallee id=%s ejectOn1st=%v reportHiddenCallee=%v key=(%s)\n",
 		//	calleeID, ejectOn1stFound, reportHiddenCallee, key)
 		hub := hubMap[key]
 		if hub.ConnectedCallerIp!="" && hub.ConnectedCallerIp!=callerIpAddr {
 			if ejectOn1stFound {
 				// found a fitting calleeID but this callee is busy (with someone else)
+				if logWantedFor("searchhub") {
+					fmt.Printf("GetOnlineCallee found callee %s busy with %s\n",key,hub.ConnectedCallerIp)
+				}
 				return "", nil, nil
 			}
 			continue
@@ -37,7 +40,7 @@ func locGetOnlineCallee(calleeID string, ejectOn1stFound bool, reportHiddenCalle
 
 		if !hub.IsCalleeHidden {
 			// found a fitting calleeID and it is free and not hidden
-			//fmt.Printf("cmdDo GetOnlineCallee found callee %s is free + not hidden\n",key)
+			//fmt.Printf("GetOnlineCallee found callee %s is free + not hidden\n",key)
 			if occupy && hub.ConnectedCallerIp=="" {
 				hub.ConnectedCallerIp = "wait"
 			}
@@ -46,7 +49,7 @@ func locGetOnlineCallee(calleeID string, ejectOn1stFound bool, reportHiddenCalle
 
 		if reportHiddenCallee {
 			// found a fitting calleeID and while this callee is hidden, we are asked to report it anyway
-			//fmt.Printf("cmdDo GetOnlineCallee found callee %s is free + hidden\n",key)
+			//fmt.Printf("GetOnlineCallee found callee %s is free + hidden\n",key)
 			if occupy && hub.ConnectedCallerIp=="" {
 				hub.ConnectedCallerIp = "wait"
 			}
@@ -55,7 +58,7 @@ func locGetOnlineCallee(calleeID string, ejectOn1stFound bool, reportHiddenCalle
 
 		if hub.IsUnHiddenForCallerAddr!="" && callerIpAddr == hub.IsUnHiddenForCallerAddr {
 			// found a fitting calleeID which is hidden, but is visible for this caller
-			//fmt.Printf("cmdDo GetOnlineCallee found callee %s free + hidden + visible to caller\n",key)
+			//fmt.Printf("GetOnlineCallee found callee %s free + hidden + visible to caller\n",key)
 			if occupy && hub.ConnectedCallerIp=="" {
 				hub.ConnectedCallerIp = "wait"
 			}
@@ -63,7 +66,7 @@ func locGetOnlineCallee(calleeID string, ejectOn1stFound bool, reportHiddenCalle
 		}
 
 		// found a fitting calleeID but we are not supposed to report this callee
-		//fmt.Printf("cmdDo GetOnlineCallee callee %s not supposed to be reported\n",key)
+		//fmt.Printf("GetOnlineCallee callee %s not supposed to be reported\n",key)
 	}
 	//fmt.Printf("GetLocalCallee nothing found\n")
 	return "", nil, nil
