@@ -232,14 +232,18 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		}
 
 		hub.CallerClient = client
-		err := StoreCallerIpInHubMap(client.globalCalleeID,wsConn.RemoteAddr().String(), false)
-		if err!=nil {
-			fmt.Printf("# %s StoreCallerIpInHubMap (%s) err=%v\n", client.connType, client.globalCalleeID, err)
-		}
+/*
 //TODO we have a problem if the connection cannot be established
 //     if peerConnected() is never called, then peerConHasEnded() will never be called
 //     and in this case hub.ConnectedCallerIp will continue to contain the caller ip
 //     stored above via StoreCallerIpInHubMap()
+// now moved StoreCallerIpInHubMap() to: if cmd=="rtcConnect"
+		err := StoreCallerIpInHubMap(client.globalCalleeID,wsConn.RemoteAddr().String(), false)
+		if err!=nil {
+			fmt.Printf("# %s StoreCallerIpInHubMap (%s) err=%v\n",
+				client.connType, client.globalCalleeID, err)
+		}
+*/
 	}
 	hub.HubMutex.Unlock()
 }
@@ -381,6 +385,10 @@ func (c *WsClient) receiveProcess(message []byte) {
 	}
 
 	if cmd=="rtcConnect" {
+		err := StoreCallerIpInHubMap(c.globalCalleeID,c.RemoteAddr, false)
+		if err!=nil {
+			fmt.Printf("# %s StoreCallerIpInHubMap (%s) err=%v\n", c.connType, c.globalCalleeID, err)
+		}
 		return
 	}
 

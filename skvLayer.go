@@ -80,7 +80,9 @@ func locGetOnlineCallee(calleeID string, ejectOn1stFound bool, reportHiddenCalle
 }
 
 func locStoreCallerIpInHubMap(calleeId string, callerIp string, skipConfirm bool) error {
-	//fmt.Printf("StoreCallerIpInHubMap calleeId=%s callerIp=%s\n", calleeId, callerIp)
+	if logWantedFor("searchhub") {
+		fmt.Printf("StoreCallerIpInHubMap calleeId=%s callerIp=%s\n", calleeId, callerIp)
+	}
 	var err error = nil
 	hubMapMutex.Lock()
 	defer hubMapMutex.Unlock()
