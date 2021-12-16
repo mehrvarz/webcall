@@ -486,7 +486,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 			hubMapMutex.RLock()
 			defer hubMapMutex.RUnlock()
 			for calleeID := range hubMap {
-				fmt.Fprintf(w,"online %s\n", calleeID)
+				fmt.Fprintf(w,"online %s (%s)\n", calleeID, hubMap[calleeID].ConnectedCallerIp)
 			}
 			printFunc(w,"\n")
 			return
