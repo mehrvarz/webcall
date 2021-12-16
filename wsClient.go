@@ -35,7 +35,8 @@ type WsClient struct {
 	wsConn *websocket.Conn
 	isOnline atombool.AtomBool	// connected to signaling server
 	isConnectedToPeer atombool.AtomBool
-	RemoteAddr string // no port
+	RemoteAddr string // with port
+	RemoteAddrNoPort string // no port
 	userAgent string
 	calleeID string
 	globalCalleeID string // unique calleeID for multiCallees as key for hubMap[]
@@ -64,16 +65,16 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	}
 
 	remoteAddr := r.RemoteAddr
-
 	realIpFromRevProxy := r.Header.Get("X-Real-Ip")
 	if realIpFromRevProxy!="" {
 		remoteAddr = realIpFromRevProxy
 	}
 
-//	idxPort := strings.Index(remoteAddr,":")
-//	if idxPort>=0 {
-//		remoteAddr = remoteAddr[:idxPort]
-//	}
+	remoteAddrNoPort := remoteAddr
+	idxPort := strings.Index(remoteAddrNoPort,":")
+	if idxPort>=0 {
+		remoteAddrNoPort = remoteAddrNoPort[:idxPort]
+	}
 
 	var wsClientID64 uint64 = 0
 	var wsClientData wsClientDataType
@@ -198,6 +199,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	client.hub = hub
 	client.isOnline.Set(true)
 	client.RemoteAddr = remoteAddr
+	client.RemoteAddrNoPort = remoteAddrNoPort
 	client.userAgent = r.UserAgent()
 	client.authenticationShown = false // being used to make sure 'TURN auth SUCCESS' is only shown 1x per client
 
@@ -385,6 +387,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 	}
 
 	if cmd=="rtcConnect" {
+// TODO store c.RemoteAddr without port
 		err := StoreCallerIpInHubMap(c.globalCalleeID,c.RemoteAddr, false)
 		if err!=nil {
 			fmt.Printf("# %s StoreCallerIpInHubMap (%s) err=%v\n", c.connType, c.globalCalleeID, err)
