@@ -387,8 +387,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 	}
 
 	if cmd=="rtcConnect" {
-// TODO store c.RemoteAddr without port
-		err := StoreCallerIpInHubMap(c.globalCalleeID,c.RemoteAddr, false)
+		err := StoreCallerIpInHubMap(c.globalCalleeID,c.RemoteAddrNoPort, false)
 		if err!=nil {
 			fmt.Printf("# %s StoreCallerIpInHubMap (%s) err=%v\n", c.connType, c.globalCalleeID, err)
 		}
