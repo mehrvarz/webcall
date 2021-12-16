@@ -19,6 +19,7 @@ const form = document.querySelector('form#password');
 const formPw = document.querySelector('input#current-password');
 const menuSettingsElement = document.getElementById('menuSettings');
 const menuContactsElement = document.getElementById('menuContacts');
+const callIdElement = document.getElementById('callId');
 //const menuExitElement = document.getElementById('menuExit');
 const bitrate = 280000;
 const autoReconnectDelay = 15;
@@ -749,6 +750,7 @@ function wsOnOpen(wsUrl) {
 	autoanswerlabel.style.display = "block";
 	menuSettingsElement.style.display = "block";
 	menuContactsElement.style.display = "block";
+	callIdElement.style.display = "block";
 //	menuExitElement.style.display = "block";
 	goOfflineButton.disabled = false;
 }
@@ -1933,6 +1935,12 @@ var counter=0;
 function openContacts() {
 	let url = "/callee/contacts?callerId="+calleeID+"&name="+calleeName+"&i="+counter++;
 	gLog('openContacts',url);
+	iframeWindowOpen(url);
+}
+
+function openCallId() {
+	let url = "/user/dial?callerId="+calleeID+"&name="+calleeName+"&i="+counter++;
+	gLog('openCallId',url);
 	iframeWindowOpen(url);
 }
 
