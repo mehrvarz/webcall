@@ -761,7 +761,11 @@ function wsOnError(evt) {
 
 function wsOnError2(str) {
 	console.log("wsOnError "+calleeID+" "+str);
-	showStatus("WebSocket error",-1);
+	if(str=="") {
+		showStatus("");
+	} else {
+		showStatus("WebSocket error",-1);
+	}
 	onlineIndicator.src="";
 }
 
