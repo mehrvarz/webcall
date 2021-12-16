@@ -585,7 +585,7 @@ function menuDialogOpen(menuDialog) {
 
 	// position menuDialog at mouse coordinate
     var e = window.event;
-    var posX = e.clientX * 0.65;
+    var posX = e.clientX * 0.65 -30;
 	if(posX<0) posX=0;
     var posY = e.clientY;
 	if(posY>50) posY-=50;
