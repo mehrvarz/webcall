@@ -236,6 +236,10 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		if err!=nil {
 			fmt.Printf("# %s StoreCallerIpInHubMap (%s) err=%v\n", client.connType, client.globalCalleeID, err)
 		}
+//TODO we have a problem if the connection cannot be established
+//     if peerConnected() is never called, then peerConHasEnded() will never be called
+//     and in this case hub.ConnectedCallerIp will continue to contain the caller ip
+//     stored above via StoreCallerIpInHubMap()
 	}
 	hub.HubMutex.Unlock()
 }
@@ -678,7 +682,6 @@ func (c *WsClient) peerConHasEnded(comment string) {
 		}
 	}
 
-	// clear callerIp from hub.ConnectedCallerIp
 	c.hub.HubMutex.Lock()
 	if c.hub.lastCallStartTime>0 {
 		c.hub.processTimeValues()
@@ -686,6 +689,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 	}
 	c.hub.HubMutex.Unlock()
 
+	// clear callerIp from hub.ConnectedCallerIp
 	err := StoreCallerIpInHubMap(c.globalCalleeID, "", false)
 	if err!=nil {
 		// err "key not found": callee has already signed off - can be ignored

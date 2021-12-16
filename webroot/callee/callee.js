@@ -1377,35 +1377,35 @@ function goOnline() {
 	peerCon.onicecandidateerror = function(e) {
 		if(e.errorCode==701) {
 			// don't warn on 701 (chrome "701 STUN allocate request timed out")
-			gLog("# onicecandidateerror", e.errorCode, e.errorText, e.url);
+			gLog("# peerCon onicecandidateerror", e.errorCode, e.errorText, e.url);
 		} else {
 			if(!gentle) console.warn("onicecandidateerror", e.errorCode, e.errorText, e.url);
-			showStatus("iceCandidate error "+e.errorCode+" "+e.errorText,-1);
+			showStatus("peerCon iceCandidate error "+e.errorCode+" "+e.errorText,-1);
 		}
 	}
 	peerCon.ontrack = ({track, streams}) => peerConOntrack(track, streams);
 	peerCon.onicegatheringstatechange = event => {
 		let connection = event.target;
-		gLog("onicegatheringstatechange "+connection.iceGatheringState);
+		gLog("peerCon onicegatheringstatechange "+connection.iceGatheringState);
 	}
 	peerCon.onnegotiationneeded = async () => {
 		if(!peerCon) {
-			gLog('onnegotiationneeded deny: no peerCon');
+			gLog('peerCon onnegotiationneeded deny: no peerCon');
 			return;
 		}
 		if(!rtcConnect) {
-			gLog('onnegotiationneeded deny: no rtcConnect');
+			gLog('peerCon onnegotiationneeded deny: no rtcConnect');
 			return;
 		}
 		try {
 			// this will trigger onIceCandidates and send hostCandidate's to the client
-			gLog("onnegotiationneeded createOffer");
+			gLog("peerCon onnegotiationneeded createOffer");
 			localDescription = await peerCon.createOffer();
 			localDescription.sdp = maybePreferCodec(localDescription.sdp, 'audio', 'send', "opus");
 			localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
 				'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
 			peerCon.setLocalDescription(localDescription).then(() => {
-				gLog('onnegotiationneeded localDescription set -> signal');
+				gLog('peerCon onnegotiationneeded localDescription set -> signal');
 				if(isDataChlOpen()) {
 					dataChannel.send("cmd|calleeOffer|"+JSON.stringify(localDescription));
 				} else {
@@ -1413,14 +1413,14 @@ function goOnline() {
 				}
 			}, err => console.error(`Failed to set local descr: ${err.toString()}`));
 		} catch(err) {
-			console.error("onnegotiationneeded err",err.message);
+			console.error("peerCon onnegotiationneeded err",err.message);
 		}
 	};
 	peerCon.onsignalingstatechange = event => {
-		gLog("signalingstatechange "+peerCon.signalingState);
+		gLog("peerCon signalingstatechange "+peerCon.signalingState);
 	}
 	peerCon.oniceconnectionstatechange = event => {
-		gLog("oniceconnectionstatechange", peerCon.iceConnectionState);
+		gLog("peerCon oniceconnectionstatechange", peerCon.iceConnectionState);
 	}
 	peerCon.onconnectionstatechange = event => {
 		gLog("peerCon connectionstatechange", peerCon.connectionState);
