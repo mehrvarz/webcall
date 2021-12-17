@@ -913,28 +913,21 @@ function gotStream(stream) {
 
 	localStream = stream;
 
+	const audioTracks = localStream.getAudioTracks();
+	if(!mediaConnect) {
+		gLog('gotStream mute local audio input '+audioTracks[0]);
+		audioTracks[0].enabled = false;
+	} else {
+		gLog('gotStream unmute local audio input '+audioTracks[0]);
+		audioTracks[0].enabled = true;
+	}
+
 	if(!peerCon) {
 		gLog('gotStream no peerCon: no addTrack');
 	} else if(addedAudioTrack) {
 		gLog('gotStream addedAudioTrack already set: no addTrack');
-		const audioTracks = localStream.getAudioTracks();
-		if(!mediaConnect) {
-			gLog('peerCon mute local audio input '+audioTracks[0]);
-			audioTracks[0].enabled = false;
-		} else {
-			gLog('peerCon unmute local audio input '+audioTracks[0]);
-			audioTracks[0].enabled = true;
-		}
 	} else {
 		gLog('gotStream addedAudioTrack');
-		const audioTracks = localStream.getAudioTracks();
-		if(!mediaConnect) {
-			gLog('peerCon mute local audio input '+audioTracks[0]);
-			audioTracks[0].enabled = false;
-		} else {
-			gLog('peerCon unmute local audio input '+audioTracks[0]);
-			audioTracks[0].enabled = true;
-		}
 		addedAudioTrack = peerCon.addTrack(audioTracks[0],localStream);
 	}
 
