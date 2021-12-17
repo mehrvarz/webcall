@@ -20,7 +20,6 @@ const formPw = document.querySelector('input#current-password');
 const menuSettingsElement = document.getElementById('menuSettings');
 const menuContactsElement = document.getElementById('menuContacts');
 const dialIdElement = document.getElementById('dialId');
-//const menuExitElement = document.getElementById('menuExit');
 const bitrate = 280000;
 const autoReconnectDelay = 15;
 const clientVersion = "2.0.0";
@@ -750,7 +749,6 @@ function wsOnOpen(wsUrl) {
 	menuSettingsElement.style.display = "block";
 	menuContactsElement.style.display = "block";
 	dialIdElement.style.display = "block";
-//	menuExitElement.style.display = "block";
 	goOfflineButton.disabled = false;
 }
 
