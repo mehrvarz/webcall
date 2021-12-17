@@ -1462,8 +1462,13 @@ function dial2() {
 	// add selected local audioTrack (audio input / mic) to peerCon
 	const audioTracks = localStream.getAudioTracks();
 	if(audioTracks.length>0) {
-		audioTracks[0].enabled = true; // unmute
-		gLog('peerCon addTrack local audio input',audioTracks[0]);
+		if(mediaConnect) {
+			audioTracks[0].enabled = true; // unmute
+			gLog('peerCon addTrack local audio input',audioTracks[0]);
+		} else {
+			audioTracks[0].enabled = false; // mute
+			gLog('peerCon addTrack local mute audio input',audioTracks[0]);
+		}
 		addedAudioTrack = peerCon.addTrack(audioTracks[0],localStream);
 	}
 
