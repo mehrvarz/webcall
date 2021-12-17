@@ -49,6 +49,38 @@ button[disabled]:hover {
 	background-color:#04c;
 }
 
+.menuButton, menuButton:focus {
+	color:white;
+	_background-color:#04c;
+	_transition: background-color 200ms;
+	_border:none;
+	_border-radius:3px;
+	_font-size: 1.0em;
+	_margin: 0 0.8em 0.8em 0;
+	_padding: 0.7em 0.8em 0.6em 0.8em;
+	_min-width: 60px;
+	_outline:none;
+	user-select:none;
+}
+.menuButton:active {
+	_background-color: #02a;
+	_font-weight:700;
+	outline:none;
+}
+.menuButton:hover {
+	color:#ff0;
+	_background-color: #b82a68;
+	_font-weight:700;
+	outline:none;
+}
+.menuButton[disabled] {
+	_color:#aaa;
+}
+.menuButton[disabled]:hover {
+	_background-color:#04c;
+}
+
+
 div#container {
 	padding: 0.7em;
 	max-width:520px;
@@ -235,10 +267,10 @@ input[type=submit]:focus {
 
 <div id="menuDialog" style="position:relative; max-width:520px; user-select:none;">
 	<div style="position:absolute; left:-999em; min-width:150px; top:0px; z-index:110; background:#45dd; color:#fff; padding:10px 20px; line-height:2.6em; border-radius:3px; cursor:pointer;">
-		<div id="menuContacts" style="display:none" onclick="openContacts()">Contacts</div>
-		<div id="dialId" style="display:none" onclick="openDialId()">Dial ID</div>
-		<div id="menuSettings" style="display:none" onclick="openSettings()">Settings</div>
-		<div onclick="openPostCallStats()">Call Stats</div>
+		<div id="menuContacts" class="menuButton" style="display:none" onclick="openContacts()">Contacts</div>
+		<div id="dialId" class="menuButton" style="display:none" onclick="openDialId()">Dial ID</div>
+		<div id="menuSettings" class="menuButton" style="display:none" onclick="openSettings()">Settings</div>
+		<div class="menuButton" onclick="openPostCallStats()">Call Stats</div>
 		<label id="fileselectlabel" style="cursor:pointer; display:none;">
 			Send File
 			<input id="fileselect" type="file" style="display:none"></input>
@@ -252,7 +284,7 @@ input[type=submit]:focus {
 		<label id="fullscreenlabel" style="margin-left:-4px;">
 			<input type="checkbox" id="fullscreen" class="checkbox"> Full screen</label>
 		</label>
-		<div id="menuExit" _style="display:none" onclick="exit()">Exit / Clear cookie</div>
+		<div class="menuButton" id="menuExit" _style="display:none" onclick="exit()">Exit / Clear cookie</div>
 	</div>
 </div>
 

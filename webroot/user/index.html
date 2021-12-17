@@ -54,7 +54,8 @@ div#container {
 	max-width:520px;
 }
 div#enterId {
-	padding: 1em 2%;
+	padding: 1em;
+	margin: 1em;
 	max-width:520px;
 }
 h1 {
@@ -317,11 +318,12 @@ input[type=submit]:focus {
 	<h1>WebCall Dial</h1>
 	<div id="status" class="status"></div>
 	<form action="javascript:;" onsubmit="submitForm(this)" _style="display:none;" id="mnumber">
-		<label for="mnumber" style="display:inline-block; padding-bottom:4px;">Enter ID:</label><br>
-		<input name="mnumber" id="enterIdVal" type="text" class="formtext" autofocus required>
+		<!--label for="mnumber" style="display:inline-block; padding-bottom:4px;">ID:</label-->
+		<br>
+		<input name="mnumber" id="enterIdVal" type="text" placeholder="target id" class="formtext" autofocus required>
 		<span class="lbutton" onclick="clearForm(3)">Clear</span>
 		<br>
-		<input type="submit" name="Submit" id="submit" value="Dial" style="width:100px; margin-top:12px;">
+		<input type="submit" name="Submit" id="submit" value="Dial" style="width:100px; margin-top:20px;">
 	</form>
 </div>
 <script src="custom.js"></script>
