@@ -13,3 +13,5 @@ require (
 	go.etcd.io/bbolt v1.3.6
 	gopkg.in/ini.v1 v1.63.0
 )
+
+//replace github.com/mehrvarz/turn/v2 => ../turn

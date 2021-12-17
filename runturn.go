@@ -88,6 +88,10 @@ func runTurnServer() {
 				}
 			}
 			if !foundIp {
+				// here I check if ipAddr is listed anywhere in hubMap as a callerIp
+				// in other words: the connection will be authenticated to use turn
+				// by the caller (!), not by the callee
+				// we do this bc only one of the two sides needs to authenticate
 				foundIp, foundCalleeId, err = SearchCallerIpInHubMap(ipAddr)
 				if err != nil {
 					fmt.Printf("# turn auth for %v FAIL err=%v\n", srcAddr.String(), err)
@@ -105,6 +109,7 @@ func runTurnServer() {
 					}
 				}
 			}
+//foundIp=true
 			if foundIp {
 				if logWantedFor("turn") {
 					recentTurnCallerIpMutex.RLock()
@@ -119,7 +124,7 @@ func runTurnServer() {
 			}
 
 			if logWantedFor("turn") {
-				fmt.Printf("turn auth for %v FAIL not found\n", srcAddr.String())
+				fmt.Printf("# turn auth for %v FAIL not found\n", srcAddr.String())
 			}
 			return nil, false
 		},

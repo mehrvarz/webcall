@@ -153,7 +153,7 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 		h.CalleeClient = nil
 	} else {
 		// clear caller peer-connection flag and callerIp in HubMap
-		//client.peerConHasEnded("unregister "+comment)
+		client.peerConHasEnded("unregister "+comment)
 	}
 
 	if logWantedFor("hub") {
