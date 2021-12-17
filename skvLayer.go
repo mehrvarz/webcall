@@ -80,14 +80,15 @@ func locGetOnlineCallee(calleeID string, ejectOn1stFound bool, reportHiddenCalle
 }
 
 func locStoreCallerIpInHubMap(calleeId string, callerIp string, skipConfirm bool) error {
-	if logWantedFor("searchhub") {
-		fmt.Printf("StoreCallerIpInHubMap calleeId=%s callerIp=%s\n", calleeId, callerIp)
-	}
 	var err error = nil
 	hubMapMutex.Lock()
 	defer hubMapMutex.Unlock()
 	hub := hubMap[calleeId]
 	if hub==nil {
+		if logWantedFor("searchhub") {
+			fmt.Printf("StoreCallerIpInHubMap calleeId=%s (not found) set callerIp=%s\n",
+				calleeId, callerIp)
+		}
 		err = skv.ErrNotFound
 	} else {
 		if hub.ConnectedCallerIp != callerIp {
@@ -104,8 +105,18 @@ func locStoreCallerIpInHubMap(calleeId string, callerIp string, skipConfirm bool
 				recentTurnCallerIpMutex.Unlock()
 			}
 
+			if logWantedFor("searchhub") {
+				fmt.Printf("StoreCallerIpInHubMap calleeId=%s set callerIp=%s was=%s\n",
+					calleeId, callerIp, hub.ConnectedCallerIp)
+			}
+
 			hub.ConnectedCallerIp = callerIp
 			hubMap[calleeId] = hub
+		} else {
+			if logWantedFor("searchhub") {
+				fmt.Printf("StoreCallerIpInHubMap calleeId=%s set callerIp=%s was already set\n",
+					calleeId, callerIp)
+			}
 		}
 	}
 	return err
