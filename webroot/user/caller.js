@@ -1356,22 +1356,22 @@ function dial2() {
 	peerCon.onicecandidate = e => onIceCandidate(e,"callerCandidate");
 	peerCon.onicecandidateerror = function(e) {
 		if(e.errorCode==701) {
-			gLog("# onicecandidateerror", e.errorCode, e.errorText, e.url);
+			gLog("# peerCon onicecandidateerror", e.errorCode, e.errorText, e.url);
 		} else {
-			if(!gentle) console.warn("onicecandidateerror", e.errorCode, e.errorText, e.url);
+			if(!gentle) console.warn("peerCon onicecandidateerror", e.errorCode, e.errorText, e.url);
 			showStatus("iceCandidate error "+e.errorCode+" "+e.errorText,-1);
 		}
 	}
 	peerCon.ontrack = ({track, streams}) => peerConOntrack(track, streams);
 	peerCon.onnegotiationneeded = async () => {
 		if(!peerCon) {
-			gLog('# onnegotiationneeded !peerCon');
+			gLog('# peerCon onnegotiationneeded !peerCon');
 			return;
 		}
-		gLog('onnegotiationneeded');
+		gLog('peerCon onnegotiationneeded');
 		try {
 			// note: this will trigger onIceCandidates and send calleeCandidate's to the client
-			gLog("onnegotiationneeded createOffer");
+			gLog("peerCon onnegotiationneeded createOffer");
 			localDescription = await peerCon.createOffer();
 			localDescription.sdp = maybePreferCodec(localDescription.sdp, 'audio', 'send', "opus");
 			localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
@@ -1379,11 +1379,11 @@ function dial2() {
 
 			peerCon.setLocalDescription(localDescription).then(() => {
 				if(doneHangup) {
-					gLog('onnegotiationneeded deny send: doneHangup');
+					gLog('peerCon onnegotiationneeded deny send: doneHangup');
 				} else if(!rtcConnect && !dialing) {
 					console.log('# onnegotiationneeded deny send: !rtcConnect && !dialing');
 				} else if(isDataChlOpen()) {
-					gLog('onnegotiationneeded send callerOfferUpd via dc');
+					gLog('peerCon onnegotiationneeded send callerOfferUpd via dc');
 					dataChannel.send("cmd|callerOfferUpd|"+JSON.stringify(localDescription));
 				} else {
 					gLog('onnegotiationneeded send callerOffer via ws');
@@ -1391,26 +1391,26 @@ function dial2() {
 				}
 			}, err => console.error(`Failed to set local descr: ${err.toString()}`));
 		} catch(err) {
-			console.error("onnegotiationneeded err",err);
+			console.error("peerCon onnegotiationneeded err",err);
 		}
 	};
 	peerCon.onicegatheringstatechange = event => {
 		let connection = event.target;
-		gLog("onicegatheringstatechange", connection.iceGatheringState);
+		gLog("peerCon onicegatheringstatechange", connection.iceGatheringState);
 	}
 	peerCon.onsignalingstatechange = event => {
-		gLog("onsignalingstate", peerCon.signalingState);
+		gLog("peerCon onsignalingstate", peerCon.signalingState);
 	}
 	peerCon.oniceconnectionstatechange = event => {
-		gLog("oniceconnectionstate", peerCon.iceConnectionState);
+		gLog("peerCon oniceconnectionstate", peerCon.iceConnectionState);
 	}
 	peerCon.onconnectionstatechange = event => {
-		gLog("peerCon connectionstatechange", peerCon.connectionState);
 		if(!peerCon) {
+			gLog("peerCon onconnectionstatechange !peerCon "+peerCon.connectionState);
 			hangupWithBusySound(true,"Peer disconnected");
 			return;
 		}
-		gLog("onconnectionstatechange", peerCon.connectionState);
+		gLog("peerCon onconnectionstatechange "+peerCon.connectionState);
 		if(peerCon.connectionState=="disconnected") {
 			console.log('peerCon disconnected',rtcConnect,mediaConnect);
 			hangupWithBusySound(true,"Peer disconnected");
