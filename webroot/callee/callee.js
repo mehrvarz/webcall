@@ -759,7 +759,8 @@ function wsOnError(evt) {
 function wsOnError2(str) {
 	console.log("wsOnError "+calleeID+" "+str);
 	if(str!="") {
-		showStatus("WebSocket error",-1);
+//		showStatus("WebSocket error",-1);
+		showStatus("No connection to WebCall server...",-1);
 		onlineIndicator.src="";
 	}
 }

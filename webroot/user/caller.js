@@ -983,7 +983,9 @@ function connectSignaling(message,openedFunc) {
 	};
 	wsConn.onerror = function(evt) {
 		console.error("wsConn.onerror");
-		showStatus("Websocket error");
+//		showStatus("Websocket error");
+		showStatus("No connection to WebCall server...");
+
 	}
 	wsConn.onclose = function (evt) {
 		if(tryingToOpenWebSocket) {
