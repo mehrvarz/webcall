@@ -1169,6 +1169,9 @@ function signalingCommand(message) {
 				vsendButton.style.display = "inline-block";
 			}
 			mediaConnectStartDate = Date.now();
+			if(typeof Android !== "undefined" && Android !== null) {
+				Android.peerConnect();
+			}
 			needToStoreMissedCall = false;
 
 			if(fileselectLabel && isDataChlOpen()) {
@@ -1417,6 +1420,9 @@ function dial2() {
 		gLog("peerCon onconnectionstatechange "+peerCon.connectionState);
 		if(peerCon.connectionState=="disconnected") {
 			console.log('peerCon disconnected',rtcConnect,mediaConnect);
+			if(typeof Android !== "undefined" && Android !== null) {
+				Android.peerDisConnect();
+			}
 			hangupWithBusySound(true,"Peer disconnected");
 			return;
 		} else if(peerCon.connectionState=="failed") {

@@ -1296,6 +1296,9 @@ function pickup2() {
 			audioTracks[0].enabled = true;
 		}
 		mediaConnectStartDate = Date.now();
+		if(typeof Android !== "undefined" && Android !== null) {
+			Android.peerConnect();
+		}
 
 		if(isDataChlOpen() && isP2pCon()) {
 			fileselectLabel.style.display = "block";
@@ -1811,6 +1814,10 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 		} else {
 			peerConCloseFunc();
 		}
+	}
+
+	if(typeof Android !== "undefined" && Android !== null) {
+		Android.peerDisConnect();
 	}
 
 	if(wsConn)
