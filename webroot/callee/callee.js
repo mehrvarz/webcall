@@ -1293,6 +1293,10 @@ function pickup2() {
 		if(vsendButton) {
 			vsendButton.style.display = "inline-block";
 		}
+		if(localStream) {
+			const audioTracks = localStream.getAudioTracks();
+			audioTracks[0].enabled = true;
+		}
 		mediaConnectStartDate = Date.now();
 
 		if(isDataChlOpen() && isP2pCon()) {

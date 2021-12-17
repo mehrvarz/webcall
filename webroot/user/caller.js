@@ -1161,6 +1161,10 @@ function signalingCommand(message) {
 
 			mediaConnect = true;
 			stopAllAudioEffects();
+			if(localStream) {
+				const audioTracks = localStream.getAudioTracks();
+				audioTracks[0].enabled = true;
+			}
 			if(vsendButton) {
 				vsendButton.style.display = "inline-block";
 			}
@@ -1396,13 +1400,13 @@ function dial2() {
 	};
 	peerCon.onicegatheringstatechange = event => {
 		let connection = event.target;
-		gLog("peerCon onicegatheringstatechange", connection.iceGatheringState);
+		gLog("peerCon onicegatheringstatechange "+connection.iceGatheringState);
 	}
 	peerCon.onsignalingstatechange = event => {
-		gLog("peerCon onsignalingstate", peerCon.signalingState);
+		gLog("peerCon onsignalingstate "+peerCon.signalingState);
 	}
 	peerCon.oniceconnectionstatechange = event => {
-		gLog("peerCon oniceconnectionstate", peerCon.iceConnectionState);
+		gLog("peerCon oniceconnectionstate "+peerCon.iceConnectionState);
 	}
 	peerCon.onconnectionstatechange = event => {
 		if(!peerCon) {
@@ -1508,6 +1512,7 @@ function dataChannelOnmessage(event) {
 				hangupWithBusySound(false,"dataChannel.close");
 			} else if(event.data.startsWith("cmd|")) {
 				let subCmd = event.data.substring(4);
+				gLog("subCmd="+subCmd);
 				if(subCmd.startsWith("ledred")) {
 					if(onlineIndicator) {
 						onlineIndicator.src="red-gradient.svg";

@@ -915,6 +915,11 @@ function gotStream(stream) {
 
 	if(!peerCon) {
 		//gLog('gotStream no peerCon: no addTrack');
+		// mute mic
+		if(localStream) {
+			const audioTracks = localStream.getAudioTracks();
+			audioTracks[0].enabled = false;
+		}
 	} else if(addedAudioTrack) {
 		gLog('gotStream addedAudioTrack already set: no addTrack');
 	} else {
