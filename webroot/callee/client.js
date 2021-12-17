@@ -914,18 +914,27 @@ function gotStream(stream) {
 	localStream = stream;
 
 	if(!peerCon) {
-		//gLog('gotStream no peerCon: no addTrack');
-		// mute mic
-		if(localStream) {
-			const audioTracks = localStream.getAudioTracks();
-			audioTracks[0].enabled = false;
-		}
+		gLog('gotStream no peerCon: no addTrack');
 	} else if(addedAudioTrack) {
 		gLog('gotStream addedAudioTrack already set: no addTrack');
-	} else {
 		const audioTracks = localStream.getAudioTracks();
-		audioTracks[0].enabled = true;
-		gLog('peerCon addTrack local audio input '+audioTracks[0]);
+		if(!mediaConnect) {
+			gLog('peerCon mute local audio input '+audioTracks[0]);
+			audioTracks[0].enabled = false;
+		} else {
+			gLog('peerCon unmute local audio input '+audioTracks[0]);
+			audioTracks[0].enabled = true;
+		}
+	} else {
+		gLog('gotStream addedAudioTrack');
+		const audioTracks = localStream.getAudioTracks();
+		if(!mediaConnect) {
+			gLog('peerCon mute local audio input '+audioTracks[0]);
+			audioTracks[0].enabled = false;
+		} else {
+			gLog('peerCon unmute local audio input '+audioTracks[0]);
+			audioTracks[0].enabled = true;
+		}
 		addedAudioTrack = peerCon.addTrack(audioTracks[0],localStream);
 	}
 
