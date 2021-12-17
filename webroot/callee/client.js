@@ -1236,7 +1236,7 @@ function remoteVideoHide() {
 }
 
 function peerConOntrack(track, streams) {
-/*
+
 // TODO tmtmtm
 //		track.onunmute = () => {
 //			if(remoteVideoFrame && remoteVideoFrame.srcObject == streams[0]) {
@@ -1250,7 +1250,8 @@ function peerConOntrack(track, streams) {
 //		}
 		remoteStream = streams[0];
 //		};
-*/
+
+/*
 	gLog('peerCon.ontrack');
 	track.onunmute = () => {
 		if(remoteVideoFrame && remoteVideoFrame.srcObject == streams[0]) {
@@ -1264,7 +1265,7 @@ function peerConOntrack(track, streams) {
 		}
 		remoteStream = streams[0];
 	};
-
+*/
 	if(remoteVideoFrame) {
 		if(!track.enabled) {
 			gLog('peerCon.ontrack onunmute !track.enabled: not set remoteVideoFrame');
