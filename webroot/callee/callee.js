@@ -532,7 +532,7 @@ function login(retryFlag) {
 			goOnlineButton.disabled = true;
 			enablePasswordForm();
 		} else if(loginStatus=="") {
-			showStatus("No answer from host",-1);
+			showStatus("No response from server",-1);
 			form.style.display = "none";
 		} else if(loginStatus=="fatal") {
 			// loginStatus "fatal" = "already logged in" or "db.GetX err"
@@ -550,7 +550,7 @@ function login(retryFlag) {
 	}, function(errString,err) {
 		console.log('xhr error',errString);
 		if(err==502 || errString.startsWith("fetch")) {
-			showStatus("No response from signaling server",3000);
+			showStatus("No response from server",-1);
 		} else {
 			showStatus("XHR error "+err,3000);
 		}
@@ -567,8 +567,8 @@ function login(retryFlag) {
 		if(retryFlag) {
 			setTimeout(function() {
 				let delay = autoReconnectDelay + Math.floor(Math.random() * 10) - 5;
-				gLog('reconnecting to signaling server in %ds... '+delay);
-				showStatus("Reconnecting to signaling server...",-1);
+				gLog('reconnecting in %ds... '+delay);
+				showStatus("Reconnecting...",-1);
 				missedCallsElement.style.display = "none";
 				missedCallsTitleElement.style.display = "none";
 				delayedWsAutoReconnect(delay);
