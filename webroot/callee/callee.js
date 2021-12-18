@@ -206,7 +206,7 @@ window.onload = function() {
 				return;
 			}
 
-			gLog('onload pw-entry is needed');
+			gLog('onload pw-entry is needed '+mode);
 			onGotStreamGoOnline = true;
 			goOnlineButton.disabled = true;
 			goOfflineButton.disabled = true;
