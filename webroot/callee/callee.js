@@ -1258,16 +1258,16 @@ function pickup() {
 	console.log('pickup -> open mic');
 	pickupAfterLocalStream = true;
 	getStream(); // -> pickup2()
+
+	if(typeof Android !== "undefined" && Android !== null) {
+		Android.callPickedUp();
+	}
 }
 
 function pickup2() {
 	gLog('pickup2');
 	showStatus("");
 	stopAllAudioEffects("pickup2");
-
-	if(typeof Android !== "undefined" && Android !== null) {
-		Android.endRinging();
-	}
 
 	if(!localStream) {
 		console.warn('pickup2 no localStream');
@@ -1433,7 +1433,7 @@ function goOnline() {
 			hangup();
 			return;
 		}
-		if(peerCon.connectionState=="disconnected") {
+		if(peerCon.connectionState=="disconnected" || peerCon.connectionState=="failed") {
 			console.log('peerCon disconnected '+rtcConnect+" "+mediaConnect);
 			stopAllAudioEffects();
 			endWebRtcSession(true,true); // -> peerConCloseFunc
@@ -1844,10 +1844,6 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 	fileselectLabel.style.display = "none";
 	progressSendElement.style.display = "none";
 	progressRcvElement.style.display = "none";
-
-	if(typeof Android !== "undefined" && Android !== null) {
-		Android.endRinging();
-	}
 
 	// goOnlinePending flag prevents secondary calls to goOnline
 	if(goOnlineAfter && !goOnlinePending) {
