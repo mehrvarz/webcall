@@ -1907,6 +1907,10 @@ function goOffline() {
 		}
 		goOnlineButton.disabled = false;
 	} else {
+		if(typeof Android !== "undefined" && Android !== null) {
+			Android.wsClose();
+		}
+
 		if(!mediaConnect) {
 			onlineIndicator.src="";
 		}
