@@ -760,7 +760,6 @@ function wsOnError(evt) {
 function wsOnError2(str) {
 	console.log("wsOnError "+calleeID+" "+str);
 	if(str!="") {
-//		showStatus("No connection to WebCall server...",-1);
 		showStatus(str,-1);
 		onlineIndicator.src="";
 	}
@@ -789,8 +788,6 @@ function wsOnClose(evt) {
 		missedCallsElement.style.display = "none";
 		missedCallsTitleElement.style.display = "none";
 		// if conditions are right after delay secs this will call login()
-// TODO on Androud this may well fail in deep sleep
-// we should do this only if NOT running on Android
 		delayedWsAutoReconnect(delay);
 	}
 }
