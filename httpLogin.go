@@ -56,10 +56,18 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			fmt.Printf("# /login GetOnlineCallee() err=%v\n", err)
 		}
 		if key != "" {
-			fmt.Fprintf(w, "fatal")
-			httpResponseCount++
-			fmt.Printf("# /login key=(%s) is already logged in rip=%s\n", key, remoteAddr)
-			return
+			time.Sleep(1 * time.Second)
+			key, _, _, err = GetOnlineCallee(urlID, ejectOn1stFound, reportHiddenCallee,
+				remoteAddr, occupy, "/login")
+			if err != nil {
+				fmt.Printf("# /login GetOnlineCallee() err=%v\n", err)
+			}
+			if key != "" {
+				fmt.Fprintf(w, "fatal")
+				httpResponseCount++
+				fmt.Printf("# /login key=(%s) is already logged in rip=%s\n", key, remoteAddr)
+				return
+			}
 		}
 	}
 
@@ -363,7 +371,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			myHubMutex.RLock()
 			if hub != nil && !hub.CalleeLogin.Get() {
 				myHubMutex.RUnlock()
-				fmt.Printf("# /login ws-connect timeout %ds removing %s/%s %v rip=%s\n",
+				fmt.Printf("/login ws-connect timeout %ds removing %s/%s %v rip=%s\n",
 					waitedFor, urlID, globalID, wsClientID, remoteAddrWithPort)
 				if globalID != "" {
 					//_,lenGlobalHubMap = 
