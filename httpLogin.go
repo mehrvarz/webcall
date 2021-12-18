@@ -53,33 +53,23 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		key, _, _, err := GetOnlineCallee(urlID, ejectOn1stFound, reportHiddenCallee,
 			remoteAddr, occupy, "/login")
 		if err != nil {
-			fmt.Printf("# /login GetOnlineCallee() err=%v\n", err)
+			fmt.Printf("# /login key=(%s) GetOnlineCallee() err=%v\n", key, err)
 		}
 		if key != "" {
-// TODO if it is the same device requesting, as the one stored, why return an error??? tmtmtm
-
+			// only throw "already logged in" if remoteAddr differes from hub.CalleeClient.RemoteAddrNoPort
 			hubMapMutex.RLock()
 			hub := hubMap[key]
 			hubMapMutex.RUnlock()
-			if hub!=nil && hub.CalleeClient!=nil {
-				//if hub.CalleeClient.RemoteAddrNoPort == remoteAddr {
-				//}
-				fmt.Printf("! /login key=(%s) is already logged in rip=%s %s\n",
-					key, remoteAddr, hub.CalleeClient.RemoteAddrNoPort)
-			}
-
-			time.Sleep(1 * time.Second)
-			key, _, _, err = GetOnlineCallee(urlID, ejectOn1stFound, reportHiddenCallee,
-				remoteAddr, occupy, "/login")
-			if err != nil {
-				fmt.Printf("# /login GetOnlineCallee() err=%v\n", err)
-			}
-			if key != "" {
+			if hub==nil || hub.CalleeClient==nil || remoteAddr != hub.CalleeClient.RemoteAddrNoPort {
 				fmt.Fprintf(w, "fatal")
 				httpResponseCount++
 				fmt.Printf("# /login key=(%s) is already logged in rip=%s\n", key, remoteAddr)
 				return
 			}
+
+			// unregister old, already logged in account
+			hub.doUnregister(hub.CalleeClient, "");
+			fmt.Printf("/login key=(%s) unregister old, already logged in rip=%s\n", key, remoteAddr)
 		}
 	}
 
