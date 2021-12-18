@@ -1438,7 +1438,7 @@ function goOnline() {
 			stopAllAudioEffects();
 			endWebRtcSession(true,true); // -> peerConCloseFunc
 		} else if(peerCon.connectionState=="connected") {
-			peerConnected();
+			peerConnected2();
 		}
 	}
 
@@ -1451,7 +1451,7 @@ function goOnline() {
 	}
 }
 
-function peerConnected() {
+function peerConnected2() {
 	if(rtcConnect) {
 		return;
 	}
