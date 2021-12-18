@@ -68,8 +68,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			}
 
 			// unregister old, already logged in account
-			hub.doUnregister(hub.CalleeClient, "");
 			fmt.Printf("/login key=(%s) unregister old, already logged in rip=%s\n", key, remoteAddr)
+			hub.doUnregister(hub.CalleeClient, "");
 		}
 	}
 
