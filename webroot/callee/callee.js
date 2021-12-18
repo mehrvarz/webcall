@@ -1460,6 +1460,11 @@ function peerConnected2() {
 	rtcConnectStartDate = Date.now();
 	mediaConnectStartDate = 0;
 	gLog("peerConnected rtcConnect");
+
+	if(typeof Android !== "undefined" && Android !== null) {
+		Android.rtcConnect();
+	}
+
 	wsSend("rtcConnect|")
 
 	if(!dataChannel) {
