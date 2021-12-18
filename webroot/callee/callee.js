@@ -193,7 +193,7 @@ window.onload = function() {
 
 			calleeID = calleeID.toLowerCase();
 			gLog('onload calleeID lowercase '+calleeID);
-			if(mode==1 || wsSecret!="") {
+			if(mode==1 || mode==3 || wsSecret!="") {
 				gLog('onload pw-entry not required with cookie/wsSecret');
 				// we have a cockie, so no manual pw-entry is needed
 				// turn automatic online off, user needs to interact before we can answer calls
@@ -661,6 +661,7 @@ function delayedWsAutoReconnect(reconPauseSecs) {
 }
 
 function showOnlineReadyMsg(sessionIdPayload) {
+	// sessionIdPayload may contain a string with the client version number
 	if(!wsConn) {
 		console.log('showOnlineReadyMsg not online');
 		return;
