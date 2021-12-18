@@ -759,7 +759,6 @@ function wsOnError(evt) {
 function wsOnError2(str) {
 	console.log("wsOnError "+calleeID+" "+str);
 	if(str!="") {
-//		showStatus("WebSocket error",-1);
 		showStatus("No connection to WebCall server...",-1);
 		onlineIndicator.src="";
 	}
@@ -928,7 +927,7 @@ function signalingCommand(message) {
 				return;
 			}
 
-			gLog("! peerCon.addIceCandidate accept address",
+			gLog("peerCon.addIceCandidate accept address",
 				address,callerCandidate.candidate);
 			if(address.indexOf(":")>=0
 					|| address==outboundIP
@@ -1429,13 +1428,13 @@ function goOnline() {
 		gLog("peerCon oniceconnectionstatechange", peerCon.iceConnectionState);
 	}
 	peerCon.onconnectionstatechange = event => {
-		gLog("peerCon connectionstatechange", peerCon.connectionState);
+		gLog("peerCon connectionstatechange "+peerCon.connectionState);
 		if(!peerCon) {
 			hangup();
 			return;
 		}
 		if(peerCon.connectionState=="disconnected") {
-			console.log('peerCon disconnected',rtcConnect,mediaConnect);
+			console.log('peerCon disconnected '+rtcConnect+" "+mediaConnect);
 			stopAllAudioEffects();
 			endWebRtcSession(true,true); // -> peerConCloseFunc
 		} else if(peerCon.connectionState=="connected") {
@@ -1460,11 +1459,11 @@ function peerConnected() {
 	goOfflineButton.disabled = true;
 	rtcConnectStartDate = Date.now();
 	mediaConnectStartDate = 0;
-	gLog("rtcConnect");
+	gLog("peerConnected rtcConnect");
 	wsSend("rtcConnect|")
 
 	if(!dataChannel) {
-		gLog('goOnline have no dataChannel');
+		gLog('peerConnected have no dataChannel');
 		createDataChannel();
 	}
 
