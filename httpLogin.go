@@ -60,7 +60,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 			hubMapMutex.RLock()
 			hub := hubMap[key]
-			hubMapMutex.RUnLock()
+			hubMapMutex.RUnlock()
 			if hub!=nil && hub.CalleeClient!=nil {
 				//if hub.CalleeClient.RemoteAddrNoPort == remoteAddr {
 				//}
