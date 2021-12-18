@@ -56,20 +56,34 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			fmt.Printf("# /login key=(%s) GetOnlineCallee() err=%v\n", key, err)
 		}
 		if key != "" {
-			// only throw "already logged in" if remoteAddr differes from hub.CalleeClient.RemoteAddrNoPort
-			hubMapMutex.RLock()
-			hub := hubMap[key]
-			hubMapMutex.RUnlock()
-			if hub==nil || hub.CalleeClient==nil || remoteAddr != hub.CalleeClient.RemoteAddrNoPort {
-				fmt.Fprintf(w, "fatal")
-				httpResponseCount++
-				fmt.Printf("# /login key=(%s) is already logged in rip=%s\n", key, remoteAddr)
-				return
+			// found "already logged in"
+			// delay a bit to see if we receive a parallel exithub that might delete this key
+			time.Sleep(300 * time.Millisecond)
+			// check again
+			key, _, _, err = GetOnlineCallee(urlID, ejectOn1stFound, reportHiddenCallee,
+				remoteAddr, occupy, "/login")
+			if err != nil {
+				fmt.Printf("# /login key=(%s) GetOnlineCallee() err=%v\n", key, err)
 			}
+			if key != "" {
+				// "already logged in" entry still exists
+				// if remoteAddr == hub.CalleeClient.RemoteAddrNoPort: unregister old entry
+				hubMapMutex.RLock()
+				hub := hubMap[key]
+				hubMapMutex.RUnlock()
+				if hub==nil || hub.CalleeClient==nil || remoteAddr != hub.CalleeClient.RemoteAddrNoPort {
+					// the new client does not come from the same IP, so deny login with same key
+					fmt.Fprintf(w, "fatal")
+					httpResponseCount++
+					fmt.Printf("# /login key=(%s) is already logged in rip=%s\n", key, remoteAddr)
+					return
+				}
 
-			// unregister old, already logged in account
-			fmt.Printf("/login key=(%s) unregister old, already logged in rip=%s\n", key, remoteAddr)
-			hub.doUnregister(hub.CalleeClient, "");
+				// the new client has the same IP as the old, so kill the old key and continue login
+				// unregister old, already logged in account
+				fmt.Printf("/login key=(%s) unregister old, already logged in rip=%s\n", key, remoteAddr)
+				hub.doUnregister(hub.CalleeClient, "");
+			}
 		}
 	}
 
@@ -222,6 +236,20 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 	exitFunc := func(calleeClient *WsClient, comment string) {
 		// exitFunc: callee is logging out: release hub and port of this session
+
+		// verify if the old calleeClient.hub.WsClientID is really same as the new wsClientID
+		var reqWsClientID uint64 = 0
+		if(calleeClient!=nil && calleeClient.hub!=nil) {
+			reqWsClientID = calleeClient.hub.WsClientID
+		}
+		if reqWsClientID != wsClientID {
+			// not the same: deny deletion
+			fmt.Printf("exithub callee=%s abort wsID=%d/%d %s rip=%s\n", globalID, wsClientID, reqWsClientID, comment, remoteAddrWithPort)
+			return;
+		}
+
+		fmt.Printf("exithub callee=%s wsID=%d/%d %s rip=%s\n", globalID, wsClientID, reqWsClientID, comment, remoteAddrWithPort)
+
 		myHubMutex.Lock()
 		if hub != nil {
 			if globalID != "" {
@@ -231,7 +259,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		}
 		myHubMutex.Unlock()
 
-		fmt.Printf("exithub callee=%s wsID=%d %s rip=%s\n", globalID, wsClientID, comment, remoteAddrWithPort)
 /*
 		// mark wsClientMap[wsClientID] for removal
 		wsClientMutex.Lock()
