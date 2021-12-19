@@ -173,7 +173,7 @@ window.onload = function() {
 	checkServerMode(function(mode) {
 		if(mode==0 || mode==1) {
 			// normal mode
-			console.log('onload load audio files');
+			console.log('onload load audio files '+mode);
 			ringtoneSound = new Audio('1980-phone-ringing.mp3');
 			busySignalSound = new Audio('busy-signal.mp3');
 			notificationSound = new Audio("notification.mp3");
@@ -454,7 +454,7 @@ function login(retryFlag) {
 		if(parts.length>=1 && parts[0].indexOf("wsid=")>=0) {
 			wsAddr = parts[0];
 			// we're now a logged-in callee-user
-//			gLog('login success wsAddr='+wsAddr);
+			gLog('login wsAddr='+wsAddr);
 
 			// hide the form
 			form.style.display = "none";
@@ -728,7 +728,7 @@ function connectSignaling(message,comment) {
 	}
 }
 
-function wsOnOpen(wsUrl) {
+function wsOnOpen() {
 	gLog('ws connection '+calleeID);
 	tryingToOpenWebSocket = false;
 	wsAutoReconnecting = false;
@@ -758,7 +758,7 @@ function wsOnError(evt) {
 }
 
 function wsOnError2(str) {
-	console.log("wsOnError "+calleeID+" "+str);
+	console.log("wsOnError2 "+str);
 	if(str!="") {
 		showStatus(str,-1);
 		onlineIndicator.src="";
