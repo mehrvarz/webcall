@@ -1992,10 +1992,10 @@ function exit() {
 
 function wakeGoOnline() {
 	gLog("wakeGoOnline start");
-	connectSignaling('','');
-	wsOnOpen();
+	connectSignaling('',''); // wsConn = Android.wsOpen(wsUrl)
+	wsOnOpen(); // green led
 	goOnlineButton.disabled = false; // prevent goOnline() abort
-	goOnline();
+	goOnline(); // wsSend("init|!")
 	showOnlineReadyMsg('');
 	gLog("wakeGoOnline done");
 }

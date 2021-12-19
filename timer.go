@@ -170,7 +170,7 @@ func ticker30sec() {
 			turnCaller, ok := recentTurnCallerIps[ipAddr]
 			if ok {
 				timeSinceLastFound := timeNow.Sub(turnCaller.TimeStored)
-				if timeSinceLastFound.Seconds() > 5 {
+				if timeSinceLastFound.Seconds() > 600 { // was 5
 					delete(recentTurnCallerIps,ipAddr)
 					deleted++
 				}
