@@ -190,7 +190,7 @@ func ticker30sec() {
 /*
 		if(ticker30secCounter%20==0) {
 			// loop through all hubs
-			fmt.Printf("ticker10min %d\n",ticker30secCounter)
+			fmt.Printf("ticker10min %d\n",ticker30secCounter/20)
 			hubMapMutex.RLock()
 			for _,hub := range hubMap {
 				if hub!=nil {
@@ -198,7 +198,7 @@ func ticker30sec() {
 					if err != nil {
 						fmt.Printf("ticker10min send dummy id=%s err=%v\n",hub.CalleeClient.calleeID,err)
 					} else {
-						fmt.Printf("ticker10min send dummy id=%s noerr\n",hub.CalleeClient.calleeID)
+						//fmt.Printf("ticker10min send dummy id=%s noerr\n",hub.CalleeClient.calleeID)
 					}
 				}
 			}

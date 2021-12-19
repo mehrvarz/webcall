@@ -702,7 +702,6 @@ let wsSendMessage = "";
 function connectSignaling(message,comment) {
 	console.log('connect to signaling server '+comment);
     var wsUrl = wsAddr;
-    gLog('connectSignaling: open ws connection... '+calleeID+' '+wsUrl);
 
 	tryingToOpenWebSocket = true;
 	wsSendMessage = message;
@@ -720,6 +719,7 @@ function connectSignaling(message,comment) {
 			}
 			return;
 		}
+	    gLog('connectSignaling: open ws connection... '+calleeID+' '+wsUrl);
 		wsConn = new WebSocket(wsUrl);
 		wsConn.onopen = wsOnOpen;
 		wsConn.onerror = wsOnError;
@@ -729,7 +729,7 @@ function connectSignaling(message,comment) {
 }
 
 function wsOnOpen() {
-	gLog('ws connection '+calleeID);
+	gLog('wsOnOpen '+calleeID);
 	tryingToOpenWebSocket = false;
 	wsAutoReconnecting = false;
 	if(!mediaConnect) {
@@ -1994,6 +1994,7 @@ function wakeGoOnline() {
 	gLog("wakeGoOnline start");
 	connectSignaling('','');
 	wsOnOpen();
+	goOnlineButton.disabled = false; // prevent goOnline() abort
 	goOnline();
 	showOnlineReadyMsg('');
 	gLog("wakeGoOnline done");
