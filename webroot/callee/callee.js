@@ -1990,3 +1990,12 @@ function exit() {
 	},1000);
 }
 
+function wakeGoOnline() {
+	gLog("wakeGoOnline start");
+	connectSignaling('','');
+	wsOnOpen();
+	goOnline();
+	showOnlineReadyMsg('');
+	gLog("wakeGoOnline done");
+}
+
