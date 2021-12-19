@@ -813,6 +813,9 @@ function signalingCommand(message) {
 
 	if(cmd=="init") {
 
+	} else if(cmd=="dummy") {
+		gLog('dummy '+payload);
+
 	} else if(cmd=="callerOffer" || cmd=="callerOfferUpd") {
 		if(peerCon==null) {
 			console.warn('callerOffer but no peerCon');

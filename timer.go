@@ -149,6 +149,7 @@ func callBackupScript(scriptName string) error {
 }
 
 // ticker30sec: logs stats, cleanup recentTurnCallerIps
+var ticker30secCounter=0;
 func ticker30sec() {
 	thirtySecTicker := time.NewTicker(30*time.Second)
 	defer thirtySecTicker.Stop()
@@ -182,6 +183,28 @@ func ticker30sec() {
 			}
 		}
 		recentTurnCallerIpMutex.Unlock()
+
+
+		// every 10 min
+		ticker30secCounter++
+/*
+		if(ticker30secCounter%20==0) {
+			// loop through all hubs
+			fmt.Printf("ticker10min %d\n",ticker30secCounter)
+			hubMapMutex.RLock()
+			for _,hub := range hubMap {
+				if hub!=nil {
+					err := hub.CalleeClient.Write([]byte("dummy|"+timeNow.String()))
+					if err != nil {
+						fmt.Printf("ticker10min send dummy id=%s err=%v\n",hub.CalleeClient.calleeID,err)
+					} else {
+						fmt.Printf("ticker10min send dummy id=%s noerr\n",hub.CalleeClient.calleeID)
+					}
+				}
+			}
+			hubMapMutex.RUnlock()
+		}
+*/
 	}
 	fmt.Printf("ticker30sec ending\n")
 }

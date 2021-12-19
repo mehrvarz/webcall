@@ -344,12 +344,18 @@ func (c *WsClient) receiveProcess(message []byte) {
 		return
 	}
 
+	if cmd=="dummy" {
+		fmt.Printf("%s dummy ip=%s id=%s payload=%s\n",
+			c.connType, c.RemoteAddr, c.calleeID, payload)
+		return
+	}
+
 	if cmd=="callerOffer" {
 		// caller starting a call - payload is JSON.stringify(localDescription)
 		if logWantedFor("wscall") {
-			fmt.Printf("%s callerDescription (call attempt) from %s to %s\n",
+			fmt.Printf("%s callerOffer (call attempt) from %s to %s\n",
 				c.connType,c.RemoteAddr,c.calleeID)
-			//fmt.Printf("%s callerDescription payload=%s\n",c.connType,payload)
+			//fmt.Printf("%s callerOffer payload=%s\n",c.connType,payload)
 		}
 
 		if c.hub.CalleeClient.Write(message) != nil {
