@@ -336,6 +336,14 @@ function videoOff() {
 }
 
 function checkServerMode(callback) {
+	if(typeof Android !== "undefined" && Android !== null) {
+		// in android mode if already connected return mode==1
+		if(Android.isConnected()) {
+			callback(1);
+			return;
+		}
+	}
+	
 	let api = apiPath+"/mode?id="+calleeID;
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 		if(xhr.responseText.startsWith("maintenance")) {
