@@ -808,7 +808,7 @@ function signalingCommand(message) {
 	if(tok.length>=2) {
 		payload = tok[1];
 	}
-	gLog('signaling cmd '+cmd);
+	//gLog('signaling cmd '+cmd);
 	//gLog('signaling payload '+payload);
 
 	if(cmd=="init") {
