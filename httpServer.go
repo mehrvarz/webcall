@@ -411,12 +411,18 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		if maintenanceMode {
 			fmt.Printf("/mode maintenance rip=%s\n",remoteAddr)
 			fmt.Fprintf(w,"maintenance")
+			if logWantedFor("mode") {
+				fmt.Printf("/mode maintenance (cookie:%s) (url:%s) rip=%s\n", calleeID, urlID, remoteAddr)
+			}
 			return
 		}
 		if cookie!=nil && pw!="" && calleeID==urlID {
 			// if calleeID (from cookie) != urlID, then we need pw-entry on the client
 			//fmt.Printf("/mode normal callee avail (cookie:%s) (url:%s) rip=%s\n",
 			//	calleeID, urlID, remoteAddr)
+			if logWantedFor("mode") {
+				fmt.Printf("/mode normal|ok (cookie:%s) (url:%s) rip=%s\n", calleeID, urlID, remoteAddr)
+			}
 			fmt.Fprintf(w,"normal|ok")
 			return
 		}
