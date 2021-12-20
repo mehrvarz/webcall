@@ -420,7 +420,9 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w,"normal|ok")
 			return
 		}
-		//fmt.Printf("/mode normal (cookie:%s) (url:%s) rip=%s\n", calleeID, urlID, remoteAddr)
+		if logWantedFor("mode") {
+			fmt.Printf("/mode normal (cookie:%s) (url:%s) rip=%s\n", calleeID, urlID, remoteAddr)
+		}
 		fmt.Fprintf(w,"normal")
 		return
 	}

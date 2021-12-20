@@ -94,7 +94,7 @@ func runTurnServer() {
 				// we do this bc only one of the two sides needs to authenticate
 				foundIp, foundCalleeId, err = SearchCallerIpInHubMap(ipAddr)
 				if err != nil {
-					fmt.Printf("# turn auth for %v FAIL err=%v\n", srcAddr.String(), err)
+					fmt.Printf("# turn auth for %v err=%v\n", srcAddr.String(), err)
 					return nil, false
 				}
 				if foundIp {
