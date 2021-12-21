@@ -22,14 +22,16 @@ import (
 )
 
 const (
-	// we postpone our next ping by 54s...
-	// - when we send a ping
+	// we postpone our next ping by pingPeriod secs...
 	// - when we receive any data from the client
 	// - when we receive a pong from the client
+	// - when we send a ping to the client
+	// - when we send a pong to the client
 	// when we send a ping, we set SetReadDeadline bc we expect to receive a pong in response within max 30s
-	// the client must send us something at least every 84s
-	// we chose 54 bc this value is smaller than the clients pingPeriod of 60s
-	pingPeriod = 100 //54
+	// the client must send us something at least every pingPeriod + 30s
+	// we use pingPeriod = 100 bc this value is bigger than the clients pingPeriod of 60s
+	// this way there should normally only be pings by the client and pongs by the server
+	pingPeriod = 100
 )
 
 var keepAliveMgr *KeepAliveMgr
@@ -184,7 +186,9 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	})
 	upgrader.SetPongHandler(func(wsConn *websocket.Conn, s string) {
 		// we received a pong from the client
-		fmt.Printf("%s gotPong %s\n",client.connType,client.calleeID)
+		if logWantedFor("gotpong") {
+			fmt.Printf("gotPong %s\n",client.calleeID)
+		}
 		// clear read deadline for now; we set it again when we send the next ping
 		wsConn.SetReadDeadline(time.Time{})
 		// set the time for sending the next ping
@@ -192,7 +196,9 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	})
 	upgrader.SetPingHandler(func(wsConn *websocket.Conn, s string) {
 		// we received a ping from the client
-		fmt.Printf("%s gotPing %s\n",client.connType,client.calleeID)
+		if logWantedFor("gotping") {
+			fmt.Printf("gotPing %s\n",client.calleeID)
+		}
 		// clear read deadline for now; we set it again when we send the next ping
 		wsConn.SetReadDeadline(time.Time{})
 		// set the time for sending the next ping
@@ -806,7 +812,9 @@ func (kaMgr *KeepAliveMgr) Run() {
 		for _,wsConn := range myClients {
 			pingTime := wsConn.Session()
 			if pingTime!=nil && timeNow.After(pingTime.(time.Time)) {
-				fmt.Printf("sendPing %s\n",wsConn.RemoteAddr().String())
+				if logWantedFor("sendping") {
+					fmt.Printf("sendPing %s\n",wsConn.RemoteAddr().String())
+				}
 				// set the time for sending the next ping in pingPeriod secs
 				kaMgr.SetPingDeadline(wsConn, pingPeriod)
 				// we expect a pong to our ping within max 30 secs from now
