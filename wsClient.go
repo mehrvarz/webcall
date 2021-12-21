@@ -184,20 +184,22 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	})
 	upgrader.SetPongHandler(func(wsConn *websocket.Conn, s string) {
 		// we received a pong from the client
+		fmt.Printf("%s gotPong %s\n",client.connType,client.calleeID)
 		// clear read deadline for now; we set it again when we send the next ping
 		wsConn.SetReadDeadline(time.Time{})
 		// set the time for sending the next ping
 		keepAliveMgr.SetPingDeadline(wsConn, pingPeriod)
 		//atomic.AddInt64(&pongRecvCounter, 1)
-		fmt.Printf("%s gotPong %s\n",client.connType,client.calleeID)
 	})
-	upgrader.SetPingHandler(func(c *websocket.Conn, s string) {
+	upgrader.SetPingHandler(func(wsConn *websocket.Conn, s string) {
 		// we received a ping from the client
+		fmt.Printf("%s gotPing %s\n",client.connType,client.calleeID)
 		// clear read deadline for now; we set it again when we send the next ping
 		wsConn.SetReadDeadline(time.Time{})
 		// set the time for sending the next ping
 		keepAliveMgr.SetPingDeadline(wsConn, pingPeriod)
-		fmt.Printf("%s gotPing %s\n",client.connType,client.calleeID)
+
+		//wsConn.WriteMessage(websocket.PongMessage, nil)
 	})
 
 	wsConn.OnClose(func(c *websocket.Conn, err error) {
