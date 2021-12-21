@@ -239,6 +239,7 @@ func ticker2sec() {
 			numberOfCallSecondsToday = 0
 			numberOfCallsTodayMutex.Unlock()
 			atomic.StoreInt64(&pingSentCounter, 0)
+			atomic.StoreInt64(&pongSentCounter, 0)
 			writeStatsFile()
 		}
 	}

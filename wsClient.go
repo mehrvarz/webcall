@@ -189,7 +189,6 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		wsConn.SetReadDeadline(time.Time{})
 		// set the time for sending the next ping
 		keepAliveMgr.SetPingDeadline(wsConn, pingPeriod)
-		//atomic.AddInt64(&pongRecvCounter, 1)
 	})
 	upgrader.SetPingHandler(func(wsConn *websocket.Conn, s string) {
 		// we received a ping from the client
@@ -200,6 +199,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		keepAliveMgr.SetPingDeadline(wsConn, pingPeriod)
 		// send the pong
 		wsConn.WriteMessage(websocket.PongMessage, nil)
+		atomic.AddInt64(&pongSentCounter, 1)
 	})
 
 	wsConn.OnClose(func(c *websocket.Conn, err error) {

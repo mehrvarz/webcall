@@ -123,6 +123,7 @@ type wsClientDataType struct {
 var wsClientMap map[uint64]wsClientDataType
 var wsClientMutex sync.RWMutex
 var pingSentCounter int64 = 0
+var pongSentCounter int64 = 0
 var outboundIP = ""
 
 
@@ -413,10 +414,11 @@ func getStats() string {
 
 	numberOfCallsTodayMutex.RLock()
 	retStr := fmt.Sprintf("stats callees:%d callers:%d p2p:%d "+
-		"calls:%d callSecs:%d ping:%d gor:%d",
+		"calls:%d callSecs:%d ping:%d pong:%d gor:%d",
 		numberOfOnlineCallees, numberOfOnlineCallers, numberOfActivePureP2pCalls,
 		numberOfCallsToday, numberOfCallSecondsToday, // feed by hub.processTimeValues()
 		atomic.LoadInt64(&pingSentCounter),
+		atomic.LoadInt64(&pongSentCounter),
 		runtime.NumGoroutine())
 	numberOfCallsTodayMutex.RUnlock()
 	return retStr
