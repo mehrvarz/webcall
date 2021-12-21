@@ -26,7 +26,7 @@ const (
 	// when we send a ping, we set the time for our next ping to be send in pingPeriod secs
 	// whenever we receive something from the client (data, a ping or a pong)
 	// we reset our next ping to be sent in pingPeriod secs
-	pingPeriod = 100
+	pingPeriod = 50
 	// when pingPeriod expires, it means that we didn't hear from the client for pingPeriod secs
 	// so we send our ping
 	// and we set SetReadDeadline bc we expect to receive a pong in response within max 30s
@@ -49,6 +49,10 @@ type WsClient struct {
 	calleeID string
 	globalCalleeID string // unique calleeID for multiCallees as key for hubMap[]
 	connType string
+	pingSent uint64
+	pongReceived uint64
+	pongSent uint64
+	pingReceived uint64
 	authenticationShown bool // whether to show "pion auth for client (%v) SUCCESS"
 	isCallee bool
 	clearOnCloseDone bool
@@ -138,15 +142,6 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 	// set no read deadline now; we do this when we send a ping
 	wsConn.SetReadDeadline(time.Time{})
-/* sample code:
-	wsConn.SetDeadline(time.Now().Add(time.Second * 10))
-	// we expect some kind of data from the client within max x secs from now
-	wsConn.SetReadDeadline(time.Now().Add(time.Second * 10))
-	wsConn.SetWriteDeadline(time.Now().Add(time.Second * 10))
-*/
-	keepAliveMgr.Add(wsConn)
-	// set the time for sending the next ping
-	keepAliveMgr.SetPingDeadline(wsConn, pingPeriod) // now + pingPeriod secs
 
 	client := &WsClient{wsConn:wsConn}
 	client.calleeID = wsClientData.calleeID // this is the local ID
@@ -157,6 +152,10 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		client.connType = "serveWs"
 	}
 
+	keepAliveMgr.Add(wsConn)
+	// set the time for sending the next ping
+	keepAliveMgr.SetPingDeadline(wsConn, pingPeriod, client) // now + pingPeriod secs
+
 
 	hub := wsClientData.hub // set by /login wsClientMap[wsClientID] = wsClientDataType{...}
 
@@ -166,7 +165,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		wsConn.SetReadDeadline(time.Time{})
 		// set the time for sending the next ping
 		// so whenever client sends some data, we postpone our next ping by pingPeriod secs
-		keepAliveMgr.SetPingDeadline(wsConn, pingPeriod) // now + pingPeriod secs
+		keepAliveMgr.SetPingDeadline(wsConn, pingPeriod, client) // now + pingPeriod secs
 
 		switch messageType {
 		case websocket.TextMessage:
@@ -192,20 +191,23 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		// clear read deadline for now; we set it again when we send the next ping
 		wsConn.SetReadDeadline(time.Time{})
 		// set the time for sending the next ping: now + pingPeriod secs
-		keepAliveMgr.SetPingDeadline(wsConn, pingPeriod)
+		keepAliveMgr.SetPingDeadline(wsConn, pingPeriod, client) // now + pingPeriod secs
+		client.pongReceived++
 	})
 	upgrader.SetPingHandler(func(wsConn *websocket.Conn, s string) {
 		// we received a ping from the client
 		if logWantedFor("gotping") {
 			fmt.Printf("gotPing %s\n",client.calleeID)
 		}
+		client.pingReceived++
 		// clear read deadline for now; we set it again when we send the next ping
 		wsConn.SetReadDeadline(time.Time{})
 		// set the time for sending the next ping: now + pingPeriod secs
-		keepAliveMgr.SetPingDeadline(wsConn, pingPeriod)
+		keepAliveMgr.SetPingDeadline(wsConn, pingPeriod, client) // now + pingPeriod secs
 		// send the pong
 		wsConn.WriteMessage(websocket.PongMessage, nil)
 		atomic.AddInt64(&pongSentCounter, 1)
+		client.pongSent++
 	})
 
 	wsConn.OnClose(func(c *websocket.Conn, err error) {
@@ -771,9 +773,16 @@ func NewKeepAliveMgr() *KeepAliveMgr {
 	}
 }
 
-func (kaMgr *KeepAliveMgr) SetPingDeadline(wsConn *websocket.Conn, secs int) {
+type KeepAliveSessionData struct {
+	pingSendTime time.Time
+	client *WsClient
+}
+
+func (kaMgr *KeepAliveMgr) SetPingDeadline(wsConn *websocket.Conn, secs int, client *WsClient) {
 	// set the absolute time for sending the next ping
 	wsConn.SetSession(time.Now().Add(time.Duration(secs)*time.Second))
+	wsConn.SetSession(&KeepAliveSessionData{
+		time.Now().Add(time.Duration(secs)*time.Second), client})
 }
 
 func (kaMgr *KeepAliveMgr) Add(c *websocket.Conn) {
@@ -808,19 +817,23 @@ func (kaMgr *KeepAliveMgr) Run() {
 		var nPing int64 = 0
 		timeNow := time.Now()
 		for _,wsConn := range myClients {
-			pingTime := wsConn.Session()
-			if pingTime!=nil && timeNow.After(pingTime.(time.Time)) {
-				// 
-				if logWantedFor("sendping") {
-					fmt.Printf("sendPing %s\n",wsConn.RemoteAddr().String())
+			keepAliveSessionData := wsConn.Session().(*KeepAliveSessionData)
+			if keepAliveSessionData!=nil {
+				if timeNow.After(keepAliveSessionData.pingSendTime) {
+					if logWantedFor("sendping") {
+						fmt.Printf("sendPing %s %s\n",wsConn.RemoteAddr().String(),
+							keepAliveSessionData.client.calleeID)
+					}
+					// set the time for sending the next ping in pingPeriod secs
+					kaMgr.SetPingDeadline(wsConn, pingPeriod, keepAliveSessionData.client)
+
+					// we expect a pong to our ping within max 30 secs from now
+					wsConn.SetReadDeadline(timeNow.Add(30*time.Second))
+					// send a ping
+					wsConn.WriteMessage(websocket.PingMessage, nil)
+					keepAliveSessionData.client.pingSent++
+					nPing++
 				}
-				// set the time for sending the next ping in pingPeriod secs
-				kaMgr.SetPingDeadline(wsConn, pingPeriod) // now + pingPeriod secs
-				// we expect a pong to our ping within max 30 secs from now
-				wsConn.SetReadDeadline(timeNow.Add(30*time.Second))
-				// send a ping
-				wsConn.WriteMessage(websocket.PingMessage, nil)
-				nPing++
 			}
 		}
 		atomic.AddInt64(&pingSentCounter, nPing)

@@ -766,7 +766,7 @@ function wsOnError(evt) {
 }
 
 function wsOnError2(str) {
-	console.log("wsOnError2 "+str);
+	//console.log("wsOnError2 "+str);
 	if(str!="") {
 		showStatus(str,-1);
 		onlineIndicator.src="";

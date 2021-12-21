@@ -330,6 +330,21 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		return true
 	}
 
+	if urlPath=="/dumpping" {
+		hubMapMutex.RLock()
+		defer hubMapMutex.RUnlock()
+		for calleeID := range hubMap {
+			fmt.Fprintf(w,"/dumpping %-20s pingSent/pongReceived pingReceived/pongSent %v/%v %v/%v\n",
+				calleeID,
+				hubMap[calleeID].CalleeClient.pingSent,
+				hubMap[calleeID].CalleeClient.pongReceived,
+				hubMap[calleeID].CalleeClient.pingReceived,
+				hubMap[calleeID].CalleeClient.pongSent)
+		}
+		printFunc(w,"\n")
+		return true
+	}
+
 	return false
 }
 
