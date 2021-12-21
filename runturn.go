@@ -18,6 +18,7 @@ type TurnCaller struct {
 	CallerID string
 	TimeStored time.Time
 }
+// recentTurnCallerIps is accessed from timer.go
 var recentTurnCallerIps map[string]TurnCaller
 var recentTurnCallerIpMutex sync.RWMutex
 

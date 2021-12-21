@@ -313,6 +313,23 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		return true
 	}
 
+	if urlPath=="/dumpturn" {
+		timeNow := time.Now()
+
+		recentTurnCallerIpMutex.Lock()
+		for ipAddr := range recentTurnCallerIps {
+			turnCaller, ok := recentTurnCallerIps[ipAddr]
+			if ok {
+				timeSinceCallerDisconnect := timeNow.Sub(turnCaller.TimeStored)
+				printFunc(w,"/dumpturn callerID=%s since caller disconnect %ds\n",
+					turnCaller.CallerID, timeSinceCallerDisconnect.Seconds())
+			}
+		}
+		recentTurnCallerIpMutex.Unlock()
+		fmt.Fprintf(w,"\n")
+		return true
+	}
+
 	return false
 }
 

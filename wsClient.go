@@ -22,8 +22,14 @@ import (
 )
 
 const (
-	// Send pings to peer with this period. Must be less than pongWait.
-	pingPeriod = (60 * 9) / 10 // =54
+	// we postpone our next ping by 54s...
+	// - when we send a ping
+	// - when we receive any data from the client
+	// - when we receive a pong from the client
+	// when we send a ping, we set SetReadDeadline bc we expect to receive a pong in response within max 30s
+	// the client must send us something at least every 84s
+	// we chose 54 bc this value is smaller than the clients pingPeriod of 60s
+	pingPeriod = 100 //54
 )
 
 var keepAliveMgr *KeepAliveMgr
@@ -127,8 +133,15 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	}
 	wsConn := conn.(*websocket.Conn)
 	//wsConn.EnableWriteCompression(true) // TODO
-	wsConn.SetReadDeadline(time.Time{}) // no read deadline
 
+	// set no read deadline now; we do this when we send a ping
+	wsConn.SetReadDeadline(time.Time{})
+/* sample code:
+	wsConn.SetDeadline(time.Now().Add(time.Second * 10))
+	// we expect some kind of data from the client within max x secs from now
+	wsConn.SetReadDeadline(time.Now().Add(time.Second * 10))
+	wsConn.SetWriteDeadline(time.Now().Add(time.Second * 10))
+*/
 	keepAliveMgr.Add(wsConn)
 	// set the time for sending the next ping
 	keepAliveMgr.SetPingDeadline(wsConn, pingPeriod)
@@ -146,9 +159,12 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	hub := wsClientData.hub // set by /login wsClientMap[wsClientID] = wsClientDataType{...}
 
 	upgrader.OnMessage(func(wsConn *websocket.Conn, messageType websocket.MessageType, data []byte) {
+
+		// clear read deadline for now; we set it again when we send the next ping
+		wsConn.SetReadDeadline(time.Time{})
 		// set the time for sending the next ping
+		// so whenever client sends any data, we postpone our next ping by 54s
 		keepAliveMgr.SetPingDeadline(wsConn, pingPeriod)
-		wsConn.SetReadDeadline(time.Time{}) // no read deadline
 
 		switch messageType {
 		case websocket.TextMessage:
@@ -167,10 +183,21 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		}
 	})
 	upgrader.SetPongHandler(func(wsConn *websocket.Conn, s string) {
+		// we received a pong from the client
+		// clear read deadline for now; we set it again when we send the next ping
+		wsConn.SetReadDeadline(time.Time{})
 		// set the time for sending the next ping
 		keepAliveMgr.SetPingDeadline(wsConn, pingPeriod)
-		wsConn.SetReadDeadline(time.Time{}) // no read deadline
 		//atomic.AddInt64(&pongRecvCounter, 1)
+		fmt.Printf("%s gotPong %s\n",client.connType,client.calleeID)
+	})
+	upgrader.SetPingHandler(func(c *websocket.Conn, s string) {
+		// we received a ping from the client
+		// clear read deadline for now; we set it again when we send the next ping
+		wsConn.SetReadDeadline(time.Time{})
+		// set the time for sending the next ping
+		keepAliveMgr.SetPingDeadline(wsConn, pingPeriod)
+		fmt.Printf("%s gotPing %s\n",client.connType,client.calleeID)
 	})
 
 	wsConn.OnClose(func(c *websocket.Conn, err error) {
@@ -667,7 +694,7 @@ func (c *WsClient) Write(b []byte) error {
 
 	c.wsConn.WriteMessage(websocket.TextMessage, b)
 	// set the time for sending the next ping
-	keepAliveMgr.SetPingDeadline(c.wsConn, pingPeriod)
+	//keepAliveMgr.SetPingDeadline(c.wsConn, pingPeriod)
 	return nil
 }
 
@@ -777,11 +804,12 @@ func (kaMgr *KeepAliveMgr) Run() {
 		for _,wsConn := range myClients {
 			pingTime := wsConn.Session()
 			if pingTime!=nil && timeNow.After(pingTime.(time.Time)) {
+				fmt.Printf("sendPing %s\n",wsConn.RemoteAddr().String())
 				// set the time for sending the next ping in pingPeriod secs
 				kaMgr.SetPingDeadline(wsConn, pingPeriod)
 				// we expect a pong to our ping within max 30 secs from now
 				wsConn.SetReadDeadline(timeNow.Add(30*time.Second))
-				// send the ping
+				// send a ping
 				wsConn.WriteMessage(websocket.PingMessage, nil)
 				nPing++
 			}
