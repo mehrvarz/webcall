@@ -198,8 +198,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		wsConn.SetReadDeadline(time.Time{})
 		// set the time for sending the next ping
 		keepAliveMgr.SetPingDeadline(wsConn, pingPeriod)
-
-		//wsConn.WriteMessage(websocket.PongMessage, nil)
+		// send the pong
+		wsConn.WriteMessage(websocket.PongMessage, nil)
 	})
 
 	wsConn.OnClose(func(c *websocket.Conn, err error) {
