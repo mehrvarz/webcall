@@ -22,16 +22,16 @@ import (
 )
 
 const (
-	// we postpone our next ping by pingPeriod secs...
-	// - when we receive any data from the client
-	// - when we receive a pong from the client
-	// - when we send a ping to the client
-	// - when we send a pong to the client
-	// when we send a ping, we set SetReadDeadline bc we expect to receive a pong in response within max 30s
-	// the client must send us something at least every pingPeriod + 30s
-	// we use pingPeriod = 100 bc this value is bigger than the clients pingPeriod of 60s
-	// this way there should normally only be pings by the client and pongs by the server
+	// we send a ping to the client when we didn't hear from it for pingPeriod secs
+	// when we send a ping, we set the time for our next ping to be send in pingPeriod secs
+	// whenever we receive something from the client (data, a ping or a pong)
+	// we reset our next ping to be sent in pingPeriod secs
 	pingPeriod = 100
+	// when pingPeriod expires, it means that we didn't hear from the client for pingPeriod secs
+	// so we send our ping
+	// and we set SetReadDeadline bc we expect to receive a pong in response within max 30s
+	// if there is still no response from the client by then, we consider the client to be gone
+	// in other words: we cap the connection if we don't hear from the client for pingPeriod + 30 secs
 )
 
 var keepAliveMgr *KeepAliveMgr
@@ -146,7 +146,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 */
 	keepAliveMgr.Add(wsConn)
 	// set the time for sending the next ping
-	keepAliveMgr.SetPingDeadline(wsConn, pingPeriod)
+	keepAliveMgr.SetPingDeadline(wsConn, pingPeriod) // now + pingPeriod secs
 
 	client := &WsClient{wsConn:wsConn}
 	client.calleeID = wsClientData.calleeID // this is the local ID
@@ -165,8 +165,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		// clear read deadline for now; we set it again when we send the next ping
 		wsConn.SetReadDeadline(time.Time{})
 		// set the time for sending the next ping
-		// so whenever client sends any data, we postpone our next ping by 54s
-		keepAliveMgr.SetPingDeadline(wsConn, pingPeriod)
+		// so whenever client sends some data, we postpone our next ping by pingPeriod secs
+		keepAliveMgr.SetPingDeadline(wsConn, pingPeriod) // now + pingPeriod secs
 
 		switch messageType {
 		case websocket.TextMessage:
@@ -191,7 +191,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		}
 		// clear read deadline for now; we set it again when we send the next ping
 		wsConn.SetReadDeadline(time.Time{})
-		// set the time for sending the next ping
+		// set the time for sending the next ping: now + pingPeriod secs
 		keepAliveMgr.SetPingDeadline(wsConn, pingPeriod)
 	})
 	upgrader.SetPingHandler(func(wsConn *websocket.Conn, s string) {
@@ -201,7 +201,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		}
 		// clear read deadline for now; we set it again when we send the next ping
 		wsConn.SetReadDeadline(time.Time{})
-		// set the time for sending the next ping
+		// set the time for sending the next ping: now + pingPeriod secs
 		keepAliveMgr.SetPingDeadline(wsConn, pingPeriod)
 		// send the pong
 		wsConn.WriteMessage(websocket.PongMessage, nil)
@@ -701,8 +701,6 @@ func (c *WsClient) Write(b []byte) error {
 	}
 
 	c.wsConn.WriteMessage(websocket.TextMessage, b)
-	// set the time for sending the next ping
-	//keepAliveMgr.SetPingDeadline(c.wsConn, pingPeriod)
 	return nil
 }
 
@@ -812,11 +810,12 @@ func (kaMgr *KeepAliveMgr) Run() {
 		for _,wsConn := range myClients {
 			pingTime := wsConn.Session()
 			if pingTime!=nil && timeNow.After(pingTime.(time.Time)) {
+				// 
 				if logWantedFor("sendping") {
 					fmt.Printf("sendPing %s\n",wsConn.RemoteAddr().String())
 				}
 				// set the time for sending the next ping in pingPeriod secs
-				kaMgr.SetPingDeadline(wsConn, pingPeriod)
+				kaMgr.SetPingDeadline(wsConn, pingPeriod) // now + pingPeriod secs
 				// we expect a pong to our ping within max 30 secs from now
 				wsConn.SetReadDeadline(timeNow.Add(30*time.Second))
 				// send a ping
