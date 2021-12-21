@@ -321,7 +321,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 			turnCaller, ok := recentTurnCallerIps[ipAddr]
 			if ok {
 				timeSinceCallerDisconnect := timeNow.Sub(turnCaller.TimeStored)
-				printFunc(w,"/dumpturn callerID=%s since caller disconnect %ds\n",
+				printFunc(w,"/dumpturn callerID=%s since caller disconnect %v\n",
 					turnCaller.CallerID, timeSinceCallerDisconnect.Seconds())
 			}
 		}
