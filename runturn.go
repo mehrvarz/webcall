@@ -125,7 +125,7 @@ func runTurnServer() {
 			}
 
 			if logWantedFor("turn") {
-				fmt.Printf("# turn auth for %v not found\n", srcAddr.String())
+				fmt.Printf("turn auth denied for %v\n", srcAddr.String())
 			}
 			return nil, false
 		},
