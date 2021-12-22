@@ -1310,7 +1310,12 @@ function pickup2() {
 			Android.peerConnect();
 		}
 
-		if(isDataChlOpen() && isP2pCon()) {
+		if(!isDataChlOpen()) {
+			gLog('do not enable fileselectLabel: !isDataChlOpen');
+		} else if(!isP2pCon()) {
+			gLog('do not enable fileselectLabel: !isP2pCon()');
+		} else {
+			gLog('enable fileselectLabel');
 			fileselectLabel.style.display = "block";
 		}
 
