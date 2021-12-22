@@ -26,7 +26,7 @@ const (
 	// when we send a ping, we set the time for our next ping to be send in pingPeriod secs
 	// whenever we receive something from the client (data, a ping or a pong)
 	// we reset our next ping to be sent in pingPeriod secs
-	pingPeriod = 50
+	pingPeriod = 90
 	// when pingPeriod expires, it means that we didn't hear from the client for pingPeriod secs
 	// so we send our ping
 	// and we set SetReadDeadline bc we expect to receive a pong in response within max 30s
