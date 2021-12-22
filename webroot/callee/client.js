@@ -162,6 +162,7 @@ function showVideoResolutionRemote() {
 }
 
 if(fileSelectElement) {
+	gLog("fileSelectElement.addEventListener");
 	fileSelectElement.addEventListener('change', (event) => {
 		gLog("fileSelect event");
 		historyBack();
