@@ -13,6 +13,7 @@ const localVideoLabel = document.querySelector('div#localVideoLabel');
 const remoteVideoRes = document.querySelector('span#remoteVideoRes');
 const remoteVideoLabel = document.querySelector('div#remoteVideoLabel');
 const cameraElement = document.getElementById('camera');
+const fileselectLabel = document.getElementById("fileselectlabel");
 const fileSelectElement = document.getElementById("fileselect");
 const iframeWindowElement = document.getElementById('iframeWindow');
 const fullscreenCheckbox = document.querySelector('input#fullscreen');
@@ -28,7 +29,6 @@ const downloadList = document.getElementById('download');
 const progressRcvElement = document.getElementById('progressRcv');
 const progressRcvLabel = document.getElementById('progressRcvLabel');
 const progressRcvBar = document.getElementById('fileProgressRcv');
-const fileselectLabel = document.getElementById("fileselectlabel");
 
 var videoEnabled = false;
 var localVideoMonitorPaused = false;
