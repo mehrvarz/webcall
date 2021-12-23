@@ -98,8 +98,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	wsClientID64, _ = strconv.ParseUint(wsClientIDstr, 10, 64)
 	if wsClientID64<=0 {
 		// not valid
-		fmt.Printf("# serveWs upgrade error wsCliID=%d rip=%s url=%s\n",
-			wsClientID64, remoteAddr, r.URL.String())
+		fmt.Printf("# serveWs invalid wsClientIDstr=%s rip=%s url=%s\n",
+			wsClientIDstr, remoteAddr, r.URL.String())
 		return
 	}
 	wsClientMutex.Lock()
@@ -111,7 +111,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	}
 	wsClientMutex.Unlock()
 	if !ok {
-		fmt.Printf("# serveWs upgrade error wsCliID=%d does not exist rip=%s url=%s\n",
+		fmt.Printf("# serveWs wsCliID=%d does not exist rip=%s url=%s\n",
 			wsClientID64, remoteAddr, r.URL.String())
 		return
 	}

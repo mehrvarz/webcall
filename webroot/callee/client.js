@@ -671,7 +671,7 @@ function iframeWindowOpen(url,addStyleString) {
 		iframeWindowElement.innerHTML = url.substring(7);
 	} else {
 		iframeWindowElement.style = styleString;
-		iframeWindowElement.innerHTML = "<iframe src='"+url+"' scrolling='yes' frameborder='no' width='100%' height='100%' allow='microphone' onload='this.contentWindow.focus()'></iframe>";
+		iframeWindowElement.innerHTML = "<iframe src='"+url+"' scrolling='yes' frameborder='no' width='100%' height='100%' allow='microphone;camera' onload='this.contentWindow.focus()'></iframe>";
 	}
 }
 

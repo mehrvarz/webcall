@@ -1953,7 +1953,10 @@ function openContacts() {
 }
 
 function openDialId() {
-	let url = "/user/?callerId="+calleeID+"&name="+calleeName+"&i="+counter++;
+	// called by onclick= in html
+	let curLoc = window.location
+	let url = curLoc.protocol+"//"+curLoc.host+
+			"/user/?callerId="+calleeID+"&name="+calleeName+"&i="+counter++;
 	gLog('openDialId',url);
 	iframeWindowOpen(url);
 }

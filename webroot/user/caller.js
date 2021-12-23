@@ -30,6 +30,7 @@ var dataChannel = null;
 var doneHangup = false;
 var dialAfterLocalStream = false;
 var dialAfterCalleeOnline = false;
+var dialButtonAfterCalleeOnline = false;
 var lastResult;
 var candidateArray = [];
 var candidateResultGenerated = true;
@@ -484,7 +485,7 @@ function calleeOnlineStatus(onlineStatus) {
 		gLog('calleeOnlineStatus abort',rtcConnect,dialing);
 		return;
 	}
-	gLog('calleeOnlineStatus',onlineStatus);
+	gLog('calleeOnlineStatus '+onlineStatus);
 	// wsAddr should be something like "127.0.0.1:8071?wsid=4054932942"
 	if(onlineStatus!="" && onlineStatus.indexOf("wsid=")>=0) {
 		// callee is available/online
@@ -574,7 +575,11 @@ function calleeOnlineAction(from) {
 			return;
 		}
 
-		if(dialAfterCalleeOnline) {
+		if(dialButtonAfterCalleeOnline) {
+			dialButtonAfterCalleeOnline = false;
+			dialButtonClick();
+
+		} else if(dialAfterCalleeOnline) {
 			// autodial after detected callee is online
 			// normally set by gotStream, if dialAfterLocalStream was set (by dialButton.onclick)
 			dialAfterCalleeOnline = false;
@@ -813,14 +818,14 @@ function clearForm(idx) {
 }
 
 function submitForm(theForm) {
-	// switch back to default container
+	// DialID: switch back to default container
 	var enterIdVal = document.getElementById("enterIdVal").value;
 	enterIdElement.style.display = "none";
 	containerElement.style.display = "block";
 	calleeID = enterIdVal;
 	gLog('submitForm set calleeID='+calleeID);
-	onload2(false);
-	dialButtonClick();
+	dialButtonAfterCalleeOnline = true;
+	onload2(true);
 }
 
 
