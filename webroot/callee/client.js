@@ -297,6 +297,12 @@ function ajaxFetch(xhr, type, api, processData, errorFkt, postData) {
 	xhr.onerror= function(e) {
 		errorFkt("fetching",xhr.status);
 	};
+	// cross-browser compatible approach to bypassing the cache
+	if(api.indexOf("?")>=0) {
+		api += "&_="+new Date().getTime();
+	} else {
+		api += "?_="+new Date().getTime();
+	}
 	gLog('xhr send('+api+') timeout='+xhrTimeout);
 	xhr.open(type, api, true);
 	xhr.setRequestHeader("Content-type", "text/plain; charset=utf-8");

@@ -1954,9 +1954,10 @@ function openContacts() {
 
 function openDialId() {
 	// called by onclick= in html
-	let curLoc = window.location
-	let url = curLoc.protocol+"//"+curLoc.host+
-			"/user/?callerId="+calleeID+"&name="+calleeName+"&i="+counter++;
+//	let curLoc = window.location
+//	let url = curLoc.protocol+"//"+curLoc.host+
+//			"/user/?callerId="+calleeID+"&name="+calleeName+"&i="+counter++;
+	let url = "/user/?callerId="+calleeID+"&name="+calleeName+"&i="+counter++;
 	gLog('openDialId',url);
 	iframeWindowOpen(url);
 }
