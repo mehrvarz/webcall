@@ -324,8 +324,8 @@ func httpGetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 }
 
 func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calleeID string, cookie *http.Cookie, remoteAddr string) {
-	if urlID=="" {
-		fmt.Printf("# /setcontact urlID empty\n")
+	if urlID=="" || urlID=="undefined" {
+		//fmt.Printf("# /setcontact urlID empty\n")
 		return
 	}
 	if urlID!=calleeID {

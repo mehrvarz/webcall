@@ -216,15 +216,17 @@ function onload2(checkFlag) {
 			gLog('start caller with calleeID',calleeID);
 
 			// store calleeID in contacts if it doesn't exist yet
-			let api = apiPath+"/setcontact?id="+callerId+"&contactID="+calleeID; //+"&name="+newName;
-			if(!gentle) console.log('request api',api);
-			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-				console.log('xhr setcontact OK',xhr.responseText);
-				if(xhr.responseText=="ok") {
-					obj[id] = newName;
-					myTableElement.innerHTML = newName;
-				}
-			}, errorAction2);
+			if(callerId!=="" && callerId!=="undefined")
+				let api = apiPath+"/setcontact?id="+callerId+"&contactID="+calleeID; //+"&name="+newName;
+				if(!gentle) console.log('request api',api);
+				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+					console.log('xhr setcontact OK',xhr.responseText);
+					if(xhr.responseText=="ok") {
+						obj[id] = newName;
+						myTableElement.innerHTML = newName;
+					}
+				}, errorAction2);
+			}
 
 			if(checkFlag) {
 				// need to know if calleeID is online asap (will switch to callee-online-layout if it is)
