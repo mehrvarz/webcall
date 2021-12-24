@@ -504,7 +504,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 					hub.CalleeClient.RemoteAddr,
 					hub.WsClientID,
 					hub.ConnectedCallerIp,
-					hub.CalleeClient.userAgent)
+					ua)
 			}
 			printFunc(w,"\n")
 			return
