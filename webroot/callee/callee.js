@@ -1956,13 +1956,11 @@ function openContacts() {
 }
 
 function openDialId() {
-	// called by onclick= in html
-//	let curLoc = window.location
-//	let url = curLoc.protocol+"//"+curLoc.host+
-//			"/user/?callerId="+calleeID+"&name="+calleeName+"&i="+counter++;
 	let url = "/user/?callerId="+calleeID+"&name="+calleeName+"&i="+counter++;
 	gLog('openDialId',url);
 	iframeWindowOpen(url);
+// TODO when iframe is closed, we still need to call peerDisConnect()
+// to clear peerConnectFlag.set(0), so that the proximity sensor will get turned off
 }
 
 function openSettings() {

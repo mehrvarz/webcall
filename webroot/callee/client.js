@@ -647,6 +647,7 @@ function onIceCandidate(event,myCandidateName) {
 }
 
 var iframeWindowOpenFlag = false;
+var iframeWindowOpenUrl = null;
 function iframeWindowOpen(url,addStyleString) {
 	if(iframeWindowOpenFlag) {
 		gLog('iframeWindowOpen iframeWindowOpenFlag');
@@ -667,6 +668,7 @@ function iframeWindowOpen(url,addStyleString) {
 	containerElement.style.filter = "blur(0.8px) brightness(60%)";
 
 	gLog('iframeWindowOpen '+url);
+	iframeWindowOpenUrl = url;
 	iframeWindowOpenFlag = true;
 	let styleString = "width:90%; max-width:440px; height:94%; position:absolute; left:3.5%; top:1%; padding:10px; z-index:200;";
 	if(addStyleString) {
@@ -689,6 +691,13 @@ function iframeWindowClose() {
 	fullScreenOverlayElement.style.display = "none";
 	fullScreenOverlayElement.onclick = null;
 	iframeWindowOpenFlag = false;
+
+	if(iframeWindowOpenUrl.startsWith("/user/?callerId")) {
+		if(typeof Android !== "undefined" && Android !== null) {
+			Android.peerDisConnect(); // will reset callInProgress and turn off proximity sensor
+		}
+	}
+	iframeWindowOpenUrl=null;
 }
 
 let lastGoodMediaConstraints;
