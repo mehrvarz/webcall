@@ -45,7 +45,7 @@ type WsClient struct {
 	isConnectedToPeer atombool.AtomBool
 	RemoteAddr string // with port
 	RemoteAddrNoPort string // no port
-	userAgent string
+	userAgent string // ws UA
 	calleeID string
 	globalCalleeID string // unique calleeID for multiCallees as key for hubMap[]
 	connType string

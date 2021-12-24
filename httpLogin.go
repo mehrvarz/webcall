@@ -308,6 +308,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	}
 
 	hub.exitFunc = exitFunc
+	hub.calleeUserAgent = userAgent
 
 	wsClientMutex.Lock()
 	myHubMutex.RLock()

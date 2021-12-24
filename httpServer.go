@@ -494,12 +494,17 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 			hubMapMutex.RLock()
 			defer hubMapMutex.RUnlock()
 			for calleeID := range hubMap {
+				hub := hubMap[calleeID]
+				ua := hub.CalleeClient.userAgent
+				if(ua=="") {
+					ua = hub.calleeUserAgent
+				}
 				fmt.Fprintf(w,"online %-20s ip=%-20s wsCli=%d callerIp=%-20s ua=%s\n",
 					calleeID, 
-					hubMap[calleeID].CalleeClient.RemoteAddr,
-					hubMap[calleeID].WsClientID,
-					hubMap[calleeID].ConnectedCallerIp,
-					hubMap[calleeID].CalleeClient.userAgent)
+					hub.CalleeClient.RemoteAddr,
+					hub.WsClientID,
+					hub.ConnectedCallerIp,
+					hub.CalleeClient.userAgent)
 			}
 			printFunc(w,"\n")
 			return
