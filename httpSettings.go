@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"io"
 	"strconv"
+	"strings"
 )
 
 func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calleeID string, cookie *http.Cookie, remoteAddr string) {
@@ -352,8 +353,11 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 	var callerInfoMap map[string]string // callerID -> name
 	err := kvContacts.Get(dbContactsBucket,calleeID,&callerInfoMap)
 	if err!=nil {
-		fmt.Printf("# /setcontact db get calleeID=%s err=%v\n", calleeID, err)
-		return
+		if(strings.Index(err.Error(),"key not found")<0) {
+			fmt.Printf("# /setcontact db get calleeID=%s err=%v\n", calleeID, err)
+			return
+		}
+		// "key not found" is just an empty contacts list
 	}
 
 	oldName,ok := callerInfoMap[contactID]
