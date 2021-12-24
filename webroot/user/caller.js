@@ -216,7 +216,7 @@ function onload2(checkFlag) {
 			gLog('start caller with calleeID',calleeID);
 
 			// store calleeID in contacts if it doesn't exist yet
-			if(callerId!=="" && callerId!=="undefined")
+			if(callerId!=="" && callerId!=="undefined") {
 				let api = apiPath+"/setcontact?id="+callerId+"&contactID="+calleeID; //+"&name="+newName;
 				if(!gentle) console.log('request api',api);
 				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
