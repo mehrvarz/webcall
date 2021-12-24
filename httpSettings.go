@@ -154,6 +154,7 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 					fmt.Printf("/setsettings (%s) new storeContacts (%s) (old:%v)\n",
 						calleeID,val,dbUser.StoreContacts)
 					dbUser.StoreContacts = true
+// TODO it would be convenient to have this in wsClient for the callee
 				}
 			} else {
 				if dbUser.StoreContacts != false {
@@ -352,6 +353,8 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 	if name=="" {
 		name = "?"
 	}
+
+// TODO evaluate dbUser.StoreMissedCalls and if it is false, just return fmt.Fprintf(w,"ok")
 
 	var callerInfoMap map[string]string // callerID -> name
 	err := kvContacts.Get(dbContactsBucket,calleeID,&callerInfoMap)

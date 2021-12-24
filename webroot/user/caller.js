@@ -217,6 +217,7 @@ function onload2(checkFlag) {
 
 			// store calleeID in contacts if it doesn't exist yet
 			if(callerId!=="" && callerId!=="undefined") {
+// TODO if storeMissedCalls checkbox
 				let api = apiPath+"/setcontact?id="+callerId+"&contactID="+calleeID; //+"&name="+newName;
 				if(!gentle) console.log('request api',api);
 				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
