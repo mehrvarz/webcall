@@ -349,6 +349,9 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 	if ok && len(url_arg_array[0]) >= 1 {
 		name = url_arg_array[0]
 	}
+	if name=="" {
+		name = "?"
+	}
 
 	var callerInfoMap map[string]string // callerID -> name
 	err := kvContacts.Get(dbContactsBucket,calleeID,&callerInfoMap)
@@ -358,6 +361,7 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 			return
 		}
 		// "key not found" is just an empty contacts list
+		fmt.Printf("/setcontact creating new contacts map\n")
 		callerInfoMap = make(map[string]string)
 	}
 
@@ -376,7 +380,7 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 		fmt.Printf("# /setcontact store calleeID=%s err=%v\n", calleeID, err)
 		return
 	}
-	fmt.Printf("/setcontact (%s) changed name from (%s) to (%s)\n",calleeID, oldName,name)
+	fmt.Printf("/setcontact (%s) changed name of %s from (%s) to (%s)\n",calleeID,contactID,oldName,name)
 	fmt.Fprintf(w,"ok")
 	return
 }
