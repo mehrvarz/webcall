@@ -221,10 +221,6 @@ function onload2(checkFlag) {
 				if(!gentle) console.log('request api',api);
 				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 					console.log('xhr setcontact OK',xhr.responseText);
-					if(xhr.responseText=="ok") {
-						obj[id] = newName;
-						myTableElement.innerHTML = newName;
-					}
 				}, errorAction2);
 			}
 
