@@ -356,7 +356,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 
 	if urlPath=="/login" {
 		httpLogin(w, r, urlID, cookie, pw, remoteAddr, remoteAddrWithPort, myRequestCount, 
-				 nocookie, startRequestTime, pwIdCombo)
+				 nocookie, startRequestTime, pwIdCombo, userAgent)
 		return
 	}
 	if urlPath=="/online" {

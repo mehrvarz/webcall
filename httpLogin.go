@@ -23,7 +23,7 @@ import (
 	"sync"
 )
 
-func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *http.Cookie, pw string, remoteAddr string, remoteAddrWithPort string, myRequestCount int, nocookie bool, startRequestTime time.Time, pwIdCombo PwIdCombo) {
+func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *http.Cookie, pw string, remoteAddr string, remoteAddrWithPort string, myRequestCount int, nocookie bool, startRequestTime time.Time, pwIdCombo PwIdCombo, userAgent string) {
 	//fmt.Printf("/login urlID=(%s) rip=%s id=%d rt=%v\n",
 	//	urlID, remoteAddrWithPort, myRequestCount, time.Since(startRequestTime)) // rt=4.393µs
 
@@ -78,7 +78,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 //					// the new client does not come from the same IP, so deny login with same key
 					fmt.Fprintf(w, "fatal")
 					httpResponseCount++
-					fmt.Printf("# /login key=(%s) is already logged in rip=%s\n", key, remoteAddr)
+					fmt.Printf("# /login key=(%s) is already logged in rip=%s ua=%s\n", 
+						key, remoteAddr, userAgent)
 					return
 //				}
 //				// the new client has the same IP as the old, so kill the old key and continue login
