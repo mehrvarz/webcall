@@ -358,6 +358,7 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 			return
 		}
 		// "key not found" is just an empty contacts list
+		callerInfoMap = make(map[string]string)
 	}
 
 	oldName,ok := callerInfoMap[contactID]
