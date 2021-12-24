@@ -596,6 +596,9 @@ function offlineAction() {
 	gLog('offlineAction');
 	goOnlineButton.disabled = false;
 	goOfflineButton.disabled = true;
+	if(!mediaConnect) {
+		onlineIndicator.src="";
+	}
 }
 
 function gotStream2() {
