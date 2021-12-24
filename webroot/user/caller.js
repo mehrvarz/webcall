@@ -36,7 +36,7 @@ var candidateArray = [];
 var candidateResultGenerated = true;
 var candidateResultString = "";
 var wsAddr = "";
-var calleeID = "";
+var calleeID = ""; // who we are calling
 var sessionDuration = 0;
 var dataChannelSendMsg = "";
 var iframeParent;
@@ -57,8 +57,8 @@ if(!singlebutton) {
 	calleeOfflineElement = document.getElementById("calleeOffline");
 	onlineIndicator = document.querySelector('img#onlineIndicator');
 }
-var callerId = ""; // calleeId of the caller
-var callerName = ""; // callee name of the caller
+var callerId = ""; // our id
+var callerName = ""; // our name
 var otherUA="";
 var microphoneIsNeeded = true;
 var fileReceiveBuffer = [];
@@ -118,7 +118,7 @@ window.onload = function() {
 		return;
 	}
 	// the following args may be used in confirmNotifyConnect()
-	callerId = getUrlParams("callerId");
+	callerId = getUrlParams("callerId"); // our id
 	callerName = getUrlParams("name");
 	gLog("onload callerId=(%s) callerName=(%s)",callerId,callerName);
 
@@ -214,6 +214,17 @@ function onload2(checkFlag) {
 			}
 
 			gLog('start caller with calleeID',calleeID);
+
+			// store calleeID in contacts if it doesn't exist yet
+			let api = apiPath+"/setcontact?id="+callerId+"&contactID="+calleeID; //+"&name="+newName;
+			if(!gentle) console.log('request api',api);
+			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+				console.log('xhr setcontact OK',xhr.responseText);
+				if(xhr.responseText=="ok") {
+					obj[id] = newName;
+					myTableElement.innerHTML = newName;
+				}
+			}, errorAction2);
 
 			if(checkFlag) {
 				// need to know if calleeID is online asap (will switch to callee-online-layout if it is)
@@ -826,6 +837,12 @@ function submitForm(theForm) {
 	gLog('submitForm set calleeID='+calleeID);
 	dialButtonAfterCalleeOnline = true;
 	onload2(true);
+}
+
+function errorAction2(errString,err) {
+	console.log('xhr error',errString);
+	// let user know via alert
+	//alert("xhr error "+errString);
 }
 
 
