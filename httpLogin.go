@@ -46,7 +46,10 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 	if strings.Index(myMultiCallees, "|"+urlID+"|") < 0 {
 		// urlID is NOT a multiCallee user
-		// so if it is already logged-in, we must abort
+		// so if urlID is already logged-in, we must abort
+		// unless the request comes from the same IP, in which case we log the old session out
+// TODO however, we must also disconnect the old session so that the client disconnects
+//      and does not try to login again
 		ejectOn1stFound := true
 		reportHiddenCallee := true
 		occupy := false
@@ -58,7 +61,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		if key != "" {
 			// found "already logged in"
 			// delay a bit to see if we receive a parallel exithub that might delete this key
-			time.Sleep(300 * time.Millisecond)
+			time.Sleep(1000 * time.Millisecond)
 			// check again
 			key, _, _, err = GetOnlineCallee(urlID, ejectOn1stFound, reportHiddenCallee,
 				remoteAddr, occupy, "/login")
@@ -68,21 +71,20 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			if key != "" {
 				// "already logged in" entry still exists
 				// if remoteAddr == hub.CalleeClient.RemoteAddrNoPort: unregister old entry
-				hubMapMutex.RLock()
-				hub := hubMap[key]
-				hubMapMutex.RUnlock()
-				if hub==nil || hub.CalleeClient==nil || remoteAddr != hub.CalleeClient.RemoteAddrNoPort {
-					// the new client does not come from the same IP, so deny login with same key
+//				hubMapMutex.RLock()
+//				hub := hubMap[key]
+//				hubMapMutex.RUnlock()
+//				if hub==nil || hub.CalleeClient==nil || remoteAddr != hub.CalleeClient.RemoteAddrNoPort {
+//					// the new client does not come from the same IP, so deny login with same key
 					fmt.Fprintf(w, "fatal")
 					httpResponseCount++
 					fmt.Printf("# /login key=(%s) is already logged in rip=%s\n", key, remoteAddr)
 					return
-				}
-
-				// the new client has the same IP as the old, so kill the old key and continue login
-				// unregister old, already logged in account
-				fmt.Printf("/login key=(%s) unregister old, already logged in rip=%s\n", key, remoteAddr)
-				hub.doUnregister(hub.CalleeClient, "");
+//				}
+//				// the new client has the same IP as the old, so kill the old key and continue login
+//				// unregister old, already logged in account
+//				fmt.Printf("/login key=(%s) unregister old, already logged in rip=%s\n", key, remoteAddr)
+//				hub.doUnregister(hub.CalleeClient, "");
 			}
 		}
 	}
