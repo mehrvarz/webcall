@@ -493,18 +493,22 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 			printFunc(w,"/dumponline rip=%s\n",remoteAddr)
 			hubMapMutex.RLock()
 			defer hubMapMutex.RUnlock()
-			for calleeID := range hubMap {
-				hub := hubMap[calleeID]
-				ua := hub.CalleeClient.userAgent
-				if(ua=="") {
-					ua = hub.calleeUserAgent
+			for calleeID,hub := range hubMap {
+				//hub := hubMap[calleeID]
+				if hub!=nil {
+					hub.HubMutex.RLock()
+					ua := hub.CalleeClient.userAgent
+					if(ua=="") {
+						ua = hub.calleeUserAgent
+					}
+					fmt.Fprintf(w,"online %-20s ip=%-20s wsCli=%d callerIp=%-20s ua=%s\n",
+						calleeID,
+						hub.CalleeClient.RemoteAddr,
+						hub.WsClientID,
+						hub.ConnectedCallerIp,
+						ua)
+					hub.HubMutex.RUnlock()
 				}
-				fmt.Fprintf(w,"online %-20s ip=%-20s wsCli=%d callerIp=%-20s ua=%s\n",
-					calleeID, 
-					hub.CalleeClient.RemoteAddr,
-					hub.WsClientID,
-					hub.ConnectedCallerIp,
-					ua)
 			}
 			printFunc(w,"\n")
 			return

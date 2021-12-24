@@ -720,7 +720,7 @@ function connectSignaling(message,comment) {
 	if(typeof Android !== "undefined" && Android !== null) {
 		// create new WsClient() and call connect(wsUrl)
 		wsConn = Android.wsOpen(wsUrl);
-		gLog('connectSignaling Android.wsOpen ',wsConn);
+		gLog("connectSignaling Android.wsOpen "+wsUrl+"|"+wsConn);
 	} else {
 		if(!window["WebSocket"]) {
 			console.error('connectSignaling: no WebSocket support');
