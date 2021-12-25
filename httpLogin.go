@@ -83,24 +83,22 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				} else if !hub.CalleeClient.isOnline.Get() {
 					offlineReason = 3 // CalleeClient is not online anymore
 				} else {
-					// if the caller cannot be pinged, hub.CalleeClient should become offline soon
+					// hub.CalleeClient seems to be online; lets see if this holds if we ping it
 					hub.CalleeClient.SendPing()
 					time.Sleep(500 * time.Millisecond)
+					// is hub.CalleeClient still online now?
 					if hub==nil || hub.CalleeClient==nil || !hub.CalleeClient.isOnline.Get() {
 						offlineReason = 4 // CalleeClient is not online anymore
 					}
 				}
-
+				if offlineReason==0 {
 					fmt.Fprintf(w, "fatal")
 					fmt.Printf("# /login key=(%s) is already logged in (%d) rip=%s ua=%s\n",
 						key, offlineReason, remoteAddr, userAgent)
 					return
-
-// if offlineReason>0 do this instead
-//				// the new client has the same IP as the old, so kill the old key and continue login
-//				// unregister old, already logged in account
-//				fmt.Printf("/login key=(%s) unregister old, already logged in rip=%s\n", key, remoteAddr)
-//				hub.doUnregister(hub.CalleeClient, "");
+				}
+				// apparenly the new login comes from the old callee, bc it is not online anymore
+				// no need to hub.doUnregister(hub.CalleeClient, ""); just continue with the login
 			}
 		}
 	}
