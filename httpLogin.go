@@ -74,7 +74,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				hubMapMutex.RLock()
 				hub := hubMap[key]
 				hubMapMutex.RUnlock()
-				// offlineReason>0: a possible but not yet acted upon indication callee is already offline
 				offlineReason := 0
 				if hub==nil {
 					offlineReason = 1 // callee's hub is gone
@@ -85,13 +84,14 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				} else {
 					// hub.CalleeClient seems to be online; lets see if this holds if we ping it
 					hub.CalleeClient.SendPing()
-					time.Sleep(500 * time.Millisecond)
+					time.Sleep(800 * time.Millisecond)
 					// is hub.CalleeClient still online now?
 					if hub==nil || hub.CalleeClient==nil || !hub.CalleeClient.isOnline.Get() {
 						offlineReason = 4 // CalleeClient is not online anymore
 					}
 				}
 				if offlineReason==0 {
+					// abort login: old callee is still online
 					fmt.Fprintf(w, "fatal")
 					fmt.Printf("# /login key=(%s) is already logged in (%d) rip=%s ua=%s\n",
 						key, offlineReason, remoteAddr, userAgent)
@@ -259,11 +259,13 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		}
 		if reqWsClientID != wsClientID {
 			// not the same: deny deletion
-			fmt.Printf("exithub callee=%s abort wsID=%d/%d %s rip=%s\n", globalID, wsClientID, reqWsClientID, comment, remoteAddrWithPort)
+			fmt.Printf("exithub callee=%s abort wsID=%d/%d %s rip=%s\n",
+				globalID, wsClientID, reqWsClientID, comment, remoteAddrWithPort)
 			return;
 		}
 
-		fmt.Printf("exithub callee=%s wsID=%d/%d %s rip=%s\n", globalID, wsClientID, reqWsClientID, comment, remoteAddrWithPort)
+		fmt.Printf("exithub callee=%s wsID=%d %s rip=%s\n",
+			globalID, wsClientID, comment, remoteAddrWithPort)
 
 		myHubMutex.Lock()
 		if hub != nil {
