@@ -120,7 +120,7 @@ window.onload = function() {
 	// the following args may be used in confirmNotifyConnect()
 	callerId = getUrlParams("callerId"); // our id
 	callerName = getUrlParams("name");
-	gLog("onload callerId=(%s) callerName=(%s)",callerId,callerName);
+	gLog("onload callerId=("+callerId+") callerName=("+callerName+")");
 
 	let text = getUrlParams("readyText");
 	if(typeof text!=="undefined" && text!="") {

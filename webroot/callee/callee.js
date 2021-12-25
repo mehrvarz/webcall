@@ -497,14 +497,15 @@ function login(retryFlag) {
 				// so that the pushRegistration.scope will also be /callee/(calleeID)
 				// so that settings.js will later make use of the correct pushRegistration
 				gLog("serviceWorker.register...");
-				let ret = navigator.serviceWorker.register('service-worker.js');
-				gLog("/callee/serviceWorker.ready... "+ret);
+//				let ret =
+				navigator.serviceWorker.register('service-worker.js');
 				// get access to the registration (and registration.pushManager) object
 				navigator.serviceWorker.ready.then(function(registration) {
-					gLog("serviceWorker.ready promise "+ret);
 					pushRegistration = registration;
 					gLog("serviceWorker.ready got pushRegistration "+pushRegistration);
 				}).catch(err => {
+					// this means that push events won't work
+					// no need to abort login process
 					console.log("serviceWorker.ready err",err.message);
 				});
 			}

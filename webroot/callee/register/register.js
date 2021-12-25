@@ -122,7 +122,10 @@ function submitForm(theForm) {
 				calleeLink = calleeLink.replace("register/","");
 				calleeLink += myCalleeID;
 				if(!gentle) console.log('calleeLink',calleeLink);
-				showStatus( "Your personal callee link is shown below. Save it for later use! You can click on it now to start receiving calls right away.<br><br>"+
+				showStatus( "Please write down your ID and password. WebCall cannot email you this data."+
+				"We don't have your Email address.<br><br>"+
+				"Your ID: "+myCalleeID+"<br><br>"+
+				"Your full callee link is shown below. Click it now to start receiving calls.<br><br>"+
 				"<a onclick='exelink(this.href); return false;' href='"+calleeLink+"'>"+calleeLink+"</a>",-1);
 			} else {
 				console.log('response:',xhr.responseText);
