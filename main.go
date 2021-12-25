@@ -102,10 +102,6 @@ var numberOfCallSecondsToday = 0
 var numberOfCallsTodayMutex sync.RWMutex
 
 var lastCurrentDayOfMonth = 0 // will be set by timer.go
-var httpRequestCountMutex sync.RWMutex
-var httpRequestCount = 0
-var httpResponseCount = 0
-var httpResponseTime time.Duration
 var wsAddr string
 var wssAddr string
 var svr *nbhttp.Server

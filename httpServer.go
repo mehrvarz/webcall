@@ -203,11 +203,6 @@ func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	startRequestTime := time.Now()
 
-	httpRequestCountMutex.Lock()
-	httpRequestCount++
-	myRequestCount := httpRequestCount
-	httpRequestCountMutex.Unlock()
-
 	remoteAddrWithPort := r.RemoteAddr
 	if strings.HasPrefix(remoteAddrWithPort,"[::1]") {
 		remoteAddrWithPort = "127.0.0.1"+remoteAddrWithPort[5:]
@@ -355,7 +350,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	//fmt.Printf("urlPath=%s\n",urlPath)
 
 	if urlPath=="/login" {
-		httpLogin(w, r, urlID, cookie, pw, remoteAddr, remoteAddrWithPort, myRequestCount, 
+		httpLogin(w, r, urlID, cookie, pw, remoteAddr, remoteAddrWithPort,
 				 nocookie, startRequestTime, pwIdCombo, userAgent)
 		return
 	}
