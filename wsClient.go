@@ -215,7 +215,6 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		keepAliveMgr.Delete(c)
 		client.isOnline.Set(false) // prevents doUnregister() from closing this already closed connection
 		if logWantedFor("wsclose") {
-			//hub.HubMutex.RLock()
 			if err!=nil {
 				fmt.Printf("%s onclose %s isCallee=%v %d err=%v\n",
 					client.connType, client.calleeID, client.isCallee, atomic.LoadInt64(&OnCloseCount), err)
@@ -223,7 +222,6 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				fmt.Printf("%s onclose %s isCallee=%v %d noerr\n",
 					client.connType, client.calleeID, client.isCallee, atomic.LoadInt64(&OnCloseCount))
 			}
-			//hub.HubMutex.RUnlock()
 		}
 		if err!=nil {
 			client.hub.doUnregister(client, "OnClose "+err.Error())
@@ -759,6 +757,10 @@ func (c *WsClient) Close(reason string) {
 	}
 }
 
+func (c *WsClient) SendPing() {
+	c.wsConn.WriteMessage(websocket.PingMessage, nil) // or wsConn.SendPing()
+}
+
 
 // KeepAliveMgr done with kind support from lesismal of github.com/lesismal/nbio
 // Keeping many idle clients alive: https://github.com/lesismal/nbio/issues/92 
@@ -830,7 +832,7 @@ func (kaMgr *KeepAliveMgr) Run() {
 					// we expect a pong to our ping within max 30 secs from now
 					wsConn.SetReadDeadline(timeNow.Add(30*time.Second))
 					// send a ping
-					wsConn.WriteMessage(websocket.PingMessage, nil)
+					wsConn.WriteMessage(websocket.PingMessage, nil) // or wsConn.SendPing()
 					keepAliveSessionData.client.pingSent++
 					nPing++
 				}

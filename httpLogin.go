@@ -82,6 +82,9 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					offlineReason = 2 // CalleeClient is gone
 				} else if !hub.CalleeClient.isOnline.Get() {
 					offlineReason = 3 // CalleeClient is not online anymore
+				} else {
+					// if the caller cannot be pinged, hub.CalleeClient should become offline soon
+					hub.CalleeClient.SendPing()
 				}
 
 					fmt.Fprintf(w, "fatal")
