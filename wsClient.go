@@ -36,7 +36,6 @@ const (
 
 var keepAliveMgr *KeepAliveMgr
 var ErrWriteNotConnected = errors.New("Write not connected")
-var OnCloseCount int64 = 0
 
 type WsClient struct {
 	hub *Hub
@@ -211,16 +210,15 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	})
 
 	wsConn.OnClose(func(c *websocket.Conn, err error) {
-		atomic.AddInt64(&OnCloseCount, 1)
 		keepAliveMgr.Delete(c)
 		client.isOnline.Set(false) // prevents doUnregister() from closing this already closed connection
 		if logWantedFor("wsclose") {
 			if err!=nil {
-				fmt.Printf("%s onclose %s isCallee=%v %d err=%v\n",
-					client.connType, client.calleeID, client.isCallee, atomic.LoadInt64(&OnCloseCount), err)
+				fmt.Printf("%s onclose %s isCallee=%v err=%v\n",
+					client.connType, client.calleeID, client.isCallee, err)
 			} else {
-				fmt.Printf("%s onclose %s isCallee=%v %d noerr\n",
-					client.connType, client.calleeID, client.isCallee, atomic.LoadInt64(&OnCloseCount))
+				fmt.Printf("%s onclose %s isCallee=%v noerr\n",
+					client.connType, client.calleeID, client.isCallee)
 			}
 		}
 		if err!=nil {
