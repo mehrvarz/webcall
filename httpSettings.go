@@ -345,19 +345,35 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 		return
 	}
 
+
 	name := ""
 	url_arg_array, ok = r.URL.Query()["name"]
 	if ok && len(url_arg_array[0]) >= 1 {
 		name = url_arg_array[0]
 	}
-	if name=="" {
-		name = "?"
+
+	// if dbUser.StoreContacts==false (not checked), just return fmt.Fprintf(w,"ok")
+	var dbEntry DbEntry
+	err := kvMain.Get(dbRegisteredIDs,calleeID,&dbEntry)
+	if err!=nil {
+		fmt.Printf("# /setcontact (%s) fail on dbRegisteredIDs rip=%s\n", calleeID, remoteAddr)
+		return
+	}
+	dbUserKey := fmt.Sprintf("%s_%d",calleeID, dbEntry.StartTime)
+	var dbUser DbUser
+	err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
+	if err!=nil {
+		fmt.Printf("# /setcontact (%s) fail on dbUserBucket rip=%s\n", calleeID, remoteAddr)
+		return
+	}
+	if !dbUser.StoreContacts {
+		fmt.Printf("/setcontact (%s) !StoreContacts rip=%s\n", calleeID, remoteAddr)
+		fmt.Fprintf(w,"ok")
+		return
 	}
 
-// TODO evaluate dbUser.StoreMissedCalls and if it is false, just return fmt.Fprintf(w,"ok")
-
 	var callerInfoMap map[string]string // callerID -> name
-	err := kvContacts.Get(dbContactsBucket,calleeID,&callerInfoMap)
+	err = kvContacts.Get(dbContactsBucket,calleeID,&callerInfoMap)
 	if err!=nil {
 		if(strings.Index(err.Error(),"key not found")<0) {
 			fmt.Printf("# /setcontact db get calleeID=%s err=%v\n", calleeID, err)
@@ -377,6 +393,9 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 		return
 	}
 
+	if name=="" {
+		name = "?"
+	}
 	callerInfoMap[contactID] = name
 	err = kvContacts.Put(dbContactsBucket, calleeID, callerInfoMap, false)
 	if err!=nil {
