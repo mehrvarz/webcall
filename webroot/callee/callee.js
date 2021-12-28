@@ -1743,7 +1743,7 @@ function dataChannelOnmessage(event) {
 
 var allAudioEffectsStopped = false;
 function stopAllAudioEffects(comment) {
-	gLog('stopAllAudioEffects',comment);
+	gLog("stopAllAudioEffects comment="+comment);
 	allAudioEffectsStopped = true;
 	try {
 		if(!ringtoneSound.paused && ringtoneIsPlaying) {

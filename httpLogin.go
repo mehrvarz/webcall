@@ -83,6 +83,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					offlineReason = 3 // CalleeClient is not online anymore
 				} else {
 					// hub.CalleeClient seems to be online; lets see if this holds if we ping it
+					fmt.Printf("/login key=(%s) send ping to prev rip=%s\n", key, remoteAddr)
 					hub.CalleeClient.SendPing()
 					time.Sleep(800 * time.Millisecond)
 					// is hub.CalleeClient still online now?
