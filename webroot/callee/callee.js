@@ -95,6 +95,8 @@ window.onload = function() {
 	}
 	gLog("calleeID "+calleeID);
 
+	let auto = getUrlParams("auto");
+
 	if(calleeID=="") {
 		// if callee was started without a calleeID, reload with calleeID from cookie
 		if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
@@ -109,7 +111,7 @@ window.onload = function() {
 	}
 
 	if(calleeID=="") {
-// TODO: allow user to enter a username?
+		// TODO: allow user to enter a username?
 		showStatus("CalleeID missing in URL",-1);
 		goOnlineButton.disabled = true;
 		goOfflineButton.disabled = true;
@@ -201,6 +203,10 @@ window.onload = function() {
 
 				if(!wsConn) {
 					goOfflineButton.disabled = true; // can't go offline if not connected
+				}
+				if(auto) {
+					// if loaded by android callee, set onGotStreamGoOnline=true to cause goOnline()
+					onGotStreamGoOnline=true;
 				}
 				start();
 				return;
@@ -456,6 +462,7 @@ function login(retryFlag) {
 	gLog("login to signaling server..."+retryFlag+" "+calleeID+" "+wsSecret.length);
 	let api = apiPath+"/login?id="+calleeID;
 	ajaxFetch(new XMLHttpRequest(), "POST", api, function(xhr) {
+		// processData
 		let loginStatus = xhr.responseText;
 		gLog('loginStatus '+loginStatus);
 		var parts = loginStatus.split("|");
@@ -557,7 +564,8 @@ function login(retryFlag) {
 		}
 
 	}, function(errString,err) {
-		console.log('xhr error',errString);
+		// errorFkt
+		console.log('xhr error '+errString+" "+err);
 		if(err==502 || errString.startsWith("fetch")) {
 			showStatus("No response from server",-1);
 		} else {
