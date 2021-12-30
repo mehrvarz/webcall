@@ -257,6 +257,28 @@ input[type=submit]:focus {
 	    opacity: 0.2;
 	}
 }
+.spinnerframe {
+	width:100%;
+	height:100vh;
+	position: relative;
+}
+.spinner {
+	margin: 0 auto;
+	border: 8px solid #f3f3f3;
+	border-radius: 50%;
+	border-top: 8px solid #3468ab;
+	width: 60px;
+	height: 60px;
+	animation: spin 2s linear infinite;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	margin: -34px 0 0 -38px;
+}
+@keyframes spin {
+	0% { transform: rotate(0deg); }
+	100% { transform: rotate(360deg); }
+}
 </style>
 </head>
 
@@ -374,6 +396,10 @@ input[type=submit]:focus {
 	<div id="timer" class="timer">4:32</div>
 	<div style="opacity:0.7;margin-top:30px;user-select:none;">WebCall by <a href="https://timur.mobi/webcall">timur.mobi</a></div>
 </div>
+<div id="spinnerframe" class="spinnerframe" style="display:none;">
+	<div id="spinner" class="spinner"></div>
+</div>
+
 <script src="custom.js"></script>
 <script src="client.js"></script>
 <script src="callee.js"></script>

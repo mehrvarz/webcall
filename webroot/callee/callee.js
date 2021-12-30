@@ -12,6 +12,7 @@ const autoanswerlabel = document.querySelector('label#autoanswerlabel');
 const titleElement = document.getElementById('title');
 const statusLine = document.getElementById('status');
 const msgbox = document.querySelector('textarea#msgbox');
+const divspinnerframe = document.querySelector('div#spinnerframe');
 const timerElement = document.querySelector('div#timer');
 const missedCallsElement = document.getElementById('missedCalls');
 const missedCallsTitleElement = document.getElementById('missedCallsTitle');
@@ -95,8 +96,6 @@ window.onload = function() {
 	}
 	gLog("calleeID "+calleeID);
 
-	let auto = getUrlParams("auto");
-
 	if(calleeID=="") {
 		// if callee was started without a calleeID, reload with calleeID from cookie
 		if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
@@ -123,6 +122,13 @@ window.onload = function() {
 		gLog("location.hash.length="+location.hash.length);
 		window.location.replace("/callee/"+calleeID);
 		return;
+	}
+
+	let auto = getUrlParams("auto");
+	if(auto) {
+		if(divspinnerframe) {
+			divspinnerframe.style.display = "block";
+		}
 	}
 
 	document.onkeydown = (evt) => onkeydownFunc(evt);
@@ -212,6 +218,11 @@ window.onload = function() {
 				return;
 			}
 
+			// end spinner
+			if(divspinnerframe) {
+				divspinnerframe.style.display = "none";
+			}
+
 			gLog('onload pw-entry is needed '+mode);
 			onGotStreamGoOnline = true;
 			goOnlineButton.disabled = true;
@@ -219,16 +230,20 @@ window.onload = function() {
 			enablePasswordForm();
 			return;
 		}
-		if(mode==2) {
-			// server is in maintenance mode
-			let mainParent = containerElement.parentNode;
-			mainParent.removeChild(containerElement);
-			var msgElement = document.createElement("div");
-			msgElement.style = "margin-top:15%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; font-size:1.2em; line-height:1.5em;";
-			msgElement.innerHTML = "<div>WebCall server is currently in maintenance mode.<br>Please try again a little later.</div>";
-			mainParent.appendChild(msgElement);
-			return;
+
+		// end spinner
+		if(divspinnerframe) {
+			divspinnerframe.style.display = "none";
 		}
+
+		// mode==2: server is in maintenance mode
+		let mainParent = containerElement.parentNode;
+		mainParent.removeChild(containerElement);
+		var msgElement = document.createElement("div");
+		msgElement.style = "margin-top:15%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; font-size:1.2em; line-height:1.5em;";
+		msgElement.innerHTML = "<div>WebCall server is currently in maintenance mode.<br>Please try again a little later.</div>";
+		mainParent.appendChild(msgElement);
+		return;
 	});
 }
 
@@ -455,6 +470,10 @@ function start() {
 		//getStream() -> getUserMedia(constraints) -> gotStream() -> goOnline() -> login()
 	} catch(ex) {
 		console.log('ex while searching for audio devices',ex.message);
+		// end spinner
+		if(divspinnerframe) {
+			divspinnerframe.style.display = "none";
+		}
 	}
 }
 
@@ -465,6 +484,12 @@ function login(retryFlag) {
 		// processData
 		let loginStatus = xhr.responseText;
 		gLog('loginStatus '+loginStatus);
+
+		// end spinner
+		if(divspinnerframe) {
+			divspinnerframe.style.display = "none";
+		}
+
 		var parts = loginStatus.split("|");
 		if(parts.length>=1 && parts[0].indexOf("wsid=")>=0) {
 			wsAddr = parts[0];
@@ -571,6 +596,12 @@ function login(retryFlag) {
 		} else {
 			showStatus("XHR error "+err,3000);
 		}
+
+		// end spinner
+		if(divspinnerframe) {
+			divspinnerframe.style.display = "none";
+		}
+
 		waitingCallerSlice = null;
 		missedCallsSlice = null;
 		var waitingCallersElement = document.getElementById('waitingCallers');
