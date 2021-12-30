@@ -699,8 +699,12 @@ function showOnlineReadyMsg(sessionIdPayload) {
 //		msg1 += "Software update available. Reload to update.<br>";
 //	}
 
-	var calleeLink = window.location.href;
-	var userLink = calleeLink.replace("callee/","user/");
+	let calleeLink = window.location.href;
+	let userLink = calleeLink.replace("callee/","user/");
+	let idxParameter = userLink.indexOf("?");
+	if(idxParameter>=0) {
+		userLink = userLink.substring(0,idxParameter);
+	}
 	//userLink = userLink.replace("calle2/","user/");
 	let msg2 = "You will receive calls made by this link:<br>"+
 		"<a target='_blank' href='"+userLink+"'>"+userLink+"</a><br>";
