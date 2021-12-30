@@ -281,7 +281,7 @@ function sendFile(file) {
 	readSlice(0);
 }
 
-var xhrTimeout = 20000;
+var xhrTimeout = 25000;
 function ajaxFetch(xhr, type, api, processData, errorFkt, postData) {
 	xhr.onreadystatechange = function() {
 		if(xhr.readyState == 4 && (xhr.status==200 || xhr.status==0)) {
