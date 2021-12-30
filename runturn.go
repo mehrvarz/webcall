@@ -110,9 +110,8 @@ func runTurnServer() {
 					}
 				}
 			}
-//foundIp=true
 			if foundIp {
-				if logWantedFor("turn") {
+				if logWantedFor("turn") && !foundByMap {
 					recentTurnCallerIpMutex.RLock()
 					fmt.Printf("turn auth for %v SUCCESS (by map %v) %d (%s)\n",
 						srcAddr.String(), foundByMap, len(recentTurnCallerIps), foundCalleeId)
