@@ -764,17 +764,17 @@ function connectSignaling(message,comment) {
 	if(typeof Android !== "undefined" && Android !== null) {
 		// create new WsClient() and call connect(wsUrl)
 		wsConn = Android.wsOpen(wsUrl);
-		gLog("connectSignaling Android.wsOpen "+wsUrl+"|"+wsConn);
+		gLog("connectSig "+wsUrl);
 	} else {
 		if(!window["WebSocket"]) {
-			console.error('connectSignaling: no WebSocket support');
+			console.error('connectSig: no WebSocket support');
 			showStatus("No WebSocket support");
 			if(!mediaConnect) {
 				onlineIndicator.src="";
 			}
 			return;
 		}
-	    gLog('connectSignaling: open ws connection... '+calleeID+' '+wsUrl);
+	    gLog('connectSig: open ws connection... '+calleeID+' '+wsUrl);
 		wsConn = new WebSocket(wsUrl);
 		wsConn.onopen = wsOnOpen;
 		wsConn.onerror = wsOnError;
