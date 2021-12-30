@@ -22,16 +22,27 @@ import (
 )
 
 const (
+	pingPeriod = 80
 	// we send a ping to the client when we didn't hear from it for pingPeriod secs
-	// when we send a ping, we set the time for our next ping to be send in pingPeriod secs
-	// whenever we receive something from the client (data, a ping or a pong)
-	// we reset our next ping to be sent in pingPeriod secs
-	pingPeriod = 90
+	// when we send a ping, we set the time for our next ping in pingPeriod secs after that
+	// whenever we receive something from the client (data or a ping or a pong)
+	// we reset the time for our next ping to be sent in pingPeriod secs after that moment
 	// when pingPeriod expires, it means that we didn't hear from the client for pingPeriod secs
 	// so we send our ping
 	// and we set SetReadDeadline bc we expect to receive a pong in response within max 30s
-	// if there is still no response from the client by then, we consider the client to be gone
-	// in other words: we cap the connection if we don't hear from the client for pingPeriod + 30 secs
+	// if there is still no response from the client by then, we consider the client to be dead
+	// in other words: we cap the connection if we don't hear from a client for pingPeriod + 30 secs
+
+	// browser clients don't send pings to us, so it is only us sending pings and them responding pongs
+
+	// android clients send pings to us every 60 secs and we respond with pongs
+	// since the pingPeriod of android clients is shorter than that of this server,
+	// this server will in practice not send any pings to android clients
+
+	// say an android client sends a ping, the server sends a pong and shortly after the client reboots
+	// the server will wait for 90s without receiving anything from this client
+	// after 90s the server will send a ping to check the client
+	// after another 20s the server declares the client dead - 100s after the clients last ping
 )
 
 var keepAliveMgr *KeepAliveMgr
@@ -112,6 +123,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	if !ok {
 		fmt.Printf("# serveWs wsCliID=%d does not exist rip=%s url=%s\n",
 			wsClientID64, remoteAddr, r.URL.String())
+		// TODO why does r.URL start with //
+		// url=//timur.mobi:8443/ws?wsid=47639023704
 		return
 	}
 /*
@@ -139,7 +152,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	wsConn := conn.(*websocket.Conn)
 	//wsConn.EnableWriteCompression(true) // TODO
 
-	// set no read deadline now; we do this when we send a ping
+	// the only time browser clients can be expected to send anything, is after we sent a ping
+	// this is why we set no read deadline here; we do this when we send a ping
 	wsConn.SetReadDeadline(time.Time{})
 
 	client := &WsClient{wsConn:wsConn}
@@ -756,7 +770,18 @@ func (c *WsClient) Close(reason string) {
 }
 
 func (c *WsClient) SendPing() {
-	c.wsConn.WriteMessage(websocket.PingMessage, nil) // or wsConn.SendPing()
+	if logWantedFor("sendping") {
+		fmt.Printf("sendPing %s %s\n",c.wsConn.RemoteAddr().String(), c.calleeID)
+	}
+
+	// set the time for sending the next ping in pingPeriod secs from now
+	keepAliveMgr.SetPingDeadline(c.wsConn, pingPeriod, c)
+
+	// we expect a pong (or anything) from the client within max 20 secs from now
+	c.wsConn.SetReadDeadline(time.Now().Add(20*time.Second))
+
+	c.wsConn.WriteMessage(websocket.PingMessage, nil)
+	c.pingSent++
 }
 
 
@@ -780,7 +805,6 @@ type KeepAliveSessionData struct {
 
 func (kaMgr *KeepAliveMgr) SetPingDeadline(wsConn *websocket.Conn, secs int, client *WsClient) {
 	// set the absolute time for sending the next ping
-	wsConn.SetSession(time.Now().Add(time.Duration(secs)*time.Second))
 	wsConn.SetSession(&KeepAliveSessionData{
 		time.Now().Add(time.Duration(secs)*time.Second), client})
 }
@@ -820,18 +844,7 @@ func (kaMgr *KeepAliveMgr) Run() {
 			keepAliveSessionData := wsConn.Session().(*KeepAliveSessionData)
 			if keepAliveSessionData!=nil {
 				if timeNow.After(keepAliveSessionData.pingSendTime) {
-					if logWantedFor("sendping") {
-						fmt.Printf("sendPing %s %s\n",wsConn.RemoteAddr().String(),
-							keepAliveSessionData.client.calleeID)
-					}
-					// set the time for sending the next ping in pingPeriod secs
-					kaMgr.SetPingDeadline(wsConn, pingPeriod, keepAliveSessionData.client)
-
-					// we expect a pong to our ping within max 30 secs from now
-					wsConn.SetReadDeadline(timeNow.Add(30*time.Second))
-					// send a ping
-					wsConn.WriteMessage(websocket.PingMessage, nil) // or wsConn.SendPing()
-					keepAliveSessionData.client.pingSent++
+					keepAliveSessionData.client.SendPing()
 					nPing++
 				}
 			}
