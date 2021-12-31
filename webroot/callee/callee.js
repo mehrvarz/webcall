@@ -78,6 +78,7 @@ var fileReceiveStartDate=0;
 var fileReceiveSinceStartSecs=0;
 var fileSendAbort=false;
 var fileReceiveAbort=false;
+var loginResponse;
 
 window.onload = function() {
 	if(!navigator.mediaDevices) {
@@ -126,9 +127,13 @@ window.onload = function() {
 
 	let auto = getUrlParams("auto");
 	if(auto) {
+        gLog("onload auto is set ("+auto+")");
+		loginResponse=false;
 		if(divspinnerframe) {
 			divspinnerframe.style.display = "block";
 		}
+	} else {
+        gLog("onload auto is not set");
 	}
 
 	document.onkeydown = (evt) => onkeydownFunc(evt);
@@ -394,14 +399,14 @@ function checkServerMode(callback) {
 
 function getUrlParams(param) {
 	if(window.location.search!="") {
-		//gLog("getUrlParams search=%s",window.location.search);
+		gLog("getUrlParams search=%s",window.location.search);
 		var query = window.location.search.substring(1);
 		var parts = query.split("&");
 		for (var i=0;i<parts.length;i++) {
-			//gLog("getUrlParams part(%d)=%s",i,parts[i]);
+			gLog("getUrlParams part(%d)=%s",i,parts[i]);
 			var seg = parts[i].split("=");
 			if (seg[0] == param) {
-				//gLog("getUrlParams found=(%s)",seg[1]);
+				gLog("getUrlParams found=(%s)",seg[1]);
 				if(typeof seg[1]!=="undefined" && seg[1]!="" && seg[1]!="undefined") {
 					return decodeURI(seg[1]);
 				}
@@ -409,11 +414,14 @@ function getUrlParams(param) {
 			}
 		}
 	}
-	let path = window.location.pathname;
-	let lastSlash = path.lastIndexOf("/");
-	let value = path.substring(lastSlash+1);
-	gLog("getUrlParams val="+value);
-	return value;
+	if(param=="id") {
+		let path = window.location.pathname;
+		let lastSlash = path.lastIndexOf("/");
+		let value = path.substring(lastSlash+1);
+		gLog("getUrlParams val="+value);
+		return value;
+	}
+	return false;
 }
 
 function showPw() {
@@ -492,6 +500,7 @@ function login(retryFlag) {
 		gLog('loginStatus '+loginStatus);
 
 		// end spinner
+		loginResponse=true;
 		if(divspinnerframe) {
 			divspinnerframe.style.display = "none";
 		}
@@ -1438,6 +1447,12 @@ function goOnline() {
 	gLog('goOnline',calleeID);
 	addedAudioTrack = null;
 	addedVideoTrack = null;
+	if(divspinnerframe) {
+		setTimeout(function() { 
+			if(!loginResponse)
+				divspinnerframe.style.display = "block";
+		},200);
+	}
 	try {
 		peerCon = new RTCPeerConnection(ICE_config);
 	} catch(ex) {
