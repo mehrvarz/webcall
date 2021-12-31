@@ -236,13 +236,19 @@ window.onload = function() {
 			divspinnerframe.style.display = "none";
 		}
 
-		// mode==2: server is in maintenance mode
-		let mainParent = containerElement.parentNode;
-		mainParent.removeChild(containerElement);
-		var msgElement = document.createElement("div");
-		msgElement.style = "margin-top:15%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; font-size:1.2em; line-height:1.5em;";
-		msgElement.innerHTML = "<div>WebCall server is currently in maintenance mode.<br>Please try again a little later.</div>";
-		mainParent.appendChild(msgElement);
+		if(mode==2) {
+			// mode==2: server is in maintenance mode
+			let mainParent = containerElement.parentNode;
+			mainParent.removeChild(containerElement);
+			var msgElement = document.createElement("div");
+			msgElement.style = "margin-top:15%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; font-size:1.2em; line-height:1.5em;";
+			msgElement.innerHTML = "<div>WebCall server is currently in maintenance mode.<br>Please try again a little later.</div>";
+			mainParent.appendChild(msgElement);
+		}
+
+		if(mode==3) {
+			// mode==3: server is not accessible
+		}
 		return;
 	});
 }
