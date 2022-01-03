@@ -635,8 +635,9 @@ function onIceCandidate(event,myCandidateName) {
 	} else if(wsConn==null) {
 		gLog("onIce "+myCandidateName+": wsConn==null "+event.candidate.address);
 // TODO wsConn.readyState==undefined
-	} else if(wsConn.readyState!=1) {
-		gLog("onIce "+myCandidateName+" readyS!=1 "+event.candidate.address+" "+wsConn.readyState);
+//	} else if(wsConn.readyState!=1) {
+//		// supposed meaning: true = signaling server not connected
+//		gLog("onIce "+myCandidateName+" readyS!=1 "+event.candidate.address+" "+wsConn.readyState);
 	} else {
 		gLog("onIce "+myCandidateName+" via wsSend "+event.candidate.address);
 		// 300ms delay to prevent "cmd "+myCandidateName+" no peerCon.remoteDescription" on other side
