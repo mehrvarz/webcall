@@ -33,16 +33,16 @@ const (
 	// if there is still no response from the client by then, we consider the client to be dead
 	// in other words: we cap the connection if we don't hear from a client for pingPeriod + 30 secs
 
-	// browser clients don't send pings to us, so it is only us sending pings and them responding pongs
-
-	// android clients send pings to us every 60 secs and we respond with pongs
-	// since the pingPeriod of android clients is shorter than that of this server,
-	// this server will in practice not send any pings to android clients
-
-	// say an android client sends a ping, the server sends a pong and shortly after the client reboots
-	// the server will wait for 90s without receiving anything from this client
-	// after 90s the server will send a ping to check the client
-	// after another 20s the server declares the client dead - 100s after the clients last ping
+	// browser clients do not send pings, so it is only the server sending pings
+	// new: android clients do not send pings anymore (for powermgmt reasons)
+	// now outdated:
+	//   android clients send pings to the server every 60 secs and we respond with pongs
+	//   since the pingPeriod of android clients is shorter than that of this server,
+	//   this server will in practice not send any pings to android clients
+	//   say an android client sends a ping, the server sends a pong and shortly after the client reboots
+	//   the server will wait for 90s without receiving anything from this client
+	//   after 90s the server will send a ping to check the client
+	//   after another 20s the server declares the client dead - 100s after the clients last ping
 )
 
 var keepAliveMgr *KeepAliveMgr
