@@ -76,17 +76,25 @@ func (h *Hub) setDeadline(secs int, comment string) {
 				//	secs,timeStart.Format("2006-01-02 15:04:05"))
 			} else {
 				// timer valid: we need to disconnect the clients
-				fmt.Printf("setDeadline reached; disconnect caller (secs=%d %v)\n",
+				fmt.Printf("setDeadline reached; end session now (secs=%d %v)\n",
 					secs,timeStart.Format("2006-01-02 15:04:05"))
-				if h.CallerClient!=nil {
-					// if there is a caller (for instance during ringing), we only disconnect this caller
-					h.CallerClient.Close("setDeadline "+comment)
-					h.CallerClient.isConnectedToPeer.Set(false)
-				} else if h.CalleeClient!=nil {
+//				if h.CallerClient!=nil {
+//					// if there is a caller (for instance during ringing), we only disconnect this caller
+//					h.CallerClient.Close("setDeadline "+comment)
+//					h.CallerClient.isConnectedToPeer.Set(false)
+//				} else
+				if h.CalleeClient!=nil {
 					// otherwise we disconnect this callee
 					//h.doUnregister(h.CalleeClient,"setDeadline "+comment)
-					h.doBroadcast([]byte("cancel|deadline"))
+					h.doBroadcast([]byte("cancel|c"))
 					h.CalleeClient.peerConHasEnded("deadline")
+
+					if(h.CallerClient!=nil) {
+						// deleting recentTurnCallerIps entry, so it does not exist on quick reconnect
+						recentTurnCallerIpMutex.Lock()
+						delete(recentTurnCallerIps,h.CallerClient.RemoteAddrNoPort)
+						recentTurnCallerIpMutex.Unlock()
+					}
 				}
 			}
 		}()

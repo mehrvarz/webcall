@@ -62,6 +62,9 @@ func runTurnServer() {
 			foundCalleeId := ""
 			// search for ipAddr without the port number
 			// bc srcAddr is from the turn client and IpInHubMap is from the websocket client (different ports)
+			// TODO this could create issues; srcAddr should be same as IpInHubMap
+			// so we don't need to cut the port
+
 			ipAddr := srcAddr.String()
 			if portIdx := strings.Index(ipAddr, ":"); portIdx >= 0 {
 				ipAddr = ipAddr[:portIdx]
@@ -72,12 +75,12 @@ func runTurnServer() {
 			recentTurnCallerIpMutex.RUnlock()
 			if ok {
 				timeSinceFirstFound := timeNow.Sub(turnCaller.TimeStored)
-				if timeSinceFirstFound.Seconds() <= 600 {
+				if timeSinceFirstFound.Seconds() <= float64(maxTalkSecsIfNoP2p) {
 					foundIp = true
 					foundCalleeId = turnCaller.CallerID
 					foundByMap = true
 				} else {
-					// session is outdated
+					// session is outdated, will not anymore be authenticated
 				}
 			} else {
 				// here I check if ipAddr is listed anywhere in hubMap as a callerIp
