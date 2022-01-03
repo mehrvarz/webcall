@@ -1,4 +1,4 @@
-// WebCall Copyright 2021 timur.mobi. All rights reserved.
+// WebCall Copyright 2022 timur.mobi. All rights reserved.
 package main
 
 import (
@@ -170,7 +170,7 @@ func ticker30sec() {
 			turnCaller, ok := recentTurnCallerIps[ipAddr]
 			if ok {
 				timeSinceLastFound := timeNow.Sub(turnCaller.TimeStored)
-				if timeSinceLastFound.Seconds() > 600 { // was 5
+				if timeSinceLastFound.Seconds() > 610 { // 10min
 					delete(recentTurnCallerIps,ipAddr)
 					deleted++
 				}

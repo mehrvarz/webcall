@@ -1,4 +1,4 @@
-// WebCall Copyright 2021 timur.mobi. All rights reserved.
+// WebCall Copyright 2022 timur.mobi. All rights reserved.
 package main
 
 import (
@@ -71,24 +71,15 @@ func runTurnServer() {
 			turnCaller, ok := recentTurnCallerIps[ipAddr]
 			recentTurnCallerIpMutex.RUnlock()
 			if ok {
-				timeSinceLastFound := timeNow.Sub(turnCaller.TimeStored)
-				if timeSinceLastFound.Seconds() <= 15 {
-					// NOTE: turn connection will be valid for 15 seconds after callee goes offline
-					// this way we prevent error msgs triggered by clients expecting turn con to be still valid
-					// such as: "turn auth for %v FAIL not found"
-					// such as: "...failed to handle Refresh-request from x.x.x.x:xxxx: no allocation found..."
+				timeSinceFirstFound := timeNow.Sub(turnCaller.TimeStored)
+				if timeSinceFirstFound.Seconds() <= 600 {
 					foundIp = true
 					foundCalleeId = turnCaller.CallerID
 					foundByMap = true
 				} else {
-					recentTurnCallerIpMutex.Lock()
-					delete(recentTurnCallerIps,ipAddr)
-					recentTurnCallerIpMutex.Unlock()
-					// here we found an outdated entry; but we won't find all outdated entries this way
-					// this is why in timer.go ticker30sec() we also look for outdated entries periodically
+					// session is outdated
 				}
-			}
-			if !foundIp {
+			} else {
 				// here I check if ipAddr is listed anywhere in hubMap as a callerIp
 				// in other words: the connection will be authenticated to use turn
 				// by the caller (!), not by the callee
