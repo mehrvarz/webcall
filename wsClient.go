@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	pingPeriod = 80
+	pingPeriod = 60
 	// we send a ping to the client when we didn't hear from it for pingPeriod secs
 	// when we send a ping, we set the time for our next ping in pingPeriod secs after that
 	// whenever we receive something from the client (data or a ping or a pong)
