@@ -1,4 +1,4 @@
-// WebCall Copyright 2021 timur.mobi. All rights reserved.
+// WebCall Copyright 2022 timur.mobi. All rights reserved.
 //
 // Method serve() is the Websocket handler for http-to-ws upgrade.
 // Method receiveProcess() is the Websocket signaling handler.
