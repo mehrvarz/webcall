@@ -1,4 +1,4 @@
-// WebCall Copyright 2021 timur.mobi. All rights reserved.
+// WebCall Copyright 2022 timur.mobi. All rights reserved.
 'use strict';
 const goOnlineButton = document.querySelector('button#onlineButton');
 const goOfflineButton = document.querySelector('button#offlineButton');
@@ -370,7 +370,7 @@ function videoOff() {
 function checkServerMode(callback) {
 	if(typeof Android !== "undefined" && Android !== null) {
 		// in android mode if already connected return mode==1
-		if(Android.isConnected()) {
+		if(Android.isConnected()>0) {
 			callback(1);
 			return;
 		}
