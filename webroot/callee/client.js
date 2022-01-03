@@ -303,7 +303,7 @@ function ajaxFetch(xhr, type, api, processData, errorFkt, postData) {
 	} else {
 		api += "?_="+new Date().getTime();
 	}
-	gLog('xhr send('+api+') timeout='+xhrTimeout);
+	gLog('xhr '+api);
 	xhr.open(type, api, true);
 	xhr.setRequestHeader("Content-type", "text/plain; charset=utf-8");
 	if(postData) {
@@ -634,8 +634,9 @@ function onIceCandidate(event,myCandidateName) {
 		dataChannel.send("cmd|"+myCandidateName+"|"+JSON.stringify(event.candidate));
 	} else if(wsConn==null) {
 		gLog("onIce "+myCandidateName+": wsConn==null "+event.candidate.address);
+// TODO wsConn.readyState==undefined
 	} else if(wsConn.readyState!=1) {
-		gLog("onIce "+myCandidateName+": readyState!=1 "+event.candidate.address+" "+wsConn.readyState);
+		gLog("onIce "+myCandidateName+" readyS!=1 "+event.candidate.address+" "+wsConn.readyState);
 	} else {
 		gLog("onIce "+myCandidateName+" via wsSend "+event.candidate.address);
 		// 300ms delay to prevent "cmd "+myCandidateName+" no peerCon.remoteDescription" on other side

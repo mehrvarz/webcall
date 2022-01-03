@@ -576,7 +576,8 @@ function login(retryFlag) {
 			form.style.display = "none";
 		} else if(loginStatus=="notregistered") {
 			wsSecret = "";
-			showStatus("User ID unknown<br><a href='"+mainLink+"'>Main page</a>",-1);
+//			showStatus("User ID unknown<br><a href='"+mainLink+"'>Main page</a>",-1);
+			showStatus("User ID unknown<br>",-1);
 			form.style.display = "none";
 		} else if(loginStatus=="busy") {
 			showStatus("User is busy<br><a href='"+mainLink+"'>Main page</a>",-1);
