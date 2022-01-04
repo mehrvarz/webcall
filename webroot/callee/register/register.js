@@ -114,19 +114,19 @@ function submitForm(theForm) {
 	setTimeout(function() {
 		// register new ID
 		let api = apiPath+"/register/"+myCalleeID;
-		if(!gentle) console.log('register api',api);
+		if(!gentle) console.log('register via api='+api);
 		ajaxFetch(new XMLHttpRequest(), "POST", api, function(xhr) {
 			if(xhr.responseText=="OK") {
 				// ID is registered; offer the link
 				calleeLink = window.location.href;
 				calleeLink = calleeLink.replace("register/","");
 				calleeLink += myCalleeID;
-				if(!gentle) console.log('calleeLink',calleeLink);
+				if(!gentle) console.log('calleeLink='+calleeLink);
 				showStatus( "Please write your ID and password down. "+
 				"We don't have your Email address and cannot send you this data.<br><br>"+
 				"<b>Your WebCall ID:&nbsp; "+myCalleeID+"</b><br><br>"+
 				"Your full WebCall callee link is shown below. "+
-				"This link works from any web browser. "+
+				"This link works from any web browser.<br><br>"+
 				"Click to start receiving calls.<br><br>"+
 				"<a onclick='exelink(this.href); return false;' href='"+calleeLink+"'>"+calleeLink+"</a>",-1);
 			} else {
