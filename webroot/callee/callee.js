@@ -78,7 +78,7 @@ var fileReceiveStartDate=0;
 var fileReceiveSinceStartSecs=0;
 var fileSendAbort=false;
 var fileReceiveAbort=false;
-var loginResponse;
+var loginResponse=false;
 
 window.onload = function() {
 	if(!navigator.mediaDevices) {
@@ -1445,14 +1445,20 @@ function goOnline() {
 	goOfflineButton.disabled = false;
 	rtcConnectStartDate = 0;
 	mediaConnectStartDate = 0;
-	gLog('goOnline',calleeID);
+	gLog('goOnline '+calleeID);
 	addedAudioTrack = null;
 	addedVideoTrack = null;
 	if(divspinnerframe) {
-		setTimeout(function() { 
-			if(!loginResponse)
-				divspinnerframe.style.display = "block";
-		},200);
+		if(typeof Android !== "undefined" && Android !== null && Android.isConnected()>0) {
+			// if already connected don't show spinner (we are most likely called by wakeGoOnline())
+		} else {
+			setTimeout(function() {
+				if(!loginResponse) {
+					gLog('goOnline no loginResponse enable spinner');
+					divspinnerframe.style.display = "block";
+				}
+			},200);
+		}
 	}
 	try {
 		peerCon = new RTCPeerConnection(ICE_config);

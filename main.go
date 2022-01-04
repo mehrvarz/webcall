@@ -1,4 +1,4 @@
-// WebCall Copyright 2021 timur.mobi. All rights reserved.
+// WebCall Copyright 2022 timur.mobi. All rights reserved.
 //
 // WebCall server is a signaling server for WebRTC clients.
 // It's main task is to connect two clients, so that they
@@ -515,7 +515,7 @@ func readConfig(init bool) {
 	adminEmail = readIniString(configIni, "adminEmail", adminEmail, "")
 
 	backupScript = readIniString(configIni, "backupScript", backupScript, "")
-	backupPauseMinutes = readIniInt(configIni, "backupPauseMinutes", backupPauseMinutes, 180, 1)
+	backupPauseMinutes = readIniInt(configIni, "backupPauseMinutes", backupPauseMinutes, 720, 1)
 
 	maxCallees = readIniInt(configIni, "maxCallees", maxCallees, 10000, 1)
 
