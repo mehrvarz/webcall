@@ -568,17 +568,17 @@ function menuDialogOpen(menuDialog) {
 	containerElement.style.filter = "blur(0.8px) brightness(60%)";
 	if(calleeMode) {
 		if(wsConn && navigator.cookieEnabled && getCookieSupport()) {
-			// cookies avail: "Contacts", "Settings" and "Exit" allowed
-			if(menuContactsElement) {
-				menuContactsElement.style.display = "block";
-			}
+			// cookies avail: "Settings" allowed
+//			if(menuContactsElement) {
+//				menuContactsElement.style.display = "block";
+//			}
 			if(menuSettingsElement) {
 				menuSettingsElement.style.display = "block";
 			}
 		} else {
-			if(menuContactsElement) {
-				menuContactsElement.style.display = "none";
-			}
+//			if(menuContactsElement) {
+//				menuContactsElement.style.display = "none";
+//			}
 			if(menuSettingsElement) {
 				menuSettingsElement.style.display = "none";
 			}

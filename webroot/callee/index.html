@@ -296,7 +296,7 @@ input[type=submit]:focus {
 
 <div id="menuDialog" style="position:relative; max-width:520px; user-select:none;">
 	<div style="position:absolute; left:-999em; min-width:150px; top:0px; z-index:110; background:#45dd; color:#fff; padding:10px 20px; line-height:2.6em; border-radius:3px; cursor:pointer;">
-		<div id="menuContacts" class="menuButton" style="display:none" onclick="openContacts()">Contacts</div>
+		<!--div id="menuContacts" class="menuButton" style="display:none" onclick="openContacts()">Contacts</div-->
 		<div id="dialId" class="menuButton" style="display:none" onclick="openDialId()">Dial ID</div>
 		<div id="menuSettings" class="menuButton" style="display:none" onclick="openSettings()">Settings</div>
 		<div class="menuButton" onclick="openPostCallStats()">Call Stats</div>
@@ -354,8 +354,11 @@ input[type=submit]:focus {
 
 
 <div id="container">
-	<img id="menu" onclick="menuDialogOpen(menuDialogElement)" src="menu.svg" style="position:relative; float:right; width:25px; margin-top:6px; z-index:100; user-select:none; cursor:pointer;">
-	<img id="camera" src="camera.svg" style="position:relative; float:right; width:30px; margin-top:5.5px; margin-right:24px; z-index:100; user-select:none; cursor:pointer; transition:opacity 500ms;" onclick="videoSwitch(false)">
+	<img id="menu" onclick="menuDialogOpen(menuDialogElement)" src="menu.svg" style="position:relative; float:right; width:25px; margin-top:9px; z-index:100; user-select:none; cursor:pointer;">
+
+	<img id="iconContacts" src="contacts.svg" style="position:relative; float:right; width:40px; margin-right:16px; z-index:100; user-select:none; cursor:pointer; transition:opacity 500ms; display:none;" onclick="openContacts()">
+
+	<img id="camera" src="camera.svg" style="position:relative; float:right; width:30px; margin-top:9px; margin-right:16px; z-index:100; user-select:none; cursor:pointer; transition:opacity 500ms;" onclick="videoSwitch(false)">
 
     <h1 id="title">WebCall</h1>
 	<div id="buttons" style="display:grid; grid-template-columns: 1fr 1fr 40px; list-style-type:none; max-width:360px;">

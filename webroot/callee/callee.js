@@ -19,7 +19,8 @@ const missedCallsTitleElement = document.getElementById('missedCallsTitle');
 const form = document.querySelector('form#password');
 const formPw = document.querySelector('input#current-password');
 const menuSettingsElement = document.getElementById('menuSettings');
-const menuContactsElement = document.getElementById('menuContacts');
+//const menuContactsElement = document.getElementById('menuContacts');
+const iconContactsElement = document.getElementById('iconContacts');
 const dialIdElement = document.getElementById('dialId');
 const bitrate = 280000;
 const autoReconnectDelay = 15;
@@ -819,7 +820,8 @@ function wsOnOpen() {
 	isHiddenlabel.style.display = "block";
 	autoanswerlabel.style.display = "block";
 	menuSettingsElement.style.display = "block";
-	menuContactsElement.style.display = "block";
+//	menuContactsElement.style.display = "block";
+	iconContactsElement.style.display = "block";
 	dialIdElement.style.display = "block";
 	goOfflineButton.disabled = false;
 }
