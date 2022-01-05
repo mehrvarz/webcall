@@ -4,10 +4,10 @@
 	 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
 	 enable-background="new 0 0 500 500" xml:space="preserve">
 	<g id="subject">
-		<path id="body" fill="#c0c0c0" d="M250,261.4c-57,0-116.5,27.8-116.5,65.3v17c0,19.4,15.9,34.1,35.5,34.1h164.7
+		<path id="body" fill="#c0c0c0"
+		 	d="M250,261.4c-57,0-116.5,27.8-116.5,65.3v17c0,19.4,15.9,34.1,35.5,34.1h164.7
 			c19.6,0,35.5-14.7,35.5-34.1v-17C369.3,289.1,307,261.4,250,261.4z"/>
 		<circle id="head" fill="#c0c0c0" cx="250" cy="176.1" r="54"/>
 	</g>
-<g id="art_layer">
-</g>
 </svg>
+
