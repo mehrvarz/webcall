@@ -73,8 +73,8 @@ function setDefaultCodec(mLine, payload) {
 function exitPage() {
 	if(!gentle) console.log('exitPage');
 	if(parent!=null && parent.iframeWindowClose) {
-		if(!gentle) console.log('parent.historyBack');
-		parent.historyBack();
+		if(!gentle) console.log('history.back()');
+		history.back();
 	}
 }
 

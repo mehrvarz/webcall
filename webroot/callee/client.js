@@ -16,6 +16,7 @@ const cameraElement = document.getElementById('camera');
 const fileselectLabel = document.getElementById("fileselectlabel");
 const fileSelectElement = document.getElementById("fileselect");
 const iframeWindowElement = document.getElementById('iframeWindow');
+const fullscreenLabel = document.querySelector('label#fullscreenLabel');
 const fullscreenCheckbox = document.querySelector('input#fullscreen');
 const mainElement = document.getElementById('main');
 const containerElement = document.getElementById('container');

@@ -218,7 +218,7 @@ function exitPage() {
 	if(!gentle) console.log('exitPage');
 	if(parent!=null && parent.iframeWindowClose) {
 		if(!gentle) console.log('parent.iframeWindowClose()');
-		parent.historyBack();
+		history.back();
 	}
 	if(!gentle) console.log('contacts exitPage stop onkeydown handler');
 }
