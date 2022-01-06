@@ -342,7 +342,7 @@ function updateClock(startDuration) {
 	if(countDownSecs<=0) {
 		countDownSecs=0;
 	}
-	if(countDownSecs==60 || countDownSecs==30 || countDownSecs==15) {
+	if(countDownSecs==60 || countDownSecs==15) {
 		notificationSound.play().catch(function(error) { });
 	}
 	if(timerElement) {
