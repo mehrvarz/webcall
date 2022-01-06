@@ -1544,14 +1544,16 @@ function goOnline() {
 }
 
 function peerConnected2() {
+	// called when peerCon.connectionState=="connected"
 	if(rtcConnect) {
+		gLog("peerConnected2 already rtcConnect abort");
 		return;
 	}
 	rtcConnect = true;
 	goOfflineButton.disabled = true;
 	rtcConnectStartDate = Date.now();
 	mediaConnectStartDate = 0;
-	gLog("peerConnected rtcConnect");
+	gLog("peerConnected2 rtcConnect");
 
 	if(typeof Android !== "undefined" && Android !== null) {
 		Android.rtcConnect();
@@ -1560,7 +1562,7 @@ function peerConnected2() {
 	wsSend("rtcConnect|")
 
 	if(!dataChannel) {
-		gLog('peerConnected have no dataChannel');
+		gLog('peerConnected2 have no dataChannel');
 		createDataChannel();
 	}
 
@@ -1624,7 +1626,7 @@ function peerConnected2() {
 		// instead of listOfClientIps
 		gLog('accept incoming call?',listOfClientIps);
 		peerCon.getStats(null)
-		.then((results) => getStatsCandidateTypes(results,"Incoming", ""), err => console.log(err.message));
+		.then((results) => getStatsCandidateTypes(results,"Incoming", ""), err => console.log(err.message)); // -> wsSend("log|callee Incoming p2p/p2p")
 
 		answerButton.disabled = false;
 		// only show msgbox if not empty
@@ -1659,7 +1661,7 @@ function peerConnected2() {
 
 function getStatsCandidateTypes(results,eventString1,eventString2) {
 	let msg = getStatsCandidateTypesEx(results,eventString1,eventString2)
-	wsSend("log|callee "+msg);
+	wsSend("log|callee "+msg); // shows up in server log as: serveWss peer callee Incoming p2p/p2p
 
 	// we rather show callerID and/or callerName if they are avail, instead of listOfClientIps
 	if(callerName!="" || callerID!="") {
