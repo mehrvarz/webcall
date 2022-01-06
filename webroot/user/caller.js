@@ -164,7 +164,7 @@ window.onload = function() {
 				// user is requesting fullscreen exit
 				document.exitFullscreen().catch(err => { });
 			}
-			setTimeout(historyBack,150);
+			setTimeout(function(){history.back();},150);
 		});
 	}
 

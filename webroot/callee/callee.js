@@ -148,7 +148,7 @@ window.onload = function() {
 			autoanswerCheckbox.checked = false;
 		}
 		wsSend("calleeHidden|"+this.checked);
-		setTimeout(historyBack,150);
+		setTimeout(function(){history.back();},150);
 	});
 
 	autoanswerCheckbox.addEventListener('change', function() {
@@ -157,7 +157,7 @@ window.onload = function() {
 			isHiddenCheckbox.checked = false;
 			wsSend("calleeHidden|false");
 		}
-		setTimeout(historyBack,150);
+		setTimeout(function(){history.back();},150);
 	});
 
 	fullscreenCheckbox.addEventListener('change', function() {
@@ -174,7 +174,7 @@ window.onload = function() {
 			// user is requesting fullscreen exit
 			document.exitFullscreen().catch(err => { });
 		}
-		setTimeout(historyBack,150);
+		setTimeout(function(){history.back();},150);
 	});
 	document.addEventListener('fullscreenchange', (event) => {
 		if(document.fullscreenElement) {
@@ -2057,8 +2057,8 @@ function exit() {
 	goOffline();
 
 	if(iframeWindowOpenFlag || menuDialogOpenElement) {
-		gLog("exit historyBack");
-		historyBack();
+		gLog("exit history.Back");
+		history.Back();
 	}
 
 	setTimeout(function() {

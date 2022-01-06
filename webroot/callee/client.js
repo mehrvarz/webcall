@@ -166,7 +166,7 @@ if(fileSelectElement) {
 	gLog("fileSelectElement.addEventListener");
 	fileSelectElement.addEventListener('change', (event) => {
 		gLog("fileSelect event");
-		historyBack();
+		history.back();
 		const files = fileSelectElement.files;
 		const file = files.item(0);
 		if(file==null) {
@@ -563,7 +563,7 @@ function menuDialogOpen(menuDialog) {
 	location.hash = hashcounter;
 	fullScreenOverlayElement.style.display = "block";
 	fullScreenOverlayElement.onclick = function() {
-		historyBack();
+		history.back();
 	}
 	containerElement.style.filter = "blur(0.8px) brightness(60%)";
 	if(calleeMode) {
@@ -620,10 +620,6 @@ function menuDialogClose() {
 	}
 }
 
-function historyBack() {
-	history.back();
-}
-
 function onIceCandidate(event,myCandidateName) {
 	if(event.candidate==null) {
 		// ICE gathering has finished
@@ -665,7 +661,7 @@ function iframeWindowOpen(url,addStyleString) {
 
 	fullScreenOverlayElement.style.display = "block";
 	fullScreenOverlayElement.onclick = function() {
-		historyBack();
+		history.back();
 	}
 
 	containerElement.style.filter = "blur(0.8px) brightness(60%)";
@@ -1422,8 +1418,8 @@ function onkeydownFunc(evt) {
 	}
 	if(isEscape) {
 		if(iframeWindowOpenFlag || menuDialogOpenElement) {
-			gLog('esc key -> historyBack()');
-			historyBack();
+			gLog('esc key -> history.back()');
+			history.back();
 		} else {
 			gLog('esc key -> no action');
 		}
