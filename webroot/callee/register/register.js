@@ -155,3 +155,11 @@ function clearForm() {
 	formPw.focus();
 }
 
+function showPw() {
+	if(formPw.type=="password") {
+		formPw.type="text";
+	} else {
+		formPw.type="password";
+	}
+}
+
