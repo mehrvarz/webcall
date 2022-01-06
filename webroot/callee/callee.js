@@ -137,6 +137,10 @@ window.onload = function() {
         gLog("onload auto is not set");
 	}
 
+	if(typeof Android !== "undefined" && Android !== null) {
+		fullscreenLabel.style.display = "none";
+	}
+
 	document.onkeydown = (evt) => onkeydownFunc(evt);
 
 	localVideoFrame.onresize = showVideoResolutionLocal;
