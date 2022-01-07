@@ -265,7 +265,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			return;
 		}
 
-		fmt.Printf("exithub callee=%s wsID=%d %s rip=%s\n",
+		fmt.Printf("exithub callee=%s wsID=%d %s %s\n",
 			globalID, wsClientID, comment, remoteAddrWithPort)
 
 		myHubMutex.Lock()
