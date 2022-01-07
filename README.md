@@ -4,7 +4,7 @@
 
 # WebCall WebRTC Telephony
 
-v2.0.4 Dec 21, 2021
+v2.0.5 Jan 7, 2022
 
 HQ audio/video telephony with bidirectional file transfer
 
