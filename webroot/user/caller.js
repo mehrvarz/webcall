@@ -1036,8 +1036,13 @@ function signalingCommand(message) {
 			console.warn('calleeAnswer abort no peerCon');
 			return;
 		}
-		let hostDescription = JSON.parse(payload);
+		if(onIceCandidates<=0) {
+			//tmtmtm
+			console.warn('no ice candidates were created');
+			return;
+		}
 
+		let hostDescription = JSON.parse(payload);
 		gLog("calleeAnswer setLocalDescription");
 		// setLocalDescription will cause "onsignalingstate have-local-offer"
 		peerCon.setLocalDescription(localDescription).then(() => {
@@ -1426,7 +1431,7 @@ function dial2() {
 	peerCon.onicegatheringstatechange = event => {
 		let connection = event.target;
 		gLog("peerCon onicegatheringstatechange "+connection.iceGatheringState);
-// TODO tmtmtm if connection.iceGatheringState=="complete" count the number of "onIce callerCandidate"
+// TODO tmtmtm if connection.iceGatheringState=="complete" show the number of "onIce callerCandidates"
 // and show a warning if the number is zero 
 		if(connection.iceGatheringState=="complete") {
 			gLog("peerCon onIceCandidates="+onIceCandidates);
