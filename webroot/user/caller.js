@@ -1039,8 +1039,8 @@ function signalingCommand(message) {
 		if(onIceCandidates<=0) {
 			// TODO tmtmtm if the number of onIceCandidates is zero. we must abort
 			console.warn('no ice candidates were created');
-			alert('No WebRTC/ICE candidates were created. Please use a different browser.');
 			hangup(true,"no ice candidates");
+			alert('No WebRTC/ICE candidates are being created. You should try a different browser.');
 			return;
 		}
 
