@@ -1014,10 +1014,10 @@ function connectSignaling(message,openedFunc) {
 			showStatus("No signaling server");
 			hangupWithBusySound(false,"Busy")
 		} else {
-			// onclose after a ws-connection has been established
-			// could be the callee being busy
+			// it is common for the signaling server to disconnect the caller early
 			gLog('wsConn.onclose');
-			stopAllAudioEffects();
+			//showStatus("Disconnected from signaling server");
+			//stopAllAudioEffects();
 		}
 		wsConn = null;
 	};
@@ -1037,13 +1037,13 @@ function signalingCommand(message) {
 			console.warn('calleeAnswer abort no peerCon');
 			return;
 		}
-		if(onIceCandidates<=0) {
-			// TODO tmtmtm if the number of onIceCandidates is zero. we must abort
+		if(onIceCandidates==0) {
+			onIceCandidates = -1;
 			console.warn('no ice candidates are being created');
 			stopAllAudioEffects();
 			hangup(true,"no ice candidates created");
 			showStatus("No WebRTC/ICE candidates are being created");
-			alert('No WebRTC/ICE candidates are being created. You should try a different browser.');
+			alert('No WebRTC/ICE candidates being created. Maybe try a different browser.');
 			return;
 		}
 
@@ -1370,8 +1370,14 @@ function dial2() {
 			if(!rtcConnect) {
 				if(!doneHangup) {
 					// no rtcConnect after 20s: give up dial-waiting
-					console.log("dialing timeout, giving up on call",candidateResultString);
+					console.log("dialing timeout, giving up on call "+candidateResultString);
 					hangupWithBusySound(true,"Failed to connect "+candidateResultString);
+					if(onIceCandidates==0) {
+						onIceCandidates = -1;
+						console.warn('no ice candidates are being created');
+						showStatus("No WebRTC/ICE candidates being created. Maybe try a different browser?");
+						return;
+					}
 				}
 			} else {
 				if(!mediaConnect) {
