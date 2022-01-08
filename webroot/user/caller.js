@@ -1015,8 +1015,9 @@ function connectSignaling(message,openedFunc) {
 			hangupWithBusySound(false,"Busy")
 		} else {
 			// onclose after a ws-connection has been established
-			// most likey the callee is busy
+			// could be the callee being busy
 			gLog('wsConn.onclose');
+			stopAllAudioEffects();
 		}
 		wsConn = null;
 	};
