@@ -1038,7 +1038,8 @@ function signalingCommand(message) {
 		}
 		if(onIceCandidates<=0) {
 			// TODO tmtmtm if the number of onIceCandidates is zero. we must abort
-			console.warn('no ice candidates were created');
+			console.warn('no ice candidates are being created');
+			stopAllAudioEffects();
 			hangup(true,"no ice candidates");
 			alert('No WebRTC/ICE candidates are being created. You should try a different browser.');
 			return;
@@ -1433,9 +1434,9 @@ function dial2() {
 	peerCon.onicegatheringstatechange = event => {
 		let connection = event.target;
 		gLog("peerCon onicegatheringstatechange "+connection.iceGatheringState);
-//		if(connection.iceGatheringState=="complete") {
-//			gLog("peerCon onIceCandidates="+onIceCandidates);
-//		}
+		if(connection.iceGatheringState=="complete") {
+			gLog("peerCon onIceCandidates="+onIceCandidates);
+		}
 	}
 	peerCon.onsignalingstatechange = event => {
 		gLog("peerCon onsignalingstate "+peerCon.signalingState);
