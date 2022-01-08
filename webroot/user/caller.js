@@ -1043,7 +1043,7 @@ function signalingCommand(message) {
 			stopAllAudioEffects();
 			hangup(true,"no ice candidates created");
 			showStatus("No WebRTC/ICE candidates are being created");
-			alert('No WebRTC/ICE candidates being created. Maybe try a different browser.');
+			alert('No WebRTC/ICE candidates being created. Maybe try a different browser?');
 			return;
 		}
 
@@ -1376,6 +1376,7 @@ function dial2() {
 						onIceCandidates = -1;
 						console.warn('no ice candidates are being created');
 						showStatus("No WebRTC/ICE candidates being created. Maybe try a different browser?");
+						alert('No WebRTC/ICE candidates being created. Maybe try a different browser?');
 						return;
 					}
 				}
