@@ -1039,6 +1039,7 @@ function signalingCommand(message) {
 		if(onIceCandidates<=0) {
 			//tmtmtm
 			console.warn('no ice candidates were created');
+			alert('No WebRTC/ICE candidates were created. Please use a different browser.');
 			return;
 		}
 
