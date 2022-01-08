@@ -35,6 +35,7 @@ var videoEnabled = false;
 var localVideoMonitorPaused = false;
 var hashcounter=0;
 var dialing = false;
+var onIceCandidates = 0;
 
 var ICE_config = {
 	"iceServers": [
@@ -628,6 +629,7 @@ function onIceCandidate(event,myCandidateName) {
 	} else if(event.candidate.address==null) {
 		//console.warn('onIce skip event.candidate.address==null');
 	} else if(isDataChlOpen()) {
+		onIceCandidates++;
 		gLog("onIce "+myCandidateName+" via dataChannel "+event.candidate.address);
 		dataChannel.send("cmd|"+myCandidateName+"|"+JSON.stringify(event.candidate));
 	} else if(wsConn==null) {
@@ -637,6 +639,7 @@ function onIceCandidate(event,myCandidateName) {
 //		// supposed meaning: true = signaling server not connected
 //		gLog("onIce "+myCandidateName+" readyS!=1 "+event.candidate.address+" "+wsConn.readyState);
 	} else {
+		onIceCandidates++;
 		gLog("onIce "+myCandidateName+" via wsSend "+event.candidate.address);
 		// 300ms delay to prevent "cmd "+myCandidateName+" no peerCon.remoteDescription" on other side
 		setTimeout(function() {

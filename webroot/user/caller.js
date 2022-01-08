@@ -1373,6 +1373,7 @@ function dial2() {
 
 	addedAudioTrack = null;
 	addedVideoTrack = null;
+	onIceCandidates = 0;
 	try {
 		gLog("dial peerCon = new RTCPeerConnection");
 		peerCon = new RTCPeerConnection(ICE_config);
@@ -1425,6 +1426,11 @@ function dial2() {
 	peerCon.onicegatheringstatechange = event => {
 		let connection = event.target;
 		gLog("peerCon onicegatheringstatechange "+connection.iceGatheringState);
+// TODO tmtmtm if connection.iceGatheringState=="complete" count the number of "onIce callerCandidate"
+// and show a warning if the number is zero 
+		if(connection.iceGatheringState=="complete") {
+			gLog("peerCon onIceCandidates="+onIceCandidates);
+		}
 	}
 	peerCon.onsignalingstatechange = event => {
 		gLog("peerCon onsignalingstate "+peerCon.signalingState);
