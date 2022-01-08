@@ -1736,7 +1736,7 @@ function hangup(mustDisconnectCallee,message) {
 		},2500); // till busy tone ends
 	} else {
 		hangupButton.disabled = true;
-		dialButton.disabled = false;
+		//dialButton.disabled = false;
 		onlineIndicator.src="";
 	}
 
@@ -1897,6 +1897,7 @@ function hangup(mustDisconnectCallee,message) {
 		setTimeout(function() {
 			// show msgbox etc.
 			checkCalleeOnline();
+			dialButton.disabled = false;
 		},2000);
 	}
 }
