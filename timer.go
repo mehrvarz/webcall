@@ -4,17 +4,68 @@ package main
 import (
 	"time"
 	"fmt"
+	"strings"
 	"bytes"
 	"encoding/gob"
 	"os"
 	"os/exec"
 	"sync/atomic"
 	"github.com/mehrvarz/webcall/skv"
+	"gopkg.in/ini.v1"
 	bolt "go.etcd.io/bbolt"
 )
 
+func ticker20min() {
+	twentyMinTicker := time.NewTicker(20*60*time.Second)
+	defer twentyMinTicker.Stop()
+	for {
+		<-twentyMinTicker.C
+		if shutdownStarted.Get() {
+			break
+		}
+
+		// load "news.ini", file should contain two lines: date= and url=
+		newsIni, err := ini.Load("news.ini")
+		if err == nil {
+			dateValue,ok := readIniEntry(newsIni,"date")
+			if(ok && dateValue!="") {
+				urlValue,ok := readIniEntry(newsIni,"url")
+				if(ok && urlValue!="") {
+					broadcastNewsLink(dateValue,urlValue)
+				}
+			}
+		}
+	}
+}
+
+func broadcastNewsLink(date string, url string) {
+	hubMapMutex.RLock()
+	defer hubMapMutex.RUnlock()
+	for calleeID,hub := range hubMap {
+		if strings.HasPrefix(calleeID,"answie") || 
+		   strings.HasPrefix(calleeID,"talkback" ||
+		   strings.HasPrefix(calleeID,"!") {
+			continue
+		}
+		data := "news|"+date+"|"+url;
+		if hub!=nil {
+			hub.HubMutex.RLock()
+			if hub.CalleeClient!=nil {
+				fmt.Printf("broadcastNewsLink to=%s data=%s\n",calleeID,data)
+				hub.CalleeClient.Write([]byte(data))
+			} else {
+				fmt.Printf("broadcastNewsLink hub.CalleeClient==nil to=%s data=%s\n",calleeID,data)
+			}
+			hub.HubMutex.RUnlock()
+		} else {
+			fmt.Printf("broadcastNewsLink hub==nil to=%s data=%s\n",calleeID,data)
+		}
+	}
+	return
+}
+
 func ticker3min() {
-	threeMinTicker := time.NewTicker(180*time.Second)
+	threeMinTicker := time.NewTicker(3*60*time.Second)
 	defer threeMinTicker.Stop()
 	lastBackupTime := time.Now()
 	for {

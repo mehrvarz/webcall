@@ -329,9 +329,10 @@ func main() {
 
 	go httpServer()
 	go runTurnServer()
-	go ticker3min()  // call backupScript + delete old tw notifications
+	go ticker20min() // news notifieer
+	go ticker3min()  // backupScript + delete old tw notifications
 	go ticker30sec() // log stats
-	go ticker10sec() // call readConfig()
+	go ticker10sec() // readConfig()
 	go ticker2sec()  // check for new day
 	if pprofPort>0 {
 		go func() {

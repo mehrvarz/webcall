@@ -22,6 +22,7 @@ const menuSettingsElement = document.getElementById('menuSettings');
 //const menuContactsElement = document.getElementById('menuContacts');
 const iconContactsElement = document.getElementById('iconContacts');
 const dialIdElement = document.getElementById('dialId');
+const exclamationElement = document.getElementById('exclamation');
 const bitrate = 280000;
 const autoReconnectDelay = 15;
 const clientVersion = "2.0.0";
@@ -80,6 +81,7 @@ var fileReceiveSinceStartSecs=0;
 var fileSendAbort=false;
 var fileReceiveAbort=false;
 var loginResponse=false;
+var minNewsDate=0;
 
 window.onload = function() {
 	if(!navigator.mediaDevices) {
@@ -140,6 +142,12 @@ window.onload = function() {
 	if(typeof Android !== "undefined" && Android !== null) {
 		fullscreenLabel.style.display = "none";
 	}
+
+
+	minNewsDate = localStorage.getItem('newsdate');
+	if(minNewsDate==null) minNewsDate=0;
+	// we show news from the server if they are newer than minNewsDate
+	// when we show them, we set localStorage.setItem('newsdate', Date.now()/1000) // ms since Jan 1, 1970
 
 	document.onkeydown = (evt) => onkeydownFunc(evt);
 
@@ -1128,6 +1136,30 @@ function signalingCommand(message) {
 	} else if(cmd=="stopCamDelivery") {
 		gLog("stopCamDelivery");
 		connectLocalVideo(true);
+
+	} else if(cmd=="news") {
+		let newsDate = payload;
+		let newsUrl = tok[2];
+		let newsDateInt = parseInt(newsDate);
+		gLog("news="+newsDate+"("+newsDateInt+">"+minNewsDate+")|"+newsUrl);
+		if(newsDateInt >= minNewsDate) {
+			gLog("news is new");
+			if(exclamationElement!=null) {
+				exclamationElement.style.opacity = 0;
+				exclamationElement.style.display = "block";
+				exclamationElement.style.opacity = 1;
+				exclamationElement.onclick = function() {
+					// TODO: open iframe for newsUrl
+					gLog("===showNews newsUrl="+newsUrl);
+					minNewsDate = Math.floor(Date.now()/1000);
+					localStorage.setItem('newsdate', minNewsDate);
+				};
+			} else {
+				gLog("exclamationElement not defined");
+			}
+		} else {
+			gLog("news is old");
+		}
 
 	} else {
 		gLog('# ignore incom cmd',cmd);
