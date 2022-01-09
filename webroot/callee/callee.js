@@ -757,6 +757,10 @@ function showOnlineReadyMsg(sessionIdPayload) {
 	if(idxParameter>=0) {
 		userLink = userLink.substring(0,idxParameter);
 	}
+	idxParameter = userLink.indexOf("#");
+	if(idxParameter>=0) {
+		userLink = userLink.substring(0,idxParameter);
+	}
 	//userLink = userLink.replace("calle2/","user/");
 	let msg2 = "You will receive calls made by this link:<br>"+
 		"<a target='_blank' href='"+userLink+"'>"+userLink+"</a><br>";
