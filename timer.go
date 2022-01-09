@@ -43,7 +43,7 @@ func broadcastNewsLink(date string, url string) {
 	defer hubMapMutex.RUnlock()
 	for calleeID,hub := range hubMap {
 		if strings.HasPrefix(calleeID,"answie") || 
-		   strings.HasPrefix(calleeID,"talkback" ||
+		   strings.HasPrefix(calleeID,"talkback") ||
 		   strings.HasPrefix(calleeID,"!") {
 			continue
 		}
