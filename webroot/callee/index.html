@@ -354,11 +354,14 @@ input[type=submit]:focus {
 
 
 <div id="container">
-	<img id="menu" onclick="menuDialogOpen(menuDialogElement)" src="menu.svg" style="position:relative; float:right; width:25px; margin-top:5px; margin-left:16px; z-index:100; user-select:none; cursor:pointer;">
+	<img id="menu" onclick="menuDialogOpen(menuDialogElement)" src="menu.svg" style="position:relative; float:right; width:25px; margin-top:5px; margin-left:18px; z-index:100; user-select:none; cursor:pointer;">
 
-	<img id="iconContacts" src="contacts.svg" style="position:relative; float:right; width:40px; margin-top:-4px; margin-left:16px; z-index:100; user-select:none; cursor:pointer; transition:opacity 500ms; display:none;" onclick="openContacts()">
+	<img id="iconContacts" src="contacts.svg" style="position:relative; float:right; width:23px; margin-top:0px; margin-left:18px; z-index:100; user-select:none; cursor:pointer; transition:opacity 500ms; display:none;" onclick="openContacts()">
 
-	<img id="camera" src="camera.svg" style="position:relative; float:right; width:30px; margin-top:5px; margin-left:16px; z-index:100; user-select:none; cursor:pointer; transition:opacity 500ms;" onclick="videoSwitch(false)">
+	<img id="camera" src="camera.svg" style="position:relative; float:right; width:30px; margin-top:4px; margin-left:18px; z-index:100; user-select:none; cursor:pointer; transition:opacity 500ms;" onclick="videoSwitch(false)">
+
+	<img id="exclamation" src="exclamation.svg" style="position:relative; float:right; width:21px; margin-top:5.5px; margin-left:18px; z-index:100; user-select:none; cursor:pointer; transition:opacity 500ms;" onclick="">
+
 
     <h1 id="title">WebCall</h1>
 	<div id="buttons" style="display:grid; grid-template-columns: 1fr 1fr 40px; list-style-type:none; max-width:360px;">
