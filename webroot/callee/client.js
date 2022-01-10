@@ -1309,7 +1309,9 @@ function peerConOntrack(track, streams) {
 					return;
 				}
 				if(onIceCandidates<1) {
+					// tmtmtm this is a problem with bromite system webview
 					gLog('peerCon.ontrack onIceCandidates',onIceCandidates);
+					showStatus("your browser engine does not generate ice candidates",-1);
 				}
 				let videoTracks = remoteStream.getVideoTracks();
 				gLog('peerCon.ontrack onunmute track.enabled: delayed v-tracks',videoTracks.length);
