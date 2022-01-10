@@ -1153,7 +1153,8 @@ function signalingCommand(message) {
 						Android.browse(newsUrl);
 					} else {
 						// open iframe for newsUrl
-						iframeWindowOpen(newsUrl,"max-width:640px;");
+						//iframeWindowOpen(newsUrl,"max-width:640px;");
+						window.open(newsUrl, "_blank");
 					}
 
 					minNewsDate = Math.floor(Date.now()/1000);
