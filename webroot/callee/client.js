@@ -1308,6 +1308,9 @@ function peerConOntrack(track, streams) {
 					remoteVideoHide();
 					return;
 				}
+				if(onIceCandidates<1) {
+					gLog('peerCon.ontrack onIceCandidates',onIceCandidates);
+				}
 				let videoTracks = remoteStream.getVideoTracks();
 				gLog('peerCon.ontrack onunmute track.enabled: delayed v-tracks',videoTracks.length);
 				if(videoTracks.length>0) {
