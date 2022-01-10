@@ -1154,7 +1154,10 @@ function signalingCommand(message) {
 					minNewsDate = Math.floor(Date.now()/1000);
 					localStorage.setItem('newsdate', minNewsDate);
 
+					let expireInSecs = 5*60;
+					gLog("exclamationElement expire in "+expireInSecs);
 					setTimeout(function(oldMinNewsDate) {
+						gLog("exclamationElement expire "+oldMinNewsDate+" "+minNewsDate);
 						if(oldMinNewsDate==minNewsDate) {
 							// did NOT receive a new news notification
 							exclamationElement.style.opacity = 0;
@@ -1162,7 +1165,7 @@ function signalingCommand(message) {
 								exclamationElement.style.display = "none";
 							},1000);
 						}
-					},5*60*1000,minNewsDate);
+					},expireInSecs*1000,minNewsDate);
 				};
 			} else {
 				gLog("exclamationElement not defined");
