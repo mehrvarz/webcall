@@ -1148,8 +1148,13 @@ function signalingCommand(message) {
 				exclamationElement.style.display = "block";
 				exclamationElement.style.opacity = 1;
 				exclamationElement.onclick = function() {
-					// open iframe for newsUrl
-					iframeWindowOpen(newsUrl,"max-width:640px;");
+
+					if(typeof Android !== "undefined" && Android !== null) {
+						Android.browse(newsUrl);
+					} else {
+						// open iframe for newsUrl
+						iframeWindowOpen(newsUrl,"max-width:640px;");
+					}
 
 					minNewsDate = Math.floor(Date.now()/1000);
 					localStorage.setItem('newsdate', minNewsDate);
