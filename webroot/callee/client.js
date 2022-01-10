@@ -1308,11 +1308,12 @@ function peerConOntrack(track, streams) {
 					remoteVideoHide();
 					return;
 				}
-				if(onIceCandidates<1) {
+				if(onIceCandidates<=0) {
 					// tmtmtm this is a problem with bromite system webview
 					gLog('peerCon.ontrack onIceCandidates',onIceCandidates);
-					showStatus("Your browser engine does not generate ice candidates."+
-							   " Cannot receive calls.",-1);
+					showStatus("Cannot receive calls. "+
+							   "Your browser engine does not generate WebRTC/ICE candidates.",-1);
+					notificationSound.play().catch(function(error) { });
 				}
 				let videoTracks = remoteStream.getVideoTracks();
 				gLog('peerCon.ontrack onunmute track.enabled: delayed v-tracks',videoTracks.length);
