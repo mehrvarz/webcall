@@ -1145,7 +1145,6 @@ function signalingCommand(message) {
 		if(newsDateInt >= minNewsDate) {
 			gLog("news is new");
 			if(exclamationElement!=null) {
-				exclamationElement.style.opacity = 0;
 				exclamationElement.style.display = "block";
 				exclamationElement.style.opacity = 1;
 				exclamationElement.onclick = function() {
@@ -1154,6 +1153,16 @@ function signalingCommand(message) {
 
 					minNewsDate = Math.floor(Date.now()/1000);
 					localStorage.setItem('newsdate', minNewsDate);
+
+					setTimeout(function(oldMinNewsDate) {
+						if(oldMinNewsDate==minNewsDate) {
+							// did NOT receive a new news notification
+							exclamationElement.style.opacity = 0;
+							setTimeout(function() {
+								exclamationElement.style.display = "none";
+							},1000);
+						}
+					},5*60*1000,minNewsDate);
 				};
 			} else {
 				gLog("exclamationElement not defined");
