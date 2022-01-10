@@ -1149,11 +1149,8 @@ function signalingCommand(message) {
 				exclamationElement.style.display = "block";
 				exclamationElement.style.opacity = 1;
 				exclamationElement.onclick = function() {
-					// TODO: open iframe for newsUrl
-					gLog("===showNews newsUrl="+newsUrl);
-					//let url = "/user/?callerId="+calleeID+"&name="+calleeName+"&i="+counter++;
-					gLog('openDialId',newsUrl);
-					iframeWindowOpen(newsUrl);
+					// open iframe for newsUrl
+					iframeWindowOpen(newsUrl,"max-width:640px;");
 
 					minNewsDate = Math.floor(Date.now()/1000);
 					localStorage.setItem('newsdate', minNewsDate);
