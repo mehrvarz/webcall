@@ -1311,7 +1311,8 @@ function peerConOntrack(track, streams) {
 				if(onIceCandidates<1) {
 					// tmtmtm this is a problem with bromite system webview
 					gLog('peerCon.ontrack onIceCandidates',onIceCandidates);
-					showStatus("your browser engine does not generate ice candidates",-1);
+					showStatus("Your browser engine does not generate ice candidates."+
+							   " Cannot receive calls.",-1);
 				}
 				let videoTracks = remoteStream.getVideoTracks();
 				gLog('peerCon.ontrack onunmute track.enabled: delayed v-tracks',videoTracks.length);
