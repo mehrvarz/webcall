@@ -1056,7 +1056,6 @@ function signalingCommand(message) {
 			showStatus("Cannot make calls. "+
 					   "Your browser engine does not generate WebRTC/ICE candidates.",-1);
 			notificationSound.play().catch(function(error) { });
-// tmtmtm	alert('No WebRTC/ICE candidates are being created.\nYou may want to try a different browser.');
 			return;
 		}
 
@@ -1391,8 +1390,6 @@ function dial2() {
 						showStatus("Cannot make calls. "+
 								   "Your browser engine does not generate WebRTC/ICE candidates.",-1);
 						notificationSound.play().catch(function(error) { });
-//						alert("No WebRTC/ICE candidates are being created.\n"+
-//							  "You may want to try a different browser.");
 						return;
 					}
 				}
@@ -1806,7 +1803,7 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 
 			// remove local vid from localStream
 			const videoTracks = localStream.getVideoTracks();
-			gLog('hangup remove local vid videoTracks.length',videoTracks.length);
+			gLog('hangup remove local vid videoTracks.length '+videoTracks.length);
 			if(videoTracks.length>0) {
 				gLog('hangup remove local vid removeTrack',videoTracks[0]);
 				videoTracks[0].stop();
@@ -1847,7 +1844,7 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 
 						const senders = peerCon.getSenders();
 						if(senders) {
-							gLog('hangup peerCon.removeTrack senders',senders.length);
+							gLog('hangup peerCon.removeTrack senders '+senders.length);
 							try {
 								senders.forEach((sender) => { peerCon.removeTrack(sender); })
 							} catch(ex) {
@@ -1857,7 +1854,7 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 
 						const receivers = peerCon.getReceivers();
 						if(receivers) {
-							gLog('hangup peerCon.receivers len=%d',receivers.length);
+							gLog('hangup peerCon.receivers len='+receivers.length);
 							try {
 								receivers.forEach((receiver) => { receiver.track.stop(); });
 							} catch(ex) {
@@ -1867,7 +1864,7 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 
 						const transceivers = peerCon.getTransceivers();
 						if(transceivers) {
-							gLog('hangup peerCon.transceivers len=%d',transceivers.length);
+							gLog('hangup peerCon.transceivers len='+transceivers.length);
 							try {
 								transceivers.forEach((transceiver) => { transceiver.stop(); })
 							} catch(ex) {
@@ -1889,9 +1886,9 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 
 				// TODO peerCon.getSenders().forEach( peerCon.removeTrack(sender) ) etc like above?
 
-				gLog('hangup peerCon.close 2',calleeID);
+				gLog('hangup peerCon.close 2 '+calleeID);
 				peerCon.close();
-				gLog('hangup peerCon.signalingState',peerCon.signalingState);
+				gLog('hangup peerCon.signalingState '+peerCon.signalingState);
 				peerCon = null;
 			}
 		}
@@ -1909,11 +1906,13 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 	}
 
 	if(mustcheckCalleeOnline && !singlebutton) {
+		// a little time for callee to login
 		setTimeout(function() {
 			// show msgbox etc.
+			gLog('hangup checkCalleeOnline');
 			checkCalleeOnline();
 			dialButton.disabled = false;
-		},2000);
+		},3000);
 	}
 }
 
