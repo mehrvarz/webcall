@@ -264,6 +264,22 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 							registerID, cookieValue, err)
 						// not fatal, but user needs to enter pw again now
 					}
+
+					// preload contacts with 2 Answie accounts
+					var callerInfoMap map[string]string // callerID -> name
+					err = kvContacts.Get(dbContactsBucket, registerID, &callerInfoMap)
+					if err!=nil {
+						callerInfoMap = make(map[string]string)
+					}
+					callerInfoMap["answie"] = "Answie Spoken"
+					callerInfoMap["answie7"] = "Answie Jazz"
+					err = kvContacts.Put(dbContactsBucket, registerID, callerInfoMap, false)
+					if err!=nil {
+						fmt.Printf("# /register kvContacts.Put registerID=%s err=%v\n", registerID, err)
+					} else {
+						fmt.Printf("/register kvContacts.Put registerID=%s OK\n", registerID)
+					}
+
 					fmt.Fprintf(w, "OK")
 				}
 			}
