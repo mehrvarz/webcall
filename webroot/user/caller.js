@@ -4,6 +4,8 @@ const dialButton = document.querySelector('button#callButton');
 const hangupButton = document.querySelector('button#hangupButton');
 const calleeOnlineElement = document.getElementById("calleeOnline");
 const enterIdElement = document.getElementById('enterId');
+const enterIdVal = document.getElementById('enterIdVal');
+const enterDomainVal = document.getElementById('enterDomainVal');
 const bitrate = 280000;
 const playDialSounds = true;
 const calleeMode = false;
@@ -188,12 +190,13 @@ window.onload = function() {
 	}
 
 	if(calleeID=="") {
+		// Dial ID
 		gLog("onload no calleeID; switch to enterId");
 		containerElement.style.display = "none";
 		enterIdElement.style.display = "block";
-		var formEnterId = document.getElementById("enterIdVal");
+		enterDomainVal.value = location.hostname;
 		setTimeout(function() {
-			formEnterId.focus();
+			enterIdVal.focus();
 		},400);
 		// will continue in submitForm()
 		return;
@@ -818,23 +821,31 @@ function clearForm(idx) {
 		formConfirm.value = "";
 		formConfirm.focus();
 	} else if(idx==3) {
-		var formEnterId = document.getElementById("enterIdVal");
-		formEnterId.value = "";
+		enterIdVal.value = "";
 		setTimeout(function() {
-			formEnterId.focus();
+			enterIdVal.focus();
+		},400);
+	} else if(idx==4) {
+		enterDomainVal.value = "";
+		setTimeout(function() {
+			enterDomainVal.focus();
 		},400);
 	}
 }
 
 function submitForm(theForm) {
 	// DialID: switch back to default container
-	var enterIdVal = document.getElementById("enterIdVal").value;
 	enterIdElement.style.display = "none";
 	containerElement.style.display = "block";
-	calleeID = enterIdVal;
-	gLog('submitForm set calleeID='+calleeID);
-	dialButtonAfterCalleeOnline = true;
-	onload2(true);
+	calleeID = enterIdVal.value;
+	gLog('submitForm set calleeID='+calleeID+" "+enterDomainVal.value);
+	if(enterDomainVal.value!=location.hostname) {
+		window.open("https://"+enterDomainVal.value+"/user/"+calleeID, ""); //"_blank"
+		history.back();
+	} else {
+		dialButtonAfterCalleeOnline = true;
+		onload2(true);
+	}
 }
 
 function errorAction2(errString,err) {

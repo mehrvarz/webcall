@@ -320,11 +320,15 @@ input[type=submit]:focus {
 	<div style="opacity:0.7;margin-top:30px;user-select:none;">WebCall by <a href="https://timur.mobi/webcall">timur.mobi</a></div>
 </div>
 <div id="enterId" style="display:none">
-	<h1>WebCall Dial</h1>
+	<h1>WebCall Dial ID</h1>
 	<div id="status" class="status"></div>
 	<form action="javascript:;" onsubmit="submitForm(this)" id="mnumber">
-		<br>
-		<input _name="mnumber" id="enterIdVal" type="text" placeholder="webcall id" class="formtext" autofocus required>
+		<label for="enterDomain" style="margin-top:20px;">Domain:</label><br>
+		<input name="enterDomain" id="enterDomainVal" type="text" _placeholder="webcall domain" class="formtext" autofocus required>
+		<span class="lbutton" onclick="clearForm(4)">Clear</span><br><br>
+
+		<label for="enterId" style="margin-top:20px;">ID:</label><br>
+		<input name="enterId" id="enterIdVal" type="text" _placeholder="webcall id" class="formtext" autofocus required>
 		<span class="lbutton" onclick="clearForm(3)">Clear</span>
 		<br>
 		<input type="submit" name="Submit" id="submit" value="Dial" style="width:100px; margin-top:20px;">
