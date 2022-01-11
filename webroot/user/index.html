@@ -168,8 +168,8 @@ form {
 .formtext {
 	border-radius:4px;
 	border:none;
-	width:200px;
-	max-width:75%;
+	width:240px;
+	max-width:72%;
 	font-size:1.2em;
 	color:#000;
 	padding:4px 4px; box-sizing:border-box;
@@ -323,12 +323,12 @@ input[type=submit]:focus {
 	<h1>WebCall Dial ID</h1>
 	<div id="status" class="status"></div>
 	<form action="javascript:;" onsubmit="submitForm(this)" id="mnumber">
-		<label for="enterDomain" style="margin-top:20px;">Domain:</label><br>
-		<input name="enterDomain" id="enterDomainVal" type="text" _placeholder="webcall domain" class="formtext" autofocus required>
+		<label for="enterDomain">Domain:</label><br>
+		<input name="enterDomain" id="enterDomainVal" type="text" class="formtext" autofocus required>
 		<span class="lbutton" onclick="clearForm(4)">Clear</span><br><br>
 
-		<label for="enterId" style="margin-top:20px;">ID:</label><br>
-		<input name="enterId" id="enterIdVal" type="text" _placeholder="webcall id" class="formtext" autofocus required>
+		<label for="enterId">ID:</label><br>
+		<input name="enterId" id="enterIdVal" type="text" class="formtext" autofocus required>
 		<span class="lbutton" onclick="clearForm(3)">Clear</span>
 		<br>
 		<input type="submit" name="Submit" id="submit" value="Dial" style="width:100px; margin-top:20px;">
