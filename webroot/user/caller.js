@@ -256,7 +256,7 @@ function onload2(checkFlag) {
 						hangupWithBusySound(true,msg);
 					} else {
 						stopAllAudioEffects();
-						hangup(true,msg);
+						hangup(true,true,msg);
 					}
 				};
 			}
@@ -514,7 +514,7 @@ function calleeOnlineStatus(onlineStatus) {
 				iframeParentArg = "occured";
 			}
 		}
-		calleeOnlineAction("checkCalleeOnline");
+		calleeOnlineAction("calleeOnlineStatus");
 		return;
 	}
 
@@ -1052,11 +1052,11 @@ function signalingCommand(message) {
 			onIceCandidates = -1;
 			console.warn('no ice candidates are being created');
 			stopAllAudioEffects();
-			hangup(true,"no ice candidates created");
+			hangup(true,false,"no ice candidates created"); // will call checkCalleeOnline()
 			showStatus("Cannot make calls. "+
 					   "Your browser engine does not generate WebRTC/ICE candidates.",-1);
 			notificationSound.play().catch(function(error) { });
-//			alert('No WebRTC/ICE candidates are being created.\nYou may want to try a different browser.');
+// tmtmtm	alert('No WebRTC/ICE candidates are being created.\nYou may want to try a different browser.');
 			return;
 		}
 
@@ -1710,7 +1710,7 @@ function stopAllAudioEffects() {
 	}
 }
 
-function hangup(mustDisconnectCallee,message) {
+function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 	dialing = false;
 	connectLocalVideo(true);
 	if(fileselectLabel) {
@@ -1908,7 +1908,7 @@ function hangup(mustDisconnectCallee,message) {
 		}
 	}
 
-	if(!singlebutton) {
+	if(mustcheckCalleeOnline && !singlebutton) {
 		setTimeout(function() {
 			// show msgbox etc.
 			checkCalleeOnline();
