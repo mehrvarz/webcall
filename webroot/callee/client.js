@@ -623,6 +623,9 @@ function menuDialogClose() {
 }
 
 function onIceCandidate(event,myCandidateName) {
+	if(doneHangup) {
+		gLog('onIce ignored after doneHangup');
+	}
 	if(event.candidate==null) {
 		// ICE gathering has finished
 		gLog('onIce end of candidates');
