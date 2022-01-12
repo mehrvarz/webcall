@@ -1396,7 +1396,9 @@ function dial2() {
 				}
 			} else {
 				if(!mediaConnect) {
-					showStatus(ringingText,-1);
+					if(!doneHangup) {
+						showStatus(ringingText,-1);
+					}
 				}
 			}
 		}
@@ -1569,6 +1571,10 @@ function createDataChannel() {
 }
 
 function dataChannelOnmessage(event) {
+	if(doneHangup) {
+		gLog("dataChannel.onmessage ignored on doneHangup");
+		return;
+	}
 	if(typeof event.data === "string") {
 		gLog("dataChannel.onmessage");
 		if(event.data) {
