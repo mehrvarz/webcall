@@ -575,7 +575,7 @@ function calleeOnlineAction(from) {
 
 	// now that we know callee is online, we load adapter-latest.js
 	loadJS("adapter-latest.js",function(){
-		gLog('loadJS callback');
+		gLog('adapter loaded');
 		if(!navigator.mediaDevices) {
 			console.warn("navigator.mediaDevices not available");
 			if(calleeOnlineElement) {
@@ -1484,6 +1484,7 @@ function dial2() {
 			hangupWithBusySound(true,"Peer disconnected");
 			return;
 		} else if(peerCon.connectionState=="failed") {
+// TODO in some situation this strikes multiple times; but there is no point playing busySound multpl times
 			hangupWithBusySound(true,"Peer connection failed "+candidateResultString);
 			return;
 		} else if(peerCon.connectionState=="connecting") {
@@ -1716,7 +1717,7 @@ function stopAllAudioEffects() {
 
 function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 	dialing = false;
-	connectLocalVideo(true);
+	connectLocalVideo(true); // forceOff
 	if(fileselectLabel) {
 		fileselectLabel.style.display = "none";
 		progressSendElement.style.display = "none";
@@ -1727,7 +1728,7 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 	}
 
 	if(doneHangup) {
-		gLog('hangup doneHangup');
+		gLog('hangup abort on doneHangup');
 		return;
 	}
 	doneHangup = true;
@@ -1837,18 +1838,8 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 		let peerConCloseFunc = function() {
 			gLog('hangup peerConCloseFunc');
 			if(mustDisconnectCallee) {
-				gLog('hangup mustDisconnectCallee');
-				if(isDataChlOpen()) {
-					gLog('hangup dataChannel send disconnect');
-					dataChannel.send("disconnect");
-					// give dataChannel disconnect some time to deliver
-					setTimeout(function() {
-						if(isDataChlOpen()) {
-							gLog('hangup dataChannel.close');
-							dataChannel.close();
-							dataChannel = null;
-						}
-
+				let closePeerCon = function() {
+					if(peerCon) {
 						const senders = peerCon.getSenders();
 						if(senders) {
 							gLog('hangup peerCon.removeTrack senders '+senders.length);
@@ -1882,7 +1873,25 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 						gLog('hangup peerCon.close');
 						peerCon.close();
 						peerCon = null;
+					}
+				}
+
+				if(isDataChlOpen()) {
+					gLog('hangup dataChannel send disconnect');
+					dataChannel.send("disconnect");
+					// give dataChannel disconnect some time to deliver
+					setTimeout(function() {
+						if(isDataChlOpen()) {
+							gLog('hangup dataChannel.close');
+							dataChannel.close();
+							dataChannel = null;
+						}
+						closePeerCon();
 					},500);
+				} else {
+					gLog('hangup dataChannel not open');
+					// most likely hangup came very early; unfortunately now we cannot disconnect callee
+					closePeerCon();
 				}
 			} else {
 				if(isDataChlOpen()) {
