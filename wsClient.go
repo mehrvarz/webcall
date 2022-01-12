@@ -769,7 +769,7 @@ func (c *WsClient) Close(reason string) {
 	}
 }
 
-func (c *WsClient) SendPing() {
+func (c *WsClient) SendPing(maxWait int) {
 	if logWantedFor("sendping") {
 		fmt.Printf("sendPing %s %s\n",c.wsConn.RemoteAddr().String(), c.calleeID)
 	}
@@ -778,7 +778,10 @@ func (c *WsClient) SendPing() {
 	keepAliveMgr.SetPingDeadline(c.wsConn, pingPeriod, c)
 
 	// we expect a pong (or anything) from the client within max 20 secs from now
-	c.wsConn.SetReadDeadline(time.Now().Add(20*time.Second))
+	if maxWait<0 {
+		maxWait = 20
+	}
+	c.wsConn.SetReadDeadline(time.Now().Add(time.Duration(maxWait)*time.Second))
 
 	c.wsConn.WriteMessage(websocket.PingMessage, nil)
 	c.pingSent++
@@ -844,7 +847,7 @@ func (kaMgr *KeepAliveMgr) Run() {
 			keepAliveSessionData := wsConn.Session().(*KeepAliveSessionData)
 			if keepAliveSessionData!=nil {
 				if timeNow.After(keepAliveSessionData.pingSendTime) {
-					keepAliveSessionData.client.SendPing()
+					keepAliveSessionData.client.SendPing(-1)
 					nPing++
 				}
 			}
