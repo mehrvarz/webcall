@@ -1311,6 +1311,7 @@ function signalingCommand(message) {
 
 function wsSend(message) {
 	if(wsConn==null || wsConn.readyState!=1) {
+		gLog('wsSend connectSignaling() '+message);
 		connectSignaling(message,null);
 	} else {
 		wsConn.send(message);

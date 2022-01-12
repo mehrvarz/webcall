@@ -990,14 +990,20 @@ function signalingCommand(message) {
 			return;
 		}
 		callerCandidate.usernameFragment = null;
+		let addIceReloopCounter=0;
 		var addIceCallerCandidate = function(callerCandidate) {
 			if(!peerCon) {
 				console.warn('cmd callerCandidate abort no peerCon');
 				return;
 			}
 			if(!peerCon.remoteDescription) {
-				console.warn("cmd callerCandidate !peerCon.remoteDescription",payload);
-				setTimeout(addIceCallerCandidate,500,callerCandidate);
+				addIceReloopCounter++;
+				if(addIceReloopCounter<6) {
+					console.warn("cmd callerCandidate !peerCon.remoteDescription",payload);
+					setTimeout(addIceCallerCandidate,500,callerCandidate);
+				} else {
+					console.warn("cmd callerCandidate !peerCon.remoteDescription abort");
+				}
 				return;
 			}
 			let tok = callerCandidate.candidate.split(' ');
