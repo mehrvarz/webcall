@@ -29,7 +29,6 @@ var rtcConnectStartDate = 0;
 var mediaConnect = false;
 var mediaConnectStartDate = 0;
 var dataChannel = null;
-var doneHangup = false;
 var dialAfterLocalStream = false;
 var dialAfterCalleeOnline = false;
 var dialButtonAfterCalleeOnline = false;

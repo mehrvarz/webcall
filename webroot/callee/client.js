@@ -35,6 +35,7 @@ var videoEnabled = false;
 var localVideoMonitorPaused = false;
 var hashcounter=0;
 var dialing = false;
+var doneHangup = false;
 var onIceCandidates = 0;
 
 var ICE_config = {
