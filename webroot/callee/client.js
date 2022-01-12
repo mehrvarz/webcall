@@ -647,7 +647,9 @@ function onIceCandidate(event,myCandidateName) {
 		// 300ms delay to prevent "cmd "+myCandidateName+" no peerCon.remoteDescription" on other side
 		setTimeout(function() {
 			// TODO support dataChannel delivery?
-			wsSend(myCandidateName+"|"+JSON.stringify(event.candidate));
+			if(!doneHangup) {
+				wsSend(myCandidateName+"|"+JSON.stringify(event.candidate));
+			}
 		},300);
 	}
 }
