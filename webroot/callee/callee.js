@@ -510,7 +510,7 @@ function login(retryFlag) {
 	ajaxFetch(new XMLHttpRequest(), "POST", api, function(xhr) {
 		// processData
 		let loginStatus = xhr.responseText;
-		gLog('loginStatus '+loginStatus);
+		//gLog('loginStatus '+loginStatus);
 
 		// end spinner
 		loginResponse=true;
@@ -557,12 +557,11 @@ function login(retryFlag) {
 				// so that the pushRegistration.scope will also be /callee/(calleeID)
 				// so that settings.js will later make use of the correct pushRegistration
 				gLog("serviceWorker.register...");
-//				let ret =
 				navigator.serviceWorker.register('service-worker.js');
 				// get access to the registration (and registration.pushManager) object
 				navigator.serviceWorker.ready.then(function(registration) {
 					pushRegistration = registration;
-					gLog("serviceWorker.ready got pushRegistration "+pushRegistration);
+					gLog("serviceWorker.ready got "+pushRegistration);
 				}).catch(err => {
 					// this means that push events won't work
 					// no need to abort login process
@@ -1521,7 +1520,7 @@ function goOnline() {
 		} else {
 			setTimeout(function() {
 				if(!loginResponse) {
-					gLog('goOnline no loginResponse enable spinner');
+					//gLog('goOnline no loginResponse enable spinner');
 					divspinnerframe.style.display = "block";
 				}
 			},200);
@@ -1672,7 +1671,7 @@ function peerConnected2() {
 			answerButton.style.background = "#04c";
 			buttonBgHighlighted = false;
 			if(!buttonBlinking || wsConn==null) {
-				gLog("buttonBlinking stop");
+				//gLog("buttonBlinking stop");
 				answerButton.style.background = "#04c";
 				return;
 			}

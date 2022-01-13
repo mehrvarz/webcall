@@ -365,7 +365,7 @@ function updateClock(startDuration) {
 var statsPostCallString = "";
 var statsPostCallDurationMS = 0;
 function getStatsPostCall(results) {
-	gLog('statsPostCall start');
+	//gLog('statsPostCall start');
 	// RTCInboundRTPAudioStream "inbound-rtp" https://www.w3.org/TR/webrtc-stats/#dom-rtcinboundrtpstreamstats
 	// RTCOutboundRTPAudioStream "outbound-rtp" https://www.w3.org/TR/webrtc-stats/#dom-rtcoutboundrtpstreamstats
 	// RTCAudioReceiverStats "receiver"
@@ -434,7 +434,9 @@ function getStatsPostCall(results) {
 		"retransmittedPacketsSent: "+retransmittedPacketsSent+"\n"+
 		"roundTripTime: "+roundTripTime+"\n"+
 		"connection: "+rtcLink+"\n";
-	gLog("statsPostCall "+statsPostCallString);
+	if(durationSecs>0) {
+		gLog("statsPostCall "+statsPostCallString);
+	}
 }
 
 function showStatsPostCall() {
@@ -861,7 +863,7 @@ function gotDevices(deviceInfos) {
 				if(deviceId.length>20) {
 					deviceId = deviceId.substring(0,20)+"...";
 				}
-				gLog('gotDevices '+deviceInfo.kind+","+deviceInfo.label+","+deviceId);
+				//gLog('gotDevices '+deviceInfo.kind+","+deviceInfo.label+","+deviceId);
 			}
 
 			const option = document.createElement('option');
