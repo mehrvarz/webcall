@@ -121,6 +121,9 @@ window.onload = function() {
 	// the following args may be used in confirmNotifyConnect()
 	callerId = getUrlParams("callerId"); // our id
 	callerName = getUrlParams("name");
+	if(typeof callerName=="undefined") {
+		callerName = "";
+	}
 	gLog("onload callerId=("+callerId+") callerName=("+callerName+")");
 
 	let text = getUrlParams("readyText");
@@ -687,7 +690,7 @@ function calleeOfflineAction() {
 		calleeOfflineElement.style.display = "block";
 
 		// calleeID is currently offline - check if calleeID can be notified (via twitter msg)
-		let api = apiPath+"/canbenotified?id="+calleeID;
+		let api = apiPath+"/canbenotified?id="+calleeID+"&caller="+callerId+"&name="+callerName;
 		gLog('canbenotified api',api);
 		xhrTimeout = 30*1000;
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
@@ -695,9 +698,6 @@ function calleeOfflineAction() {
 				// calleeID can be notified (via twitter)
 				// if caller is willing to wait, caller can invoke confirmNotifyConnect() to enter own name
 				calleeName = xhr.responseText.substring(3);
-				if(typeof callerName=="undefined") {
-					callerName = "";
-				}
 				if(calleeName=="" || calleeName.length<3) {
 					calleeName = calleeID;
 				}

@@ -539,6 +539,18 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 	}
 	calleeName := dbUser.Name
 
+	callerID := ""
+	url_arg_array, ok := r.URL.Query()["caller"]
+	if ok && len(url_arg_array[0]) > 0 {
+		callerID = strings.ToLower(url_arg_array[0])
+	}
+
+	callerName := ""
+	url_arg_array, ok = r.URL.Query()["callerName"]
+	if ok && len(url_arg_array[0]) > 0 {
+		callerName = strings.ToLower(url_arg_array[0])
+	}
+
 /* removed to fix caller getting "xxx is not online at this time" when callee is in hidden mode
 	// check if hidden online, if so skip pushable check
 	ejectOn1stFound := true
@@ -561,6 +573,7 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 	if dbUser.Email2=="" && dbUser.Str2=="" && dbUser.Str3=="" {
 		// this user can NOT rcv push msg (not pushable)
 		fmt.Printf("/canbenotified (%s) has no push channel rip=%s\n",urlID,remoteAddr)
+
 		if(dbUser.StoreMissedCalls) {
 			// store missed call
 			var missedCallsSlice []CallerInfo
@@ -573,7 +586,7 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 			if missedCallsSlice!=nil && len(missedCallsSlice)>=10 {
 				missedCallsSlice = missedCallsSlice[1:]
 			}
-			caller := CallerInfo{remoteAddrWithPort,"unknown",time.Now().Unix(),""}
+			caller := CallerInfo{remoteAddrWithPort,callerID,time.Now().Unix(),callerName}
 			missedCallsSlice = append(missedCallsSlice, caller)
 			err = kvCalls.Put(dbMissedCalls, urlID, missedCallsSlice, true) // skipConfirm
 			if err!=nil {
