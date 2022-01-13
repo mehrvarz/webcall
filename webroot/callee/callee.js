@@ -1475,7 +1475,7 @@ function hangup(dummy,dummy2,message) {
 
 	// if mediaConnect -> play short busy tone
 	if(mediaConnect) {
-		gLog("hangup: mediaConnect -> short busy sound");
+		gLog("hangup short busy sound");
 		busySignalSound.play().catch(function(error) { });
 		setTimeout(function() {
 			busySignalSound.pause();
@@ -1566,7 +1566,7 @@ function goOnline() {
 			localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
 				'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
 			peerCon.setLocalDescription(localDescription).then(() => {
-				gLog('peerCon onnegotiationneeded localDescription set -> signal');
+				gLog('peerCon onnegotiationneeded localDescription -> signal');
 				if(isDataChlOpen()) {
 					dataChannel.send("cmd|calleeOffer|"+JSON.stringify(localDescription));
 				} else {
@@ -1883,7 +1883,7 @@ function dataChannelOnmessage(event) {
 var allAudioEffectsStopped = false;
 function stopAllAudioEffects(comment) {
 	if(typeof comment!=="undefined") {
-		gLog("stopAllAudioEffects comment="+comment);
+		gLog("stopAllAudioEffects ("+comment+")");
 	}
 	allAudioEffectsStopped = true;
 	try {
