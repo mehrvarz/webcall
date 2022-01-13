@@ -1465,7 +1465,7 @@ function pickup2() {
 	},400);
 }
 
-function hangup(dummy,dummy,message) {
+function hangup(dummy,dummy2,message) {
 	showStatus("Hang up",4000);
 	console.log("hangup");
 	answerButton.style.display = "none";
