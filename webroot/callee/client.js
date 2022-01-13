@@ -1324,7 +1324,7 @@ function peerConOntrack(track, streams) {
 					notificationSound.play().catch(function(error) { });
 				}
 				let videoTracks = remoteStream.getVideoTracks();
-				gLog('peerCon.ontrack onunmute track.enabled: delayed v-tracks',videoTracks.length);
+				gLog('peerCon.ontrack unmute track.enabled: delay vtracks',videoTracks.length);
 				if(videoTracks.length>0) {
 					remoteVideoShow();
 				} else {

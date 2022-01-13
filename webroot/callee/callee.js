@@ -998,7 +998,7 @@ function signalingCommand(message) {
 			if(!peerCon.remoteDescription) {
 				addIceReloopCounter++;
 				if(addIceReloopCounter<6) {
-					console.warn("cmd callerCandidate !peerCon.remoteDescription",payload);
+					console.warn("cmd callerCandidate !peerCon.remoteDescription "+addIceReloopCounter);
 					setTimeout(addIceCallerCandidate,500,callerCandidate);
 				} else {
 					console.warn("abort cmd callerCandidate !peerCon.remoteDescription");
@@ -1774,7 +1774,7 @@ function dataChannelOnmessage(event) {
 				// sanitize incoming data
 				let cleanString = event.data.substring(4).replace(/<(?:.|\n)*?>/gm, "...");
 				if(cleanString!="") {
-					gLog("dataChannel.onmessage msg",cleanString);
+					//gLog("dataChannel.onmessage msg",cleanString);
 					if(msgbox) {
 						let curDate = new Date().toString();
 						// cut off trailing "GMT... (Central European Summer Time)"
