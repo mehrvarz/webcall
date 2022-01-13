@@ -194,6 +194,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			fmt.Fprintf(w, "error")
 			return
 		}
+
+		// pw accepted
 		dbUserKey := fmt.Sprintf("%s_%d", urlID, dbEntry.StartTime)
 		err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 		if err != nil {
@@ -204,6 +206,14 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		}
 		//fmt.Printf("/login dbUserKey=%v dbUser.Int=%d (hidden) rt=%v\n",
 		//	dbUserKey, dbUser.Int2, time.Since(startRequestTime)) // rt=75ms
+
+		// store dbUser with modified LastLoginTime
+		dbUser.LastLoginTime = time.Now().Unix()
+		err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
+		if err!=nil {
+			fmt.Printf("# /login error db=%s bucket=%s put key=%s err=%v\n",
+				dbMainName, dbUserBucket, urlID, err)
+		}
 
 		// create new unique wsClientID
 		wsClientMutex.Lock()

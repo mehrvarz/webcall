@@ -329,11 +329,12 @@ func main() {
 
 	go httpServer()
 	go runTurnServer()
-	go ticker20min() // news notifieer
-	go ticker3min()  // backupScript + delete old tw notifications
-	go ticker30sec() // log stats
-	go ticker10sec() // readConfig()
-	go ticker2sec()  // check for new day
+	go ticker3hours()  // check time since last login
+	go ticker20min()   // update news notifieer
+	go ticker3min()    // backupScript + delete old tw notifications
+	go ticker30sec()   // log stats
+	go ticker10sec()   // readConfig()
+	go ticker2sec()    // check for new day
 	if pprofPort>0 {
 		go func() {
 			addr := fmt.Sprintf(":%d",pprofPort)

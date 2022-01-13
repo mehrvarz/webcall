@@ -3,7 +3,7 @@
 // In the future other db-layers may be implemented
 package main
 
-func localDb() bool {
+func isLocalDb() bool {
 	return true
 }
 

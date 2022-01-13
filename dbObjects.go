@@ -17,6 +17,7 @@ type DbUser struct {
 	Str2ua string           // web push device 1 user agent
 	Str3 string             // web push device 2 subscription
 	Str3ua string           // web push device 2 user agent
+	LastLoginTime int64
 	Int2 int                // bit 0: hidden callee mode 0/1
 	CallCounter int         // incremented by wsHub processTimeValues()
 	ConnectedToPeerSecs int // incremented by wsHub processTimeValues()

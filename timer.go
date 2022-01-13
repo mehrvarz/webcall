@@ -15,6 +15,59 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
+func ticker3hours() {
+/*
+	kv := kvMain.(skv.SKV)
+	bucketName := dbRegisteredIDs
+	db := kv.Db
+
+//	threeHoursTicker := time.NewTicker(3*60*60*time.Second)
+	threeHoursTicker := time.NewTicker(3*60*time.Second)
+	defer threeHoursTicker.Stop()
+	for {
+		<-threeHoursTicker.C
+		if shutdownStarted.Get() {
+			break
+		}
+		err := db.Update(func(tx *bolt.Tx) error {
+			b := tx.Bucket([]byte(bucketName))
+			c := b.Cursor()
+			counter := 0
+			for k, v := c.First(); k != nil; k, v = c.Next() {
+				// k = ID
+				var dbEntry DbEntry // DbEntry{unixTime, remoteAddr, urlPw}
+				d := gob.NewDecoder(bytes.NewReader(v))
+				d.Decode(&dbEntry)
+				// we now must find out when this user was using the account the last time
+				dbUserKey := fmt.Sprintf("%s_%d", k, dbEntry.StartTime)
+				var dbUser DbUser
+				err2 := kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
+				if err2 != nil {
+					fmt.Printf("# ticker3hours %d error read db=%s bucket=%s get key=%v err=%v\n",
+						counter, dbMainName, dbUserBucket, dbUserKey, err2)
+				} else {
+					if(dbUser.LastLoginTime==0) {
+						fmt.Printf("ticker3hours %d id=%s noLastLogin\n", counter, k)
+					} else {
+						timeSinceLastLogin := time.Now().Unix() - dbUser.LastLoginTime
+// TODO delete entry if timeSinceLastLogin > 90*24*60*60
+						fmt.Printf("ticker3hours %d id=%s sinceLastLogin=%ds\n",
+							counter, k, timeSinceLastLogin)
+					}
+				}
+				counter++
+			}
+			return nil
+		})
+		if err!=nil {
+			fmt.Printf("/dumpregistered err=%v\n", err)
+		} else {
+			fmt.Printf("/dumpregistered no err\n")
+		}
+	}
+*/
+}
+
 func ticker20min() {
 	twentyMinTicker := time.NewTicker(20*60*time.Second)
 	defer twentyMinTicker.Stop()
@@ -38,6 +91,7 @@ func ticker20min() {
 	}
 }
 
+// send url (pointing to update news) to all online callees
 func broadcastNewsLink(date string, url string) {
 	hubMapMutex.RLock()
 	defer hubMapMutex.RUnlock()
@@ -74,7 +128,7 @@ func ticker3min() {
 			break
 		}
 
-		if localDb() {
+		if isLocalDb() {
 			// delete old twitter notifications
 			readConfigLock.RLock()
 			mytwitterKey := twitterKey
