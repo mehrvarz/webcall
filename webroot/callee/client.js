@@ -1402,7 +1402,7 @@ function dataChannelOnerror(event) {
 	console.log("dataChannel.onerror",event);
 	if(rtcConnect) {
 		showStatus("# dataChannel error "+event.error,-1);
-		hangup();
+		hangup(true,true,"dataChannelOnerror");
 	}
 	progressSendElement.style.display = "none";
 	if(fileselectLabel && mediaConnect && isDataChlOpen() && isP2pCon()) {
@@ -1421,7 +1421,7 @@ function hangupWithBusySound(mustDisconnectCallee,message) {
 			stopAllAudioEffects();
 		},2500);
 	}
-	hangup(mustDisconnectCallee,message);
+	hangup(mustDisconnectCallee,true,message);
 }
 
 function onkeydownFunc(evt) {

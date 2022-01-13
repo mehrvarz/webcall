@@ -1002,7 +1002,7 @@ function signalingCommand(message) {
 					console.warn("cmd callerCandidate !peerCon.remoteDescription",payload);
 					setTimeout(addIceCallerCandidate,500,callerCandidate);
 				} else {
-					console.warn("cmd callerCandidate !peerCon.remoteDescription abort");
+					console.warn("abort cmd callerCandidate !peerCon.remoteDescription");
 				}
 				return;
 			}
@@ -1465,7 +1465,7 @@ function pickup2() {
 	},400);
 }
 
-function hangup(dummy,message) {
+function hangup(dummy,dummy,message) {
 	showStatus("Hang up",4000);
 	console.log("hangup");
 	answerButton.style.display = "none";
@@ -1587,7 +1587,7 @@ function goOnline() {
 	peerCon.onconnectionstatechange = event => {
 		gLog("peerCon connectionstatechange "+peerCon.connectionState);
 		if(!peerCon) {
-			hangup();
+			hangup(true,true,"onconnectionstatechange no peercon");
 			return;
 		}
 		if(peerCon.connectionState=="disconnected" || peerCon.connectionState=="failed") {
@@ -1719,7 +1719,7 @@ function peerConnected2() {
 		rejectButton.onclick = function() {
 			gLog("hangup button");
 			buttonBlinking = false;
-			hangup();
+			hangup(true,true,"rejectButton");
 		}
 	},400);
 }
