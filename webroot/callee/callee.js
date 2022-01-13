@@ -412,14 +412,14 @@ function checkServerMode(callback) {
 
 function getUrlParams(param) {
 	if(window.location.search!="") {
-		gLog("getUrlParams search=%s",window.location.search);
+		//gLog("getUrlParams search=%s",window.location.search);
 		var query = window.location.search.substring(1);
 		var parts = query.split("&");
 		for (var i=0;i<parts.length;i++) {
-			gLog("getUrlParams part(%d)=%s",i,parts[i]);
+			//gLog("getUrlParams part(%d)=%s",i,parts[i]);
 			var seg = parts[i].split("=");
 			if (seg[0] == param) {
-				gLog("getUrlParams found=(%s)",seg[1]);
+				//gLog("getUrlParams found=(%s)",seg[1]);
 				if(typeof seg[1]!=="undefined" && seg[1]!="" && seg[1]!="undefined") {
 					return decodeURI(seg[1]);
 				}
@@ -431,7 +431,7 @@ function getUrlParams(param) {
 		let path = window.location.pathname;
 		let lastSlash = path.lastIndexOf("/");
 		let value = path.substring(lastSlash+1);
-		gLog("getUrlParams val="+value);
+		gLog("getUrlParams id val="+value);
 		return value;
 	}
 	return false;
@@ -561,7 +561,7 @@ function login(retryFlag) {
 				// get access to the registration (and registration.pushManager) object
 				navigator.serviceWorker.ready.then(function(registration) {
 					pushRegistration = registration;
-					gLog("serviceWorker.ready got "+pushRegistration);
+					gLog("serviceWorker.ready "+pushRegistration);
 				}).catch(err => {
 					// this means that push events won't work
 					// no need to abort login process
@@ -1114,7 +1114,7 @@ function signalingCommand(message) {
 		showWaitingCallers();
 
 	} else if(cmd=="missedCalls") {
-		gLog('showmissedCalls msg',payload.length);
+		//gLog('showmissedCalls msg',payload.length);
 		missedCallsSlice = null;
 		if(payload.length>0) {
 			missedCallsSlice = JSON.parse(payload);
@@ -1647,7 +1647,7 @@ function peerConnected2() {
 			ringtoneSound.onended = playRingtoneSound;
 
 			if(ringtoneSound.paused && !ringtoneIsPlaying) {
-				gLog('ringtone play will be started...');
+				gLog('ringtone play...');
 				ringtoneSound.play().catch(error => {
 					gLog('ringtone play',error.message);
 				});

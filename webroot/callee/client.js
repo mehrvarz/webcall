@@ -757,7 +757,7 @@ function getStream(selectObject) {
 	myUserMediaConstraints = JSON.parse(JSON.stringify(userMediaConstraints));
 
 	if(!videoEnabled) {
-		gLog('getStream !videoEnabled: Constraints.video = false');
+		//gLog('getStream !videoEnabled: Constraints.video = false');
 		myUserMediaConstraints.video = false;
 	}
 
@@ -788,7 +788,7 @@ function getStream(selectObject) {
 		localStream = null;
 	}
 
-	gLog('getStream set getUserMedia '+myUserMediaConstraints);
+	//gLog('getStream set getUserMedia '+myUserMediaConstraints);
 	let saveWorkingConstraints = JSON.parse(JSON.stringify(myUserMediaConstraints));
 	return navigator.mediaDevices.getUserMedia(myUserMediaConstraints)
 		.then(function(stream) {
@@ -942,10 +942,10 @@ function gotStream(stream) {
 
 	const audioTracks = localStream.getAudioTracks();
 	if(!mediaConnect) {
-		gLog('gotStream mute local audio input '+audioTracks[0]);
+		gLog('gotStream mute loc audio inp '+audioTracks[0]);
 		audioTracks[0].enabled = false;
 	} else {
-		gLog('gotStream unmute local audio input '+audioTracks[0]);
+		gLog('gotStream unmute loc audio inp '+audioTracks[0]);
 		audioTracks[0].enabled = true;
 	}
 
@@ -1207,7 +1207,7 @@ function remoteFullScreen(forceClose) {
 	if(document.fullscreenElement) {
 		fullScreenId = document.fullscreenElement.id;
 	}
-	gLog("remoteFullScreen "+fullScreenId+" "+forceClose);
+	//gLog("remoteFullScreen "+fullScreenId+" "+forceClose);
 	if(fullScreenId!="remoteVideoDiv" && !forceClose) {
 		// not yet in remoteVideoDiv fullscreen mode
 		if(remoteVideoDiv.requestFullscreen) {
@@ -1244,7 +1244,7 @@ function closeRemoteVideo() {
 }
 
 function remoteVideoHide() {
-	gLog('remoteVideoHide',remoteVideoShowing);
+	//gLog('remoteVideoHide',remoteVideoShowing);
 	window.requestAnimationFrame(function(){
 		if(remoteVideoShowing) {
 			let remoteVideoDivHeight = parseFloat(getComputedStyle(remoteVideoFrame).width)/16*9;
@@ -1253,7 +1253,7 @@ function remoteVideoHide() {
 			//gLog('remoteVideoHide',remoteVideoDiv.style.height);
 			window.requestAnimationFrame(function(){
 				if(remoteVideoShowing) {
-					gLog('remoteVideoHide set 0px');
+					//gLog('remoteVideoHide set 0px');
 					remoteVideoDiv.style.height = "0px";
 					remoteVideoLabel.innerHTML = "";
 					remoteVideoShowing = false;
