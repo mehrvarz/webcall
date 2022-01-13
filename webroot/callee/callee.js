@@ -1778,12 +1778,12 @@ function dataChannelOnmessage(event) {
 					gLog("dataChannel.onmessage msg",cleanString);
 					if(msgbox) {
 						let curDate = new Date().toString();
-						// cut off trailing " (Central European Summer Time)" from date
-						let bracketIdx = curDate.indexOf(" (");
+						// cut off trailing "GMT... (Central European Summer Time)"
+						let bracketIdx = curDate.indexOf(" GMT");
 						if(bracketIdx>=0) {
 							curDate = curDate.substring(0,bracketIdx);
 						}
-						let msg = "--- "+curDate+" ---\n" + cleanString + "\n";
+						let msg = "["+curDate+"]\n" + cleanString + "\n";
 						msgbox.value = msg;
 					}
 				}
