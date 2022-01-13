@@ -1883,7 +1883,9 @@ function dataChannelOnmessage(event) {
 
 var allAudioEffectsStopped = false;
 function stopAllAudioEffects(comment) {
-	gLog("stopAllAudioEffects comment="+comment);
+	if(typeof comment!=="undefined") {
+		gLog("stopAllAudioEffects comment="+comment);
+	}
 	allAudioEffectsStopped = true;
 	try {
 		if(!ringtoneSound.paused && ringtoneIsPlaying) {
@@ -1898,9 +1900,9 @@ function stopAllAudioEffects(comment) {
 		busySignalSound.pause();
 		busySignalSound.currentTime = 0;
 	} catch(ex) {
-		console.log('ex stopAllAudioEffects',ex.message);
+		console.log('ex stopAllAudioEffects '+ex.message);
 	}
-	gLog('stopAllAudioEffects done');
+	//gLog('stopAllAudioEffects done');
 }
 
 var goOnlinePending = false;
