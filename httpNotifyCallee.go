@@ -397,6 +397,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, remoteAddr string, remoteAddrWithPort string) {
 	// called by caller.js goodby() via "/missedCall?id=(callerInfo)"
 	// callerInfo is encoded: calleeId+"|"+callerName+"|"+callerId (plus optional: "|"+ageSecs
+	// "timur|92929|92929658912|50" tok[0]=calleeID, tok[1]=callerName, tok[2]=callerID, tok[3]=ageSecs
 	//fmt.Printf("/httpMissedCall (%s) rip=%s\n", callerInfo, remoteAddrWithPort)
 	tok := strings.Split(callerInfo, "|")
 	if len(tok) < 3 {
@@ -454,17 +455,20 @@ func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, r
 		missedCallsSlice = missedCallsSlice[1:]
 	}
 	//fmt.Printf("/httpMissedCall (%s) missedCall arrived %ds ago\n", calleeId, ageSecs64)
-	callerName := tok[1] // callerName
-	if tok[1]=="" || tok[1]=="undefined" {
-		if tok[2]=="" || tok[2]=="undefined" {
-			callerName = "unknown"
-		} else {
-			callerName = tok[2] // use callerId instead
+	callerName := tok[1]
+	callerID := tok[2]
+	if callerName=="" {
+		if tok[1]=="" || tok[1]=="undefined" {
+			if tok[2]=="" || tok[2]=="undefined" {
+				callerName = "unknown"
+			} else {
+				callerName = tok[2] // use callerId instead
+			}
 		}
 	}
 	// the actual call occured ageSecs64 ago (may be a big number, if caller waits long before aborting the page)
 	timeOfCall := time.Now().Unix() - ageSecs64
-	caller := CallerInfo{remoteAddrWithPort,callerName,timeOfCall,""}
+	caller := CallerInfo{remoteAddrWithPort,callerName,timeOfCall,callerID}
 	missedCallsSlice = append(missedCallsSlice, caller)
 	err = kvCalls.Put(dbMissedCalls, calleeId, missedCallsSlice, true) // skipConfirm
 	if err!=nil {
