@@ -457,6 +457,7 @@ func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, r
 	//fmt.Printf("/httpMissedCall (%s) missedCall arrived %ds ago\n", calleeId, ageSecs64)
 	callerName := tok[1]
 	callerID := tok[2]
+/*
 	if callerName=="" {
 		if tok[1]=="" || tok[1]=="undefined" {
 			if tok[2]=="" || tok[2]=="undefined" {
@@ -466,6 +467,7 @@ func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, r
 			}
 		}
 	}
+*/
 	// the actual call occured ageSecs64 ago (may be a big number, if caller waits long before aborting the page)
 	timeOfCall := time.Now().Unix() - ageSecs64
 	caller := CallerInfo{remoteAddrWithPort,callerName,timeOfCall,callerID}
@@ -474,7 +476,7 @@ func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, r
 	if err!=nil {
 		fmt.Printf("# /httpMissedCall (%s) fail store dbMissedCalls err=%v rip=%s\n", calleeId, err, remoteAddr)
 	} else {
-		//fmt.Printf("/httpMissedCall (%s) stored dbMissedCalls caller=%v rip=%s\n", calleeId, caller, remoteAddr)
+		fmt.Printf("/httpMissedCall (%s) caller=%v rip=%s\n", calleeId, caller, remoteAddr)
 
 		// send updated waitingCallerSlice + missedCalls to callee (if (hidden) online)
 		// check if callee is (hidden) online
