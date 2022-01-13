@@ -480,7 +480,7 @@ var rtcLink = "";
 var localCandidateType = "";
 var remoteCandidateType = "";
 function getStatsCandidateTypesEx(results,eventString1,eventString2) {
-	gLog('getStatsCandidateTypes start');
+	//gLog('getStatsCandidateTypes start');
 	rtcLink = "unknown";
 	let localCandidateId = "";
 	let remoteCandidateId = "";
@@ -495,25 +495,25 @@ function getStatsCandidateTypesEx(results,eventString1,eventString2) {
 			}
 		}
 	});
-	gLog("getStatsCandidateTypes candidateId's A "+localCandidateId+" "+remoteCandidateId);
+	//gLog("getStatsCandidateTypes candidateId's A "+localCandidateId+" "+remoteCandidateId);
 	if(localCandidateId=="" || remoteCandidateId=="") {
 		// for chrome
 		results.forEach(res => {
 			if(res.type=="transport" && res.selectedCandidatePairId!="") {
 				let selectedCandidatePairId = res.selectedCandidatePairId;
-				gLog('getStatsCandidateTypes PairId '+selectedCandidatePairId);
+				//gLog('getStatsCandidateTypes PairId '+selectedCandidatePairId);
 				results.forEach(res => {
 					if(res.id==selectedCandidatePairId) {
 						localCandidateId = res.localCandidateId;
 						remoteCandidateId = res.remoteCandidateId
-						gLog("getStatsCandidateTypes 2nd "+localCandidateId+" "+remoteCandidateId);
+						//gLog("getStatsCandidateTypes 2nd "+localCandidateId+" "+remoteCandidateId);
 					}
 				});
 			}
 		});
 	}
 
-	gLog("getStatsCandidateTypes candidateId's B "+localCandidateId+" "+remoteCandidateId);
+	//gLog("getStatsCandidateTypes candidateId's B "+localCandidateId+" "+remoteCandidateId);
 	if(localCandidateId!="") {
 		results.forEach(res => {
 			if(res.id==localCandidateId) {
