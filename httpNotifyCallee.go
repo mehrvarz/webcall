@@ -546,7 +546,7 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 	}
 
 	callerName := ""
-	url_arg_array, ok = r.URL.Query()["callerName"]
+	url_arg_array, ok = r.URL.Query()["name"]
 	if ok && len(url_arg_array[0]) > 0 {
 		callerName = strings.ToLower(url_arg_array[0])
 	}
