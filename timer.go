@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 	"bytes"
+	"unicode"
 	"encoding/gob"
 	"os"
 	"os/exec"
@@ -16,25 +17,31 @@ import (
 )
 
 func ticker3hours() {
-/*
 	kv := kvMain.(skv.SKV)
 	bucketName := dbRegisteredIDs
 	db := kv.Db
 
-//	threeHoursTicker := time.NewTicker(3*60*60*time.Second)
-	threeHoursTicker := time.NewTicker(3*60*time.Second)
+	threeHoursTicker := time.NewTicker(3*60*60*time.Second)
+//	threeHoursTicker := time.NewTicker(1*60*time.Second)
 	defer threeHoursTicker.Stop()
 	for {
 		<-threeHoursTicker.C
 		if shutdownStarted.Get() {
 			break
 		}
+		skv.DbMutex.Lock()
+		var dbUserBucketKeyArray []string
+		counterDeleted := 0
 		err := db.Update(func(tx *bolt.Tx) error {
 			b := tx.Bucket([]byte(bucketName))
 			c := b.Cursor()
 			counter := 0
 			for k, v := c.First(); k != nil; k, v = c.Next() {
 				// k = ID
+				//if strings.HasPrefix(k,"answie") || strings.HasPrefix(k,"talkback") 
+				if !isOnlyNumericString(string(k)) {
+					continue
+				}
 				var dbEntry DbEntry // DbEntry{unixTime, remoteAddr, urlPw}
 				d := gob.NewDecoder(bytes.NewReader(v))
 				d.Decode(&dbEntry)
@@ -46,26 +53,63 @@ func ticker3hours() {
 					fmt.Printf("# ticker3hours %d error read db=%s bucket=%s get key=%v err=%v\n",
 						counter, dbMainName, dbUserBucket, dbUserKey, err2)
 				} else {
-					if(dbUser.LastLoginTime==0) {
-						fmt.Printf("ticker3hours %d id=%s noLastLogin\n", counter, k)
+					lastLoginTime := dbUser.LastLoginTime
+					if(lastLoginTime==0) {
+						lastLoginTime = dbEntry.StartTime // created by httpRegister()
+					}
+					if(lastLoginTime==0) {
+						fmt.Printf("ticker3hours %d id=%s sinceLastLogin=0 StartTime=0\n", counter, k)
 					} else {
-						timeSinceLastLogin := time.Now().Unix() - dbUser.LastLoginTime
-// TODO delete entry if timeSinceLastLogin > 90*24*60*60
-						fmt.Printf("ticker3hours %d id=%s sinceLastLogin=%ds\n",
-							counter, k, timeSinceLastLogin)
+						sinceLastLoginSecs := time.Now().Unix() - lastLoginTime
+						sinceLastLoginDays := sinceLastLoginSecs/(24*60*60)
+						if sinceLastLoginDays>120 {
+							// delete this entry
+							fmt.Printf("ticker3hours %d id=%s regist delete sinceLastLogin=%ds days=%d\n",
+								counter, k, sinceLastLoginSecs, sinceLastLoginDays)
+							err2 = c.Delete()
+							if err2!=nil {
+								fmt.Printf("ticker3hours %d id=%s regist delete err=%v\n", counter, k, err2)
+							} else {
+								counterDeleted++
+								//fmt.Printf("ticker3hours %d id=%s regist deleted %d\n",
+								//	counter, k, counterDeleted)
+								// we will delete dbUserKey from dbUserBucket after db.Update() is finished
+								dbUserBucketKeyArray = append(dbUserBucketKeyArray,dbUserKey)
+							}
+						}
 					}
 				}
 				counter++
 			}
 			return nil
 		})
+		skv.DbMutex.Unlock()
 		if err!=nil {
-			fmt.Printf("/dumpregistered err=%v\n", err)
-		} else {
-			fmt.Printf("/dumpregistered no err\n")
+			fmt.Printf("ticker3hours db.Update deleted=%d err=%v\n", counterDeleted, err)
+		} else if counterDeleted>0 {
+			fmt.Printf("ticker3hours db.Update deleted=%d no err\n",counterDeleted)
 		}
+		for _,key := range dbUserBucketKeyArray {
+			fmt.Printf("ticker3hours id=%s user delete...\n", key)
+			err = kv.Delete(dbUserBucket, key)
+			if err!=nil {
+				fmt.Printf("ticker3hours key=%s user delete err=%v\n", key, err)
+			} else {
+				//fmt.Printf("ticker3hours key=%s user deleted\n", key)
+// TODO I think we need to generate a blocked entry for each deleted account
+			}
+		}
+		//fmt.Printf("ticker3hours done\n")
 	}
-*/
+}
+
+func isOnlyNumericString(s string) bool {
+    for _, r := range s {
+        if unicode.IsLetter(r) {
+            return false
+        }
+    }
+    return true
 }
 
 func ticker20min() {
@@ -136,6 +180,8 @@ func ticker3min() {
 			readConfigLock.RUnlock()
 			if mytwitterKey!="" && mytwitterSecret!="" {
 				kv := kvNotif.(skv.SKV)
+
+				skv.DbMutex.Lock()
 				kv.Db.Update(func(tx *bolt.Tx) error {
 					unixNow := time.Now().Unix()
 					//fmt.Printf("ticker3min release outdated entries from db=%s bucket=%s\n",
@@ -188,6 +234,7 @@ func ticker3min() {
 					}
 					return nil
 				})
+				skv.DbMutex.Unlock()
 			}
 
 			// call backupScript
