@@ -83,7 +83,9 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					offlineReason = 3 // CalleeClient is not online anymore
 				} else {
 					// hub.CalleeClient seems to be online; let's see if this holds if we ping it
-					fmt.Printf("/login key=(%s) send ping to prev rip=%s\n", key, remoteAddr)
+					if logWantedFor("login") {
+						fmt.Printf("/login key=(%s) send ping to prev rip=%s\n", key, remoteAddr)
+					}
 					hub.CalleeClient.SendPing(2000)
 					time.Sleep(2200 * time.Millisecond)
 					// is hub.CalleeClient still online now?
@@ -92,13 +94,13 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					}
 				}
 				if offlineReason==0 {
-					// abort login: old callee is still online
-					fmt.Fprintf(w, "fatal")
+					// abort login: old/sameId callee is still online
+					fmt.Fprintf(w,"fatal")
 					fmt.Printf("/login key=(%s) is already logged in (%d) rip=%s ua=%s\n",
 						key, offlineReason, remoteAddr, userAgent)
 					return
 				}
-				// apparenly the new login comes from the old callee, bc it is not online anymore
+				// apparently the new login comes from the old callee, bc it is not online anymore
 				// no need to hub.doUnregister(hub.CalleeClient, ""); just continue with the login
 			}
 		}
