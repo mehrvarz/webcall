@@ -146,7 +146,7 @@ function exelink(url) {
 	} else {
 		// not running inside an iframe -> continue in the same tab
 		console.log("exelink replace",calleeLink);
-		window.location.replace(calleeLink);
+		window.location.replace(calleeLink+"?auto=1");
 	}
 }
 
