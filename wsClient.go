@@ -721,7 +721,40 @@ func (c *WsClient) peerConHasEnded(comment string) {
 	// or bc callee has unregistered
 	c.hub.setDeadline(0,comment)
 	if c.isConnectedToPeer.Get() {
-		fmt.Printf("%s peerDisconnect callee %s rip=%s (%s)\n", c.connType, c.calleeID, c.RemoteAddr, comment)
+		fmt.Printf("%s peerDisconnect callee %s rip=%s (%s)\n",
+			c.connType, c.calleeID, c.RemoteAddr, comment)
+
+		// add an entry to missed calls, but only if discon happened before mediaConnect
+		if(c.hub.ConnectedToPeerSecs<=0) {
+			var missedCallsSlice []CallerInfo
+			userKey := c.calleeID + "_" + strconv.FormatInt(int64(c.hub.registrationStartTime),10)
+			var dbUser DbUser
+			err := kvMain.Get(dbUserBucket, userKey, &dbUser)
+			if err!=nil {
+				fmt.Printf("# %s (id=%s) failed to get dbUser\n",c.connType,c.calleeID)
+			} else if(dbUser.StoreMissedCalls) {
+				err = kvCalls.Get(dbMissedCalls,c.calleeID,&missedCallsSlice)
+				if err!=nil {
+					missedCallsSlice = nil
+				}
+			}
+			if missedCallsSlice!=nil {
+				// make sure we never show more than 10 missed calls
+				if len(missedCallsSlice)>=10 {
+					missedCallsSlice = missedCallsSlice[1:]
+				}
+				callerID := "" // TODO
+				callerName := "" // TODO
+				caller := CallerInfo{c.RemoteAddr, callerID, time.Now().Unix(), callerName}
+				missedCallsSlice = append(missedCallsSlice, caller)
+				err = kvCalls.Put(dbMissedCalls, c.calleeID, missedCallsSlice, true) // skipConfirm
+				if err!=nil {
+					fmt.Printf("# %s (id=%s) failed to store dbMissedCalls err=%v\n",
+						c.connType, c.calleeID, err, c.RemoteAddr)
+				}
+			}
+		}
+
 		c.isConnectedToPeer.Set(false)
 		if c.isCallee {
 			if c.hub.CallerClient!=nil {
