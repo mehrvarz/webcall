@@ -55,7 +55,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		callerId = url_arg_array[0]
 	}
 	callerName := ""
-	url_arg_array, ok = r.URL.Query()["callerName"]
+	url_arg_array, ok = r.URL.Query()["name"]
 	if ok && len(url_arg_array[0]) >= 1 {
 		callerName = url_arg_array[0]
 	}
@@ -540,7 +540,7 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 	calleeName := dbUser.Name
 
 	callerID := ""
-	url_arg_array, ok := r.URL.Query()["caller"]
+	url_arg_array, ok := r.URL.Query()["callerId"]
 	if ok && len(url_arg_array[0]) > 0 {
 		callerID = strings.ToLower(url_arg_array[0])
 	}

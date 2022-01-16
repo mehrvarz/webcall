@@ -57,6 +57,19 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		fmt.Fprintf(w, "notavail")
 		return
 	}
+/*
+	callerID := ""
+	url_arg_array, ok := r.URL.Query()["callerId"]
+	if ok && len(url_arg_array[0]) > 0 {
+		callerID = strings.ToLower(url_arg_array[0])
+	}
+
+	callerName := ""
+	url_arg_array, ok = r.URL.Query()["name"]
+	if ok && len(url_arg_array[0]) > 0 {
+		callerName = strings.ToLower(url_arg_array[0])
+	}
+*/
 	if locHub != nil {
 		// callee is managed by this server
 		locHub.HubMutex.RLock()

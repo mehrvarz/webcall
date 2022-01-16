@@ -98,7 +98,7 @@ var waitingCallerChanMap map[string]chan int // ip:port -> chan
 var waitingCallerChanLock sync.RWMutex
 
 var numberOfCallsToday = 0 // will be incremented by wshub.go processTimeValues()
-var numberOfCallSecondsToday = 0
+var numberOfCallSecondsToday int64 = 0
 var numberOfCallsTodayMutex sync.RWMutex
 
 var lastCurrentDayOfMonth = 0 // will be set by timer.go
@@ -566,7 +566,7 @@ func readStatsFile() {
 					statsFileName, iniKeyword, iniValue, err)
 			} else {
 				//fmt.Printf("stats val %s: %s (%v) %v\n", statsFileName, iniKeyword, iniValue, i64)
-				numberOfCallSecondsToday = int(i64)
+				numberOfCallSecondsToday = i64
 			}
 		}
 	}

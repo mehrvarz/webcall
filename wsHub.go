@@ -27,9 +27,10 @@ type Hub struct {
 	registrationStartTime int64 // this is the callees registration starttime; may be 0 for testuser
 	lastCallStartTime int64
 	ServiceStartTime int64
+	ConnectedToPeerSecs int64 // total secs
+	CallDurationSecs int64 // single call secs
 	maxRingSecs int //durationSecs1 int // max wait secs till caller arrives
 	maxTalkSecsIfNoP2p int // durationSecs2
-	ConnectedToPeerSecs int
 	dontCancel bool // set to prevent timer from calling cancelFunc() // TODO atomic?
 	IsCalleeHidden bool
 	LocalP2p bool
@@ -113,14 +114,14 @@ func (h *Hub) doBroadcast(message []byte) {
 
 func (h *Hub) processTimeValues() {
 	if h.lastCallStartTime>0 {
-		callDurationSecs := int(time.Now().Unix() - h.lastCallStartTime)
+		h.CallDurationSecs = time.Now().Unix() - h.lastCallStartTime
 		if logWantedFor("hub") {
-			fmt.Printf("hub processTimeValues %d\n", callDurationSecs)
+			fmt.Printf("hub processTimeValues %d\n", h.CallDurationSecs)
 		}
-		if callDurationSecs>0 {
+		if h.CallDurationSecs>0 {
 			numberOfCallsTodayMutex.Lock()
 			numberOfCallsToday++
-			numberOfCallSecondsToday += callDurationSecs
+			numberOfCallSecondsToday += h.CallDurationSecs
 			numberOfCallsTodayMutex.Unlock()
 		}
 	}

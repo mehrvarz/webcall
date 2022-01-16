@@ -120,6 +120,9 @@ window.onload = function() {
 	}
 	// the following args may be used in confirmNotifyConnect()
 	callerId = getUrlParams("callerId"); // our id
+	if(typeof callerId=="undefined") {
+		callerId = "";
+	}
 	callerName = getUrlParams("name");
 	if(typeof callerName=="undefined") {
 		callerName = "";
@@ -482,8 +485,10 @@ function getUrlParams(param) {
 }
 
 function checkCalleeOnline() {
-// todo: use callerId + callerName
 	let api = apiPath+"/online?id="+calleeID;
+	if(callerId!=="" && callerId!=="undefined") {
+		api += "&callerId="+callerId+"&name="+callerName;
+	}
 	gLog('checkCalleeOnline api',api);
 	xhrTimeout = 30*1000;
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
@@ -690,7 +695,7 @@ function calleeOfflineAction() {
 		calleeOfflineElement.style.display = "block";
 
 		// calleeID is currently offline - check if calleeID can be notified (via twitter msg)
-		let api = apiPath+"/canbenotified?id="+calleeID+"&caller="+callerId+"&name="+callerName;
+		let api = apiPath+"/canbenotified?id="+calleeID+"&callerId="+callerId+"&name="+callerName;
 		gLog('canbenotified api',api);
 		xhrTimeout = 30*1000;
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
@@ -886,7 +891,7 @@ function confirmNotifyConnect2() {
 
 function notifyConnect(callerName,callerId) {
 	showStatus("Trying to get "+calleeID+" on the phone now. Please wait...<br><br><img src='preloader-circles.svg' style='width:95%;max-height:450px;margin-top:-20%;'>",-1);
-	let api = apiPath+"/notifyCallee?id="+calleeID+"&callerName="+callerName+"&callerId="+callerId;
+	let api = apiPath+"/notifyCallee?id="+calleeID+"&callerId="+callerId+"&name="+callerName;
 	xhrTimeout = 600*1000; // 10 min extended xhr timeout
 	console.log("notifyCallee api="+api+" timeout="+xhrTimeout);
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
@@ -990,6 +995,7 @@ function connectSignaling(message,openedFunc) {
 	gLog('connectSignaling: open ws connection',calleeID);
 	let tryingToOpenWebSocket = true;
     var wsUrl = wsAddr;
+	wsUrl += "&callerId="+callerId+"&name="+callerName;
 	wsConn = new WebSocket(wsUrl);
 	wsConn.onopen = function () {
 		gLog('ws connection open',calleeID);

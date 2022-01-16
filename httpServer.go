@@ -302,7 +302,9 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 			cookie = nil
 		} else {
 			calleeIdFromCookie := cookie.Value[:idxAmpasent]
-			if calleeID=="" {
+// httpSettings() wants the calleeID from the cookie and not from the referrer
+//			if calleeID=="" {
+			if calleeIdFromCookie!="" {
 				calleeID = calleeIdFromCookie
 			}
 			if logWantedFor("cookie") {

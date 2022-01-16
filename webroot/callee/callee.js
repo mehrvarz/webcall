@@ -2123,8 +2123,8 @@ function exit() {
 	goOffline();
 
 	if(iframeWindowOpenFlag || menuDialogOpenElement) {
-		gLog("exit history.Back");
-		history.Back();
+		gLog("exit history.back");
+		history.back();
 	}
 
 	setTimeout(function() {

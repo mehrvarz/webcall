@@ -59,6 +59,8 @@ type WsClient struct {
 	calleeID string
 	globalCalleeID string // unique calleeID for multiCallees as key for hubMap[]
 	connType string
+	callerID string
+	callerName string
 	pingSent uint64
 	pongReceived uint64
 	pongSent uint64
@@ -127,18 +129,20 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		// url=//timur.mobi:8443/ws?wsid=47639023704
 		return
 	}
-/*
-	calleeHostStr := ""
-	url_arg_array, ok = r.URL.Query()["xhost"]
+
+	callerID := ""
+	url_arg_array, ok = r.URL.Query()["callerId"]
 	if ok && len(url_arg_array[0]) > 0 {
-		calleeHostStr = strings.ToLower(url_arg_array[0])
-	} else {
-		url_arg_array, ok := r.URL.Query()["host"]
-		if ok && len(url_arg_array[0]) > 0 {
-			calleeHostStr = strings.ToLower(url_arg_array[0])
-		}
+		callerID = strings.ToLower(url_arg_array[0])
 	}
-*/
+
+	callerName := ""
+	url_arg_array, ok = r.URL.Query()["name"]
+	if ok && len(url_arg_array[0]) > 0 {
+		callerName = strings.ToLower(url_arg_array[0])
+	}
+	//fmt.Printf("serve callerID=%s callerName=%s\n", callerID,callerName)
+
 	upgrader := websocket.NewUpgrader()
 	//upgrader.EnableCompression = true
 	upgrader.CheckOrigin = func(r *http.Request) bool {
@@ -159,6 +163,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	client := &WsClient{wsConn:wsConn}
 	client.calleeID = wsClientData.calleeID // this is the local ID
 	client.globalCalleeID = wsClientData.globalID
+	client.callerID = callerID
+	client.callerName = callerName
 	if tls {
 		client.connType = "serveWss"
 	} else {
@@ -269,8 +275,9 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			// get values related to talk- and service-time for this callee from the db
 			// so that 1s-ticker can calculate the live remaining time
 			hub.ServiceStartTime = wsClientData.dbEntry.StartTime // race?
-			hub.ConnectedToPeerSecs = wsClientData.dbUser.ConnectedToPeerSecs
+			hub.ConnectedToPeerSecs = int64(wsClientData.dbUser.ConnectedToPeerSecs)
 		}
+		hub.CallDurationSecs = 0
 		//fmt.Printf("%s talkSecs=%d startTime=%d serviceSecs=%d\n",
 		//	client.connType, hub.ConnectedToPeerSecs, hub.ServiceStartTime, hub.ServiceDurationSecs)
 	} else {
@@ -281,6 +288,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		}
 
 		hub.CallerClient = client
+		hub.CallDurationSecs = 0
 
 		//we UNDO this call to StoreCallerIpInHubMap() in peerConHasEnded()
 		err := StoreCallerIpInHubMap(client.globalCalleeID,wsConn.RemoteAddr().String(), false)
@@ -325,9 +333,10 @@ func (c *WsClient) receiveProcess(message []byte) {
 		c.hub.HubMutex.Lock()
 		c.hub.CalleeLogin.Set(true)
 		c.hub.HubMutex.Unlock()
+
 		if logWantedFor("wscall") {
 			fmt.Printf("%s init %s callee=%v wsID=%d rip=%s\n",
-				c.connType, c.calleeID, c.isCallee, c.hub.WsClientID, c.RemoteAddr)
+			c.connType, c.calleeID, c.isCallee, c.hub.WsClientID, c.RemoteAddr)
 		}
 		// deliver the callee client version number
 		readConfigLock.RLock()
@@ -608,7 +617,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 	}
 
 	if cmd=="log" {
-		fmt.Printf("%s peer %s %s rip=%s\n", c.connType, payload, c.calleeID, c.RemoteAddr)
+		fmt.Printf("%s peer %s %s rip=%s (%s:%s)\n", c.connType, payload, c.calleeID, c.RemoteAddr,
+			c.hub.CallerClient.callerID, c.hub.CallerClient.callerName)
 		tok := strings.Split(payload, " ")
 		if len(tok)>=3 {
 			// callee Connected p2p/p2p port=10001 id=3949620073
@@ -630,7 +640,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 						c.hub.CalleeClient.isConnectedToPeer.Set(true)
 
 						if strings.TrimSpace(tok[1])=="ConForce" {
-							// test-caller sends this msg to callee, bc test-clients do not really connect p2p
+							// test-caller sends this msg to callee, test-clients do not really connect p2p
 							c.hub.CalleeClient.Write([]byte("callerConnect|"))
 
 						} else if strings.TrimSpace(tok[1])=="Connected" {
@@ -643,14 +653,14 @@ func (c *WsClient) receiveProcess(message []byte) {
 								time.Sleep(20 * time.Millisecond)
 							}
 							if myDisconCalleeOnPeerConnected {
-								fmt.Printf("%s onPeerConnect disconnect callee %s rip=%s\n",
+								fmt.Printf("%s disconnect callee %s rip=%s\n",
 									c.connType, c.calleeID, c.RemoteAddr)
 								c.hub.CalleeClient.Close("disconCalleeOnPeerConnected")
 							}
 							if myDisconCallerOnPeerConnected {
 								if c.hub.CallerClient != nil {
-									fmt.Printf("%s peerConnect callee %s: disconnect caller rip=%s\n",
-										c.connType, c.calleeID, c.RemoteAddr)
+									fmt.Printf("%s disconnect caller rip=%s from callee %s\n",
+										c.connType, c.RemoteAddr, c.calleeID)
 									c.hub.CallerClient.Close("disconCallerOnPeerConnected")
 								}
 							}
@@ -721,11 +731,11 @@ func (c *WsClient) peerConHasEnded(comment string) {
 	// or bc callee has unregistered
 	c.hub.setDeadline(0,comment)
 	if c.isConnectedToPeer.Get() {
-		fmt.Printf("%s peerDisconnect callee %s rip=%s (%s)\n",
-			c.connType, c.calleeID, c.RemoteAddr, comment)
+		fmt.Printf("%s peerDisconnect callee %s %d rip=%s (%s)\n",
+			c.connType, c.calleeID, c.hub.CallDurationSecs, c.RemoteAddr, comment)
 
-		// add an entry to missed calls, but only if discon happened before mediaConnect
-		if(c.hub.ConnectedToPeerSecs<=0) {
+		// add an entry to missed calls, but only if there was no mediaConnect
+		if(c.hub.CallDurationSecs<=0) {
 			var missedCallsSlice []CallerInfo
 			userKey := c.calleeID + "_" + strconv.FormatInt(int64(c.hub.registrationStartTime),10)
 			var dbUser DbUser
@@ -735,6 +745,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 			} else if(dbUser.StoreMissedCalls) {
 				err = kvCalls.Get(dbMissedCalls,c.calleeID,&missedCallsSlice)
 				if err!=nil {
+					fmt.Printf("# %s (id=%s) failed to get missedCalls\n",c.connType,c.calleeID)
 					missedCallsSlice = nil
 				}
 			}
@@ -743,9 +754,8 @@ func (c *WsClient) peerConHasEnded(comment string) {
 				if len(missedCallsSlice)>=10 {
 					missedCallsSlice = missedCallsSlice[1:]
 				}
-				callerID := "" // TODO
-				callerName := "" // TODO
-				caller := CallerInfo{c.RemoteAddr, callerID, time.Now().Unix(), callerName}
+				caller := CallerInfo{c.RemoteAddr, c.hub.CallerClient.callerID,
+					time.Now().Unix(), c.hub.CallerClient.callerName}
 				missedCallsSlice = append(missedCallsSlice, caller)
 				err = kvCalls.Put(dbMissedCalls, c.calleeID, missedCallsSlice, true) // skipConfirm
 				if err!=nil {
