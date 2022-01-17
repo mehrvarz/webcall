@@ -754,8 +754,8 @@ func (c *WsClient) peerConHasEnded(comment string) {
 				if len(missedCallsSlice)>=10 {
 					missedCallsSlice = missedCallsSlice[1:]
 				}
-				caller := CallerInfo{c.RemoteAddr, c.hub.CallerClient.callerID,
-					time.Now().Unix(), c.hub.CallerClient.callerName}
+				caller := CallerInfo{c.RemoteAddr, c.hub.CallerClient.callerName,
+					time.Now().Unix(), c.hub.CallerClient.callerID}
 				missedCallsSlice = append(missedCallsSlice, caller)
 				err = kvCalls.Put(dbMissedCalls, c.calleeID, missedCallsSlice, true) // skipConfirm
 				if err!=nil {
