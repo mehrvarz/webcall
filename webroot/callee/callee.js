@@ -1223,7 +1223,7 @@ function showWaitingCallers() {
 				"<td style='text-align:right;'>since "+
 				waitingTimeString + "</td><td>"+
 				"<a onclick='pickupWaitingCaller(\""+waitingCallerSlice[i].AddrPort+"\")'>"+
-				"pickup</a></td></tr>";
+				"accept</a></td></tr>";
 		}
 		str += "</table>";
 		waitingCallersElement.innerHTML = str;
