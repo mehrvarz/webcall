@@ -560,10 +560,10 @@ func waitingCallerToCallee(calleeID string, waitingCallerSlice []CallerInfo, mis
 		if err != nil {
 			fmt.Printf("# waitingCallerToCallee (%s) failed on json.Marshal err=%v\n", calleeID,err)
 		} else if hubclient==nil {
-				fmt.Printf("# waitingCallerToCallee cannot send waitingCallers (%s) hubclient==nil\n", calleeID)
+			fmt.Printf("# waitingCallerToCallee cannot send waitingCallers (%s) hubclient==nil\n", calleeID)
 		} else {
-			fmt.Printf("waitingCallerToCallee send waitingCallers (%s) (%s) (%s)\n",
-				calleeID, hubclient.hub.IsUnHiddenForCallerAddr, string(jsonStr))
+			//fmt.Printf("waitingCallerToCallee send waitingCallers (%s) (%s) (%s)\n",
+			//	calleeID, hubclient.hub.IsUnHiddenForCallerAddr, string(jsonStr))
 			hubclient.Write([]byte("waitingCallers|"+string(jsonStr)))
 		}
 	}
