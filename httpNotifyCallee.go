@@ -252,7 +252,8 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		}
 		if calleeWsClient != nil {
 			calleeWsClient.hub.IsUnHiddenForCallerAddr = ""
-			fmt.Printf("/notifyCallee (%s) send waitingCallerSlice len=%d\n", urlID, len(waitingCallerSlice))
+			//fmt.Printf("/notifyCallee (%s) send waitingCallerSlice len=%d\n",
+			//	urlID, len(waitingCallerSlice))
 			json, err := json.Marshal(waitingCallerSlice)
 			if err != nil {
 				fmt.Printf("# /notifyCallee json.Marshal(waitingCallerSlice) err=%v\n", err)
@@ -359,7 +360,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		// remove this caller from waitingCallerSlice
 		for idx := range waitingCallerSlice {
 			if waitingCallerSlice[idx].AddrPort == remoteAddrWithPort {
-				fmt.Printf("/notifyCallee (%s) remove caller from waitingCallerSlice + store\n", urlID)
+				//fmt.Printf("/notifyCallee (%s) remove caller from waitingCallerSlice + store\n", urlID)
 				waitingCallerSlice = append(waitingCallerSlice[:idx], waitingCallerSlice[idx+1:]...)
 				err = kvCalls.Put(dbWaitingCaller, urlID, waitingCallerSlice, false)
 				if err != nil {
@@ -369,7 +370,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 				if callerGaveUp {
 					// store missed call
 					if(dbUser.StoreMissedCalls) {
-						fmt.Printf("/notifyCallee (%s) store missed call\n", urlID)
+						//fmt.Printf("/notifyCallee (%s) store missed call\n", urlID)
 						err = kvCalls.Get(dbMissedCalls, urlID, &missedCallsSlice)
 						if err != nil {
 							fmt.Printf("# /notifyCallee (%s) failed to read dbMissedCalls %v\n", urlID, err)
