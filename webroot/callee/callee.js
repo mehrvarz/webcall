@@ -1212,17 +1212,18 @@ function showWaitingCallers() {
 			if(waitingSecs>50) {
 				waitingTimeString = ""+Math.floor((waitingSecs+10)/60)+" min"
 			}
-			let callerIp = waitingCallerSlice[i].AddrPort;
-			let callerIpIdxPort = callerIp.indexOf(":");
-			if(callerIpIdxPort>0) {
-				callerIp = callerIp.substring(0,callerIpIdxPort);
-			}
+//			let callerIp = waitingCallerSlice[i].AddrPort;
+//			let callerIpIdxPort = callerIp.indexOf(":");
+//			if(callerIpIdxPort>0) {
+//				callerIp = callerIp.substring(0,callerIpIdxPort);
+//			}
 			str += "<td>" + waitingCallerSlice[i].CallerName + "</td><td>"+
-			    waitingCallerSlice[i].CallerID + "</td><td>"+
-				halfShowIpAddr(callerIp) + "</td><td style='text-align:right;'>since "+
+			    waitingCallerSlice[i].CallerID + "</td>"+
+//				"<td>"+halfShowIpAddr(callerIp) + "</td>"+
+				"<td style='text-align:right;'>since "+
 				waitingTimeString + "</td><td>"+
 				"<a onclick='pickupWaitingCaller(\""+waitingCallerSlice[i].AddrPort+"\")'>"+
-				"connect</a></td></tr>";
+				"pickup</a></td></tr>";
 		}
 		str += "</table>";
 		waitingCallersElement.innerHTML = str;
