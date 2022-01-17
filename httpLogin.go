@@ -427,13 +427,13 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			myHubMutex.RLock()
 			if hub != nil && !hub.CalleeLogin.Get() {
 				myHubMutex.RUnlock()
-				fmt.Printf("/login ws-connect timeout %ds removing %s/%s %v rip=%s\n",
+				fmt.Printf("/login ws-connect timeout %ds remove %s/%s %v rip=%s\n",
 					waitedFor, urlID, globalID, wsClientID, remoteAddrWithPort)
 				if globalID != "" {
 					//_,lenGlobalHubMap = 
 						DeleteFromHubMap(globalID)
 				}
-				// also Unregister callee
+				// also unregister callee
 				myHubMutex.RLock()
 				if hub != nil && hub.CalleeClient != nil {
 					hub.doUnregister(hub.CalleeClient, "ws-con timeout")
