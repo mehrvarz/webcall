@@ -476,7 +476,7 @@ func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, r
 	if err!=nil {
 		fmt.Printf("# /httpMissedCall (%s) fail store dbMissedCalls err=%v rip=%s\n", calleeId, err, remoteAddr)
 	} else {
-		fmt.Printf("/httpMissedCall (%s) caller=%v rip=%s\n", calleeId, caller, remoteAddr)
+		fmt.Printf("/httpMissedCall (%s) caller=%s:%s rip=%s\n", calleeId, callerName, callerID, remoteAddr)
 
 		// send updated waitingCallerSlice + missedCalls to callee (if (hidden) online)
 		// check if callee is (hidden) online
