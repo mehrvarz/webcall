@@ -141,6 +141,7 @@ window.onload = function() {
 
 	if(typeof Android !== "undefined" && Android !== null) {
 		fullscreenLabel.style.display = "none";
+		document.getElementById("nativeMenu").style.display = "block";
 	}
 
 
