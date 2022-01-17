@@ -617,8 +617,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 	}
 
 	if cmd=="log" {
-		fmt.Printf("%s peer %s %s rip=%s (%s:%s)\n", c.connType, payload, c.calleeID, c.RemoteAddr,
-			c.hub.CallerClient.callerID, c.hub.CallerClient.callerName)
+		fmt.Printf("%s peer %s %s (%s:%s)\n", c.connType, payload, c.calleeID,
+			c.hub.CallerClient.callerName, c.hub.CallerClient.callerID)
 		tok := strings.Split(payload, " ")
 		if len(tok)>=3 {
 			// callee Connected p2p/p2p port=10001 id=3949620073
