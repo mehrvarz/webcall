@@ -48,7 +48,6 @@ communication.
 
 AGPL3.0 - see: [LICENSE](LICENSE)
 
-
 ## 3rd party code (external)
 
 - github.com/lesismal/nbio
