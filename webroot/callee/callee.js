@@ -1259,7 +1259,7 @@ function showMissedCalls() {
 		}
 		missedCallsElement.style.display = "block";
 		let timeNowSecs = Math.floor((Date.now()+500)/1000);
-		let str = "<table style='width:100%; border-collapse:separate; border-spacing:6px 2px; line-height:1.5em;'>"
+		let str = "<table style='width:100%; _background:#4007; border-collapse:separate; border-spacing:6px 2px; line-height:1.5em;'>"
 		for(var i=0; i<missedCallsSlice.length; i++) {
 			str += "<tr>"
 			let waitingSecs = timeNowSecs - missedCallsSlice[i].CallTime;
@@ -1306,14 +1306,20 @@ function showMissedCalls() {
 					// open caller in iframe
 					callerLink = "<a onclick='iframeWindowOpen(\""+callerLink+"\")'>"+callerID+"</a>";
 				}
+				str += "<td>"+missedCallsSlice[i].CallerName + "</td><td>"+
+					callerLink + "</td><td style='text-align:right;'>"+
+					waitingTimeString + " ago</td><td>"+
+					"<a onclick='deleteMissedCall(\""+
+						missedCallsSlice[i].AddrPort+"_"+missedCallsSlice[i].CallTime+"\")'>"+
+					"X</a></td>";
+			} else {
+				str += "<td>"+missedCallsSlice[i].CallerName + "</td><td>"+
+					halfShowIpAddr(callerIp) + "</td><td style='text-align:right;'>"+
+					waitingTimeString + " ago</td><td>"+
+					"<a onclick='deleteMissedCall(\""+
+						missedCallsSlice[i].AddrPort+"_"+missedCallsSlice[i].CallTime+"\")'>"+
+					"X</a></td>";
 			}
-			str += "<td>"+missedCallsSlice[i].CallerName + "</td><td>"+
-			    callerLink + "</td><td>"+
-				halfShowIpAddr(callerIp) + "</td><td style='text-align:right;'>"+
-				waitingTimeString + " ago</td><td>"+
-				"<a onclick='deleteMissedCall(\""+
-					missedCallsSlice[i].AddrPort+"_"+missedCallsSlice[i].CallTime+"\")'>"+
-				"delete</a></td>";
 		}
 		str += "</table>"
 		missedCallsElement.innerHTML = str;
