@@ -54,7 +54,7 @@ button[disabled]:hover {
 	_background-color:#04c;
 	_transition: background-color 200ms;
 	_border:none;
-	padding: 0 10px 0 10px; /* 10px = margin-left +4 of labels next to menuButton (see: fullscreenlabel) */
+	padding: 0 20px 0 20px; /* 20px = margin-left (16px) +4 of labels (see: fullscreenlabel) */
 	user-select:none;
 }
 .menuButton:active {
@@ -71,6 +71,11 @@ button[disabled]:hover {
 }
 .menuButton[disabled]:hover {
 	_background-color:#04c;
+}
+.menulabel {
+	margin-left:16px; 
+	margin-right:20px; 
+	cursor:pointer;
 }
 
 div#container {
@@ -262,13 +267,13 @@ input[type=submit]:focus {
 <div id="iframeWindow" style="display:none"></div>
 
 <div id="menuDialog" style="position:relative; max-width:520px; user-select:none;">
-	<div style="position:absolute; left:-999em; _min-width:150px; top:0px; z-index:110; background:#45dd; color:#fff; padding:10px 20px; line-height:2.6em; border-radius:3px; cursor:pointer;">
+	<div style="position:absolute; left:-999em; _min-width:150px; top:0px; z-index:110; background:#45dd; color:#fff; padding:10px 0px; line-height:2.6em; border-radius:3px; cursor:pointer;">
 		<div class="menuButton" onclick="openPostCallStats()">Call Stats</div>
-		<label id="fileselectlabel" style="cursor:pointer; display:none;">
+		<label class="menulabel" id="fileselectlabel" style="display:none;">
 			Send File
 			<input id="fileselect" type="file" style="display:none"></input>
 		</label>
-		<label id="fullscreenlabel" style="margin-left:-4px;">
+		<label class="menulabel" id="fullscreenlabel">
 			<input type="checkbox" id="fullscreen" class="checkbox"> Full screen</label>
 		</label>
 	</div>
