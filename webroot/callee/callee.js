@@ -1261,7 +1261,7 @@ function showMissedCalls() {
 		}
 		missedCallsElement.style.display = "block";
 		let timeNowSecs = Math.floor((Date.now()+500)/1000);
-		let str = "<table style='width:100%; _background:#4007; border-collapse:separate; border-spacing:6px 2px; line-height:1.5em;'>"
+		let str = "<table style='width:100%; max-width:400px; _background:#4007; border-collapse:separate; _border-spacing:6px 2px; line-height:1.6em;'>"
 		for(var i=0; i<missedCallsSlice.length; i++) {
 			str += "<tr>"
 			let waitingSecs = timeNowSecs - missedCallsSlice[i].CallTime;
@@ -1295,6 +1295,8 @@ function showMissedCalls() {
 			}
 			let callerID = missedCallsSlice[i].CallerID;
 			let callerLink = callerID;
+			let callerName = missedCallsSlice[i].CallerName;
+			if(callerName=="") callerName="unknown";
 			if(callerID.length>=5) {
 				// TODO here we could also verify if callerID is a valid calleeID
 				//      and we could check if callerID is currently online
@@ -1308,16 +1310,16 @@ function showMissedCalls() {
 					// open caller in iframe
 					callerLink = "<a onclick='iframeWindowOpen(\""+callerLink+"\")'>"+callerID+"</a>";
 				}
-				str += "<td>"+missedCallsSlice[i].CallerName + "</td><td>"+
+				str += "<td>"+callerName + "</td><td>"+
 					callerLink + "</td><td style='text-align:right;'>"+
-					waitingTimeString + " ago</td><td>"+
+					waitingTimeString + "</td><td>"+
 					"<a onclick='deleteMissedCall(\""+
 						missedCallsSlice[i].AddrPort+"_"+missedCallsSlice[i].CallTime+"\")'>"+
 					"X</a></td>";
 			} else {
-				str += "<td>"+missedCallsSlice[i].CallerName + "</td><td>"+
+				str += "<td>"+callerName + "</td><td>"+
 					halfShowIpAddr(callerIp) + "</td><td style='text-align:right;'>"+
-					waitingTimeString + " ago</td><td>"+
+					waitingTimeString + "</td><td>"+
 					"<a onclick='deleteMissedCall(\""+
 						missedCallsSlice[i].AddrPort+"_"+missedCallsSlice[i].CallTime+"\")'>"+
 					"X</a></td>";
