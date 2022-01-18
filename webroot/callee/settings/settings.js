@@ -86,6 +86,7 @@ function prepareSettings(xhrresponse) {
 			document.getElementById("storeMissedCalls").checked = false;
 		}
 	}
+/*
 	if(typeof serverSettings.webPushSubscription1!=="undefined") {
 		//if(!gentle) console.log('serverSettings.webPushSubscription1',serverSettings.webPushSubscription1);
 		if(serverSettings.webPushSubscription1=="") {
@@ -162,7 +163,7 @@ function prepareSettings(xhrresponse) {
 			submitForm(false);
 		}
 	}
-
+*/
 	form.style.display = "block";
 	setTimeout(function() {
 		formPw.focus();
