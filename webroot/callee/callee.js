@@ -65,7 +65,7 @@ var autoPlaybackAudioBuffer = null;
 var autoPlaybackAudioSource = null;
 var autoPlaybackAudioSourceStarted;
 var pickupAfterLocalStream = false;
-var buttonBlinking = true;
+var buttonBlinking = false;
 var onGotStreamGoOnline = false;
 var autoPlaybackFile = "";
 var waitingCallerSlice = null;
@@ -144,7 +144,7 @@ window.onload = function() {
 		let element = document.getElementById("nativeMenu");
 		if(element) element.style.display = "block";
 		element = document.getElementById("webcallhome");
-		if(element) element.href = "https://timur.mobi/webcall/android/#download";
+		if(element) element.href = "https://timur.mobi/webcall/android/";
 	}
 
 
