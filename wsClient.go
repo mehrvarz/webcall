@@ -309,8 +309,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 	idxPipe := bytes.Index(message[:checkLen], []byte("|"))
 	if idxPipe<0 {
 		// invalid -> ignore
-		fmt.Printf("# serveWs no pipe char found; abort; checkLen=%d (%s)\n",
-			checkLen,string(message[:checkLen]))
+		//fmt.Printf("# serveWs no pipe char found; abort; checkLen=%d (%s)\n",
+		//	checkLen,string(message[:checkLen]))
 		return
 	}
 	tok := strings.Split(string(message),"|")
