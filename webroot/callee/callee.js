@@ -141,7 +141,10 @@ window.onload = function() {
 
 	if(typeof Android !== "undefined" && Android !== null) {
 		fullscreenLabel.style.display = "none";
-		document.getElementById("nativeMenu").style.display = "block";
+		let element = document.getElementById("nativeMenu");
+		if(element) element.style.display = "block";
+		element = document.getElementById("webcallhome");
+		if(element) element.href = "https://timur.mobi/webcall/android/#download";
 	}
 
 
