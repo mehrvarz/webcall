@@ -1027,8 +1027,13 @@ function signalingCommand(message) {
 				return;
 			}
 
-			gLog("peerCon.addIceCandidate accept address",
-				address,callerCandidate.candidate);
+// peerCon.addIceCandidate accept address 192.168.3.209...
+// candidate:169636353 1 udp 2122260223 192.168.3.209 40205 typ host generation 0 ufrag /RrR network-id 1
+// candidate:1151307505 1 tcp 1518280447 192.168.3.209 9 typ host tcptype active generation 0 ufrag /RrR network-id 1
+// candidate:2337567925 1 udp 1686052607 37.201.195.49 47218 typ srflx raddr 192.168.3.209 rport 19890 generation 0 ufrag /RrR network-id 1 L1451
+// candidate:240334351 1 udp 41885439 66.228.46.43 50178 typ relay raddr 37.201.195.49 rport 47218 generation 0 ufrag /RrR network-id 1
+			gLog("peerCon.addIceCandidate accept address", address, callerCandidate.candidate);
+//			gLog("peerCon.addIceCandidate accept address="+address);
 			if(address.indexOf(":")>=0
 					|| address==outboundIP
 					|| address.endsWith(".local")
