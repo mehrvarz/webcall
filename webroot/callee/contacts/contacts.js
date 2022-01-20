@@ -62,7 +62,7 @@ function requestData() {
 
 var obj = null;
 function processContacts(xhrresponse) {
-	if(!gentle) console.log('xhrresponse (%s)',xhrresponse);
+	if(!gentle) console.log("xhrresponse ("+xhrresponse+")");
 	if(xhrresponse!="") {
 		let mainLink = window.location.href;
 		let idx = mainLink.indexOf("/callee/");
