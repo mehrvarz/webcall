@@ -395,7 +395,7 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 	}
 
 	if name=="" {
-		name = "?"
+		name = "unknown"
 	}
 	callerInfoMap[contactID] = name
 	err = kvContacts.Put(dbContactsBucket, calleeID, callerInfoMap, false)
