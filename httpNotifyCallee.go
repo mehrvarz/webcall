@@ -571,7 +571,22 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 		}
 	}
 */
-	if dbUser.Email2=="" && dbUser.Str2=="" && dbUser.Str3=="" {
+
+	// check if callee is hidden online
+	calleeIsHiddenOnline := false
+	ejectOn1stFound := true
+	reportHiddenCallee := true
+	occupy := false
+	glUrlID, locHub, globHub, err := GetOnlineCallee(urlID, ejectOn1stFound, reportHiddenCallee,
+		remoteAddr, occupy, "/canbenotified")
+	if err==nil && glUrlID != "" {
+		if (locHub!=nil && locHub.IsCalleeHidden) || (globHub!=nil && globHub.IsCalleeHidden) {
+			//fmt.Printf("/canbenotified (%s) isHiddenOnline\n", glUrlID)
+			calleeIsHiddenOnline = true
+		}
+	}
+
+	if dbUser.Email2=="" && dbUser.Str2=="" && dbUser.Str3=="" && !calleeIsHiddenOnline {
 		// this user can NOT rcv push msg (not pushable)
 		fmt.Printf("/canbenotified (%s) has no push channel rip=%s\n",urlID,remoteAddr)
 
