@@ -386,11 +386,9 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 	}
 
 	oldName,ok := callerInfoMap[contactID]
-	if !ok {
-		fmt.Printf("/setcontact (%s) contactID=%s does not exist\n", calleeID, contactID)
-		//return
-	} else if(name=="" && oldName!="") {
-		fmt.Printf("/setcontact (%s) contactID=%s already exists (%s)\n", calleeID, contactID, oldName)
+	if ok && oldName!="" && oldName!="unknown" && oldName!="?" {
+		fmt.Printf("/setcontact (%s) contactID=%s already exists (%s)\n",
+			calleeID, contactID, oldName)
 		return
 	}
 
@@ -403,7 +401,8 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 		fmt.Printf("# /setcontact store calleeID=%s err=%v\n", calleeID, err)
 		return
 	}
-	fmt.Printf("/setcontact (%s) changed name of %s from (%s) to (%s)\n",calleeID,contactID,oldName,name)
+	fmt.Printf("/setcontact (%s) changed name of %s from (%s) to (%s)\n",
+		calleeID,contactID,oldName,name)
 	fmt.Fprintf(w,"ok")
 	return
 }
