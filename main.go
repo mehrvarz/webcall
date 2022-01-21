@@ -162,6 +162,7 @@ var	backupScript = ""
 var	backupPauseMinutes = 0
 var maxCallees = 0
 var cspString = ""
+var thirtySecStats = false
 
 
 func main() {
@@ -522,6 +523,8 @@ func readConfig(init bool) {
 	maxCallees = readIniInt(configIni, "maxCallees", maxCallees, 10000, 1)
 
 	cspString = readIniString(configIni, "csp", cspString, "")
+
+	thirtySecStats = readIniBoolean(configIni, "thirtySecStats", thirtySecStats, false)
 
 	readConfigLock.Unlock()
 }

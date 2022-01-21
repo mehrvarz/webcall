@@ -22,7 +22,6 @@ func ticker3hours() {
 	db := kv.Db
 
 	threeHoursTicker := time.NewTicker(3*60*60*time.Second)
-//	threeHoursTicker := time.NewTicker(1*60*time.Second)
 	defer threeHoursTicker.Stop()
 	for {
 		<-threeHoursTicker.C
@@ -311,7 +310,9 @@ func ticker30sec() {
 			break
 		}
 
-		fmt.Printf("%s\n",getStats())
+		if thirtySecStats {
+			fmt.Printf("%s\n",getStats())
+		}
 
 		// cleanup recentTurnCallerIps
 		timeNow := time.Now()
