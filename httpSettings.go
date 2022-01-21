@@ -386,7 +386,8 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 	}
 
 	oldName,ok := callerInfoMap[contactID]
-	if ok && oldName!="" && oldName!="unknown" && oldName!="?" {
+	if ok && oldName!="" && oldName!="unknown" && oldName!="?" && name=="" {
+		// don't overwrite existing name with empty name
 		fmt.Printf("/setcontact (%s) contactID=%s already exists (%s)\n",
 			calleeID, contactID, oldName)
 		return
