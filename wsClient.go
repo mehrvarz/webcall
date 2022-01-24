@@ -280,7 +280,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		hub.CallDurationSecs = 0
 		//fmt.Printf("%s talkSecs=%d startTime=%d serviceSecs=%d\n",
 		//	client.connType, hub.ConnectedToPeerSecs, hub.ServiceStartTime, hub.ServiceDurationSecs)
-	} else {
+	} else if hub.CallerClient==nil {
 		// caller client (2nd client)
 		if logWantedFor("wsclient") {
 			fmt.Printf("%s con caller id=%s wsCliID=%d rip=%s\n",
@@ -296,6 +296,9 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			fmt.Printf("# %s StoreCallerIpInHubMap (%s) err=%v\n",
 				client.connType, client.globalCalleeID, err)
 		}
+	} else {
+		fmt.Printf("# %s CallerClient for %s/%s already set wsCliID=%d rip=%s\n",
+			client.connType, client.calleeID, client.globalCalleeID, wsClientID64, client.RemoteAddr)
 	}
 	hub.HubMutex.Unlock()
 }
