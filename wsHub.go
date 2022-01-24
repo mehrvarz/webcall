@@ -37,7 +37,6 @@ type Hub struct {
 	RemoteP2p bool
 	//callerID string // id of the caller (may not be avail)
 	//callerNickname string // nickname of the caller (may not be avail)
-	//calleeHostStr string // set by the callee; will be handed over to the caller via /online
 }
 
 func newHub(maxRingSecs int, maxTalkSecsIfNoP2p int, startTime int64) *Hub {
