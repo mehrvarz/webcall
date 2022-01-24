@@ -298,8 +298,6 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	} else {
 		fmt.Printf("# %s CallerClient for %s/%s already set wsCliID=%d rip=%s\n",
 			client.connType, client.calleeID, client.globalCalleeID, wsClientID64, client.RemoteAddr)
-		// wsConn.close
-		//hub.CallerClient.Close("disconCalleeOnPeerConnected")
 		wsConn.WriteMessage(websocket.CloseMessage, nil)
 		wsConn.Close()
 	}
