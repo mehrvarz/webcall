@@ -6,11 +6,9 @@
 
 **[New: WebCall for Android (separate repository)](https://github.com/mehrvarz/webcall-android)**
 
-HQ audio/video telephony with bidirectional file transfer
+WebCall offers HQ audio/video telephony plus bidirectional file transfer. WebCall video delivers the best picture quality on top of your internet connection. Strict use of P2P connectivity results in lower latency and higher frame rates. Audio + video + two-way file transfer can all be used at the same time. Video delivery can be turned on and off at any time during the call. Audio stays in place for the duration of the call. 
 
-WebCall video delivers the best picture quality on top of your internet connection. Strict use of P2P connectivity results in lower latency and higher frame rates. Audio + video + two-way file transfer can all be used at the same time. Video delivery can be turned on and off at any time during the call. Audio stays in place for the duration of the call. 
-
-You may want to use video just briefly and continue audio-only for the rest of your conversation. Maybe you want to use video to make sure you are connected to the right person, before you start exchanging some sensitive files. Turning video off can also result in faster file delivery.
+You may want to use video only briefly and continue audio-only for the rest of your conversation. Maybe you want to use video to make sure you are connected to the right person, before you start exchanging some sensitive files. Turning video off can also result in faster file delivery.
 
 WebCall offers super high audio quality. With a 20-280 bps adaptive bitrate (Opus codec) it offers better audio quality than even the best internet radio stations. It is a joy to use, especially for long distance telephony.
 
