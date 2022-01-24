@@ -4,7 +4,7 @@
 
 # WebCall WebRTC Telephony
 
-    **New: Check out [WebCall for Android](https://github.com/mehrvarz/webcall-android)**
+**New: Check out [WebCall for Android](https://github.com/mehrvarz/webcall-android)**
 
 HQ audio/video telephony with bidirectional file transfer
 
