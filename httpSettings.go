@@ -15,7 +15,7 @@ package main
 import (
 	"net/http"
 	"fmt"
-	"net/url"
+//	"net/url"
 	"encoding/json"
 	"io"
 	"strconv"
@@ -205,6 +205,7 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 					}
 				}
 			}
+/*
 		case "webPushSubscription1":
 			newVal,err := url.QueryUnescape(val)
 			if err!=nil {
@@ -288,6 +289,7 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 					calleeID, newVal, dbUser.Str3ua)
 				dbUser.Str3ua = newVal
 			}
+*/
 		}
 	}
 

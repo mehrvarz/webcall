@@ -3,7 +3,7 @@ module github.com/mehrvarz/webcall
 go 1.16
 
 require (
-	github.com/SherClockHolmes/webpush-go v1.1.3
+	//	github.com/SherClockHolmes/webpush-go v1.1.3
 	github.com/fasthttp/websocket v1.4.3
 	github.com/lesismal/llib v1.1.4
 	github.com/lesismal/nbio v1.2.6
