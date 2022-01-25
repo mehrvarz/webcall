@@ -54,7 +54,7 @@ AGPL3.0 - see: [LICENSE](LICENSE)
 - go.etcd.io/bbolt
 - github.com/pion/turn
 - github.com/mrjones/oauth
-- github.com/SherClockHolmes/webpush-go
+[//]: # (- github.com/SherClockHolmes/webpush-go)
 - gopkg.in/ini
 - github.com/webrtcHacks/adapter.js
 
