@@ -34,7 +34,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 				var dbUser DbUser
 				d := gob.NewDecoder(bytes.NewReader(v))
 				d.Decode(&dbUser)
-				printFunc(w, "user %20s calls=%d p2p=%d/%d talk=%d\n",
+				fmt.Fprintf(w, "user %20s calls=%d p2p=%d/%d talk=%d\n",
 					k,
 					dbUser.CallCounter,
 					dbUser.LocalP2pCounter, dbUser.RemoteP2pCounter,
@@ -62,10 +62,8 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 				var dbEntry DbEntry
 				d := gob.NewDecoder(bytes.NewReader(v))
 				d.Decode(&dbEntry)
-				printFunc(w,"registered id=%s %d=%s rip=%s\n",
-					k, // ID
-					dbEntry.StartTime, time.Unix(dbEntry.StartTime,0).Format("2006-01-02 15:04:05"),
-					dbEntry.Ip)
+				fmt.Fprintf(w,"registered id=%s %d=%s\n",
+					k, dbEntry.StartTime, time.Unix(dbEntry.StartTime,0).Format("2006-01-02 15:04:05"))
 			}
 			return nil
 		})
@@ -90,7 +88,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 				d := gob.NewDecoder(bytes.NewReader(v))
 				d.Decode(&dbEntry)
 				starttime := time.Unix(dbEntry.StartTime,0)
-				printFunc(w,"blocked id=%s start=%d=%s rip=%s\n",
+				fmt.Fprintf(w,"blocked id=%s start=%d=%s rip=%s\n",
 					id, dbEntry.StartTime, starttime.Format("2006-01-02 15:04:05"), dbEntry.Ip)
 			}
 			return nil
