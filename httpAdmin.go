@@ -22,7 +22,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 
 	if urlPath=="/dumpuser" {
 		bucketName := dbUserBucket
-		fmt.Printf("/dumpuser dbName=%s bucketName=%s\n", dbMainName, bucketName)
+		fmt.Fprintf(w,"/dumpuser dbName=%s bucketName=%s\n", dbMainName, bucketName)
 		db := kv.Db
 		err := db.Update(func(tx *bolt.Tx) error {
 			b := tx.Bucket([]byte(bucketName))
@@ -45,7 +45,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		if err!=nil {
 			printFunc(w,"/dumpuser err=%v\n", err)
 		} else {
-			fmt.Printf("/dumpuser no err\n")
+			fmt.Fprintf(w,"/dumpuser no err\n")
 		}
 		return true
 	}
@@ -53,7 +53,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 	if urlPath=="/dumpregistered" {
 		// show the list of callee-IDs that have been registered and are not yet outdated
 		bucketName := dbRegisteredIDs
-		fmt.Printf("/dumpregistered dbName=%s bucketName=%s\n", dbMainName, bucketName)
+		fmt.Fprintf(w,"/dumpregistered dbName=%s bucketName=%s\n", dbMainName, bucketName)
 		db := kv.Db
 		err := db.Update(func(tx *bolt.Tx) error {
 			b := tx.Bucket([]byte(bucketName))
@@ -70,7 +70,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		if err!=nil {
 			printFunc(w,"/dumpregistered err=%v\n", err)
 		} else {
-			fmt.Printf("/dumpregistered no err\n")
+			fmt.Fprintf(w,"/dumpregistered no err\n")
 		}
 		return true
 	}
@@ -78,7 +78,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 	if urlPath=="/dumpblocked" {
 		// show the list of callee-IDs that are blocked (for various reasons)
 		bucketName := dbBlockedIDs
-		fmt.Printf("/dumpblocked dbName=%s bucketName=%s\n", dbMainName, bucketName)
+		fmt.Fprintf(w,"/dumpblocked dbName=%s bucketName=%s\n", dbMainName, bucketName)
 		db := kv.Db
 		err := db.Update(func(tx *bolt.Tx) error {
 			b := tx.Bucket([]byte(bucketName))
@@ -96,9 +96,8 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		if err!=nil {
 			printFunc(w,"/dumpblocked err=%v\n", err)
 		} else {
-			fmt.Printf("/dumpblocked no err\n")
+			fmt.Fprintf(w,"/dumpblocked no err\n")
 		}
-		printFunc(w,"\n")
 		return true
 	}
 
@@ -124,7 +123,6 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		} else {
 			printFunc(w,"/deluserid deleted user key=%v\n", userKey)
 		}
-		fmt.Fprintf(w,"\n")
 		return true
 	}
 
@@ -158,7 +156,6 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		} else {
 			printFunc(w,"/delregisteredid deleted id=%s\n", urlID)
 		}
-		fmt.Fprintf(w,"\n")
 		return true
 	}
 
@@ -193,7 +190,6 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		} else {
 			printFunc(w,"/delblockedid deleted id=%s\n", urlID)
 		}
-		fmt.Fprintf(w,"\n")
 		return true
 	}
 
@@ -266,7 +262,6 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		} else {
 			printFunc(w,"/makeregistered id=%s no err\n", urlID)
 		}
-		fmt.Fprintf(w,"\n")
 		return true
 	}
 
@@ -307,7 +302,6 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 			printFunc(w,"/editprem db=%s bucket=%s new id=%s created\n",
 				dbMainName,dbRegisteredIDs,urlID)
 		}
-		fmt.Fprintf(w,"\n")
 		return true
 	}
 
@@ -324,7 +318,6 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 			}
 		}
 		recentTurnCallerIpMutex.Unlock()
-		fmt.Fprintf(w,"\n")
 		return true
 	}
 
@@ -339,7 +332,6 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 				hubMap[calleeID].CalleeClient.pingReceived,
 				hubMap[calleeID].CalleeClient.pongSent)
 		}
-		printFunc(w,"\n")
 		return true
 	}
 
