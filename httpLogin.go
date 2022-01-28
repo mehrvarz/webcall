@@ -91,9 +91,9 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					// TODO we need a temporary array/map for the requests that are waiting here
 					// so we can prevent the same user from logging in again
 
-					// we wait max 9x250ms = 2250ms
-					for i := 0; i < 9; i++ {
-						time.Sleep(250 * time.Millisecond)
+					// we wait max 22x100ms = 2200ms
+					for i := 0; i < 22; i++ {
+						time.Sleep(100 * time.Millisecond)
 						// is hub.CalleeClient still online now?
 						if hub==nil || hub.CalleeClient==nil || !hub.CalleeClient.isOnline.Get() {
 							// CalleeClient is not online anymore
