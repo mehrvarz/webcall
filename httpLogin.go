@@ -299,6 +299,12 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	exitFunc := func(calleeClient *WsClient, comment string) {
 		// exitFunc: callee is logging out: release hub and port of this session
 
+		if hub == nil {
+			fmt.Printf("exithub callee=%s wsID=%d hub already closed %s rip=%s\n",
+				globalID, wsClientID, comment, remoteAddrWithPort)
+			return;
+		}
+
 		// verify if the old calleeClient.hub.WsClientID is really same as the new wsClientID
 		var reqWsClientID uint64 = 0
 		if(calleeClient!=nil && calleeClient.hub!=nil) {
@@ -366,6 +372,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
         wsClientMutex.Lock()
         delete(wsClientMap, wsClientID)
         wsClientMutex.Unlock()
+		calleeClient.hub.WsClientID = 0
 	}
 
 	hub.exitFunc = exitFunc
