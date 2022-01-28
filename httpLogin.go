@@ -87,10 +87,19 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 						fmt.Printf("/login key=(%s) send ping to prev rip=%s\n", key, remoteAddr)
 					}
 					hub.CalleeClient.SendPing(2000)
-					time.Sleep(2200 * time.Millisecond)
-					// is hub.CalleeClient still online now?
-					if hub==nil || hub.CalleeClient==nil || !hub.CalleeClient.isOnline.Get() {
-						offlineReason = 4 // CalleeClient is not online anymore
+
+					// TODO we need a temporary array/map for the requests that are waiting here
+					// so we can prevent the same user from logging in again
+
+					// we wait max 9x250ms = 2250ms
+					for i := 0; i < 9; i++ {
+						time.Sleep(250 * time.Millisecond)
+						// is hub.CalleeClient still online now?
+						if hub==nil || hub.CalleeClient==nil || !hub.CalleeClient.isOnline.Get() {
+							// CalleeClient is not online anymore
+							offlineReason = 4
+							break
+						}
 					}
 				}
 				if offlineReason==0 {
@@ -182,13 +191,38 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				return
 			}
 			if strings.Index(err.Error(), "timeout") < 0 {
-				// guessing more difficult if delayed
+				// pw guessing more difficult if delayed
 				time.Sleep(3000 * time.Millisecond)
 			}
 			fmt.Fprintf(w, "notregistered")
 			return
 		}
-
+/*
+		// TODO check if id already online
+		reportHiddenCallee := true
+		occupy := false
+		ejectOn1stFound :=
+		glUrlID, locHub, globHub, err := GetOnlineCallee(urlID, ejectOn1stFound, reportHiddenCallee,
+			remoteAddr, occupy, "/online")
+		if err != nil {
+			// error
+			fmt.Printf("# /online GetOnlineCallee(%s/%s) err=%v rip=%s\n", urlID, glUrlID, err, remoteAddr)
+			fmt.Fprintf(w, "error")
+			return
+		}
+		if locHub == nil && globHub == nil {
+			// unknown urlID
+			fmt.Printf("/online callee(%s/%s) not online rip=%s\n", urlID, glUrlID, remoteAddr)
+			fmt.Fprintf(w, "unknown")
+			return
+		}
+		if glUrlID == "" {
+			// callee urlID is currently NOT online (this is not an error)
+			fmt.Printf("/online callee %s is cur NOT online rip=%s\n", urlID, remoteAddr)
+			fmt.Fprintf(w, "notavail")
+			return
+		}
+*/
 		if pw != dbEntry.Password {
 			fmt.Fprintf(os.Stderr, "/login fail id=%s wrong password rip=%s\n", urlID, remoteAddr)
 			// must delay to make guessing more difficult
@@ -397,6 +431,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					break
 				}
 				if hub.CalleeLogin.Get() {
+					// this is set when callee sends 'init'
 					myHubMutex.RUnlock()
 					break
 				}
