@@ -12,7 +12,8 @@
 ::-webkit-scrollbar { display:none; }
 html {
 	width:100%; min-height:100%;
-	background-image:linear-gradient(#004, #139);
+	_background-image:linear-gradient(#004, #139);
+	background-image:linear-gradient(#339, #006);
 	color:#ddd;
 	scrollbar-width:none;
 }
@@ -204,7 +205,7 @@ form {
 	padding:4px 4px; box-sizing:border-box;
 	outline:none;
 	background:#0de;
-	box-shadow:none; /* removes red border in FF */
+	box-shadow:none; /* remove red border in FF */
 }
 .formtext:focus {
 	background-color: #0fc;
@@ -260,7 +261,7 @@ input[type=submit]:focus {
 
 <body>
 <img src="phone.svg"
-   style="position:absolute;right:0;top:2vh;width:440px;max-height:80vh;padding:2%;opacity:0.1;z-index:-1;">
+   style="position:absolute;right:0;top:2vh;width:440px;max-height:80vh;padding:2%;opacity:0.15;z-index:-1;">
 
 <div id="fullScreenOverlay" style="position:absolute; left:0; top:0; margin:0; padding:0; width:100%; height:100%; z-index:105; display:none;"></div>
 

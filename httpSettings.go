@@ -405,8 +405,12 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 		fmt.Printf("# /setcontact store calleeID=%s err=%v\n", calleeID, err)
 		return
 	}
-	fmt.Printf("/setcontact (%s) changed name of %s from (%s) to (%s)\n",
-		calleeID,contactID,oldName,name)
+	if name!=oldName {
+		fmt.Printf("/setcontact (%s) changed name of %s from (%s) to (%s)\n",
+			calleeID,contactID,oldName,name)
+	} else {
+		fmt.Printf("/setcontact (%s) store %s (%s)\n", calleeID, contactID, name)
+	}
 	fmt.Fprintf(w,"ok")
 	return
 }
