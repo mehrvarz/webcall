@@ -24,7 +24,7 @@ body {
 }
 button, button:focus {
 	background-color:#04c;
-	transition: background-color 300ms;
+	transition: background-color 200ms;
 	border:none;
 	border-radius:3px;
 	color:white;
@@ -48,6 +48,10 @@ button[disabled] {
 }
 button[disabled]:hover {
 	background-color:#04c;
+}
+
+.callbutton:hover {
+	background-color:#080;
 }
 
 .menuButton, menuButton:focus {
@@ -322,7 +326,7 @@ input[type=submit]:focus {
 	<h1 id="title">WebCall</h1>
 	<div id="calleeOnline" style="display:none">
 		<div style="display:grid; grid-template-columns: 1fr 1fr 40px; list-style-type:none; max-width:320px;">
-			<button id="callButton">Call</button>
+			<button id="callButton" class="callbutton">Call</button>
 			<button id="hangupButton" disabled>Hang Up</button>
 			<img id="onlineIndicator" src="" style="width:26px; margin:0.6em 0 0 0; user-select:none;">
 		</div>
