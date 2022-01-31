@@ -696,10 +696,8 @@ function calleeOfflineAction(onlineStatus) {
 
 		if(onlineStatus=="notavailtemp") {
 			// callee offline temporarily
-			showStatus("Please wait...",-1);
 			setTimeout(function() {
-				showStatus("Trying to find "+calleeID+"<br>Please wait...",-1);
-				// TODO need busy bee
+				showStatus("Trying to find "+calleeID+". Please wait...<br><br><img src='preloader-circles.svg' style='width:40%;max-height:120px;'>",-1);
 				setTimeout(checkCalleeOnline,20000);
 			},600);
 			return;
