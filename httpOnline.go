@@ -69,11 +69,12 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 				fmt.Printf("# /online error db=%s bucket=%s get key=%v err=%v\n",
 					dbMainName, dbUserBucket, dbUserKey, err)
 			} else {
-				// TODO use dbUser.LastLogoffTime to see how long it has been offline
-
-				nowTimeUnix := time.Now().Unix()
-				secsSinceLogoff = nowTimeUnix - dbUser.LastLoginTime
+				// use dbUser.LastLogoffTime to see how long it has been offline
+				secsSinceLogoff = time.Now().Unix() - dbUser.LastLogoffTime
 			}
+		}
+		if(secsSinceLogoff>0 && secsSinceLogoff < 15*60) {
+			// TODO callee may come back any moment
 		}
 		fmt.Printf("/online callee %s is offline (for %d secs) rip=%s\n", urlID, secsSinceLogoff, remoteAddr)
 		fmt.Fprintf(w, "notavail")
