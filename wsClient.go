@@ -268,6 +268,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 		hub.WsClientID = wsClientID64
 		hub.CalleeClient = client
+		hub.CallerClient = nil
 		hub.ServiceStartTime = time.Now().Unix()
 		hub.ConnectedToPeerSecs = 0
 		if !strings.HasPrefix(client.calleeID,"random") {
@@ -298,6 +299,9 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	} else {
 		fmt.Printf("# %s CallerClient for %s/%s already set wsCliID=%d rip=%s\n",
 			client.connType, client.calleeID, client.globalCalleeID, wsClientID64, client.RemoteAddr)
+		//fmt.Printf("# %s existing CallerClient rip=%s ua=%s\n",
+		//	client.connType, hub.CallerClient.RemoteAddr, hub.CallerClient.userAgent)
+		time.Sleep(500 * time.Millisecond)
 		wsConn.WriteMessage(websocket.CloseMessage, nil)
 		wsConn.Close()
 	}
@@ -754,7 +758,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 				}
 			}
 			if missedCallsSlice!=nil {
-				// make sure we never show more than 10 missed calls
+				// make sure we only keep up to 10 missed calls
 				if len(missedCallsSlice)>=10 {
 					missedCallsSlice = missedCallsSlice[1:]
 				}
@@ -773,6 +777,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 		if c.isCallee {
 			if c.hub.CallerClient!=nil {
 				c.hub.CallerClient.isConnectedToPeer.Set(false)
+				c.hub.CallerClient = nil
 			}
 		} else {
 			if c.hub.CalleeClient!=nil {

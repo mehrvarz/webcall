@@ -237,7 +237,7 @@ function onload2(checkFlag) {
 			if(checkFlag) {
 				// need to know if calleeID is online asap (will switch to callee-online-layout if it is)
 				dialAfterCalleeOnline = false;
-				checkCalleeOnline();
+				checkCalleeOnline(true);
 			}
 
 			if(dialButton) {
@@ -314,7 +314,7 @@ function dialButtonClick() {
 	// -> checkCalleeOnline -> ajax -> calleeOnlineAction -> gotStream -> connectSignaling
 	gLog("dialButtonClick set dialAfterCalleeOnline");
 	dialAfterCalleeOnline = true;
-	checkCalleeOnline();
+	checkCalleeOnline(true);
 }
 
 function videoOn() {
@@ -487,7 +487,7 @@ function getUrlParams(param) {
 	}
 }
 
-function checkCalleeOnline() {
+function checkCalleeOnline(waitForCallee) {
 	let api = apiPath+"/online?id="+calleeID;
 	if(callerId!=="" && callerId!=="undefined") {
 		api += "&callerId="+callerId+"&name="+callerName;
@@ -495,13 +495,13 @@ function checkCalleeOnline() {
 	gLog('checkCalleeOnline api',api);
 	xhrTimeout = 30*1000;
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-		calleeOnlineStatus(xhr.responseText);
+		calleeOnlineStatus(xhr.responseText,waitForCallee);
 	}, errorAction
 		// errorAction will switch back; if we don't want this we should handle err like in notifyConnect()
 	);
 }
 
-function calleeOnlineStatus(onlineStatus) {
+function calleeOnlineStatus(onlineStatus,waitForCallee) {
 	if(rtcConnect || dialing) {
 		// TODO check if this is still required/meaningful
 		gLog('calleeOnlineStatus abort',rtcConnect,dialing);
@@ -563,7 +563,7 @@ function calleeOnlineStatus(onlineStatus) {
 	}
 
 	// calleeOfflineAction: check if calleeID can be notified - random become callee
-	calleeOfflineAction(onlineStatus);
+	calleeOfflineAction(onlineStatus,waitForCallee);
 }
 
 function calleeOnlineAction(from) {
@@ -695,50 +695,53 @@ function loadJS(jsFile,callback) {
 	document.getElementsByTagName("head")[0].appendChild(script);
 }
 
-function calleeOfflineAction(onlineStatus) {
+function calleeOfflineAction(onlineStatus,waitForCallee) {
 	if(!singlebutton) {
 		// switch to callee-is-offline layout
 		gLog('calleeOfflineAction !singlebutton callee-is-offline');
 		calleeOnlineElement.style.display = "none";
 		calleeOfflineElement.style.display = "block";
 
-		if(onlineStatus=="notavailtemp") {
-			// callee offline temporarily
-			haveBeenWaitingForCalleeOnline=true;
-			setTimeout(function() {
-				showStatus("Trying to find "+calleeID+". Please wait...<br><br><img src='preloader-circles.svg' style='width:40%;max-height:120px;'>",-1);
-				setTimeout(checkCalleeOnline,20000);
-			},600);
-			return;
-		}
-
-		// calleeID is currently offline - check if calleeID can be notified (via twitter msg)
-		let api = apiPath+"/canbenotified?id="+calleeID+"&callerId="+callerId+"&name="+callerName;
-		gLog('canbenotified api',api);
-		xhrTimeout = 30*1000;
-		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-			if(xhr.responseText.startsWith("ok")) {
-				// calleeID can be notified (via twitter)
-				// if caller is willing to wait, caller can invoke confirmNotifyConnect() to enter own name
-				calleeName = xhr.responseText.substring(3);
-				if(calleeName=="" || calleeName.length<3) {
-					calleeName = calleeID;
-				}
-				var msg = calleeName+" is currently not available.<br><br>"+
-					"We can try to get "+calleeName+" on the phone. Can you wait a few minutes while we try to establish a connection?<br><br><a onclick='confirmNotifyConnect()'>Yes, please try</a><br><br><a href='..'>No, I have to go</a>";
-				showStatus(msg,-1);
-				needToStoreMissedCall = calleeID+"|"+callerName+"|"+callerId;
-				// needToStoreMissedCall will be cleared by a successful call
-				// if it is still set in goodby(), we will ask server to store this as a missed call
-				missedCallTime = Date.now();
+		if(waitForCallee) {
+			if(onlineStatus=="notavailtemp") {
+				// callee temporarily offline
+				haveBeenWaitingForCalleeOnline=true;
+				setTimeout(function() {
+					showStatus("Trying to find "+calleeID+". Please wait...<br><br><img src='preloader-circles.svg' style='width:40%;max-height:120px;'>",-1);
+					setTimeout(checkCalleeOnline,20000);
+				},600);
 				return;
 			}
-			// calleeID can NOT be notified
-			showStatus(calleeID+" is not available at this time. Please try again a little later.",-1);
-		}, // xhr error
-			errorAction
-			// TODO errorAction will switch back; if we don't want this we shd handle err like in notifyConnect()
-		);
+
+			// calleeID is currently offline - check if calleeID can be notified (via twitter msg)
+			let api = apiPath+"/canbenotified?id="+calleeID+"&callerId="+callerId+"&name="+callerName;
+			gLog('canbenotified api',api);
+			xhrTimeout = 30*1000;
+			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+				if(xhr.responseText.startsWith("ok")) {
+					// calleeID can be notified (via twitter)
+					// if caller is willing to wait, caller can invoke confirmNotifyConnect() to enter own name
+					calleeName = xhr.responseText.substring(3);
+					if(calleeName=="" || calleeName.length<3) {
+						calleeName = calleeID;
+					}
+					var msg = calleeName+" is currently not available.<br><br>"+
+						"We can try to get "+calleeName+" on the phone. Can you wait a few minutes while we try to establish a connection?<br><br><a onclick='confirmNotifyConnect()'>Yes, please try</a><br><br><a href='..'>No, I have to go</a>";
+					showStatus(msg,-1);
+					needToStoreMissedCall = calleeID+"|"+callerName+"|"+callerId;
+					// needToStoreMissedCall will be cleared by a successful call
+					// if it is still set in goodby(), we will ask server to store this as a missed call
+					missedCallTime = Date.now();
+					return;
+				}
+				// calleeID can NOT be notified
+				showStatus(calleeID+" is not available at this time. Please try again a little later.",-1);
+			}, // xhr error
+				errorAction
+				// TODO errorAction will switch back
+				// if we don't want this we shd handle err like in notifyConnect()
+			);
+		}
 	}
 
 	gLog('calleeOfflineAction done');
@@ -1949,7 +1952,7 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 		setTimeout(function() {
 			// show msgbox etc.
 			gLog('hangup checkCalleeOnline');
-			checkCalleeOnline();
+			checkCalleeOnline(false);
 			dialButton.disabled = false;
 		},4000);
 	}
