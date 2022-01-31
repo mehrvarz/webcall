@@ -288,6 +288,7 @@ function onload2(checkFlag) {
 
 function dialButtonClick() {
 	gLog("dialButtonClick");
+	document.activeElement.blur();
 	showStatus(connectingText,-1);
 
 	rtcConnectStartDate = 0;
