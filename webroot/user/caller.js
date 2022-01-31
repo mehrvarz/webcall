@@ -1951,7 +1951,7 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 			gLog('hangup checkCalleeOnline');
 			checkCalleeOnline();
 			dialButton.disabled = false;
-		},3000);
+		},4000);
 	}
 }
 
