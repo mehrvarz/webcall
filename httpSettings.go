@@ -416,6 +416,11 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 }
 
 func httpDeleteContact(w http.ResponseWriter, r *http.Request, urlID string, calleeID string, cookie *http.Cookie, remoteAddr string) {
+//	if(cookie==nil) {
+//		fmt.Printf("# /deletecontact cookie==nil urlID=%s calleeID=%s\n",urlID,calleeID)
+//		return
+//	}
+	// calleeID from cookie, urlID from id= or /user/... or /button/...
 	if urlID=="" {
 		fmt.Printf("# /deletecontact urlID empty\n")
 		return

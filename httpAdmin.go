@@ -24,6 +24,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		bucketName := dbUserBucket
 		fmt.Fprintf(w,"/dumpuser dbName=%s bucketName=%s\n", dbMainName, bucketName)
 		db := kv.Db
+		unixTime := time.Now().Unix()
 		err := db.Update(func(tx *bolt.Tx) error {
 			b := tx.Bucket([]byte(bucketName))
 			if b==nil {
@@ -34,11 +35,22 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 				var dbUser DbUser
 				d := gob.NewDecoder(bytes.NewReader(v))
 				d.Decode(&dbUser)
-				fmt.Fprintf(w, "user %20s calls=%d p2p=%d/%d talk=%d\n",
+				lastActivity := dbUser.LastLogoffTime;
+				if dbUser.LastLoginTime > dbUser.LastLogoffTime {
+					lastActivity = dbUser.LastLoginTime
+				}
+				secsSinceLastActivity := "-"
+				if lastActivity > 0 {
+					secsSinceLastActivity = fmt.Sprintf("%d",unixTime-lastActivity)
+				}
+				fmt.Fprintf(w, "user %22s calls=%4d p2p=%4d/%4d talk=%4d %s %s %s\n",
 					k,
 					dbUser.CallCounter,
 					dbUser.LocalP2pCounter, dbUser.RemoteP2pCounter,
-					dbUser.ConnectedToPeerSecs)
+					dbUser.ConnectedToPeerSecs,
+					time.Unix(dbUser.LastLoginTime,0).Format("2006-01-02 15:04:05"),
+					time.Unix(dbUser.LastLogoffTime,0).Format("2006-01-02 15:04:05"),
+					secsSinceLastActivity)
 			}
 			return nil
 		})

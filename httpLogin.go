@@ -151,6 +151,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	var lenGlobalHubMap int64
 	serviceSecs := 0
 	globalID := ""
+	dbUserKey := ""
 
 	if strings.HasPrefix(urlID, "random") {
 		// ignore
@@ -232,7 +233,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		}
 
 		// pw accepted
-		dbUserKey := fmt.Sprintf("%s_%d", urlID, dbEntry.StartTime)
+		dbUserKey = fmt.Sprintf("%s_%d", urlID, dbEntry.StartTime)
 		err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 		if err != nil {
 			fmt.Printf("# /login error db=%s bucket=%s get key=%v err=%v\n",
@@ -319,6 +320,23 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 		fmt.Printf("exithub callee=%s wsID=%d %s %s\n",
 			globalID, wsClientID, comment, remoteAddrWithPort)
+
+		if dbUserKey!="" {
+			// feed LastLogoffTime
+			err := kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
+			if err != nil {
+				fmt.Printf("# exithub error db=%s bucket=%s get key=%v err=%v\n",
+					dbMainName, dbUserBucket, dbUserKey, err)
+			} else {
+				// store dbUser with modified LastLogoffTime
+				dbUser.LastLogoffTime = time.Now().Unix()
+				err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
+				if err!=nil {
+					fmt.Printf("# exithub error db=%s bucket=%s put key=%s err=%v\n",
+						dbMainName, dbUserBucket, urlID, err)
+				}
+			}
+		}
 
 		myHubMutex.Lock()
 		if hub != nil {
