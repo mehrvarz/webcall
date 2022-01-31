@@ -560,7 +560,7 @@ function calleeOnlineStatus(onlineStatus) {
 	}
 
 	// calleeOfflineAction: check if calleeID can be notified - random become callee
-	calleeOfflineAction();
+	calleeOfflineAction(onlineStatus);
 }
 
 function calleeOnlineAction(from) {
@@ -687,12 +687,23 @@ function loadJS(jsFile,callback) {
 	document.getElementsByTagName("head")[0].appendChild(script);
 }
 
-function calleeOfflineAction() {
+function calleeOfflineAction(onlineStatus) {
 	if(!singlebutton) {
 		// switch to callee-is-offline layout
 		gLog('calleeOfflineAction !singlebutton callee-is-offline');
 		calleeOnlineElement.style.display = "none";
 		calleeOfflineElement.style.display = "block";
+
+		if(onlineStatus=="notavailtemp") {
+			// callee offline temporarily
+			showStatus("Please wait...",-1);
+			setTimeout(function() {
+				showStatus("Trying to find "+calleeID+".<br>Please wait...",-1);
+				// TODO need busy bee
+				setTimeout(checkCalleeOnline,20000);
+			},600);
+			return;
+		}
 
 		// calleeID is currently offline - check if calleeID can be notified (via twitter msg)
 		let api = apiPath+"/canbenotified?id="+calleeID+"&callerId="+callerId+"&name="+callerName;
@@ -706,7 +717,7 @@ function calleeOfflineAction() {
 				if(calleeName=="" || calleeName.length<3) {
 					calleeName = calleeID;
 				}
-				var msg = calleeName+" is currently not online.<br><br>"+
+				var msg = calleeName+" is currently not available.<br><br>"+
 					"We can try to get "+calleeName+" on the phone. Can you wait a few minutes while we try to establish a connection?<br><br><a onclick='confirmNotifyConnect()'>Yes, please try</a><br><br><a href='..'>No, I have to go</a>";
 				showStatus(msg,-1);
 				needToStoreMissedCall = calleeID+"|"+callerName+"|"+callerId;
@@ -716,7 +727,7 @@ function calleeOfflineAction() {
 				return;
 			}
 			// calleeID can NOT be notified
-			showStatus(calleeID+" is not online at this time. Please try again a little later.",-1);
+			showStatus(calleeID+" is not available at this time. Please try again a little later.",-1);
 		}, // xhr error
 			errorAction
 			// TODO errorAction will switch back; if we don't want this we shd handle err like in notifyConnect()

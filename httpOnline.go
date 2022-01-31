@@ -73,10 +73,12 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 				secsSinceLogoff = time.Now().Unix() - dbUser.LastLogoffTime
 			}
 		}
-		if(secsSinceLogoff>0 && secsSinceLogoff < 15*60) {
-			// TODO callee may come back any moment
-		}
 		fmt.Printf("/online callee %s is offline (for %d secs) rip=%s\n", urlID, secsSinceLogoff, remoteAddr)
+		if(secsSinceLogoff>0 && secsSinceLogoff < 15*60) {
+			// callee may come back very soon
+			fmt.Fprintf(w, "notavailtemp")
+			return
+		}
 		fmt.Fprintf(w, "notavail")
 		return
 	}
