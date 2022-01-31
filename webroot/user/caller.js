@@ -698,7 +698,7 @@ function calleeOfflineAction(onlineStatus) {
 			// callee offline temporarily
 			showStatus("Please wait...",-1);
 			setTimeout(function() {
-				showStatus("Trying to find "+calleeID+".<br>Please wait...",-1);
+				showStatus("Trying to find "+calleeID+"<br>Please wait...",-1);
 				// TODO need busy bee
 				setTimeout(checkCalleeOnline,20000);
 			},600);
