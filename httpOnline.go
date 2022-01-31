@@ -53,11 +53,32 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 	}
 	if glUrlID == "" {
 		// callee urlID is currently NOT online (this is not an error)
-		fmt.Printf("/online callee %s is cur NOT online rip=%s\n", urlID, remoteAddr)
+		// try to find out how long it has been offline
+		var secsSinceLogoff int64 = 0
+		var dbEntry DbEntry
+		err := kvMain.Get(dbRegisteredIDs, urlID, &dbEntry)
+		if err != nil {
+			fmt.Printf("# /online error db=%s get key=%v err=%v\n", dbRegisteredIDs, urlID, err)
+		} else {
+			dbUserKey := fmt.Sprintf("%s_%d", urlID, dbEntry.StartTime)
+			var dbUser DbUser
+			err := kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
+			if err != nil {
+				fmt.Printf("# /online error db=%s bucket=%s get key=%v err=%v\n",
+					dbMainName, dbUserBucket, dbUserKey, err)
+			} else {
+				// TODO use dbUser.LastLogoffTime to see how long it has been offline
+
+				nowTimeUnix := time.Now().Unix()
+				secsSinceLogoff = nowTimeUnix - dbUser.LastLoginTime
+			}
+		}
+		fmt.Printf("/online callee %s is offline (for %d secs) rip=%s\n", urlID, secsSinceLogoff, remoteAddr)
 		fmt.Fprintf(w, "notavail")
 		return
 	}
-/*
+
+/* this code can go
 	callerID := ""
 	url_arg_array, ok := r.URL.Query()["callerId"]
 	if ok && len(url_arg_array[0]) > 0 {

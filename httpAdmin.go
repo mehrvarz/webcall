@@ -24,7 +24,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		bucketName := dbUserBucket
 		printFunc(w,"/dumpuser dbName=%s bucketName=%s\n", dbMainName, bucketName)
 		db := kv.Db
-		unixTime := time.Now().Unix()
+		nowTimeUnix := time.Now().Unix()
 		err := db.Update(func(tx *bolt.Tx) error {
 			b := tx.Bucket([]byte(bucketName))
 			if b==nil {
@@ -41,7 +41,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 				}
 				secsSinceLastActivity := "-"
 				if lastActivity > 0 {
-					secsSinceLastActivity = fmt.Sprintf("%d",unixTime-lastActivity)
+					secsSinceLastActivity = fmt.Sprintf("%d",nowTimeUnix-lastActivity)
 				}
 				fmt.Fprintf(w, "user %22s calls=%4d p2p=%4d/%4d talk=%6d %s %s %s\n",
 					k,
