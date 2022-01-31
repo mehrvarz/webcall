@@ -22,7 +22,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 
 	if urlPath=="/dumpuser" {
 		bucketName := dbUserBucket
-		fmt.Fprintf(w,"/dumpuser dbName=%s bucketName=%s\n", dbMainName, bucketName)
+		printFunc(w,"/dumpuser dbName=%s bucketName=%s\n", dbMainName, bucketName)
 		db := kv.Db
 		unixTime := time.Now().Unix()
 		err := db.Update(func(tx *bolt.Tx) error {
@@ -43,7 +43,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 				if lastActivity > 0 {
 					secsSinceLastActivity = fmt.Sprintf("%d",unixTime-lastActivity)
 				}
-				fmt.Fprintf(w, "user %22s calls=%4d p2p=%4d/%4d talk=%4d %s %s %s\n",
+				fmt.Fprintf(w, "user %22s calls=%4d p2p=%4d/%4d talk=%6d %s %s %s\n",
 					k,
 					dbUser.CallCounter,
 					dbUser.LocalP2pCounter, dbUser.RemoteP2pCounter,
@@ -65,7 +65,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 	if urlPath=="/dumpregistered" {
 		// show the list of callee-IDs that have been registered and are not yet outdated
 		bucketName := dbRegisteredIDs
-		fmt.Fprintf(w,"/dumpregistered dbName=%s bucketName=%s\n", dbMainName, bucketName)
+		printFunc(w,"/dumpregistered dbName=%s bucketName=%s\n", dbMainName, bucketName)
 		db := kv.Db
 		err := db.Update(func(tx *bolt.Tx) error {
 			b := tx.Bucket([]byte(bucketName))
@@ -90,7 +90,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 	if urlPath=="/dumpblocked" {
 		// show the list of callee-IDs that are blocked (for various reasons)
 		bucketName := dbBlockedIDs
-		fmt.Fprintf(w,"/dumpblocked dbName=%s bucketName=%s\n", dbMainName, bucketName)
+		printFunc(w,"/dumpblocked dbName=%s bucketName=%s\n", dbMainName, bucketName)
 		db := kv.Db
 		err := db.Update(func(tx *bolt.Tx) error {
 			b := tx.Bucket([]byte(bucketName))
