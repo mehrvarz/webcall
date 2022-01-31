@@ -45,12 +45,14 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		fmt.Fprintf(w, "error")
 		return
 	}
+/*
 	if locHub == nil && globHub == nil {
 		// unknown urlID
 		fmt.Printf("/online callee(%s/%s) not online rip=%s\n", urlID, glUrlID, remoteAddr)
 		fmt.Fprintf(w, "unknown")
 		return
 	}
+*/
 	if glUrlID == "" {
 		// callee urlID is currently NOT online (this is not an error)
 		// try to find out how long it has been offline
