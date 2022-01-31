@@ -72,6 +72,7 @@ var fileSendAbort=false;
 var fileReceiveAbort=false;
 var needToStoreMissedCall="";
 var missedCallTime=0;
+var haveBeenWaitingForCalleeOnline=false;
 
 var extMessage = function(e) {
 	var data = e.data.split(':')
@@ -211,6 +212,7 @@ window.onload = function() {
 }
 
 function onload2(checkFlag) {
+	haveBeenWaitingForCalleeOnline=false;
 	checkServerMode(function(mode) {
 		if(mode==0) {
 			// normal mode
@@ -564,7 +566,7 @@ function calleeOnlineStatus(onlineStatus) {
 }
 
 function calleeOnlineAction(from) {
-	gLog('calleeOnlineAction from/dialAfterCalleeOnline',from,dialAfterCalleeOnline);
+	gLog('calleeOnlineAction from='+from+' dialAfterCalleeOnline='+dialAfterCalleeOnline);
 	if(!busySignalSound) {
 		gLog('loading audio files');
 		busySignalSound = new Audio('busy-signal.mp3');
@@ -572,6 +574,11 @@ function calleeOnlineAction(from) {
 		if(playDialSounds) {
 			dtmfDialingSound = new Audio('dtmf-dial.mp3');
 		}
+	}
+
+	if(haveBeenWaitingForCalleeOnline && notificationSound) {
+		haveBeenWaitingForCalleeOnline = false;
+		notificationSound.play().catch(function(error) { });
 	}
 
 	// switch to callee-is-online layout (call and hangupButton)
@@ -696,6 +703,7 @@ function calleeOfflineAction(onlineStatus) {
 
 		if(onlineStatus=="notavailtemp") {
 			// callee offline temporarily
+			haveBeenWaitingForCalleeOnline=true;
 			setTimeout(function() {
 				showStatus("Trying to find "+calleeID+". Please wait...<br><br><img src='preloader-circles.svg' style='width:40%;max-height:120px;'>",-1);
 				setTimeout(checkCalleeOnline,20000);
