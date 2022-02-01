@@ -292,7 +292,8 @@ function videoOn() {
 		}
 	}
 
-	localVideoFrame.volume = 0; // avoid audio feedback
+	localVideoFrame.volume = 0; // avoid audio feedback / listening to own mic
+	localVideoFrame.muted = 0;
 
 	// start localVideoFrame playback, setup the localVideo pane buttons
 	vmonitor();

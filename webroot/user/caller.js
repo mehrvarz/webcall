@@ -336,7 +336,8 @@ function videoOn() {
 	}
 
 	// activate localStream in localVideoFrame
-	localVideoFrame.volume = 0; // avoid audio feedback
+	localVideoFrame.volume = 0; // avoid audio feedback / listening to own mic
+	localVideoFrame.muted = 0;
 
 	// switch avSelect.selectedIndex to 1st video option
 	getStream().then(() => navigator.mediaDevices.enumerateDevices()).then((deviceInfos) => {
