@@ -289,7 +289,7 @@ function onload2(checkFlag) {
 
 function dialButtonClick() {
 	gLog("dialButtonClick");
-	document.activeElement.blur();
+//	document.activeElement.blur();	// TODO doesn't work
 	showStatus(connectingText,-1);
 
 	rtcConnectStartDate = 0;
@@ -948,6 +948,7 @@ function errorAction(errString,errcode) {
 }
 
 function gotStream2() {
+	document.activeElement.blur();
 	if(dialAfterLocalStream) {
 		gLog("gotStream2 dialAfter connectSignaling()");
 		dialAfterLocalStream=false;
