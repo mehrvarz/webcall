@@ -73,6 +73,7 @@ var fileReceiveAbort=false;
 var needToStoreMissedCall="";
 var missedCallTime=0;
 var haveBeenWaitingForCalleeOnline=false;
+var lastOnlineStatus = "";
 
 var extMessage = function(e) {
 	var data = e.data.split(':')
@@ -511,6 +512,7 @@ function calleeOnlineStatus(onlineStatus,waitForCallee) {
 	// wsAddr should be something like "127.0.0.1:8071?wsid=4054932942"
 	if(onlineStatus!="" && onlineStatus.indexOf("wsid=")>=0) {
 		// callee is available/online
+		lastOnlineStatus = onlineStatus;
 		let tok = onlineStatus.split("|");
 		wsAddr = tok[0];
 
@@ -1956,8 +1958,10 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 		// a little time for callee to login
 		setTimeout(function() {
 			// show msgbox etc.
-			gLog('hangup checkCalleeOnline');
-			checkCalleeOnline(false);
+//			gLog('hangup checkCalleeOnline');
+//			checkCalleeOnline(false);
+			gLog('hangup -> calleeOnlineStatus');
+			calleeOnlineStatus(lastOnlineStatus,false);
 			dialButton.disabled = false;
 		},4000);
 	}
