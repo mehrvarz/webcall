@@ -1924,7 +1924,7 @@ function stopAllAudioEffects(comment) {
 
 var goOnlinePending = false;
 function endWebRtcSession(disconnectCaller,goOnlineAfter) {
-	gLog('endWebRtcSession',disconnectCaller,goOnlineAfter);
+	gLog('endWebRtcSession start '+disconnectCaller+" "+goOnlineAfter);
 	if(remoteVideoFrame) {
 		remoteVideoFrame.pause();
 		remoteVideoFrame.currentTime = 0;
@@ -1940,7 +1940,7 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 	if(autoPlaybackAudioSource) {
 		autoPlaybackAudioSource.disconnect();
 		if(autoPlaybackAudioSourceStarted) {
-			gLog("endWebRtcSession autoPlayback stop",autoPlaybackFile);
+			gLog("endWebRtcSession autoPlayback stop "+autoPlaybackFile);
 			autoPlaybackAudioSource.stop();
 			autoPlaybackAudioSourceStarted = false;
 		}

@@ -1759,7 +1759,7 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 	}
 	doneHangup = true;
 
-	gLog('hangup '+message, mustDisconnectCallee);
+	gLog('hangup msg='+message+' '+mustDisconnectCallee);
 	if(message!="") {
 		showStatus(message);
 	}
@@ -1933,7 +1933,12 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 				gLog('hangup peerCon.signalingState '+peerCon.signalingState);
 				peerCon = null;
 			}
+
+			if(typeof Android !== "undefined" && Android !== null) {
+				Android.peerDisConnect();
+			}
 		}
+
 		if(singlebutton) {
 			peerConCloseFunc();
 		} else {
