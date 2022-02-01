@@ -700,7 +700,7 @@ function loadJS(jsFile,callback) {
 function calleeOfflineAction(onlineStatus,waitForCallee) {
 	if(!singlebutton) {
 		// switch to callee-is-offline layout
-		gLog('calleeOfflineAction !singlebutton callee-is-offline');
+		gLog('calleeOfflineAction !singlebutton callee is not avail '+waitForCallee);
 		calleeOnlineElement.style.display = "none";
 		calleeOfflineElement.style.display = "block";
 
@@ -710,7 +710,8 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 				haveBeenWaitingForCalleeOnline=true;
 				setTimeout(function() {
 					showStatus("Trying to find "+calleeID+". Please wait...<br><br><img src='preloader-circles.svg' style='width:40%;max-height:120px;'>",-1);
-					setTimeout(checkCalleeOnline,20000);
+					gLog('delayed checkCalleeOnline in 20s...');
+					setTimeout(checkCalleeOnline,20000,true);
 				},600);
 				return;
 			}
