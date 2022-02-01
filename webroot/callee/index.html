@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" id="main">
 <head>
-<!-- WebCall Copyright 2021 timur.mobi. All rights reserved. -->
+<!-- WebCall Copyright 2022 timur.mobi. All rights reserved. -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1.0">
 <title>WebCall Callee</title>
@@ -38,15 +38,17 @@ button:active {
 	background-color: #02a;
 	outline:none;
 }
-button:hover {
-	background-color: #b82a68;
-	outline:none;
-}
 button[disabled] {
 	color:#aaa;
 }
-button[disabled]:hover {
-	background-color:#04c;
+@media (hover: hover) {
+	button:hover {
+		background-color: #b82a68;
+		outline:none;
+	}
+	button[disabled]:hover {
+		background-color:#04c;
+	}
 }
 
 .menuButton, menuButton:focus {
@@ -61,16 +63,18 @@ button[disabled]:hover {
 	background-color: #b82a68;
 	outline:none;
 }
-.menuButton:hover {
-	color:#ff0;
-	_background-color: #b82a68;
-	outline:none;
-}
 .menuButton[disabled] {
 	_color:#aaa;
 }
-.menuButton[disabled]:hover {
-	_background-color:#04c;
+@media (hover: hover) {
+	.menuButton:hover {
+		color:#ff0;
+		_background-color: #b82a68;
+		outline:none;
+	}
+	.menuButton[disabled]:hover {
+		_background-color:#04c;
+	}
 }
 .menulabel {
 	margin-left:16px; 
@@ -97,9 +101,11 @@ a, a:link, a:visited, a:active {
 	user-select:none;
 	cursor:pointer;
 }
-a:hover {
-    color:#fff;
-    text-decoration:underline;
+@media (hover: hover) {
+	a:hover {
+		color:#fff;
+		text-decoration:underline;
+	}
 }
 label {
     display:inline-block;
