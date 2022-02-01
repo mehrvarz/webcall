@@ -111,11 +111,12 @@ func (h *Hub) doBroadcast(message []byte) {
 	}
 }
 
-func (h *Hub) processTimeValues() {
+func (h *Hub) processTimeValues(comment string) {
 	if h.lastCallStartTime>0 {
 		h.CallDurationSecs = time.Now().Unix() - h.lastCallStartTime
 		if logWantedFor("hub") {
-			fmt.Printf("hub processTimeValues %d\n", h.CallDurationSecs)
+			fmt.Printf("hub processTimeValues %s %d %d %d\n", comment,
+				h.CallDurationSecs, time.Now().Unix(), h.lastCallStartTime)
 		}
 		if h.CallDurationSecs>0 {
 			numberOfCallsTodayMutex.Lock()
@@ -136,7 +137,7 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 		h.setDeadline(-1,"doUnregister "+comment)
 		h.HubMutex.Lock()
 		if h.lastCallStartTime>0 {
-			h.processTimeValues()
+			h.processTimeValues("doUnregister")
 			h.lastCallStartTime = 0
 			h.LocalP2p = false
 			h.RemoteP2p = false

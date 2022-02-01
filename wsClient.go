@@ -583,9 +583,11 @@ func (c *WsClient) receiveProcess(message []byte) {
 			return
 		}
 
-		//fmt.Printf("%s pickup online=%v peerCon=%v\n",
-		//	c.connType, c.isOnline.Get(), c.isConnectedToPeer.Get())
 		c.hub.lastCallStartTime = time.Now().Unix()
+		if logWantedFor("hub") {
+			fmt.Printf("%s pickup online=%v peerCon=%v starttime=%d\n",
+				c.connType, c.isOnline.Get(), c.isConnectedToPeer.Get(), c.hub.lastCallStartTime)
+		}
 
 		if c.hub.CallerClient!=nil {
 			// deliver "pickup" to the caller
@@ -742,6 +744,13 @@ func (c *WsClient) peerConHasEnded(comment string) {
 		fmt.Printf("%s peerDisconnect callee %s %d rip=%s (%s)\n",
 			c.connType, c.calleeID, c.hub.CallDurationSecs, c.RemoteAddr, comment)
 
+		c.hub.HubMutex.Lock()
+		if c.hub.lastCallStartTime>0 {
+			c.hub.processTimeValues("peerConHasEnded")
+			c.hub.lastCallStartTime = 0
+		}
+		c.hub.HubMutex.Unlock()
+
 		// add an entry to missed calls, but only if there was no mediaConnect
 		if(c.hub.CallDurationSecs<=0) {
 			var missedCallsSlice []CallerInfo
@@ -785,13 +794,6 @@ func (c *WsClient) peerConHasEnded(comment string) {
 			}
 		}
 	}
-
-	c.hub.HubMutex.Lock()
-	if c.hub.lastCallStartTime>0 {
-		c.hub.processTimeValues()
-		c.hub.lastCallStartTime = 0
-	}
-	c.hub.HubMutex.Unlock()
 
 	// clear callerIp from hub.ConnectedCallerIp
 	// we only need to do this for the caller
