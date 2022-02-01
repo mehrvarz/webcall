@@ -948,7 +948,6 @@ function errorAction(errString,errcode) {
 }
 
 function gotStream2() {
-	document.activeElement.blur();
 	if(dialAfterLocalStream) {
 		gLog("gotStream2 dialAfter connectSignaling()");
 		dialAfterLocalStream=false;
@@ -1965,6 +1964,7 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 			gLog('hangup -> calleeOnlineStatus');
 			calleeOnlineStatus(lastOnlineStatus,false);
 			dialButton.disabled = false;
+//			document.activeElement.blur();
 		},4000);
 	}
 }
