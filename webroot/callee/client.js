@@ -703,7 +703,8 @@ function iframeWindowClose() {
 	fullScreenOverlayElement.onclick = null;
 	iframeWindowOpenFlag = false;
 
-	if(iframeWindowOpenUrl.startsWith("/user/?callerId")) {
+//	if(iframeWindowOpenUrl.startsWith("/user/?callerId")) {
+	if(iframeWindowOpenUrl.indexOf("/user/")>=0 && iframeWindowOpenUrl.indexOf("?callerId=")>=0) {
 		if(typeof Android !== "undefined" && Android !== null) {
 			Android.peerDisConnect(); // will reset callInProgress and turn off proximity sensor
 		}
