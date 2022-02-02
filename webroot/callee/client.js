@@ -695,7 +695,7 @@ function iframeWindowOpen(url,addStyleString) {
 }
 
 function iframeWindowClose() {
-	gLog('iframeWindowClose');
+	gLog('iframeWindowClose '+iframeWindowOpenUrl);
 	containerElement.style.filter="";
 	iframeWindowElement.innerHTML = "";
 	iframeWindowElement.style.display = "none";
