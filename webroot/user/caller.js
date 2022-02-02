@@ -1205,6 +1205,14 @@ function signalingCommand(message) {
 		}
 
 		var enableRemoteStream = function(calleeCandidate) {
+			stopAllAudioEffects();
+
+			if(typeof Android !== "undefined" && Android !== null) {
+				// on smartphones this will disable speakerphone - tmtmtm
+				// so remote audio will be played back on earpiece (if available)
+				Android.peerConnect();
+			}
+
 			// on peer connect at least an audio stream should arrive
 			let micStatus = "";
 			if(singlebutton) {
@@ -1232,7 +1240,6 @@ function signalingCommand(message) {
 			}
 
 			mediaConnect = true;
-			stopAllAudioEffects();
 			if(localStream) {
 				const audioTracks = localStream.getAudioTracks();
 				audioTracks[0].enabled = true;
@@ -1241,11 +1248,6 @@ function signalingCommand(message) {
 				vsendButton.style.display = "inline-block";
 			}
 			mediaConnectStartDate = Date.now();
-			if(typeof Android !== "undefined" && Android !== null) {
-// TODO tmtmtm this is done too early; should be done after peerCon.ontrack unmute
-// bc we need to do speakerphone=false after that
-				Android.peerConnect();
-			}
 			needToStoreMissedCall = false;
 
 			if(fileselectLabel && isDataChlOpen()) {

@@ -1311,7 +1311,7 @@ function peerConOntrack(track, streams) {
 			}
 			gLog('peerCon.ontrack onunmute track.enabled: new remoteStream');
 			remoteVideoFrame.play().catch(function(error) { });
-//			setTimeout(function() {
+			setTimeout(function() {
 				if(remoteStream==null) {
 					remoteVideoFrame.srcObject = null;
 					remoteVideoHide();
@@ -1331,7 +1331,7 @@ function peerConOntrack(track, streams) {
 				} else {
 					remoteVideoHide();
 				}
-//			},500);
+			},500);
 		}
 	}
 };
