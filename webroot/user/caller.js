@@ -1204,14 +1204,32 @@ function signalingCommand(message) {
 			return
 		}
 
-		var enableRemoteStream = function(calleeCandidate) {
-			stopAllAudioEffects();
+		console.log('callee is answering call');
 
-			if(typeof Android !== "undefined" && Android !== null) {
-				// on smartphones this will disable speakerphone - tmtmtm
-				// so remote audio will be played back on earpiece (if available)
-				Android.peerConnect();
-			}
+		if(!localStream) {
+			console.warn("cmd pickup no localStream");
+			// I see this when I quickly re-dial while busy signal of last call is still playing
+			// TODO button may now continue to show "Connecting..."
+			// but connection is still established (at least when calling answ)
+			hangupWithBusySound(true,"pickup but no localStream");
+			return;
+		}
+
+		if(!singlebutton) {
+			// hide msgbox
+			msgbox.style.display = "none";
+		}
+
+		if(typeof Android !== "undefined" && Android !== null) {
+			// on smartphones this is supposed to disable speakerphone
+			// remote audio will be played back on earpiece (if available) instead of speakerphone
+			// will also disable screenorientlock
+			Android.peerConnect();
+		}
+
+		var enableRemoteStream = function(calleeCandidate) {
+			gLog('enableRemoteStream stopAllAudioEffects');
+			stopAllAudioEffects();
 
 			// on peer connect at least an audio stream should arrive
 			let micStatus = "";
@@ -1234,7 +1252,7 @@ function signalingCommand(message) {
 
 			if(remoteVideoFrame) {
 				// enable (un-mute) remoteStream
-				gLog('set remoteVideoFrame',remoteStream);
+				gLog('set remoteVideoFrame '+remoteStream);
 				remoteVideoFrame.srcObject = remoteStream;
 				remoteVideoFrame.play().catch(function(error) {	});
 			}
@@ -1270,28 +1288,13 @@ function signalingCommand(message) {
 			}
 		}
 
-		console.log('callee is answering call');
-
-		if(!singlebutton) {
-			msgbox.style.display = "none";
-		}
-
-		if(!localStream) {
-			console.warn("cmd pickup no localStream");
-			// I see this when I quickly re-dial while busy signal of last call is still playing
-			// TODO button may now continue to show "Connecting..."
-			// but connection is still established (at least when calling answ)
-			hangupWithBusySound(true,"pickup but no localStream");
-			return;
-		}
-
-		// we now wait up to 5x300ms for remoteStream before we continue with enableRemoteStream()
+		// we now wait up to 4x300ms for remoteStream before we continue with enableRemoteStream()
 		// remoteStream will arrive via: peerCon.ontrack onunmute
 		var waitLoopCount=0;
 		let waitForRemoteStreamFunc = function() {
-			gLog('waitForRemoteStreamFunc',remoteStream,waitLoopCount);
 			if(!remoteStream) {
 				waitLoopCount++;
+				gLog('waitForRemoteStreamFunc '+remoteStream+" "+waitLoopCount);
 				if(waitLoopCount<=4) {
 					setTimeout(waitForRemoteStreamFunc, 300);
 					return;
@@ -1320,13 +1323,13 @@ function signalingCommand(message) {
 	} else if(cmd=="sessionDuration") {
 		// longest possible duration
 		sessionDuration = parseInt(payload);
-		gLog('sessionDuration',sessionDuration);
+		gLog('sessionDuration '+sessionDuration);
 		if(sessionDuration>0 && mediaConnect && !isP2pCon() && !timerStartDate) {
 			startTimer(sessionDuration);
 		}
 	} else if(cmd=="ua") {
 		otherUA = payload;
-		gLog("otherUA",otherUA);
+		gLog("otherUA "+otherUA);
 
 	} else if(cmd=="rtcVideoOff") {
 		// remote video has ended
