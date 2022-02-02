@@ -1535,11 +1535,14 @@ function dial2() {
 			}
 			hangupWithBusySound(true,"Peer disconnected");
 			return;
-		} else if(peerCon.connectionState=="failed") {
+		}
+		if(peerCon.connectionState=="failed") {
 // TODO in some situation this strikes multiple times; but there is no point playing busySound multpl times
 			hangupWithBusySound(true,"Peer connection failed "+candidateResultString);
 			return;
-		} else if(peerCon.connectionState=="connecting") {
+		}
+
+		if(peerCon.connectionState=="connecting") {
 			// if we see this despite being mediaConnect already, it is caused by createDataChannel
 			if(!mediaConnect) {
 				showStatus(connectingText,-1);
@@ -1768,6 +1771,7 @@ function stopAllAudioEffects() {
 }
 
 function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
+	gLog('hangup');
 	dialing = false;
 	connectLocalVideo(true); // forceOff
 	if(fileselectLabel) {
