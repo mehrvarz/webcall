@@ -1057,7 +1057,6 @@ function connectSignaling(message,openedFunc) {
 		} else {
 			// it is common for the signaling server to disconnect the caller early
 			gLog('wsConn.onclose');
-			//showStatus("Disconnected from signaling server");
 			//stopAllAudioEffects();
 		}
 		wsConn = null;
@@ -1243,6 +1242,8 @@ function signalingCommand(message) {
 			}
 			mediaConnectStartDate = Date.now();
 			if(typeof Android !== "undefined" && Android !== null) {
+// TODO tmtmtm this is done too early; should be done after peerCon.ontrack unmute
+// bc we need to do speakerphone=false after that
 				Android.peerConnect();
 			}
 			needToStoreMissedCall = false;
@@ -1366,7 +1367,7 @@ function dial() {
 			let loop = 0;
 			var playDialSound = function() {
 				if(!wsConn || mediaConnect) {
-					console.log('abort DialSound');
+					console.log('playDialSound abort');
 					return;
 				}
 				gLog('DialSound play()');
