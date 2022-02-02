@@ -674,8 +674,16 @@ function iframeWindowOpen(url,addStyleString) {
 
 	fullScreenOverlayElement.style.display = "block";
 	fullScreenOverlayElement.onclick = function() {
-		gLog('fullScreenOverlayElement.onclick');
+		gLog('fullScreenOverlayElement.onclick '+url);
 		// TODO this should be not so easy if we are peer-connected
+		// note: service does not see this bc it is iframe internal
+		// TODO if we do this with a peer-connected caller, we need to tell Andr service that we are disconnected
+		// so it depends on url
+		if(url && url.indexOf("/user/")>=0) {
+			if(typeof Android !== "undefined" && Android !== null) {
+				Android.peerDisConnect();
+			}
+		}
 		history.back();
 	}
 
