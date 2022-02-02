@@ -448,7 +448,7 @@ function videoOff() {
 		}
 		if(rtcConnect) {
 			// if still peer connected, activate the selected audio device
-// TODO tmtmtm not sure this is really required
+// TODO tmtmtm not sure this is really needed
 			getStream();
 		}
 	}
@@ -616,13 +616,29 @@ function calleeOnlineAction(from) {
 			if(localStream) {
 				connectSignaling("",dial); 
 			} else {
-				gLog('calleeOnlineAction dialAfter');
+				gLog('callee is online dialAfterLocalStream');
 				dialAfterLocalStream = true;
+
+				if(typeof Android !== "undefined" && Android !== null) {
+					// on smartphones this will disable the speakerphone
+					// remote audio will be played back on earpiece (if available) instead of speakerphone
+					// will also disable screen orientation changes
+					Android.prepareDial();
+				}
+
 				getStream().then(() => navigator.mediaDevices.enumerateDevices()).then(gotDevices);
 				// also -> gotStream -> connectSignaling
 			}
 		} else {
 			// no autodial after we detected callee is online
+
+			if(typeof Android !== "undefined" && Android !== null) {
+				// on smartphones this will disable the speakerphone
+				// remote audio will be played back on earpiece (if available) instead of speakerphone
+				// will also disable screen orientation changes
+				Android.prepareDial();
+			}
+
 			getStream().then(() => navigator.mediaDevices.enumerateDevices()).then(gotDevices);
 
 			// so we display a message to prepare the caller hitting the call button manually
