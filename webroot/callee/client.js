@@ -569,7 +569,6 @@ function menuDialogOpen(menuDialog) {
 	fullScreenOverlayElement.style.display = "block";
 	fullScreenOverlayElement.onclick = function() {
 		gLog('fullScreenOverlayElement.onclick');
-		// TODO this should be not so easy if we are peer-connected
 		history.back();
 	}
 	containerElement.style.filter = "blur(0.8px) brightness(60%)";
@@ -675,6 +674,8 @@ function iframeWindowOpen(url,addStyleString) {
 
 	fullScreenOverlayElement.style.display = "block";
 	fullScreenOverlayElement.onclick = function() {
+		gLog('fullScreenOverlayElement.onclick');
+		// TODO this should be not so easy if we are peer-connected
 		history.back();
 	}
 
