@@ -768,20 +768,25 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 }
 
 function goodby() {
+	gLog('goodby');
 	if(needToStoreMissedCall) {
 		if(missedCallTime>0) {
 			let ageSecs = Math.floor((Date.now()-missedCallTime)/1000);
 			needToStoreMissedCall = needToStoreMissedCall+"|"+ageSecs;
 		}
-		gLog('goodby needToStoreMissedCall',needToStoreMissedCall);
+		gLog('goodby needToStoreMissedCall '+needToStoreMissedCall);
 		// tell server to store this as missed call
 		let api = apiPath+"/missedCall?id="+needToStoreMissedCall;
 		xhrTimeout = 3*1000;
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-			gLog('goodby /missedCall success',needToStoreMissedCall);
+			gLog('goodby /missedCall success '+needToStoreMissedCall);
 		}, function(errString,err) {
-			gLog('# goodby xhr error',errString);
+			gLog('# goodby xhr error '+errString);
 		});
+	}
+
+	if(typeof Android !== "undefined" && Android !== null) {
+		Android.peerDisConnect();
 	}
 }
 

@@ -679,11 +679,13 @@ function iframeWindowOpen(url,addStyleString) {
 		// note: service does not see this bc it is iframe internal
 		// TODO if we do this with a peer-connected caller, we need to tell Andr service that we are disconnected
 		// so it depends on url
+/*
 		if(url && url.indexOf("/user/")>=0) {
 			if(typeof Android !== "undefined" && Android !== null) {
 				Android.peerDisConnect();
 			}
 		}
+*/
 		history.back();
 	}
 
