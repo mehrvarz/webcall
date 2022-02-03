@@ -65,6 +65,10 @@ func locGetOnlineCallee(calleeID string, ejectOn1stFound bool, reportBusyCallee 
 			return key, hub, nil
 		}
 
+		// TODO not sure this is needed anymore; it is now taken care of in httoOnline.go
+		// see: "if locHub.IsCalleeHidden && locHub.IsUnHiddenForCallerAddr != remoteAddr"
+		// IF this is still needed, then only when reportHiddenCallee==false
+		// in any case I don't think this is doing any harm for now
 		if hub.IsUnHiddenForCallerAddr!="" && callerIpAddr == hub.IsUnHiddenForCallerAddr {
 			// found a fitting calleeID which is hidden, but is visible for this caller
 			if logWantedFor("searchhub") {
