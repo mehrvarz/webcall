@@ -92,8 +92,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 
 		if locHub.ConnectedCallerIp != "" {
 			// this callee (urlID/glUrlID) is online but currently busy
-			fmt.Printf("/online busy for (%s/%s) callerIp=(%s) rip=%s\n",
-				urlID, glUrlID, locHub.ConnectedCallerIp, remoteAddr)
+			fmt.Printf("/online busy (%s) callerIp=%s rip=%s\n", urlID, locHub.ConnectedCallerIp, remoteAddr)
 			fmt.Fprintf(w, "busy")
 			return
 		}
