@@ -323,8 +323,9 @@ func httpGetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 		fmt.Printf("# /getcontacts (%s) failed on json.Marshal err=%v\n", urlID, err)
 		return
 	}
-	// TODO make log conditional
-	fmt.Printf("/getcontacts (%s) send %d elements\n",calleeID,len(callerInfoMap))
+	if logWantedFor("contacts") {
+		fmt.Printf("/getcontacts (%s) send %d elements\n",calleeID,len(callerInfoMap))
+	}
 	fmt.Fprintf(w,string(jsonStr))
 	return
 }
@@ -345,7 +346,9 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 		contactID = url_arg_array[0]
 	}
 	if contactID=="" {
-		fmt.Printf("# /setcontact (%s) contactID from client is empty\n", calleeID)
+		if logWantedFor("contacts") {
+			fmt.Printf("/setcontact (%s) contactID from client is empty\n", calleeID)
+		}
 		return
 	}
 
@@ -371,7 +374,9 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 		return
 	}
 	if !dbUser.StoreContacts {
-		fmt.Printf("/setcontact (%s) !StoreContacts rip=%s\n", calleeID, remoteAddr)
+		if logWantedFor("contacts") {
+			fmt.Printf("/setcontact (%s) !StoreContacts rip=%s\n", calleeID, remoteAddr)
+		}
 		fmt.Fprintf(w,"ok")
 		return
 	}
@@ -384,15 +389,19 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 			return
 		}
 		// "key not found" is just an empty contacts list
-		fmt.Printf("/setcontact creating new contacts map\n")
+		if logWantedFor("contacts") {
+			fmt.Printf("/setcontact creating new contacts map\n")
+		}
 		callerInfoMap = make(map[string]string)
 	}
 
 	oldName,ok := callerInfoMap[contactID]
 	if ok && oldName!="" && oldName!="unknown" && oldName!="?" && name=="" {
 		// don't overwrite existing name with empty name
-		fmt.Printf("/setcontact (%s) contactID=%s already exists (%s)\n",
-			calleeID, contactID, oldName)
+		if logWantedFor("contacts") {
+			fmt.Printf("/setcontact (%s) contactID=%s already exists (%s)\n",
+				calleeID, contactID, oldName)
+		}
 		return
 	}
 
