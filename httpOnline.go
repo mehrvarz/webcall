@@ -57,7 +57,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 	if glUrlID == "" {
 		// callee urlID is currently NOT online (this is not an error)
 		// try to find out how long it has been offline
-fmt.Printf("/online (%s) glUrlID=empty locHub=%v globHub=%v\n", urlID, locHub!=nil, globHub!=nil)
+		//fmt.Printf("/online (%s) glUrlID=empty locHub=%v globHub=%v\n", urlID, locHub!=nil, globHub!=nil)
 		var secsSinceLogoff int64 = 0
 		var dbEntry DbEntry
 		err := kvMain.Get(dbRegisteredIDs, urlID, &dbEntry)
@@ -87,8 +87,8 @@ fmt.Printf("/online (%s) glUrlID=empty locHub=%v globHub=%v\n", urlID, locHub!=n
 
 	if locHub != nil {
 		// callee is managed by this server
-fmt.Printf("/online locHub.ConnectedCallerIp=%s locHub.CallerClient=%v\n",
-	locHub.ConnectedCallerIp,locHub.CallerClient!=nil)
+		//fmt.Printf("/online locHub.ConnectedCallerIp=%s locHub.CallerClient=%v\n",
+		//	locHub.ConnectedCallerIp,locHub.CallerClient!=nil)
 
 		if locHub.ConnectedCallerIp != "" {
 			// this callee (urlID/glUrlID) is online but currently busy
