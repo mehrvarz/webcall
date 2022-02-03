@@ -32,7 +32,8 @@ func locGetOnlineCallee(calleeID string, ejectOn1stFound bool, reportBusyCallee 
 		// found a fitting calleeID
 		hub := hubMap[key]
 		if logWantedFor("searchhub") {
-			fmt.Printf("GetOnlineCallee found id=%s key=(%s)\n", calleeID, key)
+			fmt.Printf("GetOnlineCallee found id=%s key=%s callerIP=%s hidden=%v\n", 
+				calleeID, key, hub.ConnectedCallerIp, hub.IsCalleeHidden)
 		}
 		if hub.ConnectedCallerIp!="" && hub.ConnectedCallerIp!=callerIpAddr {
 			if ejectOn1stFound {
