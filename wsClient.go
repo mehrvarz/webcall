@@ -458,9 +458,6 @@ func (c *WsClient) receiveProcess(message []byte) {
 	}
 
 	if cmd=="cancel" {
-		if logWantedFor("hub") {
-			fmt.Printf("%s cmd cancel -> peerConHasEnded()\n")
-		}
 		c.peerConHasEnded("cancel")
 		return
 	}
