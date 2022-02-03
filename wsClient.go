@@ -458,6 +458,9 @@ func (c *WsClient) receiveProcess(message []byte) {
 	}
 
 	if cmd=="cancel" {
+		if logWantedFor("hub") {
+			fmt.Printf("%s cmd cancel -> peerConHasEnded()\n")
+		}
 		c.peerConHasEnded("cancel")
 		return
 	}
@@ -797,19 +800,18 @@ func (c *WsClient) peerConHasEnded(comment string) {
 		}
 	}
 
+// TODO this is now called on ws-disconnect
 	// clear callerIp from hub.ConnectedCallerIp
 	// we only need to do this for the caller
 	if !c.isCallee {
+		if logWantedFor("hub") {
+			fmt.Printf("%s peerConHasEnded %s clear callerIpInHub (%s)\n", c.connType, c.calleeID, comment)
+		}
 		err := StoreCallerIpInHubMap(c.globalCalleeID, "", false)
 		if err!=nil {
 			// err "key not found": callee has already signed off - can be ignored
 			if strings.Index(err.Error(),"key not found")<0 {
-				fmt.Printf("# %s peerConHasEnded %s clear callerIpInHub err=%v\n",
-					c.connType, c.calleeID, err)
-			}
-		} else {
-			if logWantedFor("hub") {
-				fmt.Printf("%s peerConHasEnded %s clear callerIpInHub no err\n", c.connType, c.calleeID)
+				fmt.Printf("# %s peerConHasEnded %s clear callerIpInHub err=%v\n", c.connType, c.calleeID, err)
 			}
 		}
 	}
