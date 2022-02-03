@@ -18,8 +18,8 @@ func locGetOnlineCallee(calleeID string, ejectOn1stFound bool, reportBusyCallee 
 	defer hubMapMutex.RUnlock()
 
 	if logWantedFor("searchhub") {
-		fmt.Printf("GetOnlineCallee %s (%s) ejectOn1stFound=%v reportHiddenCallee=%v callerIpAddr=%s\n",
-			calleeID,comment,ejectOn1stFound,reportHiddenCallee,callerIpAddr)
+		fmt.Printf("GetOnlineCallee %s (%s) ejectOn1stFound=%v reportBusy=%v reportHidden=%v callerIpAddr=%s\n",
+			calleeID,comment,ejectOn1stFound,reportBusyCallee, reportHiddenCallee,callerIpAddr)
 	}
 	calleeIdPlusExcl := calleeID+"!"
 	count:=0

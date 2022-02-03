@@ -289,7 +289,6 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 		hub.CallerClient = client
 		hub.CallDurationSecs = 0
-//		hub.ConnectedCallerIp = RemoteAddr().String()
 
 		//we UNDO this call to StoreCallerIpInHubMap() in peerConHasEnded()
 		err := StoreCallerIpInHubMap(client.globalCalleeID,wsConn.RemoteAddr().String(), false)
@@ -753,6 +752,14 @@ func (c *WsClient) peerConHasEnded(comment string) {
 		}
 		c.hub.HubMutex.Unlock()
 
+		err := StoreCallerIpInHubMap(c.globalCalleeID, "", false)
+		if err!=nil {
+			// err "key not found": callee has already signed off - can be ignored
+			if strings.Index(err.Error(),"key not found")<0 {
+				fmt.Printf("# %s peerConHasEnded %s clear callerIpInHub err=%v\n", c.connType, c.calleeID, err)
+			}
+		}
+
 		// add an entry to missed calls, but only if there was no mediaConnect
 		if(c.hub.CallDurationSecs<=0) {
 			var missedCallsSlice []CallerInfo
@@ -796,8 +803,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 			}
 		}
 	}
-
-// TODO this is now called on ws-disconnect
+/*
 	// clear callerIp from hub.ConnectedCallerIp
 	// we only need to do this for the caller
 	if !c.isCallee {
@@ -812,6 +818,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 			}
 		}
 	}
+*/
 }
 
 func (c *WsClient) Close(reason string) {
