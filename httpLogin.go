@@ -53,9 +53,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		ejectOn1stFound := true
 		reportHiddenCallee := true
 		reportBusyCallee := true
-		occupy := false
 		key, _, _, err := GetOnlineCallee(urlID, ejectOn1stFound, reportBusyCallee, 
-			reportHiddenCallee, remoteAddr, occupy, "/login")
+			reportHiddenCallee, remoteAddr, "/login")
 		if err != nil {
 			fmt.Printf("# /login key=(%s) GetOnlineCallee() err=%v\n", key, err)
 		}
@@ -65,7 +64,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			time.Sleep(1000 * time.Millisecond)
 			// check again
 			key, _, _, err = GetOnlineCallee(urlID, ejectOn1stFound, reportBusyCallee, 
-				reportHiddenCallee, remoteAddr, occupy, "/login")
+				reportHiddenCallee, remoteAddr, "/login")
 			if err != nil {
 				fmt.Printf("# /login key=(%s) GetOnlineCallee() err=%v\n", key, err)
 			}

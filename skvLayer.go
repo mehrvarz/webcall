@@ -13,7 +13,7 @@ import (
 
 // GetOnlineCallee(ID) can tell us (with optional ejectOn1stFound yes/no):
 // "is calleeID online?", "is calleeID hidden online?", "is calleeID hidden online for my callerIpAddr?"
-func locGetOnlineCallee(calleeID string, ejectOn1stFound bool, reportBusyCallee bool, reportHiddenCallee bool, callerIpAddr string, occupy bool, comment string) (string,*Hub,error) { // actual calleeID, hostingServerIp
+func locGetOnlineCallee(calleeID string, ejectOn1stFound bool, reportBusyCallee bool, reportHiddenCallee bool, callerIpAddr string, comment string) (string,*Hub,error) { // actual calleeID, hostingServerIp
 	hubMapMutex.RLock()
 	defer hubMapMutex.RUnlock()
 
@@ -48,27 +48,24 @@ func locGetOnlineCallee(calleeID string, ejectOn1stFound bool, reportBusyCallee 
 
 		if !hub.IsCalleeHidden {
 			// found a fitting calleeID and it is free and not hidden
-			//fmt.Printf("GetOnlineCallee found callee %s is free + not hidden\n",key)
-			if occupy && hub.ConnectedCallerIp=="" {
-				hub.ConnectedCallerIp = "wait"
+			if logWantedFor("searchhub") {
+				fmt.Printf("GetOnlineCallee found callee %s is free + not hidden\n",key)
 			}
 			return key, hub, nil
 		}
 
 		if reportHiddenCallee {
 			// found a fitting calleeID and while this callee is hidden, we are asked to report it anyway
-			//fmt.Printf("GetOnlineCallee found callee %s is free + hidden\n",key)
-			if occupy && hub.ConnectedCallerIp=="" {
-				hub.ConnectedCallerIp = "wait"
+			if logWantedFor("searchhub") {
+				fmt.Printf("GetOnlineCallee found callee %s is free + hidden\n",key)
 			}
 			return key, hub, nil
 		}
 
 		if hub.IsUnHiddenForCallerAddr!="" && callerIpAddr == hub.IsUnHiddenForCallerAddr {
 			// found a fitting calleeID which is hidden, but is visible for this caller
-			//fmt.Printf("GetOnlineCallee found callee %s free + hidden + visible to caller\n",key)
-			if occupy && hub.ConnectedCallerIp=="" {
-				hub.ConnectedCallerIp = "wait"
+			if logWantedFor("searchhub") {
+				fmt.Printf("GetOnlineCallee found callee %s free + hidden + visible to caller\n",key)
 			}
 			return key, hub, nil
 		}

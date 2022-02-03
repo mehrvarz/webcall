@@ -7,9 +7,9 @@ func isLocalDb() bool {
 	return true
 }
 
-func GetOnlineCallee(calleeID string, ejectOn1stFound bool, reportBusyCallee bool, reportHiddenCallee bool, callerIpAddr string, occupy bool, comment string) (string,*Hub,*Hub,error) { // actual calleeID, hostingServerIp
+func GetOnlineCallee(calleeID string, ejectOn1stFound bool, reportBusyCallee bool, reportHiddenCallee bool, callerIpAddr string, /*occupy bool,*/ comment string) (string,*Hub,*Hub,error) { // actual calleeID, hostingServerIp
 	urlID, locHub, err := locGetOnlineCallee(calleeID, ejectOn1stFound, reportBusyCallee, reportHiddenCallee,
-		callerIpAddr, occupy, comment)
+		callerIpAddr, /*occupy,*/ comment)
 	return urlID, locHub, nil, err
 }
 
