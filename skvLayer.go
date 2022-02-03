@@ -25,13 +25,15 @@ func locGetOnlineCallee(calleeID string, ejectOn1stFound bool, reportBusyCallee 
 	count:=0
 	for key := range hubMap {
 		count++
+		// wenn nicht=calleeID && fängt auch nicht mit calleeID! an, dann weitersuchen
 		if key!=calleeID && !strings.HasPrefix(key,calleeIdPlusExcl) {
 			continue
 		}
 		// found a fitting calleeID
-		//fmt.Printf("GetOnlineCallee id=%s ejectOn1st=%v reportHiddenCallee=%v key=(%s)\n",
-		//	calleeID, ejectOn1stFound, reportHiddenCallee, key)
 		hub := hubMap[key]
+		if logWantedFor("searchhub") {
+			fmt.Printf("GetOnlineCallee found id=%s key=(%s)\n", calleeID, key)
+		}
 		if hub.ConnectedCallerIp!="" && hub.ConnectedCallerIp!=callerIpAddr {
 			if ejectOn1stFound {
 				// found a fitting calleeID but this callee is busy (with someone else)
