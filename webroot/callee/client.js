@@ -669,8 +669,11 @@ function iframeWindowOpen(url,addStyleString) {
 	fullScreenOverlayElement.style.display = "block";
 	fullScreenOverlayElement.onclick = function() {
 		gLog('fullScreenOverlayElement.onclick '+url);
-// TODO fullScreenOverlayElement.onclick should not invoke history.back() if client (caller) is peer-connected
-		history.back();
+		if(mediaConnect) {
+			gLog('iframe fullScreenOverlayElement.onclick ignored (no history.back)');
+		} else {
+			history.back();
+		}
 	}
 
 	containerElement.style.filter = "blur(0.8px) brightness(60%)";
