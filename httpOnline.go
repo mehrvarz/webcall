@@ -98,6 +98,14 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 */
 	if locHub != nil {
 		// callee is managed by this server
+		if locHub.ConnectedCallerIp != "" {
+			// this callee (urlID/glUrlID) is online but currently busy
+			fmt.Printf("/online busy for (%s/%s) callerIp=(%s) rip=%s\n",
+				urlID, glUrlID, locHub.ConnectedCallerIp, remoteAddr)
+			fmt.Fprintf(w, "busy")
+			return
+		}
+
 		locHub.HubMutex.RLock()
 		wsClientID := locHub.WsClientID
 		locHub.HubMutex.RUnlock()

@@ -297,6 +297,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				client.connType, client.globalCalleeID, err)
 		}
 	} else {
+		// this code should never be reached; 2nd caller should receive "busy" from /online
 		fmt.Printf("# %s CallerClient for %s/%s already set wsCliID=%d rip=%s\n",
 			client.connType, client.calleeID, client.globalCalleeID, wsClientID64, client.RemoteAddr)
 		//fmt.Printf("# %s existing CallerClient rip=%s ua=%s\n",

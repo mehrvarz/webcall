@@ -105,7 +105,7 @@ window.onload = function() {
 	}
 
 	window.onhashchange = hashchange;
-	window.onload = goodby;
+//	window.onload = goodby;
 	window.onbeforeunload = goodby;
 	needToStoreMissedCall = "";
 	missedCallTime = 0;
