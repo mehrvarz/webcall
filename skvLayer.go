@@ -13,7 +13,7 @@ import (
 
 // GetOnlineCallee(ID) can tell us (with optional ejectOn1stFound yes/no):
 // "is calleeID online?", "is calleeID hidden online?", "is calleeID hidden online for my callerIpAddr?"
-func locGetOnlineCallee(calleeID string, ejectOn1stFound bool, reportHiddenCallee bool, callerIpAddr string, occupy bool, comment string) (string,*Hub,error) { // actual calleeID, hostingServerIp
+func locGetOnlineCallee(calleeID string, ejectOn1stFound bool, reportBusyCallee bool, reportHiddenCallee bool, callerIpAddr string, occupy bool, comment string) (string,*Hub,error) { // actual calleeID, hostingServerIp
 	hubMapMutex.RLock()
 	defer hubMapMutex.RUnlock()
 
@@ -37,6 +37,9 @@ func locGetOnlineCallee(calleeID string, ejectOn1stFound bool, reportHiddenCalle
 				// found a fitting calleeID but this callee is busy (with someone else)
 				if logWantedFor("searchhub") {
 					fmt.Printf("GetOnlineCallee found callee %s busy with %s\n",key,hub.ConnectedCallerIp)
+				}
+				if reportBusyCallee {
+					return key, hub, nil
 				}
 				return "", nil, nil
 			}

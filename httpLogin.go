@@ -52,9 +52,10 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 //      and does not try to login again
 		ejectOn1stFound := true
 		reportHiddenCallee := true
+		reportBusyCallee := true
 		occupy := false
-		key, _, _, err := GetOnlineCallee(urlID, ejectOn1stFound, reportHiddenCallee,
-			remoteAddr, occupy, "/login")
+		key, _, _, err := GetOnlineCallee(urlID, ejectOn1stFound, reportBusyCallee, 
+			reportHiddenCallee, remoteAddr, occupy, "/login")
 		if err != nil {
 			fmt.Printf("# /login key=(%s) GetOnlineCallee() err=%v\n", key, err)
 		}
@@ -63,8 +64,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			// delay a bit to see if we receive a parallel exithub that might delete this key
 			time.Sleep(1000 * time.Millisecond)
 			// check again
-			key, _, _, err = GetOnlineCallee(urlID, ejectOn1stFound, reportHiddenCallee,
-				remoteAddr, occupy, "/login")
+			key, _, _, err = GetOnlineCallee(urlID, ejectOn1stFound, reportBusyCallee, 
+				reportHiddenCallee, remoteAddr, occupy, "/login")
 			if err != nil {
 				fmt.Printf("# /login key=(%s) GetOnlineCallee() err=%v\n", key, err)
 			}

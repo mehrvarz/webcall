@@ -83,9 +83,10 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	calleeIsHiddenOnline := false
 	ejectOn1stFound := true
 	reportHiddenCallee := true
+	reportBusyCallee := true
 	occupy := false
-	glUrlID, locHub, globHub, err := GetOnlineCallee(urlID, ejectOn1stFound, reportHiddenCallee,
-		remoteAddr, occupy, "/notifyCallee")
+	glUrlID, locHub, globHub, err := GetOnlineCallee(urlID, ejectOn1stFound, reportBusyCallee,
+		reportHiddenCallee, remoteAddr, occupy, "/notifyCallee")
 	if err != nil {
 		fmt.Printf("# /notifyCallee GetOnlineCallee() err=%v\n", err)
 		return
@@ -275,8 +276,8 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		// in the mean time callee may have gone offline (and is now back online)
 		// so we assume calleeWsClient invalid and re-obtain it
 		calleeWsClient = nil
-		glUrlID, _, _, err := GetOnlineCallee(urlID, ejectOn1stFound, reportHiddenCallee,
-			remoteAddr, occupy, "/notifyCallee")
+		glUrlID, _, _, err := GetOnlineCallee(urlID, ejectOn1stFound, reportBusyCallee, 
+			reportHiddenCallee, remoteAddr, occupy, "/notifyCallee")
 		if err != nil {
 			fmt.Printf("# /notifyCallee GetOnlineCallee() err=%v\n", err)
 			return
@@ -299,8 +300,8 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 					time.Sleep(60 * time.Second)
 					// in the mean time callee may have gone offline (and is now back online)
 					// this is why we check if callee is online now
-					glUrlID, _, _, err := GetOnlineCallee(urlID, ejectOn1stFound, reportHiddenCallee,
-						remoteAddr, occupy, "/notifyCallee")
+					glUrlID, _, _, err := GetOnlineCallee(urlID, ejectOn1stFound, reportBusyCallee,
+						reportHiddenCallee, remoteAddr, occupy, "/notifyCallee")
 					if err != nil {
 						return
 					}
@@ -329,8 +330,8 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		calleeWsClient = nil
 		fmt.Printf("/notifyCallee (%s) caller disconnected\n", urlID)
 		callerGaveUp = true
-		glUrlID, _, _, err := GetOnlineCallee(urlID, ejectOn1stFound, reportHiddenCallee,
-			remoteAddr, occupy, "/notifyCallee")
+		glUrlID, _, _, err := GetOnlineCallee(urlID, ejectOn1stFound, reportBusyCallee, 
+			reportHiddenCallee, remoteAddr, occupy, "/notifyCallee")
 		if err != nil {
 			fmt.Printf("# /notifyCallee GetOnlineCallee() id=%s/%s err=%v\n", urlID, glUrlID, err)
 		} else if glUrlID == "" {
@@ -484,9 +485,10 @@ func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, r
 		calleeIsHiddenOnline := false
 		ejectOn1stFound := true
 		reportHiddenCallee := true
+		reportBusyCallee := false
 		occupy := false
-		glCalleeId, locHub, globHub, err := GetOnlineCallee(calleeId, ejectOn1stFound, reportHiddenCallee,
-			remoteAddr, occupy, "/httpMissedCall")
+		glCalleeId, locHub, globHub, err := GetOnlineCallee(calleeId, ejectOn1stFound, reportBusyCallee,
+			reportHiddenCallee, remoteAddr, occupy, "/httpMissedCall")
 		if err != nil {
 			//fmt.Printf("# /httpMissedCall GetOnlineCallee() err=%v\n", err)
 			return
@@ -576,9 +578,10 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 	calleeIsHiddenOnline := false
 	ejectOn1stFound := true
 	reportHiddenCallee := true
+	reportBusyCallee := true
 	occupy := false
-	glUrlID, locHub, globHub, err := GetOnlineCallee(urlID, ejectOn1stFound, reportHiddenCallee,
-		remoteAddr, occupy, "/canbenotified")
+	glUrlID, locHub, globHub, err := GetOnlineCallee(urlID, ejectOn1stFound, reportBusyCallee,
+		reportHiddenCallee, remoteAddr, occupy, "/canbenotified")
 	if err==nil && glUrlID != "" {
 		if (locHub!=nil && locHub.IsCalleeHidden) || (globHub!=nil && globHub.IsCalleeHidden) {
 			//fmt.Printf("/canbenotified (%s) isHiddenOnline\n", glUrlID)
