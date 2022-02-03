@@ -620,9 +620,7 @@ function calleeOnlineAction(from) {
 				dialAfterLocalStream = true;
 
 				if(typeof Android !== "undefined" && Android !== null) {
-					// on smartphones this will disable the speakerphone
 					// remote audio will be played back on earpiece (if available) instead of speakerphone
-					// will also disable screen orientation changes
 					Android.prepareDial();
 				}
 
@@ -633,9 +631,7 @@ function calleeOnlineAction(from) {
 			// no autodial after we detected callee is online
 
 			if(typeof Android !== "undefined" && Android !== null) {
-				// on smartphones this will disable the speakerphone
 				// remote audio will be played back on earpiece (if available) instead of speakerphone
-				// will also disable screen orientation changes
 				Android.prepareDial();
 			}
 
