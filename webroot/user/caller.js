@@ -289,7 +289,6 @@ function onload2(checkFlag) {
 
 function dialButtonClick() {
 	gLog("dialButtonClick");
-//	document.activeElement.blur();	// TODO doesn't work
 	showStatus(connectingText,-1);
 
 	rtcConnectStartDate = 0;
@@ -510,7 +509,7 @@ function calleeOnlineStatus(onlineStatus,waitForCallee) {
 		return;
 	}
 	gLog('calleeOnlineStatus '+onlineStatus);
-	// wsAddr should be something like "127.0.0.1:8071?wsid=4054932942"
+	// onlineStatus should be something like "127.0.0.1:8071?wsid=4054932942" (aka wsAddr)
 	if(onlineStatus!="" && onlineStatus.indexOf("wsid=")>=0) {
 		// callee is available/online
 		lastOnlineStatus = onlineStatus;

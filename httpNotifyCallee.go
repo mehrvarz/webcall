@@ -582,6 +582,10 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 	occupy := false
 	glUrlID, locHub, globHub, err := GetOnlineCallee(urlID, ejectOn1stFound, reportBusyCallee,
 		reportHiddenCallee, remoteAddr, occupy, "/canbenotified")
+	if logWantedFor("hub") {
+		fmt.Printf("/canbenotified (%s/%s) locHub=%v isHiddenOnline=%v/%v\n", urlID, glUrlID, locHub!=nil,
+			(locHub!=nil && locHub.IsCalleeHidden), (globHub!=nil && globHub.IsCalleeHidden))
+	}
 	if err==nil && glUrlID != "" {
 		if (locHub!=nil && locHub.IsCalleeHidden) || (globHub!=nil && globHub.IsCalleeHidden) {
 			//fmt.Printf("/canbenotified (%s) isHiddenOnline\n", glUrlID)
