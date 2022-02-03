@@ -26,7 +26,6 @@ var localStream = null;
 var remoteStream = null;
 var rtcConnect = false;
 var rtcConnectStartDate = 0;
-var mediaConnect = false;
 var mediaConnectStartDate = 0;
 var dataChannel = null;
 var dialAfterLocalStream = false;
