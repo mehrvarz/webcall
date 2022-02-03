@@ -136,6 +136,12 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			}
 		}
 	}
+	//if pw == "" {
+	//	url_arg_array, ok := r.URL.Query()["pw"]
+	//	if ok && len(url_arg_array[0]) > 0 {
+	//		pw = url_arg_array[0]
+	//	}
+	//}
 
 	// pw must be available now
 	if pw == "" {
