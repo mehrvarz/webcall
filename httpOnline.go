@@ -98,6 +98,9 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 */
 	if locHub != nil {
 		// callee is managed by this server
+fmt.Printf("/online locHub.ConnectedCallerIp=%s locHub.CallerClient=%v\n",
+	locHub.ConnectedCallerIp,locHub.CallerClient!=nil)
+
 		if locHub.ConnectedCallerIp != "" {
 			// this callee (urlID/glUrlID) is online but currently busy
 			fmt.Printf("/online busy for (%s/%s) callerIp=(%s) rip=%s\n",

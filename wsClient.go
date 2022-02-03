@@ -289,6 +289,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 		hub.CallerClient = client
 		hub.CallDurationSecs = 0
+//		hub.ConnectedCallerIp = RemoteAddr().String()
 
 		//we UNDO this call to StoreCallerIpInHubMap() in peerConHasEnded()
 		err := StoreCallerIpInHubMap(client.globalCalleeID,wsConn.RemoteAddr().String(), false)
