@@ -100,7 +100,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 			return
 		}
 
-		if locHub.IsCalleeHidden {
+		if locHub.IsCalleeHidden && locHub.IsUnHiddenForCallerAddr != remoteAddr {
 			fmt.Printf("/online (%s) notavail (hidden) rip=%s\n", urlID, remoteAddr)
 			fmt.Fprintf(w, "notavail")
 			return

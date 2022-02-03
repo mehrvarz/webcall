@@ -519,7 +519,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 		// payload = ip:port
 		callerAddrPort := payload
 		fmt.Printf("%s pickupWaitingCaller from %s (%s)\n", c.connType, c.RemoteAddr, callerAddrPort)
-		// this will end the standing xhr call by the caller in main.go
+		// this will end the frozen xhr call by the caller in httpNotifyCallee.go (see: case <-c)
 		waitingCallerChanMap[callerAddrPort] <- 1
 		return
 	}

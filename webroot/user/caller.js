@@ -734,7 +734,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 			xhrTimeout = 30*1000;
 			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 				if(xhr.responseText.startsWith("ok")) {
-					// calleeID can be notified (via twitter)
+					// calleeID can be notified (or is hidden)
 					// if caller is willing to wait, caller can invoke confirmNotifyConnect() to enter own name
 					calleeName = xhr.responseText.substring(3);
 					if(calleeName=="" || calleeName.length<3) {
@@ -790,7 +790,7 @@ var confirmValue = "";
 var confirmWord = "123";
 var confirmXhrNickname = false;
 function confirmNotifyConnect() {
-	// offer caller to enter own name and ask to confirm with a specific word ("yes")
+	// offer caller to enter a nickname + callerID and ask to enter confirmWord
 	// using a form with two text fields
 
 	// TODO change confirmWord ("123") randomly
@@ -901,6 +901,7 @@ function errorAction2(errString,err) {
 
 
 function confirmNotifyConnect2() {
+	// caller has entered nickname form - lets validate
 	callerName = document.getElementById("nickname").value;
 	callerId = document.getElementById("callerID").value;
 	confirmValue = document.getElementById("confirm").value;
@@ -931,6 +932,8 @@ function confirmNotifyConnect2() {
 }
 
 function notifyConnect(callerName,callerId) {
+	// nickname form was valid
+	// the next xhr will freeze until hidden callee accepts the call
 	showStatus("Trying to get "+calleeID+" on the phone now. Please wait...<br><br><img src='preloader-circles.svg' style='width:95%;max-height:450px;margin-top:-20%;'>",-1);
 	let api = apiPath+"/notifyCallee?id="+calleeID+"&callerId="+callerId+"&name="+callerName;
 	xhrTimeout = 600*1000; // 10 min extended xhr timeout

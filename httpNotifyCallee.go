@@ -268,12 +268,12 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	callerGaveUp := false
 	select {
 	case <-c:
-		// callee is allowing caller to connect
+		// callee is accepting this caller to call
 		// coming from callee.js: function pickupWaitingCaller(callerID)
 		//             client.go: if cmd=="pickupWaitingCaller"
 
 		// in the mean time callee may have gone offline (and is now back online)
-		// so we assume calleeWsClient invalid and re-obtain it
+		// so we assume calleeWsClient may be invalid and obtain it again
 		calleeWsClient = nil
 		glUrlID, _, _, err := GetOnlineCallee(urlID, ejectOn1stFound, reportBusyCallee, 
 			reportHiddenCallee, remoteAddr, "/notifyCallee")
