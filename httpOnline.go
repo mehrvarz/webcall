@@ -32,7 +32,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 	readConfigLock.RUnlock()
 
 	// we look for urlID either in the local or in the global hubmap
-	reportHiddenCallee := false
+	reportHiddenCallee := true
 	reportBusyCallee := true
 	if logWantedFor("online") {
 		fmt.Printf("/online urlID=%s rip=%s\n", urlID, remoteAddr)
@@ -95,8 +95,14 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 
 		if locHub.ConnectedCallerIp != "" {
 			// this callee (urlID/glUrlID) is online but currently busy
-			fmt.Printf("/online busy (%s) callerIp=%s rip=%s\n", urlID, locHub.ConnectedCallerIp, remoteAddr)
+			fmt.Printf("/online (%s) busy callerIp=%s rip=%s\n", urlID, locHub.ConnectedCallerIp, remoteAddr)
 			fmt.Fprintf(w, "busy")
+			return
+		}
+
+		if locHub.IsCalleeHidden {
+			fmt.Printf("/online (%s) notavail (hidden) rip=%s\n", urlID, remoteAddr)
+			fmt.Fprintf(w, "notavail")
 			return
 		}
 
@@ -138,6 +144,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		fmt.Fprintf(w, wsAddr)
 		return
 	}
+
 	if globHub != nil {
 		// callee is managed by a remote server
 		if globHub.ConnectedCallerIp != "" {
