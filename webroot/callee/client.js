@@ -672,6 +672,7 @@ function iframeWindowOpen(url,addStyleString) {
 		if(mediaConnect) {
 			gLog('iframe fullScreenOverlayElement.onclick ignored (no history.back)');
 		} else {
+			gLog('iframe fullScreenOverlayElement.onclick no mediaConnect -> history.back');
 			history.back();
 		}
 	}
