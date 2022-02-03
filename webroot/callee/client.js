@@ -37,6 +37,7 @@ var hashcounter=0;
 var dialing = false;
 var doneHangup = false;
 var onIceCandidates = 0;
+var mediaConnect = false;
 
 var ICE_config = {
 	"iceServers": [

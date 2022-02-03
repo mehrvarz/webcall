@@ -49,7 +49,6 @@ var remoteStream = null;
 var dataChannel = null;
 var rtcConnect = false
 var rtcConnectStartDate = 0;
-var mediaConnect = false;
 var mediaConnectStartDate = 0;
 var listOfClientIps = "";
 var callerID = "";
