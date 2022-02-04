@@ -1098,15 +1098,6 @@ function signalingCommand(message) {
 			console.warn('calleeAnswer abort no peerCon');
 			return;
 		}
-		if(onIceCandidates==0) {
-			onIceCandidates = -1;
-			console.warn('no ice candidates were created');
-			stopAllAudioEffects();
-			hangup(true,false,"no ice candidates were created"); // will call checkCalleeOnline()
-			showStatus("Cannot make calls. No WebRTC/ICE candidates were created.",-1);
-			notificationSound.play().catch(function(error) { });
-			return;
-		}
 
 		let hostDescription = JSON.parse(payload);
 		gLog("calleeAnswer setLocalDescription (onIceCandidates="+onIceCandidates+")");
@@ -1128,6 +1119,18 @@ function signalingCommand(message) {
 		// calleeOffer is being used when callee wants to deliver a config change
 		let hostDescription = JSON.parse(payload);
 		gLog('calleeOffer setRemoteDescription');
+
+		if(onIceCandidates==0) {
+			// check for bromite patch
+			onIceCandidates = -1;
+			console.warn('no ice candidates were created');
+			stopAllAudioEffects();
+			showStatus("Cannot make calls. No WebRTC/ICE candidates were created.",-1);
+			notificationSound.play().catch(function(error) { });
+			hangup(true,false,"no ice candidates were created"); // will call checkCalleeOnline()
+			return;
+		}
+
 		peerCon.setRemoteDescription(hostDescription).then(() => {
 			gLog('calleeOffer setRemoteDescription done');
 
