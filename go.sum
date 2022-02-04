@@ -28,6 +28,8 @@ github.com/mehrvarz/turn/v2 v2.0.10 h1:ye7e9IuPCgHhn0xXJ598SoR/SLSkIiZ+cm37rHul0
 github.com/mehrvarz/turn/v2 v2.0.10/go.mod h1:PMWy0GUzImOcZoqQ9DK1Xhr3JC/RuX00KY3Vs6UeLG8=
 github.com/mehrvarz/turn/v2 v2.0.11 h1:RT7XuwFm5Ae6e3qsM2RNb2h/3KPcj7ILiLvmPa08l0o=
 github.com/mehrvarz/turn/v2 v2.0.11/go.mod h1:PMWy0GUzImOcZoqQ9DK1Xhr3JC/RuX00KY3Vs6UeLG8=
+github.com/mehrvarz/turn/v2 v2.0.12 h1:KTur/T/SIKPLCvv0V/Ebnj9A5OfuOtifwKfC+vzJSbc=
+github.com/mehrvarz/turn/v2 v2.0.12/go.mod h1:PMWy0GUzImOcZoqQ9DK1Xhr3JC/RuX00KY3Vs6UeLG8=
 github.com/mrjones/oauth v0.0.0-20190623134757-126b35219450 h1:j2kD3MT1z4PXCiUllUJF9mWUESr9TWKS7iEKsQ/IipM=
 github.com/mrjones/oauth v0.0.0-20190623134757-126b35219450/go.mod h1:skjdDftzkFALcuGzYSklqYd8gvat6F1gZJ4YPVbkZpM=
 github.com/pion/logging v0.2.2 h1:M9+AIj/+pxNsDfAT64+MAVgJO0rsyLnoJKCqf//DoeY=
