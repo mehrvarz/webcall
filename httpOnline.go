@@ -89,7 +89,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 	if locHub != nil {
 		// callee is managed by this server
 		if logWantedFor("hub") {
-			fmt.Printf("/online (%s/%s) locHub ConnectedCallerIp=%s CallerClient=%v hidden=%v\n",
+			fmt.Printf("/online (%s/%s) locHub callerIp=%s Caller=%v hidden=%v\n",
 				urlID, glUrlID, locHub.ConnectedCallerIp, locHub.CallerClient!=nil, locHub.IsCalleeHidden)
 		}
 
@@ -137,9 +137,9 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		readConfigLock.RUnlock()
 		wsAddr = fmt.Sprintf("%s?wsid=%d", wsAddr, wsClientID)
 		if logWantedFor("wsAddr") {
-			fmt.Printf("/online callee=%s avail %s rip=%s\n", glUrlID, wsAddr, remoteAddr)
+			fmt.Printf("/online (%s) avail %s rip=%s\n", glUrlID, wsAddr, remoteAddr)
 		} else {
-			fmt.Printf("/online callee=%s avail rip=%s\n", glUrlID, remoteAddr)
+			fmt.Printf("/online (%s) avail rip=%s\n", glUrlID, remoteAddr)
 		}
 		fmt.Fprintf(w, wsAddr)
 		return

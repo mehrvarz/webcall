@@ -282,7 +282,8 @@ function videoOn() {
 	localVideoShow();
 
 	// enable local video
-	if(peerCon && rtcConnect && addLocalVideoEnabled && localStream.getTracks().length>=2 && !addedVideoTrack) {
+	if(peerCon && peerCon.iceConnectionState!="closed" &&
+			rtcConnect && addLocalVideoEnabled && localStream.getTracks().length>=2 && !addedVideoTrack) {
 		if(localCandidateType=="relay" || remoteCandidateType=="relay") {
 			gLog('videoOn no addTrack video on relayed con '+localCandidateType+' '+remoteCandidateType);
 		} else {
@@ -337,7 +338,7 @@ function videoOff() {
 
 	if(!rtcConnect) {
 		if(localStream) {
-			if(peerCon && addedAudioTrack) {
+			if(peerCon && peerCon.iceConnectionState!="closed" && addedAudioTrack) {
 				gLog("videoOff !rtcConnect peerCon.removeTrack(addedAudioTrack)");
 				peerCon.removeTrack(addedAudioTrack);
 				addedAudioTrack = null;
@@ -1947,7 +1948,7 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 		autoPlaybackAudioSource = null;
 	}
 
-	if(peerCon) {
+	if(peerCon && peerCon.iceConnectionState!="closed") {
 		let peerConCloseFunc = function() {
 			// rtcConnect && peerCon may be cleared by now
 			if(disconnectCaller) {
@@ -1968,7 +1969,7 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 				dataChannel.close();
 				dataChannel = null;
 			}
-			if(peerCon) {
+			if(peerCon && peerCon.iceConnectionState!="closed") {
 				gLog('endWebRtcSession peerConCloseFunc remove sender tracks');
 				const senders = peerCon.getSenders();
 				if(senders) {
@@ -1980,7 +1981,7 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 				}
 				gLog('endWebRtcSession peerCon.close');
 				peerCon.close();
-				peerCon = null;
+//				peerCon = null;
 				gLog('endWebRtcSession peerCon cleared');
 			}
 		};

@@ -586,8 +586,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 
 		c.hub.lastCallStartTime = time.Now().Unix()
 		if logWantedFor("hub") {
-			fmt.Printf("%s pickup online=%v peerCon=%v starttime=%d\n",
-				c.connType, c.isOnline.Get(), c.isConnectedToPeer.Get(), c.hub.lastCallStartTime)
+			fmt.Printf("%s (%s) pickup online=%v peerCon=%v starttime=%d\n",
+				c.connType, c.calleeID, c.isOnline.Get(), c.isConnectedToPeer.Get(), c.hub.lastCallStartTime)
 		}
 
 		if c.hub.CallerClient!=nil {
@@ -633,8 +633,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 		} else if c.hub==nil {
 			fmt.Printf("# %s peer c.hub==nil\n", c.connType)
 		} else {
-			fmt.Printf("%s peer %s %s (%s:%s)\n", c.connType, payload, c.calleeID,
-				c.hub.CallerClient.callerName, c.hub.CallerClient.callerID)
+			fmt.Printf("%s (%s) peer %s (%s:%s)\n", c.connType, c.calleeID, payload,
+				c.hub.CallerClient.callerID, c.hub.CallerClient.callerName)
 		}
 		tok := strings.Split(payload, " ")
 		if len(tok)>=3 {
@@ -676,8 +676,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 							}
 							if myDisconCallerOnPeerConnected {
 								if c.hub.CallerClient != nil {
-									fmt.Printf("%s disconnect caller rip=%s from callee %s\n",
-										c.connType, c.RemoteAddr, c.calleeID)
+									fmt.Printf("%s (%s) caller disconnect rip=%s\n",
+										c.connType, c.calleeID, c.RemoteAddr)
 									c.hub.CallerClient.Close("disconCallerOnPeerConnected")
 								}
 							}
@@ -748,7 +748,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 	// or bc callee has unregistered
 	c.hub.setDeadline(0,comment)
 	if c.isConnectedToPeer.Get() {
-		fmt.Printf("%s peerDisconnect callee %s %d rip=%s (%s)\n",
+		fmt.Printf("%s (%s) peer Disconnect secs=%d rip=%s (%s)\n",
 			c.connType, c.calleeID, c.hub.CallDurationSecs, c.RemoteAddr, comment)
 
 		c.hub.HubMutex.Lock()

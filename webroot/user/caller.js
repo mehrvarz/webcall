@@ -327,7 +327,8 @@ function videoOn() {
 	localVideoShow();
 
 	// add localStream video-track to peerCon
-	if(peerCon && rtcConnect && addLocalVideoEnabled && localStream.getTracks().length>=2 && !addedVideoTrack) {
+	if(peerCon && peerCon.iceConnectionState!="closed" && 
+			rtcConnect && addLocalVideoEnabled && localStream.getTracks().length>=2 && !addedVideoTrack) {
 		if(localCandidateType=="relay" || remoteCandidateType=="relay") {
 			gLog('videoOn no addTrack vid on relayed con (%s)(%s)',localCandidateType,remoteCandidateType);
 		} else {
@@ -382,7 +383,7 @@ function videoOff() {
 	if(!rtcConnect) {
 		if(localStream) {
 			// remove audio track from peerCon (stop streaming local audio)
-			if(peerCon && addedAudioTrack) {
+			if(peerCon && peerCon.iceConnectionState!="closed" && addedAudioTrack) {
 				gLog("videoOff !rtcConnect peerCon.removeTrack(addedAudioTrack)");
 				peerCon.removeTrack(addedAudioTrack);
 				addedAudioTrack = null;
@@ -1444,7 +1445,7 @@ function dial2() {
 					// no rtcConnect after 20s: give up dial-waiting
 					console.log("dialing timeout, giving up on call "+candidateResultString);
 					hangupWithBusySound(true,"Failed to connect "+candidateResultString);
-					if(onIceCandidates==0) {
+					if(onIceCandidates==0 && !doneHangup) {
 						onIceCandidates = -1;
 						console.warn('no ice candidates are being created');
 						showStatus("Cannot make calls. "+
@@ -1842,7 +1843,7 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 	}
 	remoteStream = null;
 
-	if(peerCon) {
+	if(peerCon && peerCon.iceConnectionState!="closed") {
 		if(addedAudioTrack) {
 			gLog("hangup peerCon.removeTrack(addedAudioTrack)");
 			peerCon.removeTrack(addedAudioTrack);
@@ -1896,13 +1897,13 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 	if(vsendButton)
 		vsendButton.classList.remove('blink_me')
 
-	if(peerCon) {
+	if(peerCon && peerCon.iceConnectionState!="closed") {
 		gLog('hangup peerCon');
 		let peerConCloseFunc = function() {
 			gLog('hangup peerConCloseFunc');
 			if(mustDisconnectCallee) {
 				let closePeerCon = function() {
-					if(peerCon) {
+					if(peerCon && peerCon.iceConnectionState!="closed") {
 						const senders = peerCon.getSenders();
 						if(senders) {
 							gLog('hangup peerCon.removeTrack senders '+senders.length);
@@ -1998,7 +1999,7 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 			gLog('hangup -> calleeOnlineStatus');
 			calleeOnlineStatus(lastOnlineStatus,false);
 			dialButton.disabled = false;
-		},4000);
+		},2000);
 	}
 }
 

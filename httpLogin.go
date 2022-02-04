@@ -307,7 +307,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		// exitFunc: callee is logging out: release hub and port of this session
 
 		if hub == nil {
-			fmt.Printf("exithub callee=%s wsID=%d hub already closed %s rip=%s\n",
+			fmt.Printf("exithub (%s) wsID=%d hub already closed %s rip=%s\n",
 				globalID, wsClientID, comment, remoteAddrWithPort)
 			return;
 		}
@@ -437,7 +437,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	//	fmt.Printf("/login wsAddr=%s\n",wsAddr)
 	//}
 
-	fmt.Printf("/login callee=%s wsID=%v reqtime=%v rip=%s\n",
+	fmt.Printf("/login (%s) wsID=%v reqtime=%v rip=%s\n",
 		urlID, wsClientID, time.Since(startRequestTime), remoteAddrWithPort)
 
 	responseString := fmt.Sprintf("%s|%d|%s|%d|%v",

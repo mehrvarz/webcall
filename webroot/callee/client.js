@@ -632,14 +632,15 @@ function onIceCandidate(event,myCandidateName) {
 		//console.warn('onIce skip event.candidate.address==null');
 	} else if(isDataChlOpen()) {
 		onIceCandidates++;
-		gLog("onIce "+myCandidateName+" dataChl "+event.candidate.address+" "+onIceCandidates);
+//		gLog("onIce "+myCandidateName+" dataChl "+event.candidate.address+" "+onIceCandidates);
+		gLog("onIce "+myCandidateName+" dataChl doneHangup="+doneHangup);
+
 		dataChannel.send("cmd|"+myCandidateName+"|"+JSON.stringify(event.candidate));
 	} else if(wsConn==null) {
 		gLog("onIce "+myCandidateName+": wsConn==null "+event.candidate.address+" "+onIceCandidates);
-// TODO wsConn.readyState==undefined
-//	} else if(wsConn.readyState!=1) {
-//		// supposed meaning: true = signaling server not connected
-//		gLog("onIce "+myCandidateName+" readyS!=1 "+event.candidate.address+" "+wsConn.readyState);
+	} else if(typeof wsConn.readyState !== "undefined" && wsConn.readyState!=1) {
+		// supposed meaning: true = signaling server not connected
+		gLog("onIce "+myCandidateName+" readyS!=1 "+event.candidate.address+" "+wsConn.readyState);
 	} else {
 		onIceCandidates++;
 		gLog("onIce "+myCandidateName+" wsSend "+event.candidate.address+" "+onIceCandidates);
@@ -783,11 +784,11 @@ function getStream(selectObject) {
 		allTracks.forEach(track => {
 			track.stop();
 		});
-		if(peerCon && addedAudioTrack) {
+		if(peerCon && peerCon.iceConnectionState!="closed" && addedAudioTrack) {
 			peerCon.removeTrack(addedAudioTrack);
 		}
 		addedAudioTrack = null;
-		if(peerCon && addedVideoTrack) {
+		if(peerCon && peerCon.iceConnectionState!="closed" && addedVideoTrack) {
 			peerCon.removeTrack(addedVideoTrack);
 		}
 		addedVideoTrack = null;
@@ -809,8 +810,10 @@ function getStream(selectObject) {
 		})
 		.catch(function(err) {
 			if(!videoEnabled) {
-				console.log('# audio input error', err.message);
-				alert("audio input error " + err.message);
+				console.log('# audio input error', err.message); // "Peer connection is closed"
+				if(!doneHangup) {
+					alert("audio input error " + err.message);
+				}
 			} else {
 				console.log('# audio/video error', err.message);
 				if(localVideoMsgElement) {
@@ -934,11 +937,11 @@ function gotStream(stream) {
 		allTracks.forEach(track => {
 			track.stop();
 		});
-		if(peerCon && addedAudioTrack) {
+		if(peerCon && peerCon.iceConnectionState!="closed" && addedAudioTrack) {
 			peerCon.removeTrack(addedAudioTrack);
 		}
 		addedAudioTrack = null;
-		if(peerCon && addedVideoTrack) {
+		if(peerCon && peerCon.iceConnectionState!="closed" && addedVideoTrack) {
 			peerCon.removeTrack(addedVideoTrack);
 		}
 		addedVideoTrack = null;
@@ -1422,7 +1425,7 @@ function dataChannelOnerror(event) {
 function hangupWithBusySound(mustDisconnectCallee,message) {
 	dialing = false;
 	stopAllAudioEffects();
-	if(peerCon) {
+	if(peerCon && peerCon.iceConnectionState!="closed") {
 		gLog(`hangupWithBusySound `+message);
 		busySignalSound.play().catch(function(error) { });
 		setTimeout(function() {

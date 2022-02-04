@@ -115,7 +115,7 @@ func (h *Hub) processTimeValues(comment string) {
 	if h.lastCallStartTime>0 {
 		h.CallDurationSecs = time.Now().Unix() - h.lastCallStartTime
 		if logWantedFor("hub") {
-			fmt.Printf("hub processTimeValues %s %d %d %d\n", comment,
+			fmt.Printf("hub (%s) timeValues %s sec=%d %d %d\n", h.CalleeClient.calleeID, comment,
 				h.CallDurationSecs, time.Now().Unix(), h.lastCallStartTime)
 		}
 		if h.CallDurationSecs>0 {
@@ -131,7 +131,7 @@ func (h *Hub) processTimeValues(comment string) {
 func (h *Hub) doUnregister(client *WsClient, comment string) {
 	if client.isCallee && !client.clearOnCloseDone {
 		if logWantedFor("hub") {
-			fmt.Printf("hub client unregister (%s) isCallee=%v (%s)\n",
+			fmt.Printf("hub (%s) client unregister isCallee=%v (%s)\n",
 				client.calleeID, client.isCallee, comment)
 		}
 		h.setDeadline(-1,"doUnregister "+comment)
