@@ -457,7 +457,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 	}
 
 	if cmd=="cancel" {
-		fmt.Printf("%s cmd=cancel payload=%s rip=%s\n",c.connType,payload,c.RemoteAddr)
+		//fmt.Printf("%s (%s) cmd=cancel payload=%s rip=%s\n",c.connType,c.calleeID,payload,c.RemoteAddr)
 		c.peerConHasEnded("cancel")
 		return
 	}
