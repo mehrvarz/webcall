@@ -95,6 +95,7 @@ window.addEventListener('message', extMessage, false);
 gLog("caller client extMessage now listening");
 
 window.onload = function() {
+	gLog("caller onload");
 	if(!navigator.mediaDevices) {
 		console.warn("navigator.mediaDevices not available");
 		goOnlineButton.disabled = true;
@@ -290,6 +291,8 @@ function dialButtonClick() {
 	gLog("dialButtonClick");
 	showStatus(connectingText,-1);
 
+	doneHangup = false;
+	onIceCandidates = 0;
 	rtcConnectStartDate = 0;
 	mediaConnectStartDate = 0;
 
@@ -933,7 +936,7 @@ function confirmNotifyConnect2() {
 function notifyConnect(callerName,callerId) {
 	// nickname form was valid
 	// the next xhr will freeze until hidden callee accepts the call
-	showStatus("Trying to get "+calleeID+" on the phone now. Please wait...<br><br><img src='preloader-circles.svg' style='width:95%;max-height:450px;margin-top:-20%;'>",-1);
+	showStatus("Trying to get "+calleeID+" on the phone. Please wait...<br><br><img src='preloader-circles.svg' style='width:95%;max-height:450px;margin-top:-20%;'>",-1);
 	let api = apiPath+"/notifyCallee?id="+calleeID+"&callerId="+callerId+"&name="+callerName;
 	xhrTimeout = 600*1000; // 10 min extended xhr timeout
 	console.log("notifyCallee api="+api+" timeout="+xhrTimeout);
@@ -1097,17 +1100,16 @@ function signalingCommand(message) {
 		}
 		if(onIceCandidates==0) {
 			onIceCandidates = -1;
-			console.warn('no ice candidates are being created');
+			console.warn('no ice candidates were created');
 			stopAllAudioEffects();
-			hangup(true,false,"no ice candidates created"); // will call checkCalleeOnline()
-			showStatus("Cannot make calls. "+
-					   "Your browser engine does not generate WebRTC/ICE candidates.",-1);
+			hangup(true,false,"no ice candidates were created"); // will call checkCalleeOnline()
+			showStatus("Cannot make calls. No WebRTC/ICE candidates were created.",-1);
 			notificationSound.play().catch(function(error) { });
 			return;
 		}
 
 		let hostDescription = JSON.parse(payload);
-		gLog("calleeAnswer setLocalDescription");
+		gLog("calleeAnswer setLocalDescription (onIceCandidates="+onIceCandidates+")");
 		// setLocalDescription will cause "onsignalingstate have-local-offer"
 		peerCon.setLocalDescription(localDescription).then(() => {
 			gLog('calleeAnswer setRemoteDescription');
@@ -1930,7 +1932,7 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 
 						gLog('hangup peerCon.close');
 						peerCon.close();
-						peerCon = null;
+// tmtmtm				peerCon = null;
 					}
 				}
 
@@ -1963,7 +1965,7 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 				gLog('hangup peerCon.close 2 '+calleeID);
 				peerCon.close();
 				gLog('hangup peerCon.signalingState '+peerCon.signalingState);
-				peerCon = null;
+//tmtmtm		peerCon = null;
 			}
 
 			if(typeof Android !== "undefined" && Android !== null) {
@@ -1993,7 +1995,6 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 			gLog('hangup -> calleeOnlineStatus');
 			calleeOnlineStatus(lastOnlineStatus,false);
 			dialButton.disabled = false;
-//			document.activeElement.blur();
 		},4000);
 	}
 }

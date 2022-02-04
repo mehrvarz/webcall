@@ -154,6 +154,11 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 	client.isConnectedToPeer.Set(false)
 
 	if client.isCallee {
+		if logWantedFor("hub") {
+			fmt.Printf("hub (%s) unregister callee peercon=%v (%s)\n",
+				client.calleeID, client.isConnectedToPeer.Get(), comment)
+		}
+
 		if h.CallerClient!=nil {
 			h.CallerClient.Close("unregister "+comment)
 			h.CallerClient.isConnectedToPeer.Set(false)
@@ -162,14 +167,15 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 		h.exitFunc(client,comment)
 		h.CalleeClient = nil
 	} else {
-		// wrong: clear caller peer-connection flag and callerIp in HubMap
-		// ws-connection has ended, not the peer connection
-		//client.peerConHasEnded("unregister "+comment)
-	}
+		if logWantedFor("hub") {
+			fmt.Printf("hub (%s) unregister caller peercon=%v (%s)\n",
+				client.calleeID, client.isConnectedToPeer.Get(), comment)
+		}
 
-	if logWantedFor("hub") {
-		fmt.Printf("hub client unregister done %s isCallee=%v %s\n",
-			client.calleeID, client.isCallee, comment)
+//TODO if there is no peer-con then this may be required (at least clearing CallerIp)
+//		if(client.isConnectedToPeer.Get()) {
+//			client.peerConHasEnded("unregister "+comment)
+//		}
 	}
 }
 

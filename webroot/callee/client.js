@@ -632,17 +632,17 @@ function onIceCandidate(event,myCandidateName) {
 		//console.warn('onIce skip event.candidate.address==null');
 	} else if(isDataChlOpen()) {
 		onIceCandidates++;
-		gLog("onIce "+myCandidateName+" via dataChannel "+event.candidate.address);
+		gLog("onIce "+myCandidateName+" dataChl "+event.candidate.address+" "+onIceCandidates);
 		dataChannel.send("cmd|"+myCandidateName+"|"+JSON.stringify(event.candidate));
 	} else if(wsConn==null) {
-		gLog("onIce "+myCandidateName+": wsConn==null "+event.candidate.address);
+		gLog("onIce "+myCandidateName+": wsConn==null "+event.candidate.address+" "+onIceCandidates);
 // TODO wsConn.readyState==undefined
 //	} else if(wsConn.readyState!=1) {
 //		// supposed meaning: true = signaling server not connected
 //		gLog("onIce "+myCandidateName+" readyS!=1 "+event.candidate.address+" "+wsConn.readyState);
 	} else {
 		onIceCandidates++;
-		gLog("onIce "+myCandidateName+" via wsSend "+event.candidate.address);
+		gLog("onIce "+myCandidateName+" wsSend "+event.candidate.address+" "+onIceCandidates);
 		// 300ms delay to prevent "cmd "+myCandidateName+" no peerCon.remoteDescription" on other side
 		setTimeout(function() {
 			// TODO support dataChannel delivery?
@@ -669,12 +669,15 @@ function iframeWindowOpen(url,addStyleString) {
 
 	fullScreenOverlayElement.style.display = "block";
 	fullScreenOverlayElement.onclick = function() {
-		gLog('fullScreenOverlayElement.onclick '+url);
-		if(window.frames[0].window.mediaConnect==true) {
-			gLog('iframe fullScreenOverlayElement.onclick ignored (no history.back)');
+		//gLog('fullScreenOverlayElement.onclick '+url);
+		let connect = false;
+		try {
+			connect = window.frames[0].window.mediaConnect;
+		} catch(ex) {}
+		if(connect==true) {
+			gLog('onclick fullScreenOverlayElement ignored (no history.back)');
 		} else {
-			gLog('iframe fullScreenOverlayElement.onclick no mediaConnect ('+
-				window.frames[0].window.mediaConnect+' -> history.back');
+			gLog('onclick fullScreenOverlayElement no mediaConnect ('+connect+') -> history.back');
 			history.back();
 		}
 	}
