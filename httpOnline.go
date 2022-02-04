@@ -95,9 +95,23 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 
 		if locHub.ConnectedCallerIp != "" {
 			// this callee (urlID/glUrlID) is online but currently busy
-			fmt.Printf("/online (%s) busy callerIp=%s rip=%s\n", urlID, locHub.ConnectedCallerIp, remoteAddr)
-			fmt.Fprintf(w, "busy")
-			return
+/*
+			fmt.Printf("/online (%s) busy... callerIp=%s rip=%s\n", urlID, locHub.ConnectedCallerIp, remoteAddr)
+			// before we return busy, lets wait up to 3 second
+			for i := 0; i < 50; i++ {
+				time.Sleep(100 * time.Millisecond)
+				// is hub.CalleeClient still online now?
+				if locHub!=nil && locHub.ConnectedCallerIp=="" {
+					// CalleeClient is not busy anymore
+					break
+				}
+			}
+			if locHub.ConnectedCallerIp != "" {
+*/
+				fmt.Printf("/online (%s) busy callerIp=%s rip=%s\n", urlID, locHub.ConnectedCallerIp, remoteAddr)
+				fmt.Fprintf(w, "busy")
+				return
+//			}
 		}
 
 		if locHub.IsCalleeHidden && locHub.IsUnHiddenForCallerAddr != remoteAddr {

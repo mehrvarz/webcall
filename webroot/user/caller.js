@@ -1991,15 +1991,13 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 	}
 
 	if(mustcheckCalleeOnline && !singlebutton) {
-		// a little time for callee to login
+		// it can take up to 3s for our call to get fully ended and cleared on server and callee side
 		setTimeout(function() {
-			// show msgbox etc.
-//			gLog('hangup checkCalleeOnline');
-//			checkCalleeOnline(false);
 			gLog('hangup -> calleeOnlineStatus');
+			// show msgbox etc.
 			calleeOnlineStatus(lastOnlineStatus,false);
 			dialButton.disabled = false;
-		},2000);
+		},3000);
 	}
 }
 
