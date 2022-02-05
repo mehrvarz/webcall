@@ -129,6 +129,7 @@ func (h *Hub) processTimeValues(comment string) {
 
 // doUnregister() disconnects the client; and if client==callee, calls exitFunc to deactivate hub + wsClientID
 func (h *Hub) doUnregister(client *WsClient, comment string) {
+/*
 	if client.isCallee && !client.clearOnCloseDone {
 		if logWantedFor("hub") {
 			fmt.Printf("hub (%s) unregister callee (%s)\n", client.calleeID, comment)
@@ -151,12 +152,28 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 	// NOTE if the client is still connected, calling Close() will cause nbio OnClose()
 	client.Close("unregister "+comment)
 	client.isConnectedToPeer.Set(false)
-
+*/
 	if client.isCallee {
 		if logWantedFor("hub") {
-			fmt.Printf("hub (%s) unregister callee peercon=%v (%s)\n",
-				client.calleeID, client.isConnectedToPeer.Get(), comment)
+			fmt.Printf("hub (%s) unregister callee peercon=%v clr=%v (%s)\n",
+				client.calleeID, client.isConnectedToPeer.Get(), client.clearOnCloseDone, comment)
 		}
+
+		if !client.clearOnCloseDone {
+			h.setDeadline(-1,"doUnregister "+comment)
+			h.HubMutex.Lock()
+			if h.lastCallStartTime>0 {
+				h.processTimeValues("doUnregister")
+				h.lastCallStartTime = 0
+				h.LocalP2p = false
+				h.RemoteP2p = false
+			}
+			h.HubMutex.Unlock()
+			client.clearOnCloseDone = true
+		}
+
+		client.Close("unregister "+comment)
+		client.isConnectedToPeer.Set(false)
 
 		if h.CallerClient!=nil {
 			h.CallerClient.Close("unregister "+comment)
@@ -170,6 +187,9 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 			fmt.Printf("hub (%s) unregister caller peercon=%v (%s)\n",
 				client.calleeID, client.isConnectedToPeer.Get(), comment)
 		}
+
+		client.Close("unregister "+comment)
+		client.isConnectedToPeer.Set(false)
 
 //TODO if there is no peer-con then this may be required (at least clearing CallerIp)
 //		if(client.isConnectedToPeer.Get()) {
