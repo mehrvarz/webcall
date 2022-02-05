@@ -131,8 +131,7 @@ func (h *Hub) processTimeValues(comment string) {
 func (h *Hub) doUnregister(client *WsClient, comment string) {
 	if client.isCallee && !client.clearOnCloseDone {
 		if logWantedFor("hub") {
-			fmt.Printf("hub (%s) client unregister isCallee=%v (%s)\n",
-				client.calleeID, client.isCallee, comment)
+			fmt.Printf("hub (%s) unregister callee (%s)\n", client.calleeID, comment)
 		}
 		h.setDeadline(-1,"doUnregister "+comment)
 		h.HubMutex.Lock()

@@ -319,27 +319,27 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		}
 		if reqWsClientID != wsClientID {
 			// not the same: deny deletion
-			fmt.Printf("exithub callee=%s abort wsID=%d/%d %s rip=%s\n",
+			fmt.Printf("exithub (%s) abort wsID=%d/%d %s rip=%s\n",
 				globalID, wsClientID, reqWsClientID, comment, remoteAddrWithPort)
 			return;
 		}
 
-		fmt.Printf("exithub callee=%s wsID=%d %s %s\n",
+		fmt.Printf("exithub (%s) wsID=%d %s %s\n",
 			globalID, wsClientID, comment, remoteAddrWithPort)
 
 		if dbUserKey!="" {
 			// feed LastLogoffTime
 			err := kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 			if err != nil {
-				fmt.Printf("# exithub error db=%s bucket=%s get key=%v err=%v\n",
-					dbMainName, dbUserBucket, dbUserKey, err)
+				fmt.Printf("# exithub (%s) error db=%s bucket=%s get key=%v err=%v\n",
+					globalID, dbMainName, dbUserBucket, dbUserKey, err)
 			} else {
 				// store dbUser with modified LastLogoffTime
 				dbUser.LastLogoffTime = time.Now().Unix()
 				err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
 				if err!=nil {
-					fmt.Printf("# exithub error db=%s bucket=%s put key=%s err=%v\n",
-						dbMainName, dbUserBucket, urlID, err)
+					fmt.Printf("# exithub (%s) error db=%s bucket=%s put key=%s err=%v\n",
+						globalID, dbMainName, dbUserBucket, urlID, err)
 				}
 			}
 		}
