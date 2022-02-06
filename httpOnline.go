@@ -63,7 +63,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		var dbEntry DbEntry
 		err := kvMain.Get(dbRegisteredIDs, urlID, &dbEntry)
 		if err != nil {
-			fmt.Printf("/online error db=%s get key=%v err=%v\n", dbRegisteredIDs, urlID, err)
+			fmt.Printf("/online (%s) error (%v)\n", urlID, err)
 		} else {
 			dbUserKey := fmt.Sprintf("%s_%d", urlID, dbEntry.StartTime)
 			var dbUser DbUser
