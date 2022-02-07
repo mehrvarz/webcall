@@ -15,7 +15,6 @@ package main
 import (
 	"net/http"
 	"fmt"
-//	"net/url"
 	"encoding/json"
 	"io"
 	"strconv"
@@ -54,7 +53,6 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		return
 	}
 
-//	calleeName := dbUser.Name
 	var reqBody []byte
 	readConfigLock.RLock() // for vapidPublicKey
 	reqBody, err = json.Marshal(map[string]string{
@@ -107,7 +105,6 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		fmt.Printf("# /setsettings (%s) failed on io.ReadFull body rip=%s\n",calleeID, remoteAddr)
 		return
 	}
-//	fmt.Printf("/setsettings (%s) body (%s) %d rip=%s\n", calleeID, data, len(data), remoteAddr)
 	fmt.Printf("/setsettings (%s) len=%d rip=%s\n", calleeID, len(data), remoteAddr)
 
 	var newSettingsMap map[string]string
@@ -155,7 +152,6 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 					fmt.Printf("/setsettings (%s) new storeContacts (%s) (old:%v)\n",
 						calleeID,val,dbUser.StoreContacts)
 					dbUser.StoreContacts = true
-// TODO it would be convenient to have this in wsClient for the callee
 				}
 			} else {
 				if dbUser.StoreContacts != false {
@@ -351,7 +347,6 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 		}
 		return
 	}
-
 
 	name := ""
 	url_arg_array, ok = r.URL.Query()["name"]

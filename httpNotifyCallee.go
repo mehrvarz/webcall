@@ -458,17 +458,7 @@ func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, r
 	//fmt.Printf("/httpMissedCall (%s) missedCall arrived %ds ago\n", calleeId, ageSecs64)
 	callerName := tok[1]
 	callerID := tok[2]
-/*
-	if callerName=="" {
-		if tok[1]=="" || tok[1]=="undefined" {
-			if tok[2]=="" || tok[2]=="undefined" {
-				callerName = "unknown"
-			} else {
-				callerName = tok[2] // use callerId instead
-			}
-		}
-	}
-*/
+
 	// the actual call occured ageSecs64 ago (may be a big number, if caller waits long before aborting the page)
 	timeOfCall := time.Now().Unix() - ageSecs64
 	caller := CallerInfo{remoteAddrWithPort,callerName,timeOfCall,callerID}

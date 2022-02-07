@@ -2116,8 +2116,11 @@ function openContacts() {
 	iframeWindowOpen(url);
 }
 
-function openDialId() {
+function openDialId(userId) {
 	let url = "/user/?callerId="+calleeID+"&name="+calleeName+"&i="+counter++;
+	if(userId) {
+		url = "/user/"+userId+"?callerId="+calleeID+"&name="+calleeName+"&i="+counter++;
+	}
 	gLog('openDialId',url);
 	iframeWindowOpen(url);
 // TODO when iframe is closed, we still need to call peerDisConnect()

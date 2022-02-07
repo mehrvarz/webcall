@@ -45,17 +45,9 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		fmt.Fprintf(w, "error")
 		return
 	}
-/*
-	if locHub == nil && globHub == nil {
-		// unknown urlID
-		fmt.Printf("/online callee(%s/%s) not online rip=%s\n", urlID, glUrlID, remoteAddr)
-		fmt.Fprintf(w, "unknown")
-		return
-	}
-*/
+
 	if glUrlID == "" {
-		// callee urlID is currently NOT online (this is not an error)
-		// try to find out how long it has been offline
+		// callee urlID is offline; try to find out how long
 		if logWantedFor("hub") {
 			fmt.Printf("/online (%s) glUrlID=empty locHub=%v globHub=%v\n", urlID, locHub!=nil, globHub!=nil)
 		}
@@ -97,23 +89,9 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 
 		if locHub.ConnectedCallerIp != "" {
 			// this callee (urlID/glUrlID) is online but currently busy
-/*
-			fmt.Printf("/online (%s) busy... callerIp=%s rip=%s\n", urlID, locHub.ConnectedCallerIp, remoteAddr)
-			// before we return busy, lets wait up to 3 second
-			for i := 0; i < 50; i++ {
-				time.Sleep(100 * time.Millisecond)
-				// is hub.CalleeClient still online now?
-				if locHub!=nil && locHub.ConnectedCallerIp=="" {
-					// CalleeClient is not busy anymore
-					break
-				}
-			}
-			if locHub.ConnectedCallerIp != "" {
-*/
-				fmt.Printf("/online (%s) busy callerIp=%s rip=%s\n", urlID, locHub.ConnectedCallerIp, remoteAddr)
-				fmt.Fprintf(w, "busy")
-				return
-//			}
+			fmt.Printf("/online (%s) busy callerIp=%s rip=%s\n", urlID, locHub.ConnectedCallerIp, remoteAddr)
+			fmt.Fprintf(w, "busy")
+			return
 		}
 
 		if locHub.IsCalleeHidden && locHub.IsUnHiddenForCallerAddr != remoteAddr {

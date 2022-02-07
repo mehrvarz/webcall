@@ -48,8 +48,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		// urlID is NOT a multiCallee user
 		// so if urlID is already logged-in, we must abort
 		// unless the request comes from the same IP, in which case we log the old session out
-// TODO however, we must also disconnect the old session so that the client disconnects
-//      and does not try to login again
 		ejectOn1stFound := true
 		reportHiddenCallee := true
 		reportBusyCallee := true
@@ -87,9 +85,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 						fmt.Printf("/login key=(%s) send ping to prev rip=%s\n", key, remoteAddr)
 					}
 					hub.CalleeClient.SendPing(2000)
-
-					// TODO we need a temporary array/map for the requests that are waiting here
-					// so we can prevent the same user from logging in again
 
 					// we wait max 22x100ms = 2200ms
 					for i := 0; i < 22; i++ {
@@ -135,12 +130,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			}
 		}
 	}
-	//if pw == "" {
-	//	url_arg_array, ok := r.URL.Query()["pw"]
-	//	if ok && len(url_arg_array[0]) > 0 {
-	//		pw = url_arg_array[0]
-	//	}
-	//}
 
 	// pw must be available now
 	if pw == "" {
@@ -204,32 +193,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			fmt.Fprintf(w, "notregistered")
 			return
 		}
-/*
-		// TODO check if id already online
-		reportHiddenCallee := true
-		occupy := false
-		ejectOn1stFound :=
-		glUrlID, locHub, globHub, err := GetOnlineCallee(urlID, ejectOn1stFound, reportHiddenCallee,
-			remoteAddr, occupy, "/online")
-		if err != nil {
-			// error
-			fmt.Printf("# /online GetOnlineCallee(%s/%s) err=%v rip=%s\n", urlID, glUrlID, err, remoteAddr)
-			fmt.Fprintf(w, "error")
-			return
-		}
-		if locHub == nil && globHub == nil {
-			// unknown urlID
-			fmt.Printf("/online callee(%s/%s) not online rip=%s\n", urlID, glUrlID, remoteAddr)
-			fmt.Fprintf(w, "unknown")
-			return
-		}
-		if glUrlID == "" {
-			// callee urlID is currently NOT online (this is not an error)
-			fmt.Printf("/online callee %s is cur NOT online rip=%s\n", urlID, remoteAddr)
-			fmt.Fprintf(w, "notavail")
-			return
-		}
-*/
 		if pw != dbEntry.Password {
 			fmt.Fprintf(os.Stderr, "/login fail id=%s wrong password rip=%s\n", urlID, remoteAddr)
 			// must delay to make guessing more difficult
@@ -353,46 +316,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		}
 		myHubMutex.Unlock()
 
-/*
-		// mark wsClientMap[wsClientID] for removal
-		wsClientMutex.Lock()
-		wsClientData,ok := wsClientMap[wsClientID]
-		if(ok) {
-			wsClientData.removeFlag = true
-			wsClientMap[wsClientID] = wsClientData
-		}
-		wsClientMutex.Unlock()
-		// start wsClientMap[wsClientID] removal thread
-		go func() {
-			time.Sleep(60 * time.Second)
-			wsClientMutex.Lock()
-			wsClientData,ok := wsClientMap[wsClientID]
-			if !ok {
-				wsClientMutex.Unlock()
-				fmt.Printf("exithub callee=%s wsClientMap[wsID=%d] fail rip=%s\n",
-					globalID, wsClientID, remoteAddrWithPort)
-
-			} else if wsClientData.removeFlag {
-				//fmt.Printf("exithub callee=%s wsClientMap[wsID=%d] del rip=%s\n",
-				//	globalID, wsClientID, remoteAddrWithPort)
-				delete(wsClientMap, wsClientID)
-				wsClientMutex.Unlock()
-
-			} else {
-				wsClientMutex.Unlock()
-				var err error
-                globalID,_,err = StoreCalleeInHubMap(urlID, myMultiCallees, remoteAddrWithPort, wsClientID, false)
-                if err != nil {
-                   fmt.Printf("exithub callee=%s wsClientMap[wsID=%d] undo err=%s rip=%s\n",
-                        globalID, wsClientID, err, remoteAddrWithPort)
-                } else {
-                    fmt.Printf("exithub callee=%s wsClientMap[wsID=%d] undo rip=%s\n",
-                        globalID, wsClientID, remoteAddrWithPort)
-                }
-			}
-		}()
-        //fmt.Printf("exithub callee=%s wsID=%d done rip=%s\n", globalID, wsClientID, remoteAddrWithPort)
-*/
         wsClientMutex.Lock()
         delete(wsClientMap, wsClientID)
         wsClientMutex.Unlock()
@@ -484,10 +407,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					break
 				}
 				myHubMutex.RUnlock()
-				//if i==0 {
-				//	fmt.Printf("/login checking callee id=%s for activiy in the next %ds...\n",
-				//		urlID, waitForClientWsConnectSecs)
-				//}
 			}
 			// hub.CalleeLogin will be set by callee-client sending "init|"
 			myHubMutex.RLock()
@@ -548,23 +467,5 @@ func createCookie(w http.ResponseWriter, urlID string, pw string, pwIdCombo *PwI
 
 	skipConfirm := true
 	return kvHashedPw.Put(dbHashedPwBucket, cookieValue, pwIdCombo, skipConfirm), cookieValue
-/*
-	if err != nil {
-		fmt.Printf("# /login persist PwIdCombo error db=%s bucket=%s cookie=%s err=%v\n",
-			dbHashedPwName, dbHashedPwBucket, cookieValue, err)
-		if globalID != "" {
-			_,lenGlobalHubMap = DeleteFromHubMap(globalID)
-		}
-		fmt.Fprintf(w, "noservice")
-		return
-	}
-
-	if logWantedFor("cookie") {
-		fmt.Printf("/login persisted PwIdCombo db=%s bucket=%s key=%s\n",
-			dbHashedPwName, dbHashedPwBucket, cookieValue)
-	}
-*/
-	//fmt.Printf("/login pwIdCombo stored time=%v\n",
-	//	time.Since(startRequestTime))
 }
 
