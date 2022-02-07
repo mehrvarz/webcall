@@ -302,8 +302,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 			cookie = nil
 		} else {
 			calleeIdFromCookie := cookie.Value[:idxAmpasent]
-// httpSettings() wants the calleeID from the cookie and not from the referrer
-//			if calleeID=="" {
+			// we prefere calleeID from cookie more than from referrer
 			if calleeIdFromCookie!="" {
 				calleeID = calleeIdFromCookie
 			}

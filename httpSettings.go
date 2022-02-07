@@ -300,8 +300,12 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 }
 
 func httpGetContacts(w http.ResponseWriter, r *http.Request, urlID string, calleeID string, cookie *http.Cookie, remoteAddr string) {
-	if urlID=="" {
-		fmt.Printf("# /getcontacts urlID empty\n")
+	if calleeID=="" {
+		fmt.Printf("# /getcontacts calleeID empty\n")
+		return
+	}
+	if cookie==nil {
+		fmt.Printf("# /getcontacts (%s) fail no cookie rip=%s\n", calleeID, remoteAddr)
 		return
 	}
 	if urlID!=calleeID {
@@ -316,7 +320,7 @@ func httpGetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 	}
 	jsonStr, err := json.Marshal(callerInfoMap)
 	if err != nil {
-		fmt.Printf("# /getcontacts (%s) failed on json.Marshal err=%v\n", urlID, err)
+		fmt.Printf("# /getcontacts (%s) failed on json.Marshal err=%v\n", calleeID, err)
 		return
 	}
 	if logWantedFor("contacts") {
@@ -329,6 +333,10 @@ func httpGetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calleeID string, cookie *http.Cookie, remoteAddr string) {
 	if urlID=="" || urlID=="undefined" {
 		//fmt.Printf("# /setcontact urlID empty\n")
+		return
+	}
+	if cookie==nil {
+		fmt.Printf("# /setcontact (%s) fail no cookie rip=%s\n", calleeID, remoteAddr)
 		return
 	}
 	if urlID!=calleeID {
@@ -420,13 +428,12 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 }
 
 func httpDeleteContact(w http.ResponseWriter, r *http.Request, urlID string, calleeID string, cookie *http.Cookie, remoteAddr string) {
-//	if(cookie==nil) {
-//		fmt.Printf("# /deletecontact cookie==nil urlID=%s calleeID=%s\n",urlID,calleeID)
-//		return
-//	}
-	// calleeID from cookie, urlID from id= or /user/... or /button/...
-	if urlID=="" {
-		fmt.Printf("# /deletecontact urlID empty\n")
+	if calleeID=="" {
+		fmt.Printf("# /deletecontact calleeID empty\n")
+		return
+	}
+	if(cookie==nil) {
+		fmt.Printf("# /deletecontact cookie==nil urlID=%s calleeID=%s\n",urlID,calleeID)
 		return
 	}
 	if urlID!=calleeID {
