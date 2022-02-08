@@ -612,9 +612,10 @@ function login(retryFlag) {
 			// loginStatus "fatal" = "already logged in" or "db.GetX err"
 			// no use offering pw entry again at this point
 			goOffline();
-			showStatus(	"Login failed. Already logged in from another device?<br>"+
-						"<br>Try <a onclick='window.location.reload(false)'>Reload</a>"+
-						" or go to the <a href='"+mainLink+"'>Main page</a>",-1);
+//			showStatus(	"Login failed. Already logged in from another device?<br>"+
+//						"<br>Try <a onclick='window.location.reload(false)'>Reload</a>"+
+//						" or go to the <a href='"+mainLink+"'>Main page</a>",-1);
+			showStatus(	"Login failed. Already logged in from another device?",-1);
 			form.style.display = "none";
 		} else {
 			showStatus("Unknown response: "+loginStatus,-1);
