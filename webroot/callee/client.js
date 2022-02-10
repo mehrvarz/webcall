@@ -1332,13 +1332,14 @@ function peerConOntrack(track, streams) {
 				gLog('peerCon.ontrack onIceCandidates='+onIceCandidates);
 				if(connectionstatechangeCounter<1) {
 					// tmtmtm this is a problem with bromite / no-webrtc patch
-					showStatus("Your browser engine does not generate WebRTC connection state changes",-1);
+					showStatus("WARNING: Your browser engine does not generate "+
+						"WebRTC connection state change events",-1);
 					notificationSound.play().catch(function(error) { });
-				} else if(onIceCandidates<1) {
+				} /*else if(onIceCandidates<1) {
 					// tmtmtm this is a problem with bromite / no-webrtc patch
 					showStatus("Your browser engine does not generate WebRTC/ICE candidates",-1);
 					notificationSound.play().catch(function(error) { });
-				}
+				}*/
 
 				let videoTracks = remoteStream.getVideoTracks();
 				gLog('peerCon.ontrack unmute track.enabled: delay vtracks',videoTracks.length);
