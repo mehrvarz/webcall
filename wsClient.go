@@ -289,13 +289,17 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 		hub.CallerClient = client
 		hub.CallDurationSecs = 0
-
+/*
 		//we UNDO this call to StoreCallerIpInHubMap() in peerConHasEnded()
+// TODO but when using a "bad" webview, we peerConHasEnded() will never be called
+//      good clients will call in a certain time
+// TODO if we don't see hub.CalleeClient.isConnectedToPeer.Get() very soon, we must undo this
 		err := StoreCallerIpInHubMap(client.globalCalleeID,wsConn.RemoteAddr().String(), false)
 		if err!=nil {
 			fmt.Printf("# %s StoreCallerIpInHubMap (%s) err=%v\n",
 				client.connType, client.globalCalleeID, err)
 		}
+*/
 	} else {
 		// this code should never be reached; 2nd caller should receive "busy" from /online
 		fmt.Printf("# %s CallerClient for %s/%s already set wsCliID=%d rip=%s\n",
@@ -658,6 +662,16 @@ func (c *WsClient) receiveProcess(message []byte) {
 					if !c.isCallee {
 						// when the caller sends "log", the callee also becomes peerConnected
 						c.hub.CalleeClient.isConnectedToPeer.Set(true)
+//tmtmtm
+						err := StoreCallerIpInHubMap(c.globalCalleeID,c.RemoteAddr, false)
+						if err!=nil {
+							fmt.Printf("# %s StoreCallerIpInHubMap (%s) err=%v\n",
+								c.connType, c.globalCalleeID, err)
+						} else {
+							fmt.Printf("%s StoreCallerIpInHubMap (%s) RemoteAddr=%s\n",
+								c.connType, c.globalCalleeID, c.RemoteAddr)
+						}
+
 
 						if strings.TrimSpace(tok[1])=="ConForce" {
 							// test-caller sends this msg to callee, test-clients do not really connect p2p
