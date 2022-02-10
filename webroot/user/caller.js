@@ -1103,6 +1103,7 @@ function signalingCommand(message) {
 		}
 
 		setTimeout(function() {
+			// rtcConnect timeout check
 			let warning = "";
 			if(onIceCandidates<1 && connectionstatechangeCounter<1) {
 				console.warn('no ice candidates, no connection state changes');
