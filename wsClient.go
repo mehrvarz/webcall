@@ -287,8 +287,22 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				client.connType, client.calleeID, wsClientID64, client.RemoteAddr)
 		}
 
-		hub.CallerClient = client
 		hub.CallDurationSecs = 0
+
+		hub.CallerClient = client
+
+		go func() {
+			// incoming caller gets killed if there is no peer connect after 5 sec
+			time.Sleep(5 * time.Second)
+			if hub!=nil && hub.CalleeClient!=nil && !hub.CalleeClient.isConnectedToPeer.Get() {
+				if hub.CallerClient!=nil {
+					hub.CallerClient = nil
+					fmt.Printf("%s killed con caller id=%s wsCliID=%d rip=%s\n",
+						client.connType, client.calleeID, wsClientID64, client.RemoteAddr)
+				}
+			}
+		}()
+
 /*
 		//we UNDO this call to StoreCallerIpInHubMap() in peerConHasEnded()
 // TODO but when using a "bad" webview, we peerConHasEnded() will never be called
@@ -662,7 +676,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 					if !c.isCallee {
 						// when the caller sends "log", the callee also becomes peerConnected
 						c.hub.CalleeClient.isConnectedToPeer.Set(true)
-//tmtmtm
+
 						err := StoreCallerIpInHubMap(c.globalCalleeID,c.RemoteAddr, false)
 						if err!=nil {
 							fmt.Printf("# %s StoreCallerIpInHubMap (%s) err=%v\n",
