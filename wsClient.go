@@ -297,7 +297,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			if hub!=nil && hub.CalleeClient!=nil && !hub.CalleeClient.isConnectedToPeer.Get() {
 				if hub.CallerClient!=nil {
 					hub.CallerClient = nil
-					fmt.Printf("%s killed con caller id=%s wsCliID=%d rip=%s\n",
+					fmt.Printf("%s killed caller id=%s wsCliID=%d rip=%s\n",
 						client.connType, client.calleeID, wsClientID64, client.RemoteAddr)
 				}
 			}
