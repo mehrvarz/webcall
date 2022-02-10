@@ -1557,8 +1557,9 @@ function goOnline() {
 	};
 	peerCon.onicecandidate = e => onIceCandidate(e,"calleeCandidate");
 	peerCon.onicecandidateerror = function(e) {
+		// don't warn on 701 (chrome "701 STUN allocate request timed out")
+		// 400 = bad request
 		if(e.errorCode==701) {
-			// don't warn on 701 (chrome "701 STUN allocate request timed out")
 			gLog("# peerCon onicecandidateerror", e.errorCode, e.errorText, e.url);
 		} else {
 			if(!gentle) console.warn("onicecandidateerror", e.errorCode, e.errorText, e.url);
