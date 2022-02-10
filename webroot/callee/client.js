@@ -1374,7 +1374,7 @@ function showStatus(msg,timeoutMs) {
 		}
 	}
 	if(!singlebutton) {
-		let sleepMs = 3000;
+		let sleepMs = 5000;
 		if(typeof timeoutMs!=="undefined") {
 			sleepMs = timeoutMs;
 		}
