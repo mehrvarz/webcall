@@ -73,6 +73,7 @@ var needToStoreMissedCall="";
 var missedCallTime=0;
 var haveBeenWaitingForCalleeOnline=false;
 var lastOnlineStatus = "";
+var connectionstatechangeCounter = 0;
 
 var extMessage = function(e) {
 	var data = e.data.split(':')
@@ -295,6 +296,7 @@ function dialButtonClick() {
 	onIceCandidates = 0;
 	rtcConnectStartDate = 0;
 	mediaConnectStartDate = 0;
+	connectionstatechangeCounter = 0;
 
 	if(singlebutton) {
 		// switch from dialButton to hangupButton "Connecting..."
@@ -1100,6 +1102,32 @@ function signalingCommand(message) {
 			return;
 		}
 
+		setTimeout(function() {
+			let warning = "";
+			if(onIceCandidates<1 && connectionstatechangeCounter<1) {
+				console.warn('no ice candidates, no connection state changes');
+				warning = "WARNING: no ICE candidates, no connection state changes";
+			} else if(onIceCandidates<1) {
+				console.warn('no ice candidates');
+				warning = "WARNING: no ICE candidates";
+			} else if(connectionstatechangeCounter<1) {
+				console.warn('no connection state changes');
+				warning = "WARNING: no connection state changes";
+			}
+			if(warning!="") {
+				stopAllAudioEffects();
+				notificationSound.play().catch(function(error) { });
+				showStatus(warning,-1);
+			}
+			if(!rtcConnect) {
+				// check for no-webrtc patch
+				// we could also check for no "peerCon connected" aka rtcConnect==false
+				hangup(true,false,"rtcConnect timeout "+warning); // will call checkCalleeOnline()
+			} else {
+				console.log('no rtcConnect timeout');
+			}
+		},6000);
+
 		let hostDescription = JSON.parse(payload);
 		gLog("calleeAnswer setLocalDescription (onIceCandidates="+onIceCandidates+")");
 		// setLocalDescription will cause "onsignalingstate have-local-offer"
@@ -1120,17 +1148,6 @@ function signalingCommand(message) {
 		// calleeOffer is being used when callee wants to deliver a config change
 		let hostDescription = JSON.parse(payload);
 		gLog('calleeOffer setRemoteDescription');
-
-		if(onIceCandidates==0) {
-			// check for bromite patch
-			onIceCandidates = -1;
-			console.warn('no ice candidates were created');
-			stopAllAudioEffects();
-			showStatus("Cannot make calls. No WebRTC/ICE candidates were created.",-1);
-			notificationSound.play().catch(function(error) { });
-			hangup(true,false,"no ice candidates were created"); // will call checkCalleeOnline()
-			return;
-		}
 
 		peerCon.setRemoteDescription(hostDescription).then(() => {
 			gLog('calleeOffer setRemoteDescription done');
@@ -1530,6 +1547,7 @@ function dial2() {
 		gLog("peerCon oniceconnectionstate "+peerCon.iceConnectionState);
 	}
 	peerCon.onconnectionstatechange = event => {
+		connectionstatechangeCounter++;
 		if(!peerCon) {
 			gLog("peerCon onconnectionstatechange !peerCon "+peerCon.connectionState);
 			hangupWithBusySound(true,"Peer disconnected");
