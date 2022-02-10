@@ -292,28 +292,17 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		hub.CallerClient = client
 
 		go func() {
-			// incoming caller gets killed if there is no peer connect after 5 sec
-			time.Sleep(5 * time.Second)
+			// incoming caller will get killed if there is no peer connect after 6 sec
+			time.Sleep(6 * time.Second)
 			if hub!=nil && hub.CalleeClient!=nil && !hub.CalleeClient.isConnectedToPeer.Get() {
 				if hub.CallerClient!=nil {
 					hub.CallerClient = nil
-					fmt.Printf("%s killed caller id=%s wsCliID=%d rip=%s\n",
+					fmt.Printf("%s rel caller id=%s wsCliID=%d rip=%s\n",
 						client.connType, client.calleeID, wsClientID64, client.RemoteAddr)
 				}
 			}
 		}()
 
-/*
-		//we UNDO this call to StoreCallerIpInHubMap() in peerConHasEnded()
-// TODO but when using a "bad" webview, we peerConHasEnded() will never be called
-//      good clients will call in a certain time
-// TODO if we don't see hub.CalleeClient.isConnectedToPeer.Get() very soon, we must undo this
-		err := StoreCallerIpInHubMap(client.globalCalleeID,wsConn.RemoteAddr().String(), false)
-		if err!=nil {
-			fmt.Printf("# %s StoreCallerIpInHubMap (%s) err=%v\n",
-				client.connType, client.globalCalleeID, err)
-		}
-*/
 	} else {
 		// this code should never be reached; 2nd caller should receive "busy" from /online
 		fmt.Printf("# %s CallerClient for %s/%s already set wsCliID=%d rip=%s\n",
