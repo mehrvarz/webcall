@@ -73,7 +73,6 @@ var needToStoreMissedCall="";
 var missedCallTime=0;
 var haveBeenWaitingForCalleeOnline=false;
 var lastOnlineStatus = "";
-var connectionstatechangeCounter = 0;
 
 var extMessage = function(e) {
 	var data = e.data.split(':')

@@ -38,6 +38,7 @@ var dialing = false;
 var doneHangup = false;
 var onIceCandidates = 0;
 var mediaConnect = false;
+var connectionstatechangeCounter = 0;
 
 var ICE_config = {
 	"iceServers": [
@@ -1326,13 +1327,16 @@ function peerConOntrack(track, streams) {
 					remoteVideoHide();
 					return;
 				}
+
+				gLog('peerCon.ontrack connectionstatechangeCounter='+connectionstatechangeCounter);
 				if(onIceCandidates<=0) {
 					// tmtmtm this is a problem with bromite system webview
-					gLog('peerCon.ontrack onIceCandidates',onIceCandidates);
+					gLog('peerCon.ontrack onIceCandidates='+onIceCandidates);
 					showStatus("Cannot receive calls. "+
 							   "Your browser engine does not generate WebRTC/ICE candidates.",-1);
 					notificationSound.play().catch(function(error) { });
 				}
+
 				let videoTracks = remoteStream.getVideoTracks();
 				gLog('peerCon.ontrack unmute track.enabled: delay vtracks',videoTracks.length);
 				if(videoTracks.length>0) {

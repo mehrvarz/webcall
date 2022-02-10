@@ -922,6 +922,7 @@ function signalingCommand(message) {
 		}
 		if(cmd=="callerOffer") {
 			gLog('callerOffer (incoming call)');
+			connectionstatechangeCounter=0;
 		} else {
 			gLog('callerOfferUpd (in-call)');
 		}
@@ -1604,6 +1605,7 @@ function goOnline() {
 		gLog("peerCon oniceconnectionstatechange", peerCon.iceConnectionState);
 	}
 	peerCon.onconnectionstatechange = event => {
+		connectionstatechangeCounter++;
 		gLog("peerCon connectionstatechange "+peerCon.connectionState);
 		if(!peerCon) {
 			hangup(true,true,"onconnectionstatechange no peercon");
