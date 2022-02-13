@@ -556,7 +556,7 @@ function login(retryFlag) {
 			}, function(errString,errcode) {
 				console.log('login xhr error',errString);
 			});
-
+/*
 			if(!pushRegistration) {
 				// we retrieve the pushRegistration here under /callee/(calleeID),
 				// so that the pushRegistration.scope will also be /callee/(calleeID)
@@ -573,6 +573,7 @@ function login(retryFlag) {
 					console.log("serviceWorker.ready err",err.message);
 				});
 			}
+*/
 			if(parts.length>=5 && parts[4]=="true") {
 				isHiddenCheckbox.checked = true;
 				autoanswerCheckbox.checked = false;
@@ -2162,13 +2163,13 @@ function exit() {
 		}, function(errString,err) {
 			console.log('exit xhr error',errString);
 		});
-
+/*
 		if(pushRegistration) {
 			gLog('exit delete serviceWorker');
 			pushRegistration.unregister();
 			pushRegistration = null;
 		}
-
+*/
 		setTimeout(function() {
 			gLog("exit reload");
 			window.location.reload(false);
