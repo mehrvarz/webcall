@@ -982,6 +982,7 @@ function signalingCommand(message) {
 			callerID = payload.substring(0,idxColon);
 			callerName = payload.substring(idxColon+1);
 			gLog('cmd callerInfo (%s) (%s)',callerID,callerName);
+			// callerID + callerName will be displayed via getStatsCandidateTypes()
 		} else {
 			gLog('cmd callerInfo payload=(%s)',payload);
 		}
@@ -1753,10 +1754,12 @@ function getStatsCandidateTypes(results,eventString1,eventString2) {
 
 	// we rather show callerID and/or callerName if they are avail, instead of listOfClientIps
 	if(callerName!="" || callerID!="") {
-		if(callerName.toLowerCase()==callerID.toLowerCase()) {
+		if(callerName=="") {
+			msg += " "+callerID;
+		} else if(callerName.toLowerCase()==callerID.toLowerCase()) {
 			msg += " "+callerName;
 		} else {
-			msg += " "+callerName+" "+callerID;
+			msg += " "+callerID+" "+callerName;
 		}
 	} else if(listOfClientIps!="") {
 		msg += " "+listOfClientIps;

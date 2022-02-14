@@ -1044,13 +1044,14 @@ function connectSignaling(message,openedFunc) {
 		showStatus("No WebSocket support");
 		return;
 	}
-	gLog('connectSignaling: open ws connection',calleeID);
+	gLog('connectSignaling: open ws connection '+calleeID);
 	let tryingToOpenWebSocket = true;
     var wsUrl = wsAddr;
 	wsUrl += "&callerId="+callerId+"&name="+callerName;
+	gLog('connectSignaling: wsUrl='+wsUrl);
 	wsConn = new WebSocket(wsUrl);
 	wsConn.onopen = function () {
-		gLog('ws connection open',calleeID);
+		gLog('ws connection open '+calleeID);
 		tryingToOpenWebSocket = false;
 		if(message!="") {
 			wsSend(message); // most likely "callerOffer" with localDescription

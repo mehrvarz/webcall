@@ -139,9 +139,9 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	callerName := ""
 	url_arg_array, ok = r.URL.Query()["name"]
 	if ok && len(url_arg_array[0]) > 0 {
-		callerName = strings.ToLower(url_arg_array[0])
+		callerName = url_arg_array[0]
 	}
-	//fmt.Printf("serve callerID=%s callerName=%s\n", callerID,callerName)
+	//fmt.Printf("serve callerID=%s callerName=%s (%v)\n", callerID, callerName, r.URL.Query())
 
 	upgrader := websocket.NewUpgrader()
 	//upgrader.EnableCompression = true
@@ -434,13 +434,13 @@ func (c *WsClient) receiveProcess(message []byte) {
 			return
 		}
 
-		//if c.hub.callerID!="" && c.hub.callerNickname!="" {
-		//	// send this directly to the callee
-		//	sendCmd := "callerInfo|"+c.hub.callerID+":"+c.hub.callerNickname
-		//	if c.hub.CalleeClient.Write([]byte(sendCmd)) != nil {
-		//		return
-		//	}
-		//}
+		if c.hub.CallerClient.callerID!="" || c.hub.CallerClient.callerName!="" {
+			// send this directly to the callee: see callee.js if(cmd=="callerInfo")
+			sendCmd := "callerInfo|"+c.hub.CallerClient.callerID+":"+c.hub.CallerClient.callerName
+			if c.hub.CalleeClient.Write([]byte(sendCmd)) != nil {
+				return
+			}
+		}
 
 		// exchange useragent's
 		if c.hub.CallerClient!=nil && c.hub.CalleeClient!=nil {
@@ -645,6 +645,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 		} else {
 			fmt.Printf("%s (%s) peer %s (%s:%s)\n", c.connType, c.calleeID, payload,
 				c.hub.CallerClient.callerID, c.hub.CallerClient.callerName)
+			// callerID + callerName are forward to callee via "callerInfo|" on receipt of "callerOffer"
 		}
 		tok := strings.Split(payload, " ")
 		if len(tok)>=3 {
