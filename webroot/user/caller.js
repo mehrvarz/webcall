@@ -75,7 +75,7 @@ var haveBeenWaitingForCalleeOnline=false;
 var lastOnlineStatus = "";
 
 var extMessage = function(e) {
-	// prevent an error on split() below when extensions send unrelated, non-string message events to the window
+	// prevent an error on split() below when extensions emit unrelated, non-string 'message' events to the window
 	if(typeof e.data !== 'string') {
 		return;
 	}
