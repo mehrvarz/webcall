@@ -1,4 +1,4 @@
-// WebCall Copyright 2021 timur.mobi. All rights reserved.
+// WebCall Copyright 2022 timur.mobi. All rights reserved.
 //
 // These methods enable callees to read and modify their 
 // callee specific settings. As well as read and modify their
@@ -32,8 +32,7 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		return
 	}
 	if calleeID!=urlID {
-		// this happens bc two callees are logged in via the same browser (via two tabs)
-		// and the other one has set the cookie
+		// this happens bc someone with calleeID in the cookie is now trying to use urlID via url
 		fmt.Printf("# /getsettings fail calleeID(%s) != urlID(%s) rip=%s\n", calleeID, urlID, remoteAddr)
 		return
 	}

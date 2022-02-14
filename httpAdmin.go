@@ -1,4 +1,4 @@
-// WebCall Copyright 2021 timur.mobi. All rights reserved.
+// WebCall Copyright 2022 timur.mobi. All rights reserved.
 package main
 
 import (

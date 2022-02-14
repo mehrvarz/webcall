@@ -1,4 +1,4 @@
-// WebCall Copyright 2021 timur.mobi. All rights reserved.
+// WebCall Copyright 2022 timur.mobi. All rights reserved.
 //
 // httpOnline() is called by callers via XHR "/rtcsig/online". 
 // httpAvail() is called via XHR "/rtcsig/avail".
@@ -237,7 +237,7 @@ func httpNewId(w http.ResponseWriter, r *http.Request, urlID string, calleeID st
 		return
 	}
 	// NOTE tmpCalleeID is currently free, but it is NOT reserved
-	fmt.Printf("/newid generated new id=%s for rip=%s\n",tmpCalleeID,remoteAddr)
+	fmt.Printf("/newid generated new id=%s for rip=%s ua=%s\n",tmpCalleeID,remoteAddr,r.UserAgent())
 	fmt.Fprintf(w, tmpCalleeID)
 	return
 }
@@ -245,7 +245,7 @@ func httpNewId(w http.ResponseWriter, r *http.Request, urlID string, calleeID st
 func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath string, remoteAddr string, startRequestTime time.Time) {
 	if allowNewAccounts {
 		registerID := urlPath[10:]
-		fmt.Printf("/register id=%s rip=%s\n",registerID,remoteAddr)
+		fmt.Printf("/register id=%s rip=%s ua=%s\n",registerID,remoteAddr,r.UserAgent())
 
 		postBuf := make([]byte, 128)
 		length,_ := io.ReadFull(r.Body, postBuf)

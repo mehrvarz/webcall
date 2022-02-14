@@ -1,4 +1,4 @@
-// WebCall Copyright 2021 timur.mobi. All rights reserved.
+// WebCall Copyright 2022 timur.mobi. All rights reserved.
 //
 // httpLogin() is called by callees via XHR "/rtcsig/login". 
 // httpLogin() makes sure that the given urlID and password 
@@ -237,7 +237,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		//fmt.Printf("/login globalID=(%s) urlID=(%s) rip=%s rt=%v\n",
 		//	globalID, urlID, remoteAddr, time.Since(startRequestTime))
 
-		if cookie == nil && !nocookie {
+		if /*cookie == nil &&*/ !nocookie {
 			err,cookieValue := createCookie(w, urlID, pw, &pwIdCombo)
 			if err != nil {
 				fmt.Printf("# /login persist PwIdCombo error db=%s bucket=%s cookie=%s err=%v\n",

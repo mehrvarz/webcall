@@ -1,4 +1,4 @@
-// WebCall Copyright 2021 timur.mobi. All rights reserved.
+// WebCall Copyright 2022 timur.mobi. All rights reserved.
 //
 // WebCall server will send push notifications to callees
 // if they have specified such channels and if they are not online 

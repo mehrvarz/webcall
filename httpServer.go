@@ -1,4 +1,4 @@
-// WebCall Copyright 2021 timur.mobi. All rights reserved.
+// WebCall Copyright 2022 timur.mobi. All rights reserved.
 //
 // All client activity starts in httpServer.go.
 // The handlers "/callee/", "/user/" and "/button/" serve the 
