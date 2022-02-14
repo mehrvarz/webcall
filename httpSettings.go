@@ -354,6 +354,7 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 		}
 		return
 	}
+	contactID = strings.ToLower(contactID)
 
 	name := ""
 	url_arg_array, ok = r.URL.Query()["name"]
@@ -410,18 +411,17 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 	if name=="" {
 		name = "unknown"
 	}
-	callerInfoMap[contactID] = name
-	err = kvContacts.Put(dbContactsBucket, calleeID, callerInfoMap, false)
-	if err!=nil {
-		fmt.Printf("# /setcontact store calleeID=%s err=%v\n", calleeID, err)
-		return
-	}
 	if name!=oldName {
-		fmt.Printf("/setcontact (%s) changed name of %s from (%s) to (%s)\n",
-			calleeID,contactID,oldName,name)
-	} else {
-		fmt.Printf("/setcontact (%s) store %s (%s)\n", calleeID, contactID, name)
+		fmt.Printf("/setcontact (%s) store changed name of %s from (%s) to (%s)\n",
+			calleeID, contactID, oldName, name)
+		callerInfoMap[contactID] = name
+		err = kvContacts.Put(dbContactsBucket, calleeID, callerInfoMap, false)
+		if err!=nil {
+			fmt.Printf("# /setcontact store calleeID=%s err=%v\n", calleeID, err)
+			return
+		}
 	}
+	// name has not changed
 	fmt.Fprintf(w,"ok")
 	return
 }
@@ -449,6 +449,7 @@ func httpDeleteContact(w http.ResponseWriter, r *http.Request, urlID string, cal
 		fmt.Printf("# /deletecontact (%s) contactID from client is empty\n", calleeID)
 		return
 	}
+	contactID = strings.ToLower(contactID)
 
 	var callerInfoMap map[string]string // callerID -> name
 	err := kvContacts.Get(dbContactsBucket,calleeID,&callerInfoMap)
