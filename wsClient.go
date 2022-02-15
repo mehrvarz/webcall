@@ -144,7 +144,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	//fmt.Printf("serve callerID=%s callerName=%s (%v)\n", callerID, callerName, r.URL.Query())
 
 	upgrader := websocket.NewUpgrader()
-	//upgrader.EnableCompression = true
+	//upgrader.EnableCompression = true // TODO
 	upgrader.CheckOrigin = func(r *http.Request) bool {
 		return true
 	}
@@ -157,7 +157,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	//wsConn.EnableWriteCompression(true) // TODO
 
 	// the only time browser clients can be expected to send anything, is after we sent a ping
-	// this is why we set no read deadline here; we do this when we send a ping
+	// this is why we set NO read deadline here; we do it when we send a ping
 	wsConn.SetReadDeadline(time.Time{})
 
 	client := &WsClient{wsConn:wsConn}
@@ -179,7 +179,6 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	hub := wsClientData.hub // set by /login wsClientMap[wsClientID] = wsClientDataType{...}
 
 	upgrader.OnMessage(func(wsConn *websocket.Conn, messageType websocket.MessageType, data []byte) {
-
 		// clear read deadline for now; we set it again when we send the next ping
 		wsConn.SetReadDeadline(time.Time{})
 		// set the time for sending the next ping
@@ -202,6 +201,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			fmt.Printf("# %s binary dataLen=%d\n", client.connType, len(data))
 		}
 	})
+
 	upgrader.SetPongHandler(func(wsConn *websocket.Conn, s string) {
 		// we received a pong from the client
 		if logWantedFor("gotpong") {
@@ -213,6 +213,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		keepAliveMgr.SetPingDeadline(wsConn, pingPeriod, client) // now + pingPeriod secs
 		client.pongReceived++
 	})
+
 	upgrader.SetPingHandler(func(wsConn *websocket.Conn, s string) {
 		// we received a ping from the client
 		if logWantedFor("gotping") {
@@ -292,8 +293,9 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		hub.CallerClient = client
 
 		go func() {
-			// incoming caller will get killed if there is no peer connect after 6 sec
-			time.Sleep(6 * time.Second)
+			// incoming caller will get killed if there is no peerConnect after 10 sec
+			// (it can take up to 6-8 seconds in some cases for a devices to get fully out of deep sleep)
+			time.Sleep(10 * time.Second)
 			if hub!=nil && hub.CalleeClient!=nil && !hub.CalleeClient.isConnectedToPeer.Get() {
 				if hub.CallerClient!=nil {
 					hub.CallerClient = nil
