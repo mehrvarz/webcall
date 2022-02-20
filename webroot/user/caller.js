@@ -729,7 +729,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 				// callee temporarily offline
 				haveBeenWaitingForCalleeOnline=true;
 				setTimeout(function() {
-					showStatus("Trying to find "+calleeID+". Please wait...<br><br><img src='preloader-circles.svg' style='width:40%;max-height:120px;'>",-1);
+					showStatus("Trying to find "+calleeID+". This can take a few minutes. Please wait...<br><br><img src='preloader-circles.svg' style='width:40%;max-height:120px;'>",-1);
 					gLog('delayed checkCalleeOnline in 20s...');
 					setTimeout(checkCalleeOnline,20000,true);
 				},600);
