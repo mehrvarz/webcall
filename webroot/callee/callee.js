@@ -1554,6 +1554,11 @@ function goOnline() {
 	} catch(ex) {
 		console.error("RTCPeerConnection",ex.message);
 		showStatus("RTCPeerConnection error "+ex);
+		// end spinner
+		if(divspinnerframe) {
+			loginResponse=true; // prevent delayed spinner
+			divspinnerframe.style.display = "none";
+		}
 		offlineAction();
 		return;
 	};
