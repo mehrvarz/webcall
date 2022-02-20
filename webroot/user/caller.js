@@ -1494,8 +1494,11 @@ function dial2() {
 		peerCon = new RTCPeerConnection(ICE_config);
 	} catch(ex) {
 		console.error("RTCPeerConnection",ex);
-		showStatus("Dialing error");
-		return
+		showStatus("WebRTC error");
+		stopAllAudioEffects();
+		hangup(true,false,"WebRTC error");
+		// TODO now both buttons (Call/Hangup) are deactivated (for now this is OK)
+		return;
 	};
 	peerCon.onicecandidate = e => onIceCandidate(e,"callerCandidate");
 	peerCon.onicecandidateerror = function(e) {
