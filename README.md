@@ -4,8 +4,6 @@
 
 # WebCall Telephony
 
-**[+++ New: WebCall for Android (separate repository) +++](https://github.com/mehrvarz/webcall-android)**
-
 WebCall offers HQ audio/video telephony plus bidirectional file transfer. WebCall video delivers the best picture quality on top of your internet connection. Strict use of P2P connectivity results in lower latency and higher frame rates. Audio + video + two-way file transfer can all be used at the same time. Video delivery can be turned on and off at any time during the call. Audio stays in place for the duration of the call. 
 
 You may want to use video only briefly and continue audio-only for the rest of your conversation. Maybe you want to use video to make sure you are connected to the right person, before you start exchanging some sensitive files. Turning video off can also result in faster file delivery.
@@ -16,9 +14,14 @@ WebCall links are always end-to-end encrypted. This prevents others from listeni
 
 WebCall server operates fully self-contained. It does not depend on 3rd party services (say, for STUN or TURN). This means that no big internet company will be able to track what you do. This is true when you use my server at timur.mobi. This server exists only to showcase WebCall in the best possible way. It is also true if you run your own WebCall server.
 
-WebCall work on iPhone, Android, Linux, Mac and Windows. All you need is a 2020+ web browser.
+WebCall works on iPhone, Android, Linux, Mac and Windows. All you need is a 2020+ web browser.
 
 [https://timur.mobi/webcall](https://timur.mobi/webcall)
+
+A dedicated WebCall for Android client is available:
+
+[WebCall for Android](https://github.com/mehrvarz/webcall-android)
+
 
 
 # Installation
