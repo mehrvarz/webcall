@@ -35,8 +35,6 @@ type Hub struct {
 	IsCalleeHidden bool
 	LocalP2p bool
 	RemoteP2p bool
-	//callerID string // id of the caller (may not be avail)
-	//callerNickname string // nickname of the caller (may not be avail)
 }
 
 func newHub(maxRingSecs int, maxTalkSecsIfNoP2p int, startTime int64) *Hub {

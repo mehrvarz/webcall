@@ -3,27 +3,28 @@ package main
 
 import (
 	"fmt"
+	"net"
 	"strconv"
 	"strings"
-	"net"
-	"time"
 	"sync"
+	"time"
 
-	//"github.com/pion/turn/v2" // see: https://github.com/pion/turn/issues/206#issuecomment-907091251
-	"github.com/mehrvarz/turn/v2" // this _is_ pion/turn but with a minor patch for FF on Android
+	"github.com/pion/turn/v2" // see: https://github.com/pion/turn/issues/206#issuecomment-907091251
+	//"github.com/mehrvarz/turn/v2" // this _is_ pion/turn but with a minor patch for FF on Android
 	"github.com/pion/logging"
 )
 
 type TurnCaller struct {
-	CallerID string
+	CallerID   string
 	TimeStored time.Time
 }
+
 // recentTurnCallerIps is accessed from timer.go
 var recentTurnCallerIps map[string]TurnCaller
 var recentTurnCallerIpMutex sync.RWMutex
 
 func runTurnServer() {
-	if turnPort<=0 {
+	if turnPort <= 0 {
 		return
 	}
 
@@ -79,23 +80,27 @@ func runTurnServer() {
 					foundIp = true
 					foundCalleeId = turnCaller.CallerID
 					foundByMap = true
+					//fmt.Printf("turn found session foundIp foundByMap %v\n", foundCalleeId)
 				} else {
 					// session is outdated, will not anymore be authenticated
+					fmt.Printf("# turn found session outdated %v\n", turnCaller.CallerID)
 				}
 			} else {
 				// here I check if ipAddr is listed anywhere in hubMap as a callerIp
 				// in other words: the connection will be authenticated to use turn
 				// by the caller (!), not by the callee
 				// we do this bc only one of the two sides needs to authenticate
+
 				foundIp, foundCalleeId, err = SearchCallerIpInHubMap(ipAddr)
 				if err != nil {
 					fmt.Printf("# turn auth for %v err=%v\n", srcAddr.String(), err)
 					return nil, false
 				}
+				fmt.Printf("turn no session ipAddr=%v foundIp=%v\n", ipAddr, foundIp)
 				if foundIp {
 					if !foundByMap {
 						recentTurnCallerIpMutex.Lock()
-						recentTurnCallerIps[ipAddr] = TurnCaller{foundCalleeId,timeNow}
+						recentTurnCallerIps[ipAddr] = TurnCaller{foundCalleeId, timeNow}
 						//if logWantedFor("turn") {
 						//	fmt.Printf("turn auth added (%s) to recentTurnCallerIps len=%d\n",
 						//		srcAddr.String(), len(recentTurnCallerIps))
@@ -139,4 +144,3 @@ func runTurnServer() {
 		return
 	}
 }
-

@@ -458,6 +458,17 @@ func (c *WsClient) receiveProcess(message []byte) {
 			// if after c.hub.maxRingSecs the callee has NOT picked up the call, callee will be disconnected
 			c.hub.setDeadline(c.hub.maxRingSecs,"serveWs ringsecs")
 		}
+
+		// this is needed here for turn AuthHandler
+		err := StoreCallerIpInHubMap(c.calleeID, c.RemoteAddr, false)
+		if err!=nil {
+			fmt.Printf("# %s StoreCallerIpInHubMap (%s) RemoteAddr=%s err=%v\n",
+				c.connType, c.calleeID, c.RemoteAddr, err)
+		} else {
+			fmt.Printf("%s StoreCallerIpInHubMap (%s) RemoteAddr=%s\n",
+				c.connType, c.calleeID, c.RemoteAddr)
+		}
+
 		return
 	}
 
@@ -669,6 +680,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 						// when the caller sends "log", the callee also becomes peerConnected
 						c.hub.CalleeClient.isConnectedToPeer.Set(true)
 
+						/*
+						// moved up to cmd=="callerOffer" for turn AuthHandler
 						err := StoreCallerIpInHubMap(c.globalCalleeID,c.RemoteAddr, false)
 						if err!=nil {
 							fmt.Printf("# %s StoreCallerIpInHubMap (%s) err=%v\n",
@@ -677,7 +690,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 							fmt.Printf("%s StoreCallerIpInHubMap (%s) RemoteAddr=%s\n",
 								c.connType, c.globalCalleeID, c.RemoteAddr)
 						}
-
+						*/
 
 						if strings.TrimSpace(tok[1])=="ConForce" {
 							// test-caller sends this msg to callee, test-clients do not really connect p2p
@@ -832,22 +845,6 @@ func (c *WsClient) peerConHasEnded(comment string) {
 			}
 		}
 	}
-/*
-	// clear callerIp from hub.ConnectedCallerIp
-	// we only need to do this for the caller
-	if !c.isCallee {
-		if logWantedFor("hub") {
-			fmt.Printf("%s peerConHasEnded %s clear callerIpInHub (%s)\n", c.connType, c.calleeID, comment)
-		}
-		err := StoreCallerIpInHubMap(c.globalCalleeID, "", false)
-		if err!=nil {
-			// err "key not found": callee has already signed off - can be ignored
-			if strings.Index(err.Error(),"key not found")<0 {
-				fmt.Printf("# %s peerConHasEnded %s clear callerIpInHub err=%v\n", c.connType, c.calleeID, err)
-			}
-		}
-	}
-*/
 }
 
 func (c *WsClient) Close(reason string) {

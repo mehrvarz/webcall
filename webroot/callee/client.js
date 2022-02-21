@@ -48,7 +48,7 @@ var ICE_config = {
 			'credential': '736518fb4232d44'
 		}
 	]
-	,"iceTransportPolicy": "all" // "relay"
+	,"iceTransportPolicy": "all" // "all" / "relay"
 };
 
 var defaultConstraintString = '"width": {"min":320,"ideal":1920, "max":4096 },"height": {"min":240, "ideal":1080, "max":2160 },"frameRate": { "min":10, "max":30 }';
