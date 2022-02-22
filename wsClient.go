@@ -462,10 +462,10 @@ func (c *WsClient) receiveProcess(message []byte) {
 		// this is needed here for turn AuthHandler
 		err := StoreCallerIpInHubMap(c.calleeID, c.RemoteAddr, false)
 		if err!=nil {
-			fmt.Printf("# %s StoreCallerIpInHubMap (%s) RemoteAddr=%s err=%v\n",
+			fmt.Printf("# %s callerOffer StoreCallerIpInHubMap (%s) rip=%s err=%v\n",
 				c.connType, c.calleeID, c.RemoteAddr, err)
 		} else {
-			fmt.Printf("%s StoreCallerIpInHubMap (%s) RemoteAddr=%s\n",
+			fmt.Printf("%s callerOffer StoreCallerIpInHubMap (%s) rip=%s\n",
 				c.connType, c.calleeID, c.RemoteAddr)
 		}
 
@@ -679,18 +679,6 @@ func (c *WsClient) receiveProcess(message []byte) {
 					if !c.isCallee {
 						// when the caller sends "log", the callee also becomes peerConnected
 						c.hub.CalleeClient.isConnectedToPeer.Set(true)
-
-						/*
-						// moved up to cmd=="callerOffer" for turn AuthHandler
-						err := StoreCallerIpInHubMap(c.globalCalleeID,c.RemoteAddr, false)
-						if err!=nil {
-							fmt.Printf("# %s StoreCallerIpInHubMap (%s) err=%v\n",
-								c.connType, c.globalCalleeID, err)
-						} else {
-							fmt.Printf("%s StoreCallerIpInHubMap (%s) RemoteAddr=%s\n",
-								c.connType, c.globalCalleeID, c.RemoteAddr)
-						}
-						*/
 
 						if strings.TrimSpace(tok[1])=="ConForce" {
 							// test-caller sends this msg to callee, test-clients do not really connect p2p
