@@ -861,7 +861,7 @@ function wsOnError2(str) {
 }
 
 function wsOnClose(evt) {
-	console.log("wsOnClose",calleeID);
+	console.log("wsOnClose "+calleeID);
 	wsConn=null;
 	buttonBlinking=false;
 	stopAllAudioEffects("wsOnClose");
@@ -1798,7 +1798,7 @@ function dataChannelOnmessage(event) {
 		gLog("dataChannel.onmessage");
 		if(event.data) {
 			if(event.data.startsWith("disconnect")) {
-				gLog("dataChannel.onmessage on 'disconnect'");
+				gLog("dataChannel.onmessage on '"+event.data+"'");
 				dataChannel.close();
 				dataChannel = null;
 				hangupWithBusySound(false,"dataChannel.close");
