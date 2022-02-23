@@ -1131,7 +1131,7 @@ function signalingCommand(message) {
 			} else {
 				console.log('no rtcConnect timeout');
 			}
-		},6000);
+		},9000);
 
 		let hostDescription = JSON.parse(payload);
 		gLog("calleeAnswer setLocalDescription (onIceCandidates="+onIceCandidates+")");
