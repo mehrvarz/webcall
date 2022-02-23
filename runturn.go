@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	//"github.com/pion/turn/v2" // see: https://github.com/pion/turn/issues/206#issuecomment-907091251
-	"github.com/mehrvarz/turn/v2" // this _is_ pion/turn but with a minor patch for FF on Android
+	"github.com/pion/turn/v2" // see: https://github.com/pion/turn/issues/206#issuecomment-907091251
+	//"github.com/mehrvarz/turn/v2" // this _is_ pion/turn but with a minor patch for FF on Android
 	"github.com/pion/logging"
 )
 
