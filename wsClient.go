@@ -427,8 +427,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 	if cmd=="callerOffer" {
 		// caller starting a call - payload is JSON.stringify(localDescription)
 		if logWantedFor("wscall") {
-			fmt.Printf("%s callerOffer (call attempt) from %s to %s\n",
-				c.connType,c.RemoteAddr,c.calleeID)
+			fmt.Printf("%s callerOffer (call attempt) from %s to %s/%s\n",
+				c.connType,c.RemoteAddr,c.calleeID,c.globalCalleeID)
 			//fmt.Printf("%s callerOffer payload=%s\n",c.connType,payload)
 		}
 
@@ -460,13 +460,13 @@ func (c *WsClient) receiveProcess(message []byte) {
 		}
 
 		// this is needed here for turn AuthHandler
-		err := StoreCallerIpInHubMap(c.calleeID, c.RemoteAddr, false)
+		err := StoreCallerIpInHubMap(c.globalCalleeID, c.RemoteAddr, false)
 		if err!=nil {
 			fmt.Printf("# %s callerOffer StoreCallerIpInHubMap (%s) rip=%s err=%v\n",
-				c.connType, c.calleeID, c.RemoteAddr, err)
+				c.connType, c.globalCalleeID, c.RemoteAddr, err)
 		} else {
 			fmt.Printf("%s callerOffer StoreCallerIpInHubMap (%s) rip=%s\n",
-				c.connType, c.calleeID, c.RemoteAddr)
+				c.connType, c.globalCalleeID, c.RemoteAddr)
 		}
 
 		return
