@@ -412,8 +412,7 @@ func getStats() string {
 	hubMapMutex.RUnlock()
 
 	numberOfCallsTodayMutex.RLock()
-	retStr := fmt.Sprintf("stats callees:%d callers:%d p2p:%d "+
-		"calls:%d callSecs:%d ping:%d pong:%d gor:%d",
+	retStr := fmt.Sprintf("stats callees:%d callers:%d/%d calls:%d callSecs:%d ping:%d pong:%d gor:%d",
 		numberOfOnlineCallees, numberOfOnlineCallers, numberOfActivePureP2pCalls,
 		numberOfCallsToday, numberOfCallSecondsToday, // feed by hub.processTimeValues()
 		atomic.LoadInt64(&pingSentCounter),
