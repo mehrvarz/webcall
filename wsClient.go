@@ -654,7 +654,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 		} else if c.hub==nil {
 			fmt.Printf("# %s (%s) peer c.hub==nil\n", c.connType, c.calleeID)
 		} else if c.hub.CallerClient==nil {
-			fmt.Printf("# %s (%s) peer c.hub.CallerClient==nil\n", c.connType, c.calleeID)
+			fmt.Printf("# %s (%s) peer %s c.hub.CallerClient==nil\n", c.connType, c.calleeID, payload)
 		} else {
 			fmt.Printf("%s (%s) peer %s (%s:%s)\n", c.connType, c.calleeID, payload,
 				c.hub.CallerClient.callerID, c.hub.CallerClient.callerName)
