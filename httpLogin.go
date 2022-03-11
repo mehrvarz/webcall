@@ -179,8 +179,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 		err := kvMain.Get(dbRegisteredIDs, urlID, &dbEntry)
 		if err != nil {
-			fmt.Printf("# /login error db=%s bucket=%s key=%s get registeredID err=%v\n",
-				dbMainName, dbRegisteredIDs, urlID, err)
+			fmt.Printf("# /login error db=%s bucket=%s key=%s rip=%s get registeredID err=%v\n",
+				dbMainName, dbRegisteredIDs, urlID, remoteAddr, err)
 			if strings.Index(err.Error(), "disconnect") >= 0 {
 				// TODO admin email notif may be useful
 				fmt.Fprintf(w, "error")
@@ -205,8 +205,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		dbUserKey = fmt.Sprintf("%s_%d", urlID, dbEntry.StartTime)
 		err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 		if err != nil {
-			fmt.Printf("# /login error db=%s bucket=%s get key=%v err=%v\n",
-				dbMainName, dbUserBucket, dbUserKey, err)
+			fmt.Printf("# /login error db=%s bucket=%s get key=%v rip=%s err=%v\n",
+				dbMainName, dbUserBucket, dbUserKey, remoteAddr, err)
 			fmt.Fprintf(w, "error")
 			return
 		}
@@ -217,8 +217,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		dbUser.LastLoginTime = time.Now().Unix()
 		err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
 		if err!=nil {
-			fmt.Printf("# /login error db=%s bucket=%s put key=%s err=%v\n",
-				dbMainName, dbUserBucket, urlID, err)
+			fmt.Printf("# /login error db=%s bucket=%s put key=%s rip=%s err=%v\n",
+				dbMainName, dbUserBucket, urlID, remoteAddr, err)
 		}
 
 		// create new unique wsClientID
