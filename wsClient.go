@@ -462,10 +462,10 @@ func (c *WsClient) receiveProcess(message []byte) {
 		// this is needed here for turn AuthHandler
 		err := StoreCallerIpInHubMap(c.globalCalleeID, c.RemoteAddr, false)
 		if err!=nil {
-			fmt.Printf("# %s callerOffer StoreCallerIpInHubMap (%s) rip=%s err=%v\n",
+			fmt.Printf("# %s callerOffer StoreCallerIp (%s) rip=%s err=%v\n",
 				c.connType, c.globalCalleeID, c.RemoteAddr, err)
 		} else {
-			fmt.Printf("%s callerOffer StoreCallerIpInHubMap (%s) rip=%s\n",
+			fmt.Printf("%s callerOffer StoreCallerIp (%s) rip=%s\n",
 				c.connType, c.globalCalleeID, c.RemoteAddr)
 		}
 
