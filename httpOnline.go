@@ -101,7 +101,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		}
 
 		locHub.HubMutex.RLock()
-		wsClientID := locHub.WsClientID
+		wsClientID := locHub.WsClientID // set by wsClient serve()
 		locHub.HubMutex.RUnlock()
 		if wsClientID == 0 {
 			// something has gone wrong
