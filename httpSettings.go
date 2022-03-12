@@ -173,7 +173,7 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 						var callsWhileInAbsence []CallerInfo
 						err := kvCalls.Get(dbMissedCalls,calleeID,&callsWhileInAbsence)
 						if err!=nil {
-							fmt.Printf("# /setsettings (%s) storeMissedCalls kvCalls.Get fail err=%v\n",
+							fmt.Printf("/setsettings (%s) storeMissedCalls kvCalls.Get fail err=%v\n",
 								calleeID, err)
 						} else {
 							json, err := json.Marshal(callsWhileInAbsence)
