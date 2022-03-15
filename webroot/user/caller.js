@@ -1512,11 +1512,10 @@ function dial2() {
 	}
 	peerCon.ontrack = ({track, streams}) => peerConOntrack(track, streams);
 	peerCon.onnegotiationneeded = async () => {
-		if(!peerCon) {
+		if(!peerCon || peerCon.iceConnectionState=="closed") {
 			gLog('# peerCon onnegotiationneeded !peerCon');
 			return;
 		}
-		gLog('peerCon onnegotiationneeded');
 		try {
 			// note: this will trigger onIceCandidates and send calleeCandidate's to the client
 			gLog("peerCon onnegotiationneeded createOffer");
