@@ -1127,9 +1127,8 @@ function signalingCommand(message) {
 			if(!rtcConnect) {
 				// check for no-webrtc patch
 				// we could also check for no "peerCon connected" aka rtcConnect==false
-				hangup(true,false,"rtcConnect timeout "+warning); // will call checkCalleeOnline()
-			} else {
 				console.log('no rtcConnect timeout');
+				hangup(true,false,"rtcConnect timeout "+warning); // will call checkCalleeOnline()
 			}
 		},9000);
 
