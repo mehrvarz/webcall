@@ -1065,7 +1065,7 @@ function connectSignaling(message,openedFunc) {
 		var messages = evt.data.split('\n');
 		for (var i = 0; i < messages.length; i++) {
 			signalingCommand(messages[i]);
-			if(!peerCon) {
+			if(!peerCon || peerCon.iceConnectionState=="closed") {
 				break;
 			}
 		}

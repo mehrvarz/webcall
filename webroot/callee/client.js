@@ -959,7 +959,7 @@ function gotStream(stream) {
 		audioTracks[0].enabled = true;
 	}
 
-	if(!peerCon) {
+	if(!peerCon || peerCon.iceConnectionState=="closed") {
 		gLog('gotStream no peerCon: no addTrack');
 	} else if(addedAudioTrack) {
 		gLog('gotStream addedAudioTrack already set: no addTrack');
@@ -979,7 +979,7 @@ function gotStream(stream) {
 	} else if(!addLocalVideoEnabled) {
 		// video streaming has not been activated yet
 		gLog('gotStream videoEnabled but !addLocalVideoEnabled: no addTrack vid');
-	} else if(!peerCon) {
+	} else if(!peerCon || peerCon.iceConnectionState=="closed") {
 		//gLog('gotStream videoEnabled but !peerCon: no addTrack vid');
 	} else if(localCandidateType=="relay" || remoteCandidateType=="relay") {
 		gLog('gotStream videoEnabled but relayed con: no addTrack vid (%s)(%s) '+
