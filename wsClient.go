@@ -772,15 +772,15 @@ func (c *WsClient) peerConHasEnded(comment string) {
 	// or bc callee has unregistered
 	c.hub.setDeadline(0,comment)
 	if c.isConnectedToPeer.Get() {
-		fmt.Printf("%s (%s) peer Disconnect secs=%d rip=%s (%s)\n",
-			c.connType, c.calleeID, c.hub.CallDurationSecs, c.RemoteAddr, comment)
-
 		c.hub.HubMutex.Lock()
 		if c.hub.lastCallStartTime>0 {
-			c.hub.processTimeValues("peerConHasEnded")
+			c.hub.processTimeValues("peerConHasEnded") // set c.hub.CallDurationSecs
 			c.hub.lastCallStartTime = 0
 		}
 		c.hub.HubMutex.Unlock()
+
+		fmt.Printf("%s (%s) peer Disconnect secs=%d rip=%s (%s)\n",
+			c.connType, c.calleeID, c.hub.CallDurationSecs, c.RemoteAddr, comment)
 
 		err := StoreCallerIpInHubMap(c.globalCalleeID, "", false)
 		if err!=nil {
