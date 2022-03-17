@@ -1338,7 +1338,7 @@ function peerConOntrack(track, streams) {
 					var statusMsg = "WARNING: Your browser engine does not generate "+
 						"WebRTC connection state change events";
 					if(typeof Android !== "undefined" && Android !== null) {
-						statusMsg += " <a href='https://timur.mobi/webcall/android/#webview'>More info</a>");
+						statusMsg += " <a href='https://timur.mobi/webcall/android/#webview'>More info</a>";
 					}
 					showStatus(statusMsg);
 

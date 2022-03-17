@@ -1497,7 +1497,7 @@ function dial2() {
 //			" <a href='https://timur.mobi/webcall/android/#webview'>More info</a>");
 		var statusMsg = "RTCPeerConnection "+ex.message;
 		if(typeof Android !== "undefined" && Android !== null) {
-			statusMsg += " <a href='https://timur.mobi/webcall/android/#webview'>More info</a>");
+			statusMsg += " <a href='https://timur.mobi/webcall/android/#webview'>More info</a>";
 		}
 		showStatus(statusMsg);
 
