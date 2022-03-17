@@ -1553,8 +1553,6 @@ function goOnline() {
 		peerCon = new RTCPeerConnection(ICE_config);
 	} catch(ex) {
 		console.error("RTCPeerConnection "+ex.message);
-//		showStatus("RTCPeerConnection error "+ex.message +
-//			" <a href='https://timur.mobi/webcall/android/#webview'>More info</a>");
 		var statusMsg = "RTCPeerConnection "+ex.message;
 		if(typeof Android !== "undefined" && Android !== null) {
 			statusMsg += " <a href='https://timur.mobi/webcall/android/#webview'>More info</a>";
