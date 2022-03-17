@@ -1554,7 +1554,7 @@ function goOnline() {
 	} catch(ex) {
 		console.error("RTCPeerConnection",ex.message);
 		showStatus("RTCPeerConnection error "+ex.message +
-			" <a href='https://timur.mobi/webcall/android/#webview'>read this</a>");
+			" <a href='https://timur.mobi/webcall/android/#webview'>More info</a>");
 		// end spinner
 		if(divspinnerframe) {
 			loginResponse=true; // prevent delayed spinner
