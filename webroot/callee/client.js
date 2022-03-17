@@ -1332,9 +1332,16 @@ function peerConOntrack(track, streams) {
 				gLog('peerCon.ontrack onIceCandidates='+onIceCandidates);
 				if(connectionstatechangeCounter<1) {
 					// tmtmtm this is a problem with bromite / no-webrtc patch
-					showStatus("WARNING: Your browser engine does not generate "+
-						"WebRTC connection state change events"+
-						" <a href='https://timur.mobi/webcall/android/#webview'>More info</a>",-1);
+//					showStatus("WARNING: Your browser engine does not generate "+
+//						"WebRTC connection state change events"+
+//						" <a href='https://timur.mobi/webcall/android/#webview'>More info</a>",-1);
+					var statusMsg = "WARNING: Your browser engine does not generate "+
+						"WebRTC connection state change events";
+					if(typeof Android !== "undefined" && Android !== null) {
+						statusMsg += " <a href='https://timur.mobi/webcall/android/#webview'>More info</a>");
+					}
+					showStatus(statusMsg);
+
 					notificationSound.play().catch(function(error) { });
 				} /*else if(onIceCandidates<1) {
 					// tmtmtm this is a problem with bromite / no-webrtc patch
