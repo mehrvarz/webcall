@@ -1333,7 +1333,8 @@ function peerConOntrack(track, streams) {
 				if(connectionstatechangeCounter<1) {
 					// tmtmtm this is a problem with bromite / no-webrtc patch
 					showStatus("WARNING: Your browser engine does not generate "+
-						"WebRTC connection state change events",-1);
+						"WebRTC connection state change events"+
+						" <a href='https://timur.mobi/webcall/android/#webview'>read this</a>",-1);
 					notificationSound.play().catch(function(error) { });
 				} /*else if(onIceCandidates<1) {
 					// tmtmtm this is a problem with bromite / no-webrtc patch

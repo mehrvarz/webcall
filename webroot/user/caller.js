@@ -1492,8 +1492,10 @@ function dial2() {
 		gLog("dial peerCon = new RTCPeerConnection");
 		peerCon = new RTCPeerConnection(ICE_config);
 	} catch(ex) {
-		console.error("RTCPeerConnection",ex);
-		showStatus("WebRTC error");
+		console.error("RTCPeerConnection "+ex.message);
+		showStatus("RTCPeerConnection error "+ex.message +
+			" <a href='https://timur.mobi/webcall/android/#webview'>read this</a>");
+
 		stopAllAudioEffects();
 		hangup(true,false,"WebRTC error");
 		// TODO now both buttons (Call/Hangup) are deactivated (for now this is OK)

@@ -1553,7 +1553,8 @@ function goOnline() {
 		peerCon = new RTCPeerConnection(ICE_config);
 	} catch(ex) {
 		console.error("RTCPeerConnection",ex.message);
-		showStatus("RTCPeerConnection error "+ex);
+		showStatus("RTCPeerConnection error "+ex.message +
+			" <a href='https://timur.mobi/webcall/android/#webview'>read this</a>");
 		// end spinner
 		if(divspinnerframe) {
 			loginResponse=true; // prevent delayed spinner
