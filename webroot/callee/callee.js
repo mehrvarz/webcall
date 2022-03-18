@@ -594,7 +594,6 @@ function login(retryFlag) {
 			form.style.display = "none";
 		} else if(loginStatus=="notregistered") {
 			wsSecret = "";
-//			showStatus("User ID unknown<br><a href='"+mainLink+"'>Main page</a>",-1);
 			showStatus("User ID unknown<br>",-1);
 			form.style.display = "none";
 		} else if(loginStatus=="busy") {
@@ -613,9 +612,6 @@ function login(retryFlag) {
 			// loginStatus "fatal" = "already logged in" or "db.GetX err"
 			// no use offering pw entry again at this point
 			goOffline();
-//			showStatus(	"Login failed. Already logged in from another device?<br>"+
-//						"<br>Try <a onclick='window.location.reload(false)'>Reload</a>"+
-//						" or go to the <a href='"+mainLink+"'>Main page</a>",-1);
 			showStatus(	"Login failed. Already logged in from another device?",-1);
 			form.style.display = "none";
 		} else {
@@ -842,7 +838,6 @@ function wsOnOpen() {
 	isHiddenlabel.style.display = "block";
 	autoanswerlabel.style.display = "block";
 	menuSettingsElement.style.display = "block";
-//	menuContactsElement.style.display = "block";
 	iconContactsElement.style.display = "block";
 	dialIdElement.style.display = "block";
 	goOfflineButton.disabled = false;
@@ -1999,7 +1994,6 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 				}
 				gLog('endWebRtcSession peerCon.close');
 				peerCon.close();
-//				peerCon = null;
 				gLog('endWebRtcSession peerCon cleared');
 			}
 		};
