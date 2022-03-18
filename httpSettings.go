@@ -165,7 +165,7 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 					fmt.Printf("/setsettings (%s) new storeMissedCalls (%s) old:%v\n",
 						calleeID,val,dbUser.StoreMissedCalls)
 					dbUser.StoreMissedCalls = true
-					// show missedCalls on callee web client
+					// show missedCalls on callee web client (if avail)
 					hubMapMutex.RLock()
 					hub := hubMap[calleeID]
 					hubMapMutex.RUnlock()
@@ -173,8 +173,11 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 						var callsWhileInAbsence []CallerInfo
 						err := kvCalls.Get(dbMissedCalls,calleeID,&callsWhileInAbsence)
 						if err!=nil {
-							fmt.Printf("/setsettings (%s) storeMissedCalls kvCalls.Get fail err=%v\n",
-								calleeID, err)
+							// "key not found" is here NOT an error
+							if strings.Index(err.Error(),"key not found")<0 {
+								fmt.Printf("# /setsettings (%s) storeMissedCalls kvCalls.Get fail err=%v\n",
+									calleeID, err)
+							}
 						} else {
 							json, err := json.Marshal(callsWhileInAbsence)
 							if err != nil {
