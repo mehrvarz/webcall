@@ -31,17 +31,24 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 	}
 	readConfigLock.RUnlock()
 
+	clientVersion := ""
+	url_arg_array, ok := r.URL.Query()["ver"]
+	if ok && len(url_arg_array[0]) >= 1 {
+		clientVersion = url_arg_array[0]
+	}
+
 	// we look for urlID either in the local or in the global hubmap
 	reportHiddenCallee := true
 	reportBusyCallee := true
 	if logWantedFor("online") {
-		fmt.Printf("/online urlID=%s rip=%s\n", urlID, remoteAddr)
+		fmt.Printf("/online urlID=%s rip=%s ver=%s\n", urlID, remoteAddr, clientVersion)
 	}
 	glUrlID, locHub, globHub, err := GetOnlineCallee(urlID, ejectOn1stFound, reportBusyCallee, 
 		reportHiddenCallee, remoteAddr, "/online")
 	if err != nil {
 		// error
-		fmt.Printf("# /online GetOnlineCallee(%s/%s) err=%v rip=%s\n", urlID, glUrlID, err, remoteAddr)
+		fmt.Printf("# /online GetOnlineCallee(%s/%s) err=%v rip=%s ver=%s\n",
+			urlID, glUrlID, err, remoteAddr, clientVersion)
 		fmt.Fprintf(w, "error")
 		return
 	}
@@ -56,7 +63,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		err := kvMain.Get(dbRegisteredIDs, urlID, &dbEntry)
 		if err != nil {
 			// callee urlID does not exist
-			fmt.Printf("/online (%s) error (%v) rip=%s\n", urlID, err, remoteAddr)
+			fmt.Printf("/online (%s) error (%v) rip=%s ver=%s\n", urlID, err, remoteAddr, clientVersion)
 			fmt.Fprintf(w, "error")
 			return
 		}
@@ -65,8 +72,8 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		var dbUser DbUser
 		err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 		if err != nil {
-			fmt.Printf("# /online error db=%s bucket=%s get key=%v err=%v\n",
-				dbMainName, dbUserBucket, dbUserKey, err)
+			fmt.Printf("# /online error db=%s bucket=%s get key=%v err=%v ver=%s\n",
+				dbMainName, dbUserBucket, dbUserKey, err, clientVersion)
 		} else {
 			// use dbUser.LastLogoffTime to see how long it has been offline
 			secsSinceLogoff = time.Now().Unix() - dbUser.LastLogoffTime
