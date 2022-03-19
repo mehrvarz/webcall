@@ -1967,7 +1967,6 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 
 						gLog('hangup peerCon.close');
 						peerCon.close();
-// tmtmtm				peerCon = null;
 					}
 				}
 
@@ -2000,7 +1999,6 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 				gLog('hangup peerCon.close 2 '+calleeID);
 				peerCon.close();
 				gLog('hangup peerCon.signalingState '+peerCon.signalingState);
-//tmtmtm		peerCon = null;
 			}
 
 			if(typeof Android !== "undefined" && Android !== null) {

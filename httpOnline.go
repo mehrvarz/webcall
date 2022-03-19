@@ -47,7 +47,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 	}
 
 	if glUrlID == "" {
-		// callee urlID is offline; try to find out how long
+		// callee urlID is not online; try to find out for how long
 		if logWantedFor("hub") {
 			fmt.Printf("/online (%s) glUrlID=empty locHub=%v globHub=%v\n", urlID, locHub!=nil, globHub!=nil)
 		}
@@ -55,18 +55,21 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		var dbEntry DbEntry
 		err := kvMain.Get(dbRegisteredIDs, urlID, &dbEntry)
 		if err != nil {
+			// callee urlID does not exist
 			fmt.Printf("/online (%s) error (%v) rip=%s\n", urlID, err, remoteAddr)
+			fmt.Fprintf(w, "error")
+			return
+		}
+
+		dbUserKey := fmt.Sprintf("%s_%d", urlID, dbEntry.StartTime)
+		var dbUser DbUser
+		err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
+		if err != nil {
+			fmt.Printf("# /online error db=%s bucket=%s get key=%v err=%v\n",
+				dbMainName, dbUserBucket, dbUserKey, err)
 		} else {
-			dbUserKey := fmt.Sprintf("%s_%d", urlID, dbEntry.StartTime)
-			var dbUser DbUser
-			err := kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
-			if err != nil {
-				fmt.Printf("# /online error db=%s bucket=%s get key=%v err=%v\n",
-					dbMainName, dbUserBucket, dbUserKey, err)
-			} else {
-				// use dbUser.LastLogoffTime to see how long it has been offline
-				secsSinceLogoff = time.Now().Unix() - dbUser.LastLogoffTime
-			}
+			// use dbUser.LastLogoffTime to see how long it has been offline
+			secsSinceLogoff = time.Now().Unix() - dbUser.LastLogoffTime
 		}
 		if(secsSinceLogoff>0) {
 			fmt.Printf("/online callee %s is offline (for %d secs) rip=%s\n", urlID, secsSinceLogoff, remoteAddr)
