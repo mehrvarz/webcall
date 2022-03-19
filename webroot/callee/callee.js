@@ -512,6 +512,9 @@ function start() {
 function login(retryFlag) {
 	gLog("login to signaling server..."+retryFlag+" "+calleeID+" "+wsSecret.length);
 	let api = apiPath+"/login?id="+calleeID;
+	if(typeof Android !== "undefined" && Android !== null) {
+		api = api + "&ver="+Android.getVersionName();
+	}
 	ajaxFetch(new XMLHttpRequest(), "POST", api, function(xhr) {
 		// processData
 		let loginStatus = xhr.responseText;
