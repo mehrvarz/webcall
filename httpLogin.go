@@ -369,7 +369,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	//	fmt.Printf("/login wsAddr=%s\n",wsAddr)
 	//}
 
-	fmt.Printf("/login (%s) wsID=%v reqtime=%v rip=%s ver=%s\n",
+	fmt.Printf("/login (%s) wsID=%v %v rip=%s ver=%s\n",
 		urlID, wsClientID, time.Since(startRequestTime), remoteAddrWithPort, clientVersion)
 
 	responseString := fmt.Sprintf("%s|%d|%s|%d|%v",
