@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	//github.com/SherClockHolmes/webpush-go v1.1.3
-	github.com/fasthttp/websocket v1.4.3
+	github.com/fasthttp/websocket v1.5.0
 	github.com/lesismal/llib v1.1.4
 	github.com/lesismal/nbio v1.2.6
 	//github.com/pion/turn/v2 v2.0.8
