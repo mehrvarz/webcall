@@ -981,7 +981,7 @@ function signalingCommand(message) {
 		if(idxColon>=0) {
 			callerID = payload.substring(0,idxColon);
 			callerName = payload.substring(idxColon+1);
-			gLog('cmd callerInfo (%s) (%s)',callerID,callerName);
+			gLog('cmd callerInfo ('+callerID+') ('+callerName+')');
 			// callerID + callerName will be displayed via getStatsCandidateTypes()
 		} else {
 			gLog('cmd callerInfo payload=(%s)',payload);

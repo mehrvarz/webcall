@@ -229,6 +229,15 @@ function onload2(checkFlag) {
 			}
 
 			gLog('start caller with calleeID',calleeID);
+			if(calleeID.startsWith("#")) {
+				// example: calleeID=="#007" -> ask server for callback to callerId
+				let api = apiPath+"/action?id="+calleeID.substring(1)+"&callerId="+callerId+"&name="+callerName;
+				xhrTimeout = 5*1000;
+				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+					history.back();
+				}, errorAction2);
+				return;
+			}
 
 			// store calleeID in contacts if it doesn't exist yet
 			if(callerId!=="" && callerId!=="undefined") {

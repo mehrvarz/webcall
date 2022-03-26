@@ -379,6 +379,10 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		httpSetSettings(w, r, urlID, calleeID, cookie, remoteAddr)
 		return
 	}
+	if urlPath=="/action" {
+		httpActions(w, r, urlID, calleeID, remoteAddr)
+		return
+	}
 	if strings.HasPrefix(urlPath,"/getcontacts") {
 		httpGetContacts(w, r, urlID, calleeID, cookie, remoteAddr)
 		return
