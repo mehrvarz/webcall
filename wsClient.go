@@ -123,7 +123,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	}
 	wsClientMutex.Unlock()
 	if !ok {
-		fmt.Printf("# serveWs wsCliID=%d does not exist rip=%s url=%s\n",
+		// this callee has just exited
+		fmt.Printf("serveWs wsCliID=%d does not exist rip=%s url=%s\n",
 			wsClientID64, remoteAddr, r.URL.String())
 		// TODO why does r.URL start with //
 		// url=//timur.mobi:8443/ws?wsid=47639023704
