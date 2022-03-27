@@ -279,7 +279,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		// exitFunc: callee is logging out: release hub and port of this session
 
 		if hub == nil {
-			fmt.Printf("exithub (%s) wsID=%d hub already closed %s rip=%s ver=%s\n",
+			fmt.Printf("exithub (%s) ws=%d hub already closed %s rip=%s ver=%s\n",
 				globalID, wsClientID, comment, remoteAddrWithPort, clientVersion)
 			return;
 		}
@@ -291,12 +291,12 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		}
 		if reqWsClientID != wsClientID {
 			// not the same: deny deletion
-			fmt.Printf("exithub (%s) abort wsID=%d/%d %s rip=%s ver=%s\n",
+			fmt.Printf("exithub (%s) abort ws=%d/%d %s rip=%s ver=%s\n",
 				globalID, wsClientID, reqWsClientID, comment, remoteAddrWithPort, clientVersion)
 			return;
 		}
 
-		fmt.Printf("exithub (%s) wsID=%d %s %s ver=%s\n",
+		fmt.Printf("exithub (%s) ws=%d %s %s ver=%s\n",
 			globalID, wsClientID, comment, remoteAddrWithPort, clientVersion)
 
 		if dbUserKey!="" {
@@ -369,7 +369,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	//	fmt.Printf("/login wsAddr=%s\n",wsAddr)
 	//}
 
-	fmt.Printf("/login (%s) wsID=%v %v rip=%s ver=%s\n",
+	fmt.Printf("/login (%s) ws=%v %v rip=%s ver=%s\n",
 		urlID, wsClientID, time.Since(startRequestTime), remoteAddrWithPort, clientVersion)
 
 	responseString := fmt.Sprintf("%s|%d|%s|%d|%v",
