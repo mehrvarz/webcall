@@ -55,6 +55,7 @@ func (h *Hub) setDeadline(secs int, comment string) {
 		}
 		h.dontCancel = true
 		h.timer.Stop()
+		h.timer=nil
 	}
 
 	if(secs>0) {
@@ -70,8 +71,10 @@ func (h *Hub) setDeadline(secs int, comment string) {
 			h.timer = nil
 			if h.dontCancel {
 				// timer was aborted
-				//fmt.Printf("setDeadline reached; cancel; no disconnect caller (secs=%d %v)\n",
-				//	secs,timeStart.Format("2006-01-02 15:04:05"))
+				if logWantedFor("calldur") {
+					fmt.Printf("setDeadline aborted; no disconnect caller (secs=%d %v)\n",
+						secs,timeStart.Format("2006-01-02 15:04:05"))
+				}
 			} else {
 				// timer valid: we need to disconnect the clients
 				fmt.Printf("setDeadline reached; end session now (secs=%d %v)\n",
@@ -157,6 +160,15 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 		// remove callee from hubMap; delete wsClientID from wsClientMap
 		h.exitFunc(client,comment)
 		h.CalleeClient = nil
+
+		if h.timer!=nil {
+			if logWantedFor("calldur") {
+				fmt.Printf("doUnregister clear old timer\n")
+			}
+			h.dontCancel = true
+			h.timer.Stop()
+			h.timer=nil
+		}
 	} else {
 		if logWantedFor("hub") {
 			fmt.Printf("hub (%s) unregister caller peercon=%v (%s)\n",

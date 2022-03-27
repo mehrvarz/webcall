@@ -822,6 +822,10 @@ function getStream(selectObject) {
 					localVideoMsgElement.style.opacity = 0.9;
 				}
 			}
+			showStatus(""); // undo "Connecting..."
+			dialButton.disabled = false;
+			hangupButton.disabled = true;
+
 			if(lastGoodMediaConstraints) {
 				gLog('getStream back to lastGoodMediaConstraints '+lastGoodMediaConstraints);
 				userMediaConstraints = JSON.parse(JSON.stringify(lastGoodMediaConstraints));

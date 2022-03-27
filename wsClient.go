@@ -456,7 +456,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 		}
 
 		if c.hub.maxRingSecs>0 {
-			// if after c.hub.maxRingSecs the callee has NOT picked up the call, callee will be disconnected
+			// if callee does NOT pickup the call after c.hub.maxRingSecs, callee will be disconnected
 			c.hub.setDeadline(c.hub.maxRingSecs,"serveWs ringsecs")
 		}
 
