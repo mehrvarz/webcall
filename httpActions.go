@@ -26,7 +26,7 @@ func httpActions(w http.ResponseWriter, r *http.Request, actionString string, ca
 		}()
 	case "001001":
 		// dump goroutines
-		pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
+		pprof.Lookup("goroutine").WriteTo(os.Stdout, 2)
 	default:
 		fmt.Printf("/action (%s) not implemented calleeID=%s rip=%s\n", actionString, calleeID, remoteAddr)
 	}
