@@ -15,6 +15,7 @@ type Hub struct {
 	CalleeClient *WsClient
 	CallerClient *WsClient
 	timer *time.Timer // expires when durationSecs ends; terminates session
+	timerCanceled chan struct{}
 	exitFunc func(*WsClient, string)
 	IsUnHiddenForCallerAddr string
 	ConnectedCallerIp string
@@ -50,10 +51,12 @@ func newHub(maxRingSecs int, maxTalkSecsIfNoP2p int, startTime int64) *Hub {
 
 func (h *Hub) setDeadline(secs int, comment string) {
 	if h.timer!=nil {
+		// TODO this does not release <-h.timer.C
 		if logWantedFor("calldur") {
 			fmt.Printf("setDeadline clear old timer; new secs=%d (%s)\n",secs,comment)
 		}
 		h.dontCancel = true
+		h.timerCanceled <- struct{}{}
 		h.timer.Stop()
 		h.timer=nil
 	}
@@ -63,10 +66,16 @@ func (h *Hub) setDeadline(secs int, comment string) {
 			fmt.Printf("setDeadline create %ds (%s)\n",secs,comment)
 		}
 		h.timer = time.NewTimer(time.Duration(secs) * time.Second)
+		h.timerCanceled = make(chan struct{})
 		h.dontCancel = false
 		go func() {
 			timeStart := time.Now()
-			<-h.timer.C
+			select {
+			case <-h.timer.C:
+				// do something for timeout, like change state
+			case <-h.timerCanceled:
+				// timer aborted
+			}
 			// timer has ended
 			h.timer = nil
 			if h.dontCancel {
@@ -166,6 +175,7 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 				fmt.Printf("doUnregister clear old timer\n")
 			}
 			h.dontCancel = true
+			h.timerCanceled <- struct{}{}
 			h.timer.Stop()
 			h.timer=nil
 		}
