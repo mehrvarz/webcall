@@ -32,7 +32,6 @@ type Hub struct {
 	CallDurationSecs int64 // single call secs
 	maxRingSecs int //durationSecs1 int // max wait secs till caller arrives
 	maxTalkSecsIfNoP2p int // durationSecs2
-	dontCancel bool // set to prevent timer from calling cancelFunc() // TODO atomic?
 	IsCalleeHidden bool
 	LocalP2p bool
 	RemoteP2p bool
@@ -43,7 +42,6 @@ func newHub(maxRingSecs int, maxTalkSecsIfNoP2p int, startTime int64) *Hub {
 		maxRingSecs:            maxRingSecs,
 		maxTalkSecsIfNoP2p:     maxTalkSecsIfNoP2p,
 		registrationStartTime:  startTime,
-		dontCancel:             false,
 		LocalP2p:               false,
 		RemoteP2p:              false,
 	}
@@ -55,7 +53,6 @@ func (h *Hub) setDeadline(secs int, comment string) {
 		if logWantedFor("calldur") {
 			fmt.Printf("setDeadline clear old timer; new secs=%d (%s)\n",secs,comment)
 		}
-		h.dontCancel = true
 		h.timerCanceled <- struct{}{}
 		h.timer.Stop()
 		h.timer=nil
@@ -67,24 +64,11 @@ func (h *Hub) setDeadline(secs int, comment string) {
 		}
 		h.timer = time.NewTimer(time.Duration(secs) * time.Second)
 		h.timerCanceled = make(chan struct{})
-		h.dontCancel = false
 		go func() {
 			timeStart := time.Now()
 			select {
 			case <-h.timer.C:
 				// do something for timeout, like change state
-			case <-h.timerCanceled:
-				// timer aborted
-			}
-			// timer has ended
-			h.timer = nil
-			if h.dontCancel {
-				// timer was aborted
-				if logWantedFor("calldur") {
-					fmt.Printf("setDeadline aborted; no disconnect caller (secs=%d %v)\n",
-						secs,timeStart.Format("2006-01-02 15:04:05"))
-				}
-			} else {
 				// timer valid: we need to disconnect the clients
 				fmt.Printf("setDeadline reached; end session now (secs=%d %v)\n",
 					secs,timeStart.Format("2006-01-02 15:04:05"))
@@ -106,7 +90,13 @@ func (h *Hub) setDeadline(secs int, comment string) {
 						recentTurnCallerIpMutex.Unlock()
 					}
 				}
+			case <-h.timerCanceled:
+				if logWantedFor("calldur") {
+					fmt.Printf("setDeadline aborted; no disconnect caller (secs=%d %v)\n",
+						secs,timeStart.Format("2006-01-02 15:04:05"))
+				}
 			}
+			h.timer = nil
 		}()
 	}
 }
@@ -174,7 +164,6 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 			if logWantedFor("calldur") {
 				fmt.Printf("doUnregister clear old timer\n")
 			}
-			h.dontCancel = true
 			h.timerCanceled <- struct{}{}
 			h.timer.Stop()
 			h.timer=nil
