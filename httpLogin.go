@@ -428,10 +428,10 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 						DeleteFromHubMap(globalID)
 				}
 				// also unregister callee
-				myHubMutex.RLock()
 				if hub != nil && hub.CalleeClient != nil {
 					hub.doUnregister(hub.CalleeClient, "ws-con timeout")
 				}
+				myHubMutex.RLock()
 			}
 			myHubMutex.RUnlock()
 		}()

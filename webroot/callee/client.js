@@ -1344,11 +1344,7 @@ function peerConOntrack(track, streams) {
 					showStatus(statusMsg);
 
 					notificationSound.play().catch(function(error) { });
-				} /*else if(onIceCandidates<1) {
-					// tmtmtm this is a problem with bromite / no-webrtc patch
-					showStatus("Your browser engine does not generate WebRTC/ICE candidates",-1);
-					notificationSound.play().catch(function(error) { });
-				}*/
+				}
 
 				let videoTracks = remoteStream.getVideoTracks();
 				gLog('peerCon.ontrack unmute track.enabled: delay vtracks',videoTracks.length);
