@@ -588,7 +588,7 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 			// store missed call
 			var missedCallsSlice []CallerInfo
 			err := kvCalls.Get(dbMissedCalls,urlID,&missedCallsSlice)
-			if err!=nil {
+			if err!=nil && strings.Index(err.Error(),"key not found")<0 {
 				fmt.Printf("# /canbenotified (%s) failed to read dbMissedCalls err=%v rip=%s\n",
 					urlID, err, remoteAddr)
 			}
