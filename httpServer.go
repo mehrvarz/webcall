@@ -13,6 +13,7 @@ import (
 	"time"
 	"strings"
 	"fmt"
+	"strconv"
 	"sort"
 	"encoding/json"
 	"io"
@@ -501,8 +502,9 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 					if(ua=="") {
 						ua = hub.calleeUserAgent
 					}
-					fmt.Fprintf(w,"online %-20s ip=%-20s wsCli=%d callerIp=%-20s ua=%s\n",
-						calleeID,
+					boldString, _ := strconv.Unquote(`"\033[1m` + fmt.Sprintf("%-19s",calleeID) + `\033[0m"`)
+					fmt.Fprintf(w,"online %s ip=%-20s wsCli=%d callerIp=%-20s ua=%s\n",
+						boldString,
 						hub.CalleeClient.RemoteAddr,
 						hub.WsClientID,
 						hub.ConnectedCallerIp,
