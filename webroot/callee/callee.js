@@ -1089,11 +1089,14 @@ function signalingCommand(message) {
 		}
 
 	} else if(cmd=="status") {
+		// this is currently only used to make Android users aware on new releases
 		//gLog('status='+payload);
-		if(payload!="") {
-			setTimeout(function() {
-				showStatus(payload,-1);
-			},1000);
+		if(typeof Android !== "undefined" && Android !== null) {
+			if(payload!="") {
+				setTimeout(function() {
+					showStatus(payload,-1);
+				},1000);
+			}
 		}
 
 	} else if(cmd=="sessionId") {
