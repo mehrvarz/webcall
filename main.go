@@ -113,6 +113,7 @@ type wsClientDataType struct {
 	dbUser DbUser
 	calleeID string
 	globalID string
+	clientVersion string
 	removeFlag bool
 }
 // wsClientMap[wsid] contains wsClientDataType at the moment of a callee login

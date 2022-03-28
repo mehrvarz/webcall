@@ -892,11 +892,12 @@ function wsOnMessage(evt) {
 }
 
 function wsOnMessage2(str) {
+	// WebCall service uses this to push in msgs from WebCall server
 	signalingCommand(str);
 }
 
 function signalingCommand(message) {
-	//gLog('signalingCommand '+message);
+	//console.log('signalingCommand '+message);
 	let tok = message.split("|");
 	let cmd = tok[0];
 	let payload = "";
@@ -1086,6 +1087,18 @@ function signalingCommand(message) {
 			stopAllAudioEffects("ignore cancel");
 			// TODO no endWebRtcSession ? android service will not know that ringing has ended
 		}
+
+	} else if(cmd=="status") {
+		// TODO string cleanup doesn't work bc we have quote (") characters in there
+		//let cleanString = payload.replace(/<(?:.|\n)*?>/gm, "...");
+		let cleanString = payload;
+		//gLog('status1='+cleanString);
+		if(cleanString!="") {
+			setTimeout(function() {
+				showStatus(cleanString,-1);
+			},500);
+		}
+
 	} else if(cmd=="sessionId") {
 		// callee has checked in
 		showOnlineReadyMsg(payload);
@@ -1096,7 +1109,7 @@ function signalingCommand(message) {
 		} else if(mediaConnect) {
 			var sessionDuration = parseInt(payload,10); // maxTalkSecsIfNoP2p
 			if(sessionDuration>0 && !timerStartDate) {
-				gLog('sessionDuration',sessionDuration);
+				gLog('sessionDuration '+sessionDuration);
 				startTimer(sessionDuration);
 			}
 		}

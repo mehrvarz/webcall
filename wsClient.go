@@ -61,6 +61,7 @@ type WsClient struct {
 	connType string
 	callerID string
 	callerName string
+	clientVersion string
 	pingSent uint64
 	pongReceived uint64
 	pongSent uint64
@@ -164,6 +165,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	client := &WsClient{wsConn:wsConn}
 	client.calleeID = wsClientData.calleeID // this is the local ID
 	client.globalCalleeID = wsClientData.globalID
+	client.clientVersion = wsClientData.clientVersion
 	client.callerID = callerID
 	client.callerName = callerName
 	if tls {
@@ -416,6 +418,15 @@ func (c *WsClient) receiveProcess(message []byte) {
 			// -> httpServer hubclient.Write()
 			waitingCallerToCallee(c.calleeID, waitingCallerSlice, missedCallsSlice, c)
 		}
+/*
+		fmt.Printf("%s (%s) clientVersion=%s\n",c.connType,c.calleeID,c.clientVersion)
+		if c.clientVersion < "0.9.79" {
+			// NOTE: msg MUST NOT contain apostroph (') characters
+			msg := "WebCall update available. <a href=\"/webcall/update\">Upgrade here.</a>"
+			fmt.Printf("%s (%s) send status|%s\n",c.connType,c.calleeID,msg)
+			c.Write([]byte("status|"+msg))
+		}
+*/
 		return
 	}
 

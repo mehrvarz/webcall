@@ -158,7 +158,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	if strings.HasPrefix(urlID, "random") {
 		// ignore
 	} else if strings.HasPrefix(urlID, "!") {
-		// create new unique wsClientID
+		// duo: create new unique wsClientID
 		wsClientMutex.Lock()
 		wsClientID = getNewWsClientID()
 		wsClientMutex.Unlock()
@@ -336,7 +336,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 	wsClientMutex.Lock()
 	myHubMutex.RLock()
-	wsClientMap[wsClientID] = wsClientDataType{hub, dbEntry, dbUser, urlID, globalID, false}
+	wsClientMap[wsClientID] = wsClientDataType{hub, dbEntry, dbUser, urlID, globalID, clientVersion, false}
 	myHubMutex.RUnlock()
 	wsClientMutex.Unlock()
 
