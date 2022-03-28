@@ -1089,14 +1089,11 @@ function signalingCommand(message) {
 		}
 
 	} else if(cmd=="status") {
-		// TODO string cleanup doesn't work bc we have quote (") characters in there
-		//let cleanString = payload.replace(/<(?:.|\n)*?>/gm, "...");
-		let cleanString = payload;
-		//gLog('status1='+cleanString);
-		if(cleanString!="") {
+		//gLog('status='+payload);
+		if(payload!="") {
 			setTimeout(function() {
-				showStatus(cleanString,-1);
-			},500);
+				showStatus(payload,-1);
+			},1000);
 		}
 
 	} else if(cmd=="sessionId") {
