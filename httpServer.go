@@ -503,11 +503,12 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 						ua = hub.calleeUserAgent
 					}
 					boldString, _ := strconv.Unquote(`"\033[1m` + fmt.Sprintf("%-19s",calleeID) + `\033[0m"`)
-					fmt.Fprintf(w,"online %s ip=%-20s wsCli=%d callerIp=%-20s ua=%s\n",
+					fmt.Fprintf(w,"O %s ip=%-20s ws=%d caller=%-20s ver=%s ua=%s\n",
 						boldString,
 						hub.CalleeClient.RemoteAddr,
 						hub.WsClientID,
 						hub.ConnectedCallerIp,
+						hub.CalleeClient.clientVersion,
 						ua)
 					hub.HubMutex.RUnlock()
 				}

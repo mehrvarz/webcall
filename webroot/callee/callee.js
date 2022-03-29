@@ -25,7 +25,7 @@ const dialIdElement = document.getElementById('dialId');
 const exclamationElement = document.getElementById('exclamation');
 const bitrate = 280000;
 const autoReconnectDelay = 15;
-const clientVersion = "2.0.0";
+const clientVersion = "2.0.10";
 const singlebutton = false;
 const calleeMode = true;
 
@@ -516,6 +516,8 @@ function login(retryFlag) {
 		if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
 			api = api + "&ver="+Android.getVersionName();
 		}
+	} else {
+		api = api + "&ver="+clientVersion;
 	}
 	ajaxFetch(new XMLHttpRequest(), "POST", api, function(xhr) {
 		// processData
