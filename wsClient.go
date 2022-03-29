@@ -125,7 +125,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	wsClientMutex.Unlock()
 	if !ok {
 		// this callee has just exited
-		fmt.Printf("serveWs wsCliID=%d does not exist rip=%s url=%s\n",
+		fmt.Printf("serveWs ws=%d does not exist rip=%s url=%s\n",
 			wsClientID64, remoteAddr, r.URL.String())
 		// TODO why does r.URL start with //
 		// url=//timur.mobi:8443/ws?wsid=47639023704
@@ -263,7 +263,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	if hub.CalleeClient==nil {
 		// callee client (1st client)
 		if logWantedFor("wsclient") {
-			fmt.Printf("%s con callee id=%s wsCliID=%d rip=%s\n", client.connType,
+			fmt.Printf("%s con callee id=%s ws=%d rip=%s\n", client.connType,
 				client.calleeID, wsClientID64, client.RemoteAddr)
 		}
 		client.isCallee = true
@@ -287,7 +287,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	} else if hub.CallerClient==nil {
 		// caller client (2nd client)
 		if logWantedFor("wsclient") {
-			fmt.Printf("%s con caller id=%s wsCliID=%d rip=%s\n",
+			fmt.Printf("%s con caller id=%s ws=%d rip=%s\n",
 				client.connType, client.calleeID, wsClientID64, client.RemoteAddr)
 		}
 
@@ -302,7 +302,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			if hub!=nil && hub.CalleeClient!=nil && !hub.CalleeClient.isConnectedToPeer.Get() {
 				if hub.CallerClient!=nil {
 					hub.CallerClient = nil
-					fmt.Printf("%s rel caller id=%s wsCliID=%d rip=%s\n",
+					fmt.Printf("%s rel caller id=%s ws=%d rip=%s\n",
 						client.connType, client.calleeID, wsClientID64, client.RemoteAddr)
 				}
 			}
@@ -310,7 +310,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 	} else {
 		// this code should never be reached; 2nd caller should receive "busy" from /online
-		fmt.Printf("# %s CallerClient for %s/%s already set wsCliID=%d rip=%s\n",
+		fmt.Printf("# %s CallerClient for %s/%s already set ws=%d rip=%s\n",
 			client.connType, client.calleeID, client.globalCalleeID, wsClientID64, client.RemoteAddr)
 		//fmt.Printf("# %s existing CallerClient rip=%s ua=%s\n",
 		//	client.connType, hub.CallerClient.RemoteAddr, hub.CallerClient.userAgent)
@@ -431,8 +431,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 	}
 
 	if cmd=="dummy" {
-		fmt.Printf("%s dummy ip=%s id=%s payload=%s\n",
-			c.connType, c.RemoteAddr, c.calleeID, payload)
+		fmt.Printf("%s dummy ip=%s id=%s pl=%s ua=%s\n",
+			c.connType, c.RemoteAddr, c.calleeID, payload, c.userAgent)
 		return
 	}
 
