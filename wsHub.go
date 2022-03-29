@@ -55,7 +55,11 @@ func (h *Hub) setDeadline(secs int, comment string) {
 		}
 		h.timerCanceled <- struct{}{}
 		h.timer.Stop()
-		h.timer=nil
+		if(secs>0) {
+			// before we overwrite h.timer (with a NewTimer below), let timerCanceled strike
+			time.Sleep(10 * time.Millisecond)
+			h.timer=nil	// will be done below anyway, so just to be sure
+		}
 	}
 
 	if(secs>0) {
@@ -69,20 +73,14 @@ func (h *Hub) setDeadline(secs int, comment string) {
 			select {
 			case <-h.timer.C:
 				// do something for timeout, like change state
-				// timer valid: we need to disconnect the clients
-				fmt.Printf("setDeadline reached; end session now (secs=%d %v)\n",
-					secs,timeStart.Format("2006-01-02 15:04:05"))
-//				if h.CallerClient!=nil {
-//					// if there is a caller (for instance during ringing), we only disconnect this caller
-//					h.CallerClient.Close("setDeadline "+comment)
-//					h.CallerClient.isConnectedToPeer.Set(false)
-//				} else
+				// timer valid: we need to disconnect the (relayed) clients (if still connected)
 				if h.CalleeClient!=nil {
 					// otherwise we disconnect this callee
+					fmt.Printf("setDeadline reached; end session now (secs=%d %v)\n",
+						secs,timeStart.Format("2006-01-02 15:04:05"))
 					//h.doUnregister(h.CalleeClient,"setDeadline "+comment)
 					h.doBroadcast([]byte("cancel|c"))
 					h.CalleeClient.peerConHasEnded("deadline")
-
 					if(h.CallerClient!=nil) {
 						// deleting recentTurnCallerIps entry, so it does not exist on quick reconnect
 						recentTurnCallerIpMutex.Lock()
