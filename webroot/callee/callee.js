@@ -1574,7 +1574,6 @@ function goOnline() {
 			statusMsg += " <a href='https://timur.mobi/webcall/android/#webview'>More info</a>";
 		}
 		showStatus(statusMsg);
-		wsSend("dummy|RTCPeerCon fail");
 
 		// end spinner
 		if(divspinnerframe) {
@@ -1582,6 +1581,8 @@ function goOnline() {
 			divspinnerframe.style.display = "none";
 		}
 		offlineAction();
+
+		wsSend("dummy|RTCPeerCon fail");
 		return;
 	};
 
