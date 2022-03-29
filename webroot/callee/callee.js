@@ -1565,6 +1565,7 @@ function goOnline() {
 	}
 	try {
 		peerCon = new RTCPeerConnection(ICE_config);
+		wsSend("dummy|RTCPeerCon success");
 	} catch(ex) {
 		console.error("RTCPeerConnection "+ex.message);
 		var statusMsg = "RTCPeerConnection "+ex.message;
