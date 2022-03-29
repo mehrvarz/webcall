@@ -1567,7 +1567,7 @@ function goOnline() {
 	}
 	try {
 		peerCon = new RTCPeerConnection(ICE_config);
-		wsSend("dummy|RTCPeerCon success");
+		//wsSend("dummy|RTCPeerCon success");					// TODO to be removed
 	} catch(ex) {
 		console.error("RTCPeerConnection "+ex.message);
 		var statusMsg = "RTCPeerConnection "+ex.message;
@@ -1575,7 +1575,7 @@ function goOnline() {
 			statusMsg += " <a href='https://timur.mobi/webcall/android/#webview'>More info</a>";
 		}
 		showStatus(statusMsg);
-		wsSend("dummy|RTCPeerCon fail");
+		//wsSend("dummy|RTCPeerCon fail");					// TODO to be removed
 
 		// end spinner
 		if(divspinnerframe) {
