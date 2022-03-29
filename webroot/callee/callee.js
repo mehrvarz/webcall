@@ -585,7 +585,7 @@ function login(retryFlag) {
 			}
 			gLog('isHiddenCheckbox.checked '+isHiddenCheckbox.checked);
 			wsSend("init|!"); // -> connectSignaling()
-			wsSend("dummy|done init");
+			//wsSend("dummy|done init");
 			return;
 		}
 
