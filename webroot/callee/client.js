@@ -823,8 +823,10 @@ function getStream(selectObject) {
 				}
 			}
 			showStatus(""); // undo "Connecting..."
-			dialButton.disabled = false;
-			hangupButton.disabled = true;
+			if(typeof dialButton!=="undefined" && dialButton) {
+				dialButton.disabled = false;
+				hangupButton.disabled = true;
+			}
 
 			if(lastGoodMediaConstraints) {
 				gLog('getStream back to lastGoodMediaConstraints '+lastGoodMediaConstraints);
