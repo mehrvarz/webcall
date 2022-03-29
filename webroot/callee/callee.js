@@ -585,7 +585,6 @@ function login(retryFlag) {
 			}
 			gLog('isHiddenCheckbox.checked '+isHiddenCheckbox.checked);
 			wsSend("init|!"); // -> connectSignaling()
-			//wsSend("dummy|done init");
 			return;
 		}
 
@@ -1565,7 +1564,7 @@ function goOnline() {
 	}
 	try {
 		peerCon = new RTCPeerConnection(ICE_config);
-		//wsSend("dummy|RTCPeerCon success");					// TODO to be removed
+		wsSend("dummy|RTCPeerCon success");
 	} catch(ex) {
 		console.error("RTCPeerConnection "+ex.message);
 		var statusMsg = "RTCPeerConnection "+ex.message;
@@ -1573,7 +1572,7 @@ function goOnline() {
 			statusMsg += " <a href='https://timur.mobi/webcall/android/#webview'>More info</a>";
 		}
 		showStatus(statusMsg);
-		//wsSend("dummy|RTCPeerCon fail");					// TODO to be removed
+		wsSend("dummy|RTCPeerCon fail");
 
 		// end spinner
 		if(divspinnerframe) {
