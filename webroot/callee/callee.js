@@ -585,6 +585,7 @@ function login(retryFlag) {
 			}
 			gLog('isHiddenCheckbox.checked '+isHiddenCheckbox.checked);
 			wsSend("init|!"); // -> connectSignaling()
+			wsSend("dummy|done init");
 			return;
 		}
 
@@ -1458,7 +1459,7 @@ function pickup2() {
 	// before we send "pickup|!" to caller allow some time for onnegotiation to take place
 	setTimeout(function() {
 		gLog('pickup2: after short delay send pickup to caller');
-		wsSend("pickup|!") // make caller unmute our mic on their side
+		wsSend("pickup|!"); // make caller unmute our mic on their side
 
 		answerButton.disabled = true;
 		onlineIndicator.src="red-gradient.svg";

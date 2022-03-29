@@ -1342,7 +1342,7 @@ function peerConOntrack(track, streams) {
 						statusMsg += " <a href='https://timur.mobi/webcall/android/#webview'>More info</a>";
 					}
 					showStatus(statusMsg);
-
+					wsSend("dummy|no connectionstatechanges");
 					notificationSound.play().catch(function(error) { });
 				}
 
