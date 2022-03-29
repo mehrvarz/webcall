@@ -1390,9 +1390,7 @@ function wsSend(message) {
 	if(typeof Android !== "undefined" && Android !== null) {
 		if(wsConn==null) {
 			// currently not connected to webcall server
-			//if(!message.startsWith("dummy")) {
-				connectSignaling(message,"andr wsConn==null");
-			//}
+			connectSignaling(message,"andr wsConn==null");
 		} else {
 			Android.wsSend(message);
 		}
@@ -1402,7 +1400,7 @@ function wsSend(message) {
 		// currently not connected to webcall server
 		if(wsConn) {
 			if(wsConn.readyState==0) {
-				gLog('wsSend (state 0 = connecting)');
+				gLog('wsSend (state 0 = connecting) '+message);
 				wsConn.close();
 				wsConn=null;
 				offlineAction();
