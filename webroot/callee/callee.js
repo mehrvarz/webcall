@@ -1564,7 +1564,6 @@ function goOnline() {
 	}
 	try {
 		peerCon = new RTCPeerConnection(ICE_config);
-		wsSend("dummy|RTCPeerCon success");
 	} catch(ex) {
 		console.error("RTCPeerConnection "+ex.message);
 		var statusMsg = "RTCPeerConnection "+ex.message;
@@ -1582,6 +1581,7 @@ function goOnline() {
 		offlineAction();
 		return;
 	};
+	wsSend("dummy|RTCPeerCon success");
 	peerCon.onicecandidate = e => onIceCandidate(e,"calleeCandidate");
 	peerCon.onicecandidateerror = function(e) {
 		// don't warn on 701 (chrome "701 STUN allocate request timed out")
