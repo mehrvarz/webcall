@@ -1582,7 +1582,7 @@ function goOnline() {
 		}
 		offlineAction();
 
-		wsSend("dummy|RTCPeerCon fail");
+		//wsSend("dummy|RTCPeerCon fail");
 		return;
 	};
 
