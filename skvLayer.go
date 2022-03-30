@@ -195,7 +195,9 @@ func locGetRandomCalleeID() (string,error) {
 	defer hubMapMutex.RUnlock()
 
 	newCalleeId := ""
+	tries := 0
 	for {
+		tries++
 		intID := uint64(rand.Int63n(int64(99999999999)))
 		if(intID<uint64(10000000000)) {
 			continue;
@@ -211,19 +213,19 @@ func locGetRandomCalleeID() (string,error) {
 		err := kvMain.Get(dbRegisteredIDs,newCalleeId,&dbEntry)
 		if err==nil {
 			// found in dbRegisteredIDs
-			// TODO make log conditional
-			fmt.Printf("getRandomCalleeID %v exists already in dbRegisteredIDs\n",newCalleeId)
+			//fmt.Printf("getRandomCalleeID %v exists already in dbRegisteredIDs\n",newCalleeId)
 			continue;
 		}
 		err = kvMain.Get(dbBlockedIDs,newCalleeId,&dbEntry)
 		if err==nil {
 			// found in dbBlockedIDs
-			// TODO make log conditional
-			fmt.Printf("getRandomCalleeID %v exists already in dbBlockedIDs\n",newCalleeId)
+			//fmt.Printf("getRandomCalleeID %v exists already in dbBlockedIDs\n",newCalleeId)
 			continue;
 		}
-		// not found anywhere - newCalleeID is accepted!
-		//fmt.Printf("getRandomCalleeID %v is free\n",newCalleeId)
+		// newCalleeId not found anywhere - is accepted!
+		if tries>1 {
+			fmt.Printf("getRandomCalleeID (%s) tries=%d\n", newCalleeId, tries)
+		}
 		return newCalleeId, nil
 	}
 }

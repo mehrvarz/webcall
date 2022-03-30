@@ -107,7 +107,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				if offlineReason==0 {
 					// abort login: old/sameId callee is still online
 					fmt.Fprintf(w,"fatal")
-					fmt.Printf("/login key=(%s) is already logged in (%d) rip=%s ua=%s ver=%s\n",
+					fmt.Printf("/login (%s) is already logged in (%d) rip=%s ua=%s ver=%s\n",
 						key, offlineReason, remoteAddr, userAgent, clientVersion)
 					return
 				}
