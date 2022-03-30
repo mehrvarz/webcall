@@ -664,12 +664,13 @@ func (c *WsClient) receiveProcess(message []byte) {
 		if c==nil {
 			fmt.Printf("# peer c==nil\n")
 		} else if c.hub==nil {
-			fmt.Printf("# %s (%s) peer c.hub==nil\n", c.connType, c.calleeID)
+			fmt.Printf("# %s (%s) peer c.hub==nil ver=%s\n", c.connType, c.calleeID, c.clientVersion)
 		} else if c.hub.CallerClient==nil {
-			fmt.Printf("# %s (%s) peer %s c.hub.CallerClient==nil\n", c.connType, c.calleeID, payload)
+			fmt.Printf("# %s (%s) peer %s c.hub.CallerClient==nil ver=%s\n",
+				c.connType, c.calleeID, payload, c.clientVersion)
 		} else {
-			fmt.Printf("%s (%s) peer %s (%s:%s)\n", c.connType, c.calleeID, payload,
-				c.hub.CallerClient.callerID, c.hub.CallerClient.callerName)
+			fmt.Printf("%s (%s) peer %s (%s:%s) ver=%s\n", c.connType, c.calleeID, payload,
+				c.hub.CallerClient.callerID, c.hub.CallerClient.callerName, c.clientVersion)
 			// callerID + callerName are forward to callee via "callerInfo|" on receipt of "callerOffer"
 		}
 		tok := strings.Split(payload, " ")
