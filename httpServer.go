@@ -325,7 +325,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				err = kvHashedPw.Get(dbHashedPwBucket,cookie.Value,&pwIdCombo)
 				if err!=nil {
 					// callee is using an unknown cookie
-					fmt.Printf("kvHashedPw.Get %v unknown cookie err=%v\n", r.URL, err)
+					fmt.Printf("kvHashedPw.Get %v unknown cookie '%s' err=%v\n", r.URL, cookie.Value, err)
 					cookie = nil
 				} else if calleeID!="" && pwIdCombo.CalleeId != calleeID {
 					// callee is using wrong cookie
