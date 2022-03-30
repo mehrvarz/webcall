@@ -372,7 +372,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 		err := kvCalls.Get(dbWaitingCaller,c.calleeID,&waitingCallerSlice)
 		if err!=nil {
 			// can be ignored
-			//fmt.Printf("# serveWs (id=%s) failed to read dbWaitingCaller err=%v\n", urlID, err)
+			//fmt.Printf("# serveWs (%s) failed to read dbWaitingCaller err=%v\n", urlID, err)
 		}
 		// before we send waitingCallerSlice
 		// we remove all entries that are older than 10min
@@ -390,11 +390,11 @@ func (c *WsClient) receiveProcess(message []byte) {
 			}
 		}
 		if countOutdated>0 {
-			fmt.Printf("%s (id=%s) deleted %d outdated from waitingCallerSlice\n",
+			fmt.Printf("%s (%s) deleted %d outdated from waitingCallerSlice\n",
 				c.connType, c.calleeID, countOutdated)
 			err = kvCalls.Put(dbWaitingCaller, c.calleeID, waitingCallerSlice, true) // skipConfirm
 			if err!=nil {
-				fmt.Printf("# %s (id=%s) failed to store dbWaitingCaller\n",c.connType,c.calleeID)
+				fmt.Printf("# %s (%s) failed to store dbWaitingCaller\n",c.connType,c.calleeID)
 			}
 		}
 
@@ -404,7 +404,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 		var dbUser DbUser
 		err = kvMain.Get(dbUserBucket, userKey, &dbUser)
 		if err!=nil {
-			fmt.Printf("# %s (id=%s) failed to get dbUser\n",c.connType,c.calleeID)
+			fmt.Printf("# %s (%s) failed to get dbUser\n",c.connType,c.calleeID)
 		} else if(dbUser.StoreMissedCalls) {
 			err = kvCalls.Get(dbMissedCalls,c.calleeID,&missedCallsSlice)
 			if err!=nil {
@@ -570,7 +570,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 		var dbUser DbUser
 		err := kvMain.Get(dbUserBucket, userKey, &dbUser)
 		if err!=nil {
-			fmt.Printf("# %s (id=%s) failed to get dbUser\n",c.connType,c.calleeID)
+			fmt.Printf("# %s (%s) failed to get dbUser\n",c.connType,c.calleeID)
 		} else if(dbUser.StoreMissedCalls) {
 			err = kvCalls.Get(dbMissedCalls,c.calleeID,&missedCallsSlice)
 			if err!=nil {
@@ -809,11 +809,14 @@ func (c *WsClient) peerConHasEnded(comment string) {
 			var dbUser DbUser
 			err := kvMain.Get(dbUserBucket, userKey, &dbUser)
 			if err!=nil {
-				fmt.Printf("# %s (id=%s) failed to get dbUser\n",c.connType,c.calleeID)
+				fmt.Printf("# %s (%s) failed to get dbUser\n",c.connType,c.calleeID)
 			} else if(dbUser.StoreMissedCalls) {
 				err = kvCalls.Get(dbMissedCalls,c.calleeID,&missedCallsSlice)
 				if err!=nil {
-					fmt.Printf("# %s (id=%s) failed to get missedCalls\n",c.connType,c.calleeID)
+					if strings.Index(err.Error(),"key not found")<0 {
+						fmt.Printf("# %s (%s) failed to get missedCalls rip=%s\n",
+							c.connType, c.calleeID, c.RemoteAddr)
+					}
 					missedCallsSlice = nil
 				}
 			}
@@ -827,7 +830,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 				missedCallsSlice = append(missedCallsSlice, caller)
 				err = kvCalls.Put(dbMissedCalls, c.calleeID, missedCallsSlice, true) // skipConfirm
 				if err!=nil {
-					fmt.Printf("# %s (id=%s) failed to store dbMissedCalls err=%v\n",
+					fmt.Printf("# %s (%s) failed to store dbMissedCalls err=%v\n",
 						c.connType, c.calleeID, err, c.RemoteAddr)
 				}
 			}
