@@ -24,7 +24,7 @@ import (
 )
 
 func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *http.Cookie, pw string, remoteAddr string, remoteAddrWithPort string, nocookie bool, startRequestTime time.Time, pwIdCombo PwIdCombo, userAgent string) {
-	//fmt.Printf("/login urlID=(%s) rip=%s rt=%v\n",
+	//fmt.Printf("/login (%s) rip=%s rt=%v\n",
 	//	urlID, remoteAddrWithPort, time.Since(startRequestTime)) // rt=4.393µs
 
 	clientVersion := ""
@@ -61,7 +61,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		key, _, _, err := GetOnlineCallee(urlID, ejectOn1stFound, reportBusyCallee, 
 			reportHiddenCallee, remoteAddr, "/login")
 		if err != nil {
-			fmt.Printf("# /login key=(%s) GetOnlineCallee() err=%v ver=%s\n", key, err, clientVersion)
+			fmt.Printf("# /login (%s) GetOnlineCallee() err=%v ver=%s\n", key, err, clientVersion)
 		}
 		if key != "" {
 			// found "already logged in"
@@ -71,7 +71,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			key, _, _, err = GetOnlineCallee(urlID, ejectOn1stFound, reportBusyCallee, 
 				reportHiddenCallee, remoteAddr, "/login")
 			if err != nil {
-				fmt.Printf("# /login key=(%s) GetOnlineCallee() err=%v ver=%s\n", key, err, clientVersion)
+				fmt.Printf("# /login (%s) GetOnlineCallee() err=%v ver=%s\n", key, err, clientVersion)
 			}
 			if key != "" {
 				// "already logged in" entry still exists
@@ -89,7 +89,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				} else {
 					// hub.CalleeClient seems to be online; let's see if this holds if we ping it
 					if logWantedFor("login") {
-						fmt.Printf("/login key=(%s) send ping to prev rip=%s\n", key, remoteAddr)
+						fmt.Printf("/login (%s) send ping to prev rip=%s\n", key, remoteAddr)
 					}
 					hub.CalleeClient.SendPing(2000)
 
@@ -140,12 +140,12 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 	// pw must be available now
 	if pw == "" {
-		fmt.Printf("/login no pw urlID=%s rip=%s ua=%s ver=%s\n", urlID, remoteAddr, r.UserAgent(), clientVersion)
+		fmt.Printf("/login (%s) no pw rip=%s ua=%s ver=%s\n", urlID, remoteAddr, r.UserAgent(), clientVersion)
 		fmt.Fprintf(w, "error")
 		return
 	}
 
-	//fmt.Printf("/login pw given urlID=(%s) rip=%s rt=%v\n",
+	//fmt.Printf("/login (%s) pw given rip=%s rt=%v\n",
 	//	urlID, remoteAddr, time.Since(startRequestTime)) // rt=23.184µs
 	var dbEntry DbEntry
 	var dbUser DbUser
@@ -162,24 +162,24 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		wsClientMutex.Lock()
 		wsClientID = getNewWsClientID()
 		wsClientMutex.Unlock()
-		//fmt.Printf("/login set wsClientMap[%d] for ID=(%s)\n", wsClientID, globalID)
+		//fmt.Printf("/login (%s) set wsClientMap[%d] for \n", globalID, wsClientID)
 		// hub.WsClientID and hub.ConnectedCallerIp will be set by wsclient.go
 
 		var err error
 		globalID,_,err = StoreCalleeInHubMap(urlID, myMultiCallees, remoteAddrWithPort, wsClientID, false)
 		if err != nil || globalID == "" {
-			fmt.Printf("# /login id=(%s) StoreCalleeInHubMap(%s) err=%v ver=%s\n",
+			fmt.Printf("# /login (%s) StoreCalleeInHubMap(%s) err=%v ver=%s\n",
 				globalID, urlID, err, clientVersion)
 			fmt.Fprintf(w, "noservice")
 			return
 		}
-		//fmt.Printf("/login globalID=(%s) urlID=(%s) rip=%s rt=%v\n",
+		//fmt.Printf("/login (%s) urlID=(%s) rip=%s rt=%v\n",
 		//	globalID, urlID, remoteAddr, time.Since(startRequestTime))
 	} else {
 		// pw check for everyone other than random and duo
 		if len(pw) < 6 {
 			// guessing more difficult if delayed
-			fmt.Printf("/login pw too short urlID=(%s) rip=%s ver=%s\n", urlID, remoteAddr, clientVersion)
+			fmt.Printf("/login (%s) pw too short rip=%s ver=%s\n", urlID, remoteAddr, clientVersion)
 			time.Sleep(3000 * time.Millisecond)
 			fmt.Fprintf(w, "error")
 			return
@@ -187,8 +187,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 		err := kvMain.Get(dbRegisteredIDs, urlID, &dbEntry)
 		if err != nil {
-			fmt.Printf("# /login error db=%s bucket=%s key=%s rip=%s get registeredID err=%v ver=%s\n",
-				dbMainName, dbRegisteredIDs, urlID, remoteAddr, err, clientVersion)
+			fmt.Printf("/login (%s) error db=%s bucket=%s rip=%s get registeredID err=%v ver=%s\n",
+				urlID, dbMainName, dbRegisteredIDs, remoteAddr, err, clientVersion)
 			if strings.Index(err.Error(), "disconnect") >= 0 {
 				// TODO admin email notif may be useful
 				fmt.Fprintf(w, "error")
