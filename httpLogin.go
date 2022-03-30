@@ -213,8 +213,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		dbUserKey = fmt.Sprintf("%s_%d", urlID, dbEntry.StartTime)
 		err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 		if err != nil {
-			fmt.Printf("# /login error db=%s bucket=%s get key=%v rip=%s err=%v ver=%s\n",
-				dbMainName, dbUserBucket, dbUserKey, remoteAddr, err, clientVersion)
+			fmt.Printf("# /login (%s) error db=%s bucket=%s get rip=%s err=%v ver=%s\n",
+				dbUserKey, dbMainName, dbUserBucket, remoteAddr, err, clientVersion)
 			fmt.Fprintf(w, "error")
 			return
 		}
@@ -225,8 +225,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		dbUser.LastLoginTime = time.Now().Unix()
 		err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
 		if err!=nil {
-			fmt.Printf("# /login error db=%s bucket=%s put key=%s rip=%s err=%v ver=%s\n",
-				dbMainName, dbUserBucket, urlID, remoteAddr, err, clientVersion)
+			fmt.Printf("# /login (%s) error db=%s bucket=%s put rip=%s err=%v ver=%s\n",
+				urlID, dbMainName, dbUserBucket, remoteAddr, err, clientVersion)
 		}
 
 		// create new unique wsClientID
