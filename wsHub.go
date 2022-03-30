@@ -54,12 +54,13 @@ func (h *Hub) setDeadline(secs int, comment string) {
 			fmt.Printf("setDeadline clear old timer; new secs=%d (%s)\n",secs,comment)
 		}
 		h.timerCanceled <- struct{}{}
-		h.timer.Stop()
-		if(secs>0) {
-			// before we overwrite h.timer (with a NewTimer below), let timerCanceled strike
-			time.Sleep(10 * time.Millisecond)
-			h.timer=nil	// will be done below anyway, so just to be sure
+		if !h.timer.Stop() {
+			if(secs>0) {
+				// before we overwrite h.timer (with a NewTimer below), let timerCanceled strike
+				time.Sleep(10 * time.Millisecond)
+			}
 		}
+		h.timer=nil	// will be done below anyway, so just to be sure
 	}
 
 	if(secs>0) {
@@ -163,7 +164,9 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 				fmt.Printf("doUnregister clear old timer\n")
 			}
 			h.timerCanceled <- struct{}{}
-			h.timer.Stop()
+			if !h.timer.Stop() {
+				time.Sleep(10 * time.Millisecond)
+			}
 			h.timer=nil
 		}
 	} else {
