@@ -431,8 +431,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 	}
 
 	if cmd=="dummy" {
-		fmt.Printf("%s dummy (%s) ip=%s pl=%s ua=%s\n",
-			c.connType, c.calleeID, c.RemoteAddr, payload, c.userAgent)
+		fmt.Printf("%s (%s) dummy %s ip=%s ua=%s\n",
+			c.connType, c.calleeID, payload, c.RemoteAddr, c.userAgent)
 		return
 	}
 
