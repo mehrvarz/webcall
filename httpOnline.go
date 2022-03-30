@@ -302,8 +302,8 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 					fmt.Fprintf(w,"cannot register ID")
 					// TODO this is bad! got to role back kvMain.Put((dbUser...) from above
 				} else {
-					fmt.Printf("/register (%s) db=%s bucket=%s stored OK\n",
-						registerID, dbMainName, dbRegisteredIDs)
+					//fmt.Printf("/register (%s) db=%s bucket=%s stored OK\n",
+					//	registerID, dbMainName, dbRegisteredIDs)
 					// registerID is now available for use
 					var pwIdCombo PwIdCombo
 					err,cookieValue := createCookie(w, registerID, pw, &pwIdCombo)
@@ -325,7 +325,7 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 					if err!=nil {
 						fmt.Printf("# /register (%s) kvContacts.Put err=%v\n", registerID, err)
 					} else {
-						fmt.Printf("/register (%s) kvContacts.Put OK\n", registerID)
+						//fmt.Printf("/register (%s) kvContacts.Put OK\n", registerID)
 					}
 
 					fmt.Fprintf(w, "OK")

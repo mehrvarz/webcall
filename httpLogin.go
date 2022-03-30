@@ -227,6 +227,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		if err!=nil {
 			fmt.Printf("# /login (%s) error db=%s bucket=%s put rip=%s err=%v ver=%s\n",
 				urlID, dbMainName, dbUserBucket, remoteAddr, err, clientVersion)
+			fmt.Fprintf(w, "error")
+			return
 		}
 
 		// create new unique wsClientID
