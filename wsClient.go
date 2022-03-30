@@ -195,8 +195,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			if n>0 {
 				if logWantedFor("wsreceive") {
 					max := n; if max>10 { max = 10 }
-					fmt.Printf("%s received n=%d isCallee=%v calleeID=(%s) (%s)\n",
-						client.connType, n, client.isCallee, client.calleeID, data[:max])
+					fmt.Printf("%s (%s) received n=%d isCallee=%v (%s)\n",
+						client.connType, client.calleeID, n, client.isCallee, data[:max])
 				}
 				client.receiveProcess(data)
 			}
@@ -208,7 +208,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	upgrader.SetPongHandler(func(wsConn *websocket.Conn, s string) {
 		// we received a pong from the client
 		if logWantedFor("gotpong") {
-			fmt.Printf("gotPong %s\n",client.calleeID)
+			fmt.Printf("gotPong (%s)\n",client.calleeID)
 		}
 		// clear read deadline for now; we set it again when we send the next ping
 		wsConn.SetReadDeadline(time.Time{})
@@ -220,7 +220,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	upgrader.SetPingHandler(func(wsConn *websocket.Conn, s string) {
 		// we received a ping from the client
 		if logWantedFor("gotping") {
-			fmt.Printf("gotPing %s\n",client.calleeID)
+			fmt.Printf("gotPing (%s)\n",client.calleeID)
 		}
 		client.pingReceived++
 		// clear read deadline for now; we set it again when we send the next ping
@@ -238,10 +238,10 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		client.isOnline.Set(false) // prevents doUnregister() from closing this already closed connection
 		if logWantedFor("wsclose") {
 			if err!=nil {
-				fmt.Printf("%s onclose %s isCallee=%v err=%v\n",
+				fmt.Printf("%s (%s) onclose isCallee=%v err=%v\n",
 					client.connType, client.calleeID, client.isCallee, err)
 			} else {
-				fmt.Printf("%s onclose %s isCallee=%v noerr\n",
+				fmt.Printf("%s (%s) onclose isCallee=%v noerr\n",
 					client.connType, client.calleeID, client.isCallee)
 			}
 		}
@@ -263,7 +263,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	if hub.CalleeClient==nil {
 		// callee client (1st client)
 		if logWantedFor("wsclient") {
-			fmt.Printf("%s con callee id=%s ws=%d rip=%s\n", client.connType,
+			fmt.Printf("%s (%s) con callee ws=%d rip=%s\n", client.connType,
 				client.calleeID, wsClientID64, client.RemoteAddr)
 		}
 		client.isCallee = true
@@ -287,7 +287,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	} else if hub.CallerClient==nil {
 		// caller client (2nd client)
 		if logWantedFor("wsclient") {
-			fmt.Printf("%s con caller id=%s ws=%d rip=%s\n",
+			fmt.Printf("%s (%s) con caller ws=%d rip=%s\n",
 				client.connType, client.calleeID, wsClientID64, client.RemoteAddr)
 		}
 
@@ -302,7 +302,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			if hub!=nil && hub.CalleeClient!=nil && !hub.CalleeClient.isConnectedToPeer.Get() {
 				if hub.CallerClient!=nil {
 					hub.CallerClient = nil
-					fmt.Printf("%s rel caller id=%s ws=%d rip=%s\n",
+					fmt.Printf("%s (%s) rel caller ws=%d rip=%s\n",
 						client.connType, client.calleeID, wsClientID64, client.RemoteAddr)
 				}
 			}
@@ -310,7 +310,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 	} else {
 		// this code should never be reached; 2nd caller should receive "busy" from /online
-		fmt.Printf("# %s CallerClient for %s/%s already set ws=%d rip=%s\n",
+		fmt.Printf("# %s (%s/%s) CallerClient already set ws=%d rip=%s\n",
 			client.connType, client.calleeID, client.globalCalleeID, wsClientID64, client.RemoteAddr)
 		//fmt.Printf("# %s existing CallerClient rip=%s ua=%s\n",
 		//	client.connType, hub.CallerClient.RemoteAddr, hub.CallerClient.userAgent)
