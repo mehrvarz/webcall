@@ -74,14 +74,14 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		var dbUser DbUser
 		err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 		if err != nil {
-			fmt.Printf("# /online error db=%s bucket=%s get key=%v err=%v ver=%s\n",
-				dbMainName, dbUserBucket, dbUserKey, err, clientVersion)
+			fmt.Printf("# /online (%s) error db=%s bucket=%s get key=%v err=%v ver=%s\n",
+				urlID, dbMainName, dbUserBucket, dbUserKey, err, clientVersion)
 		} else {
 			// use dbUser.LastLogoffTime to see how long it has been offline
 			secsSinceLogoff = time.Now().Unix() - dbUser.LastLogoffTime
 		}
 		if(secsSinceLogoff>0) {
-			fmt.Printf("/online callee %s is offline (for %d secs) rip=%s ver=%s ua=%s\n",
+			fmt.Printf("/online (%s) is offline (for %d secs) rip=%s ver=%s ua=%s\n",
 				urlID, secsSinceLogoff, remoteAddr, clientVersion, r.UserAgent())
 			if(secsSinceLogoff < 15*60) {
 				// callee may come back very soon
@@ -119,7 +119,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		locHub.HubMutex.RUnlock()
 		if wsClientID == 0 {
 			// something has gone wrong
-			fmt.Printf("# /online id=(%s/%s) loc ws==0 rip=%s ver=%s\n",
+			fmt.Printf("# /online (%s/%s) loc ws==0 rip=%s ver=%s\n",
 				urlID, glUrlID, remoteAddr, clientVersion)
 			// clear local ConnectedCallerIp
 			locHub.HubMutex.Lock()
@@ -153,7 +153,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		// callee is managed by a remote server
 		if globHub.ConnectedCallerIp != "" {
 			// this callee (urlID/glUrlID) is online but currently busy
-			fmt.Printf("/online busy for (%s/%s) callerIp=(%s) rip=%s ua=%s\n",
+			fmt.Printf("/online (%s/%s) busy callerIp=(%s) rip=%s ua=%s\n",
 				urlID, glUrlID, globHub.ConnectedCallerIp, remoteAddr, r.UserAgent())
 			fmt.Fprintf(w, "busy")
 			return
@@ -162,12 +162,12 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		wsClientID := globHub.WsClientID
 		if wsClientID == 0 {
 			// something has gone wrong
-			fmt.Printf("# /online glob ws=0 (%s) for id=(%s/%s) rip=%s ver=%s\n",
-				glUrlID, urlID, glUrlID, remoteAddr, clientVersion)
+			fmt.Printf("# /online (%s/%s) glob ws=0 rip=%s ver=%s\n",
+				urlID, glUrlID, remoteAddr, clientVersion)
 			// clear global ConnectedCallerIp
 			err := StoreCallerIpInHubMap(glUrlID, "", false)
 			if err!=nil {
-				fmt.Printf("# /online rkv.StoreCallerIpInHubMap err=%v\n", err)
+				fmt.Printf("# /online (%s/%s) rkv.StoreCallerIpInHubMap err=%v\n", urlID, glUrlID, err)
 			}
 			fmt.Fprintf(w, "error")
 			return
@@ -179,13 +179,13 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		}
 		wsAddr = fmt.Sprintf("%s?wsid=%d", wsAddr, wsClientID)
 
-		fmt.Printf("/online glUrlID=%s avail wsAddr=%s rip=%s\n", glUrlID, wsAddr, remoteAddr)
+		fmt.Printf("/online (%s) avail wsAddr=%s rip=%s\n", glUrlID, wsAddr, remoteAddr)
 		fmt.Fprintf(w, wsAddr)
 		return
 	}
 
 	// something has gone wrong - callee not found anywhere
-	fmt.Printf("# /online no hub found for id=(%s/%s) rip=%s\n", urlID, glUrlID, remoteAddr)
+	fmt.Printf("# /online (%s/%s) no hub found for rip=%s\n", urlID, glUrlID, remoteAddr)
 
 	// clear ConnectedCallerIp
 	StoreCallerIpInHubMap(glUrlID, "", false)
@@ -196,36 +196,36 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 func httpAvail(w http.ResponseWriter, r *http.Request, urlID string, urlPath string, remoteAddr string) {
 	checkID := urlPath[7:]
 	if !allowNewAccounts {
-		fmt.Printf("# /avail !allowNewAccounts id=%s for rip=%s\n",checkID,remoteAddr)
+		fmt.Printf("# /avail (%s) !allowNewAccounts rip=%s\n",checkID,remoteAddr)
 	} else {
 		// checks if ID is free to be registered for a new calle
 		// this is NOT the case if it is listed as registered or blocked
-		fmt.Printf("/avail check id=%s for rip=%s\n",checkID,remoteAddr)
+		fmt.Printf("/avail (%s) rip=%s\n",checkID,remoteAddr)
 		var dbEntryBlocked DbEntry
 		// checkID is blocked in dbBlockedIDs
 		err := kvMain.Get(dbBlockedIDs,checkID,&dbEntryBlocked)
 		if err!=nil {
 			// id is not listed in dbBlockedIDs
-			fmt.Printf("/avail check id=%s not found in dbBlockedIDs\n",checkID)
+			fmt.Printf("/avail (%s) not found in dbBlockedIDs\n",checkID)
 			var dbEntryRegistered DbEntry
 			err := kvMain.Get(dbRegisteredIDs,checkID,&dbEntryRegistered)
 			if err!=nil {
 				// id is not listed in dbRegisteredIDs
 				//fmt.Printf("avail check id=%s not found in dbRegisteredIDs\n",checkID)
-				fmt.Printf("/avail check id=%s for rip=%s is positive\n",checkID,remoteAddr)
+				fmt.Printf("/avail (%s) for rip=%s is positive\n",checkID,remoteAddr)
 				fmt.Fprintf(w, "true")
 				return
 			}
-			fmt.Printf("/avail check id=%s found in dbRegisteredIDs\n",checkID)
+			fmt.Printf("/avail (%s) found in dbRegisteredIDs\n",checkID)
 		}
 		// id is listed in dbBlockedIDs
 		// but if it is blocked by the same remoteAddr then we provide access of course
 		if dbEntryBlocked.Ip==remoteAddr {
-			fmt.Printf("/avail check id=%s with SAME rip=%s is positive\n",checkID,remoteAddr)
+			fmt.Printf("/avail (%s) with SAME rip=%s is positive\n",checkID,remoteAddr)
 			fmt.Fprintf(w, "true")
 			return
 		}
-		fmt.Printf("/avail check id=%s for rip=%s is negative\n",checkID,remoteAddr)
+		fmt.Printf("/avail (%s) for rip=%s is negative\n",checkID,remoteAddr)
 	}
 	fmt.Fprintf(w, "false")
 	return
@@ -251,7 +251,7 @@ func httpNewId(w http.ResponseWriter, r *http.Request, urlID string, calleeID st
 func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath string, remoteAddr string, startRequestTime time.Time) {
 	if allowNewAccounts {
 		registerID := urlPath[10:]
-		fmt.Printf("/register id=%s rip=%s ua=%s\n",registerID,remoteAddr,r.UserAgent())
+		fmt.Printf("/register (%s) rip=%s ua=%s\n",registerID,remoteAddr,r.UserAgent())
 
 		postBuf := make([]byte, 128)
 		length,_ := io.ReadFull(r.Body, postBuf)
@@ -267,7 +267,7 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 			}
 			// deny if pw is too short or not valid
 			if len(pw)<6 {
-				fmt.Printf("/register fail pw too short\n")
+				fmt.Printf("/register (%s) fail pw too short\n",registerID)
 				fmt.Fprintf(w, "too short")
 				return
 			}
@@ -279,8 +279,8 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 			err := kvMain.Get(dbRegisteredIDs,registerID,&dbEntryRegistered)
 			if err==nil {
 				// registerID is already registered
-				fmt.Printf("/register fail db=%s bucket=%s get id=%s already registered\n",
-					dbMainName, dbRegisteredIDs, registerID)
+				fmt.Printf("/register (%s) fail db=%s bucket=%s get already registered\n",
+					registerID, dbMainName, dbRegisteredIDs)
 				fmt.Fprintf(w, "was already registered")
 				return
 			}
@@ -290,25 +290,25 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 			dbUser := DbUser{Ip1:remoteAddr, UserAgent:r.UserAgent()}
 			err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
 			if err!=nil {
-				fmt.Printf("# /register error db=%s bucket=%s put key=%s err=%v\n",
-					dbMainName, dbUserBucket, registerID, err)
+				fmt.Printf("# /register (%s) error db=%s bucket=%s put err=%v\n",
+					registerID, dbMainName, dbUserBucket, err)
 				fmt.Fprintf(w,"cannot register user")
 			} else {
 				err = kvMain.Put(dbRegisteredIDs, registerID,
 						DbEntry{unixTime, remoteAddr, pw}, false)
 				if err!=nil {
-					fmt.Printf("# /register error db=%s bucket=%s put key=%s err=%v\n",
-						dbMainName,dbRegisteredIDs,registerID,err)
+					fmt.Printf("# /register (%s) error db=%s bucket=%s put err=%v\n",
+						registerID,dbMainName,dbRegisteredIDs,err)
 					fmt.Fprintf(w,"cannot register ID")
 					// TODO this is bad! got to role back kvMain.Put((dbUser...) from above
 				} else {
-					fmt.Printf("/register db=%s bucket=%s stored ID=%s OK\n",
-						dbMainName, dbRegisteredIDs, registerID)
+					fmt.Printf("/register (%s) db=%s bucket=%s stored OK\n",
+						registerID, dbMainName, dbRegisteredIDs)
 					// registerID is now available for use
 					var pwIdCombo PwIdCombo
 					err,cookieValue := createCookie(w, registerID, pw, &pwIdCombo)
 					if err!=nil {
-						fmt.Printf("/register create cookie error id=%s cookie=%s err=%v\n",
+						fmt.Printf("/register (%s) create cookie error cookie=%s err=%v\n",
 							registerID, cookieValue, err)
 						// not fatal, but user needs to enter pw again now
 					}
@@ -323,9 +323,9 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 					callerInfoMap["answie7"] = "Answie Jazz"
 					err = kvContacts.Put(dbContactsBucket, registerID, callerInfoMap, false)
 					if err!=nil {
-						fmt.Printf("# /register kvContacts.Put registerID=%s err=%v\n", registerID, err)
+						fmt.Printf("# /register (%s) kvContacts.Put err=%v\n", registerID, err)
 					} else {
-						fmt.Printf("/register kvContacts.Put registerID=%s OK\n", registerID)
+						fmt.Printf("/register (%s) kvContacts.Put OK\n", registerID)
 					}
 
 					fmt.Fprintf(w, "OK")
