@@ -218,7 +218,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		remoteAddr = remoteAddrWithPort[:idxPort]
 	}
 	if logWantedFor("http") {
-		fmt.Printf("http api (%v) tls=%v rip=%s\n", r.URL, r.TLS!=nil, remoteAddrWithPort)
+		fmt.Printf("httpApi (%v) tls=%v rip=%s\n", r.URL, r.TLS!=nil, remoteAddrWithPort)
 	}
 
 	// deny bot's
@@ -228,8 +228,9 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		strings.Index(userAgent, "spider") >= 0 ||
 		strings.Index(userAgent, "scan") >= 0 ||
 		strings.Index(userAgent, "search") >= 0 ||
-		strings.Index(userAgent, "acebook") >= 0 {
-		fmt.Printf("# /http by bot denied path=(%s) userAgent=(%s) rip=%s\n", r.URL.Path, userAgent, remoteAddr)
+		strings.Index(userAgent, "acebook") >= 0 ||
+		strings.Index(userAgent, "Telegram") >= 0 {
+		fmt.Printf("# httpApi bot denied path=(%s) userAgent=(%s) rip=%s\n", r.URL.Path, userAgent, remoteAddr)
 		return
 	}
 
@@ -270,7 +271,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		nocookie = true
 	}
 
-	//fmt.Printf("!calleeID=(%s) urlID=(%s) (raw:%s) (ref:%s)\n",
+	//fmt.Printf("httpApi !calleeID=(%s) urlID=(%s) (raw:%s) (ref:%s)\n",
 	//	calleeID, urlID, r.URL.String(), referer)
 	cookieName := "webcallid"
 	// use calleeID with cookieName only for answie#
@@ -283,7 +284,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// cookie not avail, not valid or disabled (which is fine for localhost requests)
 		if logWantedFor("cookie") {
-			fmt.Printf("no cookie avail req=%s ref=%s cookieName=%s calleeID=%s urlID=%s err=%v\n",
+			fmt.Printf("httpApi no cookie avail req=%s ref=%s cookieName=%s calleeID=%s urlID=%s err=%v\n",
 				r.URL.Path, referer, cookieName, calleeID, urlID, err)
 		}
 		cookie = nil
@@ -293,13 +294,13 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 
 		// we should only show this if a callee is making use of the pw
 		//maxlen:=20; if len(cookie.Value)<20 { maxlen=len(cookie.Value) }
-		//fmt.Printf("cookie avail(%s) req=(%s) ref=(%s) callee=(%s)\n", 
+		//fmt.Printf("httpApi cookie avail(%s) req=(%s) ref=(%s) callee=(%s)\n", 
 		//	cookie.Value[:maxlen], r.URL.Path, referer, calleeID)
 
 		// cookie.Value has format: calleeID + "&" + hashedPW
 		idxAmpasent := strings.Index(cookie.Value,"&")
 		if idxAmpasent<0 {
-			fmt.Printf("# error no ampasent in cookie.Value (%s) clear cookie\n", cookie.Value)
+			fmt.Printf("# httpApi error no ampasent in cookie.Value (%s) clear cookie\n", cookie.Value)
 			cookie = nil
 		} else {
 			calleeIdFromCookie := cookie.Value[:idxAmpasent]
@@ -308,36 +309,36 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				calleeID = calleeIdFromCookie
 			}
 			if logWantedFor("cookie") {
-				fmt.Printf("cookie avail req=%s ref=%s cookieName=%s calleeID=%s urlID=%s err=%v\n",
+				fmt.Printf("httpApi cookie avail req=%s ref=%s cookieName=%s calleeID=%s urlID=%s err=%v\n",
 					r.URL.Path, referer, cookieName, calleeID, urlID, err)
 			}
 			if calleeID!="" && calleeID != calleeIdFromCookie {
 				// client has logged in with a different user-ID than previously (this is no error)
-				fmt.Printf("calleeIdFromCookie=(%s) != calleeID=(%s) clear cookie\n",
+				fmt.Printf("httpApi calleeIdFromCookie=(%s) != calleeID=(%s) clear cookie\n",
 					calleeIdFromCookie, calleeID)
 				cookie = nil
 			} else {
 				//maxlen:=20; if len(cookie.Value)<20 { maxlen=len(cookie.Value) }
-				//fmt.Printf("cookie avail(%s) req=(%s) ref=(%s) callee=(%s)\n", 
+				//fmt.Printf("httpApi cookie avail(%s) req=(%s) ref=(%s) callee=(%s)\n", 
 				//	cookie.Value[:maxlen], r.URL.Path, referer, calleeID)
 
 				// calleeIdFromCookie == calleeID (this is good) - now get PW from kvHashedPw
 				err = kvHashedPw.Get(dbHashedPwBucket,cookie.Value,&pwIdCombo)
 				if err!=nil {
 					// callee is using an unknown cookie
-					fmt.Printf("kvHashedPw.Get %v unknown cookie '%s' err=%v\n", r.URL, cookie.Value, err)
+					fmt.Printf("httpApi %v unknown cookie '%s' err=%v\n", r.URL, cookie.Value, err)
 					cookie = nil
 				} else if calleeID!="" && pwIdCombo.CalleeId != calleeID {
 					// callee is using wrong cookie
-					fmt.Printf("# cookie available for id=(%s) != calleeID=(%s) clear cookie\n",
+					fmt.Printf("# httpApi cookie available for id=(%s) != calleeID=(%s) clear cookie\n",
 						pwIdCombo.CalleeId, calleeID)
 					cookie = nil
 				} else if pwIdCombo.Pw=="" {
-					fmt.Printf("# cookie available, pw empty, pwIdCombo=(%v) ID=%s clear cookie\n",
+					fmt.Printf("# httpApi cookie available, pw empty, pwIdCombo=(%v) ID=%s clear cookie\n",
 						pwIdCombo, calleeID)
 					cookie = nil
 				} else {
-					//fmt.Printf("cookie available for id=(%s) (%s)(%s) reqPath=%s ref=%s rip=%s\n",
+					//fmt.Printf("httpApi cookie available for id=(%s) (%s)(%s) reqPath=%s ref=%s rip=%s\n",
 					//	pwIdCombo.CalleeId, calleeID, urlID, r.URL.Path, referer, remoteAddrWithPort)
 					pw = pwIdCombo.Pw
 				}

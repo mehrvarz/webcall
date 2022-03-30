@@ -242,8 +242,8 @@ func httpNewId(w http.ResponseWriter, r *http.Request, urlID string, calleeID st
 		fmt.Printf("# /newid GetRandomCalleeID err=%v\n",err)
 		return
 	}
-	// NOTE tmpCalleeID is currently free, but it is NOT reserved
-	fmt.Printf("/newid generated new id=%s for rip=%s ua=%s\n",tmpCalleeID,remoteAddr,r.UserAgent())
+	// NOTE tmpCalleeID is currently free, but it is NOT reserved clientVersion
+	fmt.Printf("/newid (%s) generated for rip=%s ua=%s\n",tmpCalleeID,remoteAddr,r.UserAgent())
 	fmt.Fprintf(w, tmpCalleeID)
 	return
 }
