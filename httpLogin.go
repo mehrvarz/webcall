@@ -424,6 +424,9 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			if hub != nil && !hub.CalleeLogin.Get() {
 				myHubMutex.RUnlock()
 
+				fmt.Printf("/login (%s/%s) ws-connect timeout %ds ws=%v rip=%s ver=%s ua=%s\n",
+					urlID, globalID, waitedFor, wsClientID, remoteAddrWithPort, clientVersion, r.UserAgent())
+
 				// send status msg to callee
 				if hub != nil && hub.CalleeClient != nil {
 					msg := "Websocket communication problem detected."+
@@ -432,8 +435,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					time.Sleep(2 * time.Second)
 				}
 
-				fmt.Printf("/login (%s/%s) ws-connect timeout %ds ws=%v rip=%s ver=%s ua=%s\n",
-					urlID, globalID, waitedFor, wsClientID, remoteAddrWithPort, clientVersion, r.UserAgent())
 				if globalID != "" {
 					//_,lenGlobalHubMap = 
 						DeleteFromHubMap(globalID)
