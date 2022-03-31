@@ -807,6 +807,7 @@ function connectSignaling(message,comment) {
 		// create new WsClient() and call connect(wsUrl)
 		wsConn = Android.wsOpen(wsUrl);
 		gLog("connectSig "+wsUrl);
+		// service will now call wsOnOpen(), where wsSendMessage ("init|!") will be sent
 	} else {
 		if(!window["WebSocket"]) {
 			console.error('connectSig: no WebSocket support');

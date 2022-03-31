@@ -423,6 +423,14 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			myHubMutex.RLock()
 			if hub != nil && !hub.CalleeLogin.Get() {
 				myHubMutex.RUnlock()
+
+				// send status msg to callee
+				if hub != nil && hub.CalleeClient != nil {
+					msg := "Websocket communication issue detected."+
+							" Please check your System WebView and network settings."
+					hub.CalleeClient.Write([]byte("status|"+msg))
+				}
+
 				fmt.Printf("/login (%s/%s) ws-connect timeout %ds ws=%v rip=%s ver=%s ua=%s\n",
 					urlID, globalID, waitedFor, wsClientID, remoteAddrWithPort, clientVersion, r.UserAgent())
 				if globalID != "" {
