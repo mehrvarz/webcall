@@ -426,9 +426,10 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 				// send status msg to callee
 				if hub != nil && hub.CalleeClient != nil {
-					msg := "Websocket communication issue detected."+
+					msg := "Websocket communication problem detected."+
 							" Please check your System WebView and network settings."
 					hub.CalleeClient.Write([]byte("status|"+msg))
+					time.Sleep(2 * time.Second)
 				}
 
 				fmt.Printf("/login (%s/%s) ws-connect timeout %ds ws=%v rip=%s ver=%s ua=%s\n",
