@@ -581,7 +581,11 @@ function calleeOnlineStatus(onlineStatus,waitForCallee) {
 		});
 	}
 
-	// calleeOfflineAction: check if calleeID can be notified - random become callee
+	if(onlineStatus=="error") {
+		// probably id not found: don't try to notify
+		waitForCallee = false;
+	}
+	// switch to offline mode and (if waitForCallee is set) check if calleeID can be notified
 	calleeOfflineAction(onlineStatus,waitForCallee);
 }
 
