@@ -514,7 +514,7 @@ function login(retryFlag) {
 	let api = apiPath+"/login?id="+calleeID;
 	if(typeof Android !== "undefined" && Android !== null) {
 		if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
-			api = api + "&ver="+Android.getVersionName();
+			api = api + "&ver="+Android.getVersionName() + "_" + Android.webviewVersion();
 		}
 	} else {
 		api = api + "&ver="+clientVersion;
