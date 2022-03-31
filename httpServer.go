@@ -499,8 +499,11 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				//hub := hubMap[calleeID]
 				if hub!=nil {
 					hub.HubMutex.RLock()
-					ua := hub.CalleeClient.userAgent
-					if(ua=="") {
+					ua := ""
+					if hub.CalleeClient != nil {
+						ua = hub.CalleeClient.userAgent
+					}
+					if ua=="" {
 						ua = hub.calleeUserAgent
 					}
 					boldString, _ := strconv.Unquote(`"\033[1m` + fmt.Sprintf("%-19s",calleeID) + `\033[0m"`)
