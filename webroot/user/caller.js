@@ -582,7 +582,7 @@ function calleeOnlineStatus(onlineStatus,waitForCallee) {
 	}
 
 	if(onlineStatus=="error") {
-		// probably id not found: don't try to notify
+		showStatus("ID not found.",-1)
 		waitForCallee = false;
 	}
 	// switch to offline mode and (if waitForCallee is set) check if calleeID can be notified
