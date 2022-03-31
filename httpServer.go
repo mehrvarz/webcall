@@ -500,8 +500,10 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				if hub!=nil {
 					hub.HubMutex.RLock()
 					ua := ""
+					remoteAddr := ""
 					if hub.CalleeClient != nil {
 						ua = hub.CalleeClient.userAgent
+						remoteAddr = hub.CalleeClient.RemoteAddr
 					}
 					if ua=="" {
 						ua = hub.calleeUserAgent
@@ -509,7 +511,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 					boldString, _ := strconv.Unquote(`"\033[1m` + fmt.Sprintf("%-19s",calleeID) + `\033[0m"`)
 					fmt.Fprintf(w,"O %s ip=%-20s ws=%d caller=%-20s ver=%s ua=%s\n",
 						boldString,
-						hub.CalleeClient.RemoteAddr,
+						remoteAddr,
 						hub.WsClientID,
 						hub.ConnectedCallerIp,
 						hub.CalleeClient.clientVersion,
