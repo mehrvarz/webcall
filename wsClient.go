@@ -302,8 +302,17 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			if hub!=nil && hub.CalleeClient!=nil && !hub.CalleeClient.isConnectedToPeer.Get() {
 				if hub.CallerClient!=nil {
 					hub.CallerClient = nil
-					fmt.Printf("%s (%s) rel caller ws=%d rip=%s\n",
+					fmt.Printf("%s (%s) release uncon caller ws=%d rip=%s\n",
 						client.connType, client.calleeID, wsClientID64, client.RemoteAddr)
+					// clear CallerIpInHubMap
+					err := StoreCallerIpInHubMap(client.globalCalleeID, "", false)
+					if err!=nil {
+						// err "key not found": callee has already signed off - can be ignored
+						if strings.Index(err.Error(),"key not found")<0 {
+							fmt.Printf("# %s (%s) release uncon caller clear callerIpInHub err=%v\n",
+								client.connType, client.calleeID, err)
+						}
+					}
 				}
 			}
 		}()
@@ -799,7 +808,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 		if err!=nil {
 			// err "key not found": callee has already signed off - can be ignored
 			if strings.Index(err.Error(),"key not found")<0 {
-				fmt.Printf("# %s peerConHasEnded %s clear callerIpInHub err=%v\n", c.connType, c.calleeID, err)
+				fmt.Printf("# %s (%s) peerConHasEnded clear callerIpInHub err=%v\n", c.connType, c.calleeID, err)
 			}
 		}
 
