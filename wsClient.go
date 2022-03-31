@@ -419,8 +419,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 			waitingCallerToCallee(c.calleeID, waitingCallerSlice, missedCallsSlice, c)
 		}
 
-		fmt.Printf("%s (%s) clientVersion=%s\n",c.connType,c.calleeID,c.clientVersion)
 		if c.clientVersion < "0.9.80" {
+			//fmt.Printf("%s (%s) clientVersion=%s\n",c.connType,c.calleeID,c.clientVersion)
 			// NOTE: msg MUST NOT contain apostroph (') characters
 			msg := "WebCall for Android <a href=\"/webcall/update\">v0.9.80 available.</a>"
 			fmt.Printf("%s (%s) send status|%s\n",c.connType,c.calleeID,msg)
