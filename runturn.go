@@ -80,10 +80,11 @@ func runTurnServer() {
 					foundIp = true
 					foundCalleeId = turnCaller.CallerID
 					foundByMap = true
-					//fmt.Printf("turn found session foundIp foundByMap %v\n", foundCalleeId)
+					//fmt.Printf("turn session foundIp foundByMap %v\n", foundCalleeId)
 				} else {
 					// session is outdated, will not anymore be authenticated
-					fmt.Printf("# turn found session outdated %v\n", turnCaller.CallerID)
+					fmt.Printf("# turn (%s) session outdated %v %d\n",
+						turnCaller.CallerID, timeSinceFirstFound.Seconds(), maxTalkSecsIfNoP2p)
 				}
 			} else {
 				// here I check if ipAddr is listed anywhere in hubMap as a callerIp
