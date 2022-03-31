@@ -458,11 +458,13 @@ func (c *WsClient) receiveProcess(message []byte) {
 			return
 		}
 
-		if c.hub.CallerClient.callerID!="" || c.hub.CallerClient.callerName!="" {
-			// send this directly to the callee: see callee.js if(cmd=="callerInfo")
-			sendCmd := "callerInfo|"+c.hub.CallerClient.callerID+":"+c.hub.CallerClient.callerName
-			if c.hub.CalleeClient.Write([]byte(sendCmd)) != nil {
-				return
+		if c.hub != nil && c.hub.CallerClient != nil && c.hub.CalleeClient != nil {
+			if c.hub.CallerClient.callerID!="" || c.hub.CallerClient.callerName!="" {
+				// send this directly to the callee: see callee.js if(cmd=="callerInfo")
+				sendCmd := "callerInfo|"+c.hub.CallerClient.callerID+":"+c.hub.CallerClient.callerName
+				if c.hub.CalleeClient.Write([]byte(sendCmd)) != nil {
+					return
+				}
 			}
 		}
 
