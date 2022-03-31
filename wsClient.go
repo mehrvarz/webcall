@@ -418,15 +418,15 @@ func (c *WsClient) receiveProcess(message []byte) {
 			// -> httpServer hubclient.Write()
 			waitingCallerToCallee(c.calleeID, waitingCallerSlice, missedCallsSlice, c)
 		}
-/*
+
 		fmt.Printf("%s (%s) clientVersion=%s\n",c.connType,c.calleeID,c.clientVersion)
-		if c.clientVersion < "0.9.79" {
+		if c.clientVersion < "0.9.80" {
 			// NOTE: msg MUST NOT contain apostroph (') characters
-			msg := "WebCall update available. <a href=\"/webcall/update\">Upgrade here.</a>"
+			msg := "WebCall for Android <a href=\"/webcall/update\">v0.9.80 available.</a>"
 			fmt.Printf("%s (%s) send status|%s\n",c.connType,c.calleeID,msg)
 			c.Write([]byte("status|"+msg))
 		}
-*/
+
 		return
 	}
 
