@@ -518,7 +518,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 		// forward state of c.isHiddenCallee to globalHubMap
 		err := SetCalleeHiddenState(c.calleeID, c.hub.IsCalleeHidden)
 		if err != nil {
-			fmt.Printf("# serveWs SetCalleeHiddenState id=%s %v err=%v\n",c.calleeID,c.hub.IsCalleeHidden,err)
+			fmt.Printf("# serveWs (%s) SetCalleeHiddenState %v err=%v\n",c.calleeID,c.hub.IsCalleeHidden,err)
 		}
 
 		// read dbUser for IsCalleeHidden flag
@@ -527,19 +527,19 @@ func (c *WsClient) receiveProcess(message []byte) {
 		var dbUser DbUser
 		err = kvMain.Get(dbUserBucket, userKey, &dbUser)
 		if err!=nil {
-			fmt.Printf("# serveWs cmd=calleeHidden db=%s bucket=%s getX key=%v err=%v\n",
-				dbMainName, dbUserBucket, userKey, err)
+			fmt.Printf("# serveWs (%s) cmd=calleeHidden db=%s bucket=%s getX key=%v err=%v\n",
+				c.calleeID, dbMainName, dbUserBucket, userKey, err)
 		} else {
 			if c.hub.IsCalleeHidden {
 				dbUser.Int2 |= 1
 			} else {
 				dbUser.Int2 &= ^1
 			}
-			fmt.Printf("%s callee=%s set hidden=%v\n", c.connType, c.calleeID, c.hub.IsCalleeHidden)
+			fmt.Printf("%s (%s) set hidden=%v\n", c.connType, c.calleeID, c.hub.IsCalleeHidden)
 			err := kvMain.Put(dbUserBucket, userKey, dbUser, true) // skipConfirm
 			if err!=nil {
-				fmt.Printf("# serveWs calleeHidden db=%s bucket=%s put key=%v err=%v\n",
-					dbMainName, dbUserBucket, userKey, err)
+				fmt.Printf("# serveWs (%s) calleeHidden db=%s bucket=%s put key=%v err=%v\n",
+					c.calleeID, dbMainName, dbUserBucket, userKey, err)
 			} else {
 				//fmt.Printf("%s calleeHidden db=%s bucket=%s put key=%v OK\n",
 				//	c.connType, dbMainName, dbUserBucket, userKey)
