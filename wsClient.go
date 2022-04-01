@@ -302,8 +302,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			if hub!=nil && hub.CalleeClient!=nil && !hub.CalleeClient.isConnectedToPeer.Get() {
 				if hub.CallerClient!=nil {
 					hub.CallerClient = nil
-					fmt.Printf("%s (%s) release uncon caller ws=%d rip=%s\n",
-						client.connType, client.calleeID, wsClientID64, client.RemoteAddr)
+					fmt.Printf("%s (%s/%s) release uncon caller ws=%d rip=%s\n",
+						client.connType, client.calleeID, client.globalCalleeID, wsClientID64, client.RemoteAddr)
 					// clear CallerIpInHubMap
 					err := StoreCallerIpInHubMap(client.globalCalleeID, "", false)
 					if err!=nil {
