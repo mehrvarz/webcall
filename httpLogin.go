@@ -23,9 +23,6 @@ import (
 	"sync"
 )
 
-var blockMap map[string]bool
-var blockMapMutex sync.RWMutex
-
 func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *http.Cookie, pw string, remoteAddr string, remoteAddrWithPort string, nocookie bool, startRequestTime time.Time, pwIdCombo PwIdCombo, userAgent string) {
 	//fmt.Printf("/login (%s) rip=%s rt=%v\n",
 	//	urlID, remoteAddrWithPort, time.Since(startRequestTime)) // rt=4.393µs
@@ -37,16 +34,18 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	}
 
 	blockMapMutex.RLock()
-	blocked := blockMap[urlID]
+	blockedTime,ok := blockMap[urlID]
 	blockMapMutex.RUnlock()
-	if(blocked) {
+	if ok {
 		blockMapMutex.Lock()
 		delete(blockMap,urlID)
 		blockMapMutex.Unlock()
-		fmt.Fprintf(w,"fatal")
-		fmt.Printf("/login (%s) was blocked rip=%s ua=%s ver=%s\n",
-			urlID, remoteAddr, userAgent, clientVersion)
-		return
+		if time.Now().Sub(blockedTime) < 120 * time.Second {
+			fmt.Fprintf(w,"fatal")
+			fmt.Printf("/login (%s) blocked rip=%s ua=%s ver=%s\n",
+				urlID, remoteAddr, userAgent, clientVersion)
+			return
+		}
 	}
 
 
@@ -454,7 +453,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 				// we must deny the next login attempt of urlID/globalID
 				blockMapMutex.Lock()
-				blockMap[urlID] = true
+				blockMap[urlID] = time.Now()
 				blockMapMutex.Unlock()
 
 				if globalID != "" {
