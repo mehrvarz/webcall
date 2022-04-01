@@ -1095,7 +1095,7 @@ function signalingCommand(message) {
 		}
 
 	} else if(cmd=="status") {
-		// this is currently only used to make Android users aware on new releases
+		// this is currently used to make Android users aware of new releases and Websocket communication issues
 		//gLog('status='+payload);
 		if(typeof Android !== "undefined" && Android !== null) {
 			if(payload!="") {
