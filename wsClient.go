@@ -429,7 +429,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 		}
 
 		if !strings.HasPrefix(c.calleeID,"answie") && !strings.HasPrefix(c.calleeID,"talkback") {
-			if c.clientVersion < "0.9.80" {
+			if clientUpdateBelowVersion!="" && c.clientVersion < clientUpdateBelowVersion {
 				//fmt.Printf("%s (%s) clientVersion=%s\n",c.connType,c.calleeID,c.clientVersion)
 				// NOTE: msg MUST NOT contain apostroph (') characters
 				msg := "WebCall for Android <a href=\"/webcall/update\">update available.</a>"

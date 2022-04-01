@@ -164,6 +164,7 @@ var	backupPauseMinutes = 0
 var maxCallees = 0
 var cspString = ""
 var thirtySecStats = false
+var clientUpdateBelowVersion = ""
 
 
 func main() {
@@ -525,6 +526,8 @@ func readConfig(init bool) {
 	cspString = readIniString(configIni, "csp", cspString, "")
 
 	thirtySecStats = readIniBoolean(configIni, "thirtySecStats", thirtySecStats, false)
+
+	clientUpdateBelowVersion = readIniString(configIni, "clientUpdateBelowVersion", clientUpdateBelowVersion, "")
 
 	readConfigLock.Unlock()
 }
