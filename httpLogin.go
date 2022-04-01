@@ -37,6 +37,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	blockedTime,ok := blockMap[urlID]
 	blockMapMutex.RUnlock()
 	if ok {
+		fmt.Printf("/login (%s) found in blockMap (%v) rip=%s ua=%s ver=%s\n",
+			urlID, time.Now().Sub(blockedTime), remoteAddr, userAgent, clientVersion)
 		blockMapMutex.Lock()
 		delete(blockMap,urlID)
 		blockMapMutex.Unlock()
@@ -46,6 +48,9 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				urlID, remoteAddr, userAgent, clientVersion)
 			return
 		}
+	} else {
+		fmt.Printf("/login (%s) not found in blockMap rip=%s ua=%s ver=%s\n",
+			urlID, remoteAddr, userAgent, clientVersion)
 	}
 
 
