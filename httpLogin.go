@@ -42,7 +42,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		blockMapMutex.Lock()
 		delete(blockMap,urlID)
 		blockMapMutex.Unlock()
-		if time.Now().Sub(blockedTime) < 240 * time.Second {
+		if time.Now().Sub(blockedTime) < 20 * time.Minute {
 			fmt.Fprintf(w,"fatal")
 			fmt.Printf("/login (%s) blocked rip=%s ua=%s ver=%s\n",
 				urlID, remoteAddr, userAgent, clientVersion)
