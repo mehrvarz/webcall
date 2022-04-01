@@ -625,6 +625,7 @@ function login(retryFlag) {
 			showStatus(	"Login failed. Already logged in from another device?",-1);
 			form.style.display = "none";
 		} else {
+			goOffline();
 			showStatus("Unknown response: "+loginStatus,-1);
 			form.style.display = "none";
 		}
