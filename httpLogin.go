@@ -48,9 +48,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				urlID, remoteAddr, userAgent, clientVersion)
 			return
 		}
-	} else {
-		fmt.Printf("/login (%s) not found in blockMap rip=%s ua=%s ver=%s\n",
-			urlID, remoteAddr, userAgent, clientVersion)
 	}
 
 
