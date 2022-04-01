@@ -678,6 +678,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 		} else if c.hub==nil {
 			fmt.Printf("# %s (%s) peer c.hub==nil ver=%s\n", c.connType, c.calleeID, c.clientVersion)
 		} else if c.hub.CallerClient==nil {
+			// # serveWss (83710725871) peer callee Connected unknw/unknw
+			// this happens when caller disconnects immediately
 			fmt.Printf("# %s (%s) peer %s c.hub.CallerClient==nil ver=%s\n",
 				c.connType, c.calleeID, payload, c.clientVersion)
 		} else {

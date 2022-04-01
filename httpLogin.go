@@ -43,7 +43,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		delete(blockMap,urlID)
 		blockMapMutex.Unlock()
 		if time.Now().Sub(blockedTime) < 20 * time.Minute {
-			fmt.Fprintf(w,"fatal")
+			//fmt.Fprintf(w,"fatal")  // tmtmtm
+			fmt.Fprintf(w,"fatal Websocket communication problem detected. Please check your System WebView and network settings.")
 			fmt.Printf("/login (%s) blocked rip=%s ua=%s ver=%s\n",
 				urlID, remoteAddr, userAgent, clientVersion)
 			return
