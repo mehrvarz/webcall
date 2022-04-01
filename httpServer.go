@@ -501,9 +501,11 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 					hub.HubMutex.RLock()
 					ua := ""
 					remoteAddr := ""
+					clientVersion := ""
 					if hub.CalleeClient != nil {
 						ua = hub.CalleeClient.userAgent
 						remoteAddr = hub.CalleeClient.RemoteAddr
+						clientVersion = hub.CalleeClient.clientVersion
 					}
 					if ua=="" {
 						ua = hub.calleeUserAgent
@@ -514,7 +516,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 						remoteAddr,
 						hub.WsClientID,
 						hub.ConnectedCallerIp,
-						hub.CalleeClient.clientVersion,
+						clientVersion,
 						ua)
 					hub.HubMutex.RUnlock()
 				}
