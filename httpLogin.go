@@ -111,13 +111,15 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					}
 					hub.CalleeClient.SendPing(2000)
 
-					// we wait max 22x100ms = 2200ms
-					for i := 0; i < 22; i++ {
+					// wait max 35x100ms = 3500ms for id=key to log out
+					for i := 0; i < 35; i++ {
 						time.Sleep(100 * time.Millisecond)
 						// is hub.CalleeClient still online now?
 						if hub==nil || hub.CalleeClient==nil || !hub.CalleeClient.isOnline.Get() {
 							// CalleeClient is not online anymore
 							offlineReason = 4
+							fmt.Printf("/login (%s) has logged out after wait %dms rip=%s ua=%s ver=%s\n",
+								key, i*100, remoteAddr, userAgent, clientVersion)
 							break
 						}
 					}
