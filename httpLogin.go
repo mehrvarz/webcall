@@ -38,7 +38,9 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	blockMapMutex.RUnlock()
 	if ok {
 		if time.Now().Sub(blockedTime) < 20 * time.Minute {
-			fmt.Fprintf(w,"noservice|Websocket communication issue detected on your device.|Please check your System WebView and network settings. Account blocked for 20 minutes.")
+			// this msg is formated so that callee.js shows it via showStatus()
+			// and the Android service will abort reconnecter
+			fmt.Fprintf(w,"noservice|Websocket communication issue detected on your device. Please check WebCall updates page. Check your System WebView and network settings.|Account blocked for 20 minutes.")
 			fmt.Printf("/login (%s) blocked (%v) rip=%s ua=%s ver=%s\n",
 				urlID, time.Now().Sub(blockedTime), remoteAddr, userAgent, clientVersion)
 			return

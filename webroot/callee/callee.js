@@ -808,10 +808,9 @@ function connectSignaling(message,comment) {
 	wsSendMessage = message;
 
 	if(typeof Android !== "undefined" && Android !== null) {
-		// create new WsClient() and call connect(wsUrl)
 		wsConn = Android.wsOpen(wsUrl);
+		// service -> wsCli=connectHost(wsUrl) -> onOpen() -> runJS("wsOnOpen()",null) -> wsSendMessage ("init|!")
 		gLog("connectSig "+wsUrl);
-		// service will now call wsOnOpen(), where wsSendMessage ("init|!") will be sent
 	} else {
 		if(!window["WebSocket"]) {
 			console.error('connectSig: no WebSocket support');
@@ -831,6 +830,7 @@ function connectSignaling(message,comment) {
 }
 
 function wsOnOpen() {
+	// called by service connectHost(wsUrl) -> onOpen() -> runJS("wsOnOpen()",null)
 	gLog('wsOnOpen '+calleeID);
 	tryingToOpenWebSocket = false;
 	wsAutoReconnecting = false;
@@ -1397,6 +1397,7 @@ function wsSend(message) {
 		if(wsConn==null) {
 			// currently not connected to webcall server
 			connectSignaling(message,"andr wsConn==null");
+			// service -> connectHost(wsUrl) -> onOpen() -> runJS("wsOnOpen()",null) -> wsSendMessage(message)
 		} else {
 			Android.wsSend(message);
 		}
@@ -1571,7 +1572,7 @@ function goOnline() {
 	}
 	try {
 		peerCon = new RTCPeerConnection(ICE_config);
-		//console.log("RTCPeerConnection OK");
+		console.log("RTCPeerConnection OK");
 	} catch(ex) {
 		console.error("RTCPeerConnection "+ex.message);
 		var statusMsg = "RTCPeerConnection "+ex.message;
@@ -1662,7 +1663,9 @@ function goOnline() {
 		login(false);
 	} else {
 		gLog('goOnline have wsConn send init');
-		wsSend("init|!");
+		//setTimeout(function() {
+			wsSend("init|!");
+		//},500);
 	}
 }
 
