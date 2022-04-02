@@ -112,8 +112,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					}
 					hub.CalleeClient.SendPing(2000)
 
-					// now we wait max 35x100ms = 3500ms for id=key to maybe log out...
-					for i := 0; i < 35; i++ {
+					// now we wait max 45x100ms = 3500ms for id=key to maybe log out...
+					for i := 0; i < 45; i++ {
 						time.Sleep(100 * time.Millisecond)
 						// is hub.CalleeClient still online now?
 						if hub==nil || hub.CalleeClient==nil || !hub.CalleeClient.isOnline.Get() {
@@ -128,7 +128,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				if offlineReason==0 {
 					// abort this login attempt: old/sameId callee is still online
 					fmt.Fprintf(w,"fatal")
-					fmt.Printf("/login (%s) is already logged in %v rip=%s ua=%s ver=%s\n",
+					fmt.Printf("/login (%s) is still logged in %v rip=%s ua=%s ver=%s\n",
 						key, time.Since(startRequestTime), remoteAddr, userAgent, clientVersion)
 					return
 				}

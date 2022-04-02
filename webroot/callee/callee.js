@@ -657,7 +657,7 @@ function login(retryFlag) {
 		if(retryFlag) {
 			setTimeout(function() {
 				let delay = autoReconnectDelay + Math.floor(Math.random() * 10) - 5;
-				gLog('reconnecting in %ds... '+delay);
+				gLog('reconnecting in '+delay);
 				showStatus("Reconnecting...",-1);
 				missedCallsElement.style.display = "none";
 				missedCallsTitleElement.style.display = "none";
@@ -808,9 +808,11 @@ function connectSignaling(message,comment) {
 	wsSendMessage = message;
 
 	if(typeof Android !== "undefined" && Android !== null) {
+		// wsUrl will only be used if service:wsClient==null
+		// but on server triggered reconnect, service:wsClient will be set (and wsUrl will not be used)
 		wsConn = Android.wsOpen(wsUrl);
 		// service -> wsCli=connectHost(wsUrl) -> onOpen() -> runJS("wsOnOpen()",null) -> wsSendMessage ("init|!")
-		gLog("connectSig "+wsUrl);
+		//gLog("connectSig "+wsUrl);
 	} else {
 		if(!window["WebSocket"]) {
 			console.error('connectSig: no WebSocket support');
@@ -885,7 +887,7 @@ function wsOnClose(evt) {
 	if(goOnlineButton.disabled) {
 		// this is not a user-intended offline; we should be online
 		let delay = autoReconnectDelay + Math.floor(Math.random() * 10) - 5;
-		gLog('reconnecting to signaling server in %ds... '+delay);
+		gLog('reconnecting to signaling server in sec '+delay);
 		showStatus("Reconnecting to signaling server...",-1);
 		missedCallsElement.style.display = "none";
 		missedCallsTitleElement.style.display = "none";
@@ -2218,7 +2220,7 @@ function exit() {
 
 function wakeGoOnline() {
 	gLog("wakeGoOnline start");
-	connectSignaling('',''); // wsConn = Android.wsOpen(wsUrl)
+	connectSignaling('',''); // only get wsConn from service (from Android.wsOpen())
 	wsOnOpen(); // green led
 	goOnlineButton.disabled = false; // prevent goOnline() abort
 	goOnline(); // wsSend("init|!")
