@@ -18,7 +18,6 @@ import (
 	"strings"
 	"fmt"
 	"io"
-	"os"
 	"math/rand"
 	"sync"
 )
@@ -221,7 +220,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			return
 		}
 		if pw != dbEntry.Password {
-			fmt.Fprintf(os.Stderr, "/login fail id=%s wrong password rip=%s\n", urlID, remoteAddr)
+			fmt.Printf("/login (%s) fail wrong password rip=%s\n", urlID, remoteAddr)
 			// must delay to make guessing more difficult
 			time.Sleep(3000 * time.Millisecond)
 			fmt.Fprintf(w, "error")
@@ -254,24 +253,24 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		wsClientMutex.Lock()
 		wsClientID = getNewWsClientID()
 		wsClientMutex.Unlock()
-		//fmt.Printf("/login set wsClientMap[%d] for ID=(%s)\n", wsClientID, globalID)
+		//fmt.Printf("/login (%s) set wsClientMap[%d] for\n", globalID, wsClientID)
 		// hub.WsClientID and hub.ConnectedCallerIp will be set by wsclient.go
 
 		globalID,_,err = StoreCalleeInHubMap(urlID, myMultiCallees, remoteAddrWithPort, wsClientID, false)
 		if err != nil || globalID == "" {
-			fmt.Printf("# /login id=(%s) StoreCalleeInHubMap(%s) err=%v ver=%s\n",
-				globalID, urlID, err, clientVersion)
+			fmt.Printf("# /login (%s/%s) StoreCalleeInHubMap err=%v ver=%s\n",
+				urlID, globalID, err, clientVersion)
 			fmt.Fprintf(w, "noservice")
 			return
 		}
-		//fmt.Printf("/login globalID=(%s) urlID=(%s) rip=%s rt=%v\n",
+		//fmt.Printf("/login (%s) urlID=(%s) rip=%s rt=%v\n",
 		//	globalID, urlID, remoteAddr, time.Since(startRequestTime))
 
 		if /*cookie == nil &&*/ !nocookie {
 			err,cookieValue := createCookie(w, urlID, pw, &pwIdCombo)
 			if err != nil {
-				fmt.Printf("# /login persist PwIdCombo error db=%s bucket=%s cookie=%s err=%v ver=%s\n",
-					dbHashedPwName, dbHashedPwBucket, cookieValue, err, clientVersion)
+				fmt.Printf("# /login (%s) persist PwIdCombo error db=%s bucket=%s cookie=%s err=%v ver=%s\n",
+					urlID, dbHashedPwName, dbHashedPwBucket, cookieValue, err, clientVersion)
 				if globalID != "" {
 					_,lenGlobalHubMap = DeleteFromHubMap(globalID)
 				}
@@ -280,10 +279,10 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			}
 
 			if logWantedFor("cookie") {
-				fmt.Printf("/login persisted PwIdCombo db=%s bucket=%s key=%s ver=%s\n",
-					dbHashedPwName, dbHashedPwBucket, cookieValue, clientVersion)
+				fmt.Printf("/login (%s) persisted PwIdCombo db=%s bucket=%s key=%s ver=%s\n",
+					urlID, dbHashedPwName, dbHashedPwBucket, cookieValue, clientVersion)
 			}
-			//fmt.Printf("/login pwIdCombo stored time=%v\n", time.Since(startRequestTime))
+			//fmt.Printf("/login (%s) pwIdCombo stored time=%v\n", urlID, time.Since(startRequestTime))
 		}
 	}
 
