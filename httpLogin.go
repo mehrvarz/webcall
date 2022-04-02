@@ -119,8 +119,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 						if hub==nil || hub.CalleeClient==nil || !hub.CalleeClient.isOnline.Get() {
 							// CalleeClient is not online anymore (we can accept the new login)
 							offlineReason = 4
-							fmt.Printf("/login (%s) has logged out after wait %dms rip=%s ua=%s ver=%s\n",
-								key, i*100, remoteAddr, userAgent, clientVersion)
+							fmt.Printf("/login (%s) has logged out after wait %dms/%v rip=%s ua=%s ver=%s\n",
+								key, i*100, time.Since(startRequestTime), remoteAddr, userAgent, clientVersion)
 							break
 						}
 					}
@@ -128,8 +128,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				if offlineReason==0 {
 					// abort this login attempt: old/sameId callee is still online
 					fmt.Fprintf(w,"fatal")
-					fmt.Printf("/login (%s) is already logged in (%d) rip=%s ua=%s ver=%s\n",
-						key, offlineReason, remoteAddr, userAgent, clientVersion)
+					fmt.Printf("/login (%s) is already logged in %v rip=%s ua=%s ver=%s\n",
+						key, time.Since(startRequestTime), remoteAddr, userAgent, clientVersion)
 					return
 				}
 				// apparently the new login comes from the old callee, bc it is not online anymore
