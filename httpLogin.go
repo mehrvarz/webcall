@@ -92,7 +92,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				fmt.Printf("# /login (%s) GetOnlineCallee() err=%v ver=%s\n", key, err, clientVersion)
 			}
 			if key != "" {
-				// "already logged in" entry still exists
+				// a login request for a user that is still logged in
+				// maybe it has logged out and we didn't find out yet
 				// if remoteAddr == hub.CalleeClient.RemoteAddrNoPort: unregister old entry
 				hubMapMutex.RLock()
 				hub := hubMap[key]
@@ -105,18 +106,18 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				} else if !hub.CalleeClient.isOnline.Get() {
 					offlineReason = 3 // CalleeClient is not online anymore
 				} else {
-					// hub.CalleeClient seems to be online; let's see if this holds if we ping it
+					// hub.CalleeClient seems to (still) be online; let's see if this holds if we ping it
 					if logWantedFor("login") {
 						fmt.Printf("/login (%s) send ping to prev rip=%s\n", key, remoteAddr)
 					}
 					hub.CalleeClient.SendPing(2000)
 
-					// wait max 35x100ms = 3500ms for id=key to log out
+					// now we wait max 35x100ms = 3500ms for id=key to maybe log out...
 					for i := 0; i < 35; i++ {
 						time.Sleep(100 * time.Millisecond)
 						// is hub.CalleeClient still online now?
 						if hub==nil || hub.CalleeClient==nil || !hub.CalleeClient.isOnline.Get() {
-							// CalleeClient is not online anymore
+							// CalleeClient is not online anymore (we can accept the new login)
 							offlineReason = 4
 							fmt.Printf("/login (%s) has logged out after wait %dms rip=%s ua=%s ver=%s\n",
 								key, i*100, remoteAddr, userAgent, clientVersion)
@@ -125,7 +126,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					}
 				}
 				if offlineReason==0 {
-					// abort login: old/sameId callee is still online
+					// abort this login attempt: old/sameId callee is still online
 					fmt.Fprintf(w,"fatal")
 					fmt.Printf("/login (%s) is already logged in (%d) rip=%s ua=%s ver=%s\n",
 						key, offlineReason, remoteAddr, userAgent, clientVersion)
