@@ -182,7 +182,8 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 						}
 						fmt.Printf("SendTweet (%s) OK  twHandle=%s tweetId=%s\n",
 							urlID, dbUser.Email2[:maxlen], tweet.IdStr)
-						// in 1hr we want to delete this tweet via tweet.Id
+/*
+						// in 1hr we want to delete this tweet in ticker3min() via tweet.Id
 						// so we store tweet.Id dbSentNotifTweets
 						notifTweet := NotifTweet{time.Now().Unix(), msg}
 						err = kvNotif.Put(dbSentNotifTweets, tweet.IdStr, notifTweet, false)
@@ -190,6 +191,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 							fmt.Printf("# /notifyCallee (%s) failed to store dbSentNotifTweets (%s)\n",
 								urlID, tweet.IdStr)
 						}
+*/
 					}
 				}
 			}

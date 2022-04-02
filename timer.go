@@ -201,7 +201,7 @@ func ticker3min() {
 						if ageSecs >= 60*60 {
 							fmt.Printf("ticker3min outdated ID=%s ageSecs=%d > 1h (%s) deleting\n",
 								idStr, ageSecs, notifTweet.Comment)
-
+/* kvNotif is currently not fed from httpNotifyCallee.go
 							twitterClientLock.Lock()
 							if twitterClient==nil {
 								twitterAuth()
@@ -215,7 +215,9 @@ func ticker3min() {
 							twitterClientLock.Unlock()
 							if err!=nil {
 								fmt.Printf("# ticker3min DeleteTweet %s err=%v (%s)\n", idStr, err, respdata)
-							} else {
+							} else 
+*/
+							{
 								//fmt.Printf("ticker3min DeleteTweet %s OK\n", idStr)
 								err := c.Delete()
 								if err!=nil {
