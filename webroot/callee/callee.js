@@ -1225,6 +1225,7 @@ function signalingCommand(message) {
 			} else {
 				gLog("exclamationElement not defined");
 			}
+			minNewsDate = newsDateInt;
 		} else {
 			gLog("news is old");
 		}
