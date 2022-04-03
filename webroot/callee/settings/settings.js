@@ -384,8 +384,8 @@ function ajaxFetch(xhr, type, apiPath, processData, errorFkt, postData) {
 function submitForm(autoclose) {
 	// we use encodeURI to encode the subscr-strings bc these strings are themselves json 
 	// and cannot just be packaged inside json
-	var newSettings = '{ "nickname":"'+document.getElementById("nickname").value+'",'+
-		'"twname":"'+document.getElementById("twname").value+'",'+
+	var newSettings = '{ "nickname":"'+document.getElementById("nickname").value.trim()+'",'+
+		'"twname":"'+document.getElementById("twname").value.replace(/ /g,'')+'",'+  // remove all white spaces
 		//'" "twid":"'+ document.getElementById("twid").value+
 		'"storeContacts":"'+document.getElementById("storeContacts").checked+'",'+
 		'"storeMissedCalls":"'+document.getElementById("storeMissedCalls").checked+'",'+
