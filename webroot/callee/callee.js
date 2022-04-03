@@ -143,7 +143,7 @@ window.onload = function() {
 		let element = document.getElementById("nativeMenu");
 		if(element) element.style.display = "block";
 		element = document.getElementById("webcallhome");
-		if(element) element.href = "https://timur.mobi/webcall/android/";
+		if(element) element.href = "https://timur.mobi/webcall/update/";
 	}
 
 
