@@ -456,7 +456,7 @@ function enablePasswordForm() {
 	document.getElementById("current-password").value = "";
 	form.style.display = "block";
 	document.getElementById("username").focus();
-	gLog("form username "+document.getElementById("username").value);
+	//gLog("form username "+document.getElementById("username").value);
 	goOfflineButton.disabled = true;
 	missedCallsElement.style.display = "none";
 	missedCallsTitleElement.style.display = "none";

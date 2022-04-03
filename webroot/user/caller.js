@@ -904,6 +904,8 @@ function submitForm(theForm) {
 	enterIdElement.style.display = "none";
 	containerElement.style.display = "block";
 	calleeID = enterIdVal.value;
+	calleeID = calleeID.replace(/ /g,''); // remove all white spaces
+	if(calleeID.length>11) calleeID = calleeID.substring(0,11);
 	gLog('submitForm set calleeID='+calleeID+" "+enterDomainVal.value);
 	if(enterDomainVal.value!=location.hostname) {
 		window.open("https://"+enterDomainVal.value+"/user/"+calleeID, ""); //"_blank"
