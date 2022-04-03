@@ -880,7 +880,7 @@ function wsOnClose(evt) {
 		// onclose occured while being ws-connected
 		gLog('wsOnClose while connected');
 	}
-	if(goOnlineButton.disabled) {
+	if(goOnlineButton.disabled && evt) {
 		// this is not a user-intended offline; we should be online
 		let delay = autoReconnectDelay + Math.floor(Math.random() * 10) - 5;
 		gLog('reconnecting to signaling server in sec '+delay);
