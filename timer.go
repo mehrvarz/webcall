@@ -138,18 +138,21 @@ func ticker20min() {
 func broadcastNewsLink(date string, url string) {
 	hubMapMutex.RLock()
 	defer hubMapMutex.RUnlock()
+	count := 0
+	data := "news|"+date+"|"+url;
+	fmt.Printf("newsLink data=%s\n",data)
 	for calleeID,hub := range hubMap {
 		if strings.HasPrefix(calleeID,"answie") || 
 		   strings.HasPrefix(calleeID,"talkback") ||
 		   strings.HasPrefix(calleeID,"!") {
 			continue
 		}
-		data := "news|"+date+"|"+url;
 		if hub!=nil {
 			hub.HubMutex.RLock()
 			if hub.CalleeClient!=nil {
-				fmt.Printf("newsLink to=%s data=%s\n",calleeID,data)
+				//fmt.Printf("newsLink to=%s data=%s\n",calleeID,data)
 				hub.CalleeClient.Write([]byte(data))
+				count++
 			} else {
 				fmt.Printf("newsLink hub.CalleeClient==nil to=%s data=%s\n",calleeID,data)
 			}
@@ -158,6 +161,7 @@ func broadcastNewsLink(date string, url string) {
 			fmt.Printf("newsLink hub==nil to=%s data=%s\n",calleeID,data)
 		}
 	}
+	fmt.Printf("newsLink sent %x times\n",data,count)
 	return
 }
 
