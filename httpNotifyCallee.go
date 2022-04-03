@@ -172,7 +172,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 					tweet := twitter.TimelineTweet{}
 					err = json.Unmarshal(respdata, &tweet)
 					if err != nil {
-						fmt.Printf("# SendTweet cannot parse respdata err=%v\n", err)
+						fmt.Printf("# SendTweet (%s) cannot parse respdata err=%v\n", urlID, err)
 					} else {
 						// twitter notification succesfully sent
 						notificationSent |= 4
@@ -611,7 +611,7 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 
 	// yes, urlID can be notified
 	// problem is that we don't get any event if the caller gives up at this point (TODO still true?)
-	fmt.Printf("/canbenotified ok calleeId=%s name=%s rip=%s\n",urlID,calleeName,remoteAddr)
+	fmt.Printf("/canbenotified (%s) ok name=%s rip=%s\n",urlID,calleeName,remoteAddr)
 	fmt.Fprintf(w,"ok|"+calleeName)
 	return
 }
