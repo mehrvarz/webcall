@@ -870,18 +870,14 @@ function wsOnError2(str) {
 }
 
 function wsOnClose(evt) {
+	// called by wsConn.onclose
 	console.log("wsOnClose "+calleeID);
-	wsConn=null;
-	buttonBlinking=false;
-	stopAllAudioEffects("wsOnClose");
-	showStatus("disconnected from signaling server");
-	if(!mediaConnect) {
-		onlineIndicator.src="";
-	}
+	wsOnClose2();
 	if(tryingToOpenWebSocket) {
-		// onclose occured before a ws-connection could be established
+		// onclose occured while trying to establish a ws-connection (before this could be finished)
 		gLog('wsOnClose failed to open');
 	} else {
+		// onclose occured while being ws-connected
 		gLog('wsOnClose while connected');
 	}
 	if(goOnlineButton.disabled) {
@@ -893,6 +889,18 @@ function wsOnClose(evt) {
 		missedCallsTitleElement.style.display = "none";
 		// if conditions are right after delay secs this will call login()
 		delayedWsAutoReconnect(delay);
+	}
+}
+
+function wsOnClose2() {
+	// called by wsOnClose() or from android service
+	console.log("wsOnClose2 "+calleeID);
+	wsConn=null;
+	buttonBlinking=false;
+	stopAllAudioEffects("wsOnClose");
+	showStatus("disconnected from signaling server");
+	if(!mediaConnect) {
+		onlineIndicator.src="";
 	}
 }
 
