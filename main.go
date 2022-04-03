@@ -94,8 +94,8 @@ var	shutdownStarted atombool.AtomBool
 var hubMap map[string]*Hub
 var hubMapMutex sync.RWMutex
 
-var blockMap map[string]time.Time
-var blockMapMutex sync.RWMutex
+//var blockMap map[string]time.Time
+//var blockMapMutex sync.RWMutex
 
 var waitingCallerChanMap map[string]chan int // ip:port -> chan
 var waitingCallerChanLock sync.RWMutex
@@ -182,7 +182,7 @@ func main() {
 
 	fmt.Printf("--------------- webcall startup ---------------\n")
 	hubMap = make(map[string]*Hub) // calleeID -> *Hub
-	blockMap  = make(map[string]time.Time)
+//	blockMap  = make(map[string]time.Time)
 	waitingCallerChanMap = make(map[string]chan int)
 	wsClientMap = make(map[uint64]wsClientDataType) // wsClientID -> wsClientData
 	readConfig(true)

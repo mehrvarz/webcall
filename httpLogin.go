@@ -31,7 +31,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	if ok && len(url_arg_array[0]) >= 1 {
 		clientVersion = url_arg_array[0]
 	}
-
+/*
 	blockMapMutex.RLock()
 	blockedTime,ok := blockMap[urlID]
 	blockMapMutex.RUnlock()
@@ -49,7 +49,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			blockMapMutex.Unlock()
 		}
 	}
-
+*/
 
 	// reached maxCallees?
 	hubMapMutex.RLock()
@@ -455,12 +455,12 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					hub.CalleeClient.Write([]byte("status|"+msg))
 					time.Sleep(2 * time.Second)
 				}
-
+/*
 				// we must deny the next login attempt of urlID/globalID
 				blockMapMutex.Lock()
 				blockMap[urlID] = time.Now()
 				blockMapMutex.Unlock()
-
+*/
 				if globalID != "" {
 					//_,lenGlobalHubMap = 
 						DeleteFromHubMap(globalID)
