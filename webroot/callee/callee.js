@@ -1226,7 +1226,7 @@ function signalingCommand(message) {
 			}
 			minNewsDate = newsDateInt;
 		} else {
-			gLog("news is old");
+			//gLog("news is old");
 		}
 
 	} else {
