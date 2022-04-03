@@ -1190,9 +1190,8 @@ function signalingCommand(message) {
 		let newsDate = payload;
 		let newsUrl = tok[2];
 		let newsDateInt = parseInt(newsDate);
-		gLog("news="+newsDate+"("+newsDateInt+">"+minNewsDate+")|"+newsUrl);
 		if(newsDateInt >= minNewsDate) {
-			gLog("news is new");
+			gLog("news="+newsDate+"("+newsDateInt+">"+minNewsDate+")|"+newsUrl);
 			if(exclamationElement!=null) {
 				exclamationElement.style.display = "block";
 				exclamationElement.style.opacity = 1;
