@@ -303,8 +303,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 		if hub == nil {
 			// this means that the connection was most likely cut off by the device
-			fmt.Printf("exithub (%s) ws=%d hub already closed %s rip=%s ver=%s\n",
-				globalID, wsClientID, comment, remoteAddrWithPort, clientVersion)
+			//fmt.Printf("exithub (%s) ws=%d hub already closed %s rip=%s ver=%s\n",
+			//	globalID, wsClientID, comment, remoteAddrWithPort, clientVersion)
 			return;
 		}
 
@@ -446,9 +446,9 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			if hub != nil && !hub.CalleeLogin.Get() {
 				myHubMutex.RUnlock()
 
-				fmt.Printf("/login (%s/%s) ws-connect timeout %ds ws=%v rip=%s ver=%s ua=%s\n",
-					urlID, globalID, waitedFor, wsClientID, remoteAddrWithPort, clientVersion, r.UserAgent())
-
+//				fmt.Printf("/login (%s/%s) ws-connect timeout %ds ws=%v rip=%s ver=%s ua=%s\n",
+//					urlID, globalID, waitedFor, wsClientID, remoteAddrWithPort, clientVersion, r.UserAgent())
+/*
 				// send status msg to callee
 				if hub != nil && hub.CalleeClient != nil {
 					msg := "Websocket communication problem detected."+
@@ -456,6 +456,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					hub.CalleeClient.Write([]byte("status|"+msg))
 					time.Sleep(2 * time.Second)
 				}
+*/
 /*
 				// we must deny the next login attempt of urlID/globalID
 				blockMapMutex.Lock()
@@ -466,9 +467,10 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					//_,lenGlobalHubMap = 
 						DeleteFromHubMap(globalID)
 				}
-				// also unregister callee
+				// unregister callee
 				if hub != nil && hub.CalleeClient != nil {
-					hub.doUnregister(hub.CalleeClient, "ws-con timeout")
+					msg := fmt.Sprintf("ws-con timeout %ss",waitForClientWsConnectSecs)
+					hub.doUnregister(hub.CalleeClient, msg)
 				}
 				myHubMutex.RLock()
 			}
