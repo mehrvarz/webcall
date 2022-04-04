@@ -365,8 +365,14 @@ func (c *WsClient) receiveProcess(message []byte) {
 		c.hub.HubMutex.Unlock()
 
 		if logWantedFor("wscall") {
-			fmt.Printf("%s (%s) init iscallee=%v wsID=%d rip=%s\n",
-			c.connType, c.calleeID, c.isCallee, c.hub.WsClientID, c.RemoteAddr)
+			if c.isCallee {
+				fmt.Printf("%s (%s) init callee ws=%d rip=%s\n",
+					c.connType, c.calleeID, c.hub.WsClientID, c.RemoteAddr)
+			} else {
+				// this is not possible
+				fmt.Printf("# %s (%s) init caller ws=%d rip=%s\n",
+					c.connType, c.calleeID, c.hub.WsClientID, c.RemoteAddr)
+			}
 		}
 		// deliver the callee client version number
 		readConfigLock.RLock()
