@@ -54,13 +54,15 @@ func (h *Hub) setDeadline(secs int, comment string) {
 			fmt.Printf("setDeadline clear old timer; new secs=%d (%s)\n",secs,comment)
 		}
 		h.timerCanceled <- struct{}{}
-		if !h.timer.Stop() {
-			if(secs>0) {
-				// before we overwrite h.timer (with a NewTimer below), let timerCanceled strike
-				time.Sleep(10 * time.Millisecond)
+		if h.timer!=nil {
+			if !h.timer.Stop() {
+				if(secs>0) {
+					// before we overwrite h.timer (with a NewTimer below), let timerCanceled strike
+					time.Sleep(10 * time.Millisecond)
+				}
 			}
+			h.timer=nil	// will be done below anyway, so just to be sure
 		}
-		h.timer=nil	// will be done below anyway, so just to be sure
 	}
 
 	if(secs>0) {
