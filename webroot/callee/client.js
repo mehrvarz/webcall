@@ -1336,6 +1336,7 @@ function peerConOntrack(track, streams) {
 
 				gLog('peerCon.ontrack connectionstatechangeCounter='+connectionstatechangeCounter);
 				gLog('peerCon.ontrack onIceCandidates='+onIceCandidates);
+/*
 				if(connectionstatechangeCounter<1) {
 					// most likely this is a problem with bromite / no-webrtc patch
 					var statusMsg = "WARNING: Your browser engine does not generate "+
@@ -1347,7 +1348,7 @@ function peerConOntrack(track, streams) {
 					wsSend("dummy|no connectionstatechanges");
 					notificationSound.play().catch(function(error) { });
 				}
-
+*/
 				let videoTracks = remoteStream.getVideoTracks();
 				gLog('peerCon.ontrack unmute track.enabled: delay vtracks',videoTracks.length);
 				if(videoTracks.length>0) {
