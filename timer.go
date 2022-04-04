@@ -161,7 +161,7 @@ func broadcastNewsLink(date string, url string) {
 			fmt.Printf("newsLink hub==nil to=%s data=%s\n",calleeID,data)
 		}
 	}
-	fmt.Printf("newsLink sent %x times\n",count)
+	fmt.Printf("newsLink sent %d times\n",count)
 	return
 }
 

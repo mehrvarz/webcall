@@ -302,6 +302,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		// exitFunc: callee is logging out: release hub and port of this session
 
 		if hub == nil {
+			// this means that the connection was most likely cut off by the device
 			fmt.Printf("exithub (%s) ws=%d hub already closed %s rip=%s ver=%s\n",
 				globalID, wsClientID, comment, remoteAddrWithPort, clientVersion)
 			return;
