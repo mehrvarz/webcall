@@ -469,7 +469,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				}
 				// unregister callee
 				if hub != nil && hub.CalleeClient != nil {
-					msg := fmt.Sprintf("ws timeout %ss",waitForClientWsConnectSecs)
+					msg := fmt.Sprintf("ws timeout %ds",waitForClientWsConnectSecs)
 					hub.doUnregister(hub.CalleeClient, msg)
 				}
 				myHubMutex.RLock()
