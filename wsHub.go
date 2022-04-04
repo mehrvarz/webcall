@@ -104,7 +104,7 @@ func (h *Hub) setDeadline(secs int, comment string) {
 
 func (h *Hub) doBroadcast(message []byte) {
 	calleeID := ""
-	if h.CalleeClient!="" {
+	if h.CalleeClient!=nil {
 		calleeID = h.CalleeClient.calleeID
 	}
 	fmt.Printf("hub (%s) doBroadcast (%s)\n", calleeID, message)
