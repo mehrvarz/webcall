@@ -409,7 +409,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		// if hub.CalleeLogin is still false then, do skv.DeleteFromHubMap(globalID)
 		// to invalidate this callee/hub
 		go func() {
-			waitForClientWsConnectSecs := 10
+			waitForClientWsConnectSecs := 15
 			waitedFor := 0
 			for i := 0; i < waitForClientWsConnectSecs; i++ {
 				myHubMutex.RLock()
