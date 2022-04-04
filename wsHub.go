@@ -79,8 +79,8 @@ func (h *Hub) setDeadline(secs int, comment string) {
 				// timer valid: we need to disconnect the (relayed) clients (if still connected)
 				if h.CalleeClient!=nil {
 					// otherwise we disconnect this callee
-					fmt.Printf("setDeadline reached; end session now (secs=%d %v)\n",
-						secs,timeStart.Format("2006-01-02 15:04:05"))
+					fmt.Printf("setDeadline (%s) reached; end session now (secs=%d %v)\n",
+						h.CalleeClient.calleeID, secs,timeStart.Format("2006-01-02 15:04:05"))
 					//h.doUnregister(h.CalleeClient,"setDeadline "+comment)
 					h.doBroadcast([]byte("cancel|c"))
 					h.CalleeClient.peerConHasEnded("deadline")
@@ -93,8 +93,8 @@ func (h *Hub) setDeadline(secs int, comment string) {
 				}
 			case <-h.timerCanceled:
 				if logWantedFor("calldur") {
-					fmt.Printf("setDeadline aborted; no disconnect caller (secs=%d %v)\n",
-						secs,timeStart.Format("2006-01-02 15:04:05"))
+					fmt.Printf("setDeadline (%s) aborted; no disconnect caller (secs=%d %v)\n",
+						h.CalleeClient.calleeID, secs, timeStart.Format("2006-01-02 15:04:05"))
 				}
 			}
 			h.timer = nil
@@ -103,7 +103,11 @@ func (h *Hub) setDeadline(secs int, comment string) {
 }
 
 func (h *Hub) doBroadcast(message []byte) {
-	fmt.Printf("hub doBroadcast (%s)\n",message)
+	calleeID := ""
+	if h.CalleeClient!="" {
+		calleeID = h.CalleeClient.calleeID
+	}
+	fmt.Printf("hub (%s) doBroadcast (%s)\n", calleeID, message)
 	if h.CallerClient!=nil {
 		h.CallerClient.Write(message)
 	}
