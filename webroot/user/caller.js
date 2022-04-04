@@ -1116,7 +1116,7 @@ function signalingCommand(message) {
 	gLog('signaling cmd',cmd);
 
 	if(cmd=="calleeAnswer") {
-		if(!peerCon) {
+		if(!peerCon || peerCon.iceConnectionState=="closed") {
 			console.warn('calleeAnswer abort no peerCon');
 			return;
 		}
@@ -1202,7 +1202,7 @@ function signalingCommand(message) {
 		});
 
 	} else if(cmd=="calleeCandidate") {
-		if(!peerCon) {
+		if(!peerCon || peerCon.iceConnectionState=="closed") {
 			console.warn('cmd calleeCandidate abort no peerCon');
 			hangupWithBusySound(true,"calleeCandidate lost peerCon");
 			return;
@@ -1229,7 +1229,7 @@ function signalingCommand(message) {
 				gLog('calleeCandidate addIce',address,calleeCandidate.candidate);
 				// "Failed to execute 'addIceCandidate' on 'RTCPeerConnection'"
 				// may happen if peerCon.setRemoteDescription is not finished yet
-				if(!peerCon) {
+				if(!peerCon || peerCon.iceConnectionState=="closed") {
 					console.warn('cmd calleeCandidate abort no peerCon');
 					return;
 				}
@@ -1576,7 +1576,7 @@ function dial2() {
 	}
 	peerCon.onconnectionstatechange = event => {
 		connectionstatechangeCounter++;
-		if(!peerCon) {
+		if(!peerCon || peerCon.iceConnectionState=="closed") {
 			gLog("peerCon onconnectionstatechange !peerCon "+peerCon.connectionState);
 			hangupWithBusySound(true,"Peer disconnected");
 			return;
