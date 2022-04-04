@@ -242,8 +242,15 @@ func httpNewId(w http.ResponseWriter, r *http.Request, urlID string, calleeID st
 		fmt.Printf("# /newid GetRandomCalleeID err=%v\n",err)
 		return
 	}
-	// NOTE tmpCalleeID is currently free, but it is NOT reserved clientVersion
-	fmt.Printf("/newid (%s) generated for rip=%s ua=%s\n",tmpCalleeID,remoteAddr,r.UserAgent())
+	// NOTE tmpCalleeID is currently free, but it is NOT reserved
+
+	clientVersion := ""
+	url_arg_array, ok := r.URL.Query()["ver"]
+	if ok && len(url_arg_array[0]) >= 1 {
+		clientVersion = url_arg_array[0]
+	}
+	fmt.Printf("/newid (%s) generated for rip=%s ver=%s ua=%s\n",
+		tmpCalleeID, remoteAddr, clientVersion, r.UserAgent())
 	fmt.Fprintf(w, tmpCalleeID)
 	return
 }
@@ -251,7 +258,15 @@ func httpNewId(w http.ResponseWriter, r *http.Request, urlID string, calleeID st
 func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath string, remoteAddr string, startRequestTime time.Time) {
 	if allowNewAccounts {
 		registerID := urlPath[10:]
-		fmt.Printf("/register (%s) rip=%s ua=%s\n",registerID,remoteAddr,r.UserAgent())
+
+		clientVersion := ""
+		url_arg_array, ok := r.URL.Query()["ver"]
+		if ok && len(url_arg_array[0]) >= 1 {
+			clientVersion = url_arg_array[0]
+		}
+
+		fmt.Printf("/register (%s) rip=%s ver=%s ua=%s\n",
+			registerID, remoteAddr, clientVersion, r.UserAgent())
 
 		postBuf := make([]byte, 128)
 		length,_ := io.ReadFull(r.Body, postBuf)
