@@ -1698,7 +1698,7 @@ function peerConnected2() {
 	wsSend("rtcConnect|")
 
 	if(!dataChannel) {
-		gLog('peerConnected2 have no dataChannel');
+		gLog('peerConnected2 createDataChannel');
 		createDataChannel();
 	}
 
