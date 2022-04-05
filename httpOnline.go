@@ -260,6 +260,10 @@ func httpNewId(w http.ResponseWriter, r *http.Request, urlID string, calleeID st
 func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath string, remoteAddr string, startRequestTime time.Time) {
 	if allowNewAccounts {
 		registerID := urlPath[10:]
+		argIdx := strings.Index(registerID,"&")
+		if argIdx>=0 {
+			registerID = registerID[0:argIdx]
+		}
 
 		clientVersion := ""
 		url_arg_array, ok := r.URL.Query()["ver"]
