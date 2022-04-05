@@ -510,6 +510,16 @@ function checkCalleeOnline(waitForCallee) {
 	if(callerId!=="" && callerId!=="undefined") {
 		api += "&callerId="+callerId+"&name="+callerName;
 	}
+	if(typeof Android !== "undefined" && Android !== null) {
+		if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
+			api = api + "&ver="+Android.getVersionName();
+		}
+		if(typeof Android.webviewVersion !== "undefined" && Android.webviewVersion !== null) {
+			api = api + "_" + Android.webviewVersion();
+		}
+	} else {
+		//api = api + "&ver="+clientVersion;
+	}
 	gLog('checkCalleeOnline api',api);
 	xhrTimeout = 30*1000;
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {

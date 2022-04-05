@@ -114,6 +114,16 @@ function submitForm(theForm) {
 	setTimeout(function() {
 		// register new ID
 		let api = apiPath+"/register/"+myCalleeID;
+		if(typeof Android !== "undefined" && Android !== null) {
+			if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
+				api = api + "&ver="+Android.getVersionName();
+			}
+			if(typeof Android.webviewVersion !== "undefined" && Android.webviewVersion !== null) {
+				api = api + "_" + Android.webviewVersion();
+			}
+		} else {
+			//api = api + "&ver="+clientVersion;
+		}
 		if(!gentle) console.log('register via api='+api);
 		ajaxFetch(new XMLHttpRequest(), "POST", api, function(xhr) {
 			if(xhr.responseText=="OK") {
