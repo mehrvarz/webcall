@@ -248,6 +248,10 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	if idxCalleeID>=0 && !strings.HasSuffix(referer,"/") {
 		calleeID = strings.ToLower(referer[idxCalleeID+8:])
 	}
+	argIdx := strings.Index(calleeID,"&")
+	if argIdx>=0 {
+		calleeID = calleeID[0:argIdx]
+	}
 
 	urlID := "" // except for when we login with it, urlID is not our ID but of another party
 	url_arg_array, ok := r.URL.Query()["id"]
