@@ -319,6 +319,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 	} else {
 		// this code should never be reached; 2nd caller should receive "busy" from /online
+		// it can happen if two /online request in very short order return "avail"
+		// (the 2nd /online request before the 1st gets ws-connected)
 		fmt.Printf("# %s (%s/%s) CallerClient already set ws=%d rip=%s\n",
 			client.connType, client.calleeID, client.globalCalleeID, wsClientID64, client.RemoteAddr)
 		//fmt.Printf("# %s existing CallerClient rip=%s ua=%s\n",
