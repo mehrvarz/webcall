@@ -102,7 +102,8 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 
 		if locHub.ConnectedCallerIp != "" {
 			// this callee (urlID/glUrlID) is online but currently busy
-			fmt.Printf("/online (%s) busy callerIp=%s rip=%s\n", urlID, locHub.ConnectedCallerIp, remoteAddr)
+			fmt.Printf("/online (%s) busy callerIp=%s rip=%s ver=%s\n",
+				urlID, locHub.ConnectedCallerIp, remoteAddr, clientVersion)
 			fmt.Fprintf(w, "busy")
 			return
 		}
@@ -144,7 +145,8 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		}
 		readConfigLock.RUnlock()
 		wsAddr = fmt.Sprintf("%s?wsid=%d", wsAddr, wsClientID)
-		fmt.Printf("/online (%s) avail %s rip=%s ua=%s\n", glUrlID, wsAddr, remoteAddr, r.UserAgent())
+		fmt.Printf("/online (%s) avail %s rip=%s ver=%s ua=%s\n",
+			glUrlID, wsAddr, remoteAddr, clientVersion, r.UserAgent())
 		fmt.Fprintf(w, wsAddr)
 		return
 	}
@@ -153,8 +155,8 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		// callee is managed by a remote server
 		if globHub.ConnectedCallerIp != "" {
 			// this callee (urlID/glUrlID) is online but currently busy
-			fmt.Printf("/online (%s/%s) busy callerIp=(%s) rip=%s ua=%s\n",
-				urlID, glUrlID, globHub.ConnectedCallerIp, remoteAddr, r.UserAgent())
+			fmt.Printf("/online (%s/%s) busy callerIp=(%s) rip=%s ver=%s ua=%s\n",
+				urlID, glUrlID, globHub.ConnectedCallerIp, remoteAddr, clientVersion, r.UserAgent())
 			fmt.Fprintf(w, "busy")
 			return
 		}
