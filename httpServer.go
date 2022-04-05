@@ -405,7 +405,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		httpRegister(w, r, urlID, urlPath, remoteAddr, startRequestTime)
 		return
 	}
-	if urlPath=="/newid" {
+	if strings.HasPrefix(urlPath,"/newid") {
 		httpNewId(w, r, urlID, calleeID, remoteAddr)
 		return
 	}
