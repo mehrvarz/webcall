@@ -268,6 +268,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+	urlID = strings.TrimSpace(urlID)
 
 	nocookie := false
 	url_arg_array, ok = r.URL.Query()["nocookie"]
