@@ -648,7 +648,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 		if c.hub.CallerClient!=nil {
 			// deliver "pickup" to the caller
 			if logWantedFor("wscall") {
-				fmt.Printf("%s forward pickup to caller %s\n", c.connType, c.calleeID)
+				fmt.Printf("%s (%s) forward pickup to caller\n", c.connType, c.calleeID)
 			}
 			c.hub.CallerClient.Write(message)
 		}
