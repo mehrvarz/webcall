@@ -53,6 +53,7 @@ type WsClient struct {
 	wsConn *websocket.Conn
 	isOnline atombool.AtomBool	// connected to signaling server
 	isConnectedToPeer atombool.AtomBool
+	pickupSent atombool.AtomBool
 	RemoteAddr string // with port
 	RemoteAddrNoPort string // no port
 	userAgent string // ws UA
@@ -639,6 +640,12 @@ func (c *WsClient) receiveProcess(message []byte) {
 				c.connType, c.calleeID, c.RemoteAddr)
 			return
 		}
+		if c.pickupSent.Get() {
+			// prevent sending 'pickup' twice
+			fmt.Printf("# %s (%s) pickup ignored already sent rip=%s\n",
+				c.connType, c.calleeID, c.RemoteAddr)
+			return
+		}
 
 		c.hub.lastCallStartTime = time.Now().Unix()
 		if logWantedFor("hub") {
@@ -649,9 +656,10 @@ func (c *WsClient) receiveProcess(message []byte) {
 		if c.hub.CallerClient!=nil {
 			// deliver "pickup" to the caller
 			if logWantedFor("wscall") {
-				fmt.Printf("%s (%s) forward pickup to caller\n", c.connType, c.calleeID)
+				fmt.Printf("%s (%s) forward pickup to caller (%s)\n", c.connType, c.calleeID, message)
 			}
 			c.hub.CallerClient.Write(message)
+			c.pickupSent.Set(true)
 		}
 
 		// switching from maxRingSecs deadline to maxTalkSecsIfNoP2p deadline
@@ -886,6 +894,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 				c.hub.CalleeClient.isConnectedToPeer.Set(false)
 			}
 		}
+		c.pickupSent.Set(false)
 	}
 }
 

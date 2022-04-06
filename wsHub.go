@@ -158,6 +158,7 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 
 		client.Close("unregister "+comment)
 		client.isConnectedToPeer.Set(false)
+		client.pickupSent.Set(false)
 
 		if h.CallerClient!=nil {
 			h.CallerClient.Close("unregister "+comment)
