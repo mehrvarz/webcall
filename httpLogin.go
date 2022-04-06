@@ -31,25 +31,24 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	if ok && len(url_arg_array[0]) >= 1 {
 		clientVersion = url_arg_array[0]
 	}
-/*
+
 	blockMapMutex.RLock()
 	blockedTime,ok := blockMap[urlID]
 	blockMapMutex.RUnlock()
 	if ok {
-		if time.Now().Sub(blockedTime) < 60 * time.Minute {
+		if time.Now().Sub(blockedTime) < 30 * time.Minute {
 			// this msg is formated so that callee.js shows it via showStatus()
-			// and the Android service will abort reconnecter
-			fmt.Fprintf(w,"noservice|Websocket communication issue detected on your device. Please check WebCall updates page. Check your System WebView and network settings.|Account blocked for 20 minutes.")
-			fmt.Printf("/login (%s) blocked (%v) rip=%s ua=%s ver=%s\n",
-				urlID, time.Now().Sub(blockedTime), remoteAddr, userAgent, clientVersion)
-			return
-		} else {
+			// and also Android service will abort reconnecter loop
+			fmt.Fprintf(w,"noservice|Connectivity problem detected on your device|Battery optimization activated?")
+			fmt.Printf("/login (%s) blocked (%v) rip=%s ver=%s ua=%s\n",
+				urlID, time.Now().Sub(blockedTime), remoteAddr, clientVersion, userAgent)
 			blockMapMutex.Lock()
 			delete(blockMap,urlID)
 			blockMapMutex.Unlock()
+			return
 		}
 	}
-*/
+
 
 	// reached maxCallees?
 	hubMapMutex.RLock()
@@ -457,12 +456,11 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					time.Sleep(2 * time.Second)
 				}
 */
-/*
-				// we must deny the next login attempt of urlID/globalID
+				// we deny the next login attempt of urlID/globalID
 				blockMapMutex.Lock()
 				blockMap[urlID] = time.Now()
 				blockMapMutex.Unlock()
-*/
+
 				if globalID != "" {
 					//_,lenGlobalHubMap = 
 						DeleteFromHubMap(globalID)
