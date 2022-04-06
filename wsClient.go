@@ -809,7 +809,10 @@ func (c *WsClient) peerConHasEnded(comment string) {
 	// the peerConnection has ended, either bc one side has sent cmd "cancel"
 	// or bc callee has unregistered
 	c.hub.setDeadline(0,comment)
-	if c.isConnectedToPeer.Get() {
+	if !c.isConnectedToPeer.Get() {
+		fmt.Printf("%s (%s) peer Disconnect (not con) secs=%d rip=%s (%s)\n",
+			c.connType, c.calleeID, c.hub.CallDurationSecs, c.RemoteAddr, comment)
+	} else {
 		c.hub.HubMutex.Lock()
 		if c.hub.lastCallStartTime>0 {
 			c.hub.processTimeValues("peerConHasEnded") // set c.hub.CallDurationSecs
