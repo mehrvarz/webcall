@@ -82,7 +82,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 			return
 		}
 		fmt.Printf("/online (%s) avail wsAddr=%s (%s:%s) %s rip=%s\n",
-			glUrlID, wsAddr, callerId, callerName, clientVersion, remoteAddr)
+			urlID, wsAddr, callerId, callerName, clientVersion, remoteAddr)
 
 		dbUserKey := fmt.Sprintf("%s_%d", urlID, dbEntry.StartTime)
 		var dbUser DbUser
