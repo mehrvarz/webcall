@@ -820,7 +820,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 		peerType = "callee"
 	}
 	if !c.isConnectedToPeer.Get() {
-		fmt.Printf("%s (%s) peer %s disconnect (not con) secs=%d rip=%s (%s)\n",
+		fmt.Printf("%s (%s) peer %s discon (not con) %ds %s (%s)\n",
 			c.connType, c.calleeID, peerType, c.hub.CallDurationSecs, c.RemoteAddr, comment)
 	} else {
 		c.hub.HubMutex.Lock()
@@ -830,7 +830,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 		}
 		c.hub.HubMutex.Unlock()
 
-		fmt.Printf("%s (%s) peer %s disconnect secs=%d rip=%s (%s)\n",
+		fmt.Printf("%s (%s) peer %s discon %ds %s (%s)\n",
 			c.connType, c.calleeID, peerType, c.hub.CallDurationSecs, c.RemoteAddr, comment)
 
 		err := StoreCallerIpInHubMap(c.globalCalleeID, "", false)
