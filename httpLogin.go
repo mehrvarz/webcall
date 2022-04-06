@@ -83,7 +83,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		}
 		if key != "" {
 			// found "already logged in"
-			// delay a bit to see if we receive a parallel exithub that might delete this key
+			// delay a bit to see if we receive a parallel exitFunc that might delete this key
 			time.Sleep(1000 * time.Millisecond)
 			// check again
 			key, _, _, err = GetOnlineCallee(urlID, ejectOn1stFound, reportBusyCallee, 
@@ -303,7 +303,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 		if hub == nil {
 			// this means that the connection was most likely cut off by the device
-			//fmt.Printf("exithub (%s) ws=%d hub already closed %s rip=%s ver=%s\n",
+			//fmt.Printf("exitFunc (%s) ws=%d hub already closed %s rip=%s ver=%s\n",
 			//	globalID, wsClientID, comment, remoteAddrWithPort, clientVersion)
 			return;
 		}
@@ -315,26 +315,26 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		}
 		if reqWsClientID != wsClientID {
 			// not the same: deny deletion
-			fmt.Printf("exithub (%s) abort ws=%d/%d %s rip=%s ver=%s\n",
+			fmt.Printf("exit (%s) abort ws=%d/%d %s rip=%s ver=%s\n",
 				globalID, wsClientID, reqWsClientID, comment, remoteAddrWithPort, clientVersion)
 			return;
 		}
 
-		fmt.Printf("exithub (%s) ws=%d %s %s ver=%s\n",
+		fmt.Printf("exit (%s) ws=%d %s %s ver=%s\n",
 			globalID, wsClientID, comment, remoteAddrWithPort, clientVersion)
 
 		if dbUserKey!="" {
 			// feed LastLogoffTime
 			err := kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 			if err != nil {
-				fmt.Printf("# exithub (%s) error db=%s bucket=%s get key=%v err=%v\n",
+				fmt.Printf("# exit (%s) error db=%s bucket=%s get key=%v err=%v\n",
 					globalID, dbMainName, dbUserBucket, dbUserKey, err)
 			} else {
 				// store dbUser with modified LastLogoffTime
 				dbUser.LastLogoffTime = time.Now().Unix()
 				err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
 				if err!=nil {
-					fmt.Printf("# exithub (%s) error db=%s bucket=%s put key=%s err=%v\n",
+					fmt.Printf("# exit (%s) error db=%s bucket=%s put key=%s err=%v\n",
 						globalID, dbMainName, dbUserBucket, urlID, err)
 				}
 			}

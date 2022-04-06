@@ -263,7 +263,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	if hub.CalleeClient==nil {
 		// callee client (1st client)
 		if logWantedFor("wsclient") {
-			fmt.Printf("%s (%s) con callee ws=%d rip=%s\n", client.connType,
+			fmt.Printf("%s (%s) callee conn ws=%d rip=%s\n", client.connType,
 				client.calleeID, wsClientID64, client.RemoteAddr)
 		}
 		client.isCallee = true
@@ -368,11 +368,11 @@ func (c *WsClient) receiveProcess(message []byte) {
 
 		if logWantedFor("wscall") {
 			if c.isCallee {
-				fmt.Printf("%s (%s) init callee ws=%d rip=%s\n",
+				fmt.Printf("%s (%s) callee init ws=%d rip=%s\n",
 					c.connType, c.calleeID, c.hub.WsClientID, c.RemoteAddr)
 			} else {
 				// this is not possible
-				fmt.Printf("# %s (%s) init caller ws=%d rip=%s\n",
+				fmt.Printf("# %s (%s) caller init ws=%d rip=%s\n",
 					c.connType, c.calleeID, c.hub.WsClientID, c.RemoteAddr)
 			}
 		}
