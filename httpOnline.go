@@ -193,15 +193,15 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		}
 		wsAddr = fmt.Sprintf("%s?wsid=%d", wsAddr, wsClientID)
 
-		fmt.Printf("/online (%s) avail wsAddr=%s (%s:%s) rip=%s\n",
-			glUrlID, wsAddr, callerId, callerName, remoteAddr)
+		fmt.Printf("/online (%s) avail wsAddr=%s (%s:%s) %s rip=%s\n",
+			glUrlID, wsAddr, callerId, callerName, clientVersion, remoteAddr)
 		fmt.Fprintf(w, wsAddr)
 		return
 	}
 
 	// something has gone wrong - callee not found anywhere
-	fmt.Printf("# /online (%s/%s) not found (%s:%s) rip=%s\n",
-		urlID, glUrlID, callerId, callerName, remoteAddr)
+	fmt.Printf("# /online (%s/%s) not found (%s:%s) %s rip=%s\n",
+		urlID, glUrlID, callerId, callerName, clientVersion, remoteAddr)
 
 	// clear ConnectedCallerIp
 	StoreCallerIpInHubMap(glUrlID, "", false)
@@ -265,8 +265,21 @@ func httpNewId(w http.ResponseWriter, r *http.Request, urlID string, calleeID st
 	if ok && len(url_arg_array[0]) >= 1 {
 		clientVersion = url_arg_array[0]
 	}
-	fmt.Printf("/newid (%s) generated for rip=%s ver=%s ua=%s\n",
-		tmpCalleeID, remoteAddr, clientVersion, r.UserAgent())
+
+	callerId := ""
+	url_arg_array, ok = r.URL.Query()["callerId"]
+	if ok && len(url_arg_array[0]) >= 1 {
+		callerId = url_arg_array[0]
+	}
+
+	callerName := ""
+	url_arg_array, ok = r.URL.Query()["callerName"]
+	if ok && len(url_arg_array[0]) >= 1 {
+		callerName = url_arg_array[0]
+	}
+
+	fmt.Printf("/newid (%s) generated (%s:%s) rip=%s ver=%s ua=%s\n",
+		tmpCalleeID, callerId, callerName, remoteAddr, clientVersion, r.UserAgent())
 	fmt.Fprintf(w, tmpCalleeID)
 	return
 }
