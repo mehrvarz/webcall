@@ -76,11 +76,13 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		err := kvMain.Get(dbRegisteredIDs, urlID, &dbEntry)
 		if err != nil {
 			// callee urlID does not exist
-			fmt.Printf("/online (%s) error (%v) rip=%s ver=%s ua=%s\n",
-				urlID, err, remoteAddr, clientVersion, r.UserAgent())
+			fmt.Printf("/online (%s) error (%v) (%s:%s) rip=%s ver=%s ua=%s\n",
+				urlID, err, callerId, callerName, remoteAddr, clientVersion, r.UserAgent())
 			fmt.Fprintf(w, "error")
 			return
 		}
+		fmt.Printf("/online (%s) avail wsAddr=%s (%s:%s) %s rip=%s\n",
+			glUrlID, wsAddr, callerId, callerName, clientVersion, remoteAddr)
 
 		dbUserKey := fmt.Sprintf("%s_%d", urlID, dbEntry.StartTime)
 		var dbUser DbUser
