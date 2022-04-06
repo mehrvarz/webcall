@@ -36,7 +36,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	blockedTime,ok := blockMap[urlID]
 	blockMapMutex.RUnlock()
 	if ok {
-		if time.Now().Sub(blockedTime) < 30 * time.Minute {
+		if time.Now().Sub(blockedTime) <= 40 * time.Minute {
 			// this msg is formated so that callee.js shows it via showStatus()
 			// and also Android service will abort reconnecter loop
 			fmt.Fprintf(w,"noservice|Connectivity problem detected on your device|Battery optimization activated?")
@@ -47,6 +47,9 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			blockMapMutex.Unlock()
 			return
 		}
+		blockMapMutex.Lock()
+		delete(blockMap,urlID)
+		blockMapMutex.Unlock()
 	}
 
 
@@ -440,23 +443,14 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				}
 				myHubMutex.RUnlock()
 			}
+
 			// hub.CalleeLogin will be set by callee-client sending "init|"
+			// if hub.CalleeLogin is not set, the client couldn't send "init|", may be due to battery optimization
 			myHubMutex.RLock()
 			if hub != nil && !hub.CalleeLogin.Get() {
 				myHubMutex.RUnlock()
 
-//				fmt.Printf("/login (%s/%s) ws-connect timeout %ds ws=%v rip=%s ver=%s ua=%s\n",
-//					urlID, globalID, waitedFor, wsClientID, remoteAddrWithPort, clientVersion, r.UserAgent())
-/*
-				// send status msg to callee
-				if hub != nil && hub.CalleeClient != nil {
-					msg := "Websocket communication problem detected."+
-							" Please check your System WebView and network settings."
-					hub.CalleeClient.Write([]byte("status|"+msg))
-					time.Sleep(2 * time.Second)
-				}
-*/
-				// we deny the next login attempt of urlID/globalID
+				// the next login attempt of urlID/globalID will be denied to break it's reconnecter loop
 				blockMapMutex.Lock()
 				blockMap[urlID] = time.Now()
 				blockMapMutex.Unlock()
