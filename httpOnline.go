@@ -159,8 +159,8 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		}
 		readConfigLock.RUnlock()
 		wsAddr = fmt.Sprintf("%s?wsid=%d", wsAddr, wsClientID)
-		fmt.Printf("/online (%s) avail %s rip=%s ver=%s ua=%s\n",
-			glUrlID, wsAddr, remoteAddr, clientVersion, r.UserAgent())
+		fmt.Printf("/online (%s) avail wsAddr=%s (%s:%s) %s %s ua=%s\n",
+			glUrlID, wsAddr, callerId, callerName, clientVersion, remoteAddr, r.UserAgent())
 		fmt.Fprintf(w, wsAddr)
 		return
 	}
@@ -195,8 +195,8 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		}
 		wsAddr = fmt.Sprintf("%s?wsid=%d", wsAddr, wsClientID)
 
-		fmt.Printf("/online (%s) avail wsAddr=%s (%s:%s) %s rip=%s\n",
-			glUrlID, wsAddr, callerId, callerName, clientVersion, remoteAddr)
+		fmt.Printf("/online (%s) avail wsAddr=%s (%s:%s) %s %s ua=%s\n",
+			glUrlID, wsAddr, callerId, callerName, clientVersion, remoteAddr, r.UserAgent())
 		fmt.Fprintf(w, wsAddr)
 		return
 	}
