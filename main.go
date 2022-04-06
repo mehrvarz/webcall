@@ -38,6 +38,7 @@ import (
 	"strconv"
 	"bufio"
 	"runtime"
+	"math/rand"
 	"gopkg.in/ini.v1"
 	_ "net/http/pprof"
 	"github.com/mehrvarz/webcall/atombool"
@@ -261,6 +262,8 @@ func main() {
 		kvContacts.Close()
 		return
 	}
+
+	rand.Seed(time.Now().UnixNano())
 
 	readStatsFile()
 
