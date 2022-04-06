@@ -694,9 +694,15 @@ func (c *WsClient) receiveProcess(message []byte) {
 			fmt.Printf("# %s (%s) peer %s c.hub.CallerClient==nil ver=%s\n",
 				c.connType, c.calleeID, payload, c.clientVersion)
 		} else {
-			fmt.Printf("%s (%s) peer %s (%s:%s) ver=%s\n", c.connType, c.calleeID, payload,
-				c.hub.CallerClient.callerID, c.hub.CallerClient.callerName, c.clientVersion)
-			// callerID + callerName are forward to callee via "callerInfo|" on receipt of "callerOffer"
+// displayed twice: 1. payload=="caller Connected p2p/p2p" 2. payload=="callee Connected p2p/p2p"
+// but we show the same callerID and callerName and clientVersion in both cases
+			if strings.HasPrefix(payload,"callee") {
+				fmt.Printf("%s (%s) peer %s\n", c.connType, c.calleeID, payload)
+			} else {
+				fmt.Printf("%s (%s) peer %s (%s:%s) %s\n", c.connType, c.calleeID, payload,
+					c.hub.CallerClient.callerID, c.hub.CallerClient.callerName, c.clientVersion)
+				// callerID + callerName are forward to callee via "callerInfo|" on receipt of "callerOffer"
+			}
 		}
 		tok := strings.Split(payload, " ")
 		if len(tok)>=3 {
@@ -732,13 +738,13 @@ func (c *WsClient) receiveProcess(message []byte) {
 								time.Sleep(20 * time.Millisecond)
 							}
 							if myDisconCalleeOnPeerConnected {
-								fmt.Printf("%s disconnect callee %s rip=%s\n",
+								fmt.Printf("%s peer callee disconnect %s %s\n",
 									c.connType, c.calleeID, c.RemoteAddr)
 								c.hub.CalleeClient.Close("disconCalleeOnPeerConnected")
 							}
 							if myDisconCallerOnPeerConnected {
 								if c.hub.CallerClient != nil {
-									fmt.Printf("%s (%s) caller disconnect rip=%s\n",
+									fmt.Printf("%s (%s) peer caller disconnect %s\n",
 										c.connType, c.calleeID, c.RemoteAddr)
 									c.hub.CallerClient.Close("disconCallerOnPeerConnected")
 								}
