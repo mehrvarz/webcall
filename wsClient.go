@@ -287,7 +287,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	} else if hub.CallerClient==nil {
 		// caller client (2nd client)
 		if logWantedFor("wsclient") {
-			fmt.Printf("%s (%s) con caller ws=%d rip=%s\n",
+			fmt.Printf("%s (%s) caller conn ws=%d rip=%s\n",
 				client.connType, client.calleeID, wsClientID64, client.RemoteAddr)
 		}
 
@@ -809,9 +809,13 @@ func (c *WsClient) peerConHasEnded(comment string) {
 	// the peerConnection has ended, either bc one side has sent cmd "cancel"
 	// or bc callee has unregistered
 	c.hub.setDeadline(0,comment)
+	peerType := "caller"
+	if c==c.hub.CalleeClient {
+		peerType = "callee"
+	}
 	if !c.isConnectedToPeer.Get() {
-		fmt.Printf("%s (%s) peer Disconnect (not con) secs=%d rip=%s (%s)\n",
-			c.connType, c.calleeID, c.hub.CallDurationSecs, c.RemoteAddr, comment)
+		fmt.Printf("%s (%s) peer %s disconnect (not con) secs=%d rip=%s (%s)\n",
+			c.connType, c.calleeID, peerType, c.hub.CallDurationSecs, c.RemoteAddr, comment)
 	} else {
 		c.hub.HubMutex.Lock()
 		if c.hub.lastCallStartTime>0 {
@@ -820,8 +824,8 @@ func (c *WsClient) peerConHasEnded(comment string) {
 		}
 		c.hub.HubMutex.Unlock()
 
-		fmt.Printf("%s (%s) peer Disconnect secs=%d rip=%s (%s)\n",
-			c.connType, c.calleeID, c.hub.CallDurationSecs, c.RemoteAddr, comment)
+		fmt.Printf("%s (%s) peer %s disconnect secs=%d rip=%s (%s)\n",
+			c.connType, c.calleeID, peerType, c.hub.CallDurationSecs, c.RemoteAddr, comment)
 
 		err := StoreCallerIpInHubMap(c.globalCalleeID, "", false)
 		if err!=nil {
