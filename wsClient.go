@@ -635,7 +635,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 	if cmd=="pickup" {
 		// this is sent by the callee client
 		if !c.isConnectedToPeer.Get() {
-			fmt.Printf("# %s ignoring pickup while not peerConnected rip=%s\n", c.connType, c.RemoteAddr)
+			fmt.Printf("# %s (%s) pickup ignored no peerConnect rip=%s\n",
+				c.connType, c.calleeID, c.RemoteAddr)
 			return
 		}
 
