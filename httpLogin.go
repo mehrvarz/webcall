@@ -303,7 +303,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 		if hub == nil {
 			// this means that the connection was most likely cut off by the device
-			//fmt.Printf("exitFunc (%s) ws=%d hub already closed %s rip=%s ver=%s\n",
+			//fmt.Printf("exit (%s) ws=%d hub already closed %s rip=%s ver=%s\n",
 			//	globalID, wsClientID, comment, remoteAddrWithPort, clientVersion)
 			return;
 		}
@@ -315,12 +315,12 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		}
 		if reqWsClientID != wsClientID {
 			// not the same: deny deletion
-			fmt.Printf("exit (%s) abort ws=%d/%d %s rip=%s ver=%s\n",
+			fmt.Printf("exit (%s) abort ws=%d/%d %s %s %s\n",
 				globalID, wsClientID, reqWsClientID, comment, remoteAddrWithPort, clientVersion)
 			return;
 		}
 
-		fmt.Printf("exit (%s) ws=%d %s %s ver=%s\n",
+		fmt.Printf("exit (%s) ws=%d %s %s %s\n",
 			globalID, wsClientID, comment, remoteAddrWithPort, clientVersion)
 
 		if dbUserKey!="" {
