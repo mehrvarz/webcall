@@ -18,7 +18,7 @@ function makeNewId() {
 	let api = apiPath+"/newid";
 	if(typeof Android !== "undefined" && Android !== null) {
 		if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
-			api = api + "&ver="+Android.getVersionName();
+			api = api + "?ver="+Android.getVersionName();
 		}
 		if(typeof Android.webviewVersion !== "undefined" && Android.webviewVersion !== null) {
 			api = api + "_" + Android.webviewVersion();
@@ -126,7 +126,7 @@ function submitForm(theForm) {
 		let api = apiPath+"/register/"+myCalleeID;
 		if(typeof Android !== "undefined" && Android !== null) {
 			if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
-				api = api + "&ver="+Android.getVersionName();
+				api = api + "?ver="+Android.getVersionName();
 			}
 			if(typeof Android.webviewVersion !== "undefined" && Android.webviewVersion !== null) {
 				api = api + "_" + Android.webviewVersion();
