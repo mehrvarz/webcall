@@ -1087,16 +1087,16 @@ function signalingCommand(message) {
 			if(mediaConnect) {
 				// TODO if callerID and/or callerName are avail we would rather show them
 				// instead of listOfClientIps
-				showStatus("Caller canceled call ("+
-					listOfClientIps+" "+localCandidateType+"/"+remoteCandidateType+")",8000);
-				busySignalSound.play().catch(function(error) { });
-				setTimeout(function() {
-					busySignalSound.pause();
-					busySignalSound.currentTime = 0;
-				},1000);
+				//showStatus("Caller canceled call ("+
+				//	listOfClientIps+" "+localCandidateType+"/"+remoteCandidateType+")",8000);
+				//busySignalSound.play().catch(function(error) { });
+				//setTimeout(function() {
+				//	busySignalSound.pause();
+				//	busySignalSound.currentTime = 0;
+				//},1000);
 			} else {
 				// caller canceled call before connect
-				showStatus("Canceled");
+				//showStatus("Canceled");
 			}
 			stopAllAudioEffects("incoming cancel2");
 			endWebRtcSession(false,true); // -> peerConCloseFunc

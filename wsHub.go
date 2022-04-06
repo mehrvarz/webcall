@@ -109,11 +109,12 @@ func (h *Hub) doBroadcast(message []byte) {
 	if h.CalleeClient!=nil {
 		calleeID = h.CalleeClient.calleeID
 	}
-	fmt.Printf("hub (%s) doBroadcast (%s)\n", calleeID, message)
 	if h.CallerClient!=nil {
+		fmt.Printf("hub (%s) doBroadcast caller (%s)\n", calleeID, message)
 		h.CallerClient.Write(message)
 	}
 	if h.CalleeClient!=nil {
+		fmt.Printf("hub (%s) doBroadcast callee (%s)\n", calleeID, message)
 		h.CalleeClient.Write(message)
 	}
 }
