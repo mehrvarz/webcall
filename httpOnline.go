@@ -81,8 +81,8 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 			fmt.Fprintf(w, "error")
 			return
 		}
-		fmt.Printf("/online (%s) avail wsAddr=%s (%s:%s) %s rip=%s\n",
-			urlID, wsAddr, callerId, callerName, clientVersion, remoteAddr)
+		//fmt.Printf("/online (%s) avail wsAddr=%s (%s:%s) %s rip=%s\n",
+		//	urlID, wsAddr, callerId, callerName, clientVersion, remoteAddr)
 
 		dbUserKey := fmt.Sprintf("%s_%d", urlID, dbEntry.StartTime)
 		var dbUser DbUser
@@ -94,15 +94,15 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 			// use dbUser.LastLogoffTime to see how long it has been offline
 			secsSinceLogoff = time.Now().Unix() - dbUser.LastLogoffTime
 		}
-		if(secsSinceLogoff>0) {
-			fmt.Printf("/online (%s) is offline (for %d secs) rip=%s ver=%s ua=%s\n",
+		if(secsSinceLogoff>0 && secsSinceLogoff < 15*60) {
+			// callee may come back very soon
+			fmt.Printf("/online (%s) is offline temp (for %d secs) %s %s ua=%s\n",
 				urlID, secsSinceLogoff, remoteAddr, clientVersion, r.UserAgent())
-			if(secsSinceLogoff < 15*60) {
-				// callee may come back very soon
-				fmt.Fprintf(w, "notavailtemp")
-				return
-			}
+			fmt.Fprintf(w, "notavailtemp")
+			return
 		}
+		fmt.Printf("/online (%s) is offline (for %d secs) %s %s ua=%s\n",
+			urlID, secsSinceLogoff, remoteAddr, clientVersion, r.UserAgent())
 		fmt.Fprintf(w, "notavail")
 		return
 	}
