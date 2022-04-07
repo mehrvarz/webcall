@@ -598,16 +598,19 @@ function login(retryFlag) {
 		if(idx>0) {
 			mainLink = mainLink.substring(0,idx); //+ "/webcall";
 		}
+/*
 		if(loginStatus=="noservice") {
 			wsSecret = "";
 			showStatus("Service error<br><a href='"+mainLink+"'>Main page</a>",-1);
 			form.style.display = "none";
-		} else if(loginStatus=="notregistered") {
+		} else
+*/
+		if(loginStatus=="notregistered") {
 			wsSecret = "";
 			showStatus("User ID unknown<br>",-1);
 			form.style.display = "none";
 		} else if(loginStatus=="busy") {
-			showStatus("User is busy<br><a href='"+mainLink+"'>Main page</a>",-1);
+			showStatus("User is busy",-1);
 			form.style.display = "none";
 		} else if(loginStatus=="error") {
 			// loginStatus "error" = "wrong pw", "pw has less than 6 chars" or "empty pw"
