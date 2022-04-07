@@ -626,7 +626,7 @@ function login(retryFlag) {
 			form.style.display = "none";
 		} else {
 			goOffline();
-			showStatus("Unknown response: "+loginStatus,-1);
+			showStatus("Server response: "+loginStatus,-1);
 			form.style.display = "none";
 		}
 
