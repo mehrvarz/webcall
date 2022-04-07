@@ -36,7 +36,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	blockedTime,ok := blockMap[urlID]
 	blockMapMutex.RUnlock()
 	if ok {
-		if time.Now().Sub(blockedTime) <= 70 * time.Minute {
+		if time.Now().Sub(blockedTime) <= 120 * time.Minute {
 			// this response string is formated so that callee.js shows it via showStatus()
 			// it also makes Android service (0.9.83+) abort it's reconnecter loop
 			fmt.Fprintf(w,"noservice|Connection lost during sleep. Please deactivate battery optimizations for WebCall.")
