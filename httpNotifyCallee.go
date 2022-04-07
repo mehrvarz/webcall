@@ -582,6 +582,7 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 		}
 	}
 
+	// dbUser.Email2 used as tw_handle, dbUser.Str2 used as web push
 	if dbUser.Email2=="" && dbUser.Str2=="" && dbUser.Str3=="" && !calleeIsHiddenOnline {
 		// this user can NOT rcv push msg (not pushable)
 		fmt.Printf("/canbenotified (%s) has no push channel rip=%s\n",urlID,remoteAddr)
@@ -611,7 +612,8 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 
 	// yes, urlID can be notified
 	// problem is that we don't get any event if the caller gives up at this point (TODO still true?)
-	fmt.Printf("/canbenotified (%s) ok name=%s rip=%s\n",urlID,calleeName,remoteAddr)
+	fmt.Printf("/canbenotified (%s) ok name=%s tw=%s onl=%v rip=%s\n",
+		urlID,calleeName,dbUser.Email2,calleeIsHiddenOnline,remoteAddr)
 	fmt.Fprintf(w,"ok|"+calleeName)
 	return
 }
