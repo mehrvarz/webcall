@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"sync/atomic"
 	"github.com/mehrvarz/webcall/skv"
+//	"github.com/mehrvarz/webcall/twitter"
 	"gopkg.in/ini.v1"
 	bolt "go.etcd.io/bbolt"
 )
@@ -28,6 +29,25 @@ func ticker3hours() {
 		if shutdownStarted.Get() {
 			break
 		}
+/*
+		// if already tw-authenticated
+		// download list of all followers
+		// then loop all dbRegisteredIDs and clear all tw-handles that do not follow @webcall
+		var followerIDs twitter.FollowerIDs
+		twitterClientLock.Lock()
+		if twitterClient!=nil {
+			// download list of all followers
+			// TODO we must later support more than 5000 followers
+			var err error
+			followerIDs, _, err = twitterClient.QueryFollowerIDs(5000)
+			if err!=nil {
+				// TODO
+			}
+		}
+		twitterClientLock.Unlock()
+*/
+
+		// loop all dbRegisteredIDs to delete outdated accounts
 		skv.DbMutex.Lock()
 		var dbUserBucketKeyArray []string
 		counterDeleted := 0
@@ -61,7 +81,7 @@ func ticker3hours() {
 					} else {
 						sinceLastLoginSecs := time.Now().Unix() - lastLoginTime
 						sinceLastLoginDays := sinceLastLoginSecs/(24*60*60)
-						if sinceLastLoginDays>120 {
+						if sinceLastLoginDays>180 { // maxUserIdleDays
 							// delete this entry
 							fmt.Printf("ticker3hours %d id=%s regist delete sinceLastLogin=%ds days=%d\n",
 								counter, k, sinceLastLoginSecs, sinceLastLoginDays)
@@ -75,6 +95,25 @@ func ticker3hours() {
 								// we will delete dbUserKey from dbUserBucket after db.Update() is finished
 								dbUserBucketKeyArray = append(dbUserBucketKeyArray,dbUserKey)
 							}
+						} else {
+/* problem here is that I cannot compare tw-handles (in dbUser.Email2) with twitter id's
+							if dbUser.Email2!="" && len(followerIDs.Ids)>0 {
+								foundId := false
+								for id := range followerIDs.Ids {
+									if id == dbUser.Email2 {
+										foundId = true
+									}
+								}
+								if !foundId {
+									twitterClientLock.Lock()
+									if twitterClient!=nil {
+										// if dbUser.Email2!="" and not found in follower list
+										// clear dbUser.Email2 and store
+									}
+									twitterClientLock.Unlock()
+								}
+							}
+*/
 						}
 					}
 				}
@@ -98,6 +137,8 @@ func ticker3hours() {
 // TODO I think we need to generate a blocked entry for each deleted account
 			}
 		}
+
+
 		//fmt.Printf("ticker3hours done\n")
 	}
 }
