@@ -178,12 +178,15 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 					} else {
 						// twitter notification succesfully sent
 // TODO wait a minute: respdata could contain an error
+
+
+
 						notificationSent |= 4
 						maxlen := 30
 						if len(dbUser.Email2) < 30 {
 							maxlen = len(dbUser.Email2)
 						}
-						fmt.Printf("SendTweet (%s) OK  twHandle=%s tweetId=%s\n",
+						fmt.Printf("SendTweet (%s) OK twHandle=%s tweetId=%s\n",
 							urlID, dbUser.Email2[:maxlen], tweet.IdStr)
 /*
 						// in 1hr we want to delete this tweet in ticker3min() via tweet.Id

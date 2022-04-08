@@ -182,7 +182,7 @@ func (c *Client) QueryFollowerById(id int) (UserDetail, []byte, error) {
 func (c *Client) SendTweet(msg string) ([]byte, error) {
 	requesURL := fmt.Sprintf("%s?status=%s", API_TWEET, url.QueryEscape(msg))
 	respdata, err := c.PostQuery(requesURL,"") //"application/x-www-form-urlencoded")
-	//	fmt.Printf("SendTweet requesURL=(%v) response=[%s]\n",requesURL,respdata)
+fmt.Printf("SendTweet requesURL=(%v) err=%v response=[%s]\n",requesURL,err,respdata)
 	if err==nil {
 		// err==nil does not mean everything has worked 
 		// if respdata contains "errors", we must evaluate it
@@ -190,9 +190,9 @@ func (c *Client) SendTweet(msg string) ([]byte, error) {
 		// "message":"event.message_create.target.recipient_id: 'falafelxxl' is not a valid Long"
 		// json parse
 		if strings.Index(string(respdata),"\"errors\"")>=0 {
-			fmt.Printf("# SendTweet respdata err [%s]\n",respdata)
 			var ret ErrorsTweet
 			err = json.Unmarshal(respdata, &ret)
+			fmt.Printf("# SendTweet respdata [%s] err=%v\n",respdata,err)
 			if err==nil {
 				if ret.Errors[0].Code != 0 {
 					err = errors.New(ret.Errors[0].Message)
