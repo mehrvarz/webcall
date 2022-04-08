@@ -166,8 +166,10 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 					}
 					fmt.Printf("# /notifyCallee (%s/%s) SendTweet err=%v msg=%s\n",
 						urlID, dbUser.Email2[:maxlen], err, msg)
-					// TODO if err is caused by a faulty tw_user_id, entered by callee,
-					// how will callee find out about this issue?
+// TODO if err is caused by a faulty tw_user_id, entered by callee,
+// clear the name dbUser.Email2
+// dbUser.Email2 = ""
+// err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
 				} else {
 					tweet := twitter.TimelineTweet{}
 					err = json.Unmarshal(respdata, &tweet)
@@ -175,6 +177,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 						fmt.Printf("# SendTweet (%s) cannot parse respdata err=%v\n", urlID, err)
 					} else {
 						// twitter notification succesfully sent
+// TODO wait a minute: respdata could contain an error
 						notificationSent |= 4
 						maxlen := 30
 						if len(dbUser.Email2) < 30 {
