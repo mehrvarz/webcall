@@ -771,20 +771,13 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 					if(calleeName=="" || calleeName.length<3) {
 						calleeName = calleeID;
 					}
-/*
-					var msg = calleeName+" is currently not available.<br><br>"+
-						"We can try to get "+calleeName+" on the phone. Can you wait a few minutes while we try to establish a connection?<br><br><a onclick='confirmNotifyConnect()'>Yes, please try</a><br><br><a href='..'>No, I have to go</a>";
-*/
 					var msg = calleeName+" is currently not available.<br><br>"+
 						"We can try to get "+calleeName+" on the phone. Can you wait a few minutes while we try to establish a connection?<br><br><a onclick='confirmNotifyConnect()'>Yes, please try</a>";
-// TODO better ask: running in iframe?
-//					if(typeof Android !== "undefined" && Android !== null) {
-
 					if(window.self == window.top) {
-						// not running in iframe mode
+						// not running in iframe mode: no -> jump on directory up
 						msg += "<br><br><a href='..'>No, I have to go</a>";
 					} else {
-						// running in iframe mode
+						// running in iframe mode: no -> history.back()
 						msg += "<br><br><a onclick='history.back();'>No, I have to go</a>";
 					}
 
