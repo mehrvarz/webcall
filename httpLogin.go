@@ -23,8 +23,10 @@ import (
 )
 
 func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *http.Cookie, pw string, remoteAddr string, remoteAddrWithPort string, nocookie bool, startRequestTime time.Time, pwIdCombo PwIdCombo, userAgent string) {
-	//fmt.Printf("/login (%s) rip=%s rt=%v\n",
-	//	urlID, remoteAddrWithPort, time.Since(startRequestTime)) // rt=4.393µs
+	if logWantedFor("http") {
+		fmt.Printf("/login (%s) rip=%s rt=%v\n",
+			urlID, remoteAddrWithPort, time.Since(startRequestTime)) // rt=4.393µs
+	}
 
 	clientVersion := ""
 	url_arg_array, ok := r.URL.Query()["ver"]

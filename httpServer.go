@@ -365,7 +365,9 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(urlPath,"/rtcsig/") {
 		urlPath = urlPath[7:]
 	}
-	//fmt.Printf("urlPath=%s\n",urlPath)
+	if logWantedFor("http") {
+		fmt.Printf("urlPath=%s\n",urlPath)
+	}
 
 	if urlPath=="/login" {
 		httpLogin(w, r, urlID, cookie, pw, remoteAddr, remoteAddrWithPort,
