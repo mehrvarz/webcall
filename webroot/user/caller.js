@@ -777,7 +777,9 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 */
 					var msg = calleeName+" is currently not available.<br><br>"+
 						"We can try to get "+calleeName+" on the phone. Can you wait a few minutes while we try to establish a connection?<br><br><a onclick='confirmNotifyConnect()'>Yes, please try</a>";
-					if(typeof Android !== "undefined" && Android !== null) {
+// TODO better ask: running in iframe?
+//					if(typeof Android !== "undefined" && Android !== null) {
+					if(iframeParent) {
 						msg += "<br><br><a onclick='history.back();'>No, I have to go</a>";
 					} else {
 						msg += "<br><br><a href='..'>No, I have to go</a>";
