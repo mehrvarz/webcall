@@ -412,32 +412,36 @@ function submitForm(autoclose) {
 		}, newSettings);
 	}
 
-	// verify that twName is a real twitter handle
-	// if it is, store the returned ID, so we can check if it follows us
-	// if twName is a real twitter handle, we store valueTwName and the ID and exit settings
-	// otherwise we deny to store settings and we don't exit
-	let api = apiPath+"/twid?id="+valueTwName;
-	if(!gentle) console.log('request twid for twName',api);
-	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-		// store the twid
-		valueTwID = xhr.responseText;
-		if(valueTwID.startsWith("error")) {
-			// valueTwName cannot be stored
-			alert("Twitter handle cannot be verified: "+valueTwID);
-		} else if(valueTwID=="0") {
-			// valueTwName cannot be stored
-			alert("Twitter handle cannot be verified (unknown)");
-		} else {
-			// Twitter handle exists and valueTwID now contains it's ID
-			store();
-		}
-	}, function(errString,err) {
-		// twName cannot be changed (bc it cannot be verified)
-		console.log('xhr error',errString);
-		alert("xhr error\n"+errString+"\nTwitter handle cannot changed because it cannot be verified");
-		valueTwName = valueTwName2;
+	if(valueTwName=="") {
 		store();
-	});
+	} else {
+		// verify that twName is a real twitter handle
+		// if it is, store the returned ID, so we can check if it follows us
+		// if twName is a real twitter handle, we store valueTwName and the ID and exit settings
+		// otherwise we deny to store settings and we don't exit
+		let api = apiPath+"/twid?id="+valueTwName;
+		if(!gentle) console.log('request twid for twName',api);
+		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+			// store the twid
+			valueTwID = xhr.responseText;
+			if(valueTwID.startsWith("error")) {
+				// valueTwName cannot be stored
+				alert("Twitter handle cannot be verified: "+valueTwID);
+			} else if(valueTwID=="0") {
+				// valueTwName cannot be stored
+				alert("Twitter handle cannot be verified (unknown)");
+			} else {
+				// Twitter handle exists and valueTwID now contains it's ID
+				store();
+			}
+		}, function(errString,err) {
+			// twName cannot be changed (bc it cannot be verified)
+			console.log('xhr error',errString);
+			alert("xhr error\n"+errString+"\nTwitter handle cannot changed because it cannot be verified");
+			valueTwName = valueTwName2;
+			store();
+		});
+	}
 }
 
 function clearForm(idx) {
