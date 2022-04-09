@@ -152,52 +152,80 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 				fmt.Printf("# /notifyCallee (%s) failed no twitterClient\n", urlID)
 				// script will tell caller: could not reach urlID
 			} else {
-				if strings.HasPrefix(dbUser.Email2, "@") {
-					msg = dbUser.Email2 + " " + msg
-				} else {
-					msg = "@" + dbUser.Email2 + " " + msg
-				}
-				msg = msg + " " + operationalNow().Format("2006-01-02 15:04:05")
-				respdata, err := twitterClient.SendTweet(msg)
-				if err != nil {
-					maxlen := 30
-					if len(dbUser.Email2) < 30 {
-						maxlen = len(dbUser.Email2)
-					}
-					fmt.Printf("# /notifyCallee (%s/%s) SendTweet err=%v msg=%s\n",
-						urlID, dbUser.Email2[:maxlen], err, msg)
-// TODO if err is caused by a faulty tw_user_id, entered by callee,
-// clear the name dbUser.Email2
-// dbUser.Email2 = ""
-// err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
-				} else {
-					tweet := twitter.TimelineTweet{}
-					err = json.Unmarshal(respdata, &tweet)
-					if err != nil {
-						fmt.Printf("# SendTweet (%s) cannot parse respdata err=%v\n", urlID, err)
+				if dbUser.Str1 == "" {
+					// if twitter (dbUser.Str1) id NOT given, get it via twitter handle (dbUser.Email2)
+					twitterClientLock.Lock()
+					userDetail, _, err := twitterClient.QueryFollowerByName(dbUser.Email2)
+					twitterClientLock.Unlock()
+					if err!=nil {
+						fmt.Printf("# /notifyCallee dbUser.Email2=(%s) err=%v (%s)\n",
+							dbUser.Email2, err, msg)
 					} else {
-						// twitter notification succesfully sent
-// TODO wait a minute: respdata could contain an error
+						fmt.Printf("/notifyCallee dbUser.Email2=(%s) fetched id=%v\n",
+							dbUser.Email2, userDetail.ID)
+						if userDetail.ID > 0 {
+							// dbUser.Email2 is a real twitter handle
+							dbUser.Str1 = fmt.Sprintf("%d",userDetail.ID)
+						}
+					}
+				} else {
+					fmt.Printf("/notifyCallee dbUser.Email2=(%s) stored Str1=%s\n",
+						dbUser.Email2, dbUser.Str1)
+				}
 
+				if dbUser.Str1 != "" {
+// TODO must check if dbUser.Email2 is a follower (if dbUser.Str1 exists in followerIDs.Ids)
+//		if not, dbUser.Str1 = ""
+// store:
+// err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
+				}
 
-
-						notificationSent |= 4
+				if dbUser.Str1 != "" {
+					// twitter id exists: dbUser.Email2 is a real twitter handle
+					if strings.HasPrefix(dbUser.Email2, "@") {
+						msg = dbUser.Email2 + " " + msg
+					} else {
+						msg = "@" + dbUser.Email2 + " " + msg
+					}
+					msg = msg + " " + operationalNow().Format("2006-01-02 15:04:05")
+					respdata, err := twitterClient.SendTweet(msg)
+					if err != nil {
 						maxlen := 30
 						if len(dbUser.Email2) < 30 {
 							maxlen = len(dbUser.Email2)
 						}
-						fmt.Printf("SendTweet (%s) OK twHandle=%s tweetId=%s\n",
-							urlID, dbUser.Email2[:maxlen], tweet.IdStr)
-/*
-						// in 1hr we want to delete this tweet in ticker3min() via tweet.Id
-						// so we store tweet.Id dbSentNotifTweets
-						notifTweet := NotifTweet{time.Now().Unix(), msg}
-						err = kvNotif.Put(dbSentNotifTweets, tweet.IdStr, notifTweet, false)
+						fmt.Printf("# /notifyCallee (%s/%s) SendTweet err=%v msg=%s\n",
+							urlID, dbUser.Email2[:maxlen], err, msg)
+// TODO if err is caused by a faulty tw_user_id, entered by callee,
+// clear dbUser.Email2 and dbUser.Str1
+// dbUser.Email2 = ""
+// store:
+// err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
+					} else {
+						tweet := twitter.TimelineTweet{}
+						err = json.Unmarshal(respdata, &tweet)
 						if err != nil {
-							fmt.Printf("# /notifyCallee (%s) failed to store dbSentNotifTweets (%s)\n",
-								urlID, tweet.IdStr)
+							fmt.Printf("# SendTweet (%s) cannot parse respdata err=%v\n", urlID, err)
+						} else {
+							// twitter notification succesfully sent
+							notificationSent |= 4
+							maxlen := 30
+							if len(dbUser.Email2) < 30 {
+								maxlen = len(dbUser.Email2)
+							}
+							fmt.Printf("SendTweet (%s) OK twHandle=%s tweetId=%s\n",
+								urlID, dbUser.Email2[:maxlen], tweet.IdStr)
+
+//							// in 1hr we want to delete this tweet in ticker3min() via tweet.Id
+//							// so we store tweet.Id dbSentNotifTweets
+//							notifTweet := NotifTweet{time.Now().Unix(), msg}
+//							err = kvNotif.Put(dbSentNotifTweets, tweet.IdStr, notifTweet, false)
+//							if err != nil {
+//								fmt.Printf("# /notifyCallee (%s) failed to store dbSentNotifTweets (%s)\n",
+//									urlID, tweet.IdStr)
+//							}
+
 						}
-*/
 					}
 				}
 			}

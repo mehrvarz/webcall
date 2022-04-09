@@ -6,18 +6,22 @@ import (
 	"fmt"
 	"strings"
 	"bytes"
+	"strconv"
 	"unicode"
 	"encoding/gob"
 	"os"
 	"os/exec"
 	"sync/atomic"
 	"github.com/mehrvarz/webcall/skv"
-//	"github.com/mehrvarz/webcall/twitter"
+	"github.com/mehrvarz/webcall/twitter"
 	"gopkg.in/ini.v1"
 	bolt "go.etcd.io/bbolt"
 )
 
+var followerIDs twitter.FollowerIDs
+
 func ticker3hours() {
+	fmt.Printf("ticker3hours start\n")
 	kv := kvMain.(skv.SKV)
 	bucketName := dbRegisteredIDs
 	db := kv.Db
@@ -25,27 +29,36 @@ func ticker3hours() {
 	threeHoursTicker := time.NewTicker(3*60*60*time.Second)
 	defer threeHoursTicker.Stop()
 	for {
-		<-threeHoursTicker.C
+		fmt.Printf("ticker3hours loop\n")
 		if shutdownStarted.Get() {
 			break
 		}
-/*
+
 		// if already tw-authenticated
 		// download list of all followers
 		// then loop all dbRegisteredIDs and clear all tw-handles that do not follow @webcall
-		var followerIDs twitter.FollowerIDs
 		twitterClientLock.Lock()
-		if twitterClient!=nil {
+		if twitterClient==nil {
+			twitterAuth()
+		}
+		if twitterClient==nil {
+			fmt.Printf("# ticker3min no twitterClient\n")
+		} else {
 			// download list of all followers
+			fmt.Printf("ticker3hours download list of all followers...\n")
 			// TODO we must later support more than 5000 followers
 			var err error
 			followerIDs, _, err = twitterClient.QueryFollowerIDs(5000)
 			if err!=nil {
-				// TODO
+				fmt.Printf("# ticker3hours QueryFollowerIDs err=%v\n", err)
+			} else {
+				fmt.Printf("ticker3hours QueryFollowerIDs count=%d\n", len(followerIDs.Ids))
+				for idx,id := range followerIDs.Ids {
+					fmt.Printf("ticker3hours %d followerIDs.Id=%v\n", idx, int64(id))
+				}
 			}
 		}
 		twitterClientLock.Unlock()
-*/
 
 		// loop all dbRegisteredIDs to delete outdated accounts
 		skv.DbMutex.Lock()
@@ -96,24 +109,64 @@ func ticker3hours() {
 								dbUserBucketKeyArray = append(dbUserBucketKeyArray,dbUserKey)
 							}
 						} else {
-/* problem here is that I cannot compare tw-handles (in dbUser.Email2) with twitter id's
+							// this user account is not outdated
+							// let's check if given tw-handles (dbUser.Email2) exist in followerIDs
 							if dbUser.Email2!="" && len(followerIDs.Ids)>0 {
-								foundId := false
-								for id := range followerIDs.Ids {
-									if id == dbUser.Email2 {
-										foundId = true
+								var twid int64
+								if dbUser.Str1=="" {
+									// tw-handler is given but tw-id is not, let's fetch it
+									twitterClientLock.Lock()
+									userDetail, _, err := twitterClient.QueryFollowerByName(dbUser.Email2)
+									twitterClientLock.Unlock()
+									if err!=nil {
+										fmt.Printf("# ticker3hours QueryFollowerByName Email2=(%s) err=%v\n",
+											dbUser.Email2, err)
+									} else {
+										fmt.Printf("ticker3hours QueryFollowerByName Email2=(%s) fetched id=%v\n",
+											dbUser.Email2, userDetail.ID)
+										if userDetail.ID > 0 {
+											// dbUser.Email2 is a real twitter handle
+											twid = userDetail.ID
+											dbUser.Str1 = fmt.Sprintf("%d",userDetail.ID)
+										}
+									}
+								} else {
+									// tw-handler and tw-id are given
+									i64, err := strconv.ParseInt(dbUser.Str1, 10, 64)
+									if err!=nil {
+										fmt.Printf("# ticker3hours ParseInt64 Str1=(%s) err=%v\n",
+											dbUser.Str1, err)
+									} else {
+										twid = i64
 									}
 								}
-								if !foundId {
+
+								foundId := false
+								if twid>0 {
+									// check if twid exist in followerIDs
+									for _,id := range followerIDs.Ids {
+										if id == twid {
+											foundId = true
+										}
+									}
+								}
+								if foundId {
+									// this twid is a follower
+									//fmt.Printf("ticker3hours found twHandle=%s twId=%d\n", dbUser.Email2, twid)
+								} else {
+									// this twid is NOT a follower
+									fmt.Printf("# ticker3hours not found: must clear, twHandle=%s twId=%d\n",
+										dbUser.Email2, twid)
 									twitterClientLock.Lock()
 									if twitterClient!=nil {
-										// if dbUser.Email2!="" and not found in follower list
-										// clear dbUser.Email2 and store
+										dbUser.Email2 = ""
+										dbUser.Str1 = ""
+										// store
+										err3 := kvMain.Put(dbUserBucket, dbUserKey, &dbUser)
 									}
 									twitterClientLock.Unlock()
 								}
 							}
-*/
 						}
 					}
 				}
@@ -138,8 +191,8 @@ func ticker3hours() {
 			}
 		}
 
-
 		//fmt.Printf("ticker3hours done\n")
+		<-threeHoursTicker.C
 	}
 }
 

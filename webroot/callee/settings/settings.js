@@ -65,10 +65,11 @@ function prepareSettings(xhrresponse) {
 	if(typeof serverSettings.twname!=="undefined") {
 		if(!gentle) console.log('serverSettings.twname',serverSettings.twname);
 		document.getElementById("twname").value = serverSettings.twname;
+		document.getElementById("twname2").value = serverSettings.twname; // backup of twname so we detect change
 	}
 	if(typeof serverSettings.twid!=="undefined") {
 		if(!gentle) console.log('serverSettings.twid',serverSettings.twid);
-		//document.getElementById("twid").value = serverSettings.twid;
+		document.getElementById("twid").value = serverSettings.twid;	  // not being displayed
 	}
 	if(typeof serverSettings.storeContacts!=="undefined") {
 		if(!gentle) console.log('serverSettings.storeContacts',serverSettings.storeContacts);
@@ -171,6 +172,7 @@ function prepareSettings(xhrresponse) {
 	// data will be stored in submitForm()
 }
 
+/*
 function webPushSubscribe(deviceNumber) {
 	if(!('serviceWorker' in navigator)) {
 		console.warn("no serviceWorker in navigator");
@@ -184,15 +186,13 @@ function webPushSubscribe(deviceNumber) {
 		return
 	}
 
-	/*
-	console.log("webPushSubscribe device=%d -> serviceWorker.register...",deviceNumber);
-	let ret = navigator.serviceWorker.register('service-worker.js');
-	// get access to the registration (and registration.pushManager) object.
-	console.log("webPushSubscribe serviceWorker.ready...");
-	navigator.serviceWorker.ready
-	.then(function(registration) {
-		console.log("webPushSubscribe serviceWorker.register =",ret);
-	*/
+//	console.log("webPushSubscribe device=%d -> serviceWorker.register...",deviceNumber);
+//	let ret = navigator.serviceWorker.register('service-worker.js');
+//	// get access to the registration (and registration.pushManager) object.
+//	console.log("webPushSubscribe serviceWorker.ready...");
+//	navigator.serviceWorker.ready
+//	.then(function(registration) {
+//		console.log("webPushSubscribe serviceWorker.register =",ret);
 		let registration = parent.pushRegistration
 		console.log("webPushSubscribe registration =",registration);
 		console.log("webPushSubscribe pushManager.getSubscription()");
@@ -235,12 +235,10 @@ function webPushSubscribe(deviceNumber) {
 			console.log("webPushSubscribe getSubscription err",err);
 			alert("webPushSubscribe getSubscription error\n"+err);
 		});
-	/*
-	}).catch(err => {
-		console.log("webPushSubscribe getSubscription err",err);
-		alert("webPushSubscribe getSubscription error\n"+err);
-	});
-	*/
+//	}).catch(err => {
+//		console.log("webPushSubscribe getSubscription err",err);
+//		alert("webPushSubscribe getSubscription error\n"+err);
+//	});
 
 	let deliverSubscription = function(subscr) {
 		// subscr will be used for webpush.SendNotification()
@@ -342,11 +340,7 @@ function webPushSubscribe(deviceNumber) {
 		});
 	}
 }
-
-function errorAction(errString,err) {
-	console.log('xhr error',errString);
-	alert("webPushSubscribe xhr error\n"+errString);
-}
+*/
 
 var xhrTimeout = 50000;
 function ajaxFetch(xhr, type, apiPath, processData, errorFkt, postData) {
@@ -382,33 +376,68 @@ function ajaxFetch(xhr, type, apiPath, processData, errorFkt, postData) {
 }
 
 function submitForm(autoclose) {
-	// we use encodeURI to encode the subscr-strings bc these strings are themselves json 
-	// and cannot just be packaged inside json
-	var newSettings = '{ "nickname":"'+document.getElementById("nickname").value.trim()+'",'+
-		'"twname":"'+document.getElementById("twname").value.replace(/ /g,'')+'",'+  // remove all white spaces
-		//'" "twid":"'+ document.getElementById("twid").value+
-		'"storeContacts":"'+document.getElementById("storeContacts").checked+'",'+
-		'"storeMissedCalls":"'+document.getElementById("storeMissedCalls").checked+'",'+
-		'"webPushSubscription1":"'+encodeURI(serverSettings.webPushSubscription1)+'",'+
-		'"webPushUA1":"'+encodeURI(serverSettings.webPushUA1)+'",'+
-		'"webPushSubscription2":"'+encodeURI(serverSettings.webPushSubscription2)+'",'+
-		'"webPushUA2":"'+encodeURI(serverSettings.webPushUA2)+'"'+
-	'}';
-	if(!gentle) console.log('submitForm newSettings',newSettings);
+	var valueTwName = document.getElementById("twname").value.replace(/ /g,''); // remove all white spaces
+	var valueTwName2 = document.getElementById("twname2").value; // the unmodified orig value
+	var valueTwID = document.getElementById("twid").value;
+	if(!gentle) console.log('submitForm twName='+valueTwName+" twID="+valueTwID);
 
-	let api = apiPath+"/setsettings?id="+calleeID;
-	if(!gentle) console.log('request setsettings api',api);
-	ajaxFetch(new XMLHttpRequest(), "POST", api, function(xhr) {
-		if(!gentle) console.log('data posted',newSettings);
-		if(autoclose) {
-			exitPage();
+	var store = function() {
+		if(!gentle) console.log('submitForm store twName='+valueTwName+" twID="+valueTwID);
+		// we use encodeURI to encode the subscr-strings bc these strings are themselves json 
+		// and cannot just be packaged inside json
+		var newSettings = '{ "nickname":"'+document.getElementById("nickname").value.trim()+'",'+
+			'"twname":"'+valueTwName+'",'+
+			'"twid":"'+valueTwID+'",'+
+			'"storeContacts":"'+document.getElementById("storeContacts").checked+'",'+
+			'"storeMissedCalls":"'+document.getElementById("storeMissedCalls").checked+'",'+
+			'"webPushSubscription1":"'+encodeURI(serverSettings.webPushSubscription1)+'",'+
+			'"webPushUA1":"'+encodeURI(serverSettings.webPushUA1)+'",'+
+			'"webPushSubscription2":"'+encodeURI(serverSettings.webPushSubscription2)+'",'+
+			'"webPushUA2":"'+encodeURI(serverSettings.webPushUA2)+'"'+
+		'}';
+		if(!gentle) console.log('submitForm newSettings',newSettings);
+
+		let api = apiPath+"/setsettings?id="+calleeID;
+		if(!gentle) console.log('request setsettings api',api);
+		ajaxFetch(new XMLHttpRequest(), "POST", api, function(xhr) {
+			if(!gentle) console.log('data posted',newSettings);
+			if(autoclose) {
+				exitPage();
+			}
+		}, function(errString,err) {
+			errorAction(errString,err);
+			if(autoclose) {
+				exitPage();
+			}
+		}, newSettings);
+	}
+
+	// verify that twName is a real twitter handle
+	// if it is, store the returned ID, so we can check if it follows us
+	// if twName is a real twitter handle, we store valueTwName and the ID and exit settings
+	// otherwise we deny to store settings and we don't exit
+	let api = apiPath+"/twid?id="+valueTwName;
+	if(!gentle) console.log('request twid for twName',api);
+	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+		// store the twid
+		valueTwID = xhr.responseText;
+		if(valueTwID.startsWith("error")) {
+			// valueTwName cannot be stored
+			alert("Twitter handle cannot be verified: "+valueTwID);
+		} else if(valueTwID=="0") {
+			// valueTwName cannot be stored
+			alert("Twitter handle cannot be verified (unknown)");
+		} else {
+			// Twitter handle exists and valueTwID now contains it's ID
+			store();
 		}
 	}, function(errString,err) {
-		errorAction(errString,err);
-		if(autoclose) {
-			exitPage();
-		}
-	}, newSettings);
+		// twName cannot be changed (bc it cannot be verified)
+		console.log('xhr error',errString);
+		alert("xhr error\n"+errString+"\nTwitter handle cannot changed because it cannot be verified");
+		valueTwName = valueTwName2;
+		store();
+	});
 }
 
 function clearForm(idx) {
@@ -419,6 +448,11 @@ function clearForm(idx) {
 	else if(idx==2)
 		document.getElementById("twid").value = "";
 	formPw.focus();
+}
+
+function errorAction(errString,err) {
+	console.log('xhr error',errString);
+	alert("xhr error\n"+errString);
 }
 
 function exitPage() {

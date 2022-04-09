@@ -409,6 +409,10 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		httpDeleteContact(w, r, urlID, calleeID, cookie, remoteAddr)
 		return
 	}
+	if strings.HasPrefix(urlPath,"/twid") {
+		httpTwId(w, r, urlID, cookie, remoteAddr)
+		return
+	}
 	if strings.HasPrefix(urlPath,"/avail/") {
 		httpAvail(w, r, urlID, urlPath, remoteAddr)
 		return

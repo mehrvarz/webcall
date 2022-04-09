@@ -179,6 +179,14 @@ func (c *Client) QueryFollowerById(id int) (UserDetail, []byte, error) {
 	return ret, data, err
 }
 
+func (c *Client) QueryFollowerByName(name string) (UserDetail, []byte, error) {
+	requesURL := fmt.Sprintf("%s?screen_name=%s", API_FOLLOWER_INFO, name)
+	data, err := c.BasicQuery(requesURL)
+	var ret UserDetail
+	err = json.Unmarshal(data, &ret)
+	return ret, data, err
+}
+
 func (c *Client) SendTweet(msg string) ([]byte, error) {
 	requesURL := fmt.Sprintf("%s?status=%s", API_TWEET, url.QueryEscape(msg))
 	respdata, err := c.PostQuery(requesURL,"") //"application/x-www-form-urlencoded")

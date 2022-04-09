@@ -57,7 +57,7 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 	reqBody, err = json.Marshal(map[string]string{
 		"nickname": dbUser.Name,
 		"twname": dbUser.Email2, // twitter handle (starting with @)
-		"twid": dbUser.Str1, // twitter user_id  // not yet used by settings app
+		"twid": dbUser.Str1, // twitter user_id
 		"storeContacts": strconv.FormatBool(dbUser.StoreContacts),
 		"storeMissedCalls": strconv.FormatBool(dbUser.StoreMissedCalls),
 		"webPushSubscription1": dbUser.Str2,
@@ -140,7 +140,7 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 				fmt.Printf("/setsettings (%s) new twname (%s) (old:%s)\n",calleeID,val,dbUser.Email2)
 				dbUser.Email2 = val
 			}
-		case "twid":  // not yet used by settings app
+		case "twid":
 			if val != dbUser.Str1 {
 				fmt.Printf("/setsettings (%s) new twid (%s) (old:%s)\n",calleeID,val,dbUser.Str1)
 				dbUser.Str1 = val
@@ -474,6 +474,40 @@ func httpDeleteContact(w http.ResponseWriter, r *http.Request, urlID string, cal
 	}
 	fmt.Printf("/deletecontact calleeID=(%s) contactID[%s]\n",calleeID, contactID)
 	fmt.Fprintf(w,"ok")
+	return
+}
+
+func httpTwId(w http.ResponseWriter, r *http.Request, twHandle string, cookie *http.Cookie, remoteAddr string) {
+/* TODO
+	if(cookie==nil) {
+		fmt.Printf("# /twid cookie==nil twHandle=%s\n",twHandle)
+		return
+	}
+*/
+	twitterClientLock.Lock()
+	if twitterClient == nil {
+		fmt.Printf("/twid twitterAuth... twHandle=%s\n",twHandle)
+		twitterAuth()
+	}
+	twitterClientLock.Unlock()
+
+	if(twitterClient==nil) {
+		fmt.Printf("# /twid twitterClient==nil twHandle=%s\n",twHandle)
+		fmt.Fprintf(w,"errorauth")
+	} else {
+		twitterClientLock.Lock()
+		userDetail, _, err := twitterClient.QueryFollowerByName(twHandle)
+		twitterClientLock.Unlock()
+		if err!=nil {
+			fmt.Printf("# /twid twHandle=(%s) err=%v\n", twHandle, err)
+			fmt.Fprintf(w,"errorquery")
+		} else {
+			fmt.Printf("/twid twHandle.Email2=(%s) fetched id=%v\n",
+				twHandle, userDetail.ID)
+			// "0" = twHandle not found
+			fmt.Fprintf(w,fmt.Sprintf("%d",userDetail.ID))
+		}
+	}
 	return
 }
 

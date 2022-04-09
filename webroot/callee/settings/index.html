@@ -141,8 +141,17 @@ input[type=submit]:focus {
 		<br>
 		<label for="twname" style="display:inline-block; padding-bottom:4px; color:#1b1; font-weight:600;">Your Twitter handle: (optional)</label><br>
 		<input name="twname" id="twname" type="text" class="formtext" autofocus>
+		<input name="twname2" id="twname2" type="text" class="formtext" style="display:none">
 		<span onclick="clearForm(1)" style="margin-left:5px; user-select:none;">X</span><br>
 		<div style="margin-top:6px;font-size:0.90em;">We use this to tweet you in realtime about calls you receive when you are not connected. We ask the caller to wait a few minutes for you to pick up the call. You need to follow our <a href="https://twitter.com/webcall">@WebCall</a> Twitter feed to receive these notifications.</div>
+
+		<div style="display:none;"> <!-- not being displayed, but holds the twid needed in submitForm() -->
+		<br>
+		<label for="twid" style="display:inline-block; padding-bottom:4px;">Your Twitter user ID:</label><br>
+		<input name="twid" id="twid" type="text" class="formtext">
+		<span onclick="clearForm(2)" style="margin-left:5px; user-select:none;">X</span><br>
+		<div style="margin-top:10px;font-size:0.85em;">We use this to DM you in realtime about incoming calls. We also ask the caller to wait a minute or two. For this to work you need to follow our <a href="https://twitter.com/webcall">@WebCall</a> Twitter account. If you don't know your Twitter user ID, visit this site: <a href="https://tweeterid.com">tweeterid.com</a>.</div>
+		</div>
 
 		<br>
 		<label id="storeContactsLabel" style="margin-left:-4px; display:block; margin-bottom:8px;">
@@ -152,14 +161,6 @@ input[type=submit]:focus {
 		<label id="storeMissedCallsLabel" style="margin-left:-4px; display:block; margin-bottom:8px;">
 			<input type="checkbox" id="storeMissedCalls" class="checkbox"> Save missed calls</label>
 		</label>
-
-		<!-- 
-		<br>
-		<label for="twid" style="display:inline-block; padding-bottom:4px;">Your Twitter user ID:</label><br>
-		<input name="twid" id="twid" type="text" class="formtext" autofocus>
-		<span onclick="clearForm(2)" style="margin-left:5px; user-select:none;">X</span><br>
-		<div style="margin-top:10px;font-size:0.85em;">We use this to DM you in realtime about incoming calls. We also ask the caller to wait a minute or two. For this to work you need to follow our <a href="https://twitter.com/webcall">@WebCall</a> Twitter account. If you don't know your Twitter user ID, visit this site: <a href="https://tweeterid.com">tweeterid.com</a>.</div>
-		-->
 
 		<input type="submit" name="Submit" id="submit" value="Save" style="width:100px; margin-top:20px; border-radius:3px;">
 	</form>

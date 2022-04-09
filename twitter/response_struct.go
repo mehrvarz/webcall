@@ -289,7 +289,8 @@ type Followers struct {
 }
 
 type FollowerIDs struct {
-	Ids               []interface{} `json:"ids"`
+//	Ids               []interface{} `json:"ids"`
+	Ids               []int64		`json:"ids"`
 	NextCursor        int64         `json:"next_cursor"`
 	NextCursorStr     string        `json:"next_cursor_str"`
 	PreviousCursor    int           `json:"previous_cursor"`
