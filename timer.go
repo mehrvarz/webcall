@@ -161,11 +161,13 @@ func ticker3hours() {
 									if twitterClient!=nil {
 										dbUser.Email2 = ""
 										dbUser.Str1 = ""
+/*
 										// store
 										err3 := kvMain.Put(dbUserBucket, dbUserKey, &dbUser, false)
 										if err3!=nil {
 											fmt.Printf("# ticker3hours kvMain.Put fail err=%v\n", err3)
 										}
+*/
 									}
 									twitterClientLock.Unlock()
 								}
