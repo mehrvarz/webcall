@@ -771,8 +771,18 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 					if(calleeName=="" || calleeName.length<3) {
 						calleeName = calleeID;
 					}
+/*
 					var msg = calleeName+" is currently not available.<br><br>"+
 						"We can try to get "+calleeName+" on the phone. Can you wait a few minutes while we try to establish a connection?<br><br><a onclick='confirmNotifyConnect()'>Yes, please try</a><br><br><a href='..'>No, I have to go</a>";
+*/
+					var msg = calleeName+" is currently not available.<br><br>"+
+						"We can try to get "+calleeName+" on the phone. Can you wait a few minutes while we try to establish a connection?<br><br><a onclick='confirmNotifyConnect()'>Yes, please try</a>";
+					if(typeof Android !== "undefined" && Android !== null) {
+						msg += "<br><br><a onclick='history.back();'>No, I have to go</a>";
+					} else {
+						msg += "<br><br><a href='..'>No, I have to go</a>";
+					}
+
 					showStatus(msg,-1);
 					needToStoreMissedCall = calleeID+"|"+callerName+"|"+callerId;
 					// needToStoreMissedCall will be cleared by a successful call
