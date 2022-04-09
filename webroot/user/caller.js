@@ -779,10 +779,13 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 						"We can try to get "+calleeName+" on the phone. Can you wait a few minutes while we try to establish a connection?<br><br><a onclick='confirmNotifyConnect()'>Yes, please try</a>";
 // TODO better ask: running in iframe?
 //					if(typeof Android !== "undefined" && Android !== null) {
-					if(iframeParent) {
-						msg += "<br><br><a onclick='history.back();'>No, I have to go</a>";
-					} else {
+
+					if(window.self == window.top) {
+						// not running in iframe mode
 						msg += "<br><br><a href='..'>No, I have to go</a>";
+					} else {
+						// running in iframe mode
+						msg += "<br><br><a onclick='history.back();'>No, I have to go</a>";
 					}
 
 					showStatus(msg,-1);
