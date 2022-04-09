@@ -142,7 +142,9 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		}
 	}
 
-	//fmt.Printf("/login pw before httpPost (%s)\n", pw)
+	if logWantedFor("http") {
+		fmt.Printf("/login pw before httpPost (%s)\n", pw)
+	}
 	postBuf := make([]byte, 128)
 	length, _ := io.ReadFull(r.Body, postBuf)
 	if length > 0 {
