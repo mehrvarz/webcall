@@ -62,7 +62,8 @@ func ticker3hours() {
 
 		// loop all dbRegisteredIDs to delete outdated accounts
 		skv.DbMutex.Lock()
-		var dbUserBucketKeyArray []string
+		var dbUserBucketKeyArray1 []string  // for deleting
+		var dbUserBucketKeyArray2 []string  // for clear save
 		counterDeleted := 0
 		err := db.Update(func(tx *bolt.Tx) error {
 			b := tx.Bucket([]byte(bucketName))
@@ -106,7 +107,7 @@ func ticker3hours() {
 								//fmt.Printf("ticker3hours %d id=%s regist deleted %d\n",
 								//	counter, k, counterDeleted)
 								// we will delete dbUserKey from dbUserBucket after db.Update() is finished
-								dbUserBucketKeyArray = append(dbUserBucketKeyArray,dbUserKey)
+								dbUserBucketKeyArray1 = append(dbUserBucketKeyArray1,dbUserKey)
 							}
 						} else {
 							// this user account is not outdated
@@ -157,19 +158,7 @@ func ticker3hours() {
 									// this twid is NOT a follower
 									fmt.Printf("# ticker3hours not found: must clear, twHandle=%s twId=%d\n",
 										dbUser.Email2, twid)
-									twitterClientLock.Lock()
-									if twitterClient!=nil {
-										dbUser.Email2 = ""
-										dbUser.Str1 = ""
-/*
-										// store
-										err3 := kvMain.Put(dbUserBucket, dbUserKey, &dbUser, false)
-										if err3!=nil {
-											fmt.Printf("# ticker3hours kvMain.Put fail err=%v\n", err3)
-										}
-*/
-									}
-									twitterClientLock.Unlock()
+									dbUserBucketKeyArray2 = append(dbUserBucketKeyArray2,dbUserKey)
 								}
 							}
 						}
@@ -185,14 +174,31 @@ func ticker3hours() {
 		} else if counterDeleted>0 {
 			fmt.Printf("ticker3hours db.Update deleted=%d no err\n",counterDeleted)
 		}
-		for _,key := range dbUserBucketKeyArray {
+		for _,key := range dbUserBucketKeyArray1 {
 			fmt.Printf("ticker3hours id=%s user delete...\n", key)
 			err = kv.Delete(dbUserBucket, key)
 			if err!=nil {
 				fmt.Printf("ticker3hours key=%s user delete err=%v\n", key, err)
 			} else {
 				//fmt.Printf("ticker3hours key=%s user deleted\n", key)
-// TODO I think we need to generate a blocked entry for each deleted account
+				// TODO I think we need to generate a blocked entry for each deleted account
+			}
+		}
+		for _,key := range dbUserBucketKeyArray2 {
+			fmt.Printf("ticker3hours id=%s user clear save...\n", key)
+			var dbUser DbUser
+			err := kvMain.Get(dbUserBucket, key, &dbUser)
+			if err != nil {
+				fmt.Printf("# ticker3hours error read db=%s bucket=%s get key=%v err=%v\n",
+					dbMainName, dbUserBucket, key, err)
+			} else {
+				dbUser.Email2 = ""
+				dbUser.Str1 = ""
+				// store
+				err3 := kvMain.Put(dbUserBucket, key, &dbUser, true)
+				if err3!=nil {
+					fmt.Printf("# ticker3hours kvMain.Put fail err=%v\n", err3)
+				}
 			}
 		}
 
