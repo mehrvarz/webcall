@@ -163,6 +163,21 @@ func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 	if strings.HasSuffix(urlPath,"/") {
 		urlPath = urlPath[:len(urlPath)-1]
 	}
+
+	// deny bot's
+	userAgent := r.UserAgent()
+	if userAgent=="" || 
+		strings.Index(userAgent, "bot") >= 0 ||
+		strings.Index(userAgent, "spider") >= 0 ||
+		strings.Index(userAgent, "scan") >= 0 ||
+		strings.Index(userAgent, "search") >= 0 ||
+		strings.Index(userAgent, "acebook") >= 0 ||
+		strings.Index(userAgent, "Telegram") >= 0 {
+		fmt.Printf("# substituteUserNameHandler bot denied path=(%s) userAgent=(%s) rip=%s\n",
+			r.URL.Path, userAgent, remoteAddr)
+		return
+	}
+
 	if strings.Index(urlPath,"..")>=0 {
 		// suspicious! do not respond
 		fmt.Printf("# substituteUserNameHandler abort on '..' in urlPath=(%s)\n", urlPath)
