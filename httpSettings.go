@@ -477,32 +477,32 @@ func httpDeleteContact(w http.ResponseWriter, r *http.Request, urlID string, cal
 	return
 }
 
-func httpTwId(w http.ResponseWriter, r *http.Request, twHandle string, cookie *http.Cookie, remoteAddr string) {
+func httpTwId(w http.ResponseWriter, r *http.Request, twHandle string, calleeID string, cookie *http.Cookie, remoteAddr string) {
 	// /twid returns twitter-Id for a twHandle
 	if(cookie==nil) {
-		fmt.Printf("# /twid cookie==nil twHandle=%s\n",twHandle)
+		fmt.Printf("# /twid (%s) cookie==nil twHandle=%s\n", calleeID, twHandle)
 		return
 	}
 
 	twitterClientLock.Lock()
 	if twitterClient == nil {
-		fmt.Printf("/twid twitterAuth... twHandle=%s\n",twHandle)
+		fmt.Printf("/twid (%s) twitterAuth... twHandle=%s\n", calleeID, twHandle)
 		twitterAuth()
 	}
 	twitterClientLock.Unlock()
 
 	if(twitterClient==nil) {
-		fmt.Printf("# /twid twitterClient==nil twHandle=%s\n",twHandle)
+		fmt.Printf("# /twid (%s) twitterClient==nil twHandle=%s\n", calleeID, twHandle)
 		fmt.Fprintf(w,"errorauth")
 	} else {
 		twitterClientLock.Lock()
 		userDetail, _, err := twitterClient.QueryFollowerByName(twHandle)
 		twitterClientLock.Unlock()
 		if err!=nil {
-			fmt.Printf("# /twid twHandle=(%s) err=%v\n", twHandle, err)
+			fmt.Printf("# /twid (%s) twHandle=(%s) err=%v\n", calleeID, twHandle, err)
 			fmt.Fprintf(w,"errorquery")
 		} else {
-			fmt.Printf("/twid twHandle=(%s) fetched id=%v\n", twHandle, userDetail.ID)
+			fmt.Printf("/twid (%s) twHandle=(%s) fetched id=%v\n", calleeID, twHandle, userDetail.ID)
 			// "0" = twHandle not found
 			fmt.Fprintf(w,fmt.Sprintf("%d",userDetail.ID))
 		}
@@ -510,17 +510,17 @@ func httpTwId(w http.ResponseWriter, r *http.Request, twHandle string, cookie *h
 	return
 }
 
-func httpTwFollower(w http.ResponseWriter, r *http.Request, twId string, cookie *http.Cookie, remoteAddr string) {
+func httpTwFollower(w http.ResponseWriter, r *http.Request, twId string, calleeID string, cookie *http.Cookie, remoteAddr string) {
 	// return twId for twHandle
 	if(cookie==nil) {
-		fmt.Printf("# /twfollower cookie==nil twId=%s\n",twId)
+		fmt.Printf("# /twfollower (%s) cookie==nil twId=%s\n", calleeID, twId)
 		fmt.Fprintf(w,"error denied")
 		return
 	}
 
 	twid, err := strconv.ParseInt(twId, 10, 64)
 	if err!=nil {
-		fmt.Printf("# /twfollower ParseInt64 fail twid=(%s) err=%v\n", twid, err)
+		fmt.Printf("# /twfollower (%s) ParseInt64 fail twid=(%s) err=%v\n", calleeID, twid, err)
 		fmt.Fprintf(w,"error format "+err.Error())
 	} else {
 		foundId := false
@@ -534,11 +534,11 @@ func httpTwFollower(w http.ResponseWriter, r *http.Request, twId string, cookie 
 		}
 		if foundId {
 			// this twid is a follower
-			//fmt.Printf("/twfollower found twHandle=%s twId=%d\n", dbUser.Email2, twid)
+			//fmt.Printf("/twfollower (%s) found twHandle=%s twId=%d\n", calleeID, dbUser.Email2, twid)
 			fmt.Fprintf(w,"OK")
 		} else {
 			// this twid is NOT a follower
-			fmt.Printf("# /twfollower twId=%d not found\n", twid)
+			fmt.Printf("# /twfollower (%s) twId=%d not found\n", calleeID, twid)
 			fmt.Fprintf(w,"error id not found")
 		}
 	}

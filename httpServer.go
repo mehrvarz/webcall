@@ -440,11 +440,11 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if strings.HasPrefix(urlPath,"/twid") {
-		httpTwId(w, r, urlID, cookie, remoteAddr)
+		httpTwId(w, r, urlID, calleeID, cookie, remoteAddr)
 		return
 	}
 	if strings.HasPrefix(urlPath,"/twfollower") {
-		httpTwFollower(w, r, urlID, cookie, remoteAddr)
+		httpTwFollower(w, r, urlID, calleeID, cookie, remoteAddr)
 		return
 	}
 	if strings.HasPrefix(urlPath,"/avail/") {
