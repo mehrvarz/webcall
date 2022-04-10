@@ -164,6 +164,16 @@ func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 		urlPath = urlPath[:len(urlPath)-1]
 	}
 
+	remoteAddrWithPort := r.RemoteAddr
+	if strings.HasPrefix(remoteAddrWithPort,"[::1]") {
+		remoteAddrWithPort = "127.0.0.1"+remoteAddrWithPort[5:]
+	}
+	altIp := r.Header.Get("X-Real-IP")
+	if len(altIp) >= 7 && !strings.HasPrefix(remoteAddrWithPort,altIp) {
+		remoteAddrWithPort = altIp
+	}
+	remoteAddr := remoteAddrWithPort
+
 	// deny bot's
 	userAgent := r.UserAgent()
 	if userAgent=="" || 
