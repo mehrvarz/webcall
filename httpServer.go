@@ -182,6 +182,7 @@ func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 		strings.Index(userAgent, "scan") >= 0 ||
 		strings.Index(userAgent, "search") >= 0 ||
 		strings.Index(userAgent, "acebook") >= 0 ||
+		strings.Index(userAgent, "WhatsApp") >= 0 ||
 		strings.Index(userAgent, "Telegram") >= 0 {
 		fmt.Printf("# substituteUserNameHandler bot denied path=(%s) userAgent=(%s) rip=%s\n",
 			r.URL.Path, userAgent, remoteAddr)
@@ -254,6 +255,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		strings.Index(userAgent, "scan") >= 0 ||
 		strings.Index(userAgent, "search") >= 0 ||
 		strings.Index(userAgent, "acebook") >= 0 ||
+		strings.Index(userAgent, "WhatsApp") >= 0 ||
 		strings.Index(userAgent, "Telegram") >= 0 {
 		fmt.Printf("# httpApi bot denied path=(%s) userAgent=(%s) rip=%s\n", r.URL.Path, userAgent, remoteAddr)
 		return
