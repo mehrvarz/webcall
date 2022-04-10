@@ -159,7 +159,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		}
 		readConfigLock.RUnlock()
 		wsAddr = fmt.Sprintf("%s?wsid=%d", wsAddr, wsClientID)
-		fmt.Printf("/online (%s) avail wsAddr=%s (%s:%s) %s %s ua=%s\n",
+		fmt.Printf("/online (%s) avail wsAddr=%s (%s:%s) ver=%s %s ua=%s\n",
 			glUrlID, wsAddr, callerId, callerName, clientVersion, remoteAddr, r.UserAgent())
 		fmt.Fprintf(w, wsAddr)
 		return
@@ -267,7 +267,7 @@ func httpNewId(w http.ResponseWriter, r *http.Request, urlID string, calleeID st
 	if ok && len(url_arg_array[0]) >= 1 {
 		clientVersion = url_arg_array[0]
 	}
-
+/*
 	callerId := ""
 	url_arg_array, ok = r.URL.Query()["callerId"]
 	if ok && len(url_arg_array[0]) >= 1 {
@@ -279,9 +279,11 @@ func httpNewId(w http.ResponseWriter, r *http.Request, urlID string, calleeID st
 	if ok && len(url_arg_array[0]) >= 1 {
 		callerName = url_arg_array[0]
 	}
-
 	fmt.Printf("/newid (%s) generated (%s:%s) rip=%s ver=%s ua=%s\n",
 		tmpCalleeID, callerId, callerName, remoteAddr, clientVersion, r.UserAgent())
+*/
+	fmt.Printf("/newid (%s) generated rip=%s ver=%s ua=%s\n",
+		tmpCalleeID, remoteAddr, clientVersion, r.UserAgent())
 	fmt.Fprintf(w, tmpCalleeID)
 	return
 }

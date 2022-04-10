@@ -418,6 +418,10 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		httpTwId(w, r, urlID, cookie, remoteAddr)
 		return
 	}
+	if strings.HasPrefix(urlPath,"/twfollower") {
+		httpTwFollower(w, r, urlID, cookie, remoteAddr)
+		return
+	}
 	if strings.HasPrefix(urlPath,"/avail/") {
 		httpAvail(w, r, urlID, urlPath, remoteAddr)
 		return

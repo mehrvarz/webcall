@@ -478,12 +478,12 @@ func httpDeleteContact(w http.ResponseWriter, r *http.Request, urlID string, cal
 }
 
 func httpTwId(w http.ResponseWriter, r *http.Request, twHandle string, cookie *http.Cookie, remoteAddr string) {
-/* TODO
+	// return twId for twHandle
 	if(cookie==nil) {
 		fmt.Printf("# /twid cookie==nil twHandle=%s\n",twHandle)
 		return
 	}
-*/
+
 	twitterClientLock.Lock()
 	if twitterClient == nil {
 		fmt.Printf("/twid twitterAuth... twHandle=%s\n",twHandle)
@@ -509,5 +509,39 @@ func httpTwId(w http.ResponseWriter, r *http.Request, twHandle string, cookie *h
 		}
 	}
 	return
+}
+
+func httpTwFollower(w http.ResponseWriter, r *http.Request, twId string, cookie *http.Cookie, remoteAddr string) {
+	// return twId for twHandle
+	if(cookie==nil) {
+		fmt.Printf("# /twfollower cookie==nil twId=%s\n",twId)
+		fmt.Fprintf(w,"error denied")
+		return
+	}
+
+	twid, err := strconv.ParseInt(twId, 10, 64)
+	if err!=nil {
+		fmt.Printf("# /twfollower ParseInt64 fail twid=(%s) err=%v\n", twid, err)
+		fmt.Fprintf(w,"error format "+err.Error())
+	} else {
+		foundId := false
+		if twid>0 {
+			// check if twid exist in followerIDs
+			for _,id := range followerIDs.Ids {
+				if id == twid {
+					foundId = true
+				}
+			}
+		}
+		if foundId {
+			// this twid is a follower
+			//fmt.Printf("/twfollower found twHandle=%s twId=%d\n", dbUser.Email2, twid)
+			fmt.Fprintf(w,"OK")
+		} else {
+			// this twid is NOT a follower
+			fmt.Printf("# /twfollower twId=%d not found\n", twid)
+			fmt.Fprintf(w,"error id not found")
+		}
+	}
 }
 

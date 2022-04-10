@@ -21,9 +21,9 @@ const (
 	//List API URLs
 	API_BASE           string = "https://api.twitter.com/1.1/"
 	API_TIMELINE       string = API_BASE + "statuses/home_timeline.json"
-	API_FOLLOWERS_IDS  string = API_BASE + "followers/ids.json"
+	API_FOLLOWERS_IDS  string = API_BASE + "followers/ids.json"				// 15 requests per 15-min
 	API_FOLLOWERS_LIST string = API_BASE + "followers/list.json"
-	API_FOLLOWER_INFO  string = API_BASE + "users/show.json"
+	API_FOLLOWER_INFO  string = API_BASE + "users/show.json"				// 900 requests per 15-min
 	API_LISTS          string = API_BASE + "lists/statuses.json"
 	API_STATUS         string = API_BASE + "statuses/show.json"
 	API_TWEET          string = API_BASE + "statuses/update.json"
