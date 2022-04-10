@@ -446,6 +446,11 @@ function showStatsPostCall() {
 	if(myStatsPostCallString=="") {
 		myStatsPostCallString = "No call stats available";
 	}
+	if(typeof Android !== "undefined" && Android !== null) {
+		if(typeof Android.keepAwakeMS !== "undefined" && Android.keepAwakeMS !== null) {
+			myStatsPostCallString += "<br><br>keepAwake "+Android.keepAwakeMS()+" ms";
+		}
+	}
 	return myStatsPostCallString;
 }
 
