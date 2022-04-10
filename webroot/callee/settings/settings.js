@@ -413,6 +413,10 @@ function submitForm(autoclose) {
 	}
 
 	if(valueTwName=="") {
+		// no need to fetch twid
+		store();
+	} else if(valueTwName==valueTwName2 && valueTwID!="" && valueTwID!="0") {
+		// no need to fetch twid
 		store();
 	} else {
 		// verify that twName is a real twitter handle
@@ -434,6 +438,7 @@ function submitForm(autoclose) {
 				alert("Twitter handle cannot be verified (unknown)");
 			} else {
 				// Twitter handle exists and valueTwID now contains it's ID
+// TODO: here we could use /twfollower to find out if valueTwID is following us
 				store();
 			}
 		}, function(errString,err) {
