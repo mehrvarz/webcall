@@ -53,14 +53,14 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 	reportHiddenCallee := true
 	reportBusyCallee := true
 	if logWantedFor("online") {
-		fmt.Printf("/online urlID=%s rip=%s ver=%s\n", urlID, remoteAddr, clientVersion)
+		fmt.Printf("/online urlID=%s %s ver=%s\n", urlID, remoteAddr, clientVersion)
 	}
 	glUrlID, locHub, globHub, err := GetOnlineCallee(urlID, ejectOn1stFound, reportBusyCallee, 
 		reportHiddenCallee, remoteAddr, "/online")
 	if err != nil {
 		// error
-		fmt.Printf("# /online GetOnlineCallee(%s/%s) err=%v rip=%s ver=%s\n",
-			urlID, glUrlID, err, remoteAddr, clientVersion)
+		fmt.Printf("# /online GetOnlineCallee(%s/%s) %s ver=%s err=%v\n",
+			urlID, glUrlID, remoteAddr, clientVersion, err)
 		fmt.Fprintf(w, "error")
 		return
 	}
@@ -76,13 +76,13 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		err := kvMain.Get(dbRegisteredIDs, urlID, &dbEntry)
 		if err != nil {
 			// callee urlID does not exist
-			fmt.Printf("/online (%s) error (%v) (%s:%s) rip=%s ver=%s ua=%s\n",
+			fmt.Printf("/online (%s) error (%v) (%s:%s) %s ver=%s ua=%s\n",
 				urlID, err, callerId, callerName, remoteAddr, clientVersion, r.UserAgent())
 			fmt.Fprintf(w, "error")
 			return
 		}
-		//fmt.Printf("/online (%s) avail wsAddr=%s (%s:%s) %s rip=%s\n",
-		//	urlID, wsAddr, callerId, callerName, clientVersion, remoteAddr)
+		//fmt.Printf("/online (%s) avail wsAddr=%s (%s:%s) %s ver=%s\n",
+		//	urlID, wsAddr, callerId, callerName, remoteAddr, clientVersion)
 
 		dbUserKey := fmt.Sprintf("%s_%d", urlID, dbEntry.StartTime)
 		var dbUser DbUser
@@ -96,12 +96,12 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		}
 		if secsSinceLogoff>0 && secsSinceLogoff < 9*60 {
 			// callee may come back very soon
-			fmt.Printf("/online (%s) is offline temp (for %d secs) %s %s ua=%s\n",
+			fmt.Printf("/online (%s) is offline temp (for %d secs) %s ver=%s ua=%s\n",
 				urlID, secsSinceLogoff, remoteAddr, clientVersion, r.UserAgent())
 			fmt.Fprintf(w, "notavailtemp")
 			return
 		}
-		fmt.Printf("/online (%s) is offline (for %d secs) %s %s ua=%s\n",
+		fmt.Printf("/online (%s) is offline (for %d secs) %s ver=%s ua=%s\n",
 			urlID, secsSinceLogoff, remoteAddr, clientVersion, r.UserAgent())
 		fmt.Fprintf(w, "notavail")
 		return
@@ -116,14 +116,14 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 
 		if locHub.ConnectedCallerIp != "" {
 			// this callee (urlID/glUrlID) is online but currently busy
-			fmt.Printf("/online (%s) busy callerIp=%s rip=%s ver=%s\n",
+			fmt.Printf("/online (%s) busy callerIp=%s %s ver=%s\n",
 				urlID, locHub.ConnectedCallerIp, remoteAddr, clientVersion)
 			fmt.Fprintf(w, "busy")
 			return
 		}
 
 		if locHub.IsCalleeHidden && locHub.IsUnHiddenForCallerAddr != remoteAddr {
-			fmt.Printf("/online (%s) notavail (hidden) rip=%s ver=%s ua=%s\n",
+			fmt.Printf("/online (%s) notavail (hidden) %s ver=%s ua=%s\n",
 				urlID, remoteAddr, clientVersion, r.UserAgent())
 			fmt.Fprintf(w, "notavail")
 			return
@@ -134,7 +134,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		locHub.HubMutex.RUnlock()
 		if wsClientID == 0 {
 			// something has gone wrong
-			fmt.Printf("# /online (%s/%s) loc ws==0 rip=%s ver=%s\n",
+			fmt.Printf("# /online (%s/%s) loc ws==0 %s ver=%s\n",
 				urlID, glUrlID, remoteAddr, clientVersion)
 			// clear local ConnectedCallerIp
 			locHub.HubMutex.Lock()
@@ -159,8 +159,8 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		}
 		readConfigLock.RUnlock()
 		wsAddr = fmt.Sprintf("%s?wsid=%d", wsAddr, wsClientID)
-		fmt.Printf("/online (%s) avail wsAddr=%s (%s:%s) ver=%s %s ua=%s\n",
-			glUrlID, wsAddr, callerId, callerName, clientVersion, remoteAddr, r.UserAgent())
+		fmt.Printf("/online (%s) avail wsAddr=%s (%s:%s) %s ver=%s ua=%s\n",
+			glUrlID, wsAddr, callerId, callerName, remoteAddr, clientVersion, r.UserAgent())
 		fmt.Fprintf(w, wsAddr)
 		return
 	}
@@ -169,7 +169,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		// callee is managed by a remote server
 		if globHub.ConnectedCallerIp != "" {
 			// this callee (urlID/glUrlID) is online but currently busy
-			fmt.Printf("/online (%s/%s) busy callerIp=(%s) rip=%s ver=%s ua=%s\n",
+			fmt.Printf("/online (%s/%s) busy callerIp=(%s) %s ver=%s ua=%s\n",
 				urlID, glUrlID, globHub.ConnectedCallerIp, remoteAddr, clientVersion, r.UserAgent())
 			fmt.Fprintf(w, "busy")
 			return
@@ -178,7 +178,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		wsClientID := globHub.WsClientID
 		if wsClientID == 0 {
 			// something has gone wrong
-			fmt.Printf("# /online (%s/%s) glob ws=0 rip=%s ver=%s\n",
+			fmt.Printf("# /online (%s/%s) glob ws=0 %s ver=%s\n",
 				urlID, glUrlID, remoteAddr, clientVersion)
 			// clear global ConnectedCallerIp
 			err := StoreCallerIpInHubMap(glUrlID, "", false)
@@ -195,15 +195,15 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		}
 		wsAddr = fmt.Sprintf("%s?wsid=%d", wsAddr, wsClientID)
 
-		fmt.Printf("/online (%s) avail wsAddr=%s (%s:%s) %s %s ua=%s\n",
-			glUrlID, wsAddr, callerId, callerName, clientVersion, remoteAddr, r.UserAgent())
+		fmt.Printf("/online (%s) avail wsAddr=%s (%s:%s) %s ver=%s ua=%s\n",
+			glUrlID, wsAddr, callerId, callerName, remoteAddr, clientVersion, r.UserAgent())
 		fmt.Fprintf(w, wsAddr)
 		return
 	}
 
 	// something has gone wrong - callee not found anywhere
-	fmt.Printf("# /online (%s/%s) not found (%s:%s) %s rip=%s\n",
-		urlID, glUrlID, callerId, callerName, clientVersion, remoteAddr)
+	fmt.Printf("# /online (%s/%s) not found (%s:%s) %s ver=%s\n",
+		urlID, glUrlID, callerId, callerName, remoteAddr, clientVersion)
 
 	// clear ConnectedCallerIp
 	StoreCallerIpInHubMap(glUrlID, "", false)
