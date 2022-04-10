@@ -495,6 +495,9 @@ func httpTwId(w http.ResponseWriter, r *http.Request, twHandle string, calleeID 
 		fmt.Printf("# /twid (%s) twitterClient==nil twHandle=%s\n", calleeID, twHandle)
 		fmt.Fprintf(w,"errorauth")
 	} else {
+		if strings.HasPrefix(twHandle,"@") {
+			twHandle = twHandle[1:]
+		}
 		twitterClientLock.Lock()
 		userDetail, _, err := twitterClient.QueryFollowerByName(twHandle)
 		twitterClientLock.Unlock()
