@@ -426,9 +426,11 @@ function submitForm(autoclose) {
 			valueTwID = xhr.responseText;
 			if(valueTwID.startsWith("error")) {
 				// valueTwName cannot be stored
+// TODO instead of alert() show the error above the Store button
 				alert("Twitter handle cannot be verified: "+valueTwID);
 			} else if(valueTwID=="0") {
 				// valueTwName cannot be stored
+// TODO instead of alert() show the error above the Store button
 				alert("Twitter handle cannot be verified (unknown)");
 			} else {
 				// Twitter handle exists and valueTwID now contains it's ID

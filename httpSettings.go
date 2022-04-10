@@ -478,7 +478,7 @@ func httpDeleteContact(w http.ResponseWriter, r *http.Request, urlID string, cal
 }
 
 func httpTwId(w http.ResponseWriter, r *http.Request, twHandle string, cookie *http.Cookie, remoteAddr string) {
-	// return twId for twHandle
+	// /twid returns twitter-Id for a twHandle
 	if(cookie==nil) {
 		fmt.Printf("# /twid cookie==nil twHandle=%s\n",twHandle)
 		return

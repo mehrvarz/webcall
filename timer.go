@@ -129,6 +129,8 @@ func ticker3hours() {
 											// dbUser.Email2 is a real twitter handle
 											twid = userDetail.ID
 											dbUser.Str1 = fmt.Sprintf("%d",userDetail.ID)
+											// must store dbUser
+											dbUserBucketKeyArray2 = append(dbUserBucketKeyArray2,dbUserKey)
 										}
 									}
 								} else {
@@ -158,6 +160,7 @@ func ticker3hours() {
 									// this twid is NOT a follower
 									fmt.Printf("# ticker3hours not found: must clear, twHandle=%s twId=%d\n",
 										dbUser.Email2, twid)
+									// must store dbUser
 									dbUserBucketKeyArray2 = append(dbUserBucketKeyArray2,dbUserKey)
 								}
 							}
