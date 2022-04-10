@@ -502,8 +502,7 @@ func httpTwId(w http.ResponseWriter, r *http.Request, twHandle string, cookie *h
 			fmt.Printf("# /twid twHandle=(%s) err=%v\n", twHandle, err)
 			fmt.Fprintf(w,"errorquery")
 		} else {
-			fmt.Printf("/twid twHandle.Email2=(%s) fetched id=%v\n",
-				twHandle, userDetail.ID)
+			fmt.Printf("/twid twHandle=(%s) fetched id=%v\n", twHandle, userDetail.ID)
 			// "0" = twHandle not found
 			fmt.Fprintf(w,fmt.Sprintf("%d",userDetail.ID))
 		}

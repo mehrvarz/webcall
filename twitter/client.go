@@ -170,15 +170,15 @@ func (c *Client) QueryFollowerIDs(count int) (FollowerIDs, []byte, error) {
 	err = json.Unmarshal(data, &ret)
 	return ret, data, err
 }
-
-func (c *Client) QueryFollowerById(id int) (UserDetail, []byte, error) {
+/*
+func (c *Client) QueryFollowerById(id int64) (UserDetail, []byte, error) {
 	requesURL := fmt.Sprintf("%s?user_id=%d", API_FOLLOWER_INFO, id)
 	data, err := c.BasicQuery(requesURL)
 	var ret UserDetail
 	err = json.Unmarshal(data, &ret)
 	return ret, data, err
 }
-
+*/
 func (c *Client) QueryFollowerByName(name string) (UserDetail, []byte, error) {
 	requesURL := fmt.Sprintf("%s?screen_name=%s", API_FOLLOWER_INFO, name)
 	data, err := c.BasicQuery(requesURL)

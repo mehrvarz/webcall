@@ -236,7 +236,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 	wsConn.OnClose(func(c *websocket.Conn, err error) {
 		keepAliveMgr.Delete(c)
-		client.isOnline.Set(false) // prevents doUnregister() from closing this already closed connection
+		client.isOnline.Set(false) // prevent close() from closing this already closed connection
 		if logWantedFor("wsclose") {
 			if err!=nil {
 				fmt.Printf("%s (%s) onclose isCallee=%v err=%v\n",
@@ -245,6 +245,9 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				fmt.Printf("%s (%s) onclose isCallee=%v noerr\n",
 					client.connType, client.calleeID, client.isCallee)
 			}
+		}
+		if client.isCallee && client.isConnectedToPeer.Get() {
+			client.peerConHasEnded("OnClose")
 		}
 		if err!=nil {
 			client.hub.doUnregister(client, "OnClose "+err.Error())
