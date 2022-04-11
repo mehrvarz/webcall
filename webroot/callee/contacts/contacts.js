@@ -135,6 +135,16 @@ function editSubmit(formElement,id) {
 	let oldName = obj[id];
 	let newName = formtextElement.value;
 	console.log('editSubmit value',oldName,newName,id);
+
+	if(newName=="") {
+		//prevent nameless element by aborting edit form
+		let parentElement = formElement.parentNode;
+		parentElement.removeChild(formElement);
+		formElement = null;
+		formForNameOpen = false;
+		return;
+	}
+
 	if(newName.toLowerCase()=="delete") {
 		// special case
 		let api = apiPath+"/deletecontact?id="+callerID+"&contactID="+id;
