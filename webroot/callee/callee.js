@@ -1513,6 +1513,7 @@ function pickup2() {
 			}
 
 			if(peerCon) {
+				// send "log|connected" to server
 				peerCon.getStats(null)
 				.then((results) => getStatsCandidateTypes(results,"Connected","Mic is open"),
 					err => console.log(err.message));

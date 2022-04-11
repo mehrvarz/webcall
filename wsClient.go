@@ -52,7 +52,8 @@ type WsClient struct {
 	hub *Hub
 	wsConn *websocket.Conn
 	isOnline atombool.AtomBool	// connected to signaling server
-	isConnectedToPeer atombool.AtomBool
+	isConnectedToPeer atombool.AtomBool // before pickup
+	isMediaConnectedToPeer atombool.AtomBool // after pickup
 	pickupSent atombool.AtomBool
 	RemoteAddr string // with port
 	RemoteAddrNoPort string // no port
@@ -112,7 +113,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	wsClientID64, _ = strconv.ParseUint(wsClientIDstr, 10, 64)
 	if wsClientID64<=0 {
 		// not valid
-		fmt.Printf("# serveWs invalid wsClientIDstr=%s rip=%s url=%s\n",
+		fmt.Printf("# serveWs invalid wsClientIDstr=%s %s url=%s\n",
 			wsClientIDstr, remoteAddr, r.URL.String())
 		return
 	}
@@ -126,7 +127,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	wsClientMutex.Unlock()
 	if !ok {
 		// this callee has just exited
-		fmt.Printf("serveWs ws=%d does not exist rip=%s url=%s\n",
+		fmt.Printf("serveWs ws=%d does not exist %s url=%s\n",
 			wsClientID64, remoteAddr, r.URL.String())
 		// TODO why does r.URL start with //
 		// url=//timur.mobi:8443/ws?wsid=47639023704
@@ -267,7 +268,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	if hub.CalleeClient==nil {
 		// callee client (1st client)
 		if logWantedFor("wsclient") {
-			fmt.Printf("%s (%s) callee conn ws=%d rip=%s\n", client.connType,
+			fmt.Printf("%s (%s) callee conn ws=%d %s\n", client.connType,
 				client.calleeID, wsClientID64, client.RemoteAddr)
 		}
 		client.isCallee = true
@@ -291,7 +292,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	} else if hub.CallerClient==nil {
 		// caller client (2nd client)
 		if logWantedFor("wsclient") {
-			fmt.Printf("%s (%s) caller conn ws=%d rip=%s\n",
+			fmt.Printf("%s (%s) caller conn ws=%d %s\n",
 				client.connType, client.calleeID, wsClientID64, client.RemoteAddr)
 		}
 
@@ -306,7 +307,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			if hub!=nil && hub.CalleeClient!=nil && !hub.CalleeClient.isConnectedToPeer.Get() {
 				if hub.CallerClient!=nil {
 					hub.CallerClient = nil
-					fmt.Printf("%s (%s/%s) release uncon caller ws=%d rip=%s\n",
+					fmt.Printf("%s (%s/%s) release uncon caller ws=%d %s\n",
 						client.connType, client.calleeID, client.globalCalleeID, wsClientID64, client.RemoteAddr)
 					// clear CallerIpInHubMap
 					err := StoreCallerIpInHubMap(client.globalCalleeID, "", false)
@@ -325,9 +326,9 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		// this code should never be reached; 2nd caller should receive "busy" from /online
 		// it can happen if two /online request in very short order return "avail"
 		// (the 2nd /online request before the 1st gets ws-connected)
-		fmt.Printf("# %s (%s/%s) CallerClient already set ws=%d rip=%s\n",
+		fmt.Printf("# %s (%s/%s) CallerClient already set ws=%d %s\n",
 			client.connType, client.calleeID, client.globalCalleeID, wsClientID64, client.RemoteAddr)
-		//fmt.Printf("# %s existing CallerClient rip=%s ua=%s\n",
+		//fmt.Printf("# %s existing CallerClient %s ua=%s\n",
 		//	client.connType, hub.CallerClient.RemoteAddr, hub.CallerClient.userAgent)
 		time.Sleep(500 * time.Millisecond)
 		wsConn.WriteMessage(websocket.CloseMessage, nil)
@@ -362,7 +363,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 	if cmd=="init" {
 		if !c.isCallee {
 			// only the callee can send "init|"
-			fmt.Printf("# serveWs false double callee rip=%s #########\n",c.RemoteAddr)
+			fmt.Printf("# serveWs false double callee %s\n",c.RemoteAddr)
 			c.Write([]byte("cancel|busy"))
 			return
 		}
@@ -372,11 +373,11 @@ func (c *WsClient) receiveProcess(message []byte) {
 
 		if logWantedFor("wscall") {
 			if c.isCallee {
-				fmt.Printf("%s (%s) callee init ws=%d rip=%s\n",
+				fmt.Printf("%s (%s) callee init ws=%d %s\n",
 					c.connType, c.calleeID, c.hub.WsClientID, c.RemoteAddr)
 			} else {
 				// this is not possible
-				fmt.Printf("# %s (%s) caller init ws=%d rip=%s\n",
+				fmt.Printf("# %s (%s) caller init ws=%d %s\n",
 					c.connType, c.calleeID, c.hub.WsClientID, c.RemoteAddr)
 			}
 		}
@@ -461,11 +462,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 	if cmd=="callerOffer" {
 		// caller starting a call - payload is JSON.stringify(localDescription)
 		if logWantedFor("wscall") {
-			//fmt.Printf("%s (%s/%s) callerOffer (call attempt) from %s\n",
-			//	c.connType, c.calleeID, c.globalCalleeID, c.RemoteAddr)
-			fmt.Printf("%s (%s) callerOffer (call attempt) from %s\n",
+			fmt.Printf("%s (%s) callerOffer (call attempt) %s\n",
 				c.connType, c.calleeID, c.RemoteAddr)
-			//fmt.Printf("%s callerOffer payload=%s\n",c.connType,payload)
 		}
 
 		if c.hub.CalleeClient.Write(message) != nil {
@@ -500,11 +498,11 @@ func (c *WsClient) receiveProcess(message []byte) {
 		// this is needed here for turn AuthHandler
 		err := StoreCallerIpInHubMap(c.globalCalleeID, c.RemoteAddr, false)
 		if err!=nil {
-			fmt.Printf("# %s (%s) callerOffer StoreCallerIp rip=%s err=%v\n",
+			fmt.Printf("# %s (%s) callerOffer StoreCallerIp %s err=%v\n",
 				c.connType, c.globalCalleeID, c.RemoteAddr, err)
 		} else {
-			fmt.Printf("%s (%s) callerOffer StoreCallerIp rip=%s\n",
-				c.connType, c.globalCalleeID, c.RemoteAddr)
+			//fmt.Printf("%s (%s) callerOffer StoreCallerIp %s\n",
+			//	c.connType, c.globalCalleeID, c.RemoteAddr)
 		}
 
 		return
@@ -515,7 +513,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 	}
 
 	if cmd=="cancel" {
-		//fmt.Printf("%s (%s) cmd=cancel payload=%s rip=%s\n",c.connType,c.calleeID,payload,c.RemoteAddr)
+		//fmt.Printf("%s (%s) cmd=cancel payload=%s %s\n",c.connType,c.calleeID,payload,c.RemoteAddr)
 		c.peerConHasEnded("cancel")
 		return
 	}
@@ -639,13 +637,13 @@ func (c *WsClient) receiveProcess(message []byte) {
 	if cmd=="pickup" {
 		// this is sent by the callee client
 		if !c.isConnectedToPeer.Get() {
-			fmt.Printf("# %s (%s) pickup ignored no peerConnect rip=%s\n",
+			fmt.Printf("# %s (%s) pickup ignored no peerConnect %s\n",
 				c.connType, c.calleeID, c.RemoteAddr)
 			return
 		}
 		if c.pickupSent.Get() {
 			// prevent sending 'pickup' twice
-			fmt.Printf("# %s (%s) pickup ignored already sent rip=%s\n",
+			fmt.Printf("# %s (%s) pickup ignored already sent %s\n",
 				c.connType, c.calleeID, c.RemoteAddr)
 			return
 		}
@@ -693,23 +691,27 @@ func (c *WsClient) receiveProcess(message []byte) {
 		c.Write([]byte("confirm|"+payload))
 		return
 	}
-
+/*
 	if cmd=="log" {
+		// TODO make extra sure payload is not malformed
 		if c==nil {
 			fmt.Printf("# peer c==nil\n")
 		} else if c.hub==nil {
 			fmt.Printf("# %s (%s) peer c.hub==nil ver=%s\n", c.connType, c.calleeID, c.clientVersion)
 		} else if c.hub.CallerClient==nil {
-			// # serveWss (83710725871) peer callee Connected unknw/unknw
+			// # serveWss (83710725871) peer 'callee Connected unknw/unknw'
 			// this happens when caller disconnects immediately
 			fmt.Printf("# %s (%s) peer %s c.hub.CallerClient==nil ver=%s\n",
 				c.connType, c.calleeID, payload, c.clientVersion)
 		} else {
-// displayed twice: 1. payload=="caller Connected p2p/p2p" 2. payload=="callee Connected p2p/p2p"
-// but we show the same callerID and callerName and clientVersion in both cases
 			if strings.HasPrefix(payload,"callee") {
+				// payload = "callee Incoming p2p/p2p" or "callee Connected p2p/p2p"
+				// "%s (%s) peer callee Incoming p2p/p2p" or "%s (%s) peer callee Connected p2p/p2p"
+// TODO "callee Connected p2p/p2p" can happen multiple times
 				fmt.Printf("%s (%s) peer %s\n", c.connType, c.calleeID, payload)
 			} else {
+				// payload = "caller Connected p2p/p2p"
+				// peer caller Connected p2p/p2p (17212799634:Jenish) 0.9.83_98.0.4758.101
 				fmt.Printf("%s (%s) peer %s (%s:%s) %s\n", c.connType, c.calleeID, payload,
 					c.hub.CallerClient.callerID, c.hub.CallerClient.callerName, c.clientVersion)
 				// callerID + callerName are forward to callee via "callerInfo|" on receipt of "callerOffer"
@@ -718,7 +720,6 @@ func (c *WsClient) receiveProcess(message []byte) {
 		tok := strings.Split(payload, " ")
 		if len(tok)>=3 {
 			// callee Connected p2p/p2p port=10001 id=3949620073
-			// TODO make extra sure this "log" payload is not malformed
 			if strings.TrimSpace(tok[1])=="Connected" || strings.TrimSpace(tok[1])=="Incoming" ||
 					strings.TrimSpace(tok[1])=="ConForce" { // test-caller-client
 				tok2 := strings.Split(strings.TrimSpace(tok[2]), "/")
@@ -741,6 +742,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 
 						} else if strings.TrimSpace(tok[1])=="Connected" {
 							// caller is reporting peerCon: both peers are now directly connected
+							// now force-disconnect the caller
 							readConfigLock.RLock()
 							myDisconCalleeOnPeerConnected := disconCalleeOnPeerConnected
 							myDisconCallerOnPeerConnected := disconCallerOnPeerConnected
@@ -748,15 +750,17 @@ func (c *WsClient) receiveProcess(message []byte) {
 							if myDisconCalleeOnPeerConnected || myDisconCallerOnPeerConnected {
 								time.Sleep(20 * time.Millisecond)
 							}
-							if myDisconCalleeOnPeerConnected {
+							if myDisconCalleeOnPeerConnected {	
+								// this is currently never done
 								fmt.Printf("%s peer callee disconnect %s %s\n",
 									c.connType, c.calleeID, c.RemoteAddr)
 								c.hub.CalleeClient.Close("disconCalleeOnPeerConnected")
 							}
 							if myDisconCallerOnPeerConnected {
+								// this is currently always done
 								if c.hub.CallerClient != nil {
-									fmt.Printf("%s (%s) peer caller disconnect %s\n",
-										c.connType, c.calleeID, c.RemoteAddr)
+									//fmt.Printf("%s (%s) peer caller disconnect %s\n",
+									//	c.connType, c.calleeID, c.RemoteAddr)
 									c.hub.CallerClient.Close("disconCallerOnPeerConnected")
 								}
 							}
@@ -765,7 +769,102 @@ func (c *WsClient) receiveProcess(message []byte) {
 				}
 			}
 		}
-		//fmt.Printf("parsed p2p (%v/%v)\n", c.hub.LocalP2p, c.hub.RemoteP2p)
+		return
+	}
+*/
+	if cmd=="log" {
+		// TODO make extra sure payload is not malformed
+		if c==nil {
+			fmt.Printf("# peer c==nil\n")
+		} else if c.hub==nil {
+			fmt.Printf("# %s (%s) peer c.hub==nil ver=%s\n", c.connType, c.calleeID, c.clientVersion)
+		} else if c.hub.CallerClient==nil {
+			// # serveWss (83710725871) peer 'callee Connected unknw/unknw'
+			// this happens when caller disconnects immediately
+			fmt.Printf("# %s (%s) peer %s c.hub.CallerClient==nil ver=%s\n",
+				c.connType, c.calleeID, payload, c.clientVersion)
+		} else {
+			if strings.HasPrefix(payload,"callee") {
+				// payload = "callee Incoming p2p/p2p" or "callee Connected p2p/p2p"
+				// "%s (%s) peer callee Incoming p2p/p2p" or "%s (%s) peer callee Connected p2p/p2p"
+				// note: "callee Connected p2p/p2p" can happen multiple times
+				if !c.isMediaConnectedToPeer.Get() {
+					fmt.Printf("%s (%s) peer %s\n", c.connType, c.calleeID, payload)
+				} else {
+					fmt.Printf("%s (%s) peer %s (media)\n", c.connType, c.calleeID, payload)
+				}
+			} else {
+				// payload = "caller Connected p2p/p2p"
+				// peer caller Connected p2p/p2p (17212799634:Jenish) 0.9.83_98.0.4758.101
+				fmt.Printf("%s (%s) peer %s (%s:%s) %s\n", c.connType, c.calleeID, payload,
+					c.hub.CallerClient.callerID, c.hub.CallerClient.callerName, c.clientVersion)
+			}
+
+			// payload = "callee Connected p2p/p2p"
+			tok := strings.Split(payload, " ")
+			if len(tok)>=2 {
+				constate := strings.TrimSpace(tok[1])
+				if constate=="Incoming" || constate=="Connected" || constate=="ConForce" {
+					c.isConnectedToPeer.Set(true) // this is peer-connect, not full media-connect
+					if !c.isCallee {
+						// when the caller sends "log", the callee also becomes peerConnected
+						c.hub.CalleeClient.isConnectedToPeer.Set(true)
+					}
+
+					if len(tok)>=3 {
+						tok2 := strings.Split(strings.TrimSpace(tok[2]), "/")
+						if len(tok2)>=2 {
+							//fmt.Printf("%s tok2[0]=%s tok2[1]=%s\n", c.connType, tok2[0], tok2[1])
+							if tok2[0]=="p2p" {
+								c.hub.LocalP2p = true
+							}
+							if tok2[1]=="p2p" {
+								c.hub.RemoteP2p = true
+							}
+						}
+					}
+
+					if constate=="Connected" || constate=="ConForce" {
+						c.isMediaConnectedToPeer.Set(true) // this is full media-connect
+						if !c.isCallee {
+							// when the caller sends "log", the callee also becomes media-Connected
+							c.hub.CalleeClient.isMediaConnectedToPeer.Set(true)
+						}
+
+						if !c.isCallee {
+							if constate=="ConForce" {
+								// test-caller sends this msg to callee, test-clients do not really connect p2p
+								c.hub.CalleeClient.Write([]byte("callerConnect|"))
+							} else if constate=="Connected" {
+								// caller is reporting peerCon: both peers are now directly connected
+								// now force-disconnect the caller
+								readConfigLock.RLock()
+								myDisconCalleeOnPeerConnected := disconCalleeOnPeerConnected
+								myDisconCallerOnPeerConnected := disconCallerOnPeerConnected
+								readConfigLock.RUnlock()
+								if myDisconCalleeOnPeerConnected || myDisconCallerOnPeerConnected {
+									time.Sleep(20 * time.Millisecond)
+								}
+								if myDisconCalleeOnPeerConnected {
+									// this is currently never done
+									fmt.Printf("%s peer callee disconnect %s %s\n",
+										c.connType, c.calleeID, c.RemoteAddr)
+									c.hub.CalleeClient.Close("disconCalleeOnPeerConnected")
+								}
+								if myDisconCallerOnPeerConnected {
+									// this is currently always done
+									if c.hub.CallerClient != nil {
+										//fmt.Printf("%s (%s) peer caller disconnect %s\n",
+										//	c.connType, c.calleeID, c.RemoteAddr)
+										c.hub.CallerClient.Close("disconCallerOnPeerConnected")
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 		return
 	}
 
@@ -788,7 +887,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 	}
 
 	if logWantedFor("wsreceive") {
-		fmt.Printf("%s recv %s|%s callee=%v rip=%s\n",
+		fmt.Printf("%s recv %s|%s callee=%v %s\n",
 			c.connType, cmd, payload, c.isCallee, c.RemoteAddr)
 	}
 	if len(payload)>0 {
@@ -841,6 +940,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 		}
 		c.hub.HubMutex.Unlock()
 
+// TODO add caller id c.hub.CallerClient.callerID, c.hub.CallerClient.callerName
 		fmt.Printf("%s (%s) peer %s discon %ds %s (%s)\n",
 			c.connType, c.calleeID, peerType, c.hub.CallDurationSecs, c.RemoteAddr, comment)
 
@@ -864,7 +964,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 				err = kvCalls.Get(dbMissedCalls,c.calleeID,&missedCallsSlice)
 				if err!=nil {
 					if strings.Index(err.Error(),"key not found")<0 {
-						fmt.Printf("# %s (%s) failed to get missedCalls rip=%s\n",
+						fmt.Printf("# %s (%s) failed to get missedCalls %s\n",
 							c.connType, c.calleeID, c.RemoteAddr)
 					}
 					missedCallsSlice = nil
