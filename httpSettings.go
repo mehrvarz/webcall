@@ -529,11 +529,13 @@ func httpTwFollower(w http.ResponseWriter, r *http.Request, twId string, calleeI
 		foundId := false
 		if twid>0 {
 			// check if twid exist in followerIDs
+			followerIDsLock.RLock()
 			for _,id := range followerIDs.Ids {
 				if id == twid {
 					foundId = true
 				}
 			}
+			followerIDsLock.RUnlock()
 		}
 		if foundId {
 			// this twid is a follower

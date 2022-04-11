@@ -11,6 +11,7 @@ import (
 	"encoding/gob"
 	"os"
 	"os/exec"
+	"sync"
 	"sync/atomic"
 	"github.com/mehrvarz/webcall/skv"
 	"github.com/mehrvarz/webcall/twitter"
@@ -19,6 +20,7 @@ import (
 )
 
 var followerIDs twitter.FollowerIDs
+var followerIDsLock sync.RWMutex
 
 func ticker3hours() {
 	fmt.Printf("ticker3hours start\n")
@@ -48,6 +50,7 @@ func ticker3hours() {
 			fmt.Printf("ticker3hours download list of all followers...\n")
 			// TODO we must later support more than 5000 followers
 			var err error
+			followerIDsLock.Lock()
 			followerIDs, _, err = twitterClient.QueryFollowerIDs(5000)
 			if err!=nil {
 				fmt.Printf("# ticker3hours QueryFollowerIDs err=%v\n", err)
@@ -57,6 +60,7 @@ func ticker3hours() {
 					fmt.Printf("ticker3hours %d followerIDs.Id=%v\n", idx, int64(id))
 				}
 			}
+			followerIDsLock.Unlock()
 		}
 		twitterClientLock.Unlock()
 
@@ -112,7 +116,10 @@ func ticker3hours() {
 						} else {
 							// this user account is not outdated
 							// let's check if given tw-handles (dbUser.Email2) exist in followerIDs
-							if dbUser.Email2!="" && len(followerIDs.Ids)>0 {
+							followerIDsLock.RLock()
+							followerIDsLen := len(followerIDs.Ids)
+							followerIDsLock.RUnlock()
+							if dbUser.Email2!="" && followerIDsLen>0 {
 								var twid int64
 								if dbUser.Str1=="" {
 									// tw-handler is given but tw-id is not, let's fetch it
@@ -147,11 +154,13 @@ func ticker3hours() {
 								foundId := false
 								if twid>0 {
 									// check if twid exist in followerIDs
+									followerIDsLock.RLock()
 									for _,id := range followerIDs.Ids {
 										if id == twid {
 											foundId = true
 										}
 									}
+									followerIDsLock.RUnlock()
 								}
 								if foundId {
 									// this twid is a follower
