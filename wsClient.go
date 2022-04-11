@@ -831,7 +831,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 		peerType = "callee"
 	}
 	if !c.isConnectedToPeer.Get() {
-		fmt.Printf("%s (%s) peer %s discon (not con) %ds %s (%s)\n",
+		fmt.Printf("%s (%s) peer %s discon %ds (not con) %s (%s)\n",
 			c.connType, c.calleeID, peerType, c.hub.CallDurationSecs, c.RemoteAddr, comment)
 	} else {
 		c.hub.HubMutex.Lock()

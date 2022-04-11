@@ -206,7 +206,7 @@ window.onload = function() {
 		containerElement.style.display = "none";
 		enterIdElement.style.display = "block";
 		enterDomainVal.value = location.hostname;
-// TODO if storeContacts is true, set id="dialIdAutoStore" display="block"
+// TODO if storeContacts is true, set id="dialIdAutoStore" display="block", call /getsettings
 		setTimeout(function() {
 			enterIdVal.focus();
 		},400);
