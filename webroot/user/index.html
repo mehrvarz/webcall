@@ -95,7 +95,7 @@ div#container {
 	max-width:520px;
 }
 div#enterId {
-	background:#339;
+	_background:#339;
 	padding: 1em;
 	margin: 1em;
 	max-width:520px;
@@ -366,7 +366,7 @@ input[type=submit]:focus {
 	<div id="status" class="status"></div>
 	<form action="javascript:;" onsubmit="submitForm(this)" id="mnumber">
 		<label for="enterDomain">Domain:</label><br>
-		<input name="enterDomain" id="enterDomainVal" type="text" class="formtext" autofocus required>
+		<input name="enterDomain" id="enterDomainVal" type="text" class="formtext" required>
 		<span class="lbutton" onclick="clearForm(4)">Clear</span><br><br>
 
 		<label for="enterId">11-digit ID:</label><br>
@@ -374,6 +374,7 @@ input[type=submit]:focus {
 		<span class="lbutton" onclick="clearForm(3)">Clear</span>
 		<br>
 		<input type="submit" name="Submit" id="submit" value="Dial" style="width:100px; margin-top:20px;">
+		<div id="dialIdAutoStore" style="margin-top:25px;display:none;">ID will be automatically added to your contacts.</div>
 	</form>
 	<br>
 </div>
