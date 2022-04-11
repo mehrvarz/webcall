@@ -284,6 +284,7 @@ func httpNewId(w http.ResponseWriter, r *http.Request, urlID string, calleeID st
 */
 	fmt.Printf("/newid (%s) generated rip=%s ver=%s ua=%s\n",
 		tmpCalleeID, remoteAddr, clientVersion, r.UserAgent())
+	time.Sleep(3 * time.Second)
 	fmt.Fprintf(w, tmpCalleeID)
 	return
 }
