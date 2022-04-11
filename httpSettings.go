@@ -31,7 +31,7 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		fmt.Printf("# /getsettings fail no calleeID rip=%s\n", remoteAddr)
 		return
 	}
-	if calleeID!=urlID {
+	if urlID!="" && calleeID!=urlID {
 		// this happens bc someone with calleeID in the cookie is now trying to use urlID via url
 		fmt.Printf("# /getsettings fail calleeID(%s) != urlID(%s) rip=%s\n", calleeID, urlID, remoteAddr)
 		return

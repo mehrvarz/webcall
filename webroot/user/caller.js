@@ -206,7 +206,31 @@ window.onload = function() {
 		containerElement.style.display = "none";
 		enterIdElement.style.display = "block";
 		enterDomainVal.value = location.hostname;
-// TODO if storeContacts is true, set id="dialIdAutoStore" display="block", call /getsettings
+
+		// if serverSettings.storeContacts=="true", turn element "dialIdAutoStore" on
+		let api = apiPath+"/getsettings?id="+calleeID;
+		if(!gentle) console.log('request getsettings api',api);
+		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+			var xhrresponse = xhr.responseText
+			if(!gentle) console.log('xhr.responseText',xhrresponse);
+			if(xhrresponse=="") {
+				serverSettings = null;
+				return;
+			}
+			var serverSettings = JSON.parse(xhrresponse);
+			if(typeof serverSettings!=="undefined") {
+				if(!gentle) console.log('serverSettings.storeContacts',serverSettings.storeContacts);
+				if(serverSettings.storeContacts=="true") {
+					var dialIdAutoStoreElement = document.getElementById("dialIdAutoStore");
+					if(dialIdAutoStoreElement) {
+						dialIdAutoStoreElement.style.display = "block";
+					}
+				}
+			}
+		}, function(errString,err) {
+			console.log('xhr error',errString);
+		});
+
 		setTimeout(function() {
 			enterIdVal.focus();
 		},400);

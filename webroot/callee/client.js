@@ -694,7 +694,7 @@ function iframeWindowOpen(url,addStyleString) {
 	gLog('iframeWindowOpen '+url);
 	iframeWindowOpenUrl = url;
 	iframeWindowOpenFlag = true;
-	let styleString = "width:90%; max-width:440px; height:94%; position:absolute; left:3.5%; top:1%; padding:10px; z-index:200;";
+	let styleString = "width:90%; max-width:440px; height:94%; position:absolute; left:3.2%; top:1%; padding:10px; z-index:200;";
 	if(addStyleString) {
 		styleString += addStyleString;
 	}
