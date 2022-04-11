@@ -41,7 +41,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		if time.Now().Sub(blockedTime) <= 120 * time.Minute {
 			// this error response string is formated so that callee.js will show it via showStatus()
 			// it also makes Android service (0.9.85+) abort the reconnecter loop
-			fmt.Fprintf(w,"Websocket connection failed recently. Battery optimizations enabled? Please deactivate for WebCall.")
+			fmt.Fprintf(w,"Websocket connect failed recently. Battery optimizations enabled? Please deactivate for WebCall.")
 			fmt.Printf("/login (%s) blocked (%v) rip=%s ver=%s ua=%s\n",
 				urlID, time.Now().Sub(blockedTime), remoteAddr, clientVersion, userAgent)
 			blockMapMutex.Lock()
