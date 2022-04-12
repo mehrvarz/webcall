@@ -403,14 +403,18 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 
 	// check for lowercase contactID
 	oldName,ok := callerInfoMap[contactID]
-	if ok && oldName!="" && oldName!="unknown" && oldName!="?" && name=="" {
-		// lowercase contactID exists: don't overwrite existing name with empty name
-		if logWantedFor("contacts") {
-			fmt.Printf("/setcontact (%s) contactID=%s already exists (%s)\n",
-				calleeID, contactID, oldName)
+	if ok {
+		// lowercase contactID exists
+		if name=="" || name==oldName {
+			// don't overwrite existing name with empty or same name
+			if logWantedFor("contacts") {
+				fmt.Printf("/setcontact (%s) contactID=%s already exists (%s)\n",
+					calleeID, contactID, oldName)
+			}
+			return
 		}
-		return
 	}
+
 	// check for uppercase contactID
 	toUpperContactID := strings.ToUpper(contactID[0:1])+contactID[1:]
 	if logWantedFor("contacts") {
@@ -418,13 +422,16 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 			calleeID, toUpperContactID)
 	}
 	oldName,ok = callerInfoMap[toUpperContactID]
-	if ok && oldName!="" && oldName!="unknown" && oldName!="?" && name=="" {
-		// uppercase contactID exists: don't overwrite existing name with empty name
-		if logWantedFor("contacts") {
-			fmt.Printf("/setcontact (%s) contactID=%s already exists (%s)\n",
-				calleeID, toUpperContactID, oldName)
+	if ok {
+		// uppercase contactID exists
+		if name=="" || name==oldName {
+			// don't overwrite existing name with empty or same name
+			if logWantedFor("contacts") {
+				fmt.Printf("/setcontact (%s) contactID=%s already exists (%s)\n",
+					calleeID, toUpperContactID, oldName)
+			}
+			return
 		}
-		return
 	}
 
 	if name=="" {
