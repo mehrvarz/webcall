@@ -341,7 +341,7 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 		fmt.Printf("# /setcontact (%s) fail no cookie rip=%s\n", calleeID, remoteAddr)
 		return
 	}
-	if urlID!=calleeID {
+	if urlID!="" && urlID!=calleeID {
 		fmt.Printf("# /setcontact urlID=%s != calleeID=%s\n",urlID,calleeID)
 		return
 	}
@@ -401,9 +401,20 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 		callerInfoMap = make(map[string]string)
 	}
 
+	// check for lowercase contactID
 	oldName,ok := callerInfoMap[contactID]
 	if ok && oldName!="" && oldName!="unknown" && oldName!="?" && name=="" {
-		// don't overwrite existing name with empty name
+		// lowercase contactID exists: don't overwrite existing name with empty name
+		if logWantedFor("contacts") {
+			fmt.Printf("/setcontact (%s) contactID=%s already exists (%s)\n",
+				calleeID, contactID, oldName)
+		}
+		return
+	}
+	// check for uppercase contactID
+	oldName,ok = callerInfoMap[strings.ToUpper(contactID)]
+	if ok && oldName!="" && oldName!="unknown" && oldName!="?" && name=="" {
+		// uppercase contactID exists: don't overwrite existing name with empty name
 		if logWantedFor("contacts") {
 			fmt.Printf("/setcontact (%s) contactID=%s already exists (%s)\n",
 				calleeID, contactID, oldName)
