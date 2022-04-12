@@ -149,13 +149,9 @@ function editSubmit(formElement,id) {
 		// special case
 		let api = apiPath+"/deletecontact?id="+callerID+"&contactID="+id;
 		if(!gentle) console.log('request api',api);
-
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 			console.log('xhr deletecontact OK',xhr.responseText);
 			if(xhr.responseText=="ok") {
-				// not required: delete obj[id]
-				// obj.splice(index, 1);
-
 				// delete myTableElement <tr> 2nd parent of myTableElement
 				let trElement = myTableElement.parentNode.parentNode;
 				// remove trElement from DOM

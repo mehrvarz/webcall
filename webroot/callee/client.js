@@ -448,7 +448,7 @@ function showStatsPostCall() {
 	}
 	if(typeof Android !== "undefined" && Android !== null) {
 		if(typeof Android.keepAwakeMS !== "undefined" && Android.keepAwakeMS !== null) {
-			myStatsPostCallString += "<br><br>keepAwake "+Android.keepAwakeMS()+" ms";
+			myStatsPostCallString += "<br><br>keepAwake today: "+(Android.keepAwakeMS()/1000)+"s";
 		}
 	}
 	return myStatsPostCallString;
