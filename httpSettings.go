@@ -417,12 +417,12 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 		fmt.Printf("/setcontact (%s) check toUpperContactID=%s\n",
 			calleeID, toUpperContactID)
 	}
-	oldName,ok = callerInfoMap[strings.ToUpper(contactID)]
+	oldName,ok = callerInfoMap[toUpperContactID]
 	if ok && oldName!="" && oldName!="unknown" && oldName!="?" && name=="" {
 		// uppercase contactID exists: don't overwrite existing name with empty name
 		if logWantedFor("contacts") {
 			fmt.Printf("/setcontact (%s) contactID=%s already exists (%s)\n",
-				calleeID, contactID, oldName)
+				calleeID, toUpperContactID, oldName)
 		}
 		return
 	}
