@@ -412,6 +412,11 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 		return
 	}
 	// check for uppercase contactID
+	toUpperContactID := strings.ToUpper(contactID[0:1])+contactID[1:]
+	if logWantedFor("contacts") {
+		fmt.Printf("/setcontact (%s) check toUpperContactID=%s\n",
+			calleeID, toUpperContactID)
+	}
 	oldName,ok = callerInfoMap[strings.ToUpper(contactID)]
 	if ok && oldName!="" && oldName!="unknown" && oldName!="?" && name=="" {
 		// uppercase contactID exists: don't overwrite existing name with empty name

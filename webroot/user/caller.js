@@ -265,14 +265,16 @@ function onload2(checkFlag) {
 			}
 
 			// store calleeID in contacts if it doesn't exist yet
-			if(callerId!=="" && callerId!=="undefined") {
+// TODO this is too early; before callee has picked up
+// move this to "callee is answering call"
+/*			if(callerId!=="" && callerId!=="undefined") {
 				let api = apiPath+"/setcontact?id="+callerId+"&contactID="+calleeID; //+"&name="+newName;
 				if(!gentle) console.log('request api',api);
 				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 					console.log('xhr setcontact OK',xhr.responseText);
 				}, errorAction2);
 			}
-
+*/
 			if(checkFlag) {
 				// need to know if calleeID is online asap (will switch to callee-online-layout if it is)
 				dialAfterCalleeOnline = false;
@@ -1159,6 +1161,14 @@ function signalingCommand(message) {
 	gLog('signaling cmd',cmd);
 
 	if(cmd=="calleeAnswer") {
+		if(callerId!=="" && callerId!=="undefined") {
+			let api = apiPath+"/setcontact?id="+callerId+"&contactID="+calleeID; //+"&name="+newName;
+			if(!gentle) console.log('request api',api);
+			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+				console.log('xhr setcontact OK',xhr.responseText);
+			}, errorAction2);
+		}
+
 		if(!peerCon || peerCon.iceConnectionState=="closed") {
 			console.warn('calleeAnswer abort no peerCon');
 			return;
@@ -1308,7 +1318,6 @@ function signalingCommand(message) {
 		}
 
 		console.log('callee is answering call');
-
 		if(!localStream) {
 			console.warn("cmd pickup no localStream");
 			// I see this when I quickly re-dial while busy signal of last call is still playing
