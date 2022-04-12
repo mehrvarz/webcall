@@ -145,7 +145,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	if ok && len(url_arg_array[0]) > 0 {
 		callerName = url_arg_array[0]
 	}
-	//fmt.Printf("serve callerID=%s callerName=%s (%v)\n", callerID, callerName, r.URL.Query())
+	//fmt.Printf("serve callerID=%s (%v)\n", callerID, r.URL.Query())
 
 	upgrader := websocket.NewUpgrader()
 	//upgrader.EnableCompression = true // TODO
@@ -691,87 +691,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 		c.Write([]byte("confirm|"+payload))
 		return
 	}
-/*
-	if cmd=="log" {
-		// TODO make extra sure payload is not malformed
-		if c==nil {
-			fmt.Printf("# peer c==nil\n")
-		} else if c.hub==nil {
-			fmt.Printf("# %s (%s) peer c.hub==nil ver=%s\n", c.connType, c.calleeID, c.clientVersion)
-		} else if c.hub.CallerClient==nil {
-			// # serveWss (83710725871) peer 'callee Connected unknw/unknw'
-			// this happens when caller disconnects immediately
-			fmt.Printf("# %s (%s) peer %s c.hub.CallerClient==nil ver=%s\n",
-				c.connType, c.calleeID, payload, c.clientVersion)
-		} else {
-			if strings.HasPrefix(payload,"callee") {
-				// payload = "callee Incoming p2p/p2p" or "callee Connected p2p/p2p"
-				// "%s (%s) peer callee Incoming p2p/p2p" or "%s (%s) peer callee Connected p2p/p2p"
-// TODO "callee Connected p2p/p2p" can happen multiple times
-				fmt.Printf("%s (%s) peer %s\n", c.connType, c.calleeID, payload)
-			} else {
-				// payload = "caller Connected p2p/p2p"
-				// peer caller Connected p2p/p2p (17212799634:Jenish) 0.9.83_98.0.4758.101
-				fmt.Printf("%s (%s) peer %s (%s:%s) %s\n", c.connType, c.calleeID, payload,
-					c.hub.CallerClient.callerID, c.hub.CallerClient.callerName, c.clientVersion)
-				// callerID + callerName are forward to callee via "callerInfo|" on receipt of "callerOffer"
-			}
-		}
-		tok := strings.Split(payload, " ")
-		if len(tok)>=3 {
-			// callee Connected p2p/p2p port=10001 id=3949620073
-			if strings.TrimSpace(tok[1])=="Connected" || strings.TrimSpace(tok[1])=="Incoming" ||
-					strings.TrimSpace(tok[1])=="ConForce" { // test-caller-client
-				tok2 := strings.Split(strings.TrimSpace(tok[2]), "/")
-				if len(tok2)>=2 {
-					//fmt.Printf("%s tok2[0]=%s tok2[1]=%s\n", c.connType, tok2[0], tok2[1])
-					if tok2[0]=="p2p" {
-						c.hub.LocalP2p = true
-					}
-					if tok2[1]=="p2p" {
-						c.hub.RemoteP2p = true
-					}
-					c.isConnectedToPeer.Set(true)
-					if !c.isCallee {
-						// when the caller sends "log", the callee also becomes peerConnected
-						c.hub.CalleeClient.isConnectedToPeer.Set(true)
 
-						if strings.TrimSpace(tok[1])=="ConForce" {
-							// test-caller sends this msg to callee, test-clients do not really connect p2p
-							c.hub.CalleeClient.Write([]byte("callerConnect|"))
-
-						} else if strings.TrimSpace(tok[1])=="Connected" {
-							// caller is reporting peerCon: both peers are now directly connected
-							// now force-disconnect the caller
-							readConfigLock.RLock()
-							myDisconCalleeOnPeerConnected := disconCalleeOnPeerConnected
-							myDisconCallerOnPeerConnected := disconCallerOnPeerConnected
-							readConfigLock.RUnlock()
-							if myDisconCalleeOnPeerConnected || myDisconCallerOnPeerConnected {
-								time.Sleep(20 * time.Millisecond)
-							}
-							if myDisconCalleeOnPeerConnected {	
-								// this is currently never done
-								fmt.Printf("%s peer callee disconnect %s %s\n",
-									c.connType, c.calleeID, c.RemoteAddr)
-								c.hub.CalleeClient.Close("disconCalleeOnPeerConnected")
-							}
-							if myDisconCallerOnPeerConnected {
-								// this is currently always done
-								if c.hub.CallerClient != nil {
-									//fmt.Printf("%s (%s) peer caller disconnect %s\n",
-									//	c.connType, c.calleeID, c.RemoteAddr)
-									c.hub.CallerClient.Close("disconCallerOnPeerConnected")
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-		return
-	}
-*/
 	if cmd=="log" {
 		// TODO make extra sure payload is not malformed
 		if c==nil {
@@ -796,8 +716,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 			} else {
 				// payload = "caller Connected p2p/p2p"
 				// peer caller Connected p2p/p2p (17212799634:Jenish) 0.9.83_98.0.4758.101
-				fmt.Printf("%s (%s) peer %s (%s:%s) %s\n", c.connType, c.calleeID, payload,
-					c.hub.CallerClient.callerID, c.hub.CallerClient.callerName, c.clientVersion)
+				fmt.Printf("%s (%s) peer %s (%s) %s\n", c.connType, c.calleeID, payload,
+					c.hub.CallerClient.callerID, c.clientVersion)
 			}
 
 			// payload = "callee Connected p2p/p2p"
@@ -940,7 +860,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 		}
 		c.hub.HubMutex.Unlock()
 
-// TODO add caller id c.hub.CallerClient.callerID, c.hub.CallerClient.callerName
+// TODO add caller id c.hub.CallerClient.callerID
 		fmt.Printf("%s (%s) peer %s discon %ds %s (%s)\n",
 			c.connType, c.calleeID, peerType, c.hub.CallDurationSecs, c.RemoteAddr, comment)
 

@@ -59,7 +59,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	if ok && len(url_arg_array[0]) >= 1 {
 		callerName = url_arg_array[0]
 	}
-	fmt.Printf("/notifyCallee (%s) for callerId=(%s) callerName=(%s)\n", urlID, callerId, callerName)
+	fmt.Printf("/notifyCallee (%s) for callerId=(%s)\n", urlID, callerId)
 
 	var dbEntry DbEntry
 	err := kvMain.Get(dbRegisteredIDs, urlID, &dbEntry)
@@ -503,7 +503,7 @@ func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, r
 	if err!=nil {
 		fmt.Printf("# /httpMissedCall (%s) fail store dbMissedCalls err=%v rip=%s\n", calleeId, err, remoteAddr)
 	} else {
-		fmt.Printf("/httpMissedCall (%s) caller=%s:%s rip=%s\n", calleeId, callerName, callerID, remoteAddr)
+		fmt.Printf("/httpMissedCall (%s) caller=%s rip=%s\n", calleeId, callerID, remoteAddr)
 
 		// send updated waitingCallerSlice + missedCalls to callee (if (hidden) online)
 		// check if callee is (hidden) online
