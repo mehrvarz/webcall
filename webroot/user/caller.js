@@ -73,6 +73,7 @@ var needToStoreMissedCall="";
 var missedCallTime=0;
 var haveBeenWaitingForCalleeOnline=false;
 var lastOnlineStatus = "";
+var contactAutoStore = false;
 
 var extMessage = function(e) {
 	// prevent an error on split() below when extensions emit unrelated, non-string 'message' events to the window
@@ -208,6 +209,7 @@ window.onload = function() {
 		enterDomainVal.value = location.hostname;
 
 		// if serverSettings.storeContacts=="true", turn element "dialIdAutoStore" on
+		contactAutoStore = false;
 		let api = apiPath+"/getsettings?id="+calleeID;
 		if(!gentle) console.log('request getsettings api',api);
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
@@ -221,6 +223,7 @@ window.onload = function() {
 			if(typeof serverSettings!=="undefined") {
 				if(!gentle) console.log('serverSettings.storeContacts',serverSettings.storeContacts);
 				if(serverSettings.storeContacts=="true") {
+					contactAutoStore = true;
 					var dialIdAutoStoreElement = document.getElementById("dialIdAutoStore");
 					if(dialIdAutoStoreElement) {
 						dialIdAutoStoreElement.style.display = "block";
@@ -1161,12 +1164,14 @@ function signalingCommand(message) {
 	gLog('signaling cmd',cmd);
 
 	if(cmd=="calleeAnswer") {
-		if(callerId!=="" && callerId!=="undefined") {
-			let api = apiPath+"/setcontact?id="+callerId+"&contactID="+calleeID; //+"&name="+newName;
-			if(!gentle) console.log('request api',api);
-			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-				console.log('xhr setcontact OK',xhr.responseText);
-			}, errorAction2);
+		if(contactAutoStore) {
+			if(callerId!=="" && callerId!=="undefined") {
+				let api = apiPath+"/setcontact?id="+callerId+"&contactID="+calleeID; //+"&name="+newName;
+				if(!gentle) console.log('request api',api);
+				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+					console.log('xhr setcontact OK',xhr.responseText);
+				}, errorAction2);
+			}
 		}
 
 		if(!peerCon || peerCon.iceConnectionState=="closed") {
