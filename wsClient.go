@@ -292,8 +292,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	} else if hub.CallerClient==nil {
 		// caller client (2nd client)
 		if logWantedFor("wsclient") {
-			fmt.Printf("%s (%s) caller conn ws=%d %s\n",
-				client.connType, client.calleeID, wsClientID64, client.RemoteAddr)
+			fmt.Printf("%s (%s) caller conn ws=%d (%s) %s\n", .connType, client.calleeID,
+				client wsClientID64, client.hub.CallerClient.callerID, client.RemoteAddr)
 		}
 
 		hub.CallDurationSecs = 0
@@ -709,13 +709,14 @@ func (c *WsClient) receiveProcess(message []byte) {
 				// "%s (%s) peer callee Incoming p2p/p2p" or "%s (%s) peer callee Connected p2p/p2p"
 				// note: "callee Connected p2p/p2p" can happen multiple times
 				if !c.isMediaConnectedToPeer.Get() {
-					fmt.Printf("%s (%s) peer %s\n", c.connType, c.calleeID, payload)
+					fmt.Printf("%s (%s) peer %s (%s)\n",
+						c.connType, c.calleeID, payload, c.hub.CallerClient.callerID)
 				} else {
 					fmt.Printf("%s (%s) peer %s (media)\n", c.connType, c.calleeID, payload)
 				}
 			} else {
 				// payload = "caller Connected p2p/p2p"
-				// peer caller Connected p2p/p2p (17212799634:Jenish) 0.9.83_98.0.4758.101
+				// peer caller Connected p2p/p2p (callerID) 0.9.83_98.0.4758.101
 				fmt.Printf("%s (%s) peer %s (%s) %s\n", c.connType, c.calleeID, payload,
 					c.hub.CallerClient.callerID, c.clientVersion)
 			}
