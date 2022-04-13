@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 	"bytes"
-	"strconv"
+//	"strconv"
 	"unicode"
 	"encoding/gob"
 	"os"
@@ -31,43 +31,15 @@ func ticker3hours() {
 	threeHoursTicker := time.NewTicker(3*60*60*time.Second)
 	defer threeHoursTicker.Stop()
 	for {
+		<-threeHoursTicker.C
 		fmt.Printf("ticker3hours loop\n")
 		if shutdownStarted.Get() {
 			break
 		}
 
-		// if already tw-authenticated
-		// download list of all followers
-		// then loop all dbRegisteredIDs and clear all tw-handles that do not follow @webcall
-		twitterClientLock.Lock()
-		if twitterClient==nil {
-			twitterAuth()
-		}
-		if twitterClient==nil {
-			fmt.Printf("# ticker3min no twitterClient\n")
-		} else {
-			// download list of all followers
-			fmt.Printf("ticker3hours download list of all followers...\n")
-			// TODO we must later support more than 5000 followers
-			var err error
-			followerIDsLock.Lock()
-			followerIDs, _, err = twitterClient.QueryFollowerIDs(5000)
-			if err!=nil {
-				fmt.Printf("# ticker3hours QueryFollowerIDs err=%v\n", err)
-			} else {
-				fmt.Printf("ticker3hours QueryFollowerIDs count=%d\n", len(followerIDs.Ids))
-				for idx,id := range followerIDs.Ids {
-					fmt.Printf("ticker3hours %d followerIDs.Id=%v\n", idx, int64(id))
-				}
-			}
-			followerIDsLock.Unlock()
-		}
-		twitterClientLock.Unlock()
-
 		// loop all dbRegisteredIDs to delete outdated accounts
 		skv.DbMutex.Lock()
 		var dbUserBucketKeyArray1 []string  // for deleting
-		var dbUserBucketKeyArray2 []string  // for clear save
 		counterDeleted := 0
 		err := db.Update(func(tx *bolt.Tx) error {
 			b := tx.Bucket([]byte(bucketName))
@@ -115,72 +87,6 @@ func ticker3hours() {
 							}
 						} else {
 							// this user account is not outdated
-							// let's check if given tw-handle (dbUser.Email2) exist in followerIDs
-							followerIDsLock.RLock()
-							followerIDsLen := len(followerIDs.Ids)
-							followerIDsLock.RUnlock()
-							if dbUser.Email2!="" && followerIDsLen>0 {
-								var twid int64 = 0
-								if dbUser.Str1=="" {
-									// tw-handler is given but tw-id is not, let's fetch it
-									twitterClientLock.Lock()
-									userDetail, _, err := twitterClient.QueryFollowerByName(dbUser.Email2)
-									twitterClientLock.Unlock()
-									if err!=nil {
-										fmt.Printf("# ticker3hours QueryFollowerByName Email2=(%s) err=%v\n",
-											dbUser.Email2, err)
-									} else {
-										fmt.Printf("ticker3hours QueryFollowerByName Email2=(%s) fetched id=%v\n",
-											dbUser.Email2, userDetail.ID)
-										if userDetail.ID > 0 {
-											// dbUser.Email2 is a real twitter handle
-											// put the twid in dbUser
-											twid = userDetail.ID
-											dbUser.Str1 = fmt.Sprintf("%d",twid)
-											// store dbUser below
-											dbUserBucketKeyArray2 = append(dbUserBucketKeyArray2,dbUserKey)
-										}
-									}
-								} else {
-									// tw-handler and tw-id are given
-									i64, err := strconv.ParseInt(dbUser.Str1, 10, 64)
-									if err!=nil {
-										fmt.Printf("# ticker3hours ParseInt64 Str1=(%s) err=%v\n",
-											dbUser.Str1, err)
-									} else {
-										twid = i64
-									}
-								}
-/*
-								// check if twid is a follower
-								// if not we clear the tw-handle in dbUser and store it
-								foundId := false
-								if twid>0 {
-									// check if twid exist in followerIDs
-									followerIDsLock.RLock()
-									for _,id := range followerIDs.Ids {
-										if id == twid {
-											foundId = true
-											break
-										}
-									}
-									followerIDsLock.RUnlock()
-								}
-								if foundId {
-									// twid is a follower
-									//fmt.Printf("ticker3hours found twHandle=%s twId=%d\n", dbUser.Email2, twid)
-								} else {
-									// twid is NOT a follower
-									fmt.Printf("# ticker3hours not found: must clear, twHandle=%s twId=%d\n",
-										dbUser.Email2, twid)
-									// clear twitter handle and id
-									dbUser.Email2 = ""
-									dbUser.Str1 = ""
-									// store dbUser below
-									dbUserBucketKeyArray2 = append(dbUserBucketKeyArray2,dbUserKey)
-								}
-*/
-							}
 						}
 					}
 				}
@@ -204,26 +110,7 @@ func ticker3hours() {
 				// TODO I think we need to generate a blocked entry for each deleted account
 			}
 		}
-
-		// store the users that have their twid added, or their tw-handle cleared
-		for _,key := range dbUserBucketKeyArray2 {
-			fmt.Printf("ticker3hours id=%s user clear save...\n", key)
-			var dbUser DbUser
-			err := kvMain.Get(dbUserBucket, key, &dbUser)
-			if err != nil {
-				fmt.Printf("# ticker3hours error read db=%s bucket=%s get key=%v err=%v\n",
-					dbMainName, dbUserBucket, key, err)
-			} else {
-				// store
-				err3 := kvMain.Put(dbUserBucket, key, &dbUser, true)
-				if err3!=nil {
-					fmt.Printf("# ticker3hours kvMain.Put fail err=%v\n", err3)
-				}
-			}
-		}
-
 		//fmt.Printf("ticker3hours done\n")
-		<-threeHoursTicker.C
 	}
 }
 
@@ -240,10 +127,36 @@ func ticker20min() {
 	twentyMinTicker := time.NewTicker(20*60*time.Second)
 	defer twentyMinTicker.Stop()
 	for {
-		<-twentyMinTicker.C
 		if shutdownStarted.Get() {
 			break
 		}
+
+		// download list of all twitter followers
+		twitterClientLock.Lock()
+		if twitterClient==nil {
+			twitterAuth()
+		}
+		if twitterClient==nil {
+			fmt.Printf("# ticker20min no twitterClient\n")
+		} else {
+			// download list of followers
+			fmt.Printf("ticker20min download list of all followers...\n")
+			// TODO we must later support more than 5000 followers
+			var err error
+			followerIDsLock.Lock()
+			followerIDs, _, err = twitterClient.QueryFollowerIDs(5000)
+			if err!=nil {
+				fmt.Printf("# ticker20min QueryFollowerIDs err=%v\n", err)
+			} else {
+				fmt.Printf("ticker20min QueryFollowerIDs count=%d\n", len(followerIDs.Ids))
+				for idx,id := range followerIDs.Ids {
+					fmt.Printf("ticker20min %d followerIDs.Id=%v\n", idx, int64(id))
+				}
+			}
+			followerIDsLock.Unlock()
+		}
+		twitterClientLock.Unlock()
+
 
 		// load "news.ini", file should contain two lines: date= and url=
 		newsIni, err := ini.Load("news.ini")
@@ -256,6 +169,8 @@ func ticker20min() {
 				}
 			}
 		}
+
+		<-twentyMinTicker.C
 	}
 }
 
