@@ -23,7 +23,7 @@ import (
 )
 
 func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *http.Cookie, pw string, remoteAddr string, remoteAddrWithPort string, nocookie bool, startRequestTime time.Time, pwIdCombo PwIdCombo, userAgent string) {
-	if logWantedFor("http") {
+	if logWantedFor("login") {
 		fmt.Printf("/login (%s) rip=%s rt=%v\n",
 			urlID, remoteAddrWithPort, time.Since(startRequestTime)) // rt=4.393µs
 	}
@@ -318,9 +318,11 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			calleeClient.hub.WsClientID = 0
 		}
 		if reqWsClientID != wsClientID {
-			// not the same: deny deletion
-			fmt.Printf("exit (%s) abort ws=%d/%d %s %s %s\n",
-				globalID, wsClientID, reqWsClientID, comment, remoteAddrWithPort, clientVersion)
+			// not the same (already exited): abort exit / deny deletion
+			if logWantedFor("login") {
+				fmt.Printf("exit (%s) abort ws=%d/%d %s %s %s\n",
+					globalID, wsClientID, reqWsClientID, comment, remoteAddrWithPort, clientVersion)
+			}
 			return;
 		}
 
