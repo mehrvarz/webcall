@@ -100,7 +100,7 @@ func ticker3hours() {
 						sinceLastLoginSecs := time.Now().Unix() - lastLoginTime
 						sinceLastLoginDays := sinceLastLoginSecs/(24*60*60)
 						if sinceLastLoginDays>180 { // maxUserIdleDays
-							// delete this entry
+							// account is outdated, delete this entry
 							fmt.Printf("ticker3hours %d id=%s regist delete sinceLastLogin=%ds days=%d\n",
 								counter, k, sinceLastLoginSecs, sinceLastLoginDays)
 							err2 = c.Delete()
@@ -115,12 +115,12 @@ func ticker3hours() {
 							}
 						} else {
 							// this user account is not outdated
-							// let's check if given tw-handles (dbUser.Email2) exist in followerIDs
+							// let's check if given tw-handle (dbUser.Email2) exist in followerIDs
 							followerIDsLock.RLock()
 							followerIDsLen := len(followerIDs.Ids)
 							followerIDsLock.RUnlock()
 							if dbUser.Email2!="" && followerIDsLen>0 {
-								var twid int64
+								var twid int64 = 0
 								if dbUser.Str1=="" {
 									// tw-handler is given but tw-id is not, let's fetch it
 									twitterClientLock.Lock()
@@ -134,8 +134,9 @@ func ticker3hours() {
 											dbUser.Email2, userDetail.ID)
 										if userDetail.ID > 0 {
 											// dbUser.Email2 is a real twitter handle
+											// put the twid in dbUser
 											twid = userDetail.ID
-											dbUser.Str1 = fmt.Sprintf("%d",userDetail.ID)
+											dbUser.Str1 = fmt.Sprintf("%d",twid)
 											// store dbUser below
 											dbUserBucketKeyArray2 = append(dbUserBucketKeyArray2,dbUserKey)
 										}
@@ -150,7 +151,9 @@ func ticker3hours() {
 										twid = i64
 									}
 								}
-
+/*
+								// check if twid is a follower
+								// if not we clear the tw-handle in dbUser and store it
 								foundId := false
 								if twid>0 {
 									// check if twid exist in followerIDs
@@ -158,20 +161,25 @@ func ticker3hours() {
 									for _,id := range followerIDs.Ids {
 										if id == twid {
 											foundId = true
+											break
 										}
 									}
 									followerIDsLock.RUnlock()
 								}
 								if foundId {
-									// this twid is a follower
+									// twid is a follower
 									//fmt.Printf("ticker3hours found twHandle=%s twId=%d\n", dbUser.Email2, twid)
 								} else {
-									// this twid is NOT a follower
+									// twid is NOT a follower
 									fmt.Printf("# ticker3hours not found: must clear, twHandle=%s twId=%d\n",
 										dbUser.Email2, twid)
+									// clear twitter handle and id
+									dbUser.Email2 = ""
+									dbUser.Str1 = ""
 									// store dbUser below
 									dbUserBucketKeyArray2 = append(dbUserBucketKeyArray2,dbUserKey)
 								}
+*/
 							}
 						}
 					}
@@ -196,6 +204,8 @@ func ticker3hours() {
 				// TODO I think we need to generate a blocked entry for each deleted account
 			}
 		}
+
+		// store the users that have their twid added, or their tw-handle cleared
 		for _,key := range dbUserBucketKeyArray2 {
 			fmt.Printf("ticker3hours id=%s user clear save...\n", key)
 			var dbUser DbUser
@@ -204,8 +214,6 @@ func ticker3hours() {
 				fmt.Printf("# ticker3hours error read db=%s bucket=%s get key=%v err=%v\n",
 					dbMainName, dbUserBucket, key, err)
 			} else {
-				dbUser.Email2 = ""
-				dbUser.Str1 = ""
 				// store
 				err3 := kvMain.Put(dbUserBucket, key, &dbUser, true)
 				if err3!=nil {

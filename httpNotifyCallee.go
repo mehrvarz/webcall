@@ -91,7 +91,9 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		return
 	}
 	if glUrlID != "" {
+		// callee is online
 		if (locHub!=nil && locHub.IsCalleeHidden) || (globHub!=nil && globHub.IsCalleeHidden) {
+			// callee is online but hidden
 			fmt.Printf("/notifyCallee (%s) isHiddenOnline\n", glUrlID)
 			calleeIsHiddenOnline = true
 		}
@@ -140,9 +142,10 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 			}
 		}
 */
-		// notify urlID via twitter direct message
+		// notify urlID via twitter message
 		// here we use twitter message (or twitter direct message) to send a notification
-		if dbUser.Email2 != "" { // twitter handle
+		if dbUser.Email2 != "" {
+			// twitter handle exists
 			twitterClientLock.Lock()
 			if twitterClient == nil {
 				twitterAuth()
@@ -152,36 +155,60 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 				fmt.Printf("# /notifyCallee (%s) failed no twitterClient\n", urlID)
 				// script will tell caller: could not reach urlID
 			} else {
+				// we are authenticated to twitter, does this user have a twid?
+				var twid int64 = 0
 				if dbUser.Str1 == "" {
-					// if twitter (dbUser.Str1) id NOT given, get it via twitter handle (dbUser.Email2)
+					// if twitter-id (dbUser.Str1) is NOT given, get it via twitter handle (dbUser.Email2)
 					twitterClientLock.Lock()
 					userDetail, _, err := twitterClient.QueryFollowerByName(dbUser.Email2)
 					twitterClientLock.Unlock()
 					if err!=nil {
-						fmt.Printf("# /notifyCallee dbUser.Email2=(%s) err=%v (%s)\n",
-							dbUser.Email2, err, msg)
+						fmt.Printf("# /notifyCallee (%s) dbUser.Email2=(%s) err=%v (%s)\n",
+							urlID, dbUser.Email2, err, msg)
 					} else {
-						fmt.Printf("/notifyCallee dbUser.Email2=(%s) fetched id=%v\n",
-							dbUser.Email2, userDetail.ID)
+						fmt.Printf("/notifyCallee (%s) dbUser.Email2=(%s) fetched id=%v\n",
+							urlID, dbUser.Email2, userDetail.ID)
 						if userDetail.ID > 0 {
 							// dbUser.Email2 is a real twitter handle
-							dbUser.Str1 = fmt.Sprintf("%d",userDetail.ID)
+							twid = userDetail.ID
+							dbUser.Str1 = fmt.Sprintf("%d",twid)
+							// store this modified dbUser
+							err2 := kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
+							if err2!=nil {
+								fmt.Printf("# /notifyCallee (%s) kvMain.Put fail err=%v\n", urlID, err2)
+							}
 						}
 					}
 				} else {
-					fmt.Printf("/notifyCallee dbUser.Email2=(%s) stored Str1=%s\n",
-						dbUser.Email2, dbUser.Str1)
+					fmt.Printf("/notifyCallee (%s) dbUser.Email2=(%s) stored Str1=%s\n",
+						urlID, dbUser.Email2, dbUser.Str1)
+					// tw-id is given
+					i64, err := strconv.ParseInt(dbUser.Str1, 10, 64)
+					if err!=nil {
+						fmt.Printf("# /notifyCallee (%s) ParseInt64 Str1=(%s) err=%v\n",
+							urlID, dbUser.Str1, err)
+					} else {
+						twid = i64
+					}
 				}
 
-				if dbUser.Str1 != "" {
-// TODO must check if dbUser.Email2 is a follower (if dbUser.Str1 exists in followerIDs.Ids)
-//		if not, dbUser.Str1 = ""
-// store:
-// err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
+				// check if dbUser.Email2 is a follower
+				isFollower := false
+				if twid>0 {
+					// check if twid exist in followerIDs
+					followerIDsLock.RLock()
+					for _,id := range followerIDs.Ids {
+						if id == twid {
+							isFollower = true
+							break
+						}
+					}
+					followerIDsLock.RUnlock()
 				}
 
-				if dbUser.Str1 != "" {
-					// twitter id exists: dbUser.Email2 is a real twitter handle
+				// send tweet only if user is a follower
+				if isFollower {
+					// twid is a follower
 					if strings.HasPrefix(dbUser.Email2, "@") {
 						msg = dbUser.Email2 + " " + msg
 					} else {
@@ -190,17 +217,19 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 					msg = msg + " " + operationalNow().Format("2006-01-02 15:04:05")
 					respdata, err := twitterClient.SendTweet(msg)
 					if err != nil {
+						// failed to send tweet
 						maxlen := 30
 						if len(dbUser.Email2) < 30 {
 							maxlen = len(dbUser.Email2)
 						}
-						fmt.Printf("# /notifyCallee (%s/%s) SendTweet err=%v msg=%s\n",
+						fmt.Printf("# /notifyCallee (%s) %s SendTweet err=%v msg=%s\n",
 							urlID, dbUser.Email2[:maxlen], err, msg)
-// TODO if err is caused by a faulty tw_user_id, entered by callee,
-// clear dbUser.Email2 and dbUser.Str1
-// dbUser.Email2 = ""
-// store:
-// err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
+						// something is wrong with tw-handle (dbUser.Email2) clear the twid (dbUser.Str1)
+						dbUser.Str1 = ""
+						err2 := kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
+						if err2!=nil {
+							fmt.Printf("# /notifyCallee (%s) kvMain.Put fail err=%v\n", urlID, err2)
+						}
 					} else {
 						tweet := twitter.TimelineTweet{}
 						err = json.Unmarshal(respdata, &tweet)
@@ -232,7 +261,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		}
 
 		if notificationSent==0 {
-			// we couldn't send any notifications: store call as missed call
+			// we could not send any notifications: store call as missed call
 			fmt.Printf("# /notifyCallee (%s) no notification sent\n", urlID)
 			if(dbUser.StoreMissedCalls) {
 				fmt.Printf("# /notifyCallee (%s) no notification sent - store as missed call\n", urlID)

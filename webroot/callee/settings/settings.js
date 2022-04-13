@@ -70,6 +70,9 @@ function prepareSettings(xhrresponse) {
 	if(typeof serverSettings.twid!=="undefined") {
 		if(!gentle) console.log('serverSettings.twid',serverSettings.twid);
 		document.getElementById("twid").value = serverSettings.twid;	  // not being displayed
+		if(!="" && !="0") {
+			document.getElementById("twnameWithId").style.display = "inline";
+		}
 	}
 	if(typeof serverSettings.storeContacts!=="undefined") {
 		if(!gentle) console.log('serverSettings.storeContacts',serverSettings.storeContacts);
