@@ -454,9 +454,9 @@ function showStatsPostCall() {
 			awakeMins = awakeMins - awakeHrs*60;
 			awakeSecs = awakeSecs - awakeHrs*60*60 - awakeMins*60;
 			myStatsPostCallString += "<br><br>KeepAwake today: "+
-				awakeHrs+"hr&nbsp;" +
-				String(awakeMins).padStart(2,'0')+"min&nbsp;"+
-				String(awakeSecs).padStart(2,'0')+"sec";
+				awakeHrs+"h&nbsp;" +
+				String(awakeMins).padStart(2,'0')+"m&nbsp;"+
+				String(awakeSecs).padStart(2,'0')+"s";
 		}
 /*
 	} else {
