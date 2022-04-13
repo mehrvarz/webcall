@@ -850,8 +850,9 @@ func (c *WsClient) peerConHasEnded(comment string) {
 		peerType = "callee"
 	}
 	if !c.isConnectedToPeer.Get() {
-		fmt.Printf("%s (%s) peer %s discon %ds (not con) %s (%s)\n",
-			c.connType, c.calleeID, peerType, c.hub.CallDurationSecs, c.RemoteAddr, comment)
+		// hangup before media connect
+		//fmt.Printf("%s (%s) peer %s discon %ds (before connect) %s (%s)\n",
+		//	c.connType, c.calleeID, peerType, c.hub.CallDurationSecs, c.RemoteAddr, comment)
 	} else {
 		c.hub.HubMutex.Lock()
 		if c.hub.lastCallStartTime>0 {
@@ -860,9 +861,9 @@ func (c *WsClient) peerConHasEnded(comment string) {
 		}
 		c.hub.HubMutex.Unlock()
 
-// TODO add caller id c.hub.CallerClient.callerID
-		fmt.Printf("%s (%s) peer %s discon %ds %s (%s)\n",
-			c.connType, c.calleeID, peerType, c.hub.CallDurationSecs, c.RemoteAddr, comment)
+		fmt.Printf("%s (%s) peer %s discon %ds (%s) %s (%s)\n",
+			c.connType, c.calleeID, peerType, c.hub.CallDurationSecs,
+			c.hub.CallerClient.callerID, c.RemoteAddr, comment)
 
 		err := StoreCallerIpInHubMap(c.globalCalleeID, "", false)
 		if err!=nil {
