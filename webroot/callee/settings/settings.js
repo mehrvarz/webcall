@@ -439,23 +439,23 @@ function submitForm(autoclose) {
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 			// store the twid
 			valueTwID = xhr.responseText;
+			document.activeElement.blur();
 			console.log('xhr response valueTwID='+valueTwID);
 			if(valueTwID.startsWith("error")) {
-				// valueTwName cannot be stored
-// TODO instead of alert() show the error above the Store button
-				alert("Twitter handle cannot be verified: "+valueTwID);
+				// valueTwName cannot be verified/stored
+				document.getElementById("errstring").innerHTML = "Twitter handle error: "+valueTwID;
 			} else if(valueTwID=="" || valueTwID=="0") {
 				// valueTwName cannot be stored
-// TODO instead of alert() show the error above the Store button
-				alert("Twitter handle cannot be verified (unknown)");
+				document.getElementById("errstring").innerHTML = "Twitter handle not found";
 			} else {
-				// Twitter handle exists and valueTwID now contains it's ID
-// TODO: here we could use /twfollower to find out if valueTwID is following us
+				// Twitter handle exists and valueTwID now contains the twID
+				// TODO: here we could use /twfollower to find out if valueTwID is following us
 				store();
 			}
 		}, function(errString,err) {
 			// twName cannot be changed (bc it cannot be verified)
 			console.log('xhr error='+errString);
+			document.activeElement.blur();
 			alert("xhr error\n"+errString+"\nTwitter handle cannot changed because it cannot be verified");
 			valueTwName = valueTwName2;
 			store();
