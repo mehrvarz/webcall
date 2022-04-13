@@ -409,7 +409,7 @@ function submitForm(autoclose) {
 		if(!gentle) console.log('submitForm newSettings',newSettings);
 
 		let api = apiPath+"/setsettings?id="+calleeID;
-		if(!gentle) console.log('request setsettings api',api);
+		if(!gentle) console.log('request setsettings api='+api);
 		ajaxFetch(new XMLHttpRequest(), "POST", api, function(xhr) {
 			if(!gentle) console.log('data posted',newSettings);
 			if(autoclose) {
@@ -435,15 +435,16 @@ function submitForm(autoclose) {
 		// if twName is a real twitter handle, we store valueTwName and the ID and exit settings
 		// otherwise we deny to store settings and we don't exit
 		let api = apiPath+"/twid?id="+valueTwName;
-		if(!gentle) console.log('request twid for twName',api);
+		if(!gentle) console.log('request twid for twName '+api);
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 			// store the twid
 			valueTwID = xhr.responseText;
+			console.log('xhr response valueTwID='+valueTwID);
 			if(valueTwID.startsWith("error")) {
 				// valueTwName cannot be stored
 // TODO instead of alert() show the error above the Store button
 				alert("Twitter handle cannot be verified: "+valueTwID);
-			} else if(valueTwID=="0") {
+			} else if(valueTwID=="" || valueTwID=="0") {
 				// valueTwName cannot be stored
 // TODO instead of alert() show the error above the Store button
 				alert("Twitter handle cannot be verified (unknown)");
@@ -454,7 +455,7 @@ function submitForm(autoclose) {
 			}
 		}, function(errString,err) {
 			// twName cannot be changed (bc it cannot be verified)
-			console.log('xhr error',errString);
+			console.log('xhr error='+errString);
 			alert("xhr error\n"+errString+"\nTwitter handle cannot changed because it cannot be verified");
 			valueTwName = valueTwName2;
 			store();
