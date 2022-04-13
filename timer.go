@@ -144,9 +144,10 @@ func ticker20min() {
 			// TODO we must later support more than 5000 followers
 			var err error
 			followerIDsLock.Lock()
-			followerIDs, _, err = twitterClient.QueryFollowerIDs(5000)
+			var data []byte
+			followerIDs, data, err = twitterClient.QueryFollowerIDs(5000)
 			if err!=nil {
-				fmt.Printf("# ticker20min QueryFollowerIDs err=%v\n", err)
+				fmt.Printf("# ticker20min QueryFollowerIDs err=%v [%v]\n", err, data)
 			} else {
 				fmt.Printf("ticker20min QueryFollowerIDs count=%d\n", len(followerIDs.Ids))
 				for idx,id := range followerIDs.Ids {

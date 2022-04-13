@@ -209,6 +209,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 				// send tweet only if user is a follower
 				if isFollower {
 					// twid is a follower
+/*
 					if strings.HasPrefix(dbUser.Email2, "@") {
 						msg = dbUser.Email2 + " " + msg
 					} else {
@@ -216,6 +217,8 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 					}
 					msg = msg + " " + operationalNow().Format("2006-01-02 15:04:05")
 					respdata, err := twitterClient.SendTweet(msg)
+*/
+					respdata, err := twitterClient.SendDirect(dbUser.Str1, msg)
 					if err != nil {
 						// failed to send tweet
 						maxlen := 30

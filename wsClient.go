@@ -292,8 +292,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	} else if hub.CallerClient==nil {
 		// caller client (2nd client)
 		if logWantedFor("wsclient") {
-			fmt.Printf("%s (%s) caller conn ws=%d (%s) %s\n", .connType, client.calleeID,
-				client wsClientID64, client.hub.CallerClient.callerID, client.RemoteAddr)
+			fmt.Printf("%s (%s) caller conn ws=%d (%s) %s\n", client.connType, client.calleeID,
+				wsClientID64, client.hub.CallerClient.callerID, client.RemoteAddr)
 		}
 
 		hub.CallDurationSecs = 0
