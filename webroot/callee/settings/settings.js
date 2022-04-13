@@ -381,13 +381,14 @@ function ajaxFetch(xhr, type, apiPath, processData, errorFkt, postData) {
 function submitForm(autoclose) {
 	var valueTwName = document.getElementById("twname").value.replace(/ /g,''); // remove all white spaces
 	var valueTwName2 = document.getElementById("twname2").value; // the unmodified orig value
+	var valueTwID = document.getElementById("twid").value;
 	if(valueTwName=="" || valueTwName!=valueTwName2) {
 		document.getElementById("twnameWithId").style.display = "none";
+		valueTwID = "";
 	}
 	if(valueTwName.startsWith("@")) {
 		valueTwName = valueTwName.substring(1);
 	}
-	var valueTwID = document.getElementById("twid").value;
 	if(!gentle) console.log('submitForm twName='+valueTwName+" twID="+valueTwID);
 
 
