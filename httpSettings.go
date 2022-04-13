@@ -104,7 +104,7 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		fmt.Printf("# /setsettings (%s) failed on io.ReadFull body rip=%s\n",calleeID, remoteAddr)
 		return
 	}
-	fmt.Printf("/setsettings (%s) len=%d rip=%s\n", calleeID, len(data), remoteAddr)
+	//fmt.Printf("/setsettings (%s) len=%d rip=%s\n", calleeID, len(data), remoteAddr)
 
 	var newSettingsMap map[string]string
 	err := json.Unmarshal([]byte(data), &newSettingsMap)
@@ -296,7 +296,7 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 	if err!=nil {
 		fmt.Printf("# /setsettings (%s) store db=%s bucket=%s err=%v\n", calleeID, dbMainName, dbUserBucket, err)
 	} else {
-		fmt.Printf("/setsettings (%s) stored db=%s bucket=%s\n", calleeID, dbMainName, dbUserBucket)
+		//fmt.Printf("/setsettings (%s) stored db=%s bucket=%s\n", calleeID, dbMainName, dbUserBucket)
 	}
 	return
 }

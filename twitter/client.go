@@ -44,7 +44,7 @@ func (c *Client) BasicQuery(queryString string) ([]byte, error) {
 		return nil, errors.New("No Client OAuth")
 	}
 
-	fmt.Printf("BasicQuery queryString=%s\r\n",queryString)
+	//fmt.Printf("BasicQuery queryString=%s\r\n",queryString)
 	response, err := c.HttpConn.Get(queryString)
 
 	/*
@@ -127,7 +127,8 @@ func (c *Client) QueryStatus(id int64 ) (*TimelineTweet, []byte, error) {
 		if err==nil && ret.Id==0 {
 			ret := ErrorsTweet{}
 			err = json.Unmarshal(data, &ret)
-//fmt.Printf("QueryStatus Unmarshal err=[%v] ret.Errors[0].Code=%d [%s]\r\n",err,ret.Errors[0].Code,ret.Errors[0].Message)
+			//fmt.Printf("QueryStatus Unmarshal err=[%v] ret.Errors[0].Code=%d [%s]\r\n",
+			//	err,ret.Errors[0].Code,ret.Errors[0].Message)
 			if err==nil && ret.Errors!=nil && ret.Errors[0].Code>0 {
 				return nil, data, errors.New(ret.Errors[0].Message)
 			}
@@ -190,7 +191,7 @@ func (c *Client) QueryFollowerByName(name string) (UserDetail, []byte, error) {
 func (c *Client) SendTweet(msg string) ([]byte, error) {
 	requesURL := fmt.Sprintf("%s?status=%s", API_TWEET, url.QueryEscape(msg))
 	respdata, err := c.PostQuery(requesURL,"") //"application/x-www-form-urlencoded")
-fmt.Printf("SendTweet requesURL=(%v) err=%v response=[%s]\n",requesURL,err,respdata)
+	fmt.Printf("SendTweet requesURL=(%v) err=%v response=[%s]\n",requesURL,err,respdata)
 	if err==nil {
 		// err==nil does not mean everything has worked 
 		// if respdata contains "errors", we must evaluate it
