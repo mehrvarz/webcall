@@ -444,12 +444,32 @@ function getStatsPostCall(results) {
 function showStatsPostCall() {
 	var myStatsPostCallString = statsPostCallString.replaceAll("\n","<br>");
 	if(myStatsPostCallString=="") {
-		myStatsPostCallString = "No call stats available";
+		myStatsPostCallString = "No call stats available!!!";
 	}
 	if(typeof Android !== "undefined" && Android !== null) {
 		if(typeof Android.keepAwakeMS !== "undefined" && Android.keepAwakeMS !== null) {
-			myStatsPostCallString += "<br><br>Keep awake today: "+parseInt(Android.keepAwakeMS()/1000, 10)+"s";
+			var awakeSecs = parseInt(Android.keepAwakeMS()/1000, 10);
+			var awakeMins = parseInt(awakeSecs/60);
+			var awakeHrs  = parseInt(awakeMins/60);
+			awakeMins = awakeMins - awakeHrs*60;
+			awakeSecs = awakeSecs - awakeHrs*60*60 - awakeMins*60;
+			myStatsPostCallString += "<br><br>KeepAwake today: "+
+				awakeHrs+"hr&nbsp;" +
+				String(awakeMins).padStart(2,'0')+"min&nbsp;"+
+				String(awakeSecs).padStart(2,'0')+"sec";
 		}
+/*
+	} else {
+		var awakeSecs = 134; //40333;
+		var awakeMins = parseInt(awakeSecs/60);
+		var awakeHrs  = parseInt(awakeMins/60);
+		awakeMins = awakeMins - awakeHrs*60;
+		awakeSecs = awakeSecs - awakeHrs*60*60 - awakeMins*60;
+		myStatsPostCallString += "<br><br>KeepAwake today: "+
+			awakeHrs+"hr&nbsp;" +
+			String(awakeMins).padStart(2,'0')+"min&nbsp;"+
+			String(awakeSecs).padStart(2,'0')+"sec";
+*/
 	}
 	return myStatsPostCallString;
 }
