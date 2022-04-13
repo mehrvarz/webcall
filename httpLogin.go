@@ -315,6 +315,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		var reqWsClientID uint64 = 0
 		if(calleeClient!=nil && calleeClient.hub!=nil) {
 			reqWsClientID = calleeClient.hub.WsClientID
+			calleeClient.hub.WsClientID = 0
 		}
 		if reqWsClientID != wsClientID {
 			// not the same: deny deletion
@@ -355,7 +356,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
         wsClientMutex.Lock()
         delete(wsClientMap, wsClientID)
         wsClientMutex.Unlock()
-		calleeClient.hub.WsClientID = 0
+//		calleeClient.hub.WsClientID = 0
 	}
 
 	hub.exitFunc = exitFunc
