@@ -444,7 +444,7 @@ function getStatsPostCall(results) {
 function showStatsPostCall() {
 	var myStatsPostCallString = statsPostCallString.replaceAll("\n","<br>");
 	if(myStatsPostCallString=="") {
-		myStatsPostCallString = "No call stats available!!!";
+		myStatsPostCallString = "No call stats available";
 	}
 	if(typeof Android !== "undefined" && Android !== null) {
 		if(typeof Android.keepAwakeMS !== "undefined" && Android.keepAwakeMS !== null) {
