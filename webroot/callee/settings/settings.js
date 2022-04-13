@@ -52,6 +52,8 @@ function prepareSettings(xhrresponse) {
 		return;
 	}
 
+	document.getElementById("twnameWithId").style.display = "none";
+
 	// json parse xhrresponse
 	serverSettings = JSON.parse(xhrresponse);
 	if(typeof serverSettings.vapidPublicKey!=="undefined") {
@@ -70,7 +72,7 @@ function prepareSettings(xhrresponse) {
 	if(typeof serverSettings.twid!=="undefined") {
 		if(!gentle) console.log('serverSettings.twid',serverSettings.twid);
 		document.getElementById("twid").value = serverSettings.twid;	  // not being displayed
-		if(serverSettings.twid!="" && serverSettings.twid!="0") {
+		if(serverSettings.twid!="" && serverSettings.twid!="0" && serverSettings.twname!="") {
 			document.getElementById("twnameWithId").style.display = "inline";
 		}
 	}
