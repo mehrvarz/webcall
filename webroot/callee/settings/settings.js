@@ -70,7 +70,7 @@ function prepareSettings(xhrresponse) {
 	if(typeof serverSettings.twid!=="undefined") {
 		if(!gentle) console.log('serverSettings.twid',serverSettings.twid);
 		document.getElementById("twid").value = serverSettings.twid;	  // not being displayed
-		if(!="" && !="0") {
+		if(serverSettings.twid!="" && serverSettings.twid!="0") {
 			document.getElementById("twnameWithId").style.display = "inline";
 		}
 	}
