@@ -27,7 +27,8 @@ const (
 	API_LISTS          string = API_BASE + "lists/statuses.json"
 	API_STATUS         string = API_BASE + "statuses/show.json"
 	API_TWEET          string = API_BASE + "statuses/update.json"
-	API_DIRECT         string = API_BASE + "direct_messages/events/new.json"
+	API_DIRECT         string = API_BASE + "direct_messages/events/new.json" // 1000 per user; 15000 per app 24h
+
 )
 
 type Client struct {
@@ -236,11 +237,14 @@ twurl -A 'Content-type: application/json' -X POST /1.1/direct_messages/events/ne
 	respdata, err := ioutil.ReadAll(response.Body)
 	fmt.Printf("SendDirect response=[%s]\n",respdata)
 /*
+response=[{"event":{"type":"message_create","id":"1514380631991627786","created_timestamp":"1649891453155","message_create":{"target":{"recipient_id":"218447389"},"sender_id":"1388595296205250560","message_data":{"text":"Gnut2 is waiting for you to pick up the phone.","entities":{"hashtags":[],"symbols":[],"user_mentions":[],"urls":[]}}}}}]
+
 response=[{"event":{"type":"message_create","id":"1391575599735525381","created_timestamp":"1620612451858","message_create":{"target":{"recipient_id":"218447389"},"sender_id":"1388595296205250560","message_data":{"text":"A call for you https:\/\/t.co\/tmp115RC8V \/user\/123456","entities":{"hashtags":[],"symbols":[],"user_mentions":[],"urls":[{"url":"https:\/\/t.co\/tmp115RC8V","expanded_url":"http:\/\/timur.mobi","display_url":"timur.mobi","indices":[15,38]}]}}}}}]
 
 response=[{"event":{"type":"message_create","id":"1392278525663645703","created_timestamp":"1620780042459","message_create":{"target":{"recipient_id":"1065529529052143616"},"sender_id":"1388595296205250560","message_data":{"text":"A caller is waiting for you now","entities":{"hashtags":[],"symbols":[],"user_mentions":[],"urls":[]}}}}}]
 
 response=[{"errors":[{"code":214,"message":"event.message_create.target.recipient_id: 'falafelxxl' is not a valid Long"}]}]
+
 */
 	if err==nil {
 		// err==nil does not mean everything has worked 

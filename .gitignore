@@ -10,4 +10,9 @@ accessToken.txt
 *.pdf
 *.txt
 favicon.ico
+showlogs.sh
+webcall.prev
+news.ini
+dumponline.sh
+backupdb.sh
 

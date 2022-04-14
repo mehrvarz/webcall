@@ -389,6 +389,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 			return
 		}
 		c.clearOnCloseDone = false
+
 		// send list of waitingCaller and missedCalls to callee client
 		var waitingCallerSlice []CallerInfo
 		err := kvCalls.Get(dbWaitingCaller,c.calleeID,&waitingCallerSlice)
@@ -430,17 +431,21 @@ func (c *WsClient) receiveProcess(message []byte) {
 		} else if(dbUser.StoreMissedCalls) {
 			err = kvCalls.Get(dbMissedCalls,c.calleeID,&missedCallsSlice)
 			if err!=nil {
-				missedCallsSlice = nil
+//?				missedCallsSlice = nil
+				fmt.Printf("# %s (%s) failed to read dbMissedCalls\n",c.connType,c.calleeID)
 			}
 		}
 
+		if logWantedFor("waitingCaller") {
+			fmt.Printf("%s (%s) waitingCaller=%d missedCalls=%d\n",c.connType,c.calleeID,
+				len(waitingCallerSlice),len(missedCallsSlice))
+		}
 		if len(waitingCallerSlice)>0 || len(missedCallsSlice)>0 {
-			//fmt.Printf("%s waitingCallerToCallee (%s) %d %d\n",c.connType,c.calleeID,
-			//	len(waitingCallerSlice),len(missedCallsSlice))
 			// -> httpServer hubclient.Write()
 			waitingCallerToCallee(c.calleeID, waitingCallerSlice, missedCallsSlice, c)
 		}
 
+// TODO: check this
 		if !strings.HasPrefix(c.calleeID,"answie") && !strings.HasPrefix(c.calleeID,"talkback") {
 			if clientUpdateBelowVersion!="" && c.clientVersion < clientUpdateBelowVersion {
 				//fmt.Printf("%s (%s) clientVersion=%s\n",c.connType,c.calleeID,c.clientVersion)

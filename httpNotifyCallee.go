@@ -234,6 +234,8 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 							fmt.Printf("# /notifyCallee (%s) kvMain.Put fail err=%v\n", urlID, err2)
 						}
 					} else {
+// TODO twitter.TimelineTweet is the wrong struct for direct messages 
+// therefor tweet.IdStr is empty
 						tweet := twitter.TimelineTweet{}
 						err = json.Unmarshal(respdata, &tweet)
 						if err != nil {
@@ -292,6 +294,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 
 	// we now "freeze" the callers xhr until callee goes online and sends a value to the callers chan
 	// waitingCallerChanMap[urlID] <- 1 to signal it is picking up the call
+	//fmt.Printf("/notifyCallee (%s) notification sent; freeze caller\n", urlID)
 	c := make(chan int)
 	waitingCallerChanLock.Lock()
 	waitingCallerChanMap[remoteAddrWithPort] = c
@@ -329,6 +332,8 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 				calleeWsClient.Write([]byte("waitingCallers|" + string(json)))
 			}
 		}
+	} else {
+// TODO callee was not hidden online, but really offline
 	}
 
 	// let caller wait (let it's xhr stand) until callee picks up the call
