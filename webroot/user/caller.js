@@ -110,7 +110,6 @@ window.onload = function() {
 	}
 
 	window.onhashchange = hashchange;
-//	window.onload = goodby;
 	window.onbeforeunload = goodby;
 	needToStoreMissedCall = "";
 	missedCallTime = 0;
@@ -267,17 +266,6 @@ function onload2(checkFlag) {
 				return;
 			}
 
-			// store calleeID in contacts if it doesn't exist yet
-// TODO this is too early; before callee has picked up
-// move this to "callee is answering call"
-/*			if(callerId!=="" && callerId!=="undefined") {
-				let api = apiPath+"/setcontact?id="+callerId+"&contactID="+calleeID; //+"&name="+newName;
-				if(!gentle) console.log('request api',api);
-				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-					console.log('xhr setcontact OK',xhr.responseText);
-				}, errorAction2);
-			}
-*/
 			if(checkFlag) {
 				// need to know if calleeID is online asap (will switch to callee-online-layout if it is)
 				dialAfterCalleeOnline = false;
@@ -342,7 +330,6 @@ function dialButtonClick() {
 
 	if(singlebutton) {
 		// switch from dialButton to hangupButton "Connecting..."
-		//hangupButton.style.backgroundColor = "#d33"; // color from button:active
 		hangupButton.innerHTML = connectingText;
 		dialButton.style.display = "none";
 		hangupButton.style.display = "inline-block";
@@ -861,9 +848,7 @@ var confirmXhrNickname = false;
 function confirmNotifyConnect() {
 	// offer caller to enter a nickname + callerID and ask to enter confirmWord
 	// using a form with two text fields
-
 	// TODO change confirmWord ("123") randomly
-
 	if(typeof callerName=="undefined") {
 		callerName = "";
 	}

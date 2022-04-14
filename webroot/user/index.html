@@ -12,8 +12,6 @@
 ::-webkit-scrollbar { display:none; }
 html {
 	width:100%; min-height:100%;
-	_background-image:linear-gradient(#004, #139);
-	_background-image:linear-gradient(#339, #006);
 	background-image:linear-gradient(#039, #004);
 	color:#ddd;
 	scrollbar-width:none;
@@ -61,9 +59,6 @@ button[disabled] {
 
 .menuButton, menuButton:focus {
 	color:white;
-	_background-color:#04c;
-	_transition: background-color 200ms;
-	_border:none;
 	padding: 0 20px 0 20px; /* 20px = margin-left (16px) +4 of labels (see: fullscreenlabel) */
 	user-select:none;
 }
@@ -72,16 +67,13 @@ button[disabled] {
 	outline:none;
 }
 .menuButton[disabled] {
-	_color:#aaa;
 }
 @media (hover: hover) {
 	.menuButton:hover {
 		color:#ff0;
-		_background-color: #b82a68;
 		outline:none;
 	}
 	.menuButton[disabled]:hover {
-		_background-color:#04c;
 	}
 }
 .menulabel {
@@ -95,7 +87,6 @@ div#container {
 	max-width:520px;
 }
 div#enterId {
-	_background:#339;
 	padding: 1em;
 	margin: 1em;
 	max-width:520px;
@@ -186,14 +177,9 @@ select:focus {
 	outline:none;
 }
 .timer {
-	_position:absolute;
-    _top:8vh;
-    _left:50%;
-    _transform:translate(-50%, -50%);
 	position:absolute;
 	right:10px;
 	bottom:10px;
-	_background:#4007;
     width:200px;
 	color:#555;
 	font-size:4.0em;
