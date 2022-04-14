@@ -303,18 +303,18 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	waitingCaller := CallerInfo{remoteAddrWithPort, callerName, time.Now().Unix(), callerId}
 	var waitingCallerSlice []CallerInfo
 	var calleeWsClient *WsClient = nil
-	if calleeIsHiddenOnline {
-		// send a waitingCaller json-update (containing remoteAddrWithPort + callerName) to hidden callee
-		err = kvCalls.Get(dbWaitingCaller, urlID, &waitingCallerSlice)
-		if err != nil {
-			// we can ignore this
-		}
-		waitingCallerSlice = append(waitingCallerSlice, waitingCaller)
-		err = kvCalls.Put(dbWaitingCaller, urlID, waitingCallerSlice, false)
-		if err != nil {
-			fmt.Printf("# /notifyCallee (%s) failed to store dbWaitingCaller\n", urlID)
-		}
+	// send a waitingCaller json-update (containing remoteAddrWithPort + callerName) to hidden callee
+	err = kvCalls.Get(dbWaitingCaller, urlID, &waitingCallerSlice)
+	if err != nil {
+		// we can ignore this
+	}
+	waitingCallerSlice = append(waitingCallerSlice, waitingCaller)
+	err = kvCalls.Put(dbWaitingCaller, urlID, waitingCallerSlice, false)
+	if err != nil {
+		fmt.Printf("# /notifyCallee (%s) failed to store dbWaitingCaller\n", urlID)
+	}
 
+	if calleeIsHiddenOnline {
 		hubMapMutex.RLock()
 		myhub := hubMap[urlID]
 		hubMapMutex.RUnlock()
@@ -332,8 +332,6 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 				calleeWsClient.Write([]byte("waitingCallers|" + string(json)))
 			}
 		}
-	} else {
-// TODO callee was not hidden online, but really offline
 	}
 
 	// let caller wait (let it's xhr stand) until callee picks up the call

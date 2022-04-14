@@ -432,7 +432,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 			err = kvCalls.Get(dbMissedCalls,c.calleeID,&missedCallsSlice)
 			if err!=nil {
 //?				missedCallsSlice = nil
-				fmt.Printf("# %s (%s) failed to read dbMissedCalls\n",c.connType,c.calleeID)
+				//fmt.Printf("# %s (%s) failed to read dbMissedCalls\n",c.connType,c.calleeID)
 			}
 		}
 
