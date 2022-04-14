@@ -150,8 +150,10 @@ func ticker20min() {
 				fmt.Printf("# ticker20min QueryFollowerIDs err=%v [%v]\n", err, data)
 			} else {
 				fmt.Printf("ticker20min QueryFollowerIDs count=%d\n", len(followerIDs.Ids))
-				for idx,id := range followerIDs.Ids {
-					fmt.Printf("ticker20min %d followerIDs.Id=%v\n", idx+1, int64(id))
+				if logWantedFor("twitter") {
+					for idx,id := range followerIDs.Ids {
+						fmt.Printf("ticker20min %d followerIDs.Id=%v\n", idx+1, int64(id))
+					}
 				}
 			}
 			followerIDsLock.Unlock()
