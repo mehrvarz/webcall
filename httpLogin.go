@@ -123,8 +123,10 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 						if hub==nil || hub.CalleeClient==nil || !hub.CalleeClient.isOnline.Get() {
 							// CalleeClient is not online anymore (we can accept the new login)
 							offlineReason = 4
-							fmt.Printf("/login (%s) has logged out after wait %dms/%v rip=%s ua=%s ver=%s\n",
-								key, i*100, time.Since(startRequestTime), remoteAddr, userAgent, clientVersion)
+							if logWantedFor("login") {
+								fmt.Printf("/login (%s) has logged out after wait %dms/%v rip=%s ua=%s ver=%s\n",
+								  key, i*100, time.Since(startRequestTime), remoteAddr, userAgent, clientVersion)
+							}
 							break
 						}
 					}
