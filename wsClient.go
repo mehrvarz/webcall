@@ -377,12 +377,12 @@ func (c *WsClient) receiveProcess(message []byte) {
 
 		if logWantedFor("wscall") {
 			if c.isCallee {
-				fmt.Printf("%s (%s) callee init ws=%d %s\n",
-					c.connType, c.calleeID, c.hub.WsClientID, c.RemoteAddr)
+				fmt.Printf("%s (%s) callee init ws=%d ver=%s %s\n",
+					c.connType, c.calleeID, c.hub.WsClientID, c.clientVersion, c.RemoteAddr)
 			} else {
 				// this is not possible
-				fmt.Printf("# %s (%s) caller init ws=%d %s\n",
-					c.connType, c.calleeID, c.hub.WsClientID, c.RemoteAddr)
+				fmt.Printf("# %s (%s) caller init ws=%d ver=%s %s\n",
+					c.connType, c.calleeID, c.hub.WsClientID, c.clientVersion, c.RemoteAddr)
 			}
 		}
 		// deliver the callee client version number
