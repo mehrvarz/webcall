@@ -140,7 +140,7 @@ func ticker20min() {
 			fmt.Printf("# ticker20min no twitterClient\n")
 		} else {
 			// download list of followers
-			fmt.Printf("ticker20min download list of all followers...\n")
+			fmt.Printf("ticker20min download list of twitter followers...\n")
 			// TODO we must later support more than 5000 followers
 			var err error
 			followerIDsLock.Lock()
