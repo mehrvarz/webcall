@@ -303,7 +303,7 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 
 func httpGetContacts(w http.ResponseWriter, r *http.Request, urlID string, calleeID string, cookie *http.Cookie, remoteAddr string) {
 	if calleeID=="" {
-		fmt.Printf("# /getcontacts calleeID empty\n")
+		fmt.Printf("# /getcontacts calleeID empty urlID=%s rip=\n",urlID, remoteAddr)
 		return
 	}
 	if cookie==nil {
