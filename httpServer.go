@@ -563,7 +563,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 						ua = hub.calleeUserAgent
 					}
 					boldString, _ := strconv.Unquote(`"\033[1m` + fmt.Sprintf("%-19s",calleeID) + `\033[0m"`)
-					fmt.Fprintf(w,"O %s ip=%-21s ws=%d caller=%-21s ver=%s ua=%s\n",
+					fmt.Fprintf(w,"%s ip=%-21s ws=%d caller=%-21s ver=%s ua=%s\n",
 						boldString,
 						remoteAddr,
 						hub.WsClientID,
