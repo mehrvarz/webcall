@@ -145,7 +145,7 @@ function editSubmit(formElement,id) {
 		return;
 	}
 
-	if(newName.toLowerCase()=="delete" || newName=="---") {
+	if(newName.toLowerCase()=="delete" || newName=="...") {
 		// special case
 		let api = apiPath+"/deletecontact?id="+callerID+"&contactID="+id;
 		if(!gentle) console.log('request api',api);

@@ -277,11 +277,11 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		if /*cookie == nil &&*/ !nocookie {
 			err,cookieValue := createCookie(w, urlID, pw, &pwIdCombo)
 			if err != nil {
-				fmt.Printf("# /login (%s) persist PwIdCombo error db=%s bucket=%s cookie=%s err=%v ver=%s\n",
-					urlID, dbHashedPwName, dbHashedPwBucket, cookieValue, err, clientVersion)
 				if globalID != "" {
 					_,lenGlobalHubMap = DeleteFromHubMap(globalID)
 				}
+				fmt.Printf("# /login (%s) persist PwIdCombo error db=%s bucket=%s cookie=%s err=%v ver=%s (%d)\n",
+					urlID, dbHashedPwName, dbHashedPwBucket, cookieValue, err, clientVersion, lenGlobalHubMap)
 				fmt.Fprintf(w, "noservice")
 				return
 			}
