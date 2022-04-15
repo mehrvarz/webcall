@@ -86,9 +86,10 @@ func runTurnServer() {
 // TODO this is logged after the session has gone offline
 					_, locHub, _, err := GetOnlineCallee(turnCallee.CalleeID,
 						true, true, true, "", "turn")
-					if err!=nil {
-					} else if locHub==nil {
-						// turnCallee.CalleeID is off
+					if err==nil && locHub==nil {
+						// turnCallee.CalleeID is offline
+					} else if err==nil && locHub.ConnectedCallerIp == "" {
+						// turnCallee.CalleeID is online but not connected
 					} else {
 						fmt.Printf("# turn (%s) session outdated %v %d\n",
 							turnCallee.CalleeID, timeSinceFirstFound.Seconds(), maxTalkSecsIfNoP2p)

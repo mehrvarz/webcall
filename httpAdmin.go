@@ -325,8 +325,8 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 			turnCallee, ok := recentTurnCalleeIps[ipAddr]
 			if ok {
 				timeSinceCallerDisconnect := timeNow.Sub(turnCallee.TimeStored)
-				printFunc(w,"/dumpturn callerID=%s since caller disconnect %v\n",
-					turnCallee.CallerID, timeSinceCallerDisconnect.Seconds())
+				printFunc(w,"/dumpturn calleeID=%s since caller disconnect %v\n",
+					turnCallee.CalleeID, timeSinceCallerDisconnect.Seconds())
 			}
 		}
 		recentTurnCalleeIpMutex.Unlock()
