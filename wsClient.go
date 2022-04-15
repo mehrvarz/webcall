@@ -718,8 +718,13 @@ func (c *WsClient) receiveProcess(message []byte) {
 				// "%s (%s) peer callee Incoming p2p/p2p" or "%s (%s) peer callee Connected p2p/p2p"
 				// note: "callee Connected p2p/p2p" can happen multiple times
 				if !c.isMediaConnectedToPeer.Get() {
-					fmt.Printf("%s (%s) peer %s (%s)\n",
-						c.connType, c.calleeID, payload, c.hub.CallerClient.callerID)
+					if c.hub.CallerClient.callerID=="" {
+						fmt.Printf("%s (%s) peer %s %s\n",
+							c.connType, c.calleeID, payload, c.RemoteAddr)
+					} else {
+						fmt.Printf("%s (%s) peer %s (%s)\n",
+							c.connType, c.calleeID, payload, c.hub.CallerClient.callerID)
+					}
 				} else {
 					fmt.Printf("%s (%s) peer %s (media)\n", c.connType, c.calleeID, payload)
 				}
