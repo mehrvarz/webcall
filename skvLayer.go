@@ -100,16 +100,16 @@ func locStoreCallerIpInHubMap(calleeId string, callerIp string, skipConfirm bool
 	} else {
 		if hub.ConnectedCallerIp != callerIp {
 
-			if callerIp == "" && recentTurnCallerIps!=nil {
+			if callerIp == "" && recentTurnCalleeIps!=nil {
 				// client is gone, but we prolong turn session by a few secs, to avoid turn-errors
 				ipAddr := hub.ConnectedCallerIp
 				if portIdx := strings.Index(ipAddr, ":"); portIdx >= 0 {
 					ipAddr = ipAddr[:portIdx]
 				}
 				//fmt.Printf("StoreCallerIpInHubMap prolong turn for callerIp=%s\n", ipAddr)
-				recentTurnCallerIpMutex.Lock()
-				recentTurnCallerIps[ipAddr] = TurnCaller{calleeId,time.Now()}
-				recentTurnCallerIpMutex.Unlock()
+				recentTurnCalleeIpMutex.Lock()
+				recentTurnCalleeIps[ipAddr] = TurnCallee{calleeId,time.Now()}
+				recentTurnCalleeIpMutex.Unlock()
 			}
 
 			if logWantedFor("searchhub") {

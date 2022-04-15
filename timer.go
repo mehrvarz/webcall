@@ -348,7 +348,7 @@ func callBackupScript(scriptName string) error {
 	return nil
 }
 
-// ticker30sec: logs stats, cleanup recentTurnCallerIps
+// ticker30sec: logs stats, cleanup recentTurnCalleeIps
 var ticker30secCounter=0;
 func ticker30sec() {
 	thirtySecTicker := time.NewTicker(30*time.Second)
@@ -363,28 +363,28 @@ func ticker30sec() {
 			fmt.Printf("%s\n",getStats())
 		}
 
-		// cleanup recentTurnCallerIps
+		// cleanup recentTurnCalleeIps
 		timeNow := time.Now()
 		deleted := 0
-		recentTurnCallerIpMutex.Lock()
-		//fmt.Printf("ticker30sec recentTurnCallerIps cleanup elementCount=%d\n",len(recentTurnCallerIps))
-		for ipAddr := range recentTurnCallerIps {
-			turnCaller, ok := recentTurnCallerIps[ipAddr]
+		recentTurnCalleeIpMutex.Lock()
+		//fmt.Printf("ticker30sec recentTurnCalleeIps cleanup elementCount=%d\n",len(recentTurnCalleeIps))
+		for ipAddr := range recentTurnCalleeIps {
+			turnCallee, ok := recentTurnCalleeIps[ipAddr]
 			if ok {
-				timeSinceLastFound := timeNow.Sub(turnCaller.TimeStored)
+				timeSinceLastFound := timeNow.Sub(turnCallee.TimeStored)
 				if timeSinceLastFound.Seconds() > 610 { // 10min
-					delete(recentTurnCallerIps,ipAddr)
+					delete(recentTurnCalleeIps,ipAddr)
 					deleted++
 				}
 			}
 		}
 		if deleted>0 {
 			if logWantedFor("turn") {
-				fmt.Printf("ticker30sec deleted %d entries from recentTurnCallerIps (remain=%d)\n",
-					deleted, len(recentTurnCallerIps))
+				fmt.Printf("ticker30sec deleted %d entries from recentTurnCalleeIps (remain=%d)\n",
+					deleted, len(recentTurnCalleeIps))
 			}
 		}
-		recentTurnCallerIpMutex.Unlock()
+		recentTurnCalleeIpMutex.Unlock()
 
 
 		// every 10 min

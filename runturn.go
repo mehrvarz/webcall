@@ -14,21 +14,21 @@ import (
 	"github.com/pion/logging"
 )
 
-type TurnCaller struct {
+type TurnCallee struct {
 	CallerID   string
 	TimeStored time.Time
 }
 
-// recentTurnCallerIps is accessed from timer.go
-var recentTurnCallerIps map[string]TurnCaller
-var recentTurnCallerIpMutex sync.RWMutex
+// recentTurnCalleeIps is accessed from timer.go
+var recentTurnCalleeIps map[string]TurnCallee
+var recentTurnCalleeIpMutex sync.RWMutex
 
 func runTurnServer() {
 	if turnPort <= 0 {
 		return
 	}
 
-	recentTurnCallerIps = make(map[string]TurnCaller)
+	recentTurnCalleeIps = make(map[string]TurnCallee)
 
 	fmt.Printf("turn server listening on '%s' port=%d\n", turnIP, turnPort)
 	udpListener, err := net.ListenPacket("udp4", "0.0.0.0:"+strconv.Itoa(turnPort))
@@ -71,20 +71,28 @@ func runTurnServer() {
 				ipAddr = ipAddr[:portIdx]
 			}
 
-			recentTurnCallerIpMutex.RLock()
-			turnCaller, ok := recentTurnCallerIps[ipAddr]
-			recentTurnCallerIpMutex.RUnlock()
+			recentTurnCalleeIpMutex.RLock()
+			turnCallee, ok := recentTurnCalleeIps[ipAddr]
+			recentTurnCalleeIpMutex.RUnlock()
 			if ok {
-				timeSinceFirstFound := timeNow.Sub(turnCaller.TimeStored)
+				timeSinceFirstFound := timeNow.Sub(turnCallee.TimeStored)
 				if timeSinceFirstFound.Seconds() <= float64(maxTalkSecsIfNoP2p) {
 					foundIp = true
-					foundCalleeId = turnCaller.CallerID
+					foundCalleeId = turnCallee.CallerID
 					foundByMap = true
 					//fmt.Printf("turn session foundIp foundByMap %v\n", foundCalleeId)
 				} else {
 					// session is outdated, will not anymore be authenticated
-					fmt.Printf("# turn (%s) session outdated %v %d\n",
-						turnCaller.CallerID, timeSinceFirstFound.Seconds(), maxTalkSecsIfNoP2p)
+// TODO this is logged after the session has gone offline
+					_, locHub, _, err := GetOnlineCallee(turnCallee.CallerID,
+						true, true, true, "", "turn")
+					if err!=nil {
+					} else if locHub==nil {
+						// turnCallee.CallerID is off
+					} else {
+						fmt.Printf("# turn (%s) session outdated %v %d\n",
+							turnCallee.CallerID, timeSinceFirstFound.Seconds(), maxTalkSecsIfNoP2p)
+					}
 				}
 			} else {
 				// here I check if ipAddr is listed anywhere in hubMap as a callerIp
@@ -100,22 +108,22 @@ func runTurnServer() {
 				fmt.Printf("turn no session ipAddr=%v foundIp=%v\n", ipAddr, foundIp)
 				if foundIp {
 					if !foundByMap {
-						recentTurnCallerIpMutex.Lock()
-						recentTurnCallerIps[ipAddr] = TurnCaller{foundCalleeId, timeNow}
+						recentTurnCalleeIpMutex.Lock()
+						recentTurnCalleeIps[ipAddr] = TurnCallee{foundCalleeId, timeNow}
 						//if logWantedFor("turn") {
-						//	fmt.Printf("turn auth added (%s) to recentTurnCallerIps len=%d\n",
-						//		srcAddr.String(), len(recentTurnCallerIps))
+						//	fmt.Printf("turn auth added (%s) to recentTurnCalleeIps len=%d\n",
+						//		srcAddr.String(), len(recentTurnCalleeIps))
 						//}
-						recentTurnCallerIpMutex.Unlock()
+						recentTurnCalleeIpMutex.Unlock()
 					}
 				}
 			}
 			if foundIp {
 				if logWantedFor("turn") && !foundByMap {
-					recentTurnCallerIpMutex.RLock()
+					recentTurnCalleeIpMutex.RLock()
 					fmt.Printf("turn auth for %v SUCCESS (by map %v) %d (%s)\n",
-						srcAddr.String(), foundByMap, len(recentTurnCallerIps), foundCalleeId)
-					recentTurnCallerIpMutex.RUnlock()
+						srcAddr.String(), foundByMap, len(recentTurnCalleeIps), foundCalleeId)
+					recentTurnCalleeIpMutex.RUnlock()
 				}
 				// NOTE: the same key strings are used in caller.js and callee.js
 				// it doesn't matter what they are, but they must be the same

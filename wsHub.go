@@ -86,10 +86,10 @@ func (h *Hub) setDeadline(secs int, comment string) {
 						h.doBroadcast([]byte("cancel|c"))
 						h.CalleeClient.peerConHasEnded("deadline")
 						if(h.CallerClient!=nil) {
-							// deleting recentTurnCallerIps entry, so it does not exist on quick reconnect
-							recentTurnCallerIpMutex.Lock()
-							delete(recentTurnCallerIps,h.CallerClient.RemoteAddrNoPort)
-							recentTurnCallerIpMutex.Unlock()
+							// deleting recentTurnCalleeIps entry, so it does not exist on quick reconnect
+							recentTurnCalleeIpMutex.Lock()
+							delete(recentTurnCalleeIps,h.CallerClient.RemoteAddrNoPort)
+							recentTurnCalleeIpMutex.Unlock()
 						}
 					}
 				}

@@ -320,16 +320,16 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 	if urlPath=="/dumpturn" {
 		timeNow := time.Now()
 
-		recentTurnCallerIpMutex.Lock()
-		for ipAddr := range recentTurnCallerIps {
-			turnCaller, ok := recentTurnCallerIps[ipAddr]
+		recentTurnCalleeIpMutex.Lock()
+		for ipAddr := range recentTurnCalleeIps {
+			turnCallee, ok := recentTurnCalleeIps[ipAddr]
 			if ok {
-				timeSinceCallerDisconnect := timeNow.Sub(turnCaller.TimeStored)
+				timeSinceCallerDisconnect := timeNow.Sub(turnCallee.TimeStored)
 				printFunc(w,"/dumpturn callerID=%s since caller disconnect %v\n",
-					turnCaller.CallerID, timeSinceCallerDisconnect.Seconds())
+					turnCallee.CallerID, timeSinceCallerDisconnect.Seconds())
 			}
 		}
-		recentTurnCallerIpMutex.Unlock()
+		recentTurnCalleeIpMutex.Unlock()
 		return true
 	}
 
