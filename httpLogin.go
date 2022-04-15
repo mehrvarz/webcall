@@ -328,8 +328,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			return;
 		}
 
-		fmt.Printf("exit (%s) ws=%d %s %s %s\n",
-			globalID, wsClientID, comment, remoteAddrWithPort, clientVersion)
+		fmt.Printf("exit (%s) ws=%d %s ver=%s %s\n",
+			globalID, wsClientID, comment, clientVersion, remoteAddrWithPort)
 
 		if dbUserKey!="" {
 			// feed LastLogoffTime
@@ -401,8 +401,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	//	fmt.Printf("/login wsAddr=%s\n",wsAddr)
 	//}
 
-	fmt.Printf("/login (%s) ws=%v %v %s %s\n",
-		urlID, wsClientID, time.Since(startRequestTime), remoteAddrWithPort, clientVersion)
+	fmt.Printf("/login (%s) ws=%v %v ver=%s %s\n",
+		urlID, wsClientID, time.Since(startRequestTime), clientVersion, remoteAddrWithPort)
 
 	responseString := fmt.Sprintf("%s|%d|%s|%d|%v",
 		wsAddr,                     // 0
