@@ -15,7 +15,7 @@ import (
 )
 
 type TurnCallee struct {
-	CallerID   string
+	CalleeID   string
 	TimeStored time.Time
 }
 
@@ -78,20 +78,20 @@ func runTurnServer() {
 				timeSinceFirstFound := timeNow.Sub(turnCallee.TimeStored)
 				if timeSinceFirstFound.Seconds() <= float64(maxTalkSecsIfNoP2p) {
 					foundIp = true
-					foundCalleeId = turnCallee.CallerID
+					foundCalleeId = turnCallee.CalleeID
 					foundByMap = true
 					//fmt.Printf("turn session foundIp foundByMap %v\n", foundCalleeId)
 				} else {
 					// session is outdated, will not anymore be authenticated
 // TODO this is logged after the session has gone offline
-					_, locHub, _, err := GetOnlineCallee(turnCallee.CallerID,
+					_, locHub, _, err := GetOnlineCallee(turnCallee.CalleeID,
 						true, true, true, "", "turn")
 					if err!=nil {
 					} else if locHub==nil {
-						// turnCallee.CallerID is off
+						// turnCallee.CalleeID is off
 					} else {
 						fmt.Printf("# turn (%s) session outdated %v %d\n",
-							turnCallee.CallerID, timeSinceFirstFound.Seconds(), maxTalkSecsIfNoP2p)
+							turnCallee.CalleeID, timeSinceFirstFound.Seconds(), maxTalkSecsIfNoP2p)
 					}
 				}
 			} else {
