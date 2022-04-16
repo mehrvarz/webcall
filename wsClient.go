@@ -731,8 +731,13 @@ func (c *WsClient) receiveProcess(message []byte) {
 			} else {
 				// payload = "caller Connected p2p/p2p"
 				// peer caller Connected p2p/p2p (callerID) 0.9.83_98.0.4758.101
-				fmt.Printf("%s (%s) peer %s (%s) %s\n", c.connType, c.calleeID, payload,
-					c.hub.CallerClient.callerID, c.clientVersion)
+				if c.hub.CallerClient.callerID=="" {
+					fmt.Printf("%s (%s) peer %s ver=%s %s\n", c.connType, c.calleeID, payload,
+						c.clientVersion, c.RemoteAddr)
+				} else {
+					fmt.Printf("%s (%s) peer %s ver=%s (%s)\n", c.connType, c.calleeID, payload,
+						c.clientVersion, c.hub.CallerClient.callerID)
+				}
 			}
 
 			// payload = "callee Connected p2p/p2p"
