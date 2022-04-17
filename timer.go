@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strings"
 	"bytes"
-//	"strconv"
 	"unicode"
 	"encoding/gob"
 	"os"
@@ -172,6 +171,24 @@ func ticker20min() {
 				}
 			}
 		}
+
+		calleeLoginMutex.Lock()
+		for calleeID,calleeLoginSlice := range calleeLoginMap {
+			fmt.Printf("ticker20min calleeLoginMap (%s) A len=%d\n", calleeID, len(calleeLoginSlice))
+			for len(calleeLoginSlice)>0 {
+				if time.Now().Sub(calleeLoginSlice[0]) < 30 * time.Minute {
+					break
+				}
+				if len(calleeLoginSlice)<=1 {
+					calleeLoginSlice = nil
+					break
+				}
+				calleeLoginSlice = calleeLoginSlice[1:]
+			}
+			fmt.Printf("ticker20min calleeLoginMap (%s) B len=%d\n", calleeID, len(calleeLoginSlice))
+			calleeLoginMap[calleeID] = calleeLoginSlice
+		}
+		calleeLoginMutex.Unlock()
 
 		<-twentyMinTicker.C
 	}
