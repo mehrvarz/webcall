@@ -74,9 +74,9 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	calleeLoginMutex.Lock()
 	calleeLoginMap[urlID] = calleeLoginSlice
 	calleeLoginMutex.Unlock()
-	if len(calleeLoginSlice) > 15 {
-		fmt.Printf("# /login (%s) more than 15 logins in the last 30 min rip=%s ver=%s\n",
-			urlID, remoteAddr, clientVersion)
+	if len(calleeLoginSlice) >= maxLoginPer30min {
+		fmt.Printf("# /login (%s) more than %d logins in the last 30 min rip=%s ver=%s\n",
+			urlID, maxLoginPer30min, remoteAddr, clientVersion)
 		fmt.Fprintf(w,"Too many disconnects / reconnects in too little time.")
 		return
 	}

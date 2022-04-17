@@ -101,6 +101,7 @@ var blockMapMutex sync.RWMutex
 
 var calleeLoginMap map[string][]time.Time
 var calleeLoginMutex sync.RWMutex
+var maxLoginPer30min = 12
 
 var waitingCallerChanMap map[string]chan int // ip:port -> chan
 var waitingCallerChanLock sync.RWMutex
@@ -540,6 +541,8 @@ func readConfig(init bool) {
 	thirtySecStats = readIniBoolean(configIni, "thirtySecStats", thirtySecStats, false)
 
 	clientUpdateBelowVersion = readIniString(configIni, "clientUpdateBelowVersion", clientUpdateBelowVersion, "")
+
+	maxLoginPer30min = readIniInt(configIni, "maxLoginPer30min", maxLoginPer30min, 12, 1)
 
 	readConfigLock.Unlock()
 }
