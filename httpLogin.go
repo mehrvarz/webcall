@@ -158,8 +158,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 							// CalleeClient is not online anymore (we can accept the new login)
 							offlineReason = 4
 							if logWantedFor("login") {
-								fmt.Printf("/login (%s) has logged out after wait %dms/%v rip=%s ua=%s ver=%s\n",
-								  key, i*100, time.Since(startRequestTime), remoteAddr, userAgent, clientVersion)
+								fmt.Printf("/login (%s) has logged out after wait %dms/%v %s ver=%s ua=%s\n",
+								  key, i*100, time.Since(startRequestTime), remoteAddr, clientVersion, userAgent)
 							}
 							break
 						}
@@ -168,8 +168,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				if offlineReason==0 {
 					// abort this login attempt: old/sameId callee is already/still logged in
 					fmt.Fprintf(w,"fatal")
-					fmt.Printf("/login (%s) already logged in %v rip=%s ua=%s ver=%s\n",
-						key, time.Since(startRequestTime), remoteAddr, userAgent, clientVersion)
+					fmt.Printf("/login (%s) already logged in %v %s ver=%s ua=%s\n",
+						key, time.Since(startRequestTime), remoteAddr, clientVersion, userAgent)
 					return
 				}
 				// apparently the new login comes from the old callee, bc it is not online anymore
@@ -200,7 +200,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 	// pw must be available now
 	if pw == "" {
-		fmt.Printf("/login (%s) no pw rip=%s ua=%s ver=%s\n", urlID, remoteAddr, r.UserAgent(), clientVersion)
+		fmt.Printf("/login (%s) no pw %s ver=%s ua=%s\n", urlID, remoteAddr, clientVersion, userAgent)
 		fmt.Fprintf(w, "error")
 		return
 	}
@@ -435,9 +435,9 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	//	fmt.Printf("/login wsAddr=%s\n",wsAddr)
 	//}
 
-	fmt.Printf("/login (%s) ws=%v %d %v ver=%s %s\n",
+	fmt.Printf("/login (%s) ws=%v %d %v ver=%s %s ua=%s\n",
 		urlID, wsClientID, len(calleeLoginSlice), time.Since(startRequestTime),
-		clientVersion, remoteAddrWithPort)
+		clientVersion, remoteAddrWithPort, userAgent)
 
 	responseString := fmt.Sprintf("%s|%d|%s|%d|%v",
 		wsAddr,                     // 0
