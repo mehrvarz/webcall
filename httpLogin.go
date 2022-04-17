@@ -65,7 +65,11 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			if time.Now().Sub(calleeLoginSlice[0]) < 30 * time.Minute {
 				break
 			}
-			calleeLoginSlice = calleeLoginSlice[1:]
+			if len(calleeLoginSlice)>1 {
+				calleeLoginSlice = calleeLoginSlice[1:]
+			} else {
+				calleeLoginSlice = calleeLoginSlice[:0]
+			}
 		}
 	}
 	calleeLoginSlice = append(calleeLoginSlice,time.Now())
