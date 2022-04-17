@@ -69,8 +69,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		}
 	}
 	calleeLoginSlice = append(calleeLoginSlice,time.Now())
-	fmt.Printf("# /login (%s) %d logins in the last 30 min rip=%s ver=%s\n",
-		urlID, len(calleeLoginSlice), remoteAddr, clientVersion)
+	//fmt.Printf("# /login (%s) %d logins in the last 30 min rip=%s ver=%s\n",
+	//	urlID, len(calleeLoginSlice), remoteAddr, clientVersion)
 	calleeLoginMutex.Lock()
 	calleeLoginMap[urlID] = calleeLoginSlice
 	calleeLoginMutex.Unlock()
@@ -428,8 +428,9 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	//	fmt.Printf("/login wsAddr=%s\n",wsAddr)
 	//}
 
-	fmt.Printf("/login (%s) ws=%v %v ver=%s %s\n",
-		urlID, wsClientID, time.Since(startRequestTime), clientVersion, remoteAddrWithPort)
+	fmt.Printf("/login (%s) ws=%v %d %v ver=%s %s\n",
+		urlID, wsClientID, len(calleeLoginSlice), time.Since(startRequestTime),
+		clientVersion, remoteAddrWithPort)
 
 	responseString := fmt.Sprintf("%s|%d|%s|%d|%v",
 		wsAddr,                     // 0
