@@ -172,6 +172,7 @@ func ticker20min() {
 			}
 		}
 
+		// cleanup calleeLoginMap so we don't hold on to memory after we don't have to
 		calleeLoginMutex.Lock()
 		for calleeID,calleeLoginSlice := range calleeLoginMap {
 			fmt.Printf("ticker20min calleeLoginMap (%s) A len=%d\n", calleeID, len(calleeLoginSlice))
