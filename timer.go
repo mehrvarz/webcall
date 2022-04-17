@@ -188,7 +188,11 @@ func ticker20min() {
 					calleeLoginSlice = calleeLoginSlice[1:]
 				}
 				fmt.Printf("ticker20min calleeLoginMap (%s) B len=%d\n", calleeID, len(calleeLoginSlice))
-				calleeLoginMap[calleeID] = calleeLoginSlice
+				if calleeLoginSlice==nil {
+					delete(calleeLoginMap,calleeID)
+				} else {
+					calleeLoginMap[calleeID] = calleeLoginSlice
+				}
 			}
 		}
 		calleeLoginMutex.Unlock()
