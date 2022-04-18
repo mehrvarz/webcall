@@ -1470,6 +1470,8 @@ function pickup2() {
 		return;
 	}
 
+	answerButton.disabled = true;
+
 	if(remoteStream) {
 		gLog('pickup2 peerCon start remoteVideoFrame');
 		remoteVideoFrame.srcObject = remoteStream;
@@ -1481,7 +1483,6 @@ function pickup2() {
 		gLog('pickup2: after short delay send pickup to caller');
 		wsSend("pickup|!"); // make caller unmute our mic on their side
 
-		answerButton.disabled = true;
 		onlineIndicator.src="red-gradient.svg";
 		mediaConnect = true;
 		if(vsendButton) {

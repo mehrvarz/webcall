@@ -72,8 +72,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			}
 		}
 	}
-	//fmt.Printf("# /login (%s) %d logins in the last 30 min rip=%s ver=%s\n",
-	//	urlID, len(calleeLoginSlice), remoteAddr, clientVersion)
 	if len(calleeLoginSlice) >= maxLoginPer30min {
 		fmt.Printf("# /login (%s) %d >= %d logins in the last 30 min rip=%s ver=%s\n",
 			urlID, len(calleeLoginSlice), maxLoginPer30min, remoteAddr, clientVersion)
