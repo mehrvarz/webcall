@@ -174,7 +174,7 @@ func ticker20min() {
 		// cleanup calleeLoginMap so we don't hold on to memory after we don't have to
 		calleeLoginMutex.Lock()
 		for calleeID,calleeLoginSlice := range calleeLoginMap {
-			fmt.Printf("ticker20min calleeLoginMap (%s) A len=%d\n", calleeID, len(calleeLoginSlice))
+			//fmt.Printf("ticker20min calleeLoginMap (%s) A len=%d\n", calleeID, len(calleeLoginSlice))
 			if len(calleeLoginSlice)>0 {
 				for len(calleeLoginSlice)>0 {
 					if time.Now().Sub(calleeLoginSlice[0]) < 30 * time.Minute {
@@ -186,7 +186,9 @@ func ticker20min() {
 					}
 					calleeLoginSlice = calleeLoginSlice[1:]
 				}
-				fmt.Printf("ticker20min calleeLoginMap (%s) B len=%d\n", calleeID, len(calleeLoginSlice))
+				if len(calleeLoginSlice)>3 {
+					fmt.Printf("ticker20min calleeLoginMap (%s) len=%d\n", calleeID, len(calleeLoginSlice))
+				}
 				if calleeLoginSlice==nil {
 					delete(calleeLoginMap,calleeID)
 				} else {
