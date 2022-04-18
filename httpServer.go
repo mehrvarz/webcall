@@ -556,7 +556,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 					clientVersion := ""
 					if hub.CalleeClient != nil {
 						ua = hub.CalleeClient.userAgent
-						remoteAddr = hub.CalleeClient.RemoteAddr
+						remoteAddr = hub.CalleeClient.RemoteAddrNoPort
 						clientVersion = hub.CalleeClient.clientVersion
 					}
 					if ua=="" {
