@@ -127,7 +127,8 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		wsClientID := locHub.WsClientID // set by wsClient serve()
 		locHub.HubMutex.RUnlock()
 		if wsClientID == 0 {
-			// something has gone wrong
+			// this seems to happen when urlID is just now logging in, but has not yet completed
+/*
 			fmt.Printf("# /online (%s/%s) loc ws==0 ver=%s %s\n",
 				urlID, glUrlID, clientVersion, remoteAddr)
 			// clear local ConnectedCallerIp
@@ -135,6 +136,11 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 			locHub.ConnectedCallerIp = ""
 			locHub.HubMutex.Unlock()
 			fmt.Fprintf(w, "error")
+*/
+			// better not to return error, just act as if (id) is not curretly online
+			fmt.Printf("/online (%s/%s) notavail ws=0 ver=%s %s\n",
+				urlID, glUrlID, clientVersion, remoteAddr)
+			fmt.Fprintf(w, "notavail")
 			return
 		}
 
