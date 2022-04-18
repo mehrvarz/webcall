@@ -130,7 +130,7 @@ func ticker20min() {
 			break
 		}
 
-		// download list of all twitter followers
+		// fetch list of all twitter followers
 		twitterClientLock.Lock()
 		if twitterClient==nil {
 			twitterAuth()
@@ -138,8 +138,7 @@ func ticker20min() {
 		if twitterClient==nil {
 			fmt.Printf("# ticker20min no twitterClient\n")
 		} else {
-			// download list of followers
-			fmt.Printf("ticker20min download list of twitter followers...\n")
+			fmt.Printf("ticker20min fetch list of twitter followers...\n")
 			// TODO we must later support more than 5000 followers
 			var err error
 			followerIDsLock.Lock()
