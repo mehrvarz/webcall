@@ -881,9 +881,17 @@ func (c *WsClient) peerConHasEnded(comment string) {
 		}
 		c.hub.HubMutex.Unlock()
 
-		fmt.Printf("%s (%s) peer %s discon %ds (%s) %s (%s)\n",
-			c.connType, c.calleeID, peerType, c.hub.CallDurationSecs,
-			c.hub.CallerClient.callerID, c.RemoteAddr, comment)
+		localPeerCon := "?"
+		remotePeerCon := "?"
+		if c.hub!=nil {
+			localPeerCon = "p2p"
+			if !c.hub.LocalP2p { localPeerCon = "relay" }
+			remotePeerCon = "p2p"
+			if !c.hub.RemoteP2p { remotePeerCon = "relay" }
+		}
+		fmt.Printf("%s (%s) peer %s discon %ds %s/%s (%s) %s (%s)\n",
+			c.connType, c.calleeID, peerType, c.hub.CallDurationSecs, localPeerCon, remotePeerCon,
+			c.hub.CallerClient.callerID, c.RemoteAddrNoPort, comment)
 
 		err := StoreCallerIpInHubMap(c.globalCalleeID, "", false)
 		if err!=nil {
