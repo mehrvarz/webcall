@@ -90,12 +90,6 @@ func runTurnServer() {
 					} else if err==nil && locHub.ConnectedCallerIp == "" {
 						// turnCallee.CalleeID is online but not connected: don't log
 					} else {
-// TODO this happens on p2p/p2p session
-// # turn (id) session outdated 604.679439992 600
-// and bc foundIp will not be set, we retur nil below
-// serveWss (id) peer callee discon 430s p2p/p2p
-// das problem ist, dass recentTurnCalleeIps[ipAddr] fälschlicherweise etwas zurückgibt
-// recentTurnCalleeIps[] muss auch beendet werden wenn eine relayed verbindung vorzeitig beendet wird
 						fmt.Printf("# turn (%s) session outdated %s %v %d\n",
 							turnCallee.CalleeID, ipAddr, timeSinceFirstFound.Seconds(), maxTalkSecsIfNoP2p)
 					}
@@ -121,6 +115,9 @@ func runTurnServer() {
 						//		srcAddr.String(), len(recentTurnCalleeIps))
 						//}
 						recentTurnCalleeIpMutex.Unlock()
+
+						// NOTE: recentTurnCalleeIps[ipAddr] will be deleted
+						//       in wsClient.go peerConHasEnded() on 'peer callee discon'
 					}
 				}
 			}
