@@ -892,6 +892,12 @@ func (c *WsClient) peerConHasEnded(comment string) {
 		fmt.Printf("%s (%s) peer %s discon %ds %s/%s (%s) %s (%s)\n",
 			c.connType, c.calleeID, peerType, c.hub.CallDurationSecs, localPeerCon, remotePeerCon,
 			c.hub.CallerClient.callerID, c.RemoteAddrNoPort, comment)
+		if localPeerCon=="relay" || remotePeerCon=="relay" {
+			// must clear recentTurnCalleeIps[ipNoPort] entry (if this was a relay session)
+			recentTurnCalleeIpMutex.Lock()
+			delete(recentTurnCalleeIps,c.RemoteAddrNoPort)
+			recentTurnCalleeIpMutex.Unlock()
+		}
 
 		err := StoreCallerIpInHubMap(c.globalCalleeID, "", false)
 		if err!=nil {
