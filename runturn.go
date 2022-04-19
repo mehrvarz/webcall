@@ -20,6 +20,7 @@ type TurnCallee struct {
 }
 
 // recentTurnCalleeIps is accessed from timer.go
+// recentTurnCalleeIps provides a mapping: TurnCallee <-- [callerIP]
 var recentTurnCalleeIps map[string]TurnCallee
 var recentTurnCalleeIpMutex sync.RWMutex
 
@@ -66,6 +67,7 @@ func runTurnServer() {
 			// TODO this could create issues; srcAddr should be same as IpInHubMap
 			// so we don't need to cut the port
 
+			// ipAddr is the caller ip
 			ipAddr := srcAddr.String()
 			if portIdx := strings.Index(ipAddr, ":"); portIdx >= 0 {
 				ipAddr = ipAddr[:portIdx]
@@ -100,6 +102,7 @@ func runTurnServer() {
 				// by the caller (!), not by the callee
 				// we do this bc only one of the two sides needs to authenticate
 
+				// SearchCallerIpInHubMap() returns the callee ip and ID for the given caller ipAddr
 				foundIp, foundCalleeId, err = SearchCallerIpInHubMap(ipAddr)
 				if err != nil {
 					fmt.Printf("# turn auth for %v err=%v\n", srcAddr.String(), err)
