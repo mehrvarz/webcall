@@ -339,6 +339,10 @@ function dialButtonClick() {
 		hangupButton.style.animation = "gradientBG 30s ease infinite";
 		//gLog("hangupButton.style",hangupButton.style);
 	} else {
+		if(dialButton.disabled) {
+			// prevent multiple checkCalleeOnline()
+			return;
+		}
 		dialButton.disabled = true;
 		hangupButton.disabled = false;
 		msgbox.style.display = "none";
