@@ -889,13 +889,18 @@ func (c *WsClient) peerConHasEnded(comment string) {
 			remotePeerCon = "p2p"
 			if !c.hub.RemoteP2p { remotePeerCon = "relay" }
 		}
+		// peer callee discon
 		fmt.Printf("%s (%s) peer %s discon %ds %s/%s (%s) %s (%s)\n",
 			c.connType, c.calleeID, peerType, c.hub.CallDurationSecs, localPeerCon, remotePeerCon,
-			c.hub.CallerClient.callerID, c.RemoteAddrNoPort, comment)
+			c.hub.CallerClient.callerID, c.hub.CallerClient.RemoteAddrNoPort, comment)
 //		if localPeerCon=="relay" || remotePeerCon=="relay" {
 			// must clear recentTurnCalleeIps[ipNoPort] entry (if this was a relay session)
 			recentTurnCalleeIpMutex.Lock()
-			delete(recentTurnCalleeIps,c.RemoteAddrNoPort)
+// TODO wrong c.RemoteAddrNoPort is the wrong ipAddr; we need to use the caller ip addr
+// from: serveWss (95478981959) callerOffer (call attempt) 117.121.211.105:38244   <---
+// that would be c.hub.CallerClient.RemoteAddrNoPort
+//			delete(recentTurnCalleeIps,c.RemoteAddrNoPort)
+			delete(recentTurnCalleeIps,c.hub.CallerClient.RemoteAddrNoPort)
 			recentTurnCalleeIpMutex.Unlock()
 //		}
 
