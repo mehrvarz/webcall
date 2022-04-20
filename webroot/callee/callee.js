@@ -629,7 +629,7 @@ function login(retryFlag) {
 			form.style.display = "none";
 		} else {
 			goOffline();
-			showStatus("Server response: "+loginStatus,-1);
+			showStatus("Server: "+loginStatus,-1);
 			form.style.display = "none";
 		}
 

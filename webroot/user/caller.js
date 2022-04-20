@@ -942,7 +942,9 @@ function submitForm(theForm) {
 	containerElement.style.display = "block";
 	calleeID = enterIdVal.value;
 	calleeID = calleeID.replace(/ /g,''); // remove all white spaces
-	if(calleeID.length>11) calleeID = calleeID.substring(0,11);
+	if(!calleeID.startsWith("#")) {
+		if(calleeID.length>11) calleeID = calleeID.substring(0,11);
+	}
 	gLog('submitForm set calleeID='+calleeID+" "+enterDomainVal.value);
 	if(enterDomainVal.value!=location.hostname) {
 		window.open("https://"+enterDomainVal.value+"/user/"+calleeID, ""); //"_blank"
