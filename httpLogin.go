@@ -24,7 +24,7 @@ import (
 
 func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *http.Cookie, pw string, remoteAddr string, remoteAddrWithPort string, nocookie bool, startRequestTime time.Time, pwIdCombo PwIdCombo, userAgent string) {
 	if logWantedFor("login") {
-		fmt.Printf("/login (%s) rip=%s rt=%v\n",
+		fmt.Printf("/login (%s) %s rt=%v\n",
 			urlID, remoteAddrWithPort, time.Since(startRequestTime)) // rt=4.393µs
 	}
 
@@ -32,6 +32,13 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	url_arg_array, ok := r.URL.Query()["ver"]
 	if ok && len(url_arg_array[0]) >= 1 {
 		clientVersion = url_arg_array[0]
+	}
+
+	if strings.HasPrefix(urlID, "answie") || strings.HasPrefix(urlID, "talkback") {
+		if remoteAddr!="127.0.0.1" && remoteAddr!=outboundIP {
+			fmt.Printf("/login (%s) not from local host denied %s\n", urlID, remoteAddrWithPort)
+			return
+		}
 	}
 
 	blockMapMutex.RLock()

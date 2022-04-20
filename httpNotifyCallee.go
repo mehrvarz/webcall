@@ -613,29 +613,8 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 		callerName = strings.ToLower(url_arg_array[0])
 	}
 
-/* removed to fix caller getting "xxx is not online at this time" when callee is in hidden mode
-	// check if hidden online, if so skip pushable check
-	ejectOn1stFound := true
-	reportHiddenCallee := true
-	occupy := false
-	key, locHub, globHub, err := GetOnlineCallee(urlID, ejectOn1stFound, reportHiddenCallee,
-		remoteAddr, occupy, "/canbenotified")
-	if err!=nil {
-		fmt.Printf("# /canbenotified GetOnlineCallee() err=%v\n",err)
-		return
-	}
-
-	if key!="" {
-		if (locHub!=nil && locHub.IsCalleeHidden) || (globHub!=nil && globHub.IsCalleeHidden) {
-			fmt.Printf("/canbenotified (%s) isHiddenOnline rip=%s\n",urlID,remoteAddr)
-			return
-		}
-	}
-*/
-
 	// check if callee is hidden online
 	calleeIsHiddenOnline := false
-	calleeHasPushChannel := false
 	ejectOn1stFound := true
 	reportHiddenCallee := true
 	reportBusyCallee := true
@@ -652,9 +631,11 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 		}
 	}
 
+	calleeHasPushChannel := false
 	if !calleeIsHiddenOnline {
+		// has twitter account?
 		if dbUser.Email2!="" && dbUser.Str1!="" {
-			// if a follower
+			// if a follower?
 			twid, err := strconv.ParseInt(dbUser.Str1, 10, 64)
 			if err!=nil {
 				fmt.Printf("# /notifyCallee (%s) ParseInt64 Str1=(%s) err=%v\n",
