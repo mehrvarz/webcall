@@ -35,8 +35,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	}
 
 	if strings.HasPrefix(urlID, "answie") || strings.HasPrefix(urlID, "talkback") {
-		if remoteAddr!="127.0.0.1" && remoteAddr!=outboundIP {
-			fmt.Printf("/login (%s) not from local host denied %s\n", urlID, remoteAddrWithPort)
+		if remoteAddrWithPort!="127.0.0.1" && remoteAddrWithPort!=outboundIP {
+			fmt.Printf("/login (%s) not from local host denied %s\n", urlID, remoteAddr)
 			return
 		}
 	}
