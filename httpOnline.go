@@ -255,6 +255,9 @@ func httpNewId(w http.ResponseWriter, r *http.Request, urlID string, calleeID st
 		fmt.Printf("# /newid !allowNewAccounts\n")
 		return
 	}
+
+// TODO begrenzen, wie oft eine ip /newid aufrufen kann
+
 	tmpCalleeID,err := GetRandomCalleeID()
 	if err!=nil {
 		fmt.Printf("# /newid GetRandomCalleeID err=%v\n",err)
