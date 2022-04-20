@@ -635,6 +635,7 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 
 	// check if callee is hidden online
 	calleeIsHiddenOnline := false
+	calleeHasPushChannel := false
 	ejectOn1stFound := true
 	reportHiddenCallee := true
 	reportBusyCallee := true
@@ -651,39 +652,62 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 		}
 	}
 
-	// dbUser.Email2 used as tw_handle, dbUser.Str2 used as web push
-	if dbUser.Email2=="" && dbUser.Str2=="" && dbUser.Str3=="" && !calleeIsHiddenOnline {
-		// this user can NOT rcv push msg (not pushable)
-		fmt.Printf("/canbenotified (%s) has no push channel rip=%s\n",urlID,remoteAddr)
-
-		if(dbUser.StoreMissedCalls) {
-			// store missed call
-			var missedCallsSlice []CallerInfo
-			err := kvCalls.Get(dbMissedCalls,urlID,&missedCallsSlice)
-			if err!=nil && strings.Index(err.Error(),"key not found")<0 {
-				fmt.Printf("# /canbenotified (%s) failed to read dbMissedCalls err=%v rip=%s\n",
-					urlID, err, remoteAddr)
-			}
-			// make sure we never show more than 10 missed calls
-			if missedCallsSlice!=nil && len(missedCallsSlice)>=10 {
-				missedCallsSlice = missedCallsSlice[1:]
-			}
-			caller := CallerInfo{remoteAddrWithPort,callerName,time.Now().Unix(),callerID}
-			missedCallsSlice = append(missedCallsSlice, caller)
-			err = kvCalls.Put(dbMissedCalls, urlID, missedCallsSlice, true) // skipConfirm
+	if !calleeIsHiddenOnline {
+		if dbUser.Email2!="" && dbUser.Str1!="" {
+			// if a follower
+			twid, err := strconv.ParseInt(dbUser.Str1, 10, 64)
 			if err!=nil {
-				fmt.Printf("# /canbenotified (%s) failed to store dbMissedCalls err=%v rip=%s\n",
-					urlID, err, remoteAddr)
+				fmt.Printf("# /notifyCallee (%s) ParseInt64 Str1=(%s) err=%v\n",
+					urlID, dbUser.Str1, err)
+			} else if twid>0 {
+				// check if twid exist in followerIDs
+				isFollower := false
+				followerIDsLock.RLock()
+				for _,id := range followerIDs.Ids {
+					if id == twid {
+						isFollower = true
+						break
+					}
+				}
+				followerIDsLock.RUnlock()
+				if isFollower {
+					calleeHasPushChannel = true
+				}
 			}
 		}
+	}
+
+	if calleeIsHiddenOnline || calleeHasPushChannel {
+		// yes, urlID can be notified
+		// problem is that we don't get any event if the caller gives up at this point (TODO still true?)
+		fmt.Printf("/canbenotified (%s) ok name=%s tw=%s onl=%v rip=%s\n",
+			urlID,calleeName,dbUser.Email2,calleeIsHiddenOnline,remoteAddr)
+		fmt.Fprintf(w,"ok|"+calleeName)
 		return
 	}
 
-	// yes, urlID can be notified
-	// problem is that we don't get any event if the caller gives up at this point (TODO still true?)
-	fmt.Printf("/canbenotified (%s) ok name=%s tw=%s onl=%v rip=%s\n",
-		urlID,calleeName,dbUser.Email2,calleeIsHiddenOnline,remoteAddr)
-	fmt.Fprintf(w,"ok|"+calleeName)
+	// this user can NOT rcv push msg (not pushable)
+	fmt.Printf("/canbenotified (%s) has no push channel rip=%s\n",urlID,remoteAddr)
+	if(dbUser.StoreMissedCalls) {
+		// store missed call
+		var missedCallsSlice []CallerInfo
+		err := kvCalls.Get(dbMissedCalls,urlID,&missedCallsSlice)
+		if err!=nil && strings.Index(err.Error(),"key not found")<0 {
+			fmt.Printf("# /canbenotified (%s) failed to read dbMissedCalls err=%v rip=%s\n",
+				urlID, err, remoteAddr)
+		}
+		// make sure we never show more than 10 missed calls
+		if missedCallsSlice!=nil && len(missedCallsSlice)>=10 {
+			missedCallsSlice = missedCallsSlice[1:]
+		}
+		caller := CallerInfo{remoteAddrWithPort,callerName,time.Now().Unix(),callerID}
+		missedCallsSlice = append(missedCallsSlice, caller)
+		err = kvCalls.Put(dbMissedCalls, urlID, missedCallsSlice, true) // skipConfirm
+		if err!=nil {
+			fmt.Printf("# /canbenotified (%s) failed to store dbMissedCalls err=%v rip=%s\n",
+				urlID, err, remoteAddr)
+		}
+	}
 	return
 }
 
