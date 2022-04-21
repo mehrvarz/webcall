@@ -210,10 +210,10 @@ window.onload = function() {
 		// if serverSettings.storeContacts=="true", turn element "dialIdAutoStore" on
 		contactAutoStore = false;
 		let api = apiPath+"/getsettings?id="+calleeID;
-		if(!gentle) console.log('request getsettings api',api);
+		if(!gentle) console.log('request getsettings api '+api);
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 			var xhrresponse = xhr.responseText
-			if(!gentle) console.log('xhr.responseText',xhrresponse);
+			//if(!gentle) console.log('xhr.responseText '+xhrresponse);
 			if(xhrresponse=="") {
 				serverSettings = null;
 				return;
