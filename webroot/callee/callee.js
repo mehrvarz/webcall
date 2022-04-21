@@ -868,8 +868,9 @@ function wsOnError2(str) {
 	//console.log("wsOnError2 "+str);
 	if(str!="") {
 		showStatus(str,-1);
-		onlineIndicator.src="";
 	}
+	onlineIndicator.src="";
+	wsConn=null;
 }
 
 function wsOnClose(evt) {
@@ -1587,7 +1588,7 @@ function goOnline() {
 	}
 	try {
 		peerCon = new RTCPeerConnection(ICE_config);
-		console.log("RTCPeerConnection OK");
+		console.log("new RTCPeerConnection ready");
 	} catch(ex) {
 		console.error("RTCPeerConnection "+ex.message);
 		var statusMsg = "RTCPeerConnection "+ex.message;
