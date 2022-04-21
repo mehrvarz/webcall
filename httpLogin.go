@@ -34,6 +34,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		clientVersion = url_arg_array[0]
 	}
 
+	// answie and talkback can only log in from localhost
 	if strings.HasPrefix(urlID, "answie") || strings.HasPrefix(urlID, "talkback") {
 		if remoteAddr!="127.0.0.1" && remoteAddr!=outboundIP {
 			fmt.Printf("/login (%s) not from local host denied %s\n", urlID, remoteAddrWithPort)
@@ -41,6 +42,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		}
 	}
 
+	// was this callee blocked (due to ws-connect timeout15)?
 	blockMapMutex.RLock()
 	blockedTime,ok := blockMap[urlID]
 	blockMapMutex.RUnlock()
