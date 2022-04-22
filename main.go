@@ -103,6 +103,10 @@ var calleeLoginMap map[string][]time.Time
 var calleeLoginMutex sync.RWMutex
 var maxLoginPer30min = 12
 
+var clientRequestsMap map[string][]time.Time
+var clientRequestsMutex sync.RWMutex
+var maxClientRequestsPer30min = 60
+
 var waitingCallerChanMap map[string]chan int // ip:port -> chan
 var waitingCallerChanLock sync.RWMutex
 
@@ -190,6 +194,7 @@ func main() {
 	hubMap = make(map[string]*Hub) // calleeID -> *Hub
 	blockMap = make(map[string]time.Time)
 	calleeLoginMap = make(map[string][]time.Time)
+	clientRequestsMap = make(map[string][]time.Time)
 	waitingCallerChanMap = make(map[string]chan int)
 	wsClientMap = make(map[uint64]wsClientDataType) // wsClientID -> wsClientData
 	readConfig(true)
@@ -543,6 +548,7 @@ func readConfig(init bool) {
 	clientUpdateBelowVersion = readIniString(configIni, "clientUpdateBelowVersion", clientUpdateBelowVersion, "")
 
 	maxLoginPer30min = readIniInt(configIni, "maxLoginPer30min", maxLoginPer30min, 12, 1)
+	maxClientRequestsPer30min = readIniInt(configIni, "maxRequestsPer60min", maxClientRequestsPer30min, 60, 1)
 
 	readConfigLock.Unlock()
 }

@@ -198,6 +198,34 @@ func ticker20min() {
 		}
 		calleeLoginMutex.Unlock()
 
+
+		// cleanup clientRequestsMap so we don't hold on to memory after we don't have to
+		clientRequestsMutex.Lock()
+		for calleeID,clientRequestsSlice := range clientRequestsMap {
+			//fmt.Printf("ticker20min clientRequestsMap (%s) A len=%d\n", calleeID, len(clientRequestsSlice))
+			if len(clientRequestsSlice)>0 {
+				for len(clientRequestsSlice)>0 {
+					if time.Now().Sub(clientRequestsSlice[0]) < 30 * time.Minute {
+						break
+					}
+					if len(clientRequestsSlice)<=1 {
+						clientRequestsSlice = nil
+						break
+					}
+					clientRequestsSlice = clientRequestsSlice[1:]
+				}
+				if len(clientRequestsSlice)>3 {
+					fmt.Printf("ticker20min clientRequestsMap (%s) len=%d\n", calleeID, len(clientRequestsSlice))
+				}
+				if clientRequestsSlice==nil {
+					delete(clientRequestsMap,calleeID)
+				} else {
+					clientRequestsMap[calleeID] = clientRequestsSlice
+				}
+			}
+		}
+		clientRequestsMutex.Unlock()
+
 		<-twentyMinTicker.C
 	}
 }

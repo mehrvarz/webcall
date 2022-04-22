@@ -80,15 +80,15 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				calleeLoginSlice = calleeLoginSlice[:0]
 			}
 		}
-	}
-	if len(calleeLoginSlice) >= maxLoginPer30min {
-		fmt.Printf("# /login (%s) %d >= %d logins in the last 30 min rip=%s ver=%s\n",
-			urlID, len(calleeLoginSlice), maxLoginPer30min, remoteAddr, clientVersion)
-		fmt.Fprintf(w,"Too many disconnects / reconnects (login attempts) in short order")
-		calleeLoginMutex.Lock()
-		calleeLoginMap[urlID] = calleeLoginSlice
-		calleeLoginMutex.Unlock()
-		return
+		if len(calleeLoginSlice) >= maxLoginPer30min {
+			fmt.Printf("# /login (%s) %d >= %d logins in the last 30 min rip=%s ver=%s\n",
+				urlID, len(calleeLoginSlice), maxLoginPer30min, remoteAddr, clientVersion)
+			fmt.Fprintf(w,"Too many disconnects / reconnects (login attempts) in short order")
+			calleeLoginMutex.Lock()
+			calleeLoginMap[urlID] = calleeLoginSlice
+			calleeLoginMutex.Unlock()
+			return
+		}
 	}
 	calleeLoginSlice = append(calleeLoginSlice,time.Now())
 	calleeLoginMutex.Lock()

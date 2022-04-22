@@ -261,6 +261,41 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+
+	// if more than 15 logins per 30min (relative to calleeID or ip?)
+	// send response string (too many disconnects) that will stop reconnector
+	clientRequestsMutex.RLock()
+	clientRequestsSlice,ok := clientRequestsMap[remoteAddr]
+	clientRequestsMutex.RUnlock()
+	if ok {
+		for len(clientRequestsSlice)>0 {
+			if time.Now().Sub(clientRequestsSlice[0]) < 30 * time.Minute {
+				break
+			}
+			if len(clientRequestsSlice)>1 {
+				clientRequestsSlice = clientRequestsSlice[1:]
+			} else {
+				clientRequestsSlice = clientRequestsSlice[:0]
+			}
+		}
+		if len(clientRequestsSlice) >= maxClientRequestsPer30min {
+			fmt.Printf("# httpApi rip=%s %d >= %d requests in the last 30 min\n",
+				remoteAddr, len(clientRequestsSlice), maxClientRequestsPer30min)
+			fmt.Fprintf(w,"Too many requests in short order")
+			clientRequestsMutex.Lock()
+			clientRequestsMap[remoteAddr] = clientRequestsSlice
+			clientRequestsMutex.Unlock()
+			return
+		}
+	}
+	clientRequestsSlice = append(clientRequestsSlice,time.Now())
+	clientRequestsMutex.Lock()
+	clientRequestsMap[remoteAddr] = clientRequestsSlice
+	clientRequestsMutex.Unlock()
+
+
+
+
 	referer := r.Referer()
 	refOptionsIdx := strings.Index(referer,"?")
 	if refOptionsIdx>=0 {
