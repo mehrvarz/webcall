@@ -362,14 +362,14 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		if reqWsClientID != wsClientID {
 			// not the same (already exited): abort exit / deny deletion
 			if logWantedFor("login") {
-				fmt.Printf("exit (%s) abort ws=%d/%d %s %s %s\n",
+				fmt.Printf("exit (%s) abort ws=%d/%d '%s' %s ver=%s\n",
 					globalID, wsClientID, reqWsClientID, comment, remoteAddrWithPort, clientVersion)
 			}
 			return;
 		}
 
-		fmt.Printf("exit (%s) ws=%d %s ver=%s %s\n",
-			globalID, wsClientID, comment, clientVersion, remoteAddrWithPort)
+		fmt.Printf("exit (%s) ws=%d '%s' %s ver=%s\n",
+			globalID, wsClientID, comment, remoteAddrWithPort, clientVersion)
 
 		if dbUserKey!="" {
 			// feed LastLogoffTime
