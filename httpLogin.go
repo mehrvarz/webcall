@@ -50,7 +50,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		if time.Now().Sub(blockedTime) <= 10 * 60 * time.Minute {
 			// this error response string is formated so that callee.js will show it via showStatus()
 			// it also makes Android service (0.9.85+) abort the reconnecter loop
-			fmt.Fprintf(w,"Websocket connection failed earlier. You need to deactivate battery optimizations for WebCall.")
+			fmt.Fprintf(w,"Websocket connection failed earlier. Please deactivate battery optimizations.")
 			fmt.Printf("/login (%s) block recon (%v) rip=%s ver=%s ua=%s\n",
 				urlID, time.Now().Sub(blockedTime), remoteAddr, clientVersion, userAgent)
 			blockMapMutex.Lock()
@@ -63,38 +63,37 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		blockMapMutex.Unlock()
 	}
 
-
-	// if more than 15 logins per 30min (relative to calleeID or ip?)
-	// send response string (too many disconnects) that will stop reconnector
+	// deny more than 15 logins per 30min (relative to urlID)
 	calleeLoginMutex.RLock()
 	calleeLoginSlice,ok := calleeLoginMap[urlID]
 	calleeLoginMutex.RUnlock()
-	if ok {
-		for len(calleeLoginSlice)>0 {
-			if time.Now().Sub(calleeLoginSlice[0]) < 30 * time.Minute {
-				break
+	if maxLoginPer30min>0 {
+		if ok {
+			for len(calleeLoginSlice)>0 {
+				if time.Now().Sub(calleeLoginSlice[0]) < 30 * time.Minute {
+					break
+				}
+				if len(calleeLoginSlice)>1 {
+					calleeLoginSlice = calleeLoginSlice[1:]
+				} else {
+					calleeLoginSlice = calleeLoginSlice[:0]
+				}
 			}
-			if len(calleeLoginSlice)>1 {
-				calleeLoginSlice = calleeLoginSlice[1:]
-			} else {
-				calleeLoginSlice = calleeLoginSlice[:0]
+			if len(calleeLoginSlice) >= maxLoginPer30min {
+				fmt.Printf("# /login (%s) %d >= %d logins in the last 30 min rip=%s ver=%s\n",
+					urlID, len(calleeLoginSlice), maxLoginPer30min, remoteAddr, clientVersion)
+				fmt.Fprintf(w,"Too many disconnects / reconnects (login attempts) in short order")
+				calleeLoginMutex.Lock()
+				calleeLoginMap[urlID] = calleeLoginSlice
+				calleeLoginMutex.Unlock()
+				return
 			}
 		}
-		if len(calleeLoginSlice) >= maxLoginPer30min {
-			fmt.Printf("# /login (%s) %d >= %d logins in the last 30 min rip=%s ver=%s\n",
-				urlID, len(calleeLoginSlice), maxLoginPer30min, remoteAddr, clientVersion)
-			fmt.Fprintf(w,"Too many disconnects / reconnects (login attempts) in short order")
-			calleeLoginMutex.Lock()
-			calleeLoginMap[urlID] = calleeLoginSlice
-			calleeLoginMutex.Unlock()
-			return
-		}
+		calleeLoginSlice = append(calleeLoginSlice,time.Now())
+		calleeLoginMutex.Lock()
+		calleeLoginMap[urlID] = calleeLoginSlice
+		calleeLoginMutex.Unlock()
 	}
-	calleeLoginSlice = append(calleeLoginSlice,time.Now())
-	calleeLoginMutex.Lock()
-	calleeLoginMap[urlID] = calleeLoginSlice
-	calleeLoginMutex.Unlock()
-
 
 	// reached maxCallees?
 	hubMapMutex.RLock()
