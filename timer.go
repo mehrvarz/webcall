@@ -187,7 +187,8 @@ func ticker20min() {
 					calleeLoginSlice = calleeLoginSlice[1:]
 				}
 				if len(calleeLoginSlice)>3 {
-					fmt.Printf("ticker20min calleeLoginMap (%s) len=%d\n", calleeID, len(calleeLoginSlice))
+					fmt.Printf("ticker20min calleeLoginMap (%s) %d/%d\n",
+						calleeID, len(calleeLoginSlice), maxLoginPer30min)
 				}
 				if calleeLoginSlice==nil {
 					delete(calleeLoginMap,calleeID)
@@ -215,7 +216,8 @@ func ticker20min() {
 					clientRequestsSlice = clientRequestsSlice[1:]
 				}
 				if len(clientRequestsSlice)>3 {
-					fmt.Printf("ticker20min clientRequestsMap (%s) len=%d\n", calleeID, len(clientRequestsSlice))
+					fmt.Printf("ticker20min clientRequestsMap (%s) %d/%d\n",
+						calleeID, len(clientRequestsSlice), maxClientRequestsPer30min)
 				}
 				if clientRequestsSlice==nil {
 					delete(clientRequestsMap,calleeID)
