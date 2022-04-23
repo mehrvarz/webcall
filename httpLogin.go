@@ -80,7 +80,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				}
 			}
 			if len(calleeLoginSlice) >= maxLoginPer30min {
-				fmt.Printf("# /login (%s) %d >= %d logins in the last 30 min rip=%s ver=%s\n",
+				fmt.Printf("# /login (%s) %d >= %d logins/30m rip=%s ver=%s\n",
 					urlID, len(calleeLoginSlice), maxLoginPer30min, remoteAddr, clientVersion)
 				fmt.Fprintf(w,"Too many disconnects / reconnects (login attempts) in short order")
 				calleeLoginMutex.Lock()
@@ -441,9 +441,9 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	//	fmt.Printf("/login wsAddr=%s\n",wsAddr)
 	//}
 
-	fmt.Printf("/login (%s) ws=%v %d %v ver=%s %s ua=%s\n",
+	fmt.Printf("/login (%s) ws=%v %d %v %s ver=%s ua=%s\n",
 		urlID, wsClientID, len(calleeLoginSlice), time.Since(startRequestTime),
-		clientVersion, remoteAddrWithPort, userAgent)
+		remoteAddrWithPort, clientVersion, userAgent)
 
 	responseString := fmt.Sprintf("%s|%d|%s|%d|%v",
 		wsAddr,                     // 0
@@ -510,6 +510,9 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				if hub != nil && hub.CalleeClient != nil {
 					msg := fmt.Sprintf("timeout%ds",waitForClientWsConnectSecs)
 					hub.doUnregister(hub.CalleeClient, msg)
+				} else {
+					fmt.Printf("# /login (%s) timeout%ds no hub.CalleeClient %s ver=%s\n",
+						urlID, waitForClientWsConnectSecs, remoteAddrWithPort, clientVersion)
 				}
 				myHubMutex.RLock()
 			}

@@ -215,7 +215,7 @@ func ticker20min() {
 					}
 					clientRequestsSlice = clientRequestsSlice[1:]
 				}
-				if len(clientRequestsSlice)>3 {
+				if len(clientRequestsSlice)>10 {
 					fmt.Printf("ticker20min clientRequestsMap (%s) %d/%d\n",
 						calleeID, len(clientRequestsSlice), maxClientRequestsPer30min)
 				}
