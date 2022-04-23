@@ -330,8 +330,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		// this code should never be reached; 2nd caller should receive "busy" from /online
 		// it can happen if two /online request in very short order return "avail"
 		// (the 2nd /online request before the 1st gets ws-connected)
-		fmt.Printf("# %s (%s/%s) CallerClient already set ws=%d %s\n",
-			client.connType, client.calleeID, client.globalCalleeID, wsClientID64, client.RemoteAddr)
+		fmt.Printf("# %s (%s/%s) CallerClient already set %s ws=%d\n",
+			client.connType, client.calleeID, client.globalCalleeID, client.RemoteAddr, wsClientID64)
 		//fmt.Printf("# %s existing CallerClient %s ua=%s\n",
 		//	client.connType, hub.CallerClient.RemoteAddr, hub.CallerClient.userAgent)
 		time.Sleep(500 * time.Millisecond)
@@ -358,7 +358,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 	if len(tok)!=2 {
 		// invalid -> ignore
 		fmt.Printf("# serveWs len(tok)=%d is !=2; abort; checkLen=%d idxPipe=%d (%s)\n",
-			len(tok),checkLen,idxPipe,string(message[:checkLen]))
+			len(tok), checkLen, idxPipe, string(message[:checkLen]))
 		return
 	}
 
@@ -377,12 +377,12 @@ func (c *WsClient) receiveProcess(message []byte) {
 
 		if logWantedFor("wscall") {
 			if c.isCallee {
-				fmt.Printf("%s (%s) callee init ws=%d ver=%s %s\n",
-					c.connType, c.calleeID, c.hub.WsClientID, c.clientVersion, c.RemoteAddr)
+				fmt.Printf("%s (%s) callee init ws=%d %s ver=%s\n",
+					c.connType, c.calleeID, c.hub.WsClientID, c.RemoteAddr, c.clientVersion)
 			} else {
 				// this is not possible
-				fmt.Printf("# %s (%s) caller init ws=%d ver=%s %s\n",
-					c.connType, c.calleeID, c.hub.WsClientID, c.clientVersion, c.RemoteAddr)
+				fmt.Printf("# %s (%s) caller init ws=%d %s ver=%s\n",
+					c.connType, c.calleeID, c.hub.WsClientID, c.RemoteAddr, c.clientVersion)
 			}
 		}
 		// deliver the callee client version number
@@ -452,7 +452,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 // TODO: check this
 		if !strings.HasPrefix(c.calleeID,"answie") && !strings.HasPrefix(c.calleeID,"talkback") {
 			if clientUpdateBelowVersion!="" && c.clientVersion < clientUpdateBelowVersion {
-				//fmt.Printf("%s (%s) clientVersion=%s\n",c.connType,c.calleeID,c.clientVersion)
+				//fmt.Printf("%s (%s) ver=%s\n",c.connType,c.calleeID,c.clientVersion)
 				// NOTE: msg MUST NOT contain apostroph (') characters
 				msg := "WebCall for Android <a href=\"/webcall/update\">update available.</a>"
 				fmt.Printf("%s (%s) send status|%s\n",c.connType,c.calleeID,msg)
