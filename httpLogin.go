@@ -51,8 +51,10 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			// this error response string is formated so that callee.js will show it via showStatus()
 			// it also makes Android service (0.9.85+) abort the reconnecter loop
 			fmt.Fprintf(w,"Websocket connection failed earlier. Please deactivate battery optimizations.")
-			fmt.Printf("/login (%s) block recon (%v) rip=%s ver=%s ua=%s\n",
-				urlID, time.Now().Sub(blockedTime), remoteAddr, clientVersion, userAgent)
+			if logWantedFor("overload") {
+				fmt.Printf("/login (%s) block recon (%v) rip=%s ver=%s ua=%s\n",
+					urlID, time.Now().Sub(blockedTime), remoteAddr, clientVersion, userAgent)
+			}
 			blockMapMutex.Lock()
 			delete(blockMap,urlID)
 			blockMapMutex.Unlock()
@@ -80,8 +82,10 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				}
 			}
 			if len(calleeLoginSlice) >= maxLoginPer30min {
-				fmt.Printf("# /login (%s) %d >= %d logins/30m rip=%s ver=%s\n",
-					urlID, len(calleeLoginSlice), maxLoginPer30min, remoteAddr, clientVersion)
+				if logWantedFor("overload") {
+					fmt.Printf("# /login (%s) %d >= %d logins/30m rip=%s ver=%s\n",
+						urlID, len(calleeLoginSlice), maxLoginPer30min, remoteAddr, clientVersion)
+				}
 				fmt.Fprintf(w,"Too many disconnects / reconnects (login attempts) in short order")
 				calleeLoginMutex.Lock()
 				calleeLoginMap[urlID] = calleeLoginSlice

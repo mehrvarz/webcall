@@ -279,8 +279,10 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 			if len(clientRequestsSlice) >= maxClientRequestsPer30min {
-				fmt.Printf("# httpApi rip=%s %d >= %d requests/30m\n",
-					remoteAddr, len(clientRequestsSlice), maxClientRequestsPer30min)
+				if logWantedFor("overload") {
+					fmt.Printf("# httpApi rip=%s %d >= %d requests/30m\n",
+						remoteAddr, len(clientRequestsSlice), maxClientRequestsPer30min)
+				}
 				fmt.Fprintf(w,"Too many requests in short order")
 				clientRequestsMutex.Lock()
 				clientRequestsMap[remoteAddr] = clientRequestsSlice
