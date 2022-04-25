@@ -243,8 +243,13 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	if idxPort>=0 {
 		remoteAddr = remoteAddrWithPort[:idxPort]
 	}
+
+	urlPath := r.URL.Path
+	if strings.HasPrefix(urlPath,"/rtcsig/") {
+		urlPath = urlPath[7:]
+	}
 	if logWantedFor("http") {
-		fmt.Printf("httpApi (%v) tls=%v rip=%s\n", r.URL, r.TLS!=nil, remoteAddrWithPort)
+		fmt.Printf("httpApi (%v) tls=%v rip=%s\n", urlPath, r.TLS!=nil, remoteAddrWithPort)
 	}
 
 	// deny bot's
@@ -260,7 +265,6 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("# httpApi bot denied path=(%s) userAgent=(%s) rip=%s\n", r.URL.Path, userAgent, remoteAddr)
 		return
 	}
-
 
 	// deny a remoteAddr to do more than 60 requests per 30min
 	if maxClientRequestsPer30min>0 && remoteAddr!=outboundIP && remoteAddr!="127.0.0.1" {
@@ -280,8 +284,8 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			if len(clientRequestsSlice) >= maxClientRequestsPer30min {
 				if logWantedFor("overload") {
-					fmt.Printf("# httpApi rip=%s %d >= %d requests/30m\n",
-						remoteAddr, len(clientRequestsSlice), maxClientRequestsPer30min)
+					fmt.Printf("# httpApi rip=%s %d >= %d requests/30m (%s)\n",
+						remoteAddr, len(clientRequestsSlice), maxClientRequestsPer30min, urlPath)
 				}
 				fmt.Fprintf(w,"Too many requests in short order")
 				clientRequestsMutex.Lock()
@@ -423,14 +427,6 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		}
-	}
-
-	urlPath := r.URL.Path
-	if strings.HasPrefix(urlPath,"/rtcsig/") {
-		urlPath = urlPath[7:]
-	}
-	if logWantedFor("http") {
-		fmt.Printf("urlPath=%s\n",urlPath)
 	}
 
 	if urlPath=="/login" {
