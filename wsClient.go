@@ -762,6 +762,12 @@ func (c *WsClient) receiveProcess(message []byte) {
 							c.hub.CalleeClient.isMediaConnectedToPeer.Set(true)
 						}
 
+						if maxClientRequestsPer30min>0 && c.RemoteAddr!=outboundIP && c.RemoteAddr!="127.0.0.1" {
+							clientRequestsMutex.Lock()
+							clientRequestsMap[c.RemoteAddr] = nil
+							clientRequestsMutex.Unlock()
+						}
+
 						if !c.isCallee {
 							if constate=="ConForce" {
 								// test-caller sends this msg to callee, test-clients do not really connect p2p
