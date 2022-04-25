@@ -69,7 +69,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	calleeLoginMutex.RLock()
 	calleeLoginSlice,ok := calleeLoginMap[urlID]
 	calleeLoginMutex.RUnlock()
-	if maxLoginPer30min>0 {
+	if maxLoginPer30min>0 && remoteAddr!=outboundIP && remoteAddr!="127.0.0.1" {
 		if ok {
 			for len(calleeLoginSlice)>0 {
 				if time.Now().Sub(calleeLoginSlice[0]) < 30 * time.Minute {

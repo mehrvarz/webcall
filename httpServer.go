@@ -263,7 +263,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 
 
 	// deny a remoteAddr to do more than 60 requests per 30min
-	if maxClientRequestsPer30min>0 {
+	if maxClientRequestsPer30min>0 && remoteAddr!=outboundIP && remoteAddr!="127.0.0.1" {
 		clientRequestsMutex.RLock()
 		clientRequestsSlice,ok := clientRequestsMap[remoteAddr]
 		clientRequestsMutex.RUnlock()
