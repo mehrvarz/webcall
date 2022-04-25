@@ -158,11 +158,13 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 
 		client.Close("unregister "+comment)
 		client.isConnectedToPeer.Set(false)
+		client.isMediaConnectedToPeer.Set(false)
 		client.pickupSent.Set(false)
 
 		if h.CallerClient!=nil {
 			h.CallerClient.Close("unregister "+comment)
 			h.CallerClient.isConnectedToPeer.Set(false)
+			h.CallerClient.isMediaConnectedToPeer.Set(false)
 			h.CallerClient = nil
 		}
 		// remove callee from hubMap; delete wsClientID from wsClientMap

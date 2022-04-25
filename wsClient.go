@@ -944,14 +944,17 @@ func (c *WsClient) peerConHasEnded(comment string) {
 		}
 
 		c.isConnectedToPeer.Set(false)
+		c.isMediaConnectedToPeer.Set(false)
 		if c.isCallee {
 			if c.hub.CallerClient!=nil {
 				c.hub.CallerClient.isConnectedToPeer.Set(false)
+				c.hub.CallerClient.isMediaConnectedToPeer.Set(false)
 				c.hub.CallerClient = nil
 			}
 		} else {
 			if c.hub.CalleeClient!=nil {
 				c.hub.CalleeClient.isConnectedToPeer.Set(false)
+				c.hub.CalleeClient.isMediaConnectedToPeer.Set(false)
 			}
 		}
 		c.pickupSent.Set(false)
