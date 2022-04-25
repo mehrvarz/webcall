@@ -27,6 +27,9 @@ func ticker3hours() {
 	bucketName := dbRegisteredIDs
 	db := kv.Db
 
+	// put ticker3hours out of step with other tickers
+	time.Sleep(7 * time.Second)
+
 	threeHoursTicker := time.NewTicker(3*60*60*time.Second)
 	defer threeHoursTicker.Stop()
 	for {

@@ -306,6 +306,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 		go func() {
 			// incoming caller will get killed if there is no peerConnect after 10 sec
+			// set by constate=="Incoming" || constate=="Connected" || constate=="ConForce"
 			// (it can take up to 6-8 seconds in some cases for a devices to get fully out of deep sleep)
 			time.Sleep(10 * time.Second)
 			if hub!=nil && hub.CalleeClient!=nil && !hub.CalleeClient.isConnectedToPeer.Get() {
@@ -683,7 +684,6 @@ func (c *WsClient) receiveProcess(message []byte) {
 			c.hub.setDeadline(c.hub.maxTalkSecsIfNoP2p,"pickup")
 
 			// deliver max talktime to both clients
-			//c.hub.doBroadcast([]byte("sessionDuration|"+fmt.Sprintf("%d",c.hub.maxTalkSecsIfNoP2p)))
 			c.hub.doBroadcast([]byte("sessionDuration|"+strconv.FormatInt(int64(c.hub.maxTalkSecsIfNoP2p),10)))
 		}
 		return
@@ -713,31 +713,21 @@ func (c *WsClient) receiveProcess(message []byte) {
 			fmt.Printf("# %s (%s) peer %s c.hub.CallerClient==nil ver=%s\n",
 				c.connType, c.calleeID, payload, c.clientVersion)
 		} else {
+			// payload = "callee Incoming p2p/p2p" or "callee Connected p2p/p2p"
+			// "%s (%s) peer callee Incoming p2p/p2p" or "%s (%s) peer callee Connected p2p/p2p"
+			// note: "callee Connected p2p/p2p" can happen multiple times
+			conType := "plain"
+			if c.isMediaConnectedToPeer.Get() {
+				conType = "media"
+			}
 			if strings.HasPrefix(payload,"callee") {
-				// payload = "callee Incoming p2p/p2p" or "callee Connected p2p/p2p"
-				// "%s (%s) peer callee Incoming p2p/p2p" or "%s (%s) peer callee Connected p2p/p2p"
-				// note: "callee Connected p2p/p2p" can happen multiple times
-				if !c.isMediaConnectedToPeer.Get() {
-					if c.hub.CallerClient.callerID=="" {
-						fmt.Printf("%s (%s) peer %s %s\n",
-							c.connType, c.calleeID, payload, c.RemoteAddr)
-					} else {
-						fmt.Printf("%s (%s) peer %s (%s)\n",
-							c.connType, c.calleeID, payload, c.hub.CallerClient.callerID)
-					}
-				} else {
-					fmt.Printf("%s (%s) peer %s (media)\n", c.connType, c.calleeID, payload)
-				}
+				fmt.Printf("%s (%s) peer %s %s %s <- %s (%s) ver=%s\n",
+					c.connType, c.calleeID, payload, conType, c.hub.CalleeClient.RemoteAddr,
+					c.hub.CallerClient.RemoteAddr, c.hub.CallerClient.callerID, c.hub.CalleeClient.clientVersion)
 			} else {
-				// payload = "caller Connected p2p/p2p"
-				// peer caller Connected p2p/p2p (callerID) 0.9.83_98.0.4758.101
-				if c.hub.CallerClient.callerID=="" {
-					fmt.Printf("%s (%s) peer %s ver=%s %s\n", c.connType, c.calleeID, payload,
-						c.clientVersion, c.RemoteAddr)
-				} else {
-					fmt.Printf("%s (%s) peer %s ver=%s (%s)\n", c.connType, c.calleeID, payload,
-						c.clientVersion, c.hub.CallerClient.callerID)
-				}
+				fmt.Printf("%s (%s) peer %s %s %s <- %s (%s) ver=%s\n",
+					c.connType, c.calleeID, payload, conType, c.hub.CalleeClient.RemoteAddr, 
+					c.hub.CallerClient.RemoteAddr, c.hub.CallerClient.callerID, c.hub.CallerClient.clientVersion)
 			}
 
 			// payload = "callee Connected p2p/p2p"
@@ -745,6 +735,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 			if len(tok)>=2 {
 				constate := strings.TrimSpace(tok[1])
 				if constate=="Incoming" || constate=="Connected" || constate=="ConForce" {
+					//fmt.Printf("%s (%s) set ConnectedToPeer\n", c.connType, c.calleeID)
 					c.isConnectedToPeer.Set(true) // this is peer-connect, not full media-connect
 					if !c.isCallee {
 						// when the caller sends "log", the callee also becomes peerConnected
