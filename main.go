@@ -548,7 +548,7 @@ func readConfig(init bool) {
 	clientUpdateBelowVersion = readIniString(configIni, "clientUpdateBelowVersion", clientUpdateBelowVersion, "")
 
 	maxLoginPer30min = readIniInt(configIni, "maxLoginPer30min", maxLoginPer30min, 0, 1)
-	maxClientRequestsPer30min = readIniInt(configIni, "maxRequestsPer60min", maxClientRequestsPer30min, 0, 1)
+	maxClientRequestsPer30min = readIniInt(configIni, "maxRequestsPer30min", maxClientRequestsPer30min, 0, 1)
 
 	readConfigLock.Unlock()
 }
