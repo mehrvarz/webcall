@@ -450,7 +450,6 @@ func (c *WsClient) receiveProcess(message []byte) {
 			waitingCallerToCallee(c.calleeID, waitingCallerSlice, missedCallsSlice, c)
 		}
 
-// TODO: check this
 		if !strings.HasPrefix(c.calleeID,"answie") && !strings.HasPrefix(c.calleeID,"talkback") {
 			if clientUpdateBelowVersion!="" && c.clientVersion < clientUpdateBelowVersion {
 				//fmt.Printf("%s (%s) ver=%s\n",c.connType,c.calleeID,c.clientVersion)
@@ -713,27 +712,31 @@ func (c *WsClient) receiveProcess(message []byte) {
 			fmt.Printf("# %s (%s) peer %s c.hub.CallerClient==nil ver=%s\n",
 				c.connType, c.calleeID, payload, c.clientVersion)
 		} else {
+			// payload = "callee Connected p2p/p2p"
+			tok := strings.Split(payload, " ")
+
 			// payload = "callee Incoming p2p/p2p" or "callee Connected p2p/p2p"
 			// "%s (%s) peer callee Incoming p2p/p2p" or "%s (%s) peer callee Connected p2p/p2p"
 			// note: "callee Connected p2p/p2p" can happen multiple times
-			conType := "plain"
-			if c.isMediaConnectedToPeer.Get() {
-				conType = "media"
+			constate := ""
+			constateShort := "-"
+			if len(tok)>=2 {
+				constate = strings.TrimSpace(tok[1])
+				if constate=="Incoming"  { constateShort = "INC" }
+				if constate=="Connected" { constateShort = "CON" }
+				if constate=="ConForce"  { constateShort = "CON" }
 			}
-			if strings.HasPrefix(payload,"callee") {
-				fmt.Printf("%s (%s) peer %s %s %s <- %s (%s) ver=%s\n",
-					c.connType, c.calleeID, payload, conType, c.hub.CalleeClient.RemoteAddr,
-					c.hub.CallerClient.RemoteAddr, c.hub.CallerClient.callerID, c.hub.CalleeClient.clientVersion)
+			if tok[0]=="callee" {
+				fmt.Printf("%s (%s) peer %s %s %s %s <- %s (%s)\n",
+					c.connType, c.calleeID, tok[0], constateShort, tok[2], c.hub.CalleeClient.RemoteAddrNoPort,
+					c.hub.CallerClient.RemoteAddrNoPort, c.hub.CallerClient.callerID)
 			} else {
-				fmt.Printf("%s (%s) peer %s %s %s <- %s (%s) ver=%s\n",
-					c.connType, c.calleeID, payload, conType, c.hub.CalleeClient.RemoteAddr, 
-					c.hub.CallerClient.RemoteAddr, c.hub.CallerClient.callerID, c.hub.CallerClient.clientVersion)
+				fmt.Printf("%s (%s) peer %s %s %s %s <- %s (%s)\n",
+					c.connType, c.calleeID, tok[0], constateShort, tok[2], c.hub.CalleeClient.RemoteAddrNoPort,
+					c.hub.CallerClient.RemoteAddrNoPort, c.hub.CallerClient.callerID)
 			}
 
-			// payload = "callee Connected p2p/p2p"
-			tok := strings.Split(payload, " ")
 			if len(tok)>=2 {
-				constate := strings.TrimSpace(tok[1])
 				if constate=="Incoming" || constate=="Connected" || constate=="ConForce" {
 					//fmt.Printf("%s (%s) set ConnectedToPeer\n", c.connType, c.calleeID)
 					c.isConnectedToPeer.Set(true) // this is peer-connect, not full media-connect
@@ -887,19 +890,15 @@ func (c *WsClient) peerConHasEnded(comment string) {
 			if !c.hub.RemoteP2p { remotePeerCon = "relay" }
 		}
 		// peer callee discon
-		fmt.Printf("%s (%s) peer %s discon %ds %s/%s (%s) %s (%s)\n",
+		fmt.Printf("%s (%s) peer %s DIS %ds %s/%s %s <- %s (%s) %s\n",
 			c.connType, c.calleeID, peerType, c.hub.CallDurationSecs, localPeerCon, remotePeerCon,
-			c.hub.CallerClient.callerID, c.hub.CallerClient.RemoteAddrNoPort, comment)
-//		if localPeerCon=="relay" || remotePeerCon=="relay" {
-			// must clear recentTurnCalleeIps[ipNoPort] entry (if this was a relay session)
-			recentTurnCalleeIpMutex.Lock()
-// TODO wrong c.RemoteAddrNoPort is the wrong ipAddr; we need to use the caller ip addr
-// from: serveWss (95478981959) callerOffer (call attempt) 117.121.211.105:38244   <---
-// that would be c.hub.CallerClient.RemoteAddrNoPort
-//			delete(recentTurnCalleeIps,c.RemoteAddrNoPort)
-			delete(recentTurnCalleeIps,c.hub.CallerClient.RemoteAddrNoPort)
-			recentTurnCalleeIpMutex.Unlock()
-//		}
+			c.hub.CalleeClient.RemoteAddrNoPort, 
+			c.hub.CallerClient.RemoteAddrNoPort, c.hub.CallerClient.callerID, comment)
+
+		// clear recentTurnCalleeIps[ipNoPort] entry (if this was a relay session)
+		recentTurnCalleeIpMutex.Lock()
+		delete(recentTurnCalleeIps,c.hub.CallerClient.RemoteAddrNoPort)
+		recentTurnCalleeIpMutex.Unlock()
 
 		err := StoreCallerIpInHubMap(c.globalCalleeID, "", false)
 		if err!=nil {
