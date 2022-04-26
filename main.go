@@ -178,6 +178,7 @@ var maxCallees = 0
 var cspString = ""
 var thirtySecStats = false
 var clientUpdateBelowVersion = ""
+var clientBlockBelowVersion = ""
 
 
 func main() {
@@ -546,6 +547,7 @@ func readConfig(init bool) {
 	thirtySecStats = readIniBoolean(configIni, "thirtySecStats", thirtySecStats, false)
 
 	clientUpdateBelowVersion = readIniString(configIni, "clientUpdateBelowVersion", clientUpdateBelowVersion, "")
+	clientBlockBelowVersion  = readIniString(configIni, "clientBlockBelowVersion", clientBlockBelowVersion, "")
 
 	maxLoginPer30min = readIniInt(configIni, "maxLoginPer30min", maxLoginPer30min, 0, 1)
 	maxClientRequestsPer30min = readIniInt(configIni, "maxRequestsPer30min", maxClientRequestsPer30min, 0, 1)

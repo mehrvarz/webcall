@@ -451,6 +451,20 @@ func (c *WsClient) receiveProcess(message []byte) {
 		}
 
 		if !strings.HasPrefix(c.calleeID,"answie") && !strings.HasPrefix(c.calleeID,"talkback") {
+			if clientBlockBelowVersion!="" && c.clientVersion < clientBlockBelowVersion {
+				//fmt.Printf("%s (%s) ver=%s\n",c.connType,c.calleeID,c.clientVersion)
+				// NOTE: msg MUST NOT contain apostroph (') characters
+				msg := "Your WebCall for Android client is outdated."+
+						" <a href=\"/webcall/update\">Please update.</a>"
+				fmt.Printf("%s (%s) send status|%s\n",c.connType,c.calleeID,msg)
+				c.Write([]byte("status|"+msg))
+				//c.Write([]byte("cancel|"))
+				time.Sleep(500 * time.Millisecond)
+				//c.wsConn.WriteMessage(websocket.CloseMessage, nil)
+				//c.wsConn.Close()
+				c.Close("outdated")
+				return
+			}
 			if clientUpdateBelowVersion!="" && c.clientVersion < clientUpdateBelowVersion {
 				//fmt.Printf("%s (%s) ver=%s\n",c.connType,c.calleeID,c.clientVersion)
 				// NOTE: msg MUST NOT contain apostroph (') characters

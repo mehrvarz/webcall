@@ -49,6 +49,8 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 	if logWantedFor("online") {
 		fmt.Printf("/online (%s) %s ver=%s\n", urlID, remoteAddr, clientVersion)
 	}
+	// TODO fmt.Fprintf(w, "clear")
+
 	glUrlID, locHub, globHub, err := GetOnlineCallee(urlID, ejectOn1stFound, reportBusyCallee, 
 		reportHiddenCallee, remoteAddr, "/online")
 	if err != nil {
