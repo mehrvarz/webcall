@@ -387,6 +387,10 @@ func (c *WsClient) receiveProcess(message []byte) {
 					c.connType, c.calleeID, c.hub.WsClientID, c.RemoteAddr, c.clientVersion)
 			}
 		}
+
+		// TODO should we clear callerIpInHubMap via StoreCallerIpInHubMap(,"") just to be sure?
+		StoreCallerIpInHubMap(c.globalCalleeID, "", false)
+
 		// deliver the callee client version number
 		readConfigLock.RLock()
 		calleeClientVersionTmp := calleeClientVersion
@@ -736,6 +740,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 			// this happens when caller disconnects immediately
 			fmt.Printf("# %s (%s) peer %s c.hub.CallerClient==nil ver=%s\n",
 				c.connType, c.calleeID, payload, c.clientVersion)
+			// TODO should we clear callerIpInHubMap via StoreCallerIpInHubMap(,"") ?
+			StoreCallerIpInHubMap(c.globalCalleeID, "", false)
 		} else {
 			// payload = "callee Connected p2p/p2p"
 			tok := strings.Split(payload, " ")
