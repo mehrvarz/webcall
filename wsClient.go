@@ -514,19 +514,20 @@ func (c *WsClient) receiveProcess(message []byte) {
 				return
 			}
 		}
-
-		if c.hub.maxRingSecs>0 {
-			// if callee does NOT pickup the call after c.hub.maxRingSecs, callee will be disconnected
-			c.hub.setDeadline(c.hub.maxRingSecs,"serveWs ringsecs")
-		}
-
+/*
 		if !c.isConnectedToPeer.Get() {
 			// we already received "pickup ignored no peerConnect"
 			fmt.Printf("# %s (%s) no peer connect before StoreCallerIpInHubMap()\n", c.connType, c.calleeID)
-		} else if c.hub.CallerClient==nil {
+		} else
+*/
+		if c.hub.CallerClient==nil {
 			// we already received "peer callee Connected unknw/unknw c.hub.CallerClient==nil"
 			fmt.Printf("# %s (%s) no hub.CallerClient before StoreCallerIpInHubMap()\n", c.connType, c.calleeID)
 		} else {
+			if c.hub.maxRingSecs>0 {
+				// if callee does NOT pickup the call after c.hub.maxRingSecs, callee will be disconnected
+				c.hub.setDeadline(c.hub.maxRingSecs,"serveWs ringsecs")
+			}
 			// this is needed for turn AuthHandler: store caller RemoteAddr
 			err := StoreCallerIpInHubMap(c.globalCalleeID, c.RemoteAddr, false)
 			if err!=nil {
