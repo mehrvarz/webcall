@@ -86,7 +86,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					fmt.Printf("# /login (%s) %d >= %d logins/30m rip=%s ver=%s\n",
 						urlID, len(calleeLoginSlice), maxLoginPer30min, remoteAddr, clientVersion)
 				}
-				fmt.Fprintf(w,"Too many disconnects / reconnects (login attempts) in short order")
+				fmt.Fprintf(w,"Too many reconnects / login attempts in short order. Please take a pause.")
 				calleeLoginMutex.Lock()
 				calleeLoginMap[urlID] = calleeLoginSlice
 				calleeLoginMutex.Unlock()
@@ -249,7 +249,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		// pw check for everyone other than random and duo
 		if len(pw) < 6 {
 			// guessing more difficult if delayed
-			fmt.Printf("/login (%s) pw too short rip=%s ver=%s\n", urlID, remoteAddr, clientVersion)
+			fmt.Printf("/login (%s) pw too short %s ver=%s\n", urlID, remoteAddr, clientVersion)
 			time.Sleep(3000 * time.Millisecond)
 			fmt.Fprintf(w, "error")
 			return
@@ -257,7 +257,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 		err := kvMain.Get(dbRegisteredIDs, urlID, &dbEntry)
 		if err != nil {
-			fmt.Printf("/login (%s) error db=%s bucket=%s rip=%s get registeredID err=%v ver=%s\n",
+			fmt.Printf("/login (%s) error db=%s bucket=%s %s get registeredID err=%v ver=%s\n",
 				urlID, dbMainName, dbRegisteredIDs, remoteAddr, err, clientVersion)
 			if strings.Index(err.Error(), "disconnect") >= 0 {
 				// TODO admin email notif may be useful
@@ -272,7 +272,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			return
 		}
 		if pw != dbEntry.Password {
-			fmt.Printf("/login (%s) fail wrong password rip=%s\n", urlID, remoteAddr)
+			fmt.Printf("/login (%s) fail wrong password %d %s\n", urlID, len(calleeLoginSlice), remoteAddr)
 			// must delay to make guessing more difficult
 			time.Sleep(3000 * time.Millisecond)
 			fmt.Fprintf(w, "error")
@@ -283,7 +283,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		dbUserKey = fmt.Sprintf("%s_%d", urlID, dbEntry.StartTime)
 		err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 		if err != nil {
-			fmt.Printf("# /login (%s) error db=%s bucket=%s get rip=%s err=%v ver=%s\n",
+			fmt.Printf("# /login (%s) error db=%s bucket=%s get %s err=%v ver=%s\n",
 				dbUserKey, dbMainName, dbUserBucket, remoteAddr, err, clientVersion)
 			fmt.Fprintf(w, "error")
 			return
@@ -295,7 +295,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		dbUser.LastLoginTime = time.Now().Unix()
 		err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
 		if err!=nil {
-			fmt.Printf("# /login (%s) error db=%s bucket=%s put rip=%s err=%v ver=%s\n",
+			fmt.Printf("# /login (%s) error db=%s bucket=%s put %s err=%v ver=%s\n",
 				urlID, dbMainName, dbUserBucket, remoteAddr, err, clientVersion)
 			fmt.Fprintf(w, "error")
 			return
