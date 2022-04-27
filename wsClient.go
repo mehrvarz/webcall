@@ -485,6 +485,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 
 	if cmd=="callerOffer" {
 		// caller starting a call - payload is JSON.stringify(localDescription)
+		// TODO prevent double callerOffer? maybe message is different the 2nd time?
 		if logWantedFor("wscall") {
 			fmt.Printf("%s (%s) callerOffer (call attempt) %s\n",
 				c.connType, c.calleeID, c.RemoteAddr)
@@ -519,14 +520,22 @@ func (c *WsClient) receiveProcess(message []byte) {
 			c.hub.setDeadline(c.hub.maxRingSecs,"serveWs ringsecs")
 		}
 
-		// this is needed here for turn AuthHandler
-		err := StoreCallerIpInHubMap(c.globalCalleeID, c.RemoteAddr, false)
-		if err!=nil {
-			fmt.Printf("# %s (%s) callerOffer StoreCallerIp %s err=%v\n",
-				c.connType, c.globalCalleeID, c.RemoteAddr, err)
+		if !c.isConnectedToPeer.Get() {
+			// we already received "pickup ignored no peerConnect"
+			fmt.Printf("# %s (%s) no peer connect before StoreCallerIpInHubMap()\n", c.connType, c.calleeID)
+		} else if c.hub.CallerClient==nil {
+			// we already received "peer callee Connected unknw/unknw c.hub.CallerClient==nil"
+			fmt.Printf("# %s (%s) no hub.CallerClient before StoreCallerIpInHubMap()\n", c.connType, c.calleeID)
 		} else {
-			//fmt.Printf("%s (%s) callerOffer StoreCallerIp %s\n",
-			//	c.connType, c.globalCalleeID, c.RemoteAddr)
+			// this is needed for turn AuthHandler: store caller RemoteAddr
+			err := StoreCallerIpInHubMap(c.globalCalleeID, c.RemoteAddr, false)
+			if err!=nil {
+				fmt.Printf("# %s (%s) callerOffer StoreCallerIp %s err=%v\n",
+					c.connType, c.globalCalleeID, c.RemoteAddr, err)
+			} else {
+				//fmt.Printf("%s (%s) callerOffer StoreCallerIp %s\n",
+				//	c.connType, c.globalCalleeID, c.RemoteAddr)
+			}
 		}
 
 		return
@@ -919,11 +928,13 @@ func (c *WsClient) peerConHasEnded(comment string) {
 		if err!=nil {
 			// err "key not found": callee has already signed off - can be ignored
 			if strings.Index(err.Error(),"key not found")<0 {
-				fmt.Printf("# %s (%s) peerConHasEnded clear callerIpInHub err=%v\n", c.connType, c.calleeID, err)
+				fmt.Printf("# %s (%s) peerConHasEnded clear callerIpInHub err=%v\n",
+					c.connType, c.calleeID, err)
 			}
 		}
 
 		// add an entry to missed calls, but only if there was no mediaConnect
+		// TODO is it a missed call if callee himself denied the call?
 		if(c.hub.CallDurationSecs<=0) {
 			var missedCallsSlice []CallerInfo
 			userKey := c.calleeID + "_" + strconv.FormatInt(int64(c.hub.registrationStartTime),10)

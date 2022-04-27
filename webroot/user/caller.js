@@ -1601,7 +1601,7 @@ function dial2() {
 					gLog('peerCon onnegotiationneeded send callerOfferUpd via dc');
 					dataChannel.send("cmd|callerOfferUpd|"+JSON.stringify(localDescription));
 				} else {
-					gLog('onnegotiationneeded send callerOffer via ws');
+					gLog('peerCon onnegotiationneeded send callerOffer via ws');
 					wsSend("callerOffer|"+JSON.stringify(localDescription));
 				}
 			}, err => console.error(`Failed to set local descr: ${err.toString()}`));
