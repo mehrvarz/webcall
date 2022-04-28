@@ -129,10 +129,10 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	wsClientMutex.Unlock()
 	if !ok {
 		// this callee has just exited
-		fmt.Printf("serveWs ws=%d does not exist %s url=%s\n",
-			wsClientID64, remoteAddr, r.URL.String())
-		// TODO why does r.URL start with //
-		// url=//timur.mobi:8443/ws?wsid=47639023704
+		// does not to be logged
+		//fmt.Printf("serveWs ws=%d does not exist %s url=%s\n",
+		//	wsClientID64, remoteAddr, r.URL.String())
+		// TODO why does r.URL start with "//": url=//timur.mobi:8443/ws?wsid=47639023704
 		return
 	}
 
@@ -386,13 +386,15 @@ func (c *WsClient) receiveProcess(message []byte) {
 	if cmd=="init" {
 		if !c.isCallee {
 			// only the callee can send "init|"
-			fmt.Printf("# serveWs deny 2nd callee %s\n",c.RemoteAddr)
+			fmt.Printf("# %s (%s) deny 2nd callee %s\n", c.connType, c.calleeID, c.RemoteAddr)
 			c.Write([]byte("cancel|busy"))
 			return
 		}
 
 		if c.calleeInitReceived.Get() {
-			fmt.Printf("# serveWs deny 2nd callee init %s\n",c.RemoteAddr)
+			// only the 1st callee "init|" is accepted
+			// don't need to log this
+			//fmt.Printf("# %s (%s) deny 2nd callee init %s\n", c.connType, c.calleeID, c.RemoteAddr)
 			return
 		}
 		c.calleeInitReceived.Set(true)
@@ -768,9 +770,9 @@ func (c *WsClient) receiveProcess(message []byte) {
 		} else if c.hub.CallerClient==nil {
 			// # serveWss (83710725871) peer 'callee Connected unknw/unknw'
 			// this happens when caller disconnects immediately
-			fmt.Printf("# %s (%s) peer %s c.hub.CallerClient==nil ver=%s\n",
-				c.connType, c.calleeID, payload, c.clientVersion)
-			// TODO should we clear callerIpInHubMap via StoreCallerIpInHubMap(,"") ?
+			//fmt.Printf("# %s (%s) peer %s c.hub.CallerClient==nil ver=%s\n",
+			//	c.connType, c.calleeID, payload, c.clientVersion)
+			// clear callerIpInHubMap via StoreCallerIpInHubMap(,"") ?
 			StoreCallerIpInHubMap(c.globalCalleeID, "", false)
 		} else {
 			// payload = "callee Connected p2p/p2p"
