@@ -506,6 +506,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 			return
 		}
 
+		c.calleeInitReceived.Set(false)
+
 		if logWantedFor("wscall") {
 			fmt.Printf("%s (%s) callerOffer (call attempt) %s\n",
 				c.connType, c.calleeID, c.RemoteAddr)
@@ -767,16 +769,16 @@ func (c *WsClient) receiveProcess(message []byte) {
 			constateShort := "-"
 			if len(tok)>=2 {
 				constate = strings.TrimSpace(tok[1])
-				if constate=="Incoming"  { constateShort = "INC" }
-				if constate=="Connected" { constateShort = "CON" }
-				if constate=="ConForce"  { constateShort = "CON" }
+				if constate=="Incoming"  { constateShort = "RING" }
+				if constate=="Connected" { constateShort = "CONN" }
+				if constate=="ConForce"  { constateShort = "CONF" }
 			}
 			if tok[0]=="callee" {
-				fmt.Printf("%s (%s) peer %s %s %s %s <- %s (%s)\n",
+				fmt.Printf("%s (%s) PEER %s %s %s %s <- %s (%s)\n",
 					c.connType, c.calleeID, tok[0], constateShort, tok[2], c.hub.CalleeClient.RemoteAddrNoPort,
 					c.hub.CallerClient.RemoteAddrNoPort, c.hub.CallerClient.callerID)
 			} else {
-				fmt.Printf("%s (%s) peer %s %s %s %s <- %s (%s)\n",
+				fmt.Printf("%s (%s) PEER %s %s %s %s <- %s (%s)\n",
 					c.connType, c.calleeID, tok[0], constateShort, tok[2], c.hub.CalleeClient.RemoteAddrNoPort,
 					c.hub.CallerClient.RemoteAddrNoPort, c.hub.CallerClient.callerID)
 			}
@@ -935,7 +937,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 			if !c.hub.RemoteP2p { remotePeerCon = "relay" }
 		}
 		// peer callee discon
-		fmt.Printf("%s (%s) peer %s DIS %ds %s/%s %s <- %s (%s) %s\n",
+		fmt.Printf("%s (%s) PEER %s DISC %ds %s/%s %s <- %s (%s) %s\n",
 			c.connType, c.calleeID, peerType, c.hub.CallDurationSecs, localPeerCon, remotePeerCon,
 			c.hub.CalleeClient.RemoteAddrNoPort, 
 			c.hub.CallerClient.RemoteAddrNoPort, c.hub.CallerClient.callerID, comment)
