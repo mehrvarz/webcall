@@ -55,6 +55,7 @@ type WsClient struct {
 	isConnectedToPeer atombool.AtomBool // before pickup
 	isMediaConnectedToPeer atombool.AtomBool // after pickup
 	pickupSent atombool.AtomBool
+	callerOfferForwarded atombool.AtomBool
 	RemoteAddr string // with port
 	RemoteAddrNoPort string // no port
 	userAgent string // ws UA
@@ -301,8 +302,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		}
 
 		hub.CallDurationSecs = 0
-
 		hub.CallerClient = client
+		client.callerOfferForwarded.Set(false)
 
 		go func() {
 			// incoming caller will get killed if there is no peerConnect after 10 sec
@@ -489,15 +490,23 @@ func (c *WsClient) receiveProcess(message []byte) {
 
 	if cmd=="callerOffer" {
 		// caller starting a call - payload is JSON.stringify(localDescription)
-		// TODO prevent double callerOffer? maybe message is different the 2nd time?
+		if c.callerOfferForwarded.Get() {
+			// prevent double callerOffer
+			fmt.Printf("%s (%s) callerOffer (call attempt) already forwarded %s\n",
+				c.connType, c.calleeID, c.RemoteAddr)
+			return
+		}
+
 		if logWantedFor("wscall") {
 			fmt.Printf("%s (%s) callerOffer (call attempt) %s\n",
 				c.connType, c.calleeID, c.RemoteAddr)
 		}
 
+		// forward the callerOffer message to the callee client
 		if c.hub.CalleeClient.Write(message) != nil {
 			return
 		}
+		c.callerOfferForwarded.Set(true)
 
 		if c.hub != nil && c.hub.CallerClient != nil && c.hub.CalleeClient != nil {
 			if c.hub.CallerClient.callerID!="" || c.hub.CallerClient.callerName!="" {
@@ -518,12 +527,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 				return
 			}
 		}
-/*
-		if !c.isConnectedToPeer.Get() {
-			// we already received "pickup ignored no peerConnect"
-			fmt.Printf("# %s (%s) no peer connect before StoreCallerIpInHubMap()\n", c.connType, c.calleeID)
-		} else
-*/
+
 		if c.hub.CallerClient==nil {
 			// we already received "peer callee Connected unknw/unknw c.hub.CallerClient==nil"
 			fmt.Printf("# %s (%s) no hub.CallerClient before StoreCallerIpInHubMap()\n", c.connType, c.calleeID)
@@ -538,11 +542,12 @@ func (c *WsClient) receiveProcess(message []byte) {
 				fmt.Printf("# %s (%s) callerOffer StoreCallerIp %s err=%v\n",
 					c.connType, c.globalCalleeID, c.RemoteAddr, err)
 			} else {
-				//fmt.Printf("%s (%s) callerOffer StoreCallerIp %s\n",
-				//	c.connType, c.globalCalleeID, c.RemoteAddr)
+				if logWantedFor("wscall") {
+					fmt.Printf("%s (%s) callerOffer done StoreCallerIp %s\n",
+						c.connType, c.globalCalleeID, c.RemoteAddr)
+				}
 			}
 		}
-
 		return
 	}
 

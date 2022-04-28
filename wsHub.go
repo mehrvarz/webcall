@@ -143,6 +143,8 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 				client.calleeID, client.isConnectedToPeer.Get(), client.clearOnCloseDone, comment)
 		}
 
+		// NOTE: delete(hubMap,id) might have been executed, caused by timeout15s
+
 		if !client.clearOnCloseDone {
 			h.setDeadline(-1,"doUnregister "+comment)
 			h.HubMutex.Lock()
