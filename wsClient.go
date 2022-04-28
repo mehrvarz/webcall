@@ -55,6 +55,7 @@ type WsClient struct {
 	isConnectedToPeer atombool.AtomBool // before pickup
 	isMediaConnectedToPeer atombool.AtomBool // after pickup
 	pickupSent atombool.AtomBool
+	calleeInitReceived atombool.AtomBool
 	callerOfferForwarded atombool.AtomBool
 	RemoteAddr string // with port
 	RemoteAddrNoPort string // no port
@@ -273,6 +274,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				client.calleeID, wsClientID64, client.RemoteAddr)
 		}
 		client.isCallee = true
+		client.calleeInitReceived.Set(false)
 		hub.IsCalleeHidden = wsClientData.dbUser.Int2&1!=0
 		hub.IsUnHiddenForCallerAddr = ""
 
@@ -374,6 +376,12 @@ func (c *WsClient) receiveProcess(message []byte) {
 			c.Write([]byte("cancel|busy"))
 			return
 		}
+
+		if c.calleeInitReceived.Get() {
+			return
+		}
+		c.calleeInitReceived.Set(true)
+
 		c.hub.HubMutex.Lock()
 		c.hub.CalleeLogin.Set(true)
 		c.hub.HubMutex.Unlock()
