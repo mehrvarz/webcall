@@ -314,9 +314,23 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			time.Sleep(10 * time.Second)
 			if hub!=nil && hub.CalleeClient!=nil && !hub.CalleeClient.isConnectedToPeer.Get() {
 				if hub.CallerClient!=nil {
-					hub.CallerClient = nil
 					fmt.Printf("%s (%s/%s) release uncon caller ws=%d %s\n",
 						client.connType, client.calleeID, client.globalCalleeID, wsClientID64, client.RemoteAddr)
+
+					// tell caller about this
+					// NOTE: msg MUST NOT contain apostroph (') characters
+					msg := "Unable to establish a peer connection."+
+						" This could be a network, a firewall or a WebRTC related issue."
+					hub.CallerClient.Write([]byte("status|"+msg))
+					hub.CallerClient = nil
+
+					// tell callee about this
+					// NOTE: msg MUST NOT contain apostroph (') characters
+					msg = "Unable to establish a peer connection."+
+						" This could be a network, a firewall or a WebRTC related issue."+
+						" Make sure <a href=\"/webcall/android/#webview\">WebRTC-Check</a> works on your device."
+					hub.CalleeClient.Write([]byte("status|"+msg))
+
 					// clear CallerIpInHubMap
 					err := StoreCallerIpInHubMap(client.globalCalleeID, "", false)
 					if err!=nil {
