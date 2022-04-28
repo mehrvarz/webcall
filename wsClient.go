@@ -506,7 +506,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 			return
 		}
 
-		c.calleeInitReceived.Set(false)
+		c.hub.CalleeClient.calleeInitReceived.Set(false)
 
 		if logWantedFor("wscall") {
 			fmt.Printf("%s (%s) callerOffer (call attempt) %s\n",
