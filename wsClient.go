@@ -319,14 +319,14 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 					// tell caller about this
 					// NOTE: msg MUST NOT contain apostroph (') characters
-					msg := "Unable to establish a peer connection."+
+					msg := "Unable to establish peer connection."+
 						" This could be a network, a firewall or a WebRTC related issue."
 					hub.CallerClient.Write([]byte("status|"+msg))
 					hub.CallerClient = nil
 
 					// tell callee about this
 					// NOTE: msg MUST NOT contain apostroph (') characters
-					msg = "Unable to establish a peer connection."+
+					msg = "Unable to establish peer connection with caller."+
 						" This could be a network, a firewall or a WebRTC related issue."+
 						" Make sure <a href=\"/webcall/android/#webview\">WebRTC-Check</a> works on your device."
 					hub.CalleeClient.Write([]byte("status|"+msg))
