@@ -372,12 +372,13 @@ func (c *WsClient) receiveProcess(message []byte) {
 	if cmd=="init" {
 		if !c.isCallee {
 			// only the callee can send "init|"
-			fmt.Printf("# serveWs false double callee %s\n",c.RemoteAddr)
+			fmt.Printf("# serveWs deny 2nd callee %s\n",c.RemoteAddr)
 			c.Write([]byte("cancel|busy"))
 			return
 		}
 
 		if c.calleeInitReceived.Get() {
+			fmt.Printf("# serveWs deny 2nd callee init %s\n",c.RemoteAddr)
 			return
 		}
 		c.calleeInitReceived.Set(true)
