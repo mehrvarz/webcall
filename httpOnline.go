@@ -106,6 +106,8 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 	if locHub != nil {
 		// callee is managed by this server
 		if logWantedFor("hub") {
+			locHub.HubMutex.RLock()
+			locHub.HubMutex.RUnlock()
 			fmt.Printf("/online (%s/%s) locHub callerIp=%s Caller=%v hidden=%v\n",
 				urlID, glUrlID, locHub.ConnectedCallerIp, locHub.CallerClient!=nil, locHub.IsCalleeHidden)
 		}

@@ -189,9 +189,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	client.authenticationShown = false // being used to make sure 'TURN auth SUCCESS' is only shown 1x per client
 
 	hub := wsClientData.hub // set by /login wsClientMap[wsClientID] = wsClientDataType{...}
-//	hub.HubMutex.Lock()
 	client.hub = hub
-//	hub.HubMutex.Unlock()
 
 	upgrader.OnMessage(func(wsConn *websocket.Conn, messageType websocket.MessageType, data []byte) {
 		// clear read deadline for now; we set it again when we send the next ping

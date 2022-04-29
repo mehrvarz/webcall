@@ -78,6 +78,8 @@ func (h *Hub) setDeadline(secs int, comment string) {
 			case <-h.timer.C:
 				// do something for timeout, like change state
 				// timer valid: we need to disconnect the (relayed) clients (if still connected)
+				h.HubMutex.RLock()
+				h.HubMutex.RUnlock()
 				if h.CalleeClient!=nil {
 					// otherwise we disconnect this callee
 					if h.CalleeClient.isConnectedToPeer.Get() {
@@ -106,6 +108,8 @@ func (h *Hub) setDeadline(secs int, comment string) {
 }
 
 func (h *Hub) doBroadcast(message []byte) {
+	h.HubMutex.RLock()
+	h.HubMutex.RUnlock()
 	calleeID := ""
 	if h.CalleeClient!=nil {
 		calleeID = h.CalleeClient.calleeID
@@ -148,14 +152,16 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 
 		if !client.clearOnCloseDone {
 			h.setDeadline(-1,"doUnregister "+comment)
-			h.HubMutex.Lock()
+			h.HubMutex.RLock()
+			h.HubMutex.RUnlock()
 			if h.lastCallStartTime>0 {
 				h.processTimeValues("doUnregister")
+				h.HubMutex.Lock()
 				h.lastCallStartTime = 0
 				h.LocalP2p = false
 				h.RemoteP2p = false
+				h.HubMutex.Unlock()
 			}
-			h.HubMutex.Unlock()
 			client.clearOnCloseDone = true
 		}
 
@@ -164,15 +170,22 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 		client.isMediaConnectedToPeer.Set(false)
 		client.pickupSent.Set(false)
 
+		h.HubMutex.RLock()
+		h.HubMutex.RUnlock()
 		if h.CallerClient!=nil {
 			h.CallerClient.Close("unregister "+comment)
 			h.CallerClient.isConnectedToPeer.Set(false)
 			h.CallerClient.isMediaConnectedToPeer.Set(false)
+			h.HubMutex.Lock()
 			h.CallerClient = nil
+			h.HubMutex.Unlock()
 		}
 		// remove callee from hubMap; delete wsClientID from wsClientMap
 		h.exitFunc(client,comment)
+
+		h.HubMutex.Lock()
 		h.CalleeClient = nil
+		h.HubMutex.Unlock()
 
 		if h.timer!=nil {
 			if logWantedFor("calldur") {
