@@ -185,9 +185,9 @@ func ticker20min() {
 func cleanupCalleeLoginMap(w io.Writer, min int, title string) {
 	// cleanup calleeLoginMap so we don't hold on to memory after we don't have to
 	calleeLoginMutex.Lock()
-fmt.Fprintf(w,"%s calleeLoginMap len=%d\n", title, len(calleeLoginMap))
+	fmt.Fprintf(w,"%s calleeLoginMap len=%d\n", title, len(calleeLoginMap))
 	for calleeID,calleeLoginSlice := range calleeLoginMap {
-fmt.Fprintf(w,"%s calleeLoginMap (%s) A len=%d\n", title, calleeID, len(calleeLoginSlice))
+		//fmt.Fprintf(w,"%s calleeLoginMap (%s) A len=%d\n", title, calleeID, len(calleeLoginSlice))
 		if len(calleeLoginSlice)>0 {
 			for len(calleeLoginSlice)>0 {
 				if time.Now().Sub(calleeLoginSlice[0]) < 30 * time.Minute {
@@ -200,8 +200,6 @@ fmt.Fprintf(w,"%s calleeLoginMap (%s) A len=%d\n", title, calleeID, len(calleeLo
 				calleeLoginSlice = calleeLoginSlice[1:]
 			}
 			if len(calleeLoginSlice)>min {
-				fmt.Printf("-%s calleeLoginMap (%s) %d/%d\n",
-					title, calleeID, len(calleeLoginSlice), maxLoginPer30min)
 				fmt.Fprintf(w,"%s calleeLoginMap (%s) %d/%d\n",
 					title, calleeID, len(calleeLoginSlice), maxLoginPer30min)
 			}
@@ -218,9 +216,9 @@ fmt.Fprintf(w,"%s calleeLoginMap (%s) A len=%d\n", title, calleeID, len(calleeLo
 func cleanupClientRequestsMap(w io.Writer, min int, title string) {
 	// cleanup clientRequestsMap so we don't hold on to memory after we don't have to
 	clientRequestsMutex.Lock()
-fmt.Fprintf(w,"%s clientRequestsMap len=%d\n", title, len(clientRequestsMap))
+	fmt.Fprintf(w,"%s clientRequestsMap len=%d\n", title, len(clientRequestsMap))
 	for calleeID,clientRequestsSlice := range clientRequestsMap {
-fmt.Fprintf(w,"%s clientRequestsMap (%s) A len=%d\n", title, calleeID, len(clientRequestsSlice))
+		//fmt.Fprintf(w,"%s clientRequestsMap (%s) A len=%d\n", title, calleeID, len(clientRequestsSlice))
 		if len(clientRequestsSlice)>0 {
 			for len(clientRequestsSlice)>0 {
 				if time.Now().Sub(clientRequestsSlice[0]) < 30 * time.Minute {
@@ -233,8 +231,6 @@ fmt.Fprintf(w,"%s clientRequestsMap (%s) A len=%d\n", title, calleeID, len(clien
 				clientRequestsSlice = clientRequestsSlice[1:]
 			}
 			if len(clientRequestsSlice)>=min {
-				fmt.Printf("-%s clientRequestsMap (%s) %d/%d\n",
-					title, calleeID, len(clientRequestsSlice), maxClientRequestsPer30min)
 				fmt.Fprintf(w,"%s clientRequestsMap (%s) %d/%d\n",
 					title, calleeID, len(clientRequestsSlice), maxClientRequestsPer30min)
 			}

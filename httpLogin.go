@@ -65,7 +65,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		blockMapMutex.Unlock()
 	}
 
-	// deny more than 15 logins per 30min (relative to urlID)
+	// deny a callee to do more than X logins per 30min (relative to urlID)
 	calleeLoginMutex.RLock()
 	calleeLoginSlice,ok := calleeLoginMap[urlID]
 	calleeLoginMutex.RUnlock()
