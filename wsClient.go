@@ -730,8 +730,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 		}
 		if c.pickupSent.Get() {
 			// prevent sending 'pickup' twice
-			fmt.Printf("# %s (%s) pickup ignored already sent %s\n",
-				c.connType, c.calleeID, c.RemoteAddr)
+			//fmt.Printf("# %s (%s) pickup ignored already sent %s\n",
+			//	c.connType, c.calleeID, c.RemoteAddr)
 			return
 		}
 
@@ -755,16 +755,17 @@ func (c *WsClient) receiveProcess(message []byte) {
 		if (c.hub.LocalP2p && c.hub.RemoteP2p) || c.hub.maxTalkSecsIfNoP2p<=0 {
 			// full p2p con: remove maxRingSecs deadline and do NOT replace it with any talktimer deadline
 //TODO this is done despite one side being relayed?
+//because c.hub.LocalP2p and c.hub.RemoteP2p are both true, despite 
 			if logWantedFor("calldur") {
-				fmt.Printf("%s clear setDeadline maxTalkSecsIfNoP2p %v %v\n",
-					c.connType, c.hub.LocalP2p, c.hub.RemoteP2p)
+				fmt.Printf("%s (%s) clear setDeadline maxTalkSecsIfNoP2p %v %v\n",
+					c.connType, c.calleeID, c.hub.LocalP2p, c.hub.RemoteP2p)
 			}
 			c.hub.setDeadline(0,"pickup")
 		} else {
 			// relayed con: clear maxRingSecs deadline and replace it with maxTalkSecsIfNoP2p deadline
 			if logWantedFor("calldur") {
-				fmt.Printf("%s setDeadline maxTalkSecsIfNoP2p %v %v\n",
-					c.connType, c.hub.LocalP2p, c.hub.RemoteP2p)
+				fmt.Printf("%s (%s) setDeadline maxTalkSecsIfNoP2p %v %v\n",
+					c.connType, c.calleeID, c.hub.LocalP2p, c.hub.RemoteP2p)
 			}
 			c.hub.setDeadline(c.hub.maxTalkSecsIfNoP2p,"pickup")
 
@@ -836,18 +837,27 @@ func (c *WsClient) receiveProcess(message []byte) {
 					}
 
 					if len(tok)>=3 {
-						tok2 := strings.Split(strings.TrimSpace(tok[2]), "/")
+						tok2string := strings.TrimSpace(tok[2])
+						tok2 := strings.Split(tok2string, "/")
 						if len(tok2)>=2 {
-							//fmt.Printf("%s tok2[0]=%s tok2[1]=%s\n", c.connType, tok2[0], tok2[1])
+fmt.Printf("%s tok2[0]=%s tok2[1]=%s\n", c.connType, tok2[0], tok2[1])
 							c.hub.HubMutex.Lock()
 							if tok2[0]=="p2p" {
 								c.hub.LocalP2p = true
+							} else {
+								c.hub.LocalP2p = false
 							}
 							if tok2[1]=="p2p" {
 								c.hub.RemoteP2p = true
+							} else {
+								c.hub.RemoteP2p = false
 							}
 							c.hub.HubMutex.Unlock()
+						} else {
+fmt.Printf("%s tok2string=%s has no slash\n", c.connType, tok2string)
 						}
+					} else {
+fmt.Printf("%s len(tok)<3\n", c.connType)
 					}
 
 					if constate=="Connected" || constate=="ConForce" {
