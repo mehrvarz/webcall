@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"unicode"
 	"encoding/gob"
+	"io"
 	"os"
 	"os/exec"
 	"sync"
@@ -174,65 +175,77 @@ func ticker20min() {
 			}
 		}
 
-		// cleanup calleeLoginMap so we don't hold on to memory after we don't have to
-		calleeLoginMutex.Lock()
-		for calleeID,calleeLoginSlice := range calleeLoginMap {
-			//fmt.Printf("ticker20min calleeLoginMap (%s) A len=%d\n", calleeID, len(calleeLoginSlice))
-			if len(calleeLoginSlice)>0 {
-				for len(calleeLoginSlice)>0 {
-					if time.Now().Sub(calleeLoginSlice[0]) < 30 * time.Minute {
-						break
-					}
-					if len(calleeLoginSlice)<=1 {
-						calleeLoginSlice = nil
-						break
-					}
-					calleeLoginSlice = calleeLoginSlice[1:]
-				}
-				if len(calleeLoginSlice)>3 {
-					fmt.Printf("ticker20min calleeLoginMap (%s) %d/%d\n",
-						calleeID, len(calleeLoginSlice), maxLoginPer30min)
-				}
-				if calleeLoginSlice==nil {
-					delete(calleeLoginMap,calleeID)
-				} else {
-					calleeLoginMap[calleeID] = calleeLoginSlice
-				}
-			}
-		}
-		calleeLoginMutex.Unlock()
-
-
-		// cleanup clientRequestsMap so we don't hold on to memory after we don't have to
-		clientRequestsMutex.Lock()
-		for calleeID,clientRequestsSlice := range clientRequestsMap {
-			//fmt.Printf("ticker20min clientRequestsMap (%s) A len=%d\n", calleeID, len(clientRequestsSlice))
-			if len(clientRequestsSlice)>0 {
-				for len(clientRequestsSlice)>0 {
-					if time.Now().Sub(clientRequestsSlice[0]) < 30 * time.Minute {
-						break
-					}
-					if len(clientRequestsSlice)<=1 {
-						clientRequestsSlice = nil
-						break
-					}
-					clientRequestsSlice = clientRequestsSlice[1:]
-				}
-				if len(clientRequestsSlice)>10 {
-					fmt.Printf("ticker20min clientRequestsMap (%s) %d/%d\n",
-						calleeID, len(clientRequestsSlice), maxClientRequestsPer30min)
-				}
-				if clientRequestsSlice==nil {
-					delete(clientRequestsMap,calleeID)
-				} else {
-					clientRequestsMap[calleeID] = clientRequestsSlice
-				}
-			}
-		}
-		clientRequestsMutex.Unlock()
+		cleanupCalleeLoginMap(os.Stdout, 3, "ticker20min")
+		cleanupClientRequestsMap(os.Stdout, 10, "ticker20min")
 
 		<-twentyMinTicker.C
 	}
+}
+
+func cleanupCalleeLoginMap(w io.Writer, min int, title string) {
+	// cleanup calleeLoginMap so we don't hold on to memory after we don't have to
+	calleeLoginMutex.Lock()
+fmt.Fprintf(w,"%s calleeLoginMap len=%d\n", title, len(calleeLoginMap))
+	for calleeID,calleeLoginSlice := range calleeLoginMap {
+fmt.Fprintf(w,"%s calleeLoginMap (%s) A len=%d\n", title, calleeID, len(calleeLoginSlice))
+		if len(calleeLoginSlice)>0 {
+			for len(calleeLoginSlice)>0 {
+				if time.Now().Sub(calleeLoginSlice[0]) < 30 * time.Minute {
+					break
+				}
+				if len(calleeLoginSlice)<=1 {
+					calleeLoginSlice = nil
+					break
+				}
+				calleeLoginSlice = calleeLoginSlice[1:]
+			}
+			if len(calleeLoginSlice)>min {
+				fmt.Printf("-%s calleeLoginMap (%s) %d/%d\n",
+					title, calleeID, len(calleeLoginSlice), maxLoginPer30min)
+				fmt.Fprintf(w,"%s calleeLoginMap (%s) %d/%d\n",
+					title, calleeID, len(calleeLoginSlice), maxLoginPer30min)
+			}
+			if calleeLoginSlice==nil {
+				delete(calleeLoginMap,calleeID)
+			} else {
+				calleeLoginMap[calleeID] = calleeLoginSlice
+			}
+		}
+	}
+	calleeLoginMutex.Unlock()
+}
+
+func cleanupClientRequestsMap(w io.Writer, min int, title string) {
+	// cleanup clientRequestsMap so we don't hold on to memory after we don't have to
+	clientRequestsMutex.Lock()
+fmt.Fprintf(w,"%s clientRequestsMap len=%d\n", title, len(clientRequestsMap))
+	for calleeID,clientRequestsSlice := range clientRequestsMap {
+fmt.Fprintf(w,"%s clientRequestsMap (%s) A len=%d\n", title, calleeID, len(clientRequestsSlice))
+		if len(clientRequestsSlice)>0 {
+			for len(clientRequestsSlice)>0 {
+				if time.Now().Sub(clientRequestsSlice[0]) < 30 * time.Minute {
+					break
+				}
+				if len(clientRequestsSlice)<=1 {
+					clientRequestsSlice = nil
+					break
+				}
+				clientRequestsSlice = clientRequestsSlice[1:]
+			}
+			if len(clientRequestsSlice)>=min {
+				fmt.Printf("-%s clientRequestsMap (%s) %d/%d\n",
+					title, calleeID, len(clientRequestsSlice), maxClientRequestsPer30min)
+				fmt.Fprintf(w,"%s clientRequestsMap (%s) %d/%d\n",
+					title, calleeID, len(clientRequestsSlice), maxClientRequestsPer30min)
+			}
+			if clientRequestsSlice==nil {
+				delete(clientRequestsMap,calleeID)
+			} else {
+				clientRequestsMap[calleeID] = clientRequestsSlice
+			}
+		}
+	}
+	clientRequestsMutex.Unlock()
 }
 
 // send url (pointing to update news) to all online callees
