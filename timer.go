@@ -199,11 +199,11 @@ func cleanupCalleeLoginMap(w io.Writer, min int, title string) {
 				}
 				calleeLoginSlice = calleeLoginSlice[1:]
 			}
-			if len(calleeLoginSlice)>min {
+			if len(calleeLoginSlice)>=min {
 				fmt.Fprintf(w,"%s calleeLoginMap (%s) %d/%d\n",
 					title, calleeID, len(calleeLoginSlice), maxLoginPer30min)
 			}
-			if calleeLoginSlice==nil {
+			if calleeLoginSlice==nil || len(calleeLoginSlice)==0 {
 				delete(calleeLoginMap,calleeID)
 			} else {
 				calleeLoginMap[calleeID] = calleeLoginSlice
@@ -234,7 +234,7 @@ func cleanupClientRequestsMap(w io.Writer, min int, title string) {
 				fmt.Fprintf(w,"%s clientRequestsMap (%s) %d/%d\n",
 					title, calleeID, len(clientRequestsSlice), maxClientRequestsPer30min)
 			}
-			if clientRequestsSlice==nil {
+			if clientRequestsSlice==nil || len(clientRequestsSlice)==0 {
 				delete(clientRequestsMap,calleeID)
 			} else {
 				clientRequestsMap[calleeID] = clientRequestsSlice
