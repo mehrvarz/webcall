@@ -611,15 +611,13 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 
 		if urlPath=="/dumpLoginCount" {
 			printFunc(w,"/dumpLoginCount rip=%s\n",remoteAddr)
-			cleanupCalleeLoginMap(w,0,urlPath)
-			//printFunc(w,"\n")
+			cleanupCalleeLoginMap(w,2,urlPath)
 			return
 		}
 
 		if urlPath=="/dumpRequestCount" {
 			printFunc(w,"/dumpRequestCount rip=%s\n",remoteAddr)
-			cleanupClientRequestsMap(w,0,urlPath)
-			//printFunc(w,"\n")
+			cleanupClientRequestsMap(w,3,urlPath)
 			return
 		}
 
