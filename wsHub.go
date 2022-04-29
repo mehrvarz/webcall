@@ -51,7 +51,8 @@ func (h *Hub) setDeadline(secs int, comment string) {
 	if h.timer!=nil {
 		// TODO this does not release <-h.timer.C
 		if logWantedFor("calldur") {
-			fmt.Printf("setDeadline clear old timer; new secs=%d (%s)\n",secs,comment)
+			fmt.Printf("setDeadline (%s) clear old timer; new secs=%d (%s)\n",
+				h.CalleeClient.calleeID, secs, comment)
 		}
 		h.timerCanceled <- struct{}{}
 		if h.timer!=nil {
@@ -67,7 +68,7 @@ func (h *Hub) setDeadline(secs int, comment string) {
 
 	if(secs>0) {
 		if logWantedFor("calldur") {
-			fmt.Printf("setDeadline create %ds (%s)\n",secs,comment)
+			fmt.Printf("setDeadline (%s) create %ds (%s)\n", h.CalleeClient.calleeID, secs, comment)
 		}
 		h.timer = time.NewTimer(time.Duration(secs) * time.Second)
 		h.timerCanceled = make(chan struct{})

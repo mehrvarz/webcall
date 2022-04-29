@@ -843,7 +843,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 						tok2string := strings.TrimSpace(tok[2])
 						tok2 := strings.Split(tok2string, "/")
 						if len(tok2)>=2 {
-fmt.Printf("%s tok2[0]=%s tok2[1]=%s\n", c.connType, tok2[0], tok2[1])
+							//fmt.Printf("%s tok2[0]=%s tok2[1]=%s\n", c.connType, tok2[0], tok2[1])
 							if tok2[0]=="p2p" {
 								c.hub.LocalP2p = true
 							}
@@ -851,10 +851,10 @@ fmt.Printf("%s tok2[0]=%s tok2[1]=%s\n", c.connType, tok2[0], tok2[1])
 								c.hub.RemoteP2p = true
 							}
 						} else {
-fmt.Printf("%s tok2string=%s has no slash\n", c.connType, tok2string)
+							fmt.Printf("%s tok2string=%s has no slash\n", c.connType, tok2string)
 						}
 					} else {
-fmt.Printf("%s len(tok)<3\n", c.connType)
+						fmt.Printf("%s len(tok)<3\n", c.connType)
 					}
 					c.hub.HubMutex.Unlock()
 
