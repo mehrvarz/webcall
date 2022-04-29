@@ -736,11 +736,15 @@ func (c *WsClient) receiveProcess(message []byte) {
 		// switching from maxRingSecs deadline to maxTalkSecsIfNoP2p deadline
 		if (c.hub.LocalP2p && c.hub.RemoteP2p) || c.hub.maxTalkSecsIfNoP2p<=0 {
 			// full p2p con: remove maxRingSecs deadline and do NOT replace it with any talktimer deadline
-			//fmt.Printf("skip setDeadline maxTalkSecsIfNoP2p %v %v\n", c.hub.LocalP2p, c.hub.RemoteP2p)
+			if logWantedFor("calldur") {
+fmt.Printf("%s clear setDeadline maxTalkSecsIfNoP2p %v %v\n", c.connType, c.hub.LocalP2p, c.hub.RemoteP2p)
+			}
 			c.hub.setDeadline(0,"pickup")
 		} else {
 			// relayed con: clear maxRingSecs deadline and replace it with maxTalkSecsIfNoP2p deadline
-			//fmt.Printf("%s setDeadline maxTalkSecsIfNoP2p %v %v\n", c.connType, c.hub.LocalP2p, c.hub.RemoteP2p)
+			if logWantedFor("calldur") {
+fmt.Printf("%s setDeadline maxTalkSecsIfNoP2p %v %v\n", c.connType, c.hub.LocalP2p, c.hub.RemoteP2p)
+			}
 			c.hub.setDeadline(c.hub.maxTalkSecsIfNoP2p,"pickup")
 
 			// deliver max talktime to both clients
@@ -957,6 +961,8 @@ func (c *WsClient) peerConHasEnded(comment string) {
 			c.connType, c.calleeID, peerType, c.hub.CallDurationSecs, localPeerCon, remotePeerCon,
 			c.hub.CalleeClient.RemoteAddrNoPort, 
 			c.hub.CallerClient.RemoteAddrNoPort, c.hub.CallerClient.callerID, comment)
+
+//		c.hub.setDeadline(0,"disc")
 
 		// clear recentTurnCalleeIps[ipNoPort] entry (if this was a relay session)
 		recentTurnCalleeIpMutex.Lock()
