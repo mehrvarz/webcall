@@ -485,8 +485,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 			if clientBlockBelowVersion!="" && c.clientVersion < clientBlockBelowVersion {
 				//fmt.Printf("%s (%s) ver=%s\n",c.connType,c.calleeID,c.clientVersion)
 				// NOTE: msg MUST NOT contain apostroph (') characters
-				msg := "Your WebCall for Android client is outdated."+
-						" <a href=\"/webcall/update\">Please update.</a>"
+				msg := "Your WebCall client is no longer supported."+
+						" <a href=\"/webcall/update\">Please upgrade.</a>"
 				fmt.Printf("%s (%s) send status|%s\n",c.connType,c.calleeID,msg)
 				c.Write([]byte("status|"+msg))
 				//c.Write([]byte("cancel|"))
