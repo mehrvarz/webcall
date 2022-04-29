@@ -182,8 +182,16 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	// set the time for sending the next ping
 	keepAliveMgr.SetPingDeadline(wsConn, pingPeriod, client) // now + pingPeriod secs
 
+	client.isOnline.Set(true)
+	client.RemoteAddr = remoteAddr
+	client.RemoteAddrNoPort = remoteAddrNoPort
+	client.userAgent = r.UserAgent()
+	client.authenticationShown = false // being used to make sure 'TURN auth SUCCESS' is only shown 1x per client
 
 	hub := wsClientData.hub // set by /login wsClientMap[wsClientID] = wsClientDataType{...}
+//	hub.HubMutex.Lock()
+	client.hub = hub
+//	hub.HubMutex.Unlock()
 
 	upgrader.OnMessage(func(wsConn *websocket.Conn, messageType websocket.MessageType, data []byte) {
 		// clear read deadline for now; we set it again when we send the next ping
@@ -259,14 +267,6 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		}
 	})
 
-	hub.HubMutex.Lock()
-	client.hub = hub
-	client.isOnline.Set(true)
-	client.RemoteAddr = remoteAddr
-	client.RemoteAddrNoPort = remoteAddrNoPort
-	client.userAgent = r.UserAgent()
-	client.authenticationShown = false // being used to make sure 'TURN auth SUCCESS' is only shown 1x per client
-
 	if hub.CalleeClient==nil {
 		// callee client (1st client)
 		if logWantedFor("wsclient") {
@@ -275,14 +275,17 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		}
 		client.isCallee = true
 		client.calleeInitReceived.Set(false)
+
+		hub.HubMutex.Lock()
 		hub.IsCalleeHidden = wsClientData.dbUser.Int2&1!=0
 		hub.IsUnHiddenForCallerAddr = ""
-
 		hub.WsClientID = wsClientID64
 		hub.CalleeClient = client
 		hub.CallerClient = nil
 		hub.ServiceStartTime = time.Now().Unix()
 		hub.ConnectedToPeerSecs = 0
+		hub.HubMutex.Unlock()
+
 		if !strings.HasPrefix(client.calleeID,"random") {
 			// get values related to talk- and service-time for this callee from the db
 			// so that 1s-ticker can calculate the live remaining time
@@ -303,8 +306,11 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				wsClientID64, callerID, client.RemoteAddr)
 		}
 
+		hub.HubMutex.Lock()
 		hub.CallDurationSecs = 0
 		hub.CallerClient = client
+		hub.HubMutex.Unlock()
+		client.isCallee = false
 		client.callerOfferForwarded.Set(false)
 
 		go func() {
@@ -312,17 +318,23 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			// set by constate=="Incoming" || constate=="Connected" || constate=="ConForce"
 			// (it can take up to 6-8 seconds in some cases for a devices to get fully out of deep sleep)
 			time.Sleep(10 * time.Second)
-			if hub!=nil && hub.CalleeClient!=nil && !hub.CalleeClient.isConnectedToPeer.Get() {
+
+			hub.HubMutex.RLock()
+			hub.HubMutex.RUnlock()
+			if hub.CalleeClient!=nil && !hub.CalleeClient.isConnectedToPeer.Get() {
 				if hub.CallerClient!=nil {
-					fmt.Printf("%s (%s/%s) release uncon caller ws=%d %s\n",
-						client.connType, client.calleeID, client.globalCalleeID, wsClientID64, client.RemoteAddr)
+					fmt.Printf("%s (%s/%s) release uncon caller ws=%d %s\n", client.connType,
+						client.calleeID, client.globalCalleeID, wsClientID64, client.RemoteAddr)
 
 					// tell caller about this
 					// NOTE: msg MUST NOT contain apostroph (') characters
 					msg := "Unable to establish peer connection."+
 						" This could be a network, a firewall or a WebRTC related issue."
 					hub.CallerClient.Write([]byte("status|"+msg))
+
+					hub.HubMutex.Lock()
 					hub.CallerClient = nil
+					hub.HubMutex.Unlock()
 
 					// tell callee about this
 					// NOTE: msg MUST NOT contain apostroph (') characters
@@ -357,7 +369,6 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		wsConn.WriteMessage(websocket.CloseMessage, nil)
 		wsConn.Close()
 	}
-	hub.HubMutex.Unlock()
 }
 
 func (c *WsClient) receiveProcess(message []byte) {
@@ -399,9 +410,9 @@ func (c *WsClient) receiveProcess(message []byte) {
 		}
 		c.calleeInitReceived.Set(true)
 
-		c.hub.HubMutex.Lock()
+		c.hub.HubMutex.RLock()
+		c.hub.HubMutex.RUnlock()
 		c.hub.CalleeLogin.Set(true)
-		c.hub.HubMutex.Unlock()
 
 		if logWantedFor("wscall") {
 			if c.isCallee {
@@ -522,6 +533,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 			return
 		}
 
+		c.hub.HubMutex.RLock()
+		c.hub.HubMutex.RUnlock()
 		c.hub.CalleeClient.calleeInitReceived.Set(false)
 
 		if logWantedFor("wscall") {
@@ -535,7 +548,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 		}
 		c.callerOfferForwarded.Set(true)
 
-		if c.hub != nil && c.hub.CallerClient != nil && c.hub.CalleeClient != nil {
+		if c.hub.CallerClient != nil && c.hub.CalleeClient != nil {
 			if c.hub.CallerClient.callerID!="" || c.hub.CallerClient.callerName!="" {
 				// send this directly to the callee: see callee.js if(cmd=="callerInfo")
 				sendCmd := "callerInfo|"+c.hub.CallerClient.callerID+":"+c.hub.CallerClient.callerName
@@ -590,12 +603,14 @@ func (c *WsClient) receiveProcess(message []byte) {
 
 	if cmd=="calleeHidden" {
 		//fmt.Printf("%s cmd=calleeHidden from %s (%s)\n",c.connType,c.RemoteAddr,payload)
+		c.hub.HubMutex.Lock()
 		if(payload=="true") {
 			c.hub.IsCalleeHidden = true
 		} else {
 			c.hub.IsCalleeHidden = false
 		}
 		c.hub.IsUnHiddenForCallerAddr = ""
+		c.hub.HubMutex.Unlock()
 
 		// forward state of c.isHiddenCallee to globalHubMap
 		err := SetCalleeHiddenState(c.calleeID, c.hub.IsCalleeHidden)
@@ -656,6 +671,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 		callerAddrPortPlusCallTime := payload
 		//fmt.Printf("%s deleteMissedCall from %s callee=%s (payload=%s)\n",
 		//	c.connType, c.RemoteAddr, c.calleeID, callerAddrPortPlusCallTime)
+		c.hub.HubMutex.RLock()
+		c.hub.HubMutex.RUnlock()
 
 		// remove this call from dbMissedCalls for c.calleeID
 		// first: load dbMissedCalls for c.calleeID
@@ -718,12 +735,13 @@ func (c *WsClient) receiveProcess(message []byte) {
 			return
 		}
 
+		c.hub.HubMutex.Lock()
 		c.hub.lastCallStartTime = time.Now().Unix()
+		c.hub.HubMutex.Unlock()
 		if logWantedFor("hub") {
 			fmt.Printf("%s (%s) pickup online=%v peerCon=%v starttime=%d\n",
 				c.connType, c.calleeID, c.isOnline.Get(), c.isConnectedToPeer.Get(), c.hub.lastCallStartTime)
 		}
-
 		if c.hub.CallerClient!=nil {
 			// deliver "pickup" to the caller
 			if logWantedFor("wscall") {
@@ -736,14 +754,17 @@ func (c *WsClient) receiveProcess(message []byte) {
 		// switching from maxRingSecs deadline to maxTalkSecsIfNoP2p deadline
 		if (c.hub.LocalP2p && c.hub.RemoteP2p) || c.hub.maxTalkSecsIfNoP2p<=0 {
 			// full p2p con: remove maxRingSecs deadline and do NOT replace it with any talktimer deadline
+//TODO this is done despite one side being relayed?
 			if logWantedFor("calldur") {
-fmt.Printf("%s clear setDeadline maxTalkSecsIfNoP2p %v %v\n", c.connType, c.hub.LocalP2p, c.hub.RemoteP2p)
+				fmt.Printf("%s clear setDeadline maxTalkSecsIfNoP2p %v %v\n",
+					c.connType, c.hub.LocalP2p, c.hub.RemoteP2p)
 			}
 			c.hub.setDeadline(0,"pickup")
 		} else {
 			// relayed con: clear maxRingSecs deadline and replace it with maxTalkSecsIfNoP2p deadline
 			if logWantedFor("calldur") {
-fmt.Printf("%s setDeadline maxTalkSecsIfNoP2p %v %v\n", c.connType, c.hub.LocalP2p, c.hub.RemoteP2p)
+				fmt.Printf("%s setDeadline maxTalkSecsIfNoP2p %v %v\n",
+					c.connType, c.hub.LocalP2p, c.hub.RemoteP2p)
 			}
 			c.hub.setDeadline(c.hub.maxTalkSecsIfNoP2p,"pickup")
 
@@ -767,6 +788,8 @@ fmt.Printf("%s setDeadline maxTalkSecsIfNoP2p %v %v\n", c.connType, c.hub.LocalP
 
 	if cmd=="log" {
 		// TODO make extra sure payload is not malformed
+		c.hub.HubMutex.RLock()
+		c.hub.HubMutex.RUnlock()
 		if c==nil {
 			fmt.Printf("# peer c==nil\n")
 		} else if c.hub==nil {
@@ -816,12 +839,14 @@ fmt.Printf("%s setDeadline maxTalkSecsIfNoP2p %v %v\n", c.connType, c.hub.LocalP
 						tok2 := strings.Split(strings.TrimSpace(tok[2]), "/")
 						if len(tok2)>=2 {
 							//fmt.Printf("%s tok2[0]=%s tok2[1]=%s\n", c.connType, tok2[0], tok2[1])
+							c.hub.HubMutex.Lock()
 							if tok2[0]=="p2p" {
 								c.hub.LocalP2p = true
 							}
 							if tok2[1]=="p2p" {
 								c.hub.RemoteP2p = true
 							}
+							c.hub.HubMutex.Unlock()
 						}
 					}
 
@@ -875,6 +900,8 @@ fmt.Printf("%s setDeadline maxTalkSecsIfNoP2p %v %v\n", c.connType, c.hub.LocalP
 		return
 	}
 
+	c.hub.HubMutex.RLock()
+	c.hub.HubMutex.RUnlock()
 	if !c.isCallee {
 		// client is caller
 		if !c.hub.CalleeClient.isOnline.Get() {
@@ -933,7 +960,8 @@ func (c *WsClient) peerConHasEnded(comment string) {
 	// or bc callee has unregistered
 	c.hub.setDeadline(0,comment)
 	peerType := "caller"
-	if c==c.hub.CalleeClient {
+//	if c==c.hub.CalleeClient {
+	if c.isCallee {
 		peerType = "callee"
 	}
 	if !c.isConnectedToPeer.Get() {
@@ -1015,11 +1043,17 @@ func (c *WsClient) peerConHasEnded(comment string) {
 
 		c.isConnectedToPeer.Set(false)
 		c.isMediaConnectedToPeer.Set(false)
+		c.hub.HubMutex.RLock()
+		c.hub.HubMutex.RUnlock()
 		if c.isCallee {
 			if c.hub.CallerClient!=nil {
 				c.hub.CallerClient.isConnectedToPeer.Set(false)
 				c.hub.CallerClient.isMediaConnectedToPeer.Set(false)
+
+				// hub.CallerClient must be nil
+				c.hub.HubMutex.Lock()
 				c.hub.CallerClient = nil
+				c.hub.HubMutex.Unlock()
 			}
 		} else {
 			if c.hub.CalleeClient!=nil {
