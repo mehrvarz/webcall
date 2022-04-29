@@ -215,8 +215,8 @@ func cleanupCalleeLoginMap(w io.Writer, min int, title string) {
 
 func cleanupClientRequestsMap(w io.Writer, min int, title string) {
 	// cleanup clientRequestsMap so we don't hold on to memory after we don't have to
+	var deleteID []string
 	clientRequestsMutex.Lock()
-	fmt.Fprintf(w,"%s clientRequestsMap len=%d\n", title, len(clientRequestsMap))
 	for calleeID,clientRequestsSlice := range clientRequestsMap {
 		//fmt.Fprintf(w,"%s clientRequestsMap (%s) A len=%d\n", title, calleeID, len(clientRequestsSlice))
 		if len(clientRequestsSlice)>0 {
@@ -230,15 +230,21 @@ func cleanupClientRequestsMap(w io.Writer, min int, title string) {
 				}
 				clientRequestsSlice = clientRequestsSlice[1:]
 			}
-			if len(clientRequestsSlice)>=min {
-				fmt.Fprintf(w,"%s clientRequestsMap (%s) %d/%d\n",
-					title, calleeID, len(clientRequestsSlice), maxClientRequestsPer30min)
-			}
-			if clientRequestsSlice==nil || len(clientRequestsSlice)==0 {
-				delete(clientRequestsMap,calleeID)
+			if clientRequestsSlice==nil || len(clientRequestsSlice)<=0 {
+				deleteID = append(deleteID,calleeID)
 			} else {
 				clientRequestsMap[calleeID] = clientRequestsSlice
 			}
+		}
+	}
+	for _,ID := range deleteID {
+		delete(clientRequestsMap,ID)
+	}
+	fmt.Fprintf(w,"%s clientRequestsMap len=%d\n", title, len(clientRequestsMap))
+	for calleeID,clientRequestsSlice := range clientRequestsMap {
+		if len(clientRequestsSlice)>=min {
+			fmt.Fprintf(w,"%s clientRequestsMap (%s) %d/%d\n",
+				title, calleeID, len(clientRequestsSlice), maxClientRequestsPer30min)
 		}
 	}
 	clientRequestsMutex.Unlock()
