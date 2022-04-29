@@ -184,8 +184,8 @@ func ticker20min() {
 
 func cleanupCalleeLoginMap(w io.Writer, min int, title string) {
 	// cleanup calleeLoginMap so we don't hold on to memory after we don't have to
+	var deleteID []string
 	calleeLoginMutex.Lock()
-	fmt.Fprintf(w,"%s calleeLoginMap len=%d\n", title, len(calleeLoginMap))
 	for calleeID,calleeLoginSlice := range calleeLoginMap {
 		//fmt.Fprintf(w,"%s calleeLoginMap (%s) A len=%d\n", title, calleeID, len(calleeLoginSlice))
 		if len(calleeLoginSlice)>0 {
@@ -199,15 +199,21 @@ func cleanupCalleeLoginMap(w io.Writer, min int, title string) {
 				}
 				calleeLoginSlice = calleeLoginSlice[1:]
 			}
-			if len(calleeLoginSlice)>=min {
-				fmt.Fprintf(w,"%s calleeLoginMap (%s) %d/%d\n",
-					title, calleeID, len(calleeLoginSlice), maxLoginPer30min)
-			}
-			if calleeLoginSlice==nil || len(calleeLoginSlice)==0 {
-				delete(calleeLoginMap,calleeID)
+			if calleeLoginSlice==nil || len(calleeLoginSlice)<=0 {
+				deleteID = append(deleteID,calleeID)
 			} else {
 				calleeLoginMap[calleeID] = calleeLoginSlice
 			}
+		}
+	}
+	for _,ID := range deleteID {
+		delete(calleeLoginMap,ID)
+	}
+	fmt.Fprintf(w,"%s calleeLoginMap len=%d\n", title, len(calleeLoginMap))
+	for calleeID,calleeLoginSlice := range calleeLoginMap {
+		if len(calleeLoginSlice)>=min {
+			fmt.Fprintf(w,"%s calleeLoginMap (%s) %d/%d\n",
+				title, calleeID, len(calleeLoginSlice), maxLoginPer30min)
 		}
 	}
 	calleeLoginMutex.Unlock()
