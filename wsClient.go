@@ -836,29 +836,27 @@ func (c *WsClient) receiveProcess(message []byte) {
 						c.hub.CalleeClient.isConnectedToPeer.Set(true)
 					}
 
+					c.hub.HubMutex.Lock()
+					c.hub.LocalP2p = false
+					c.hub.RemoteP2p = false
 					if len(tok)>=3 {
 						tok2string := strings.TrimSpace(tok[2])
 						tok2 := strings.Split(tok2string, "/")
 						if len(tok2)>=2 {
 fmt.Printf("%s tok2[0]=%s tok2[1]=%s\n", c.connType, tok2[0], tok2[1])
-							c.hub.HubMutex.Lock()
 							if tok2[0]=="p2p" {
 								c.hub.LocalP2p = true
-							} else {
-								c.hub.LocalP2p = false
 							}
 							if tok2[1]=="p2p" {
 								c.hub.RemoteP2p = true
-							} else {
-								c.hub.RemoteP2p = false
 							}
-							c.hub.HubMutex.Unlock()
 						} else {
 fmt.Printf("%s tok2string=%s has no slash\n", c.connType, tok2string)
 						}
 					} else {
 fmt.Printf("%s len(tok)<3\n", c.connType)
 					}
+					c.hub.HubMutex.Unlock()
 
 					if constate=="Connected" || constate=="ConForce" {
 						c.isMediaConnectedToPeer.Set(true) // this is full media-connect
