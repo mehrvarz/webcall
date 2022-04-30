@@ -179,6 +179,7 @@ var cspString = ""
 var thirtySecStats = false
 var clientUpdateBelowVersion = ""
 var clientBlockBelowVersion = ""
+var serverStartTime time.Time
 
 
 func main() {
@@ -192,6 +193,7 @@ func main() {
 	}
 
 	fmt.Printf("--------------- webcall startup ---------------\n")
+	serverStartTime = time.Now()
 	hubMap = make(map[string]*Hub) // calleeID -> *Hub
 	blockMap = make(map[string]time.Time)
 	calleeLoginMap = make(map[string][]time.Time)

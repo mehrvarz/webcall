@@ -516,9 +516,12 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				myHubMutex.RUnlock()
 
 				// the next login attempt of urlID/globalID will be denied to break it's reconnecter loop
-				blockMapMutex.Lock()
-				blockMap[urlID] = time.Now()
-				blockMapMutex.Unlock()
+				// but we should NOT do this right after server start
+				if time.Now().Sub(serverStartTime) > 30 * time.Second {
+					blockMapMutex.Lock()
+					blockMap[urlID] = time.Now()
+					blockMapMutex.Unlock()
+				}
 
 				if globalID != "" {
 					//_,lenGlobalHubMap = 
