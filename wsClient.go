@@ -498,11 +498,10 @@ func (c *WsClient) receiveProcess(message []byte) {
 						" Please <a href=\"/webcall/update\">upgrade</a> to the new v1.x release."
 				fmt.Printf("%s (%s) send status|%s\n",c.connType,c.calleeID,msg)
 				c.Write([]byte("status|"+msg))
-				//c.Write([]byte("cancel|"))
-				time.Sleep(500 * time.Millisecond)
-				//c.wsConn.WriteMessage(websocket.CloseMessage, nil)
-				//c.wsConn.Close()
-				c.Close("outdated")
+				go func() {
+					time.Sleep(1500 * time.Millisecond)
+					c.Close("outdated")
+				}()
 				return
 			}
 			if clientUpdateBelowVersion!="" && c.clientVersion < clientUpdateBelowVersion {
