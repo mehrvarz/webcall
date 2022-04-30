@@ -323,9 +323,11 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 					client.calleeID, client.globalCalleeID, wsClientID64, client.RemoteAddr)
 
 				// NOTE: msg MUST NOT contain apostroph (') characters
-				msg := "Unable to establish peer connection."+
-			" This could be a network/firewall or a browser/WebRTC related issue one either side."+
-			" On Android make sure <a href=\"/webcall/android/#webview\">WebRTC-Check</a> works on your device."
+				msg :=  "Unable to establish direct P2P connection."+
+						" This could be a browser/WebRTC related issue."+
+						" Could also be a network/firewall issue."+
+						" On Android make sure <a href=\"/webcall/android/#webview\">WebRTC-Check</a>"+
+						" works on your device."
 				// tell caller about this
 				hub.CallerClient.Write([]byte("status|"+msg))
 				// tell callee about this
