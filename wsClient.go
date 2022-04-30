@@ -319,20 +319,21 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 			hub.HubMutex.RLock()
 			if hub.CalleeClient!=nil && !hub.CalleeClient.isConnectedToPeer.Get() && hub.CallerClient!=nil {
-				fmt.Printf("%s (%s/%s) release uncon caller ws=%d %s\n", client.connType,
+				fmt.Printf("%s (%s/%s) caller not peercon ws=%d %s\n", client.connType,
 					client.calleeID, client.globalCalleeID, wsClientID64, client.RemoteAddr)
 
 				// tell caller about this
 				// NOTE: msg MUST NOT contain apostroph (') characters
 				msg := "Unable to establish peer connection."+
-					" This could be a network, a firewall or a WebRTC related issue."
+			" This could be a network, a firewall or a WebRTC related issue."+
+			" On Android make sure <a href=\"/webcall/android/#webview\">WebRTC-Check</a> works on your device."
 				hub.CallerClient.Write([]byte("status|"+msg))
 
 				// tell callee about this
 				// NOTE: msg MUST NOT contain apostroph (') characters
 				msg = "Unable to establish peer connection with caller."+
-					" This could be a network, a firewall or a WebRTC related issue."+
-					" Make sure <a href=\"/webcall/android/#webview\">WebRTC-Check</a> works on your device."
+			" This could be a network, a firewall or a WebRTC related issue."+
+			" On Android make sure <a href=\"/webcall/android/#webview\">WebRTC-Check</a> works on your device."
 				hub.CalleeClient.Write([]byte("status|"+msg))
 				hub.HubMutex.RUnlock()
 
@@ -345,7 +346,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				if err!=nil {
 					// err "key not found": callee has already signed off - can be ignored
 					if strings.Index(err.Error(),"key not found")<0 {
-						fmt.Printf("# %s (%s) release uncon caller clear callerIpInHub err=%v\n",
+						fmt.Printf("# %s (%s) caller not peercon clear callerIpInHub err=%v\n",
 							client.connType, client.calleeID, err)
 					}
 				}
