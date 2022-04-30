@@ -317,10 +317,10 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	if calleeIsHiddenOnline {
 		hubMapMutex.RLock()
 		myhub := hubMap[urlID]
-		hubMapMutex.RUnlock()
 		if myhub!=nil {
 			calleeWsClient = myhub.CalleeClient
 		}
+		hubMapMutex.RUnlock()
 		if calleeWsClient != nil {
 			calleeWsClient.hub.IsUnHiddenForCallerAddr = ""
 			//fmt.Printf("/notifyCallee (%s) send waitingCallerSlice len=%d\n",

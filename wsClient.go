@@ -318,39 +318,39 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			time.Sleep(10 * time.Second)
 
 			hub.HubMutex.RLock()
-			hub.HubMutex.RUnlock()
-			if hub.CalleeClient!=nil && !hub.CalleeClient.isConnectedToPeer.Get() {
-				if hub.CallerClient!=nil {
-					fmt.Printf("%s (%s/%s) release uncon caller ws=%d %s\n", client.connType,
-						client.calleeID, client.globalCalleeID, wsClientID64, client.RemoteAddr)
+			if hub.CalleeClient!=nil && !hub.CalleeClient.isConnectedToPeer.Get() && hub.CallerClient!=nil {
+				fmt.Printf("%s (%s/%s) release uncon caller ws=%d %s\n", client.connType,
+					client.calleeID, client.globalCalleeID, wsClientID64, client.RemoteAddr)
 
-					// tell caller about this
-					// NOTE: msg MUST NOT contain apostroph (') characters
-					msg := "Unable to establish peer connection."+
-						" This could be a network, a firewall or a WebRTC related issue."
-					hub.CallerClient.Write([]byte("status|"+msg))
+				// tell caller about this
+				// NOTE: msg MUST NOT contain apostroph (') characters
+				msg := "Unable to establish peer connection."+
+					" This could be a network, a firewall or a WebRTC related issue."
+				hub.CallerClient.Write([]byte("status|"+msg))
 
-					hub.HubMutex.Lock()
-					hub.CallerClient = nil
-					hub.HubMutex.Unlock()
+				// tell callee about this
+				// NOTE: msg MUST NOT contain apostroph (') characters
+				msg = "Unable to establish peer connection with caller."+
+					" This could be a network, a firewall or a WebRTC related issue."+
+					" Make sure <a href=\"/webcall/android/#webview\">WebRTC-Check</a> works on your device."
+				hub.CalleeClient.Write([]byte("status|"+msg))
+				hub.HubMutex.RUnlock()
 
-					// tell callee about this
-					// NOTE: msg MUST NOT contain apostroph (') characters
-					msg = "Unable to establish peer connection with caller."+
-						" This could be a network, a firewall or a WebRTC related issue."+
-						" Make sure <a href=\"/webcall/android/#webview\">WebRTC-Check</a> works on your device."
-					hub.CalleeClient.Write([]byte("status|"+msg))
+				hub.HubMutex.Lock()
+				hub.CallerClient = nil
+				hub.HubMutex.Unlock()
 
-					// clear CallerIpInHubMap
-					err := StoreCallerIpInHubMap(client.globalCalleeID, "", false)
-					if err!=nil {
-						// err "key not found": callee has already signed off - can be ignored
-						if strings.Index(err.Error(),"key not found")<0 {
-							fmt.Printf("# %s (%s) release uncon caller clear callerIpInHub err=%v\n",
-								client.connType, client.calleeID, err)
-						}
+				// clear CallerIpInHubMap
+				err := StoreCallerIpInHubMap(client.globalCalleeID, "", false)
+				if err!=nil {
+					// err "key not found": callee has already signed off - can be ignored
+					if strings.Index(err.Error(),"key not found")<0 {
+						fmt.Printf("# %s (%s) release uncon caller clear callerIpInHub err=%v\n",
+							client.connType, client.calleeID, err)
 					}
 				}
+			} else {
+				hub.HubMutex.RUnlock()
 			}
 		}()
 
@@ -409,8 +409,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 		c.calleeInitReceived.Set(true)
 
 		c.hub.HubMutex.RLock()
-		c.hub.HubMutex.RUnlock()
 		c.hub.CalleeLogin.Set(true)
+		c.hub.HubMutex.RUnlock()
 
 		if logWantedFor("wscall") {
 			if c.isCallee {
@@ -532,8 +532,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 		}
 
 		c.hub.HubMutex.RLock()
-		c.hub.HubMutex.RUnlock()
 		c.hub.CalleeClient.calleeInitReceived.Set(false)
+		c.hub.HubMutex.RUnlock()
 
 		if logWantedFor("wscall") {
 			fmt.Printf("%s (%s) callerOffer (call attempt) %s\n",
@@ -608,12 +608,13 @@ func (c *WsClient) receiveProcess(message []byte) {
 			c.hub.IsCalleeHidden = false
 		}
 		c.hub.IsUnHiddenForCallerAddr = ""
+		calleeHidden := c.hub.IsCalleeHidden
 		c.hub.HubMutex.Unlock()
 
 		// forward state of c.isHiddenCallee to globalHubMap
-		err := SetCalleeHiddenState(c.calleeID, c.hub.IsCalleeHidden)
+		err := SetCalleeHiddenState(c.calleeID, calleeHidden)
 		if err != nil {
-			fmt.Printf("# serveWs (%s) SetCalleeHiddenState %v err=%v\n",c.calleeID,c.hub.IsCalleeHidden,err)
+			fmt.Printf("# serveWs (%s) SetCalleeHiddenState %v err=%v\n", c.calleeID, calleeHidden, err)
 		}
 
 		// read dbUser for IsCalleeHidden flag
@@ -625,12 +626,12 @@ func (c *WsClient) receiveProcess(message []byte) {
 			fmt.Printf("# serveWs (%s) cmd=calleeHidden db=%s bucket=%s getX key=%v err=%v\n",
 				c.calleeID, dbMainName, dbUserBucket, userKey, err)
 		} else {
-			if c.hub.IsCalleeHidden {
+			if calleeHidden {
 				dbUser.Int2 |= 1
 			} else {
 				dbUser.Int2 &= ^1
 			}
-			fmt.Printf("%s (%s) set hidden=%v\n", c.connType, c.calleeID, c.hub.IsCalleeHidden)
+			fmt.Printf("%s (%s) set hidden=%v\n", c.connType, c.calleeID, calleeHidden)
 			err := kvMain.Put(dbUserBucket, userKey, dbUser, true) // skipConfirm
 			if err!=nil {
 				fmt.Printf("# serveWs (%s) calleeHidden db=%s bucket=%s put key=%v err=%v\n",
@@ -669,13 +670,13 @@ func (c *WsClient) receiveProcess(message []byte) {
 		callerAddrPortPlusCallTime := payload
 		//fmt.Printf("%s deleteMissedCall from %s callee=%s (payload=%s)\n",
 		//	c.connType, c.RemoteAddr, c.calleeID, callerAddrPortPlusCallTime)
-		c.hub.HubMutex.RLock()
-		c.hub.HubMutex.RUnlock()
 
 		// remove this call from dbMissedCalls for c.calleeID
 		// first: load dbMissedCalls for c.calleeID
 		var missedCallsSlice []CallerInfo
+		c.hub.HubMutex.RLock()
 		userKey := c.calleeID + "_" + strconv.FormatInt(int64(c.hub.registrationStartTime),10)
+		c.hub.HubMutex.RUnlock()
 		var dbUser DbUser
 		err := kvMain.Get(dbUserBucket, userKey, &dbUser)
 		if err!=nil {
@@ -710,7 +711,9 @@ func (c *WsClient) receiveProcess(message []byte) {
 						fmt.Printf("# serveWs deleteMissedCall (%s) failed json.Marshal\n", c.calleeID)
 					} else {
 						//fmt.Printf("deleteMissedCall send missedCallsSlice %s\n", c.calleeID)
+						c.hub.HubMutex.RLock()
 						c.hub.CalleeClient.Write([]byte("missedCalls|"+string(json)))
+						c.hub.HubMutex.RUnlock()
 					}
 					break
 				}
@@ -740,6 +743,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 			fmt.Printf("%s (%s) pickup online=%v peerCon=%v starttime=%d\n",
 				c.connType, c.calleeID, c.isOnline.Get(), c.isConnectedToPeer.Get(), c.hub.lastCallStartTime)
 		}
+		c.hub.HubMutex.RLock()
 		if c.hub.CallerClient!=nil {
 			// deliver "pickup" to the caller
 			if logWantedFor("wscall") {
@@ -750,10 +754,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 		}
 
 		// switching from maxRingSecs deadline to maxTalkSecsIfNoP2p deadline
-		if (c.hub.LocalP2p && c.hub.RemoteP2p) || c.hub.maxTalkSecsIfNoP2p<=0 {
+		if c.hub.maxTalkSecsIfNoP2p<=0 || (c.hub.LocalP2p && c.hub.RemoteP2p) {
 			// full p2p con: remove maxRingSecs deadline and do NOT replace it with any talktimer deadline
-//TODO this is done despite one side being relayed?
-//because c.hub.LocalP2p and c.hub.RemoteP2p are both true, despite 
 			if logWantedFor("calldur") {
 				fmt.Printf("%s (%s) clear setDeadline maxTalkSecsIfNoP2p %v %v\n",
 					c.connType, c.calleeID, c.hub.LocalP2p, c.hub.RemoteP2p)
@@ -770,6 +772,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 			// deliver max talktime to both clients
 			c.hub.doBroadcast([]byte("sessionDuration|"+strconv.FormatInt(int64(c.hub.maxTalkSecsIfNoP2p),10)))
 		}
+		c.hub.HubMutex.RUnlock()
 		return
 	}
 
@@ -787,130 +790,133 @@ func (c *WsClient) receiveProcess(message []byte) {
 
 	if cmd=="log" {
 		// TODO make extra sure payload is not malformed
-		c.hub.HubMutex.RLock()
-		c.hub.HubMutex.RUnlock()
 		if c==nil {
 			fmt.Printf("# peer c==nil\n")
-		} else if c.hub==nil {
+			return
+		}
+		if c.hub==nil {
 			fmt.Printf("# %s (%s) peer c.hub==nil ver=%s\n", c.connType, c.calleeID, c.clientVersion)
-		} else if c.hub.CallerClient==nil {
+			return
+		}
+
+		c.hub.HubMutex.Lock()
+		if c.hub.CallerClient==nil {
+			c.hub.HubMutex.Unlock()
 			// # serveWss (83710725871) peer 'callee Connected unknw/unknw'
 			// this happens when caller disconnects immediately
 			//fmt.Printf("# %s (%s) peer %s c.hub.CallerClient==nil ver=%s\n",
 			//	c.connType, c.calleeID, payload, c.clientVersion)
 			// clear callerIpInHubMap via StoreCallerIpInHubMap(,"") ?
 			StoreCallerIpInHubMap(c.globalCalleeID, "", false)
+			return
+		}
+
+		// payload = "callee Connected p2p/p2p"
+		tok := strings.Split(payload, " ")
+
+		// payload = "callee Incoming p2p/p2p" or "callee Connected p2p/p2p"
+		// "%s (%s) peer callee Incoming p2p/p2p" or "%s (%s) peer callee Connected p2p/p2p"
+		// note: "callee Connected p2p/p2p" can happen multiple times
+		constate := ""
+		constateShort := "-"
+		if len(tok)>=2 {
+			constate = strings.TrimSpace(tok[1])
+			if constate=="Incoming"  { constateShort = "RING" }
+			if constate=="Connected" { constateShort = "CONN" }
+			if constate=="ConForce"  { constateShort = "CONF" }
+		}
+		if tok[0]=="callee" {
+			fmt.Printf("%s (%s) PEER %s %s %s %s <- %s (%s)\n",
+				c.connType, c.calleeID, tok[0], constateShort, tok[2], c.hub.CalleeClient.RemoteAddrNoPort,
+				c.hub.CallerClient.RemoteAddrNoPort, c.hub.CallerClient.callerID)
 		} else {
-			// payload = "callee Connected p2p/p2p"
-			tok := strings.Split(payload, " ")
+			fmt.Printf("%s (%s) PEER %s %s %s %s <- %s (%s)\n",
+				c.connType, c.calleeID, tok[0], constateShort, tok[2], c.hub.CalleeClient.RemoteAddrNoPort,
+				c.hub.CallerClient.RemoteAddrNoPort, c.hub.CallerClient.callerID)
+		}
 
-			// payload = "callee Incoming p2p/p2p" or "callee Connected p2p/p2p"
-			// "%s (%s) peer callee Incoming p2p/p2p" or "%s (%s) peer callee Connected p2p/p2p"
-			// note: "callee Connected p2p/p2p" can happen multiple times
-			constate := ""
-			constateShort := "-"
-			if len(tok)>=2 {
-				constate = strings.TrimSpace(tok[1])
-				if constate=="Incoming"  { constateShort = "RING" }
-				if constate=="Connected" { constateShort = "CONN" }
-				if constate=="ConForce"  { constateShort = "CONF" }
+		if len(tok)>=2 && (constate=="Incoming" || constate=="Connected" || constate=="ConForce") {
+			//fmt.Printf("%s (%s) set ConnectedToPeer\n", c.connType, c.calleeID)
+			c.isConnectedToPeer.Set(true) // this is peer-connect, not full media-connect
+			if !c.isCallee {
+				// when the caller sends "log", the callee also becomes peerConnected
+				c.hub.CalleeClient.isConnectedToPeer.Set(true)
 			}
-			if tok[0]=="callee" {
-				fmt.Printf("%s (%s) PEER %s %s %s %s <- %s (%s)\n",
-					c.connType, c.calleeID, tok[0], constateShort, tok[2], c.hub.CalleeClient.RemoteAddrNoPort,
-					c.hub.CallerClient.RemoteAddrNoPort, c.hub.CallerClient.callerID)
+
+			c.hub.LocalP2p = false
+			c.hub.RemoteP2p = false
+			if len(tok)>=3 {
+				tok2string := strings.TrimSpace(tok[2])
+				tok2 := strings.Split(tok2string, "/")
+				if len(tok2)>=2 {
+					//fmt.Printf("%s tok2[0]=%s tok2[1]=%s\n", c.connType, tok2[0], tok2[1])
+					if tok2[0]=="p2p" {
+						c.hub.LocalP2p = true
+					}
+					if tok2[1]=="p2p" {
+						c.hub.RemoteP2p = true
+					}
+				} else {
+					fmt.Printf("%s tok2string=%s has no slash\n", c.connType, tok2string)
+				}
 			} else {
-				fmt.Printf("%s (%s) PEER %s %s %s %s <- %s (%s)\n",
-					c.connType, c.calleeID, tok[0], constateShort, tok[2], c.hub.CalleeClient.RemoteAddrNoPort,
-					c.hub.CallerClient.RemoteAddrNoPort, c.hub.CallerClient.callerID)
+				fmt.Printf("%s len(tok)<3\n", c.connType)
 			}
 
-			if len(tok)>=2 {
-				if constate=="Incoming" || constate=="Connected" || constate=="ConForce" {
-					//fmt.Printf("%s (%s) set ConnectedToPeer\n", c.connType, c.calleeID)
-					c.isConnectedToPeer.Set(true) // this is peer-connect, not full media-connect
-					if !c.isCallee {
-						// when the caller sends "log", the callee also becomes peerConnected
-						c.hub.CalleeClient.isConnectedToPeer.Set(true)
-					}
+			if constate=="Connected" || constate=="ConForce" {
+				c.isMediaConnectedToPeer.Set(true) // this is full media-connect
+				if !c.isCallee {
+					// when the caller sends "log", the callee also becomes media-Connected
+					c.hub.CalleeClient.isMediaConnectedToPeer.Set(true)
+				}
 
-					c.hub.HubMutex.Lock()
-					c.hub.LocalP2p = false
-					c.hub.RemoteP2p = false
-					if len(tok)>=3 {
-						tok2string := strings.TrimSpace(tok[2])
-						tok2 := strings.Split(tok2string, "/")
-						if len(tok2)>=2 {
-							//fmt.Printf("%s tok2[0]=%s tok2[1]=%s\n", c.connType, tok2[0], tok2[1])
-							if tok2[0]=="p2p" {
-								c.hub.LocalP2p = true
-							}
-							if tok2[1]=="p2p" {
-								c.hub.RemoteP2p = true
-							}
-						} else {
-							fmt.Printf("%s tok2string=%s has no slash\n", c.connType, tok2string)
+				if maxClientRequestsPer30min>0 && c.RemoteAddr!=outboundIP && c.RemoteAddr!="127.0.0.1" {
+					clientRequestsMutex.Lock()
+					clientRequestsMap[c.RemoteAddr] = nil
+					clientRequestsMutex.Unlock()
+				}
+
+				if !c.isCallee {
+					if constate=="ConForce" {
+						// test-caller sends this msg to callee, test-clients do not really connect p2p
+						c.hub.CalleeClient.Write([]byte("callerConnect|"))
+					} else if constate=="Connected" {
+						// caller is reporting peerCon: both peers are now directly connected
+						// now force-disconnect the caller
+						readConfigLock.RLock()
+						myDisconCalleeOnPeerConnected := disconCalleeOnPeerConnected
+						myDisconCallerOnPeerConnected := disconCallerOnPeerConnected
+						readConfigLock.RUnlock()
+						if myDisconCalleeOnPeerConnected || myDisconCallerOnPeerConnected {
+							time.Sleep(20 * time.Millisecond)
 						}
-					} else {
-						fmt.Printf("%s len(tok)<3\n", c.connType)
-					}
-					c.hub.HubMutex.Unlock()
-
-					if constate=="Connected" || constate=="ConForce" {
-						c.isMediaConnectedToPeer.Set(true) // this is full media-connect
-						if !c.isCallee {
-							// when the caller sends "log", the callee also becomes media-Connected
-							c.hub.CalleeClient.isMediaConnectedToPeer.Set(true)
+						if myDisconCalleeOnPeerConnected {
+							// this is currently never done
+							fmt.Printf("%s peer callee disconnect %s %s\n",
+								c.connType, c.calleeID, c.RemoteAddr)
+							c.hub.CalleeClient.Close("disconCalleeOnPeerConnected")
 						}
-
-						if maxClientRequestsPer30min>0 && c.RemoteAddr!=outboundIP && c.RemoteAddr!="127.0.0.1" {
-							clientRequestsMutex.Lock()
-							clientRequestsMap[c.RemoteAddr] = nil
-							clientRequestsMutex.Unlock()
-						}
-
-						if !c.isCallee {
-							if constate=="ConForce" {
-								// test-caller sends this msg to callee, test-clients do not really connect p2p
-								c.hub.CalleeClient.Write([]byte("callerConnect|"))
-							} else if constate=="Connected" {
-								// caller is reporting peerCon: both peers are now directly connected
-								// now force-disconnect the caller
-								readConfigLock.RLock()
-								myDisconCalleeOnPeerConnected := disconCalleeOnPeerConnected
-								myDisconCallerOnPeerConnected := disconCallerOnPeerConnected
-								readConfigLock.RUnlock()
-								if myDisconCalleeOnPeerConnected || myDisconCallerOnPeerConnected {
-									time.Sleep(20 * time.Millisecond)
-								}
-								if myDisconCalleeOnPeerConnected {
-									// this is currently never done
-									fmt.Printf("%s peer callee disconnect %s %s\n",
-										c.connType, c.calleeID, c.RemoteAddr)
-									c.hub.CalleeClient.Close("disconCalleeOnPeerConnected")
-								}
-								if myDisconCallerOnPeerConnected {
-									// this is currently always done
-									if c.hub.CallerClient != nil {
-										//fmt.Printf("%s (%s) peer caller disconnect %s\n",
-										//	c.connType, c.calleeID, c.RemoteAddr)
-										c.hub.CallerClient.Close("disconCallerOnPeerConnected")
-									}
-								}
+						if myDisconCallerOnPeerConnected {
+							// this is currently always done
+							if c.hub.CallerClient != nil {
+								//fmt.Printf("%s (%s) peer caller disconnect %s\n",
+								//	c.connType, c.calleeID, c.RemoteAddr)
+								c.hub.CallerClient.Close("disconCallerOnPeerConnected")
 							}
 						}
 					}
 				}
 			}
 		}
+		c.hub.HubMutex.Unlock()
 		return
 	}
 
-	c.hub.HubMutex.RLock()
-	c.hub.HubMutex.RUnlock()
-	if !c.isCallee {
+	if !c.isCallee && c.hub!=nil {
 		// client is caller
+		c.hub.HubMutex.RLock()
 		if !c.hub.CalleeClient.isOnline.Get() {
+			c.hub.HubMutex.RUnlock()
 			// but there is no callee
 			fmt.Printf("# %s client %s without callee not allowed (%s)\n",
 				c.connType, c.RemoteAddr, cmd)
@@ -918,19 +924,22 @@ func (c *WsClient) receiveProcess(message []byte) {
 			return
 		}
 		if c.hub.CallerClient!=nil && c.hub.CallerClient!=c {
+			c.hub.HubMutex.RUnlock()
 			// but there is already another caller-client
 			fmt.Printf("# %s client %s is 2nd client not allowed\n",
 				c.connType, c.RemoteAddr)
 			c.Write([]byte("cancel|busy"))
 			return
 		}
+		c.hub.HubMutex.RUnlock()
 	}
 
 	if logWantedFor("wsreceive") {
 		fmt.Printf("%s recv %s|%s callee=%v %s\n",
 			c.connType, cmd, payload, c.isCallee, c.RemoteAddr)
 	}
-	if len(payload)>0 {
+	if len(payload)>0 && c.hub!=nil {
+		c.hub.HubMutex.RLock()
 		if c.isCallee {
 			if c.hub.CallerClient!=nil {
 				c.hub.CallerClient.Write(message)
@@ -940,6 +949,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 				c.hub.CalleeClient.Write(message)
 			}
 		}
+		c.hub.HubMutex.RUnlock()
 	} else {
 		//fmt.Printf("%s %s with no payload\n",c.connType,cmd)
 	}
@@ -964,9 +974,13 @@ func (c *WsClient) Write(b []byte) error {
 func (c *WsClient) peerConHasEnded(comment string) {
 	// the peerConnection has ended, either bc one side has sent cmd "cancel"
 	// or bc callee has unregistered
+	if c==nil || c.hub==nil {
+		return
+	}
 	c.hub.setDeadline(0,comment)
+
+	c.hub.HubMutex.Lock()
 	peerType := "caller"
-//	if c==c.hub.CalleeClient {
 	if c.isCallee {
 		peerType = "callee"
 	}
@@ -975,12 +989,10 @@ func (c *WsClient) peerConHasEnded(comment string) {
 		//fmt.Printf("%s (%s) peer %s discon %ds (before connect) %s (%s)\n",
 		//	c.connType, c.calleeID, peerType, c.hub.CallDurationSecs, c.RemoteAddr, comment)
 	} else {
-		c.hub.HubMutex.Lock()
 		if c.hub.lastCallStartTime>0 {
 			c.hub.processTimeValues("peerConHasEnded") // set c.hub.CallDurationSecs
 			c.hub.lastCallStartTime = 0
 		}
-		c.hub.HubMutex.Unlock()
 
 		localPeerCon := "?"
 		remotePeerCon := "?"
@@ -991,17 +1003,16 @@ func (c *WsClient) peerConHasEnded(comment string) {
 			if !c.hub.RemoteP2p { remotePeerCon = "relay" }
 		}
 		// peer callee discon
-		fmt.Printf("%s (%s) PEER %s DISC %ds %s/%s %s <- %s (%s) %s\n",
-			c.connType, c.calleeID, peerType, c.hub.CallDurationSecs, localPeerCon, remotePeerCon,
-			c.hub.CalleeClient.RemoteAddrNoPort, 
-			c.hub.CallerClient.RemoteAddrNoPort, c.hub.CallerClient.callerID, comment)
-
-//		c.hub.setDeadline(0,"disc")
-
-		// clear recentTurnCalleeIps[ipNoPort] entry (if this was a relay session)
-		recentTurnCalleeIpMutex.Lock()
-		delete(recentTurnCalleeIps,c.hub.CallerClient.RemoteAddrNoPort)
-		recentTurnCalleeIpMutex.Unlock()
+		if c.hub.CalleeClient!=nil && c.hub.CallerClient!=nil {
+			fmt.Printf("%s (%s) PEER %s DISC %ds %s/%s %s <- %s (%s) %s\n",
+				c.connType, c.calleeID, peerType, c.hub.CallDurationSecs, localPeerCon, remotePeerCon,
+				c.hub.CalleeClient.RemoteAddrNoPort, 
+				c.hub.CallerClient.RemoteAddrNoPort, c.hub.CallerClient.callerID, comment)
+			// clear recentTurnCalleeIps[ipNoPort] entry (if this was a relay session)
+			recentTurnCalleeIpMutex.Lock()
+			delete(recentTurnCalleeIps,c.hub.CallerClient.RemoteAddrNoPort)
+			recentTurnCalleeIpMutex.Unlock()
+		}
 
 		err := StoreCallerIpInHubMap(c.globalCalleeID, "", false)
 		if err!=nil {
@@ -1031,7 +1042,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 					missedCallsSlice = nil
 				}
 			}
-			if missedCallsSlice!=nil {
+			if missedCallsSlice!=nil && c.hub.CallerClient!=nil {
 				// make sure we only keep up to 10 missed calls
 				if len(missedCallsSlice)>=10 {
 					missedCallsSlice = missedCallsSlice[1:]
@@ -1049,17 +1060,12 @@ func (c *WsClient) peerConHasEnded(comment string) {
 
 		c.isConnectedToPeer.Set(false)
 		c.isMediaConnectedToPeer.Set(false)
-		c.hub.HubMutex.RLock()
-		c.hub.HubMutex.RUnlock()
 		if c.isCallee {
 			if c.hub.CallerClient!=nil {
 				c.hub.CallerClient.isConnectedToPeer.Set(false)
 				c.hub.CallerClient.isMediaConnectedToPeer.Set(false)
-
 				// hub.CallerClient must be nil
-				c.hub.HubMutex.Lock()
 				c.hub.CallerClient = nil
-				c.hub.HubMutex.Unlock()
 			}
 		} else {
 			if c.hub.CalleeClient!=nil {
@@ -1069,6 +1075,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 		}
 		c.pickupSent.Set(false)
 	}
+	c.hub.HubMutex.Unlock()
 }
 
 func (c *WsClient) Close(reason string) {

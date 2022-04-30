@@ -79,8 +79,8 @@ func (h *Hub) setDeadline(secs int, comment string) {
 				// do something for timeout, like change state
 				// timer valid: we need to disconnect the (relayed) clients (if still connected)
 				h.HubMutex.RLock()
-				h.HubMutex.RUnlock()
 				if h.CalleeClient!=nil {
+					h.HubMutex.RUnlock()
 					// otherwise we disconnect this callee
 					if h.CalleeClient.isConnectedToPeer.Get() {
 						fmt.Printf("setDeadline (%s) reached; end session now (secs=%d %v)\n",
@@ -95,6 +95,8 @@ func (h *Hub) setDeadline(secs int, comment string) {
 							recentTurnCalleeIpMutex.Unlock()
 						}
 					}
+				} else {
+					h.HubMutex.RUnlock()
 				}
 			case <-h.timerCanceled:
 				if logWantedFor("calldur") {
@@ -108,9 +110,8 @@ func (h *Hub) setDeadline(secs int, comment string) {
 }
 
 func (h *Hub) doBroadcast(message []byte) {
-	h.HubMutex.RLock()
-	h.HubMutex.RUnlock()
 	calleeID := ""
+	h.HubMutex.RLock()
 	if h.CalleeClient!=nil {
 		calleeID = h.CalleeClient.calleeID
 	}
@@ -122,6 +123,7 @@ func (h *Hub) doBroadcast(message []byte) {
 		fmt.Printf("hub (%s) doBroadcast callee (%s) %s\n", calleeID, message, h.CalleeClient.RemoteAddr)
 		h.CalleeClient.Write(message)
 	}
+	h.HubMutex.RUnlock()
 }
 
 func (h *Hub) processTimeValues(comment string) {
@@ -153,14 +155,16 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 		if !client.clearOnCloseDone {
 			h.setDeadline(-1,"doUnregister "+comment)
 			h.HubMutex.RLock()
-			h.HubMutex.RUnlock()
 			if h.lastCallStartTime>0 {
+				h.HubMutex.RUnlock()
 				h.processTimeValues("doUnregister")
 				h.HubMutex.Lock()
 				h.lastCallStartTime = 0
 				h.LocalP2p = false
 				h.RemoteP2p = false
 				h.HubMutex.Unlock()
+			} else {
+				h.HubMutex.RUnlock()
 			}
 			client.clearOnCloseDone = true
 		}
@@ -171,14 +175,16 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 		client.pickupSent.Set(false)
 
 		h.HubMutex.RLock()
-		h.HubMutex.RUnlock()
 		if h.CallerClient!=nil {
 			h.CallerClient.Close("unregister "+comment)
 			h.CallerClient.isConnectedToPeer.Set(false)
 			h.CallerClient.isMediaConnectedToPeer.Set(false)
+			h.HubMutex.RUnlock()
 			h.HubMutex.Lock()
 			h.CallerClient = nil
 			h.HubMutex.Unlock()
+		} else {
+			h.HubMutex.RUnlock()
 		}
 		// remove callee from hubMap; delete wsClientID from wsClientMap
 		h.exitFunc(client,comment)

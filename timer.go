@@ -274,11 +274,12 @@ func broadcastNewsLink(date string, url string) {
 			if hub.CalleeClient!=nil {
 				//fmt.Printf("newsLink to=%s data=%s\n",calleeID,data)
 				hub.CalleeClient.Write([]byte(data))
+				hub.HubMutex.RUnlock()
 				count++
 			} else {
+				hub.HubMutex.RUnlock()
 				fmt.Printf("newsLink hub.CalleeClient==nil to=%s data=%s\n",calleeID,data)
 			}
-			hub.HubMutex.RUnlock()
 		} else {
 			fmt.Printf("newsLink hub==nil to=%s data=%s\n",calleeID,data)
 		}
