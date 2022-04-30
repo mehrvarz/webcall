@@ -531,7 +531,7 @@ func readConfig(init bool) {
 		"disconCallerOnPeerConnected", disconCallerOnPeerConnected, true)
 	calleeClientVersion = readIniString(configIni, "calleeClientVersion", calleeClientVersion, "2.0.0")
 
-	maxRingSecs = readIniInt(configIni, "maxRingSecs", maxRingSecs, 300, 1)
+	maxRingSecs = readIniInt(configIni, "maxRingSecs", maxRingSecs, 120, 1)
 	maxTalkSecsIfNoP2p = readIniInt(configIni, "maxTalkSecsIfNoP2p", maxTalkSecsIfNoP2p, 600, 1)
 
 	turnDebugLevel = readIniInt(configIni, "turnDebugLevel", turnDebugLevel, 3, 1)

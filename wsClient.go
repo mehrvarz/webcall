@@ -492,8 +492,10 @@ func (c *WsClient) receiveProcess(message []byte) {
 		}
 
 		if !strings.HasPrefix(c.calleeID,"answie") && !strings.HasPrefix(c.calleeID,"talkback") {
+/*
 			if clientBlockBelowVersion!="" && c.clientVersion < clientBlockBelowVersion {
 				//fmt.Printf("%s (%s) ver=%s\n",c.connType,c.calleeID,c.clientVersion)
+				// NOTE: msg should be same as in httpLogin.go (search: clientBlockBelowVersion)
 				// NOTE: msg MUST NOT contain apostroph (') characters
 				msg := "The version of WebCall you are using has a technical problem and is no longer supported."+
 						" Please <a href=\"/webcall/update\">upgrade</a> to the new v1.x release."
@@ -505,6 +507,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 				}()
 				return
 			}
+*/
 			if clientUpdateBelowVersion!="" && c.clientVersion < clientUpdateBelowVersion {
 				//fmt.Printf("%s (%s) ver=%s\n",c.connType,c.calleeID,c.clientVersion)
 				// NOTE: msg MUST NOT contain apostroph (') characters
