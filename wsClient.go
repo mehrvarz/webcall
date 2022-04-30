@@ -319,7 +319,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 			hub.HubMutex.RLock()
 			if hub.CalleeClient!=nil && !hub.CalleeClient.isConnectedToPeer.Get() && hub.CallerClient!=nil {
-				fmt.Printf("%s (%s/%s) caller not peercon after 10s ws=%d %s\n", client.connType,
+				fmt.Printf("%s (%s/%s) NO PEERCON after 10s ws=%d %s\n", client.connType,
 					client.calleeID, client.globalCalleeID, wsClientID64, client.RemoteAddr)
 
 				// NOTE: msg MUST NOT contain apostroph (') characters
@@ -343,7 +343,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				if err!=nil {
 					// err "key not found": callee has already signed off - can be ignored
 					if strings.Index(err.Error(),"key not found")<0 {
-						fmt.Printf("# %s (%s) caller not peercon clear callerIpInHub err=%v\n",
+						fmt.Printf("# %s (%s) NO PEERCON clear callerIpInHub err=%v\n",
 							client.connType, client.calleeID, err)
 					}
 				}
