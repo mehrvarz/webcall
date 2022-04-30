@@ -42,6 +42,19 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		}
 	}
 
+	// check clientBlockBelowVersion and clientUpdateBelowVersion (but not for answie and talkback)
+	if !strings.HasPrefix(urlID,"answie") && !strings.HasPrefix(urlID,"talkback") {
+		if clientBlockBelowVersion!="" && clientVersion < clientBlockBelowVersion {
+			fmt.Printf("/login (%s) deny clientVersion (%s) < clientBlockBelowVersion (%s)\n",
+				urlID, clientVersion, clientBlockBelowVersion)
+			// NOTE: msg MUST NOT contain apostroph (') characters
+			msg := "The version of WebCall you are using has a technical problem and is no longer supported."+
+					" <a href=\"/webcall/update\">Please upgrade.</a>"
+			fmt.Fprintf(w,msg)
+			return
+		}
+	}
+
 	// was this callee blocked (due to ws-connect timeout15)?
 	blockMapMutex.RLock()
 	blockedTime,ok := blockMap[urlID]

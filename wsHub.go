@@ -100,7 +100,7 @@ func (h *Hub) setDeadline(secs int, comment string) {
 				}
 			case <-h.timerCanceled:
 				if logWantedFor("calldur") {
-					fmt.Printf("setDeadline (%s) aborted; no disconnect caller (secs=%d %v)\n",
+					fmt.Printf("setDeadline (%s) aborted: no caller disconnect (secs=%d %v)\n",
 						h.CalleeClient.calleeID, secs, timeStart.Format("2006-01-02 15:04:05"))
 				}
 			}
