@@ -212,8 +212,25 @@ func cleanupCalleeLoginMap(w io.Writer, min int, title string) {
 	fmt.Fprintf(w,"%s calleeLoginMap len=%d\n", title, len(calleeLoginMap))
 	for calleeID,calleeLoginSlice := range calleeLoginMap {
 		if len(calleeLoginSlice)>=min {
-			fmt.Fprintf(w,"%s calleeLoginMap (%s) %d/%d\n",
-				title, calleeID, len(calleeLoginSlice), maxLoginPer30min)
+			// get calleeIP for calleeID
+			calleeIP := ""
+			ejectOn1stFound := true
+			reportHiddenCallee := true
+			reportBusyCallee := true
+			_, hub, _, err := GetOnlineCallee(calleeID, ejectOn1stFound, reportBusyCallee,
+				reportHiddenCallee, "", title)
+			if err != nil {
+				// bad luck
+			} else if hub == nil {
+				// bad luck
+			} else if hub.CalleeClient == nil {
+				// bad luck
+			} else {
+				calleeIP = hub.CalleeClient.RemoteAddr
+			}
+
+			fmt.Fprintf(w,"%s calleeLoginMap (%s) %d/%d %s\n",
+				title, calleeID, len(calleeLoginSlice), maxLoginPer30min, calleeIP)
 		}
 	}
 	calleeLoginMutex.Unlock()
