@@ -45,8 +45,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	// check clientBlockBelowVersion and clientUpdateBelowVersion (but not for answie and talkback)
 	if !strings.HasPrefix(urlID,"answie") && !strings.HasPrefix(urlID,"talkback") {
 		if clientBlockBelowVersion!="" && clientVersion < clientBlockBelowVersion {
-			fmt.Printf("/login (%s) deny clientVersion (%s) < clientBlockBelowVersion (%s)\n",
-				urlID, clientVersion, clientBlockBelowVersion)
+			fmt.Printf("/login (%s) deny clientVersion (%s) < clientBlockBelowVersion (%s) %s\n",
+				urlID, clientVersion, clientBlockBelowVersion, remoteAddr)
 			// NOTE: msg should be same as in wsClient.go (search: clientBlockBelowVersion)
 			// NOTE: msg MUST NOT contain apostroph (') characters
 			msg := "The version of WebCall you are using has a technical problem and is no longer supported."+
