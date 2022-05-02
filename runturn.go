@@ -129,8 +129,8 @@ func runTurnServer() {
 			if foundIp {
 				if !foundByMap /*&& logWantedFor("turn") */ {
 					recentTurnCalleeIpMutex.RLock()
-					fmt.Printf("turn (%s) authenticated ip=%v (by map %v) %d\n",
-						foundCalleeId, ipAddr, foundByMap, len(recentTurnCalleeIps))
+					fmt.Printf("turn (%s) authenticated caller %v %d\n",
+						foundCalleeId, ipAddr, len(recentTurnCalleeIps))
 					recentTurnCalleeIpMutex.RUnlock()
 				}
 				// NOTE: the same key strings are used in caller.js and callee.js

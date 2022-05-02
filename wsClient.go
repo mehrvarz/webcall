@@ -532,59 +532,68 @@ func (c *WsClient) receiveProcess(message []byte) {
 		}
 
 		c.hub.HubMutex.RLock()
+		if c.hub.CalleeClient==nil {
+			c.hub.HubMutex.RUnlock()
+			fmt.Printf("%s (%s) INCOMING CALL %s but hub.CalleeClient==nil\n",
+				c.connType, c.calleeID, c.RemoteAddr)
+			return
+		}
+		if c.hub.CallerClient==nil {
+			c.hub.HubMutex.RUnlock()
+			fmt.Printf("%s (%s) INCOMING CALL %s but hub.CallerClient==nil\n",
+				c.connType, c.calleeID, c.RemoteAddr)
+			return
+		}
+
 		c.hub.CalleeClient.calleeInitReceived.Set(false)
-		c.hub.HubMutex.RUnlock()
 
 		if logWantedFor("wscall") {
-			fmt.Printf("%s (%s) INCOMING CALL %s\n", c.connType, c.calleeID, c.RemoteAddr)
+			fmt.Printf("%s (%s) INCOMING CALL %s <- %s\n",
+				c.connType, c.calleeID, c.hub.CalleeClient.RemoteAddr, c.RemoteAddr)
 		}
 
 		// forward the callerOffer message to the callee client
 		if c.hub.CalleeClient.Write(message) != nil {
+			c.hub.HubMutex.RUnlock()
 			return
 		}
 		c.callerOfferForwarded.Set(true)
 
-		if c.hub.CallerClient != nil && c.hub.CalleeClient != nil {
-			if c.hub.CallerClient.callerID!="" || c.hub.CallerClient.callerName!="" {
-				// send this directly to the callee: see callee.js if(cmd=="callerInfo")
-				sendCmd := "callerInfo|"+c.hub.CallerClient.callerID+":"+c.hub.CallerClient.callerName
-				if c.hub.CalleeClient.Write([]byte(sendCmd)) != nil {
-					return
-				}
+		if c.hub.CallerClient.callerID!="" || c.hub.CallerClient.callerName!="" {
+			// send this directly to the callee: see callee.js if(cmd=="callerInfo")
+			sendCmd := "callerInfo|"+c.hub.CallerClient.callerID+":"+c.hub.CallerClient.callerName
+			if c.hub.CalleeClient.Write([]byte(sendCmd)) != nil {
+				c.hub.HubMutex.RUnlock()
+				return
 			}
 		}
 
 		// exchange useragent's
-		if c.hub.CallerClient!=nil && c.hub.CalleeClient!=nil {
-			if c.hub.CallerClient.Write([]byte("ua|"+c.hub.CalleeClient.userAgent)) != nil {
-				return
-			}
-			if c.hub.CalleeClient.Write([]byte("ua|"+c.hub.CallerClient.userAgent)) != nil {
-				return
-			}
+		if c.hub.CallerClient.Write([]byte("ua|"+c.hub.CalleeClient.userAgent)) != nil {
+			c.hub.HubMutex.RUnlock()
+			return
+		}
+		if c.hub.CalleeClient.Write([]byte("ua|"+c.hub.CallerClient.userAgent)) != nil {
+			c.hub.HubMutex.RUnlock()
+			return
 		}
 
-		if c.hub.CallerClient==nil {
-			// we already received "peer callee Connected unknw/unknw c.hub.CallerClient==nil"
-			fmt.Printf("# %s (%s) no hub.CallerClient before StoreCallerIpInHubMap()\n", c.connType, c.calleeID)
+		if c.hub.maxRingSecs>0 {
+			// if callee does NOT pickup the call after c.hub.maxRingSecs, callee will be disconnected
+			c.hub.setDeadline(c.hub.maxRingSecs,"serveWs ringsecs")
+		}
+		// this is needed for turn AuthHandler: store caller RemoteAddr
+		err := StoreCallerIpInHubMap(c.globalCalleeID, c.RemoteAddr, false)
+		if err!=nil {
+			fmt.Printf("# %s (%s) callerOffer StoreCallerIp %s err=%v\n",
+				c.connType, c.globalCalleeID, c.RemoteAddr, err)
 		} else {
-			if c.hub.maxRingSecs>0 {
-				// if callee does NOT pickup the call after c.hub.maxRingSecs, callee will be disconnected
-				c.hub.setDeadline(c.hub.maxRingSecs,"serveWs ringsecs")
-			}
-			// this is needed for turn AuthHandler: store caller RemoteAddr
-			err := StoreCallerIpInHubMap(c.globalCalleeID, c.RemoteAddr, false)
-			if err!=nil {
-				fmt.Printf("# %s (%s) callerOffer StoreCallerIp %s err=%v\n",
-					c.connType, c.globalCalleeID, c.RemoteAddr, err)
-			} else {
-				if logWantedFor("wscall") {
-					fmt.Printf("%s (%s) callerOffer done StoreCallerIp %s\n",
-						c.connType, c.globalCalleeID, c.RemoteAddr)
-				}
+			if logWantedFor("wscall") {
+				fmt.Printf("%s (%s) callerOffer StoreCallerIp %s\n",
+					c.connType, c.globalCalleeID, c.RemoteAddr)
 			}
 		}
+		c.hub.HubMutex.RUnlock()
 		return
 	}
 
