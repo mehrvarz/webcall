@@ -67,7 +67,7 @@ func runTurnServer() {
 			// TODO this could create issues; srcAddr should be same as IpInHubMap
 			// so we don't need to cut the port
 
-			// ipAddr is the caller ip
+			// ipAddr is the caller ip without :port
 			ipAddr := srcAddr.String()
 			if portIdx := strings.Index(ipAddr, ":"); portIdx >= 0 {
 				ipAddr = ipAddr[:portIdx]
@@ -105,30 +105,32 @@ func runTurnServer() {
 				// SearchCallerIpInHubMap() returns the callee ip and ID for the given caller ipAddr
 				foundIp, foundCalleeId, err = SearchCallerIpInHubMap(ipAddr)
 				if err != nil {
-					fmt.Printf("# turn auth for %v err=%v\n", srcAddr.String(), err)
+					fmt.Printf("# turn auth for %v err=%v\n", ipAddr, err)
 					return nil, false
 				}
-				fmt.Printf("turn no session ipAddr=%v foundIp=%v\n", ipAddr, foundIp)
 				if foundIp {
+					//fmt.Printf("turn service approved for (%s) %v\n", foundCalleeId, ipAddr)
 					if !foundByMap {
 						recentTurnCalleeIpMutex.Lock()
 						recentTurnCalleeIps[ipAddr] = TurnCallee{foundCalleeId, timeNow}
 						//if logWantedFor("turn") {
 						//	fmt.Printf("turn auth added (%s) to recentTurnCalleeIps len=%d\n",
-						//		srcAddr.String(), len(recentTurnCalleeIps))
+						//		ipAddr, len(recentTurnCalleeIps))
 						//}
 						recentTurnCalleeIpMutex.Unlock()
 
 						// NOTE: recentTurnCalleeIps[ipAddr] will be deleted
 						//       in wsClient.go peerConHasEnded() on 'peer callee discon'
 					}
+				} else {
+					//fmt.Printf("turn service not approved for %v\n", ipAddr)
 				}
 			}
 			if foundIp {
-				if logWantedFor("turn") && !foundByMap {
+				if !foundByMap /*&& logWantedFor("turn") */ {
 					recentTurnCalleeIpMutex.RLock()
-					fmt.Printf("turn auth for %v SUCCESS (by map %v) %d (%s)\n",
-						srcAddr.String(), foundByMap, len(recentTurnCalleeIps), foundCalleeId)
+					fmt.Printf("turn (%s) authenticated ip=%v (by map %v) %d\n",
+						foundCalleeId, ipAddr, foundByMap, len(recentTurnCalleeIps))
 					recentTurnCalleeIpMutex.RUnlock()
 				}
 				// NOTE: the same key strings are used in caller.js and callee.js
@@ -137,9 +139,9 @@ func runTurnServer() {
 				return authKey, true
 			}
 
-			if logWantedFor("turn") {
+//			if logWantedFor("turn") {
 				fmt.Printf("turn auth denied for %v\n", srcAddr.String())
-			}
+//			}
 			return nil, false
 		},
 		// PacketConnConfigs is a list of UDP Listeners and the configuration around them
