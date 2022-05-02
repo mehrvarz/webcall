@@ -326,8 +326,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				msg :=  "Unable to establish a direct P2P connection. "+
 						"This is likely a browser/WebRTC related issue (on one of the devices). "+
 						"Could also be a network/firewall issue. "+
-						"On Android, make sure <a href=\"/webcall/android/#webview\">WebRTC-Check</a> "+
-						"is working properly."
+						"On Android, run <a href=\"/webcall/android/#webview\">WebRTC-Check</a> "+
+						"to test your System WebView."
 				// tell caller about this
 				hub.CallerClient.Write([]byte("status|"+msg))
 				// tell callee about this

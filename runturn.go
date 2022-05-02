@@ -140,7 +140,8 @@ func runTurnServer() {
 			}
 
 //			if logWantedFor("turn") {
-				fmt.Printf("turn auth denied for %v\n", srcAddr.String())
+// FIXME this appears too often
+				fmt.Printf("turn auth denied for %v\n", ipAddr)
 //			}
 			return nil, false
 		},
