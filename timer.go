@@ -220,11 +220,14 @@ func cleanupCalleeLoginMap(w io.Writer, min int, title string) {
 			_, hub, _, err := GetOnlineCallee(calleeID, ejectOn1stFound, reportBusyCallee,
 				reportHiddenCallee, "", title)
 			if err != nil {
+				// not online anymore
 				calleeIP = "err="+err.Error()
 			} else if hub == nil {
-				calleeIP = "hub==nil" // TODO this happens: maybe just logged out?
+				// not online anymore
+				calleeIP = "gone"
 			} else if hub.CalleeClient == nil {
-				calleeIP = "hub.CalleeClient==nil"
+				// not online anymore
+				calleeIP = "gone"
 			} else {
 				calleeIP = hub.CalleeClient.RemoteAddr
 			}
