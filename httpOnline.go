@@ -97,6 +97,12 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 			fmt.Fprintf(w, "notavailtemp")
 			return
 		}
+		if secsSinceLogoff>1651395074 { // offline for >=52 years (since 1970)
+			fmt.Printf("/online (%s) is offline (was never online) %s ver=%s ua=%s\n",
+				urlID, remoteAddr, clientVersion, r.UserAgent())
+			fmt.Fprintf(w, "notavail")
+			return
+		}
 		fmt.Printf("/online (%s) is offline (for %d secs) %s ver=%s ua=%s\n",
 			urlID, secsSinceLogoff, remoteAddr, clientVersion, r.UserAgent())
 		fmt.Fprintf(w, "notavail")

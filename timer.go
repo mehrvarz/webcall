@@ -222,7 +222,7 @@ func cleanupCalleeLoginMap(w io.Writer, min int, title string) {
 			if err != nil {
 				calleeIP = "err="+err.Error()
 			} else if hub == nil {
-				calleeIP = "hub==nil"
+				calleeIP = "hub==nil" // TODO this happens: maybe just logged out?
 			} else if hub.CalleeClient == nil {
 				calleeIP = "hub.CalleeClient==nil"
 			} else {
