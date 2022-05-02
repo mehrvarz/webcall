@@ -526,7 +526,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 		// caller starting a call - payload is JSON.stringify(localDescription)
 		if c.callerOfferForwarded.Get() {
 			// prevent double callerOffer
-			fmt.Printf("%s (%s) callerOffer (call attempt) already forwarded %s\n",
+			fmt.Printf("%s (%s) incoming call was already forwarded %s\n",
 				c.connType, c.calleeID, c.RemoteAddr)
 			return
 		}
@@ -536,8 +536,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 		c.hub.HubMutex.RUnlock()
 
 		if logWantedFor("wscall") {
-			fmt.Printf("%s (%s) callerOffer (call attempt) %s\n",
-				c.connType, c.calleeID, c.RemoteAddr)
+			fmt.Printf("%s (%s) INCOMING CALL %s\n", c.connType, c.calleeID, c.RemoteAddr)
 		}
 
 		// forward the callerOffer message to the callee client
