@@ -324,7 +324,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 				// NOTE: msg MUST NOT contain apostroph (') characters
 				msg :=  "Unable to establish a direct P2P connection. "+
-						"This is likely a browser/WebRTC related issue (on one of the devices). "+
+						"This is likely a browser/WebRTC related issue. "+
 						"Could also be a network/firewall issue. "+
 						"On Android, run <a href=\"/webcall/android/#webview\">WebRTC-Check</a> "+
 						"to test your System WebView."

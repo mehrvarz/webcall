@@ -56,7 +56,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		}
 	}
 
-	// was this callee blocked (due to ws-connect timeout15)?
+	// was this callee blocked (due to ws-connect timeout22)?
 	blockMapMutex.RLock()
 	blockedTime,ok := blockMap[urlID]
 	blockMapMutex.RUnlock()
