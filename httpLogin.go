@@ -47,7 +47,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		if clientBlockBelowVersion!="" && clientVersion < clientBlockBelowVersion {
 			fmt.Printf("/login (%s) deny clientVersion (%s) < clientBlockBelowVersion (%s) %s\n",
 				urlID, clientVersion, clientBlockBelowVersion, remoteAddr)
-			// NOTE: msg should be same as in wsClient.go (search: clientBlockBelowVersion)
 			// NOTE: msg MUST NOT contain apostroph (') characters
 			msg := "The version of WebCall you are using has a technical problem and is no longer supported."+
 					" <a href=\"/webcall/update\">Please upgrade.</a>"
@@ -62,13 +61,18 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	blockMapMutex.RUnlock()
 	if ok {
 		if time.Now().Sub(blockedTime) <= 10 * 60 * time.Minute {
-			// this error response string is formated so that callee.js will show it via showStatus()
-			// it also makes Android service (0.9.85+) abort the reconnecter loop
-			fmt.Fprintf(w,"A Websocket connection has failed. Please deactivate battery optimizations for WebCall and/or check your firewall settings.")
 			if logWantedFor("overload") {
 				fmt.Printf("/login (%s) block recon (%v) rip=%s ver=%s ua=%s\n",
 					urlID, time.Now().Sub(blockedTime), remoteAddr, clientVersion, userAgent)
 			}
+			// this error response string is formated so that callee.js will show it via showStatus()
+			// it also makes Android service (1.0.0-RC3+) abort the reconnecter loop
+			// NOTE: msg MUST NOT contain apostroph (') characters
+//			fmt.Fprintf(w,"A Websocket connection has failed. Please deactivate battery optimizations for WebCall and/or check your firewall settings.")
+			msg :=  "Websocket re-connect failed. Please deactivate battery optimizations for WebCall"+
+					" and/or check your firewall settings."+
+					" <a href=\"/webcall/more/#keepawake\">Read this</a>"
+			fmt.Fprintf(w,msg)
 			blockMapMutex.Lock()
 			delete(blockMap,urlID)
 			blockMapMutex.Unlock()
