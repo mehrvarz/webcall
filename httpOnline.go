@@ -72,8 +72,11 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		err := kvMain.Get(dbRegisteredIDs, urlID, &dbEntry)
 		if err != nil {
 			// callee urlID does not exist
-			fmt.Printf("/online (%s) error (%v) (%s) %s ver=%s ua=%s\n",
-				urlID, err, callerId, remoteAddr, clientVersion, r.UserAgent())
+			// do not log key not found
+			if strings.Index(err.Error(),"key not found")<0 {
+				fmt.Printf("/online (%s) error (%v) (%s) %s ver=%s ua=%s\n",
+					urlID, err, callerId, remoteAddr, clientVersion, r.UserAgent())
+			}
 			fmt.Fprintf(w, "error")
 			return
 		}
