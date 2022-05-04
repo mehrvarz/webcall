@@ -112,11 +112,10 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		return
 	}
 
+	locHub.HubMutex.RLock()
 	if locHub != nil {
 		// callee is managed by this server
 		if logWantedFor("hub") {
-			locHub.HubMutex.RLock()
-			locHub.HubMutex.RUnlock()
 			fmt.Printf("/online (%s/%s) locHub callerIp=%s Caller=%v hidden=%v\n",
 				urlID, glUrlID, locHub.ConnectedCallerIp, locHub.CallerClient!=nil, locHub.IsCalleeHidden)
 		}
@@ -125,6 +124,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 			// this callee (urlID/glUrlID) is online but currently busy
 			fmt.Printf("/online (%s) busy callerIp=%s %s ver=%s\n",
 				urlID, locHub.ConnectedCallerIp, remoteAddr, clientVersion)
+			locHub.HubMutex.RUnlock()
 			fmt.Fprintf(w, "busy")
 			return
 		}
@@ -132,25 +132,17 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		if locHub.IsCalleeHidden && locHub.IsUnHiddenForCallerAddr != remoteAddr {
 			fmt.Printf("/online (%s) notavail (hidden) %s ver=%s ua=%s\n",
 				urlID, remoteAddr, clientVersion, r.UserAgent())
+			locHub.HubMutex.RUnlock()
 			fmt.Fprintf(w, "notavail")
 			return
 		}
 
-		locHub.HubMutex.RLock()
 		wsClientID := locHub.WsClientID // set by wsClient serve()
-		locHub.HubMutex.RUnlock()
 		if wsClientID == 0 {
 			// this seems to happen when urlID is just now logging in, but has not yet completed
-/*
-			fmt.Printf("# /online (%s/%s) loc ws==0 %s ver=%s\n",
-				urlID, glUrlID, remoteAddr, clientVersion)
-			// clear local ConnectedCallerIp
-			locHub.HubMutex.Lock()
-			locHub.ConnectedCallerIp = ""
-			locHub.HubMutex.Unlock()
-			fmt.Fprintf(w, "error")
-*/
-			// better not to return error, just act as if (id) is not curretly online
+			// TODO wait a moment and try again?
+			locHub.HubMutex.RUnlock()
+			// just act as if (urlID) is not curretly online
 			fmt.Printf("/online (%s/%s) notavail ws=0 %s ver=%s\n",
 				urlID, glUrlID, remoteAddr, clientVersion)
 			fmt.Fprintf(w, "notavail")
@@ -173,9 +165,11 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		readConfigLock.RUnlock()
 		wsAddr = fmt.Sprintf("%s?wsid=%d", wsAddr, wsClientID)
 		if !strings.HasPrefix(glUrlID,"answie") && !strings.HasPrefix(glUrlID,"talkback") {
-			fmt.Printf("/online (%s) avail wsAddr=%s (%s) %s ver=%s ua=%s\n",
-				glUrlID, wsAddr, callerId, remoteAddr, clientVersion, r.UserAgent())
+			fmt.Printf("/online (%s) avail wsAddr=%s %s <- %s (%s) ver=%s ua=%s\n",
+				glUrlID, wsAddr, locHub.CalleeClient.RemoteAddr,
+				remoteAddr, callerId, clientVersion, r.UserAgent())
 		}
+		locHub.HubMutex.RUnlock()
 		fmt.Fprintf(w, wsAddr)
 		return
 	}
