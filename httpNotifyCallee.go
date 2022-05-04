@@ -59,7 +59,6 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	if ok && len(url_arg_array[0]) >= 1 {
 		callerName = url_arg_array[0]
 	}
-	fmt.Printf("/notifyCallee (%s) for callerId=(%s)\n", urlID, callerId)
 
 	var dbEntry DbEntry
 	err := kvMain.Get(dbRegisteredIDs, urlID, &dbEntry)
@@ -75,6 +74,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		return
 	}
 
+	fmt.Printf("/notifyCallee (%s) for callerId=(%s) %s\n", urlID, callerId, remoteAddr)
 	if dbUser.StoreContacts && callerId != "" {
 		addContact(urlID, callerId, callerName, "/notifyCallee")
 	}
@@ -335,7 +335,8 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	}
 
 	// let caller wait (let it's xhr stand) until callee picks up the call
-	fmt.Printf("/notifyCallee (%s) waiting for callee to come online (%d)\n", urlID, notificationSent)
+	fmt.Printf("/notifyCallee (%s) waiting for callee to come online (%d) %s\n",
+		urlID, notificationSent, remoteAddr)
 	callerGaveUp := false
 	select {
 	case <-c:
@@ -398,7 +399,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		// in the mean time callee may have gone offline (and is now back online)
 		// so we assume calleeWsClient invalid and re-obtain it
 		calleeWsClient = nil
-		fmt.Printf("/notifyCallee (%s) caller disconnected\n", urlID)
+		fmt.Printf("/notifyCallee (%s) caller disconnected callerId=(%s) %s\n", urlID, callerId, remoteAddr)
 		callerGaveUp = true
 		glUrlID, _, _, err := GetOnlineCallee(urlID, ejectOn1stFound, reportBusyCallee, 
 			reportHiddenCallee, remoteAddr, "/notifyCallee")
