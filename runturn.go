@@ -139,10 +139,9 @@ func runTurnServer() {
 				return authKey, true
 			}
 
-//			if logWantedFor("turn") {
-// FIXME this appears too often
+			if logWantedFor("turn") {
 				fmt.Printf("turn auth denied for %v\n", ipAddr)
-//			}
+			}
 			return nil, false
 		},
 		// PacketConnConfigs is a list of UDP Listeners and the configuration around them
