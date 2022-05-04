@@ -351,7 +351,11 @@ function dialButtonClick() {
 	// -> checkCalleeOnline -> ajax -> calleeOnlineAction -> gotStream -> connectSignaling
 	gLog("dialButtonClick set dialAfterCalleeOnline");
 	dialAfterCalleeOnline = true;
-	checkCalleeOnline(true);
+	if(wsAddr!="") {
+		calleeOnlineAction("dialButton");
+	} else {
+		checkCalleeOnline(true);
+	}
 }
 
 function videoOn() {

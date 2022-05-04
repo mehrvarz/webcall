@@ -519,7 +519,7 @@ func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, r
 	var missedCallsSlice []CallerInfo
 	err = kvCalls.Get(dbMissedCalls,calleeId,&missedCallsSlice)
 	if err!=nil {
-		fmt.Printf("# /httpMissedCall (%s) fail read dbMissedCalls err=%v rip=%s\n", calleeId, err, remoteAddr)
+		fmt.Printf("/httpMissedCall (%s) fail read dbMissedCalls (ignore) %s err=%v\n", calleeId, remoteAddr, err)
 		// TODO I think this is no error, so don't abort
 		//return
 	}
