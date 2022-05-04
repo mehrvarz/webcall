@@ -188,22 +188,20 @@ func cleanupCalleeLoginMap(w io.Writer, min int, title string) {
 	calleeLoginMutex.Lock()
 	for calleeID,calleeLoginSlice := range calleeLoginMap {
 		//fmt.Fprintf(w,"%s calleeLoginMap (%s) A len=%d\n", title, calleeID, len(calleeLoginSlice))
-		if len(calleeLoginSlice)>0 {
-			for len(calleeLoginSlice)>0 {
-				if time.Now().Sub(calleeLoginSlice[0]) < 30 * time.Minute {
-					break
-				}
-				if len(calleeLoginSlice)<=1 {
-					calleeLoginSlice = nil
-					break
-				}
-				calleeLoginSlice = calleeLoginSlice[1:]
+		for len(calleeLoginSlice)>0 {
+			if time.Now().Sub(calleeLoginSlice[0]) < 30 * time.Minute {
+				break
 			}
-			if calleeLoginSlice==nil || len(calleeLoginSlice)<=0 {
-				deleteID = append(deleteID,calleeID)
-			} else {
-				calleeLoginMap[calleeID] = calleeLoginSlice
+			if len(calleeLoginSlice)<=1 {
+				calleeLoginSlice = nil
+				break
 			}
+			calleeLoginSlice = calleeLoginSlice[1:]
+		}
+		if calleeLoginSlice==nil || len(calleeLoginSlice)<=0 {
+			deleteID = append(deleteID,calleeID)
+		} else {
+			calleeLoginMap[calleeID] = calleeLoginSlice
 		}
 	}
 	for _,ID := range deleteID {
@@ -245,22 +243,20 @@ func cleanupClientRequestsMap(w io.Writer, min int, title string) {
 	clientRequestsMutex.Lock()
 	for calleeID,clientRequestsSlice := range clientRequestsMap {
 		//fmt.Fprintf(w,"%s clientRequestsMap (%s) A len=%d\n", title, calleeID, len(clientRequestsSlice))
-		if len(clientRequestsSlice)>0 {
-			for len(clientRequestsSlice)>0 {
-				if time.Now().Sub(clientRequestsSlice[0]) < 30 * time.Minute {
-					break
-				}
-				if len(clientRequestsSlice)<=1 {
-					clientRequestsSlice = nil
-					break
-				}
-				clientRequestsSlice = clientRequestsSlice[1:]
+		for len(clientRequestsSlice)>0 {
+			if time.Now().Sub(clientRequestsSlice[0]) < 30 * time.Minute {
+				break
 			}
-			if clientRequestsSlice==nil || len(clientRequestsSlice)<=0 {
-				deleteID = append(deleteID,calleeID)
-			} else {
-				clientRequestsMap[calleeID] = clientRequestsSlice
+			if len(clientRequestsSlice)<=1 {
+				clientRequestsSlice = nil
+				break
 			}
+			clientRequestsSlice = clientRequestsSlice[1:]
+		}
+		if clientRequestsSlice==nil || len(clientRequestsSlice)<=0 {
+			deleteID = append(deleteID,calleeID)
+		} else {
+			clientRequestsMap[calleeID] = clientRequestsSlice
 		}
 	}
 	for _,ID := range deleteID {

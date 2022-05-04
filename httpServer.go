@@ -284,10 +284,11 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			if len(clientRequestsSlice) >= maxClientRequestsPer30min {
 				if logWantedFor("overload") {
-					fmt.Printf("# httpApi rip=%s %d >= %d requests/30m (%s)\n",
+					fmt.Printf("httpApi rip=%s %d >= %d requests/30m (%s)\n",
 						remoteAddr, len(clientRequestsSlice), maxClientRequestsPer30min, urlPath)
 				}
 				fmt.Fprintf(w,"Too many requests in short order. Please take a pause.")
+//TODO now that we have shown this warning, we could (after a few minutes) reduce the clientRequestsSlice a bit
 				clientRequestsMutex.Lock()
 				clientRequestsMap[remoteAddr] = clientRequestsSlice
 				clientRequestsMutex.Unlock()

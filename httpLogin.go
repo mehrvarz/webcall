@@ -68,7 +68,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			// this error response string is formated so that callee.js will show it via showStatus()
 			// it also makes Android service (1.0.0-RC3+) abort the reconnecter loop
 			// NOTE: msg MUST NOT contain apostroph (') characters
-//			fmt.Fprintf(w,"A Websocket connection has failed. Please deactivate battery optimizations for WebCall and/or check your firewall settings.")
 			msg :=  "Websocket re-connect failed. Please deactivate battery optimizations for WebCall"+
 					" and/or check your firewall settings."+
 					" <a href=\"/webcall/more/#keepawake\">Read this</a>"
@@ -101,7 +100,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			}
 			if len(calleeLoginSlice) >= maxLoginPer30min {
 				if logWantedFor("overload") {
-					fmt.Printf("# /login (%s) %d >= %d logins/30m rip=%s ver=%s\n",
+					fmt.Printf("/login (%s) %d >= %d logins/30m rip=%s ver=%s\n",
 						urlID, len(calleeLoginSlice), maxLoginPer30min, remoteAddr, clientVersion)
 				}
 				fmt.Fprintf(w,"Too many reconnects / login attempts in short order. Please take a pause.")
