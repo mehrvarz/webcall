@@ -80,16 +80,16 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 
 func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calleeID string, cookie *http.Cookie, remoteAddr string) {
 	if calleeID=="" {
-		fmt.Printf("# /setsettings fail no calleeID rip=%s\n", remoteAddr)
+		fmt.Printf("# /setsettings fail no calleeID %s\n", remoteAddr)
 		return
 	}
 	if cookie==nil {
-		fmt.Printf("# /setsettings (%s) fail no cookie rip=%s\n", calleeID, remoteAddr)
+		fmt.Printf("# /setsettings (%s) fail no cookie %s\n", calleeID, remoteAddr)
 		return
 	}
 
 	if calleeID!=urlID {
-		fmt.Printf("# /setsettings fail calleeID(%s) != urlID(%s) rip=%s\n", calleeID, urlID, remoteAddr)
+		fmt.Printf("# /setsettings fail calleeID(%s) != urlID(%s) %s\n", calleeID, urlID, remoteAddr)
 		return
 	}
 
@@ -101,7 +101,7 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		data = string(postBuf[:length])
 	}
 	if data=="" {
-		fmt.Printf("# /setsettings (%s) failed on io.ReadFull body rip=%s\n",calleeID, remoteAddr)
+		fmt.Printf("# /setsettings (%s) failed on io.ReadFull body %s\n",calleeID, remoteAddr)
 		return
 	}
 	//fmt.Printf("/setsettings (%s) len=%d rip=%s\n", calleeID, len(data), remoteAddr)
@@ -109,14 +109,15 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 	var newSettingsMap map[string]string
 	err := json.Unmarshal([]byte(data), &newSettingsMap)
 	if err!=nil {
-		fmt.Printf("# /setsettings (%s) failed on json.Unmarshal (%v) err=%v\n", calleeID, data, err)
+		fmt.Printf("# /setsettings (%s) failed on json.Unmarshal (%v) %s err=%v\n",
+			calleeID, data, remoteAddr, err)
 		return
 	}
 
 	var dbEntry DbEntry
 	err = kvMain.Get(dbRegisteredIDs,calleeID,&dbEntry)
 	if err!=nil {
-		fmt.Printf("# /setsettings (%s) failed on dbRegisteredIDs rip=%s\n", calleeID, remoteAddr)
+		fmt.Printf("# /setsettings (%s) failed on dbRegisteredIDs %s\n", calleeID, remoteAddr)
 		return
 	}
 
@@ -124,7 +125,7 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 	var dbUser DbUser
 	err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 	if err!=nil {
-		fmt.Printf("# /setsettings (%s) failed on dbUserBucket rip=%s\n", calleeID, remoteAddr)
+		fmt.Printf("# /setsettings (%s) failed on dbUserBucket %s\n", calleeID, remoteAddr)
 		return
 	}
 
@@ -132,30 +133,30 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		switch(key) {
 		case "nickname":
 			if val != dbUser.Name {
-				fmt.Printf("/setsettings (%s) new nickname (%s) (old:%s)\n",calleeID,val,dbUser.Name)
+				fmt.Printf("/setsettings (%s) new nickname (%s) (old:%s) %s\n",calleeID,val,dbUser.Name,remoteAddr)
 				dbUser.Name = val
 			}
 		case "twname":
 			if val != dbUser.Email2 {
-				fmt.Printf("/setsettings (%s) new twname (%s) (old:%s)\n",calleeID,val,dbUser.Email2)
+				fmt.Printf("/setsettings (%s) new twname (%s) (old:%s) %s\n",calleeID,val,dbUser.Email2,remoteAddr)
 				dbUser.Email2 = val
 			}
 		case "twid":
 			if val != dbUser.Str1 {
-				fmt.Printf("/setsettings (%s) new twid (%s) (old:%s)\n",calleeID,val,dbUser.Str1)
+				fmt.Printf("/setsettings (%s) new twid (%s) (old:%s) %s\n", calleeID, val, dbUser.Str1, remoteAddr)
 				dbUser.Str1 = val
 			}
 		case "storeContacts":
 			if(val=="true") {
 				if dbUser.StoreContacts != true {
-					fmt.Printf("/setsettings (%s) new storeContacts (%s) (old:%v)\n",
-						calleeID,val,dbUser.StoreContacts)
+					fmt.Printf("/setsettings (%s) new storeContacts (%s) (old:%v) %s\n",
+						calleeID, val, dbUser.StoreContacts, remoteAddr)
 					dbUser.StoreContacts = true
 				}
 			} else {
 				if dbUser.StoreContacts != false {
-					fmt.Printf("/setsettings (%s) new storeContacts (%s) (old:%v)\n",
-						calleeID,val,dbUser.StoreContacts)
+					fmt.Printf("/setsettings (%s) new storeContacts (%s) (old:%v) %s\n",
+						calleeID, val, dbUser.StoreContacts, remoteAddr)
 					dbUser.StoreContacts = false
 				}
 			}
@@ -191,8 +192,8 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 				}
 			} else {
 				if dbUser.StoreMissedCalls {
-					fmt.Printf("/setsettings (%s) new storeMissedCalls (%s) old:%v\n",
-						calleeID,val,dbUser.StoreMissedCalls)
+					fmt.Printf("/setsettings (%s) new storeMissedCalls (%s) old:%v %s\n",
+						calleeID, val, dbUser.StoreMissedCalls, remoteAddr)
 					dbUser.StoreMissedCalls = false
 					// hide missedCalls on callee web client
 					hubMapMutex.RLock()
@@ -294,7 +295,8 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 	// store data
 	err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
 	if err!=nil {
-		fmt.Printf("# /setsettings (%s) store db=%s bucket=%s err=%v\n", calleeID, dbMainName, dbUserBucket, err)
+		fmt.Printf("# /setsettings (%s) store db=%s bucket=%s %s err=%v\n",
+			calleeID, dbMainName, dbUserBucket, remoteAddr, err)
 	} else {
 		//fmt.Printf("/setsettings (%s) stored db=%s bucket=%s\n", calleeID, dbMainName, dbUserBucket)
 	}
@@ -303,30 +305,30 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 
 func httpGetContacts(w http.ResponseWriter, r *http.Request, urlID string, calleeID string, cookie *http.Cookie, remoteAddr string) {
 	if calleeID=="" {
-		fmt.Printf("# /getcontacts calleeID empty urlID=%s rip=\n",urlID, remoteAddr)
+		fmt.Printf("# /getcontacts calleeID empty urlID=%s %s\n",urlID, remoteAddr)
 		return
 	}
 	if cookie==nil {
-		fmt.Printf("# /getcontacts (%s) fail no cookie rip=%s\n", calleeID, remoteAddr)
+		fmt.Printf("# /getcontacts (%s) fail no cookie %s\n", calleeID, remoteAddr)
 		return
 	}
 	if urlID!=calleeID {
-		fmt.Printf("# /getcontacts urlID=%s != calleeID=%s\n",urlID,calleeID)
+		fmt.Printf("# /getcontacts urlID=%s != calleeID=%s %s\n",urlID,calleeID, remoteAddr)
 		return
 	}
 	var callerInfoMap map[string]string // callerID -> name
 	err := kvContacts.Get(dbContactsBucket,calleeID,&callerInfoMap)
 	if err!=nil {
-		fmt.Printf("# /getcontacts db get calleeID=%s err=%v\n", calleeID, err)
+		fmt.Printf("# /getcontacts db get calleeID=%s %s err=%v\n", calleeID, remoteAddr, err)
 		return
 	}
 	jsonStr, err := json.Marshal(callerInfoMap)
 	if err != nil {
-		fmt.Printf("# /getcontacts (%s) failed on json.Marshal err=%v\n", calleeID, err)
+		fmt.Printf("# /getcontacts (%s) failed on json.Marshal %s err=%v\n", calleeID, remoteAddr, err)
 		return
 	}
 	if logWantedFor("contacts") {
-		fmt.Printf("/getcontacts (%s) send %d elements\n",calleeID,len(callerInfoMap))
+		fmt.Printf("/getcontacts (%s) send %d elements %s\n", calleeID, len(callerInfoMap), remoteAddr)
 	}
 	fmt.Fprintf(w,string(jsonStr))
 	return
@@ -338,11 +340,11 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 		return
 	}
 	if cookie==nil {
-		fmt.Printf("# /setcontact (%s) fail no cookie rip=%s\n", calleeID, remoteAddr)
+		fmt.Printf("# /setcontact (%s) fail no cookie %s\n", calleeID, remoteAddr)
 		return
 	}
 	if urlID!="" && urlID!=calleeID {
-		fmt.Printf("# /setcontact urlID=%s != calleeID=%s\n",urlID,calleeID)
+		fmt.Printf("# /setcontact urlID=%s != calleeID=%s %s\n", urlID, calleeID, remoteAddr)
 		return
 	}
 
@@ -353,7 +355,7 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 	}
 	if contactID=="" {
 		if logWantedFor("contacts") {
-			fmt.Printf("/setcontact (%s) contactID from client is empty\n", calleeID)
+			fmt.Printf("/setcontact (%s) contactID from client is empty %s\n", calleeID, remoteAddr)
 		}
 		return
 	}
@@ -369,19 +371,19 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 	var dbEntry DbEntry
 	err := kvMain.Get(dbRegisteredIDs,calleeID,&dbEntry)
 	if err!=nil {
-		fmt.Printf("# /setcontact (%s) fail on dbRegisteredIDs rip=%s\n", calleeID, remoteAddr)
+		fmt.Printf("# /setcontact (%s) fail on dbRegisteredIDs %s\n", calleeID, remoteAddr)
 		return
 	}
 	dbUserKey := fmt.Sprintf("%s_%d",calleeID, dbEntry.StartTime)
 	var dbUser DbUser
 	err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 	if err!=nil {
-		fmt.Printf("# /setcontact (%s) fail on dbUserBucket rip=%s\n", calleeID, remoteAddr)
+		fmt.Printf("# /setcontact (%s) fail on dbUserBucket %s\n", calleeID, remoteAddr)
 		return
 	}
 	if !dbUser.StoreContacts {
 		if logWantedFor("contacts") {
-			fmt.Printf("/setcontact (%s) !StoreContacts rip=%s\n", calleeID, remoteAddr)
+			fmt.Printf("/setcontact (%s) !StoreContacts %s\n", calleeID, remoteAddr)
 		}
 		fmt.Fprintf(w,"ok")
 		return
@@ -391,12 +393,12 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 	err = kvContacts.Get(dbContactsBucket,calleeID,&callerInfoMap)
 	if err!=nil {
 		if(strings.Index(err.Error(),"key not found")<0) {
-			fmt.Printf("# /setcontact db get calleeID=%s err=%v\n", calleeID, err)
+			fmt.Printf("# /setcontact db get calleeID=%s %s err=%v\n", calleeID, remoteAddr, err)
 			return
 		}
 		// "key not found" is just an empty contacts list
 		if logWantedFor("contacts") {
-			fmt.Printf("/setcontact creating new contacts map\n")
+			fmt.Printf("/setcontact creating new contacts map %s\n", remoteAddr)
 		}
 		callerInfoMap = make(map[string]string)
 	}
@@ -408,8 +410,8 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 		if name=="" || name==oldName {
 			// don't overwrite existing name with empty or same name
 			if logWantedFor("contacts") {
-				fmt.Printf("/setcontact (%s) contactID=%s already exists (%s)\n",
-					calleeID, contactID, oldName)
+				fmt.Printf("/setcontact (%s) contactID=%s already exists (%s) %s\n",
+					calleeID, contactID, oldName, remoteAddr)
 			}
 			return
 		}
@@ -427,8 +429,8 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 		if name=="" || name==oldName {
 			// don't overwrite existing name with empty or same name
 			if logWantedFor("contacts") {
-				fmt.Printf("/setcontact (%s) contactID=%s already exists (%s)\n",
-					calleeID, toUpperContactID, oldName)
+				fmt.Printf("/setcontact (%s) contactID=%s already exists (%s) %s\n",
+					calleeID, toUpperContactID, oldName, remoteAddr)
 			}
 			return
 		}
@@ -439,13 +441,13 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 	}
 	if name!=oldName {
 		if name!="unknown" {
-			fmt.Printf("/setcontact (%s) store changed name of %s from (%s) to (%s)\n",
-				calleeID, contactID, oldName, name)
+			fmt.Printf("/setcontact (%s) store changed name of %s from (%s) to (%s) %s\n",
+				calleeID, contactID, oldName, name, remoteAddr)
 		}
 		callerInfoMap[contactID] = name
 		err = kvContacts.Put(dbContactsBucket, calleeID, callerInfoMap, false)
 		if err!=nil {
-			fmt.Printf("# /setcontact store calleeID=%s err=%v\n", calleeID, err)
+			fmt.Printf("# /setcontact store calleeID=%s %s err=%v\n", calleeID, remoteAddr, err)
 			return
 		}
 	}
@@ -456,15 +458,15 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 
 func httpDeleteContact(w http.ResponseWriter, r *http.Request, urlID string, calleeID string, cookie *http.Cookie, remoteAddr string) {
 	if calleeID=="" {
-		fmt.Printf("# /deletecontact calleeID empty\n")
+		fmt.Printf("# /deletecontact calleeID empty %s\n", remoteAddr)
 		return
 	}
 	if(cookie==nil) {
-		fmt.Printf("# /deletecontact cookie==nil urlID=%s calleeID=%s\n",urlID,calleeID)
+		fmt.Printf("# /deletecontact cookie==nil urlID=%s calleeID=%s %s\n", urlID, calleeID, remoteAddr)
 		return
 	}
 	if urlID!=calleeID {
-		fmt.Printf("# /deletecontact urlID=%s != calleeID=%s\n",urlID,calleeID)
+		fmt.Printf("# /deletecontact urlID=%s != calleeID=%s %s\n", urlID, calleeID, remoteAddr)
 		return
 	}
 
@@ -474,7 +476,7 @@ func httpDeleteContact(w http.ResponseWriter, r *http.Request, urlID string, cal
 		contactID = url_arg_array[0]
 	}
 	if contactID=="" {
-		fmt.Printf("# /deletecontact (%s) contactID from client is empty\n", calleeID)
+		fmt.Printf("# /deletecontact (%s) contactID from client is empty %s\n", calleeID, remoteAddr)
 		return
 	}
 	contactID = strings.ToLower(contactID)
@@ -482,22 +484,22 @@ func httpDeleteContact(w http.ResponseWriter, r *http.Request, urlID string, cal
 	var callerInfoMap map[string]string // callerID -> name
 	err := kvContacts.Get(dbContactsBucket,calleeID,&callerInfoMap)
 	if err!=nil {
-		fmt.Printf("# /deletecontact db get calleeID=%s err=%v\n", calleeID, err)
+		fmt.Printf("# /deletecontact db get calleeID=%s %s err=%v\n", calleeID, remoteAddr, err)
 		return
 	}
 
 	_,ok = callerInfoMap[contactID]
 	if !ok {
-		fmt.Printf("# /deletecontact (%s) callerInfoMap[%s] does not exist\n", calleeID, contactID)
+		fmt.Printf("# /deletecontact (%s) callerInfoMap[%s] does not exist %s\n", calleeID, contactID, remoteAddr)
 		return
 	}
 	delete(callerInfoMap,contactID)
 	err = kvContacts.Put(dbContactsBucket, calleeID, callerInfoMap, false)
 	if err!=nil {
-		fmt.Printf("# /deletecontact store calleeID=%s err=%v\n", calleeID, err)
+		fmt.Printf("# /deletecontact store calleeID=%s %s err=%v\n", calleeID, remoteAddr, err)
 		return
 	}
-	fmt.Printf("/deletecontact calleeID=(%s) contactID[%s]\n",calleeID, contactID)
+	fmt.Printf("/deletecontact calleeID=(%s) contactID[%s] %s\n",calleeID, contactID, remoteAddr)
 	fmt.Fprintf(w,"ok")
 	return
 }
@@ -505,19 +507,19 @@ func httpDeleteContact(w http.ResponseWriter, r *http.Request, urlID string, cal
 func httpTwId(w http.ResponseWriter, r *http.Request, twHandle string, calleeID string, cookie *http.Cookie, remoteAddr string) {
 	// /twid returns twitter-Id for a twHandle
 	if(cookie==nil) {
-		fmt.Printf("# /twid (%s) cookie==nil twHandle=%s\n", calleeID, twHandle)
+		fmt.Printf("# /twid (%s) cookie==nil twHandle=%s %s\n", calleeID, twHandle, remoteAddr)
 		return
 	}
 
 	twitterClientLock.Lock()
 	if twitterClient == nil {
-		fmt.Printf("/twid (%s) twitterAuth... twHandle=%s\n", calleeID, twHandle)
+		fmt.Printf("/twid (%s) twitterAuth... twHandle=%s %s\n", calleeID, twHandle, remoteAddr)
 		twitterAuth()
 	}
 	twitterClientLock.Unlock()
 
 	if(twitterClient==nil) {
-		fmt.Printf("# /twid (%s) twitterClient==nil twHandle=%s\n", calleeID, twHandle)
+		fmt.Printf("# /twid (%s) twitterClient==nil twHandle=%s %s\n", calleeID, twHandle, remoteAddr)
 		fmt.Fprintf(w,"errorauth")
 	} else {
 		if strings.HasPrefix(twHandle,"@") {
@@ -527,10 +529,11 @@ func httpTwId(w http.ResponseWriter, r *http.Request, twHandle string, calleeID 
 		userDetail, _, err := twitterClient.QueryFollowerByName(twHandle)
 		twitterClientLock.Unlock()
 		if err!=nil {
-			fmt.Printf("# /twid (%s) twHandle=(%s) err=%v\n", calleeID, twHandle, err)
+			fmt.Printf("# /twid (%s) twHandle=(%s) %s err=%v\n", calleeID, twHandle, remoteAddr, err)
 			fmt.Fprintf(w,"errorquery")
 		} else {
-			fmt.Printf("/twid (%s) twHandle=(%s) fetched id=%v\n", calleeID, twHandle, userDetail.ID)
+			fmt.Printf("/twid (%s) twHandle=(%s) fetched id=%v %s\n",
+				calleeID, twHandle, userDetail.ID, remoteAddr)
 			// "0" = twHandle not found
 			fmt.Fprintf(w,fmt.Sprintf("%d",userDetail.ID))
 		}
@@ -541,14 +544,14 @@ func httpTwId(w http.ResponseWriter, r *http.Request, twHandle string, calleeID 
 func httpTwFollower(w http.ResponseWriter, r *http.Request, twId string, calleeID string, cookie *http.Cookie, remoteAddr string) {
 	// return twId for twHandle
 	if(cookie==nil) {
-		fmt.Printf("# /twfollower (%s) cookie==nil twId=%s\n", calleeID, twId)
+		fmt.Printf("# /twfollower (%s) cookie==nil twId=%s %s\n", calleeID, twId, remoteAddr)
 		fmt.Fprintf(w,"error denied")
 		return
 	}
 
 	twid, err := strconv.ParseInt(twId, 10, 64)
 	if err!=nil {
-		fmt.Printf("# /twfollower (%s) ParseInt64 fail twid=(%s) err=%v\n", calleeID, twid, err)
+		fmt.Printf("# /twfollower (%s) ParseInt64 fail twid=(%s) %s err=%v\n", calleeID, twid, remoteAddr, err)
 		fmt.Fprintf(w,"error format "+err.Error())
 	} else {
 		foundId := false
@@ -568,7 +571,7 @@ func httpTwFollower(w http.ResponseWriter, r *http.Request, twId string, calleeI
 			fmt.Fprintf(w,"OK")
 		} else {
 			// this twid is NOT a follower
-			fmt.Printf("# /twfollower (%s) twId=%d not found\n", calleeID, twid)
+			fmt.Printf("# /twfollower (%s) twId=%d not found %s\n", calleeID, twid, remoteAddr)
 			fmt.Fprintf(w,"error id not found")
 		}
 	}
