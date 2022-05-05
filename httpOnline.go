@@ -82,6 +82,9 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 			if strings.Index(err.Error(),"key not found")<0 {
 				fmt.Printf("/online (%s) error (%v) (%s) %s ver=%s ua=%s\n",
 					urlID, err, callerId, remoteAddr, clientVersion, r.UserAgent())
+			} else {
+				// delay brute
+				time.Sleep(1000 * time.Millisecond)
 			}
 			fmt.Fprintf(w, "error")
 			return
