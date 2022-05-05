@@ -36,6 +36,7 @@ var candidateArray = [];
 var candidateResultGenerated = true;
 var candidateResultString = "";
 var wsAddr = "";
+var wsAddrTime;
 var calleeID = ""; // who we are calling
 var sessionDuration = 0;
 var dataChannelSendMsg = "";
@@ -351,7 +352,9 @@ function dialButtonClick() {
 	// -> checkCalleeOnline -> ajax -> calleeOnlineAction -> gotStream -> connectSignaling
 	gLog("dialButtonClick set dialAfterCalleeOnline");
 	dialAfterCalleeOnline = true;
-	if(wsAddr!="") {
+
+	let wsAddrAgeSecs = Math.floor((Date.now()-wsAddrTime)/1000);
+	if(wsAddr!="" && wsAddrAgeSecs<30) {
 		calleeOnlineAction("dialButton");
 	} else {
 		checkCalleeOnline(true);
@@ -567,6 +570,7 @@ function calleeOnlineStatus(onlineStatus,waitForCallee) {
 		lastOnlineStatus = onlineStatus;
 		let tok = onlineStatus.split("|");
 		wsAddr = tok[0];
+		wsAddrTime = Date.now();
 
 		if(singlebutton) {
 			// enable parent iframe (height)
@@ -796,6 +800,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 						lastOnlineStatus = xhr.responseText;
 						let tok = xhr.responseText.split("|");
 						wsAddr = tok[0];
+						wsAddrTime = Date.now();
 						// switch to callee-is-online layout
 						calleeOnlineElement.style.display = "block";
 						calleeOfflineElement.style.display = "none";
