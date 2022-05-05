@@ -780,16 +780,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 
 		if(waitForCallee) {
 			if(onlineStatus=="notavailtemp") {
-				// callee temporarily offline
-/*
-				haveBeenWaitingForCalleeOnline=true; // will cause notificationSound to play
-				setTimeout(function() {
-					showStatus("Trying to find "+calleeID+". This can take a few minutes. Please wait...<br><br><img src='preloader-circles.svg' style='width:40%;max-height:120px;'>",-1);
-					gLog('delayed checkCalleeOnline in 20s...');
-					setTimeout(checkCalleeOnline,20000,true);
-				},600);
-*/
-				// instead of a status-check-loop, have the caller wait
+				// callee temporarily offline: have caller wait for callee
 				showStatus("Trying to find "+calleeID+". This can take a few minutes. Please wait...<br><br><img src='preloader-circles.svg' style='width:40%;max-height:120px;'>",-1);
 				let api = apiPath+"/online?id="+calleeID+"&wait=true&callerId="+callerId+"&name="+callerName;
 				xhrTimeout = 900*1000; // 15 min extended xhr timeout
@@ -804,8 +795,19 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 						// switch to callee-is-online layout
 						calleeOnlineElement.style.display = "block";
 						calleeOfflineElement.style.display = "none";
-						// auto-click on call button
-						dialButton.click();
+
+						showStatus("You can enter a text message before you start the call (optional):",-1);
+						msgbox.style.display = "block";
+						haveBeenWaitingForCalleeOnline=true; // will cause notificationSound to play
+
+						if(!notificationSound) {
+							gLog('load notificationSound');
+							notificationSound = new Audio("notification.mp3");
+						}
+						gLog('play notificationSound');
+						notificationSound.play().catch(function(error) { 
+							gLog('# notificationSound err='+error);
+						});
 						return;
 					}
 					gLog('callee could not be reached (%s)',xhr.responseText);
@@ -1528,7 +1530,7 @@ function dial() {
 				}
 				loop++;
 				dtmfDialingSound.play().catch(function(error) {
-					gLog('# DialSound err',error);
+					gLog('# DialSound err='+error);
 				});
 				dtmfDialingSound.onended = playDialSound;
 			}
