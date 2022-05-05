@@ -23,7 +23,7 @@ import (
 )
 
 func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *http.Cookie, pw string, remoteAddr string, remoteAddrWithPort string, nocookie bool, startRequestTime time.Time, pwIdCombo PwIdCombo, userAgent string) {
-	if logWantedFor("login") {
+	if logWantedFor("loginex") {
 		fmt.Printf("/login (%s) %s rt=%v\n",
 			urlID, remoteAddrWithPort, time.Since(startRequestTime)) // rt=4.393µs
 	}
@@ -172,7 +172,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					offlineReason = 3 // CalleeClient is not online anymore
 				} else {
 					// hub.CalleeClient seems to (still) be online; let's see if this holds if we ping it
-					if logWantedFor("login") {
+					if logWantedFor("loginex") {
 						fmt.Printf("/login (%s) send ping to prev rip=%s\n", key, remoteAddr)
 					}
 					hub.CalleeClient.SendPing(2000)
@@ -184,7 +184,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 						if hub==nil || hub.CalleeClient==nil || !hub.CalleeClient.isOnline.Get() {
 							// CalleeClient is not online anymore (we can accept the new login)
 							offlineReason = 4
-							if logWantedFor("login") {
+							if logWantedFor("loginex") {
 								fmt.Printf("/login (%s) has logged out after wait %dms/%v %s ver=%s ua=%s\n",
 								  key, i*100, time.Since(startRequestTime), remoteAddr, clientVersion, userAgent)
 							}
@@ -386,15 +386,17 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		}
 		if reqWsClientID != wsClientID {
 			// not the same (already exited): abort exit / deny deletion
-			if logWantedFor("login") {
+			if logWantedFor("loginex") {
 				fmt.Printf("exit (%s) abort ws=%d/%d '%s' %s ver=%s\n",
 					globalID, wsClientID, reqWsClientID, comment, remoteAddrWithPort, clientVersion)
 			}
 			return;
 		}
 
-		fmt.Printf("exit (%s) ws=%d '%s' %s ver=%s\n",
-			globalID, wsClientID, comment, remoteAddrWithPort, clientVersion)
+		if logWantedFor("login") {
+			fmt.Printf("exit (%s) ws=%d '%s' %s ver=%s\n",
+				globalID, wsClientID, comment, remoteAddrWithPort, clientVersion)
+		}
 
 		if dbUserKey!="" {
 			// feed LastLogoffTime
@@ -466,9 +468,11 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	//	fmt.Printf("/login wsAddr=%s\n",wsAddr)
 	//}
 
-	fmt.Printf("/login (%s) ws=%v %d %v %s ver=%s ua=%s\n",
-		urlID, wsClientID, len(calleeLoginSlice), time.Since(startRequestTime),
-		remoteAddrWithPort, clientVersion, userAgent)
+	if logWantedFor("login") {
+		fmt.Printf("/login (%s) ws=%v %d %v %s ver=%s ua=%s\n",
+			urlID, wsClientID, len(calleeLoginSlice), time.Since(startRequestTime),
+			remoteAddrWithPort, clientVersion, userAgent)
+	}
 
 	responseString := fmt.Sprintf("%s|%d|%s|%d|%v",
 		wsAddr,                     // 0

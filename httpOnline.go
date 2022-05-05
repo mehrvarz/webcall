@@ -212,10 +212,12 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		}
 		readConfigLock.RUnlock()
 		wsAddr = fmt.Sprintf("%s?wsid=%d", wsAddr, wsClientID)
-		if !strings.HasPrefix(glUrlID,"answie") && !strings.HasPrefix(glUrlID,"talkback") {
-			fmt.Printf("/online (%s) avail wsAddr=%s %s <- %s (%s) ver=%s ua=%s\n",
-				glUrlID, wsAddr, locHub.CalleeClient.RemoteAddr,
-				remoteAddr, callerId, clientVersion, r.UserAgent())
+		if logWantedFor("login") {
+			if !strings.HasPrefix(glUrlID,"answie") && !strings.HasPrefix(glUrlID,"talkback") {
+				fmt.Printf("/online (%s) avail wsAddr=%s %s <- %s (%s) ver=%s ua=%s\n",
+					glUrlID, wsAddr, locHub.CalleeClient.RemoteAddr,
+					remoteAddr, callerId, clientVersion, r.UserAgent())
+			}
 		}
 		locHub.HubMutex.RUnlock()
 		fmt.Fprintf(w, wsAddr)
@@ -251,9 +253,11 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 			wsAddr = globHub.WssUrl
 		}
 		wsAddr = fmt.Sprintf("%s?wsid=%d", wsAddr, wsClientID)
-		if !strings.HasPrefix(glUrlID,"answie") && !strings.HasPrefix(glUrlID,"talkback") {
-			fmt.Printf("/online (%s) avail wsAddr=%s (%s) %s ver=%s ua=%s\n",
-				glUrlID, wsAddr, callerId, remoteAddr, clientVersion, r.UserAgent())
+		if logWantedFor("login") {
+			if !strings.HasPrefix(glUrlID,"answie") && !strings.HasPrefix(glUrlID,"talkback") {
+				fmt.Printf("/online (%s) avail wsAddr=%s (%s) %s ver=%s ua=%s\n",
+					glUrlID, wsAddr, callerId, remoteAddr, clientVersion, r.UserAgent())
+			}
 		}
 		fmt.Fprintf(w, wsAddr)
 		return
