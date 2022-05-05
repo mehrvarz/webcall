@@ -880,9 +880,10 @@ func (c *WsClient) receiveProcess(message []byte) {
 
 				if maxClientRequestsPer30min>0 && c.RemoteAddr!=outboundIP && c.RemoteAddr!="127.0.0.1" {
 					clientRequestsMutex.Lock()
-					clientRequestsMap[c.RemoteAddr] = nil
+					clientRequestsMap[c.RemoteAddrNoPort] = nil
 					clientRequestsMutex.Unlock()
 				}
+				// TODO also reset calleeLoginMap?
 
 				if !c.isCallee {
 					if constate=="ConForce" {
