@@ -547,10 +547,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 
 		c.hub.CalleeClient.calleeInitReceived.Set(false)
 
-		if logWantedFor("wscall") {
-			fmt.Printf("%s (%s) INCOMING CALL %s <- %s\n",
-				c.connType, c.calleeID, c.hub.CalleeClient.RemoteAddr, c.RemoteAddr)
-		}
+		fmt.Printf("%s (%s) INCOMING CALL %s <- %s\n",
+			c.connType, c.calleeID, c.hub.CalleeClient.RemoteAddr, c.RemoteAddr)
 
 		// forward the callerOffer message to the callee client
 		if c.hub.CalleeClient.Write(message) != nil {
