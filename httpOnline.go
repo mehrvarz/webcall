@@ -43,6 +43,12 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		callerId = url_arg_array[0]
 	}
 
+	wait := false
+	url_arg_array, ok = r.URL.Query()["wait"]
+	if ok && len(url_arg_array[0]) >= 1 {
+		wait = true
+	}
+
 	// we look for urlID either in the local or in the global hubmap
 	reportHiddenCallee := true
 	reportBusyCallee := true
@@ -97,19 +103,58 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 			// callee may come back very soon
 			fmt.Printf("/online (%s) is offline temp (for %d secs) %s ver=%s ua=%s\n",
 				urlID, secsSinceLogoff, remoteAddr, clientVersion, r.UserAgent())
-			fmt.Fprintf(w, "notavailtemp")
-			return
-		}
-		if secsSinceLogoff>1651395074 { // offline for >=52 years (since 1970)
-			fmt.Printf("/online (%s) is offline (was never online) %s ver=%s ua=%s\n",
-				urlID, remoteAddr, clientVersion, r.UserAgent())
+			if(!wait) {
+				fmt.Fprintf(w, "notavailtemp")
+				return
+			}
+			// loop: wait for callee
+			loopStartTime := time.Now()
+			for {
+				fmt.Printf("/online (%s) is offline temp, caller waiting... %s\n",
+					urlID, remoteAddr)
+				time.Sleep(3 * time.Second)
+				select {
+				case <-r.Context().Done():
+					// client gave up
+					fmt.Printf("/online (%s) is offline temp, caller wait abort %s\n",
+						urlID, remoteAddr)
+					return
+				default:
+					glUrlID, locHub, globHub, err = GetOnlineCallee(urlID, ejectOn1stFound, reportBusyCallee,
+						reportHiddenCallee, remoteAddr, "/online")
+					if err != nil {
+						// error: something went wrong
+						fmt.Printf("# /online GetOnlineCallee(%s/%s) %s ver=%s err=%v\n",
+							urlID, glUrlID, remoteAddr, clientVersion, err)
+						fmt.Fprintf(w, "error")
+						return
+					}
+					//fmt.Printf("/online (%s) is offline temp: glUrlID=(%s) %v %v\n",
+					//	urlID, glUrlID, locHub!=nil, globHub!=nil)
+				}
+				if glUrlID != "" {
+					// callee urlID is now online, continue below to return ws/wss url
+					break
+				}
+				if time.Now().Sub(loopStartTime) > 15 * time.Minute {
+					// callee still not online: give up waiting
+					fmt.Fprintf(w, "notavail")
+					return
+				}
+			}
+
+		} else {
+			if secsSinceLogoff>1651395074 { // offline for >=52 years (since 1970)
+				fmt.Printf("/online (%s) is offline (was never online) %s ver=%s ua=%s\n",
+					urlID, remoteAddr, clientVersion, r.UserAgent())
+				fmt.Fprintf(w, "notavail")
+				return
+			}
+			fmt.Printf("/online (%s) is offline (for %d secs) %s ver=%s ua=%s\n",
+				urlID, secsSinceLogoff, remoteAddr, clientVersion, r.UserAgent())
 			fmt.Fprintf(w, "notavail")
 			return
 		}
-		fmt.Printf("/online (%s) is offline (for %d secs) %s ver=%s ua=%s\n",
-			urlID, secsSinceLogoff, remoteAddr, clientVersion, r.UserAgent())
-		fmt.Fprintf(w, "notavail")
-		return
 	}
 
 	locHub.HubMutex.RLock()

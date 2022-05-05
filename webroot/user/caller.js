@@ -777,12 +777,40 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 		if(waitForCallee) {
 			if(onlineStatus=="notavailtemp") {
 				// callee temporarily offline
-				haveBeenWaitingForCalleeOnline=true;
+/*
+				haveBeenWaitingForCalleeOnline=true; // will cause notificationSound to play
 				setTimeout(function() {
 					showStatus("Trying to find "+calleeID+". This can take a few minutes. Please wait...<br><br><img src='preloader-circles.svg' style='width:40%;max-height:120px;'>",-1);
 					gLog('delayed checkCalleeOnline in 20s...');
 					setTimeout(checkCalleeOnline,20000,true);
 				},600);
+*/
+				// instead of a status-check-loop, have the caller wait
+				showStatus("Trying to find "+calleeID+". This can take a few minutes. Please wait...<br><br><img src='preloader-circles.svg' style='width:40%;max-height:120px;'>",-1);
+				let api = apiPath+"/online?id="+calleeID+"&wait=true&callerId="+callerId+"&name="+callerName;
+				xhrTimeout = 900*1000; // 15 min extended xhr timeout
+				console.log("notifyCallee api="+api+" timeout="+xhrTimeout);
+				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+					if(xhr.responseText!=null && xhr.responseText.indexOf("?wsid=")>0) {
+						gLog('callee is now online. switching to call layout. '+xhr.responseText);
+						lastOnlineStatus = xhr.responseText;
+						let tok = xhr.responseText.split("|");
+						wsAddr = tok[0];
+						// switch to callee-is-online layout
+						calleeOnlineElement.style.display = "block";
+						calleeOfflineElement.style.display = "none";
+						// auto-click on call button
+						dialButton.click();
+						return;
+					}
+					gLog('callee could not be reached (%s)',xhr.responseText);
+					showStatus("Unable to reach "+calleeID+".<br>Please try again later.",-1);
+					needToStoreMissedCall = "";
+				}, function(errString,errcode) {
+					//errorAction(errString)
+					gLog('callee could not be reached. xhr err',errString,errcode);
+					showStatus("Unable to reach "+calleeID+".<br>Please try again later.",-1);
+				});
 				return;
 			}
 

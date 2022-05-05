@@ -292,7 +292,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		}
 	}
 
-	// we now "freeze" the callers xhr until callee goes online and sends a value to the callers chan
+	// we now "freeze" the caller's xhr until callee goes online and sends a value to the caller's chan
 	// waitingCallerChanMap[urlID] <- 1 to signal it is picking up the call
 	//fmt.Printf("/notifyCallee (%s) notification sent; freeze caller\n", urlID)
 	c := make(chan int)
