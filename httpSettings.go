@@ -438,8 +438,10 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 		name = "unknown"
 	}
 	if name!=oldName {
-		fmt.Printf("/setcontact (%s) store changed name of %s from (%s) to (%s)\n",
-			calleeID, contactID, oldName, name)
+		if name!="unknown" {
+			fmt.Printf("/setcontact (%s) store changed name of %s from (%s) to (%s)\n",
+				calleeID, contactID, oldName, name)
+		}
 		callerInfoMap[contactID] = name
 		err = kvContacts.Put(dbContactsBucket, calleeID, callerInfoMap, false)
 		if err!=nil {
