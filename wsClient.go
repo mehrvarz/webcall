@@ -318,6 +318,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			delaySecs := 10
 			time.Sleep(time.Duration(delaySecs) * time.Second)
 
+			// TODO abort this if connection was disconnected by caller
+			// (PEER callee DISC -> hub.CallerClient=nil )
 			hub.HubMutex.RLock()
 			if hub.CalleeClient!=nil && !hub.CalleeClient.isConnectedToPeer.Get() && hub.CallerClient!=nil {
 				fmt.Printf("%s (%s) NO PEERCON %ds %s <- %s (%s)\n", client.connType, client.calleeID, 
@@ -1014,7 +1016,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 			remotePeerCon = "p2p"
 			if !c.hub.RemoteP2p { remotePeerCon = "relay" }
 		}
-		// peer callee discon
+		// peer callee disc
 		if c.hub.CalleeClient!=nil && c.hub.CallerClient!=nil {
 			fmt.Printf("%s (%s) PEER %s DISC %ds %s/%s %s <- %s (%s) %s\n",
 				c.connType, c.calleeID, peerType, c.hub.CallDurationSecs, localPeerCon, remotePeerCon,
@@ -1076,8 +1078,6 @@ func (c *WsClient) peerConHasEnded(comment string) {
 			if c.hub.CallerClient!=nil {
 				c.hub.CallerClient.isConnectedToPeer.Set(false)
 				c.hub.CallerClient.isMediaConnectedToPeer.Set(false)
-				// hub.CallerClient must be nil
-				c.hub.CallerClient = nil
 			}
 		} else {
 			if c.hub.CalleeClient!=nil {
@@ -1085,6 +1085,10 @@ func (c *WsClient) peerConHasEnded(comment string) {
 				c.hub.CalleeClient.isMediaConnectedToPeer.Set(false)
 			}
 		}
+
+		// hub.CallerClient must be nil
+		c.hub.CallerClient = nil
+
 		c.pickupSent.Set(false)
 	}
 	c.hub.HubMutex.Unlock()
