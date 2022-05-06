@@ -356,9 +356,11 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		// this code should never be reached; 2nd caller should receive "busy" from /online
 		// it can happen if two /online request in very short order return "avail"
 		// (the 2nd /online request before the 1st gets ws-connected)
-		fmt.Printf("# %s (%s/%s) CallerClient already set [%s] %s ws=%d\n",
-			client.connType, client.calleeID, client.globalCalleeID, hub.CallerClient.RemoteAddr,
-			client.RemoteAddr, wsClientID64)
+		if logWantedFor("login") {
+			fmt.Printf("# %s (%s/%s) CallerClient already set [%s] %s ws=%d\n",
+				client.connType, client.calleeID, client.globalCalleeID, hub.CallerClient.RemoteAddr,
+				client.RemoteAddr, wsClientID64)
+		}
 		//fmt.Printf("# %s existing CallerClient %s ua=%s\n",
 		//	client.connType, hub.CallerClient.RemoteAddr, hub.CallerClient.userAgent)
 		time.Sleep(500 * time.Millisecond)
@@ -528,7 +530,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 		// caller starting a call - payload is JSON.stringify(localDescription)
 		if c.callerOfferForwarded.Get() {
 			// prevent double callerOffer
-			fmt.Printf("%s (%s) incoming call was already forwarded %s\n",
+			fmt.Printf("%s (%s) CALL from %s was already forwarded\n",
 				c.connType, c.calleeID, c.RemoteAddr)
 			return
 		}
@@ -536,21 +538,21 @@ func (c *WsClient) receiveProcess(message []byte) {
 		c.hub.HubMutex.RLock()
 		if c.hub.CalleeClient==nil {
 			c.hub.HubMutex.RUnlock()
-			fmt.Printf("%s (%s) INCOMING CALL %s but hub.CalleeClient==nil\n",
+			fmt.Printf("%s (%s) CALL from %s but hub.CalleeClient==nil\n",
 				c.connType, c.calleeID, c.RemoteAddr)
 			return
 		}
 		if c.hub.CallerClient==nil {
 			c.hub.HubMutex.RUnlock()
-			fmt.Printf("%s (%s) INCOMING CALL %s but hub.CallerClient==nil\n",
-				c.connType, c.calleeID, c.RemoteAddr)
+			fmt.Printf("%s (%s) CALL %s <- %s but hub.CallerClient==nil\n",
+				c.connType, c.calleeID, c.hub.CalleeClient.RemoteAddr, c.RemoteAddr)
 			return
 		}
 
 		c.hub.CalleeClient.calleeInitReceived.Set(false)
 
-		fmt.Printf("%s (%s) INCOMING CALL %s <- %s\n",
-			c.connType, c.calleeID, c.hub.CalleeClient.RemoteAddr, c.RemoteAddr)
+		fmt.Printf("%s (%s) CALL %s <- %s (%s)\n",
+			c.connType, c.calleeID, c.hub.CalleeClient.RemoteAddr, c.RemoteAddr, c.hub.CallerClient.callerID)
 
 		// forward the callerOffer message to the callee client
 		if c.hub.CalleeClient.Write(message) != nil {
@@ -733,8 +735,10 @@ func (c *WsClient) receiveProcess(message []byte) {
 	if cmd=="pickup" {
 		// this is sent by the callee client
 		if !c.isConnectedToPeer.Get() {
-			fmt.Printf("# %s (%s) pickup ignored no peerConnect %s\n",
-				c.connType, c.calleeID, c.RemoteAddr)
+			if logWantedFor("login") {
+				fmt.Printf("# %s (%s) pickup ignored no peerConnect %s\n",
+					c.connType, c.calleeID, c.RemoteAddr)
+			}
 			return
 		}
 		if c.pickupSent.Get() {
