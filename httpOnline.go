@@ -104,23 +104,29 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		}
 		if secsSinceLogoff>0 && secsSinceLogoff < 3*60 {
 			// callee may come back very soon
-			fmt.Printf("/online (%s) is offline temp (for %d secs) %s ver=%s ua=%s\n",
-				urlID, secsSinceLogoff, remoteAddr, clientVersion, r.UserAgent())
 			if(!wait) {
+				if logWantedFor("login") {
+					fmt.Printf("/online (%s) offline temp (for %d secs) %s ver=%s ua=%s\n",
+						urlID, secsSinceLogoff, remoteAddr, clientVersion, r.UserAgent())
+				}
 				fmt.Fprintf(w, "notavailtemp")
 				return
 			}
 			// loop: wait for callee
 			loopStartTime := time.Now()
 			for {
-				fmt.Printf("/online (%s) is offline temp, caller waiting... %s\n",
-					urlID, remoteAddr)
+				if logWantedFor("login") {
+					fmt.Printf("/online (%s) offline temp, caller waiting... %s\n",
+						urlID, remoteAddr)
+				}
 				time.Sleep(3 * time.Second)
 				select {
 				case <-r.Context().Done():
 					// client gave up
-					fmt.Printf("/online (%s) is offline temp, caller wait abort %s\n",
-						urlID, remoteAddr)
+					if logWantedFor("login") {
+						fmt.Printf("/online (%s) offline temp, caller wait abort %s\n",
+							urlID, remoteAddr)
+					}
 					return
 				default:
 					glUrlID, locHub, globHub, err = GetOnlineCallee(urlID, ejectOn1stFound, reportBusyCallee,
@@ -132,7 +138,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 						fmt.Fprintf(w, "error")
 						return
 					}
-					//fmt.Printf("/online (%s) is offline temp: glUrlID=(%s) %v %v\n",
+					//fmt.Printf("/online (%s) offline temp: glUrlID=(%s) %v %v\n",
 					//	urlID, glUrlID, locHub!=nil, globHub!=nil)
 				}
 				if glUrlID != "" {
@@ -148,13 +154,17 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 
 		} else {
 			if secsSinceLogoff>1651395074 { // offline for >=52 years (since 1970)
-				fmt.Printf("/online (%s) is offline (was never online) %s ver=%s ua=%s\n",
-					urlID, remoteAddr, clientVersion, r.UserAgent())
+				if logWantedFor("login") {
+					fmt.Printf("/online (%s) offline (was never online) %s ver=%s ua=%s\n",
+						urlID, remoteAddr, clientVersion, r.UserAgent())
+				}
 				fmt.Fprintf(w, "notavail")
 				return
 			}
-			fmt.Printf("/online (%s) is offline (for %d secs) %s ver=%s ua=%s\n",
-				urlID, secsSinceLogoff, remoteAddr, clientVersion, r.UserAgent())
+			if logWantedFor("login") {
+				fmt.Printf("/online (%s) offline (for %d secs) %s ver=%s ua=%s\n",
+					urlID, secsSinceLogoff, remoteAddr, clientVersion, r.UserAgent())
+			}
 			fmt.Fprintf(w, "notavail")
 			return
 		}
