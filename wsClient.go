@@ -315,22 +315,21 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			// incoming caller will get killed if there is no peerConnect after 10 sec
 			// set by constate=="Incoming" || constate=="Connected" || constate=="ConForce"
 			// (it can take up to 6-8 seconds in some cases for a devices to get fully out of deep sleep)
-			time.Sleep(10 * time.Second)
+			delaySecs := 10
+			time.Sleep(time.Duration(delaySecs) * time.Second)
 
 			hub.HubMutex.RLock()
 			if hub.CalleeClient!=nil && !hub.CalleeClient.isConnectedToPeer.Get() && hub.CallerClient!=nil {
-				fmt.Printf("%s (%s/%s) NO PEERCON after 10s ws=%d %s\n", client.connType,
-					client.calleeID, client.globalCalleeID, wsClientID64, client.RemoteAddr)
+				fmt.Printf("%s (%s) NO PEERCON %ds ws=%d %s <- %s\n", client.connType,
+					client.calleeID, delaySecs, wsClientID64, hub.CalleeClient.RemoteAddr, client.RemoteAddr)
 
 				// NOTE: msg MUST NOT contain apostroph (') characters
 				msg :=  "Unable to establish a direct P2P connection. "+
-						"This is likely a browser/WebRTC related issue. "+
-						"Could also be a network/firewall issue. "+
-						"On Android, run <a href=\"/webcall/android/#webview\">WebRTC-Check</a> "+
+						"This is likely a WebRTC related issue with your browser/WebView. "+
+						"It could also be a network/firewall issue. "+
+						"If on Android, run <a href=\"/webcall/android/#webview\">WebRTC-Check</a> "+
 						"to test your System WebView."
-				// tell caller about this
 				hub.CallerClient.Write([]byte("status|"+msg))
-				// tell callee about this
 				hub.CalleeClient.Write([]byte("status|"+msg))
 				hub.HubMutex.RUnlock()
 
