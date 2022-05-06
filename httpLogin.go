@@ -393,12 +393,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			return;
 		}
 
-		if strings.HasPrefix(comment,"OnClose") {
-			if logWantedFor("login") {
-				fmt.Printf("exit (%s) ws=%d '%s' %s ver=%s\n",
-					globalID, wsClientID, comment, remoteAddrWithPort, clientVersion)
-			}
-		} else {
+		if logWantedFor("login") || !strings.HasPrefix(comment,"OnClose") {
 			fmt.Printf("exit (%s) ws=%d '%s' %s ver=%s\n",
 				globalID, wsClientID, comment, remoteAddrWithPort, clientVersion)
 		}
