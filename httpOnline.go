@@ -342,8 +342,10 @@ func httpNewId(w http.ResponseWriter, r *http.Request, urlID string, calleeID st
 	if ok && len(url_arg_array[0]) >= 1 {
 		clientVersion = url_arg_array[0]
 	}
-	fmt.Printf("/newid (%s) generated %s ver=%s ua=%s\n",
-		tmpCalleeID, remoteAddr, clientVersion, r.UserAgent())
+	if logWantedFor("login") {
+		fmt.Printf("/newid (%s) generated %s ver=%s ua=%s\n",
+			tmpCalleeID, remoteAddr, clientVersion, r.UserAgent())
+	}
 	time.Sleep(1 * time.Second)
 	fmt.Fprintf(w, tmpCalleeID)
 	return
