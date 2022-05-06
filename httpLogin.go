@@ -365,7 +365,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	myMaxRingSecs := maxRingSecs
 	myMaxTalkSecsIfNoP2p := maxTalkSecsIfNoP2p
 	readConfigLock.RUnlock()
-	var myHubMutex sync.RWMutex
+	var myHubMutex sync.RWMutex // only to protect local hub from exitFunc
 	hub := newHub(myMaxRingSecs, myMaxTalkSecsIfNoP2p, dbEntry.StartTime)
 	//fmt.Printf("/login newHub urlID=%s duration %d/%d rt=%v\n",
 	//	urlID, maxRingSecs, maxTalkSecsIfNoP2p, time.Since(startRequestTime))
@@ -434,16 +434,12 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	hub.calleeUserAgent = userAgent
 
 	wsClientMutex.Lock()
-	myHubMutex.RLock()
 	wsClientMap[wsClientID] = wsClientDataType{hub, dbEntry, dbUser, urlID, globalID, clientVersion, false}
-	myHubMutex.RUnlock()
 	wsClientMutex.Unlock()
 
 	//fmt.Printf("/login newHub store in local hubMap with globalID=%s\n", globalID)
 	hubMapMutex.Lock()
-	myHubMutex.RLock()
 	hubMap[globalID] = hub
-	myHubMutex.RUnlock()
 	hubMapMutex.Unlock()
 
 	//fmt.Printf("/login run hub id=%s durationSecs=%d/%d rt=%v\n",
@@ -495,38 +491,39 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					myHubMutex.RUnlock()
 					break
 				}
+				hub.HubMutex.RLock()
 				if hub.CalleeClient == nil {
+					hub.HubMutex.RUnlock()
 					myHubMutex.RUnlock()
 					break
 				}
 				if hub.CalleeLogin.Get() {
 					// this is set when callee sends 'init'
+					hub.HubMutex.RUnlock()
 					myHubMutex.RUnlock()
 					break
 				}
+				hub.HubMutex.RUnlock()
 				myHubMutex.RUnlock()
 
 				time.Sleep(1 * time.Second)
 				waitedFor++
-
-				hubMapMutex.RLock()
 				myHubMutex.Lock()
+				hubMapMutex.RLock()
 				hub = hubMap[globalID]
-				myHubMutex.Unlock()
 				hubMapMutex.RUnlock()
-
-				myHubMutex.RLock()
 				if hub == nil {
 					// callee is already gone
-					myHubMutex.RUnlock()
+					myHubMutex.Unlock()
 					break
 				}
-				myHubMutex.RUnlock()
+				myHubMutex.Unlock()
 			}
 
 			// hub.CalleeLogin will be set by callee-client sending "init|"
 			// if hub.CalleeLogin is not set, the client couldn't send "init|", may be due to battery optimization
 			myHubMutex.RLock()
+			hub.HubMutex.RLock()
 			if hub != nil && hub.CalleeClient != nil && !hub.CalleeLogin.Get() {
 				// the next login attempt of urlID/globalID will be denied to break it's reconnecter loop
 				// but we should NOT do this right after server start
@@ -538,23 +535,18 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					blockMapMutex.Unlock()
 				}
 
-				if hub != nil && hub.CalleeClient != nil {
-					// unregister callee
-					myHubMutex.RUnlock()
-					msg := fmt.Sprintf("timeout%ds",waitedFor)
-					hub.doUnregister(hub.CalleeClient, msg)
-				} else {
-					// has already exited
-					myHubMutex.RUnlock()
-//					fmt.Printf("# /login (%s) timeout%ds (already exited) %s ver=%s\n",
-//						urlID, waitedFor, remoteAddrWithPort, clientVersion)
-				}
+				// unregister callee
+				hub.HubMutex.RUnlock()
+				myHubMutex.RUnlock()
+				msg := fmt.Sprintf("timeout%ds",waitedFor)
+				hub.doUnregister(hub.CalleeClient, msg)
 
 				if globalID != "" {
 					//_,lenGlobalHubMap =
 						DeleteFromHubMap(globalID)
 				}
 			} else {
+				hub.HubMutex.RUnlock()
 				myHubMutex.RUnlock()
 			}
 		}()
