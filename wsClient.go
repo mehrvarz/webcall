@@ -413,15 +413,13 @@ func (c *WsClient) receiveProcess(message []byte) {
 		c.hub.CalleeLogin.Set(true)
 		c.hub.HubMutex.RUnlock()
 
-		if logWantedFor("wscall") {
-			if c.isCallee {
-				fmt.Printf("%s (%s) callee init ws=%d %s ver=%s\n",
-					c.connType, c.calleeID, c.hub.WsClientID, c.RemoteAddr, c.clientVersion)
-			} else {
-				// this is not possible
-				fmt.Printf("# %s (%s) caller init ws=%d %s ver=%s\n",
-					c.connType, c.calleeID, c.hub.WsClientID, c.RemoteAddr, c.clientVersion)
-			}
+		if c.isCallee {
+			fmt.Printf("%s (%s) callee init ws=%d %s ver=%s\n",
+				c.connType, c.calleeID, c.hub.WsClientID, c.RemoteAddr, c.clientVersion)
+		} else {
+			// this is not possible
+			fmt.Printf("# %s (%s) caller init ws=%d %s ver=%s\n",
+				c.connType, c.calleeID, c.hub.WsClientID, c.RemoteAddr, c.clientVersion)
 		}
 
 		// TODO should we clear callerIpInHubMap via StoreCallerIpInHubMap(,"") just to be sure?
