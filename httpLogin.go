@@ -395,10 +395,10 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			return;
 		}
 
-		if logWantedFor("login") || !strings.HasPrefix(comment,"OnClose") {
+//		if logWantedFor("login") || !strings.HasPrefix(comment,"OnClose") {
 			fmt.Printf("exit (%s) ws=%d '%s' %s ver=%s\n",
 				globalID, wsClientID, comment, remoteAddrWithPort, clientVersion)
-		}
+//		}
 
 		if dbUserKey!="" {
 			// feed LastLogoffTime
