@@ -194,13 +194,15 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				}
 				if offlineReason==0 {
 					// abort this login attempt: old/sameId callee is already/still logged in
-					fmt.Fprintf(w,"fatal")
-					calleeIP := ""
-					if hub!=nil && hub.CalleeClient!=nil {
-						calleeIP = hub.CalleeClient.RemoteAddr
+					if logWantedFor("login") {
+						calleeIP := ""
+						if hub!=nil && hub.CalleeClient!=nil {
+							calleeIP = hub.CalleeClient.RemoteAddr
+						}
+						fmt.Printf("/login (%s) already/still logged in %v by %s <- %s ver=%s ua=%s\n",
+							key, time.Since(startRequestTime), calleeIP, remoteAddr, clientVersion, userAgent)
 					}
-					fmt.Printf("/login (%s) already/still logged in %v by %s <- %s ver=%s ua=%s\n",
-						key, time.Since(startRequestTime), calleeIP, remoteAddr, clientVersion, userAgent)
+					fmt.Fprintf(w,"fatal")
 					return
 				}
 				// apparently the new login comes from the old callee, bc it is not online anymore

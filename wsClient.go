@@ -509,7 +509,9 @@ func (c *WsClient) receiveProcess(message []byte) {
 				//fmt.Printf("%s (%s) ver=%s\n",c.connType,c.calleeID,c.clientVersion)
 				// NOTE: msg MUST NOT contain apostroph (') characters
 				msg := "WebCall for Android <a href=\"/webcall/update\">update available.</a>"
-				fmt.Printf("%s (%s) send status|%s\n",c.connType,c.calleeID,msg)
+				if logWantedFor("login") {
+					fmt.Printf("%s (%s) send status|%s\n",c.connType,c.calleeID,msg)
+				}
 				c.Write([]byte("status|"+msg))
 			}
 		}
