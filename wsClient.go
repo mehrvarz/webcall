@@ -320,8 +320,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 			hub.HubMutex.RLock()
 			if hub.CalleeClient!=nil && !hub.CalleeClient.isConnectedToPeer.Get() && hub.CallerClient!=nil {
-				fmt.Printf("%s (%s) NO PEERCON %ds ws=%d %s <- %s\n", client.connType,
-					client.calleeID, delaySecs, wsClientID64, hub.CalleeClient.RemoteAddr, client.RemoteAddr)
+				fmt.Printf("%s (%s) NO PEERCON %ds %s <- %s (%s)\n", client.connType, client.calleeID, 
+					delaySecs, hub.CalleeClient.RemoteAddr, client.RemoteAddr, hub.CallerClient.callerID)
 
 				// NOTE: msg MUST NOT contain apostroph (') characters
 				msg :=  "Unable to establish a direct P2P connection. "+
