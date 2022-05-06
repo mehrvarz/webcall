@@ -395,10 +395,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			return;
 		}
 
-//		if logWantedFor("login") || !strings.HasPrefix(comment,"OnClose") {
-			fmt.Printf("exit (%s) ws=%d '%s' %s ver=%s\n",
-				globalID, wsClientID, comment, remoteAddrWithPort, clientVersion)
-//		}
+		fmt.Printf("exit (%s) ws=%d '%s' %s ver=%s\n",
+			globalID, wsClientID, comment, remoteAddrWithPort, clientVersion)
 
 		if dbUserKey!="" {
 			// feed LastLogoffTime
@@ -529,8 +527,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				// the next login attempt of urlID/globalID will be denied to break it's reconnecter loop
 				// but we should NOT do this right after server start
 				if time.Now().Sub(serverStartTime) > 30 * time.Second {
-					fmt.Printf("/login (%s) ws-conn timeout%ds %s ver=%s\n",
-						urlID, waitedFor, remoteAddrWithPort, clientVersion)
+					//fmt.Printf("/login (%s) ws-conn timeout%ds %s ver=%s\n",
+					//	urlID, waitedFor, remoteAddrWithPort, clientVersion)
 					blockMapMutex.Lock()
 					blockMap[urlID] = time.Now()
 					blockMapMutex.Unlock()
@@ -544,8 +542,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				} else {
 					// has already exited
 					myHubMutex.RUnlock()
-					//fmt.Printf("# /login (%s) timeout%ds (already exited) %s ver=%s\n",
-					//	urlID, waitForClientWsConnectSecs, remoteAddrWithPort, clientVersion)
+					fmt.Printf("# /login (%s) timeout%ds (already exited) %s ver=%s\n",
+						urlID, waitedFor, remoteAddrWithPort, clientVersion)
 				}
 
 				if globalID != "" {
