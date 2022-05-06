@@ -543,9 +543,9 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					myHubMutex.RUnlock()
 					msg := fmt.Sprintf("timeout%ds",waitedFor)
 					hub.doUnregister(hub.CalleeClient, msg)
-//				} else {
-//					// has already exited
-//					myHubMutex.RUnlock()
+				} else {
+					// has already exited
+					myHubMutex.RUnlock()
 //					fmt.Printf("# /login (%s) timeout%ds (already exited) %s ver=%s\n",
 //						urlID, waitedFor, remoteAddrWithPort, clientVersion)
 				}
