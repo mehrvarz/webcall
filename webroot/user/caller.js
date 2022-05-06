@@ -1213,27 +1213,29 @@ function signalingCommand(message) {
 
 		setTimeout(function() {
 			// rtcConnect timeout check
-			let warning = "";
-			if(onIceCandidates<1 && connectionstatechangeCounter<1) {
-				console.warn('no ice candidates, no connection state changes');
-				warning = "WARNING: no ICE candidates, no connection state changes";
-			} else if(onIceCandidates<1) {
-				console.warn('no ice candidates');
-				warning = "WARNING: no ICE candidates";
-			} else if(connectionstatechangeCounter<1) {
-				console.warn('no connection state changes');
-				warning = "WARNING: no connection state changes";
-			}
-			if(warning!="") {
-				stopAllAudioEffects();
-				notificationSound.play().catch(function(error) { });
-				showStatus(warning,-1);
-			}
-			if(!rtcConnect) {
-				// check for no-webrtc patch
-				// we could also check for no "peerCon connected" aka rtcConnect==false
-				console.log('no rtcConnect timeout');
-				hangup(true,false,"rtcConnect timeout "+warning); // will call checkCalleeOnline()
+			if(!doneHangup) {
+				let warning = "";
+				if(onIceCandidates<1 && connectionstatechangeCounter<1) {
+					console.warn('no ice candidates, no connection state changes');
+					warning = "WARNING: no ICE candidates, no connection state changes";
+				} else if(onIceCandidates<1) {
+					console.warn('no ice candidates');
+					warning = "WARNING: no ICE candidates";
+				} else if(connectionstatechangeCounter<1) {
+					console.warn('no connection state changes');
+					warning = "WARNING: no connection state changes";
+				}
+				if(warning!="") {
+					stopAllAudioEffects();
+					notificationSound.play().catch(function(error) { });
+					showStatus(warning,-1);
+				}
+				if(!rtcConnect) {
+					// check for no-webrtc patch
+					// we could also check for no "peerCon connected" aka rtcConnect==false
+					console.log('no rtcConnect timeout');
+					hangup(true,false,"rtcConnect timeout "+warning); // will call checkCalleeOnline()
+				}
 			}
 		},9000);
 
