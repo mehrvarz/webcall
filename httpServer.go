@@ -582,7 +582,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 			defer hubMapMutex.RUnlock()
 			for calleeID,hub := range hubMap {
 				//hub := hubMap[calleeID]
-				if hub!=nil {
+				if hub!=nil && hub.WsClientID!=0 {
 					hub.HubMutex.RLock()
 					ua := ""
 					remoteAddr := ""
