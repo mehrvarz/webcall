@@ -47,13 +47,14 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		if clientBlockBelowVersion!="" && clientVersion < clientBlockBelowVersion {
 			fmt.Printf("/login (%s) deny clientVersion (%s) < clientBlockBelowVersion (%s) %s\n",
 				urlID, clientVersion, clientBlockBelowVersion, remoteAddr)
-/*
+
 			// NOTE: msg MUST NOT contain apostroph (') characters
 			msg := "The version of WebCall you are using has a technical problem and is no longer supported."+
 					" <a href=\"/webcall/update\">Please upgrade.</a>"
 			fmt.Fprintf(w,msg)
-*/
+/*
 			http.Redirect(w, r, "https://timur.mobi/webcall/update", 301)
+*/
 			return
 		}
 	}
@@ -527,7 +528,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			if hub==nil {
 				// callee is already gone
 				myHubMutex.RUnlock()
-				fmt.Printf("# /login (%s/%s) skip waitForWsConnect hub==nil %d\n", urlID, globalID, waitedFor)
+				//fmt.Printf("# /login (%s/%s) skip waitForWsConnect hub==nil %d\n", urlID, globalID, waitedFor)
 			} else {
 				if hub.CalleeLogin.Get() {
 					// this is perfect: ws-connect / init did occur
@@ -556,8 +557,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 						hub.doUnregister(hub.CalleeClient, msg)
 					} else {
 						// callee has exited early
-						fmt.Printf("/login (%s/%s) timeout%ds skip hub.doUnregister\n",
-							urlID, globalID, waitedFor)
+						//fmt.Printf("/login (%s/%s) timeout%ds skip hub.doUnregister\n",
+						//	urlID, globalID, waitedFor)
 					}
 
 					if globalID != "" {
