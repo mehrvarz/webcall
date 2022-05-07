@@ -197,10 +197,9 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 
 		wsClientID := locHub.WsClientID // set by wsClient serve()
 		if wsClientID == 0 {
-			// this seems to happen when urlID is just now logging in, but has not yet completed
-			// TODO wait a moment and try again?
-			locHub.HubMutex.RUnlock()
+			// this seems to happen when urlID has not logged in or is just now logging in but not finished
 			// just act as if (urlID) is not curretly online
+			locHub.HubMutex.RUnlock()
 			fmt.Printf("/online (%s) notavail ws=0 %s ver=%s\n", urlID, remoteAddr, clientVersion)
 			fmt.Fprintf(w, "notavail")
 			return
