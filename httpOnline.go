@@ -201,8 +201,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 			// TODO wait a moment and try again?
 			locHub.HubMutex.RUnlock()
 			// just act as if (urlID) is not curretly online
-			fmt.Printf("/online (%s/%s) notavail ws=0 %s ver=%s\n",
-				urlID, glUrlID, remoteAddr, clientVersion)
+			fmt.Printf("/online (%s) notavail ws=0 %s ver=%s\n", urlID, remoteAddr, clientVersion)
 			fmt.Fprintf(w, "notavail")
 			return
 		}
