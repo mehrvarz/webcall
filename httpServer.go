@@ -550,8 +550,10 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				//	urlID, dbHashedPwName, dbHashedPwBucket, cookie.Value)
 				fmt.Fprintf(w,"ok")
 			} else {
-				fmt.Printf("# /logout (%s) dbHashedPw.Delete db=%s bucket=%s key=%s err=%s\n",
+				// user did logout without being logged in - never mind
+				fmt.Printf("/logout (%s) dbHashedPw.Delete db=%s bucket=%s key=%s err=%s\n",
 					urlID, dbHashedPwName, dbHashedPwBucket, cookie.Value, err)
+				fmt.Fprintf(w,"ok")
 			}
 		} else {
 			fmt.Printf("# /logout (%s) r.Cookie(cookieName) err=%s\n", urlID, err)
