@@ -51,6 +51,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			msg := "The version of WebCall you are using has a technical problem and is no longer supported."+
 					" <a href=\"/webcall/update\">Please upgrade.</a>"
 			fmt.Fprintf(w,msg)
+			http.Redirect(w, r, "https://timur.mobi/webcall/update", 301)
 			return
 		}
 	}
