@@ -550,7 +550,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 
 		c.hub.CalleeClient.calleeInitReceived.Set(false)
 
-		fmt.Printf("%s (%s) CALL ☎️ %s <- %s (%s)\n",
+		fmt.Printf("%s (%s) CALL ☎️  %s <- %s (%s)\n",
 			c.connType, c.calleeID, c.hub.CalleeClient.RemoteAddr, c.RemoteAddr, c.hub.CallerClient.callerID)
 
 		// forward the callerOffer message to the callee client
