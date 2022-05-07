@@ -531,36 +531,49 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			// hub.CalleeLogin will be set by callee-client sending "init|"
 			// if hub.CalleeLogin is not set, the client couldn't send "init|", may be due to battery optimization
 			myHubMutex.RLock()
-			hub.HubMutex.RLock()
-			if hub != nil && hub.CalleeClient != nil && !hub.CalleeLogin.Get() {
-				// the next login attempt of urlID/globalID will be denied to break it's reconnecter loop
-				// but we should NOT do this right after server start
-				if time.Now().Sub(serverStartTime) > 30 * time.Second {
-					//fmt.Printf("/login (%s) ws-conn timeout%ds %s ver=%s\n",
-					//	urlID, waitedFor, remoteAddrWithPort, clientVersion)
-					blockMapMutex.Lock()
-					blockMap[urlID] = time.Now()
-					blockMapMutex.Unlock()
-				}
-
-				// unregister callee
-				hub.HubMutex.RUnlock()
+			if hub==nil {
+				// this would be kind of fatal
 				myHubMutex.RUnlock()
-				msg := fmt.Sprintf("timeout%ds",waitedFor)
-				hub.doUnregister(hub.CalleeClient, msg)
-
-				if globalID != "" {
-					//_,lenGlobalHubMap =
-						DeleteFromHubMap(globalID)
-				}
+				fmt.Printf("# /login (%s/%s) skip waitForWsConnect hub==nil %d\n", urlID, globalID, waitedFor)
 			} else {
-				hub.HubMutex.RUnlock()
-				myHubMutex.RUnlock()
-				if hub==nil {
-					fmt.Printf("# /login (%s/%s) skip waitForWsConnect hub==nil%v\n", urlID, globalID)
+				hub.HubMutex.RLock()
+				if hub.CalleeLogin.Get() {
+					// this is perfect: ws-connect / init did occur
+					hub.HubMutex.RUnlock()
+					myHubMutex.RUnlock()
 				} else {
-					fmt.Printf("# /login (%s/%s) skip waitForWsConnect hub.CalleeClient=%v %v\n",
-						urlID, globalID, hub.CalleeClient!=nil, hub.CalleeLogin.Get())
+					// the next login attempt of urlID/globalID will be denied to break it's reconnecter loop
+					// but we should NOT do this right after server start
+					if time.Now().Sub(serverStartTime) > 30 * time.Second {
+						//fmt.Printf("/login (%s) ws-conn timeout%ds %s ver=%s\n",
+						//	urlID, waitedFor, remoteAddrWithPort, clientVersion)
+						blockMapMutex.Lock()
+						blockMap[urlID] = time.Now()
+						blockMapMutex.Unlock()
+					}
+
+					unregisterNeeded := false
+					if hub.CalleeClient != nil {
+						unregisterNeeded = true
+					}
+
+					// unregister callee
+					hub.HubMutex.RUnlock()
+					myHubMutex.RUnlock()
+					if unregisterNeeded {
+						msg := fmt.Sprintf("timeout%ds",waitedFor)
+						hub.doUnregister(hub.CalleeClient, msg)
+					} else {
+						fmt.Printf("# /login (%s/%s) skip hub.doUnregister %d\n", urlID, globalID, waitedFor)
+					}
+
+					if globalID != "" {
+						//_,lenGlobalHubMap =
+							DeleteFromHubMap(globalID)
+					} else {
+						fmt.Printf("# /login (%s/%s) skip DeleteFromHubMap(globalID) %d\n",
+							urlID, globalID, waitedFor)
+					}
 				}
 			}
 		}()
