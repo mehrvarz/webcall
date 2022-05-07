@@ -670,14 +670,14 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 	}
 
 	// this user can NOT rcv push msg (not pushable)
-	fmt.Printf("/canbenotified (%s) has no push channel rip=%s\n",urlID,remoteAddr)
+	fmt.Printf("/canbenotified (%s) has no push channel %s (%s)\n",urlID,remoteAddr, callerID)
 	if(dbUser.StoreMissedCalls) {
 		// store missed call
 		var missedCallsSlice []CallerInfo
 		err := kvCalls.Get(dbMissedCalls,urlID,&missedCallsSlice)
 		if err!=nil && strings.Index(err.Error(),"key not found")<0 {
-			fmt.Printf("# /canbenotified (%s) failed to read dbMissedCalls err=%v rip=%s\n",
-				urlID, err, remoteAddr)
+			fmt.Printf("# /canbenotified (%s) failed to read dbMissedCalls %s (%s) err=%v\n",
+				urlID, remoteAddr, callerID, err)
 		}
 		// make sure we never show more than 10 missed calls
 		if missedCallsSlice!=nil && len(missedCallsSlice)>=10 {
@@ -687,8 +687,8 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 		missedCallsSlice = append(missedCallsSlice, caller)
 		err = kvCalls.Put(dbMissedCalls, urlID, missedCallsSlice, true) // skipConfirm
 		if err!=nil {
-			fmt.Printf("# /canbenotified (%s) failed to store dbMissedCalls err=%v rip=%s\n",
-				urlID, err, remoteAddr)
+			fmt.Printf("# /canbenotified (%s) failed to store dbMissedCalls %s (%s) err=%v\n",
+				urlID, remoteAddr, callerID, err)
 		}
 	}
 	return
