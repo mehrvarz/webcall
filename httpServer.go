@@ -556,7 +556,9 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				fmt.Fprintf(w,"ok")
 			}
 		} else {
-			fmt.Printf("# /logout (%s) r.Cookie(cookieName) err=%s\n", urlID, err)
+			if strings.Index(err.Error(),"named cookie not present")<0 {
+				fmt.Printf("# /logout (%s) r.Cookie(%s) err=%s\n", urlID, cookieName, err)
+			}
 		}
 		expiration := time.Now().Add(-1 * time.Hour)
 		fmt.Printf("clearcookie (%s) cookieName=(%s) %s\n",urlID,cookieName,remoteAddr)
