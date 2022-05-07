@@ -2195,12 +2195,6 @@ function openSettings() {
 
 function exit() {
 	gLog("exit (id=%s)",calleeID);
-
-	if(typeof Android !== "undefined" && Android !== null) {
-		Android.wsExit();
-		return;
-	}
-
 	containerElement.style.filter = "blur(0.8px) brightness(60%)";
 	goOffline();
 
@@ -2215,8 +2209,16 @@ function exit() {
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 			let logoutStatus = xhr.responseText;
 			gLog('exit logoutStatus (%s)',logoutStatus);
+			if(typeof Android !== "undefined" && Android !== null) {
+				Android.wsExit();
+				return;
+			}
 		}, function(errString,err) {
 			console.log('exit xhr error',errString);
+			if(typeof Android !== "undefined" && Android !== null) {
+				Android.wsExit();
+				return;
+			}
 		});
 /*
 		if(pushRegistration) {
