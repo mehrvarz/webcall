@@ -430,6 +430,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		    wsClientMutex.Lock()
 		    delete(wsClientMap, wsClientID)
 		    wsClientMutex.Unlock()
+		} else {
+			fmt.Printf("# exit (%s) wsClientID==0\n", urlID)
 		}
 //		calleeClient.hub.WsClientID = 0
 	}
