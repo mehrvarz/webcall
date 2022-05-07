@@ -497,21 +497,11 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					myHubMutex.RUnlock()
 					break
 				}
-				hub.HubMutex.RLock()
-/*
-				if hub.CalleeClient == nil {
-					hub.HubMutex.RUnlock()
-					myHubMutex.RUnlock()
-					break
-				}
-*/
 				if hub.CalleeLogin.Get() {
 					// this is set when callee sends 'init'
-					hub.HubMutex.RUnlock()
 					myHubMutex.RUnlock()
 					break
 				}
-				hub.HubMutex.RUnlock()
 				myHubMutex.RUnlock()
 
 				time.Sleep(1 * time.Second)
@@ -532,14 +522,12 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			// if hub.CalleeLogin is not set, the client couldn't send "init|", may be due to battery optimization
 			myHubMutex.RLock()
 			if hub==nil {
-				// this would be kind of fatal
+				// callee is already gone
 				myHubMutex.RUnlock()
 				fmt.Printf("# /login (%s/%s) skip waitForWsConnect hub==nil %d\n", urlID, globalID, waitedFor)
 			} else {
-				hub.HubMutex.RLock()
 				if hub.CalleeLogin.Get() {
 					// this is perfect: ws-connect / init did occur
-					hub.HubMutex.RUnlock()
 					myHubMutex.RUnlock()
 				} else {
 					// the next login attempt of urlID/globalID will be denied to break it's reconnecter loop
@@ -552,14 +540,14 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 						blockMapMutex.Unlock()
 					}
 
+					hub.HubMutex.RLock()
 					unregisterNeeded := false
 					if hub.CalleeClient != nil {
 						unregisterNeeded = true
 					}
-
-					// unregister callee
 					hub.HubMutex.RUnlock()
 					myHubMutex.RUnlock()
+					// unregister callee
 					if unregisterNeeded {
 						msg := fmt.Sprintf("timeout%ds",waitedFor)
 						hub.doUnregister(hub.CalleeClient, msg)
