@@ -490,7 +490,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 		}
 
 		if !strings.HasPrefix(c.calleeID,"answie") && !strings.HasPrefix(c.calleeID,"talkback") {
-/*
+			/* moved to httpServer.go
 			if clientBlockBelowVersion!="" && c.clientVersion < clientBlockBelowVersion {
 				//fmt.Printf("%s (%s) ver=%s\n",c.connType,c.calleeID,c.clientVersion)
 				// NOTE: msg should be same as in httpLogin.go (search: clientBlockBelowVersion)
@@ -505,7 +505,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 				}()
 				return
 			}
-*/
+			*/
 			if clientUpdateBelowVersion!="" && c.clientVersion < clientUpdateBelowVersion {
 				//fmt.Printf("%s (%s) ver=%s\n",c.connType,c.calleeID,c.clientVersion)
 				// NOTE: msg MUST NOT contain apostroph (') characters
