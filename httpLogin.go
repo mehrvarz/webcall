@@ -554,8 +554,16 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			} else {
 				hub.HubMutex.RUnlock()
 				myHubMutex.RUnlock()
+				if hub==nil {
+					fmt.Printf("# /login (%s/%s) skip waitForWsConnect hub==nil%v\n", urlID, globalID)
+				} else {
+					fmt.Printf("# /login (%s/%s) skip waitForWsConnect hub.CalleeClient=%v %v\n",
+						urlID, globalID, hub.CalleeClient!=nil, hub.CalleeLogin.Get())
+				}
 			}
 		}()
+	} else {
+		fmt.Printf("# /login (%s/%s) not starting waitForWsConnect\n", urlID, globalID)
 	}
 	return
 }
