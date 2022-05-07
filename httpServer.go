@@ -546,10 +546,15 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			err = kvHashedPw.Delete(dbHashedPwBucket, cookie.Value)
 			if err==nil {
-				fmt.Printf("/logout dbHashedPw.Delete OK db=%s bucket=%s key=%s\n",
-					dbHashedPwName, dbHashedPwBucket, cookie.Value)
+				//fmt.Printf("/logout (%s) dbHashedPw.Delete OK db=%s bucket=%s key=%s\n",
+				//	urlID, dbHashedPwName, dbHashedPwBucket, cookie.Value)
 				fmt.Fprintf(w,"ok")
+			} else {
+				fmt.Printf("# /logout (%s) dbHashedPw.Delete db=%s bucket=%s key=%s err=%s\n",
+					urlID, dbHashedPwName, dbHashedPwBucket, cookie.Value, err)
 			}
+		} else {
+			fmt.Printf("# /logout (%s) r.Cookie(cookieName) err=%s\n", urlID, err)
 		}
 		expiration := time.Now().Add(-1 * time.Hour)
 		fmt.Printf("clearcookie (%s) cookieName=(%s) %s\n",urlID,cookieName,remoteAddr)

@@ -417,8 +417,12 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		if hub != nil {
 			if globalID != "" {
 				_,lenGlobalHubMap = DeleteFromHubMap(globalID)
+			} else {
+				fmt.Printf("# exit (%s) globalID is empty\n", urlID)
 			}
 			hub = nil
+		} else {
+			fmt.Printf("# exit (%s) hub==nil\n", urlID)
 		}
 		myHubMutex.Unlock()
 
