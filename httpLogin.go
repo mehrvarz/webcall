@@ -530,16 +530,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					// this is perfect: ws-connect / init did occur
 					myHubMutex.RUnlock()
 				} else {
-					// the next login attempt of urlID/globalID will be denied to break it's reconnecter loop
-					// but we should NOT do this right after server start
-					if time.Now().Sub(serverStartTime) > 30 * time.Second {
-						//fmt.Printf("/login (%s) ws-conn timeout%ds %s ver=%s\n",
-						//	urlID, waitedFor, remoteAddrWithPort, clientVersion)
-						blockMapMutex.Lock()
-						blockMap[urlID] = time.Now()
-						blockMapMutex.Unlock()
-					}
-
 					hub.HubMutex.RLock()
 					unregisterNeeded := false
 					if hub.CalleeClient != nil {
@@ -547,19 +537,31 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					}
 					hub.HubMutex.RUnlock()
 					myHubMutex.RUnlock()
-					// unregister callee
+
 					if unregisterNeeded {
+						// the next login attempt of urlID/globalID will be denied to break it's reconnecter loop
+						// but we should NOT do this right after server start
+						if time.Now().Sub(serverStartTime) > 30 * time.Second {
+							//fmt.Printf("/login (%s) ws-conn timeout%ds %s ver=%s\n",
+							//	urlID, waitedFor, remoteAddrWithPort, clientVersion)
+							blockMapMutex.Lock()
+							blockMap[urlID] = time.Now()
+							blockMapMutex.Unlock()
+						}
+
 						msg := fmt.Sprintf("timeout%ds",waitedFor)
 						hub.doUnregister(hub.CalleeClient, msg)
 					} else {
-						fmt.Printf("# /login (%s/%s) skip hub.doUnregister %d\n", urlID, globalID, waitedFor)
+						// callee has exited early
+						fmt.Printf("/login (%s/%s) timeout%ds skip hub.doUnregister\n",
+							urlID, globalID, waitedFor)
 					}
 
 					if globalID != "" {
 						//_,lenGlobalHubMap =
 							DeleteFromHubMap(globalID)
 					} else {
-						fmt.Printf("# /login (%s/%s) skip DeleteFromHubMap(globalID) %d\n",
+						fmt.Printf("# /login (%s/%s) skip DeleteFromHubMap() %d\n",
 							urlID, globalID, waitedFor)
 					}
 				}
