@@ -498,11 +498,13 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					break
 				}
 				hub.HubMutex.RLock()
+/*
 				if hub.CalleeClient == nil {
 					hub.HubMutex.RUnlock()
 					myHubMutex.RUnlock()
 					break
 				}
+*/
 				if hub.CalleeLogin.Get() {
 					// this is set when callee sends 'init'
 					hub.HubMutex.RUnlock()
