@@ -552,7 +552,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		expiration := time.Now().Add(-1 * time.Hour)
-		fmt.Printf("clear cookie cookieName=(%s) cookieValue=(%s)\n",cookieName,"")
+		fmt.Printf("clearcookie (%s) cookieName=(%s) %s\n",urlID,cookieName,remoteAddr)
 		cookieObj := http.Cookie{Name:cookieName, Value:"",
 					Path:"/",
 					HttpOnly:false,
