@@ -209,6 +209,13 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 				// send tweet only if user is a follower
 				if isFollower {
 					// twid is a follower
+
+					maxlen := 30
+					if len(dbUser.Email2) < 30 {
+						maxlen = len(dbUser.Email2)
+					}
+					fmt.Printf("/notifyCallee (%s) SendTweet🐦  %s msg=%s\n",
+						urlID, dbUser.Email2[:maxlen], msg)
 /*
 					if strings.HasPrefix(dbUser.Email2, "@") {
 						msg = dbUser.Email2 + " " + msg
@@ -221,10 +228,6 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 					respdata, err := twitterClient.SendDirect(dbUser.Str1, msg)
 					if err != nil {
 						// failed to send tweet
-						maxlen := 30
-						if len(dbUser.Email2) < 30 {
-							maxlen = len(dbUser.Email2)
-						}
 						fmt.Printf("# /notifyCallee (%s) %s SendTweet err=%v msg=%s\n",
 							urlID, dbUser.Email2[:maxlen], err, msg)
 						// something is wrong with tw-handle (dbUser.Email2) clear the twid (dbUser.Str1)
