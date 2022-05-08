@@ -102,13 +102,20 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 			// use dbUser.LastLogoffTime to see how long it has been offline
 			secsSinceLogoff = time.Now().Unix() - dbUser.LastLogoffTime
 		}
-		if secsSinceLogoff>0 && secsSinceLogoff < 3*60 {
+		if secsSinceLogoff>0 && secsSinceLogoff < 8*60 {
 			// callee may come back very soon
 			if(!wait) {
 				if logWantedFor("login") {
 					fmt.Printf("/online (%s) offline temp (for %d secs) %s ver=%s ua=%s\n",
 						urlID, secsSinceLogoff, remoteAddr, clientVersion, r.UserAgent())
 				}
+// "notavailtemp" is evaluated by caller.js, which will respond by requesting /online with &wait=true
+// and it will start to wait up to 15min for callee to come online
+// this &wait= request is handeled below, where also up to 15min will be waited for the caller to come online
+// TODO it would be good if we would reduce the wait-time depending on our secsSinceLogoff
+// so for example if secsSinceLogoff==7*60, it would make sense to wait only up to (15-7=8) minutes for callee
+// however, we would need to deliver the max-wait duration (say, 8min) to the caller
+// and the caller would deliver it back with the wait-parameter (currently boolean)
 				fmt.Fprintf(w, "notavailtemp")
 				return
 			}

@@ -198,14 +198,14 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				}
 				if offlineReason==0 {
 					// abort this login attempt: old/sameId callee is already/still logged in
-					if logWantedFor("login") {
+//					if logWantedFor("login") {
 						calleeIP := ""
 						if hub!=nil && hub.CalleeClient!=nil {
 							calleeIP = hub.CalleeClient.RemoteAddr
 						}
 						fmt.Printf("/login (%s) already/still logged in %v by %s <- %s ver=%s ua=%s\n",
 							key, time.Since(startRequestTime), calleeIP, remoteAddr, clientVersion, userAgent)
-					}
+//					}
 					fmt.Fprintf(w,"fatal")
 					return
 				}
@@ -347,7 +347,7 @@ fmt.Printf("/login (%s) fail wrong password [%s/%s] %d %s\n",
 		//fmt.Printf("/login (%s) urlID=(%s) rip=%s rt=%v\n",
 		//	globalID, urlID, remoteAddr, time.Since(startRequestTime))
 
-		if /*cookie == nil &&*/ !nocookie {
+		if cookie == nil && !nocookie {
 			err,cookieValue := createCookie(w, urlID, pw, &pwIdCombo)
 			if err != nil {
 				if globalID != "" {
@@ -393,7 +393,8 @@ fmt.Printf("/login (%s) fail wrong password [%s/%s] %d %s\n",
 			calleeClient.hub.WsClientID = 0
 		}
 		if reqWsClientID != wsClientID {
-			// not the same (already exited): abort exit / deny deletion
+			// not the same (already exited, possibly by timeout22s): abort exit / deny deletion
+			// exit (id) abort ws=54553222902/0 'OnClose'
 			fmt.Printf("exit (%s) abort ws=%d/%d '%s' %s ver=%s\n",
 				globalID, wsClientID, reqWsClientID, comment, remoteAddrWithPort, clientVersion)
 			return;

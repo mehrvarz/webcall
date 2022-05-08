@@ -783,7 +783,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 				// callee temporarily offline: have caller wait for callee
 				showStatus("Trying to find "+calleeID+". This can take a few minutes. Please wait...<br><br><img src='preloader-circles.svg' style='width:40%;max-height:120px;'>",-1);
 				let api = apiPath+"/online?id="+calleeID+"&wait=true&callerId="+callerId+"&name="+callerName;
-				xhrTimeout = 900*1000; // 15 min extended xhr timeout
+				xhrTimeout = 15*60*1000; // 15min
 				console.log("notifyCallee api="+api+" timeout="+xhrTimeout);
 				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 					if(xhr.responseText!=null && xhr.responseText.indexOf("?wsid=")>0) {

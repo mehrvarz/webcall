@@ -360,6 +360,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// cookie not avail, not valid or disabled (which is fine for localhost requests)
 		if logWantedFor("cookie") {
+// TODO don't log for localhost requests?
 			fmt.Printf("httpApi no cookie avail req=%s ref=%s cookieName=%s calleeID=%s urlID=%s err=%v\n",
 				r.URL.Path, referer, cookieName, calleeID, urlID, err)
 		}
@@ -385,8 +386,8 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				calleeID = calleeIdFromCookie
 			}
 			if logWantedFor("cookie") {
-				fmt.Printf("httpApi cookie avail req=%s ref=%s cookieName=%s calleeID=%s urlID=%s err=%v\n",
-					r.URL.Path, referer, cookieName, calleeID, urlID, err)
+				fmt.Printf("httpApi cookie avail req=%s ref=%s cookieName=%s cValue=%s calleeID=%s urlID=%s\n",
+					r.URL.Path, referer, cookieName, cookie.Value, calleeID, urlID)
 			}
 			if calleeID!="" && calleeID != calleeIdFromCookie {
 				// client has logged in with a different user-ID than previously (this is no error)
@@ -400,30 +401,31 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 
 				// calleeIdFromCookie == calleeID (this is good) - now get PW from kvHashedPw
 				err = kvHashedPw.Get(dbHashedPwBucket,cookie.Value,&pwIdCombo)
-				pwIdComboCalleeId := pwIdCombo.CalleeId
-				argIdx := strings.Index(pwIdComboCalleeId,"&")
-				if argIdx>=0 {
-					pwIdComboCalleeId = pwIdComboCalleeId[0:argIdx]
-					pwIdCombo.CalleeId = pwIdComboCalleeId
-				}
-
 				if err!=nil {
 					// callee is using an unknown cookie
 					fmt.Printf("httpApi %v unknown cookie '%s' err=%v\n", r.URL, cookie.Value, err)
 					cookie = nil
-				} else if calleeID!="" && pwIdCombo.CalleeId != calleeID {
-					// callee is using wrong cookie
-					fmt.Printf("# httpApi cookie available for id=(%s) != calleeID=(%s) clear cookie\n",
-						pwIdCombo.CalleeId, calleeID)
-					cookie = nil
-				} else if pwIdCombo.Pw=="" {
-					fmt.Printf("# httpApi cookie available, pw empty, pwIdCombo=(%v) ID=%s clear cookie\n",
-						pwIdCombo, calleeID)
-					cookie = nil
 				} else {
-					//fmt.Printf("httpApi cookie available for id=(%s) (%s)(%s) reqPath=%s ref=%s rip=%s\n",
-					//	pwIdCombo.CalleeId, calleeID, urlID, r.URL.Path, referer, remoteAddrWithPort)
-					pw = pwIdCombo.Pw
+					pwIdComboCalleeId := pwIdCombo.CalleeId
+					argIdx := strings.Index(pwIdComboCalleeId,"&")
+					if argIdx>=0 {
+						pwIdComboCalleeId = pwIdComboCalleeId[0:argIdx]
+						pwIdCombo.CalleeId = pwIdComboCalleeId
+					}
+					if calleeID!="" && pwIdCombo.CalleeId != calleeID {
+						// callee is using wrong cookie
+						fmt.Printf("# httpApi wrong cookie for id=(%s) != calleeID=(%s) clear cookie\n",
+							pwIdCombo.CalleeId, calleeID)
+						cookie = nil
+					} else if pwIdCombo.Pw=="" {
+						fmt.Printf("# httpApi cookie available, pw empty, pwIdCombo=(%v) ID=%s clear cookie\n",
+							pwIdCombo, calleeID)
+						cookie = nil
+					} else {
+						//fmt.Printf("httpApi cookie available for id=(%s) (%s)(%s) reqPath=%s ref=%s rip=%s\n",
+						//	pwIdCombo.CalleeId, calleeID, urlID, r.URL.Path, referer, remoteAddrWithPort)
+						pw = pwIdCombo.Pw
+					}
 				}
 			}
 		}
