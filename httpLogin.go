@@ -42,7 +42,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		}
 	}
 
-	// check clientBlockBelowVersion and clientUpdateBelowVersion (but not for answie and talkback)
+	// check clientBlockBelowVersion (but not for answie and talkback)
 	if !strings.HasPrefix(urlID,"answie") && !strings.HasPrefix(urlID,"talkback") {
 		if clientBlockBelowVersion!="" && clientVersion < clientBlockBelowVersion {
 			fmt.Printf("/login (%s) deny clientVersion (%s) < clientBlockBelowVersion (%s) %s\n",

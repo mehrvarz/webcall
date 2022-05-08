@@ -509,7 +509,10 @@ func (c *WsClient) receiveProcess(message []byte) {
 			if clientUpdateBelowVersion!="" && c.clientVersion < clientUpdateBelowVersion {
 				//fmt.Printf("%s (%s) ver=%s\n",c.connType,c.calleeID,c.clientVersion)
 				// NOTE: msg MUST NOT contain apostroph (') characters
-				msg := "WebCall for Android <a href=\"/webcall/update\">update available.</a>"
+//				msg := "WebCall for Android <a href=\"/webcall/update\">update available.</a>"
+				msg := "This version of WebCall for Android has a technical problem. "+
+						"Support will be phased out soon. "+
+						"Please upgrade now to <a href=\"/webcall/update/\">v1.0 or newer.</a>"
 				if logWantedFor("login") {
 					fmt.Printf("%s (%s) send status|%s\n",c.connType,c.calleeID,msg)
 				}
