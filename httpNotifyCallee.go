@@ -523,9 +523,8 @@ func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, r
 	var missedCallsSlice []CallerInfo
 	err = kvCalls.Get(dbMissedCalls,calleeId,&missedCallsSlice)
 	if err!=nil {
-		fmt.Printf("/httpMissedCall (%s) fail read dbMissedCalls (ignore) %s err=%v\n", calleeId, remoteAddr, err)
-		// TODO I think this is no error, so don't abort
-		//return
+		// no error, just ignore
+		//fmt.Printf("/httpMissedCall (%s) fail read dbMissedCalls %s err=%v\n", calleeId, remoteAddr, err)
 	}
 	// make sure we never show more than 10 missed calls
 	if missedCallsSlice!=nil && len(missedCallsSlice)>=10 {
