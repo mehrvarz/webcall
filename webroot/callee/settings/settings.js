@@ -458,7 +458,7 @@ function submitForm(autoclose) {
 			// twName cannot be changed (bc it cannot be verified)
 			console.log('xhr error='+errString);
 			document.activeElement.blur();
-			alert("xhr error\n"+errString+"\nTwitter handle cannot changed because it cannot be verified");
+			alert("xhr error\n"+errString+"\nTwitter handle cannot be verified");
 			valueTwName = valueTwName2;
 			store();
 		});
