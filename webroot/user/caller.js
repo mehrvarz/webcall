@@ -679,12 +679,12 @@ function calleeOnlineAction(from) {
 				dialAfterLocalStream = true;
 
 				if(typeof Android !== "undefined" && Android !== null) {
-					// remote audio will be played back on earpiece (if available) instead of speakerphone
+					// not sure this is still needed
 					Android.prepareDial();
 				}
 
 				getStream().then(() => navigator.mediaDevices.enumerateDevices()).then(gotDevices);
-				// also -> gotStream -> connectSignaling
+				// also: -> gotStream -> connectSignaling
 			}
 		} else {
 			// no autodial after we detected callee is online
@@ -714,11 +714,11 @@ function calleeOnlineAction(from) {
 					showStatus( "You can enter a text message before you start the call (optional):",-1)
 					msgbox.style.display = "block";
 					gLog('callerName',callerName);
-/*
+					/*
 					if(typeof callerName!=="undefined" && callerName!="") {
 						msgbox.value = "Hi, this is "+callerName;
 					}
-*/
+					*/
 					let placeholderText = "";
 					msgbox.onfocus = function() {
 						placeholderText = msgbox.placeholder;
@@ -1173,14 +1173,14 @@ function connectSignaling(message,openedFunc) {
 	wsConn.onclose = function (evt) {
 		if(tryingToOpenWebSocket) {
 			// onclose before a ws-connection could be established
+			// likely wsAddr is outdated
+			// TODO we might want to: wsAddr="" and retry with checkCalleeOnline(true)
 			tryingToOpenWebSocket = false;
 			console.log('wsConn.onclose: failed to open');
-			showStatus("No signaling server");
-			hangupWithBusySound(false,"Busy")
+			hangupWithBusySound(false,"connect error");
 		} else {
 			// it is common for the signaling server to disconnect the caller early
 			gLog('wsConn.onclose');
-			//stopAllAudioEffects();
 		}
 		wsConn = null;
 	};

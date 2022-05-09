@@ -891,8 +891,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 					if c.hub.maxTalkSecsIfNoP2p>0 && (!c.hub.LocalP2p || !c.hub.RemoteP2p) {
 						// relayed con: set maxTalkSecsIfNoP2p deadline
 						if logWantedFor("calldur") {
-							fmt.Printf("%s (%s) setDeadline maxTalkSecsIfNoP2p %v %v\n",
-								c.connType, c.calleeID, c.hub.LocalP2p, c.hub.RemoteP2p)
+							fmt.Printf("%s (%s) setDeadline maxTalkSecsIfNoP2p %d %v %v\n",
+								c.connType, c.calleeID, c.hub.maxTalkSecsIfNoP2p, c.hub.LocalP2p, c.hub.RemoteP2p)
 						}
 						c.hub.setDeadline(c.hub.maxTalkSecsIfNoP2p,"peer con")
 

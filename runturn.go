@@ -92,7 +92,7 @@ func runTurnServer() {
 					} else if err==nil && locHub.ConnectedCallerIp == "" {
 						// turnCallee.CalleeID is online but not connected: don't log
 					} else {
-						fmt.Printf("# turn (%s) session outdated %s %v %d\n",
+						fmt.Printf("turn (%s) session outdated %s %v %d\n",
 							turnCallee.CalleeID, ipAddr, timeSinceFirstFound.Seconds(), maxTalkSecsIfNoP2p)
 					}
 				}
