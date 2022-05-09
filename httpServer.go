@@ -360,9 +360,11 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// cookie not avail, not valid or disabled (which is fine for localhost requests)
 		if logWantedFor("cookie") {
-// TODO don't log for localhost requests?
-			fmt.Printf("httpApi no cookie avail req=%s ref=%s cookieName=%s calleeID=%s urlID=%s err=%v\n",
-				r.URL.Path, referer, cookieName, calleeID, urlID, err)
+			// don't log for localhost 127.0.0.1 requests
+			if remoteAddr!=outboundIP && remoteAddr!="127.0.0.1" {
+				fmt.Printf("httpApi no cookie avail req=%s ref=%s cookieName=%s calleeID=%s urlID=%s err=%v\n",
+					r.URL.Path, referer, cookieName, calleeID, urlID, err)
+			}
 		}
 		cookie = nil
 	} else {
@@ -393,8 +395,8 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				// client has logged in with a different user-ID than previously (this is no error)
 				fmt.Printf("httpApi calleeIdFromCookie=(%s) != calleeID=(%s) clear cookie\n",
 					calleeIdFromCookie, calleeID)
-// TODO should the clientside cookie be deleted?
-//				clearCookie(w, r, urlID, remoteAddr)
+				// delete clientside cookie
+				clearCookie(w, r, urlID, remoteAddr)
 				cookie = nil
 			} else {
 				//maxlen:=20; if len(cookie.Value)<20 { maxlen=len(cookie.Value) }
@@ -406,8 +408,8 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				if err!=nil {
 					// callee is using an unknown cookie
 					fmt.Printf("httpApi %v unknown cookie '%s' err=%v\n", r.URL, cookie.Value, err)
-// TODO should the clientside cookie be deleted?
-//					clearCookie(w, r, urlID, remoteAddr)
+					// delete clientside cookie
+					clearCookie(w, r, urlID, remoteAddr)
 					cookie = nil
 				} else {
 					pwIdComboCalleeId := pwIdCombo.CalleeId
@@ -420,14 +422,14 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 						// callee is using wrong cookie
 						fmt.Printf("# httpApi wrong cookie for id=(%s) != calleeID=(%s) clear cookie\n",
 							pwIdCombo.CalleeId, calleeID)
-// TODO should the clientside cookie be deleted?
-//						clearCookie(w, r, urlID, remoteAddr)
+						// delete clientside cookie
+						clearCookie(w, r, urlID, remoteAddr)
 						cookie = nil
 					} else if pwIdCombo.Pw=="" {
 						fmt.Printf("# httpApi cookie available, pw empty, pwIdCombo=(%v) ID=%s clear cookie\n",
 							pwIdCombo, calleeID)
-// TODO should the clientside cookie be deleted?
-//						clearCookie(w, r, urlID, remoteAddr)
+						// delete clientside cookie
+						clearCookie(w, r, urlID, remoteAddr)
 						cookie = nil
 					} else {
 						//fmt.Printf("httpApi cookie available for id=(%s) (%s)(%s) reqPath=%s ref=%s rip=%s\n",
