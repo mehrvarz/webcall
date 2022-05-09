@@ -766,7 +766,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 			c.hub.CallerClient.Write(message)
 			c.pickupSent.Set(true)
 		}
-
+/*
+// TODO we should move this to PEER callee CONN
 		// switching from maxRingSecs deadline to maxTalkSecsIfNoP2p deadline
 		if c.hub.maxTalkSecsIfNoP2p<=0 || (c.hub.LocalP2p && c.hub.RemoteP2p) {
 			// full p2p con: remove maxRingSecs deadline and do NOT replace it with any talktimer deadline
@@ -786,6 +787,9 @@ func (c *WsClient) receiveProcess(message []byte) {
 			// deliver max talktime to both clients
 			c.hub.doBroadcast([]byte("sessionDuration|"+strconv.FormatInt(int64(c.hub.maxTalkSecsIfNoP2p),10)))
 		}
+*/
+		c.hub.setDeadline(0,"pickup")
+
 		c.hub.HubMutex.RUnlock()
 		return
 	}
@@ -882,6 +886,20 @@ func (c *WsClient) receiveProcess(message []byte) {
 				if !c.isCallee {
 					// when the caller sends "log", the callee also becomes media-Connected
 					c.hub.CalleeClient.isMediaConnectedToPeer.Set(true)
+				} else {
+					// callee reports: peer connected
+					if c.hub.maxTalkSecsIfNoP2p>0 && (!c.hub.LocalP2p || !c.hub.RemoteP2p) {
+						// relayed con: set maxTalkSecsIfNoP2p deadline
+						if logWantedFor("calldur") {
+							fmt.Printf("%s (%s) setDeadline maxTalkSecsIfNoP2p %v %v\n",
+								c.connType, c.calleeID, c.hub.LocalP2p, c.hub.RemoteP2p)
+						}
+						c.hub.setDeadline(c.hub.maxTalkSecsIfNoP2p,"peer con")
+
+						// deliver max talktime to both clients
+						c.hub.doBroadcast(
+							[]byte("sessionDuration|"+strconv.FormatInt(int64(c.hub.maxTalkSecsIfNoP2p),10)))
+					}
 				}
 
 				if maxClientRequestsPer30min>0 && c.RemoteAddr!=outboundIP && c.RemoteAddr!="127.0.0.1" {
