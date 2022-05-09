@@ -661,8 +661,10 @@ func clearCookie(w http.ResponseWriter, r *http.Request, urlID string, remoteAdd
 			fmt.Fprintf(w,"ok")
 		} else {
 			// user did logout without being logged in - never mind
-			fmt.Printf("clearCookie (%s) dbHashedPw.Delete db=%s bucket=%s key=%s err=%s\n",
-				urlID, dbHashedPwName, dbHashedPwBucket, cookie.Value, err)
+			if strings.Index(err.Error(),"key not found")<0 {
+				fmt.Printf("clearCookie (%s) dbHashedPw.Delete db=%s bucket=%s key=%s err=%s\n",
+					urlID, dbHashedPwName, dbHashedPwBucket, cookie.Value, err)
+			}
 			fmt.Fprintf(w,"ok")
 		}
 	} else {
