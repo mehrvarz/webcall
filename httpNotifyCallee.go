@@ -666,8 +666,8 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 	if calleeIsHiddenOnline || calleeHasPushChannel {
 		// yes, urlID can be notified
 		// problem is that we don't get any event if the caller gives up at this point (TODO still true?)
-		fmt.Printf("/canbenotified (%s) ok name=%s tw=%s onl=%v rip=%s\n",
-			urlID,calleeName,dbUser.Email2,calleeIsHiddenOnline,remoteAddr)
+		fmt.Printf("/canbenotified (%s) yes tw=%s onl=%v nickname=%s rip=%s\n",
+			urlID, dbUser.Email2, calleeIsHiddenOnline, calleeName, remoteAddr)
 		fmt.Fprintf(w,"ok|"+calleeName)
 		return
 	}
