@@ -586,9 +586,9 @@ func createCookie(w http.ResponseWriter, urlID string, pw string, pwIdCombo *PwI
 	// create new cookie with name=webcallid value=urlID
 	// store only if url parameter nocookie is NOT set
 	cookieSecret := fmt.Sprintf("%d", rand.Int63n(99999999999))
-	if logWantedFor("cookie") {
-		fmt.Printf("/login cookieSecret=%s\n", cookieSecret)
-	}
+//	if logWantedFor("cookie") {
+//		fmt.Printf("/login cookieSecret=%s\n", cookieSecret)
+//	}
 
 	// we need urlID in cookieName only for answie#
 	cookieName := "webcallid"
@@ -597,10 +597,10 @@ func createCookie(w http.ResponseWriter, urlID string, pw string, pwIdCombo *PwI
 	}
 	expiration := time.Now().Add(6 * 31 * 24 * time.Hour)
 	cookieValue := fmt.Sprintf("%s&%s", urlID, string(cookieSecret))
-	if logWantedFor("cookie") {
-		fmt.Printf("/login create cookie cookieName=(%s) cookieValue=(%s)\n",
-			cookieName, cookieValue)
-	}
+//	if logWantedFor("cookie") {
+//		fmt.Printf("/login create cookie cookieName=(%s) cookieValue=(%s)\n",
+//			cookieName, cookieValue)
+//	}
 	cookieObj := http.Cookie{Name: cookieName, Value: cookieValue,
 		Path:     "/",
 		HttpOnly: false,
