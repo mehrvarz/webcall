@@ -1139,7 +1139,7 @@ function connectSignaling(message,openedFunc) {
 		showStatus("No WebSocket support");
 		return;
 	}
-	gLog('connectSignaling: open ws connection '+calleeID);
+	gLog('connectSignaling: open ws connection '+calleeID+' '+wsAddr);
 	let tryingToOpenWebSocket = true;
     var wsUrl = wsAddr;
 	wsUrl += "&callerId="+callerId+"&name="+callerName;
@@ -1166,18 +1166,18 @@ function connectSignaling(message,openedFunc) {
 		}
 	};
 	wsConn.onerror = function(evt) {
-		console.error("wsConn.onerror");
-		showStatus("No connection to WebCall server...");
-
+		console.error("wsConn.onerror: clear wsAddr");
+		showStatus("connect error");
+		wsAddr = "";
 	}
 	wsConn.onclose = function (evt) {
 		if(tryingToOpenWebSocket) {
 			// onclose before a ws-connection could be established
 			// likely wsAddr is outdated
+			console.log('wsConn.onclose: clear wsAddr='+wsAddr);
 			wsAddr = "";
 			// TODO we might want to: retry with checkCalleeOnline(true)
 			tryingToOpenWebSocket = false;
-			console.log('wsConn.onclose: failed to open');
 			hangupWithBusySound(false,"connect error");
 		} else {
 			// it is common for the signaling server to disconnect the caller early
