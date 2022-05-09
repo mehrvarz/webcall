@@ -322,7 +322,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			// (PEER callee DISC -> hub.CallerClient=nil )
 			hub.HubMutex.RLock()
 			if hub.CalleeClient!=nil && !hub.CalleeClient.isConnectedToPeer.Get() && hub.CallerClient!=nil {
-				fmt.Printf("%s (%s) NO PEERCON %ds %s <- %s (%s)\n", client.connType, client.calleeID, 
+				fmt.Printf("%s (%s) NO PEERCON📵 %ds %s <- %s (%s)\n", client.connType, client.calleeID, 
 					delaySecs, hub.CalleeClient.RemoteAddr, client.RemoteAddr, hub.CallerClient.callerID)
 
 				// NOTE: msg MUST NOT contain apostroph (') characters
