@@ -301,7 +301,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		}
 		if pw != dbEntry.Password {
 //			fmt.Printf("/login (%s) fail wrong password %d %s\n", urlID, len(calleeLoginSlice), remoteAddr)
-fmt.Printf("/login (%s) fail wrong password [%s/%s] %d %s\n",
+fmt.Printf("/login (%s) fail wrong password [%s/shd:%s] %d %s\n",
 	urlID, pw, dbEntry.Password, len(calleeLoginSlice), remoteAddr)
 			// must delay to make guessing more difficult
 			time.Sleep(3000 * time.Millisecond)
