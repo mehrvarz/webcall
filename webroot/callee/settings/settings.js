@@ -11,6 +11,7 @@ const webpush2uaElement = document.getElementById("webpush2ua");
 var calleeID = "";
 var calleeLink = "";
 var vapidPublicKey = ""
+var xhrTwidActive = false;
 
 window.onload = function() {
 	let id = getUrlParams("id");
@@ -436,10 +437,13 @@ function submitForm(autoclose) {
 		// if it is, store the returned ID, so we can check if it follows us
 		// if twName is a real twitter handle, we store valueTwName and the ID and exit settings
 		// otherwise we deny to store settings and we don't exit
+		if(xhrTwidActive) return;
+		xhrTwidActive = true;
 		let api = apiPath+"/twid?id="+valueTwName;
 		if(!gentle) console.log('request twid for twName '+api);
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 			// store the twid
+			xhrTwidActive = false;
 			valueTwID = xhr.responseText;
 			document.activeElement.blur();
 			console.log('xhr response valueTwID='+valueTwID);
@@ -456,6 +460,7 @@ function submitForm(autoclose) {
 			}
 		}, function(errString,err) {
 			// twName cannot be changed (bc it cannot be verified)
+			xhrTwidActive = false;
 			console.log('xhr error='+errString);
 			document.activeElement.blur();
 			alert("xhr error\n"+errString+"\nTwitter handle cannot be verified");
