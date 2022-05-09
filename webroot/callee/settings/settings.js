@@ -456,6 +456,7 @@ function submitForm(autoclose) {
 			} else {
 				// Twitter handle exists and valueTwID now contains the twID
 				// TODO: here we could use /twfollower to find out if valueTwID is following us
+				//       but /twfollower may be 20m old
 				store();
 			}
 		}, function(errString,err) {
