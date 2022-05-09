@@ -295,6 +295,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				time.Sleep(3000 * time.Millisecond)
 			}
 // TODO clear cookie?
+//			clearCookie(w, r, urlID, remoteAddr)
 			fmt.Fprintf(w, "notregistered")
 			return
 		}
