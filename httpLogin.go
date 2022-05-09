@@ -198,14 +198,12 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				}
 				if offlineReason==0 {
 					// abort this login attempt: old/sameId callee is already/still logged in
-//					if logWantedFor("login") {
-						calleeIP := ""
-						if hub!=nil && hub.CalleeClient!=nil {
-							calleeIP = hub.CalleeClient.RemoteAddr
-						}
-						fmt.Printf("/login (%s) already/still logged in %v by %s <- %s ver=%s ua=%s\n",
-							key, time.Since(startRequestTime), calleeIP, remoteAddr, clientVersion, userAgent)
-//					}
+					calleeIP := ""
+					if hub!=nil && hub.CalleeClient!=nil {
+						calleeIP = hub.CalleeClient.RemoteAddrNoPort
+					}
+					fmt.Printf("/login (%s) already/still logged in %v by %s <- %s ver=%s ua=%s\n",
+						key, time.Since(startRequestTime), calleeIP, remoteAddr, clientVersion, userAgent)
 					fmt.Fprintf(w,"fatal")
 					return
 				}
