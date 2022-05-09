@@ -396,8 +396,10 @@ fmt.Printf("/login (%s) fail wrong password [%s/%s] %d %s\n",
 		if reqWsClientID != wsClientID {
 			// not the same (already exited, possibly by timeout22s): abort exit / deny deletion
 			// exit (id) abort ws=54553222902/0 'OnClose'
-			fmt.Printf("exit (%s) abort ws=%d/%d '%s' %s ver=%s\n",
-				globalID, wsClientID, reqWsClientID, comment, remoteAddrWithPort, clientVersion)
+			if reqWsClientID!=0 {
+				fmt.Printf("exit (%s) abort ws=%d/%d '%s' %s ver=%s\n",
+					globalID, wsClientID, reqWsClientID, comment, remoteAddrWithPort, clientVersion)
+			}
 			return;
 		}
 
