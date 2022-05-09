@@ -1174,8 +1174,8 @@ function connectSignaling(message,openedFunc) {
 		if(tryingToOpenWebSocket) {
 			// onclose before a ws-connection could be established
 			// likely wsAddr is outdated
-			// TODO we might want to: wsAddr="" and retry with checkCalleeOnline(true)
 			wsAddr = "";
+			// TODO we might want to: retry with checkCalleeOnline(true)
 			tryingToOpenWebSocket = false;
 			console.log('wsConn.onclose: failed to open');
 			hangupWithBusySound(false,"connect error");
