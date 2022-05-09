@@ -673,7 +673,7 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 	}
 
 	// this user can NOT rcv push msg (not pushable)
-	fmt.Printf("/canbenotified (%s) has no push channel %s (%s)\n",urlID,remoteAddr, callerID)
+	fmt.Printf("/canbenotified (%s) no push channel / not hidden online %s (%s)\n",urlID,remoteAddr, callerID)
 	if(dbUser.StoreMissedCalls) {
 		// store missed call
 		var missedCallsSlice []CallerInfo
