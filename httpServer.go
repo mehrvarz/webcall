@@ -394,6 +394,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				fmt.Printf("httpApi calleeIdFromCookie=(%s) != calleeID=(%s) clear cookie\n",
 					calleeIdFromCookie, calleeID)
 				cookie = nil
+// TODO should the clientside cookie be deleted?
 			} else {
 				//maxlen:=20; if len(cookie.Value)<20 { maxlen=len(cookie.Value) }
 				//fmt.Printf("httpApi cookie avail(%s) req=(%s) ref=(%s) callee=(%s)\n", 
@@ -405,6 +406,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 					// callee is using an unknown cookie
 					fmt.Printf("httpApi %v unknown cookie '%s' err=%v\n", r.URL, cookie.Value, err)
 					cookie = nil
+// TODO should the clientside cookie be deleted?
 				} else {
 					pwIdComboCalleeId := pwIdCombo.CalleeId
 					argIdx := strings.Index(pwIdComboCalleeId,"&")
@@ -417,10 +419,12 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 						fmt.Printf("# httpApi wrong cookie for id=(%s) != calleeID=(%s) clear cookie\n",
 							pwIdCombo.CalleeId, calleeID)
 						cookie = nil
+// TODO should the clientside cookie be deleted?
 					} else if pwIdCombo.Pw=="" {
 						fmt.Printf("# httpApi cookie available, pw empty, pwIdCombo=(%v) ID=%s clear cookie\n",
 							pwIdCombo, calleeID)
 						cookie = nil
+// TODO should the clientside cookie be deleted?
 					} else {
 						//fmt.Printf("httpApi cookie available for id=(%s) (%s)(%s) reqPath=%s ref=%s rip=%s\n",
 						//	pwIdCombo.CalleeId, calleeID, urlID, r.URL.Path, referer, remoteAddrWithPort)

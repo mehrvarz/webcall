@@ -284,6 +284,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 		err := kvMain.Get(dbRegisteredIDs, urlID, &dbEntry)
 		if err != nil {
+			// err is most likely "skv key not found"
 			fmt.Printf("/login (%s) error db=%s bucket=%s %s get registeredID err=%v ver=%s\n",
 				urlID, dbMainName, dbRegisteredIDs, remoteAddr, err, clientVersion)
 			if strings.Index(err.Error(), "disconnect") >= 0 {
@@ -295,6 +296,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				// pw guessing more difficult if delayed
 				time.Sleep(3000 * time.Millisecond)
 			}
+// TODO clear cookie?
 			fmt.Fprintf(w, "notregistered")
 			return
 		}

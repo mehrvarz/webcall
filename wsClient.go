@@ -1019,7 +1019,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 		}
 		// peer callee disc
 		if c.hub.CalleeClient!=nil && c.hub.CallerClient!=nil {
-			fmt.Printf("%s (%s) PEER %s DISC %ds %s/%s %s <- %s (%s) %s\n",
+			fmt.Printf("%s (%s) PEER %s DISC📴 %ds %s/%s %s <- %s (%s) %s\n",
 				c.connType, c.calleeID, peerType, c.hub.CallDurationSecs, localPeerCon, remotePeerCon,
 				c.hub.CalleeClient.RemoteAddrNoPort, 
 				c.hub.CallerClient.RemoteAddrNoPort, c.hub.CallerClient.callerID, comment)
