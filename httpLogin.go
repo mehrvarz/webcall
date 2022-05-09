@@ -609,7 +609,7 @@ func createCookie(w http.ResponseWriter, urlID string, pw string, pwIdCombo *PwI
 	cookie := &cookieObj
 	http.SetCookie(w, cookie)
 	if logWantedFor("cookie") {
-		fmt.Printf("/login cookie (%v) created\n", cookieValue)
+		fmt.Printf("/login cookie created (%v)\n", cookieValue)
 	}
 
 	pwIdCombo.Pw = pw
