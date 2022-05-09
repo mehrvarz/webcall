@@ -396,7 +396,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				fmt.Printf("httpApi calleeIdFromCookie=(%s) != calleeID=(%s) clear cookie\n",
 					calleeIdFromCookie, calleeID)
 				// delete clientside cookie
-				clearCookie(w, r, urlID, remoteAddr)
+				clearCookie(w, r, urlID, remoteAddr, "false cookie userID")
 				cookie = nil
 			} else {
 				//maxlen:=20; if len(cookie.Value)<20 { maxlen=len(cookie.Value) }
@@ -409,7 +409,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 					// callee is using an unknown cookie
 					fmt.Printf("httpApi %v unknown cookie '%s' err=%v\n", r.URL, cookie.Value, err)
 					// delete clientside cookie
-					clearCookie(w, r, urlID, remoteAddr)
+					clearCookie(w, r, urlID, remoteAddr, "unknown cookie")
 					cookie = nil
 				} else {
 					pwIdComboCalleeId := pwIdCombo.CalleeId
@@ -423,13 +423,13 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 						fmt.Printf("# httpApi wrong cookie for id=(%s) != calleeID=(%s) clear cookie\n",
 							pwIdCombo.CalleeId, calleeID)
 						// delete clientside cookie
-						clearCookie(w, r, urlID, remoteAddr)
+						clearCookie(w, r, urlID, remoteAddr, "wrong cookie")
 						cookie = nil
 					} else if pwIdCombo.Pw=="" {
 						fmt.Printf("# httpApi cookie available, pw empty, pwIdCombo=(%v) ID=%s clear cookie\n",
 							pwIdCombo, calleeID)
 						// delete clientside cookie
-						clearCookie(w, r, urlID, remoteAddr)
+						clearCookie(w, r, urlID, remoteAddr, "cookie pw empty")
 						cookie = nil
 					} else {
 						//fmt.Printf("httpApi cookie available for id=(%s) (%s)(%s) reqPath=%s ref=%s rip=%s\n",
@@ -547,7 +547,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if urlPath=="/logout" {
-		clearCookie(w, r, urlID, remoteAddr)
+		clearCookie(w, r, urlID, remoteAddr, "/logout")
 		return
 	}
 	if urlPath=="/version" {
@@ -647,7 +647,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func clearCookie(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr string) {
+func clearCookie(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr string, comment string) {
 	cookieName := "webcallid"
 	if strings.HasPrefix(urlID,"answie") {
 		cookieName = "webcallid-"+urlID
@@ -658,14 +658,14 @@ func clearCookie(w http.ResponseWriter, r *http.Request, urlID string, remoteAdd
 		if err==nil {
 			//fmt.Printf("clearCookie (%s) dbHashedPw.Delete OK db=%s bucket=%s key=%s\n",
 			//	urlID, dbHashedPwName, dbHashedPwBucket, cookie.Value)
-			fmt.Fprintf(w,"ok")
+			//fmt.Fprintf(w,"ok")
 		} else {
 			// user did logout without being logged in - never mind
 			if strings.Index(err.Error(),"key not found")<0 {
 				fmt.Printf("clearCookie (%s) dbHashedPw.Delete db=%s bucket=%s key=%s err=%s\n",
 					urlID, dbHashedPwName, dbHashedPwBucket, cookie.Value, err)
 			}
-			fmt.Fprintf(w,"ok")
+			//fmt.Fprintf(w,"ok")
 		}
 	} else {
 		if strings.Index(err.Error(),"named cookie not present")<0 {
@@ -673,7 +673,7 @@ func clearCookie(w http.ResponseWriter, r *http.Request, urlID string, remoteAdd
 		}
 	}
 	expiration := time.Now().Add(-1 * time.Hour)
-	fmt.Printf("clearcookie (%s) cookieName=(%s) %s\n",urlID,cookieName,remoteAddr)
+	fmt.Printf("clearcookie (%s) cookieName=(%s) %s '%s'\n",urlID,cookieName,remoteAddr, comment)
 	cookieObj := http.Cookie{Name:cookieName, Value:"",
 				Path:"/",
 				HttpOnly:false,
