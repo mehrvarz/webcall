@@ -116,16 +116,16 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 // so for example if secsSinceLogoff==7*60, it would make sense to wait only up to (15-7=8) minutes for callee
 // however, we would need to deliver the max-wait duration (say, 8min) to the caller
 // and the caller would deliver it back with the wait-parameter (currently boolean)
-				fmt.Fprintf(w, "notavailtemp")
+				fmt.Fprintf(w, fmt.Sprintf("notavailtemp%d",secsSinceLogoff))
 				return
 			}
 			// loop: wait for callee
 			loopStartTime := time.Now()
 			for {
-				if logWantedFor("login") {
-					fmt.Printf("/online (%s) offline temp, caller waiting... %s\n",
-						urlID, remoteAddr)
-				}
+				//if logWantedFor("login") {
+				//	fmt.Printf("/online (%s) offline temp, caller waiting... %s\n",
+				//		urlID, remoteAddr)
+				//}
 				time.Sleep(3 * time.Second)
 				select {
 				case <-r.Context().Done():
