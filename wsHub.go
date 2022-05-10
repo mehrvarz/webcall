@@ -84,7 +84,6 @@ func (h *Hub) setDeadline(secs int, comment string) {
 					if h.CalleeClient.isConnectedToPeer.Get() {
 						fmt.Printf("setDeadline (%s) reached; end session now (secs=%d %v)\n",
 							h.CalleeClient.calleeID, secs, timeStart.Format("2006-01-02 15:04:05"))
-						//h.doUnregister(h.CalleeClient,"setDeadline "+comment)
 						h.doBroadcast([]byte("cancel|c"))
 						h.CalleeClient.peerConHasEnded("deadline")
 						if(h.CallerClient!=nil) {
