@@ -815,10 +815,18 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 					}
 					gLog('callee could not be reached (%s)',xhr.responseText);
 					showStatus("Unable to reach "+calleeID+".<br>Please try again later.",-1);
-					//needToStoreMissedCall = "";
+					needToStoreMissedCall = "";
 				}, function(errString,errcode) {
 					gLog('callee could not be reached. xhr err',errString,errcode);
 					showStatus("Unable to reach "+calleeID+".<br>Please try again later.",-1);
+					needToStoreMissedCall = "";
+					// errcode 504 = timeout
+					let api = apiPath+"/missedCall?id="+calleeID+"|"+callerName+"|"+callerId;
+					ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+						gLog('/missedCall success');
+					}, function(errString,err) {
+						gLog('# /missedCall xhr error: '+errString+' '+err);
+					});
 				});
 				return;
 			}
