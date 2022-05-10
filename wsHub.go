@@ -78,9 +78,9 @@ func (h *Hub) setDeadline(secs int, comment string) {
 			case <-h.timer.C:
 				// do something for timeout, like change state
 				// timer valid: we need to disconnect the (relayed) clients (if still connected)
-				h.HubMutex.RLock()
+//				h.HubMutex.RLock()
 				if h.CalleeClient!=nil {
-					h.HubMutex.RUnlock()
+//					h.HubMutex.RUnlock()
 					// otherwise we disconnect this callee
 					if h.CalleeClient.isConnectedToPeer.Get() {
 						fmt.Printf("setDeadline (%s) reached; end session now (secs=%d %v)\n",
@@ -96,7 +96,7 @@ func (h *Hub) setDeadline(secs int, comment string) {
 						}
 					}
 				} else {
-					h.HubMutex.RUnlock()
+//					h.HubMutex.RUnlock()
 				}
 			case <-h.timerCanceled:
 				if logWantedFor("calldur") {
