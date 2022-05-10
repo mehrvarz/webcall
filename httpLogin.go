@@ -50,11 +50,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 			// NOTE: msg MUST NOT contain apostroph (') characters
 			msg := "The version of WebCall you are using has a technical problem and is no longer supported."+
-					" <a href=\"/webcall/update\">Please upgrade.</a>"
+					" <a href=\"https://timur.mobi/webcall/update/\">Please upgrade.</a>"
 			fmt.Fprintf(w,msg)
-/*
-			http.Redirect(w, r, "https://timur.mobi/webcall/update", 301)
-*/
 			return
 		}
 	}
@@ -74,7 +71,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			// NOTE: msg MUST NOT contain apostroph (') characters
 			msg :=  "Websocket re-connect failed. Please deactivate battery optimizations for WebCall"+
 					" and/or check your firewall settings."+
-					" <a href=\"/webcall/more/#keepawake\">Read this</a>"
+					" <a href=\"https://timur.mobi/webcall/more/#keepawake\">Read this</a>"
 			fmt.Fprintf(w,msg)
 			blockMapMutex.Lock()
 			delete(blockMap,urlID)

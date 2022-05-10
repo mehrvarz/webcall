@@ -327,10 +327,10 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 				// NOTE: msg MUST NOT contain apostroph (') characters
 				msg :=  "Unable to establish a direct P2P connection. "+
-						"This is likely a WebRTC related issue with your browser/WebView. "+
-						"It could also be a network/firewall issue. "+
-						"If on Android, run <a href=\"/webcall/android/#webview\">WebRTC-Check</a> "+
-						"to test your System WebView."
+				 "This is likely a WebRTC related issue with your browser/WebView. "+
+				 "It could also be a network/firewall issue. "+
+				 "If on Android, run <a href=\"https://timur.mobi/webcall/android/#webview\">WebRTC-Check</a> "+
+				 "to test your System WebView."
 				hub.CallerClient.Write([]byte("status|"+msg))
 				hub.CalleeClient.Write([]byte("status|"+msg))
 				hub.HubMutex.RUnlock()
@@ -509,10 +509,10 @@ func (c *WsClient) receiveProcess(message []byte) {
 			if clientUpdateBelowVersion!="" && c.clientVersion < clientUpdateBelowVersion {
 				//fmt.Printf("%s (%s) ver=%s\n",c.connType,c.calleeID,c.clientVersion)
 				// NOTE: msg MUST NOT contain apostroph (') characters
-//				msg := "WebCall for Android <a href=\"/webcall/update\">update available.</a>"
+//				msg := "WebCall for Android <a href=\"https://timur.mobi/webcall/update/\">update available.</a>"
 				msg := "This version of WebCall for Android has a technical problem. "+
 						"Support will be phased out soon. "+
-						"Please upgrade now to <a href=\"/webcall/update/\">v1.0 or newer.</a>"
+						"Please upgrade to <a href=\"https://timur.mobi/webcall/update/\">v1.0 or newer.</a>"
 				if logWantedFor("login") {
 					fmt.Printf("%s (%s) send status|%s\n",c.connType,c.calleeID,msg)
 				}
