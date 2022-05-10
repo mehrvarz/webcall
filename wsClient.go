@@ -475,7 +475,6 @@ func (c *WsClient) receiveProcess(message []byte) {
 		} else if(dbUser.StoreMissedCalls) {
 			err = kvCalls.Get(dbMissedCalls,c.calleeID,&missedCallsSlice)
 			if err!=nil {
-//?				missedCallsSlice = nil
 				//fmt.Printf("# %s (%s) failed to read dbMissedCalls\n",c.connType,c.calleeID)
 			}
 		}
@@ -696,11 +695,10 @@ func (c *WsClient) receiveProcess(message []byte) {
 		} else if(dbUser.StoreMissedCalls) {
 			err = kvCalls.Get(dbMissedCalls,c.calleeID,&missedCallsSlice)
 			if err!=nil {
-				missedCallsSlice = nil
 				fmt.Printf("# serveWs deleteMissedCall (%s) failed to read dbMissedCalls\n",c.calleeID)
 			}
 		}
-		if missedCallsSlice!=nil {
+		if len(missedCallsSlice)>0 {
 			//fmt.Printf("serveWs deleteMissedCall (%s) found %d entries\n",
 			//	c.calleeID, len(missedCallsSlice))
 			// search for callerIP:port + CallTime == callerAddrPortPlusCallTime
@@ -1072,13 +1070,12 @@ func (c *WsClient) peerConHasEnded(comment string) {
 						fmt.Printf("# %s (%s) failed to get missedCalls %s\n",
 							c.connType, c.calleeID, c.RemoteAddr)
 					}
-					//missedCallsSlice = nil
 				}
 			}
 			if /*missedCallsSlice!=nil &&*/ c.hub.CallerClient!=nil {
 				// make sure we only keep up to 10 missed calls
-				for len(missedCallsSlice)>=10 {
-					missedCallsSlice = missedCallsSlice[1:]
+				if len(missedCallsSlice)>=10 {
+					missedCallsSlice = missedCallsSlice[len(missedCallsSlice)-9:]
 				}
 				caller := CallerInfo{c.RemoteAddr, c.hub.CallerClient.callerName,
 					time.Now().Unix(), c.hub.CallerClient.callerID}
