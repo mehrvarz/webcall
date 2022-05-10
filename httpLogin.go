@@ -548,7 +548,7 @@ fmt.Printf("/login (%s) fail wrong password [%s/shd:%s] %d %s\n",
 					if unregisterNeeded {
 						// the next login attempt of urlID/globalID will be denied to break it's reconnecter loop
 						// but we should NOT do this right after server start
-						if time.Now().Sub(serverStartTime) > 30 * time.Second {
+						if time.Now().Sub(serverStartTime) > 60 * time.Second {
 							//fmt.Printf("/login (%s) ws-conn timeout%ds %s ver=%s\n",
 							//	urlID, waitedFor, remoteAddrWithPort, clientVersion)
 							blockMapMutex.Lock()
