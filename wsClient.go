@@ -1072,12 +1072,12 @@ func (c *WsClient) peerConHasEnded(comment string) {
 						fmt.Printf("# %s (%s) failed to get missedCalls %s\n",
 							c.connType, c.calleeID, c.RemoteAddr)
 					}
-					missedCallsSlice = nil
+					//missedCallsSlice = nil
 				}
 			}
-			if missedCallsSlice!=nil && c.hub.CallerClient!=nil {
+			if /*missedCallsSlice!=nil &&*/ c.hub.CallerClient!=nil {
 				// make sure we only keep up to 10 missed calls
-				if len(missedCallsSlice)>=10 {
+				for len(missedCallsSlice)>=10 {
 					missedCallsSlice = missedCallsSlice[1:]
 				}
 				caller := CallerInfo{c.RemoteAddr, c.hub.CallerClient.callerName,
@@ -1085,9 +1085,12 @@ func (c *WsClient) peerConHasEnded(comment string) {
 				missedCallsSlice = append(missedCallsSlice, caller)
 				err = kvCalls.Put(dbMissedCalls, c.calleeID, missedCallsSlice, true) // skipConfirm
 				if err!=nil {
-					fmt.Printf("# %s (%s) failed to store dbMissedCalls err=%v\n",
-						c.connType, c.calleeID, err, c.RemoteAddr)
+					fmt.Printf("# %s (%s) failed to store dbMissedCalls %s err=%v\n",
+						c.connType, c.calleeID, c.RemoteAddr, err)
 				}
+			} else {
+				fmt.Printf("# %s (%s) store dbMissedCalls but hub.CallerClient==nil %s\n",
+					c.connType, c.calleeID, c.RemoteAddr)
 			}
 		}
 
