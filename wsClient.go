@@ -1054,39 +1054,59 @@ func (c *WsClient) peerConHasEnded(comment string) {
 			}
 		}
 
-		// add an entry to missed calls, but only if there was no mediaConnect
-		// TODO is it a missed call if callee himself denied the call?
+		// add an entry to missed calls, but only if hub.CallDurationSecs==0
+		// TODO is it a missed call if callee himself denied the call? (currently yes)
 		if(c.hub.CallDurationSecs<=0) {
-			var missedCallsSlice []CallerInfo
-			userKey := c.calleeID + "_" + strconv.FormatInt(int64(c.hub.registrationStartTime),10)
-			var dbUser DbUser
-			err := kvMain.Get(dbUserBucket, userKey, &dbUser)
-			if err!=nil {
-				fmt.Printf("# %s (%s) failed to get dbUser\n",c.connType,c.calleeID)
-			} else if(dbUser.StoreMissedCalls) {
-				err = kvCalls.Get(dbMissedCalls,c.calleeID,&missedCallsSlice)
+			if logWantedFor("missedcall") {
+				fmt.Printf("%s (%s) store missedCall %s ...\n", c.connType, c.calleeID, c.RemoteAddr)
+			}
+			if c.hub.CallerClient!=nil {
+				if logWantedFor("missedcall") {
+					fmt.Printf("%s (%s) store missedCall hub.CallerClient avail %s\n",
+						c.connType, c.calleeID, c.RemoteAddr)
+				}
+				var missedCallsSlice []CallerInfo
+				userKey := c.calleeID + "_" + strconv.FormatInt(int64(c.hub.registrationStartTime),10)
+				var dbUser DbUser
+				err := kvMain.Get(dbUserBucket, userKey, &dbUser)
 				if err!=nil {
-					if strings.Index(err.Error(),"key not found")<0 {
-						fmt.Printf("# %s (%s) failed to get missedCalls %s\n",
+					fmt.Printf("# %s (%s) failed to get dbUser\n",c.connType,c.calleeID)
+				} else if(dbUser.StoreMissedCalls) {
+					if logWantedFor("missedcall") {
+						fmt.Printf("%s (%s) store missedCall hub.CallerClient avail %s\n",
 							c.connType, c.calleeID, c.RemoteAddr)
 					}
-				}
-			}
-			if /*missedCallsSlice!=nil &&*/ c.hub.CallerClient!=nil {
-				// make sure we only keep up to 10 missed calls
-				if len(missedCallsSlice)>=10 {
-					missedCallsSlice = missedCallsSlice[len(missedCallsSlice)-9:]
-				}
-				caller := CallerInfo{c.RemoteAddr, c.hub.CallerClient.callerName,
-					time.Now().Unix(), c.hub.CallerClient.callerID}
-				missedCallsSlice = append(missedCallsSlice, caller)
-				err = kvCalls.Put(dbMissedCalls, c.calleeID, missedCallsSlice, true) // skipConfirm
-				if err!=nil {
-					fmt.Printf("# %s (%s) failed to store dbMissedCalls %s err=%v\n",
-						c.connType, c.calleeID, c.RemoteAddr, err)
+					err = kvCalls.Get(dbMissedCalls,c.calleeID,&missedCallsSlice)
+					if err!=nil {
+						if strings.Index(err.Error(),"key not found")<0 {
+							fmt.Printf("# %s (%s) failed to get missedCalls %s\n",
+								c.connType, c.calleeID, c.RemoteAddr)
+						}
+					}
+					if logWantedFor("missedcall") {
+						fmt.Printf("%s (%s) store missedCall old count %d %s\n",
+							c.connType, c.calleeID, len(missedCallsSlice), c.RemoteAddr)
+					}
+					// make sure we only keep the latest 10 missed calls
+					if len(missedCallsSlice)>=10 {
+						missedCallsSlice = missedCallsSlice[len(missedCallsSlice)-9:]
+					}
+					caller := CallerInfo{c.RemoteAddr, c.hub.CallerClient.callerName,
+						time.Now().Unix(), c.hub.CallerClient.callerID}
+					missedCallsSlice = append(missedCallsSlice, caller)
+					err = kvCalls.Put(dbMissedCalls, c.calleeID, missedCallsSlice, true) // skipConfirm
+					if err!=nil {
+						fmt.Printf("# %s (%s) failed to store dbMissedCalls %s err=%v\n",
+							c.connType, c.calleeID, c.RemoteAddr, err)
+					} else {
+						if logWantedFor("missedcall") {
+							fmt.Printf("%s (%s) stored missedCall %s\n", c.connType, c.calleeID, c.RemoteAddr)
+						}
+						// TODO send missedCallsSlice to callee?
+					}
 				}
 			} else {
-				fmt.Printf("# %s (%s) store dbMissedCalls but hub.CallerClient==nil %s\n",
+				fmt.Printf("# %s (%s) store missedCall but hub.CallerClient==nil %s\n",
 					c.connType, c.calleeID, c.RemoteAddr)
 			}
 		}
@@ -1105,9 +1125,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 			}
 		}
 
-		// hub.CallerClient must be nil
 		c.hub.CallerClient = nil
-
 		c.pickupSent.Set(false)
 	}
 	c.hub.HubMutex.Unlock()
