@@ -425,70 +425,46 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	waitingCallerChanLock.Unlock()
 
 	var missedCallsSlice []CallerInfo
-	if callerGaveUp {
+	if callerGaveUp && dbUser.StoreMissedCalls {
 		// store missed call
-		if(dbUser.StoreMissedCalls) {
-			//fmt.Printf("/notifyCallee (%s) store missed call\n", urlID)
-			err = kvCalls.Get(dbMissedCalls, urlID, &missedCallsSlice)
-			if err!=nil && strings.Index(err.Error(),"key not found")<0 {
-				fmt.Printf("# /notifyCallee (%s) failed to read dbMissedCalls %s (%s) err=%v\n",
-					urlID, remoteAddr, callerId, err)
-			}
-			// make sure we never have more than 10 missed calls
-			if len(missedCallsSlice) >= 10 {
-				missedCallsSlice = missedCallsSlice[len(missedCallsSlice)-9:]
-			}
-			missedCallsSlice = append(missedCallsSlice, waitingCaller)
-			err = kvCalls.Put(dbMissedCalls, urlID, missedCallsSlice, false)
+		//fmt.Printf("/notifyCallee (%s) store missed call\n", urlID)
+		err = kvCalls.Get(dbMissedCalls, urlID, &missedCallsSlice)
+		if err!=nil && strings.Index(err.Error(),"key not found")<0 {
+			fmt.Printf("# /notifyCallee (%s) failed to read dbMissedCalls %s (%s) err=%v\n",
+				urlID, remoteAddr, callerId, err)
+		}
+		// make sure we never have more than 10 missed calls
+		if len(missedCallsSlice) >= 10 {
+			missedCallsSlice = missedCallsSlice[len(missedCallsSlice)-9:]
+		}
+		missedCallsSlice = append(missedCallsSlice, waitingCaller)
+		err = kvCalls.Put(dbMissedCalls, urlID, missedCallsSlice, false)
+		if err != nil {
+			fmt.Printf("# /notifyCallee (%s) failed to store dbMissedCalls %v\n", urlID, err)
+		}
+	}
+
+	// remove this caller from waitingCallerSlice
+	err = kvCalls.Get(dbWaitingCaller, urlID, &waitingCallerSlice)
+	if err != nil {
+		// we can ignore this
+	}
+	for idx := range waitingCallerSlice {
+		if waitingCallerSlice[idx].AddrPort == remoteAddrWithPort {
+			//fmt.Printf("/notifyCallee (%s) remove caller from waitingCallerSlice + store\n", urlID)
+			waitingCallerSlice = append(waitingCallerSlice[:idx], waitingCallerSlice[idx+1:]...)
+			err = kvCalls.Put(dbWaitingCaller, urlID, waitingCallerSlice, false)
 			if err != nil {
-				fmt.Printf("# /notifyCallee (%s) failed to store dbMissedCalls %v\n", urlID, err)
+				fmt.Printf("# /notifyCallee (%s) failed to store dbWaitingCaller\n", urlID)
 			}
+			break
 		}
 	}
 
 	if calleeWsClient==nil {
 		// callee is still offline: don't send waitingCaller update
-		fmt.Printf("# /notifyCallee (%s/%s) callee is still offline\n", urlID, glUrlID)
+		fmt.Printf("/notifyCallee (%s/%s) callee still offline (no send waitingCaller)\n", urlID, glUrlID)
 	} else {
-		err = kvCalls.Get(dbWaitingCaller, urlID, &waitingCallerSlice)
-		if err != nil {
-			// we can ignore this
-		}
-
-		// remove this caller from waitingCallerSlice
-		for idx := range waitingCallerSlice {
-			if waitingCallerSlice[idx].AddrPort == remoteAddrWithPort {
-				//fmt.Printf("/notifyCallee (%s) remove caller from waitingCallerSlice + store\n", urlID)
-				waitingCallerSlice = append(waitingCallerSlice[:idx], waitingCallerSlice[idx+1:]...)
-				err = kvCalls.Put(dbWaitingCaller, urlID, waitingCallerSlice, false)
-				if err != nil {
-					fmt.Printf("# /notifyCallee (%s) failed to store dbWaitingCaller\n", urlID)
-				}
-/*
-				if callerGaveUp {
-					// store missed call
-					if(dbUser.StoreMissedCalls) {
-						//fmt.Printf("/notifyCallee (%s) store missed call\n", urlID)
-						err = kvCalls.Get(dbMissedCalls, urlID, &missedCallsSlice)
-						if err!=nil && strings.Index(err.Error(),"key not found")<0 {
-							fmt.Printf("# /notifyCallee (%s) failed to read dbMissedCalls %s (%s) err=%v\n",
-								urlID, remoteAddr, callerId, err)
-						}
-						// make sure we never have more than 10 missed calls
-						if missedCallsSlice != nil && len(missedCallsSlice) >= 10 {
-							missedCallsSlice = missedCallsSlice[1:]
-						}
-						missedCallsSlice = append(missedCallsSlice, waitingCaller)
-						err = kvCalls.Put(dbMissedCalls, urlID, missedCallsSlice, false)
-						if err != nil {
-							fmt.Printf("# /notifyCallee (%s) failed to store dbMissedCalls %v\n", urlID, err)
-						}
-					}
-				}
-*/
-				break
-			}
-		}
 		// send updated waitingCallerSlice + missedCalls
 		waitingCallerToCallee(urlID, waitingCallerSlice, missedCallsSlice, calleeWsClient)
 	}
