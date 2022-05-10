@@ -111,7 +111,7 @@ func (h *Hub) setDeadline(secs int, comment string) {
 
 func (h *Hub) doBroadcast(message []byte) {
 	calleeID := ""
-	h.HubMutex.RLock()
+//	h.HubMutex.RLock()
 	if h.CalleeClient!=nil {
 		calleeID = h.CalleeClient.calleeID
 	}
@@ -123,7 +123,7 @@ func (h *Hub) doBroadcast(message []byte) {
 		fmt.Printf("hub (%s) doBroadcast callee (%s) %s\n", calleeID, message, h.CalleeClient.RemoteAddr)
 		h.CalleeClient.Write(message)
 	}
-	h.HubMutex.RUnlock()
+//	h.HubMutex.RUnlock()
 }
 
 func (h *Hub) processTimeValues(comment string) {
