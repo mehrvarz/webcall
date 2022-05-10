@@ -1008,9 +1008,10 @@ func (c *WsClient) peerConHasEnded(comment string) {
 	if c==nil || c.hub==nil {
 		return
 	}
-	c.hub.setDeadline(0,comment)
 
 	c.hub.HubMutex.Lock()
+	c.hub.setDeadline(0,comment)
+
 	peerType := "caller"
 	if c.isCallee {
 		peerType = "callee"
