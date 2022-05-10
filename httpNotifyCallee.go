@@ -276,8 +276,9 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 				caller := CallerInfo{remoteAddrWithPort, callerName, time.Now().Unix(), callerId}
 				var missedCallsSlice []CallerInfo
 				err := kvCalls.Get(dbMissedCalls, urlID, &missedCallsSlice)
-				if err != nil {
-					//fmt.Printf("# /notifyCallee (%s) failed to read dbMissedCalls %v\n", urlID, err)
+				if err!=nil && strings.Index(err.Error(),"key not found")<0 {
+					fmt.Printf("# /notifyCallee (%s) failed to read dbMissedCalls %s (%s) err=%v\n",
+						urlID, remoteAddr, callerId, err)
 				}
 				// make sure we never have more than 10 missed calls
 				if missedCallsSlice != nil && len(missedCallsSlice) >= 10 {
@@ -447,8 +448,9 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 					if(dbUser.StoreMissedCalls) {
 						//fmt.Printf("/notifyCallee (%s) store missed call\n", urlID)
 						err = kvCalls.Get(dbMissedCalls, urlID, &missedCallsSlice)
-						if err != nil {
-							fmt.Printf("# /notifyCallee (%s) failed to read dbMissedCalls %v\n", urlID, err)
+						if err!=nil && strings.Index(err.Error(),"key not found")<0 {
+							fmt.Printf("# /notifyCallee (%s) failed to read dbMissedCalls %s (%s) err=%v\n",
+								urlID, remoteAddr, callerId, err)
 						}
 						// make sure we never have more than 10 missed calls
 						if missedCallsSlice != nil && len(missedCallsSlice) >= 10 {
