@@ -410,7 +410,8 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		if err != nil {
 			fmt.Printf("# /notifyCallee (%s/%s) GetOnlineCallee() err=%v\n", urlID, glUrlID, err)
 		} else if glUrlID == "" {
-			fmt.Printf("# /notifyCallee (%s/%s) GetOnlineCallee() is empty\n", urlID, glUrlID)
+			// urlID is not online
+			fmt.Printf("/notifyCallee (%s/%s) GetOnlineCallee() is empty\n", urlID, glUrlID)
 		} else {
 			hubMapMutex.RLock()
 			calleeWsClient = hubMap[glUrlID].CalleeClient
@@ -423,15 +424,36 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	delete(waitingCallerChanMap, remoteAddrWithPort)
 	waitingCallerChanLock.Unlock()
 
+	var missedCallsSlice []CallerInfo
+	if callerGaveUp {
+		// store missed call
+		if(dbUser.StoreMissedCalls) {
+			//fmt.Printf("/notifyCallee (%s) store missed call\n", urlID)
+			err = kvCalls.Get(dbMissedCalls, urlID, &missedCallsSlice)
+			if err!=nil && strings.Index(err.Error(),"key not found")<0 {
+				fmt.Printf("# /notifyCallee (%s) failed to read dbMissedCalls %s (%s) err=%v\n",
+					urlID, remoteAddr, callerId, err)
+			}
+			// make sure we never have more than 10 missed calls
+			if len(missedCallsSlice) >= 10 {
+				missedCallsSlice = missedCallsSlice[len(missedCallsSlice)-9:]
+			}
+			missedCallsSlice = append(missedCallsSlice, waitingCaller)
+			err = kvCalls.Put(dbMissedCalls, urlID, missedCallsSlice, false)
+			if err != nil {
+				fmt.Printf("# /notifyCallee (%s) failed to store dbMissedCalls %v\n", urlID, err)
+			}
+		}
+	}
+
 	if calleeWsClient==nil {
-		fmt.Printf("# /notifyCallee (%s/%s) calleeWsClient==nil cannot update dbWaitingCaller\n", urlID, glUrlID)
+		// callee is still offline: don't send waitingCaller update
+		fmt.Printf("# /notifyCallee (%s/%s) callee is still offline\n", urlID, glUrlID)
 	} else {
 		err = kvCalls.Get(dbWaitingCaller, urlID, &waitingCallerSlice)
 		if err != nil {
 			// we can ignore this
 		}
-
-		var missedCallsSlice []CallerInfo
 
 		// remove this caller from waitingCallerSlice
 		for idx := range waitingCallerSlice {
@@ -442,7 +464,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 				if err != nil {
 					fmt.Printf("# /notifyCallee (%s) failed to store dbWaitingCaller\n", urlID)
 				}
-
+/*
 				if callerGaveUp {
 					// store missed call
 					if(dbUser.StoreMissedCalls) {
@@ -463,6 +485,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 						}
 					}
 				}
+*/
 				break
 			}
 		}
