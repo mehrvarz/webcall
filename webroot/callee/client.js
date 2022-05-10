@@ -288,7 +288,7 @@ function sendFile(file) {
 }
 
 var xhrTimeout = 25000;
-function ajaxFetch(xhr, type, api, processData, errorFkt, postData) {
+function ajaxFetch(xhr, type, api, processData, errorFkt, postData, sync) {
 	xhr.onreadystatechange = function() {
 		if(xhr.readyState == 4 && (xhr.status==200 || xhr.status==0)) {
 			processData(xhr);
@@ -296,9 +296,11 @@ function ajaxFetch(xhr, type, api, processData, errorFkt, postData) {
 			errorFkt("fetch error",xhr.status);
 		}
 	}
-	xhr.timeout = xhrTimeout;
-	xhr.ontimeout = function() {
-		errorFkt("timeout",0);
+	if(!sync) {
+		xhr.timeout = xhrTimeout;
+		xhr.ontimeout = function() {
+			errorFkt("timeout",0);
+		}
 	}
 	xhr.onerror= function(e) {
 		errorFkt("fetching",xhr.status);
@@ -310,7 +312,7 @@ function ajaxFetch(xhr, type, api, processData, errorFkt, postData) {
 		api += "?_="+new Date().getTime();
 	}
 	gLog('xhr '+api);
-	xhr.open(type, api, true);
+	xhr.open(type, api, !sync);
 	xhr.setRequestHeader("Content-type", "text/plain; charset=utf-8");
 	if(postData) {
 		xhr.send(postData);

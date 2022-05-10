@@ -785,9 +785,12 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 				let api = apiPath+"/online?id="+calleeID+"&wait=true&callerId="+callerId+"&name="+callerName;
 				xhrTimeout = 15*60*1000; // 15min
 				console.log("notifyCallee api="+api+" timeout="+xhrTimeout);
+				// in case caller aborts:
+				needToStoreMissedCall = calleeID+"|"+callerName+"|"+callerId;
 				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 					if(xhr.responseText!=null && xhr.responseText.indexOf("?wsid=")>0) {
 						gLog('callee is now online. switching to call layout. '+xhr.responseText);
+						needToStoreMissedCall = "";
 						lastOnlineStatus = xhr.responseText;
 						let tok = xhr.responseText.split("|");
 						wsAddr = tok[0];
@@ -812,9 +815,8 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 					}
 					gLog('callee could not be reached (%s)',xhr.responseText);
 					showStatus("Unable to reach "+calleeID+".<br>Please try again later.",-1);
-					needToStoreMissedCall = "";
+					//needToStoreMissedCall = "";
 				}, function(errString,errcode) {
-					//errorAction(errString)
 					gLog('callee could not be reached. xhr err',errString,errcode);
 					showStatus("Unable to reach "+calleeID+".<br>Please try again later.",-1);
 				});
@@ -864,21 +866,21 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 }
 
 function goodby() {
-	gLog('goodby');
+	gLog('goodby ('+needToStoreMissedCall+')');
 	if(needToStoreMissedCall) {
 		if(missedCallTime>0) {
 			let ageSecs = Math.floor((Date.now()-missedCallTime)/1000);
 			needToStoreMissedCall = needToStoreMissedCall+"|"+ageSecs;
 		}
 		gLog('goodby needToStoreMissedCall '+needToStoreMissedCall);
-		// tell server to store this as missed call
+		// tell server to store a missed call entry
+		// doing sync xhr in goodby/beforeunload (see: last (7th) parameter = true)
 		let api = apiPath+"/missedCall?id="+needToStoreMissedCall;
-		xhrTimeout = 3*1000;
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 			gLog('goodby /missedCall success '+needToStoreMissedCall);
 		}, function(errString,err) {
 			gLog('# goodby xhr error '+errString);
-		});
+		}, false, true);
 	}
 
 	if(typeof Android !== "undefined" && Android !== null) {

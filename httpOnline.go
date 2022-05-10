@@ -370,6 +370,12 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 			clientVersion = url_arg_array[0]
 		}
 
+		if registerID=="" {
+			fmt.Printf("# /register fail no ID urlPath=(%s) %s ver=%s ua=%s\n",
+				urlPath, remoteAddr, clientVersion, r.UserAgent())
+			return
+		}
+
 		fmt.Printf("/register (%s) %s ver=%s ua=%s\n",
 			registerID, remoteAddr, clientVersion, r.UserAgent())
 
@@ -452,6 +458,9 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 				}
 			}
 		}
+	} else {
+		fmt.Printf("# /register newAccounts not allowed urlPath=(%s) %s ua=%s\n",
+			urlPath, remoteAddr, r.UserAgent())
 	}
 	return
 }
