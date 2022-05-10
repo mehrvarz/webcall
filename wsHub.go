@@ -48,6 +48,7 @@ func newHub(maxRingSecs int, maxTalkSecsIfNoP2p int, startTime int64) *Hub {
 }
 
 func (h *Hub) setDeadline(secs int, comment string) {
+	// likes to be called with h.HubMutex (r)locked
 	if h.timer!=nil {
 		// TODO this does not release <-h.timer.C
 		if logWantedFor("calldur") {
@@ -78,9 +79,7 @@ func (h *Hub) setDeadline(secs int, comment string) {
 			case <-h.timer.C:
 				// do something for timeout, like change state
 				// timer valid: we need to disconnect the (relayed) clients (if still connected)
-//				h.HubMutex.RLock()
 				if h.CalleeClient!=nil {
-//					h.HubMutex.RUnlock()
 					// otherwise we disconnect this callee
 					if h.CalleeClient.isConnectedToPeer.Get() {
 						fmt.Printf("setDeadline (%s) reached; end session now (secs=%d %v)\n",
@@ -95,8 +94,6 @@ func (h *Hub) setDeadline(secs int, comment string) {
 							recentTurnCalleeIpMutex.Unlock()
 						}
 					}
-				} else {
-//					h.HubMutex.RUnlock()
 				}
 			case <-h.timerCanceled:
 				if logWantedFor("calldur") {
@@ -110,8 +107,8 @@ func (h *Hub) setDeadline(secs int, comment string) {
 }
 
 func (h *Hub) doBroadcast(message []byte) {
+	// likes to be called with h.HubMutex (r)locked
 	calleeID := ""
-//	h.HubMutex.RLock()
 	if h.CalleeClient!=nil {
 		calleeID = h.CalleeClient.calleeID
 	}
@@ -123,7 +120,6 @@ func (h *Hub) doBroadcast(message []byte) {
 		fmt.Printf("hub (%s) doBroadcast callee (%s) %s\n", calleeID, message, h.CalleeClient.RemoteAddr)
 		h.CalleeClient.Write(message)
 	}
-//	h.HubMutex.RUnlock()
 }
 
 func (h *Hub) processTimeValues(comment string) {
