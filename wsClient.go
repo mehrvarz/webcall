@@ -312,40 +312,41 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		client.callerOfferForwarded.Set(false)
 
 		go func() {
-			// incoming caller will get killed if there is no peerConnect after 10 sec
-			// set by constate=="Incoming" || constate=="Connected" || constate=="ConForce"
+			// incoming caller will get removed if there is no peerConnect after 10 sec
 			// (it can take up to 6-8 seconds in some cases for a devices to get fully out of deep sleep)
 			delaySecs := 10
 			time.Sleep(time.Duration(delaySecs) * time.Second)
 
-			// TODO abort this if connection was disconnected by caller
-			// (PEER callee DISC -> hub.CallerClient=nil )
 			hub.HubMutex.RLock()
-			if hub.CalleeClient!=nil && !hub.CalleeClient.isConnectedToPeer.Get() && hub.CallerClient!=nil {
-				fmt.Printf("%s (%s) NO PEERCON📵 %ds %s <- %s (%s)\n", client.connType, client.calleeID, 
-					delaySecs, hub.CalleeClient.RemoteAddr, client.RemoteAddr, hub.CallerClient.callerID)
+			if hub.CalleeClient!=nil && !hub.CalleeClient.isConnectedToPeer.Get() {
+				// only log NO PEERCON if CallerClient.callerOfferForwarded was set (if "callerOffer" was sent) 
+				if hub.CallerClient!=nil && hub.CallerClient.callerOfferForwarded.Get() {
+					// TODO: after 10s, how do we know hub.CallerClient is the same as 10s ago?
+					fmt.Printf("%s (%s) NO PEERCON📵 %ds %s <- %s (%s)\n", client.connType, client.calleeID,
+						delaySecs, hub.CalleeClient.RemoteAddr, client.RemoteAddr, hub.CallerClient.callerID)
 
-				// NOTE: msg MUST NOT contain apostroph (') characters
-				msg :=  "Unable to establish a direct P2P connection. "+
-				 "This is likely a WebRTC related issue with your browser/WebView. "+
-				 "It could also be a network/firewall issue. "+
-				 "If on Android, run <a href=\"https://timur.mobi/webcall/android/#webview\">WebRTC-Check</a> "+
-				 "to test your System WebView."
-				hub.CallerClient.Write([]byte("status|"+msg))
-				hub.CalleeClient.Write([]byte("status|"+msg))
-				hub.HubMutex.RUnlock()
+					// NOTE: msg MUST NOT contain apostroph (') characters
+					msg :=  "Unable to establish a direct P2P connection. "+
+					  "This is likely a WebRTC related issue with your browser/WebView. "+
+					  "It could also be a network/firewall issue. "+
+					  "On Android, run <a href=\"https://timur.mobi/webcall/android/#webview\">WebRTC-Check</a> "+
+					  "to test your System WebView."
+					hub.CallerClient.Write([]byte("status|"+msg))
+					hub.CalleeClient.Write([]byte("status|"+msg))
+					hub.HubMutex.RUnlock()
 
-				hub.HubMutex.Lock()
-				hub.CallerClient = nil
-				hub.HubMutex.Unlock()
+					hub.HubMutex.Lock()
+					hub.CallerClient = nil
+					hub.HubMutex.Unlock()
 
-				// clear CallerIpInHubMap
-				err := StoreCallerIpInHubMap(client.globalCalleeID, "", false)
-				if err!=nil {
-					// err "key not found": callee has already signed off - can be ignored
-					if strings.Index(err.Error(),"key not found")<0 {
-						fmt.Printf("# %s (%s) NO PEERCON clear callerIpInHub err=%v\n",
-							client.connType, client.calleeID, err)
+					// clear CallerIpInHubMap
+					err := StoreCallerIpInHubMap(client.globalCalleeID, "", false)
+					if err!=nil {
+						// err "key not found": callee has already signed off - can be ignored
+						if strings.Index(err.Error(),"key not found")<0 {
+							fmt.Printf("# %s (%s) NO PEERCON clear callerIpInHub err=%v\n",
+								client.connType, client.calleeID, err)
+						}
 					}
 				}
 			} else {
