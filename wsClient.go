@@ -360,11 +360,11 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		// this code should never be reached; 2nd caller should receive "busy" from /online
 		// it can happen if two /online request in very short order return "avail"
 		// (the 2nd /online request before the 1st gets ws-connected)
-		if logWantedFor("login") {
+//		if logWantedFor("login") {
 			fmt.Printf("# %s (%s/%s) CallerClient already set [%s] %s ws=%d\n",
 				client.connType, client.calleeID, client.globalCalleeID, hub.CallerClient.RemoteAddr,
 				client.RemoteAddr, wsClientID64)
-		}
+//		}
 		//fmt.Printf("# %s existing CallerClient %s ua=%s\n",
 		//	client.connType, hub.CallerClient.RemoteAddr, hub.CallerClient.userAgent)
 		time.Sleep(500 * time.Millisecond)
@@ -407,7 +407,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 		if c.calleeInitReceived.Get() {
 			// only the 1st callee "init|" is accepted
 			// don't need to log this
-			fmt.Printf("# %s (%s) deny 2nd callee init %s\n", c.connType, c.calleeID, c.RemoteAddr)
+			//fmt.Printf("# %s (%s) deny 2nd callee init %s\n", c.connType, c.calleeID, c.RemoteAddr)
 			return
 		}
 
