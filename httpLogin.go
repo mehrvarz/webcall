@@ -400,8 +400,10 @@ fmt.Printf("/login (%s) fail wrong password [%s/shd:%s] %d %s\n",
 			return;
 		}
 
-		fmt.Printf("exit (%s) ws=%d '%s' %s ver=%s\n",
-			globalID, wsClientID, comment, remoteAddrWithPort, clientVersion)
+		if logWantedFor("attach") {
+			fmt.Printf("exit (%s) ws=%d '%s' %s ver=%s\n",
+				globalID, wsClientID, comment, remoteAddrWithPort, clientVersion)
+		}
 
 		if dbUserKey!="" {
 			// feed LastLogoffTime

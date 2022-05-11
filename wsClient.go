@@ -421,7 +421,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 		// doUnregister() will call setDeadline(0) and processTimeValues() if this is false; then set it true
 		c.clearOnCloseDone = false // TODO make it atomic?
 
-		if logWantedFor("login") {
+		if logWantedFor("attach") {
 			fmt.Printf("%s (%s) callee init ws=%d %s ver=%s\n",
 				c.connType, c.calleeID, c.hub.WsClientID, c.RemoteAddr, c.clientVersion)
 		}
@@ -521,8 +521,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 		// caller starting a call - payload is JSON.stringify(localDescription)
 		if c.callerOfferForwarded.Get() {
 			// prevent double callerOffer
-			fmt.Printf("%s (%s) CALL from %s was already forwarded\n",
-				c.connType, c.calleeID, c.RemoteAddr)
+			//fmt.Printf("# %s (%s) CALL from %s was already forwarded\n",
+			//	c.connType, c.calleeID, c.RemoteAddr)
 			return
 		}
 
@@ -1158,9 +1158,9 @@ func (c *WsClient) peerConHasEnded(comment string) {
 		}
 	}
 
-	if logWantedFor("login") {
-		fmt.Printf("%s (%s) peerConHasEnded %s done (%s)\n", c.connType, c.calleeID, peerType, comment)
-	}
+	//if logWantedFor("login") {
+	//	fmt.Printf("%s (%s) peerConHasEnded %s done (%s)\n", c.connType, c.calleeID, peerType, comment)
+	//}
 }
 
 func (c *WsClient) Close(reason string) {
