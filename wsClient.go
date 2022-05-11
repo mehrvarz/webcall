@@ -505,9 +505,9 @@ func (c *WsClient) receiveProcess(message []byte) {
 				waitingCallerToCallee(c.calleeID, waitingCallerSlice, missedCallsSlice, c)
 			}
 		}
-		if logWantedFor("login") {
-			fmt.Printf("%s (%s) callee init done\n", c.connType, c.calleeID)
-		}
+		//if logWantedFor("login") {
+		//	fmt.Printf("%s (%s) callee init done\n", c.connType, c.calleeID)
+		//}
 		return
 	}
 
