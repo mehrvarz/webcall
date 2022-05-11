@@ -148,10 +148,10 @@ func (h *Hub) processTimeValues(comment string) {
 // doUnregister() disconnects the client; and if client==callee, calls exitFunc to deactivate hub + wsClientID
 func (h *Hub) doUnregister(client *WsClient, comment string) {
 	if client.isCallee {
-//		if logWantedFor("hub") {
+		if logWantedFor("hub") {
 			fmt.Printf("hub (%s) unregister callee peercon=%v clr=%v (%s)\n",
 				client.calleeID, client.isConnectedToPeer.Get(), client.clearOnCloseDone, comment)
-//		}
+		}
 
 		// NOTE: delete(hubMap,id) might have been executed, caused by timeout15s
 
