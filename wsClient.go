@@ -1030,14 +1030,14 @@ func (c *WsClient) peerConHasEnded(comment string) {
 	}
 
 	if !c.isConnectedToPeer.Get() {
-		// call was hangup before peerconnect
-		if logWantedFor("login") {
-			fmt.Printf("%s (%s) peerConHasEnded %s before peerconnect %s (%s)\n",
+		// no peerconnect: call was hangup
+		if logWantedFor("attach") {
+			fmt.Printf("%s (%s) peerConHasEnded %s no peerconnect %s (%s)\n",
 				c.connType, c.calleeID, peerType, c.RemoteAddr, comment)
 		}
 	} else {
 		// we are disconnection a peer connect
-		if logWantedFor("login") {
+		if logWantedFor("attach") {
 			fmt.Printf("%s (%s) peerConHasEnded %s con=%v media=%v (%s)\n",
 				c.connType, c.calleeID, peerType, c.isConnectedToPeer.Get(),
 				c.isMediaConnectedToPeer.Get(), comment)
@@ -1149,16 +1149,20 @@ func (c *WsClient) peerConHasEnded(comment string) {
 	c.hub.CallerClient = nil
 	c.hub.HubMutex.Unlock()
 
+	if logWantedFor("attach") {
+		fmt.Printf("%s (%s) peerConHasEnded clr CallerIp %s\n",
+			c.connType, c.calleeID, c.globalCalleeID)
+	}
 	err := StoreCallerIpInHubMap(c.globalCalleeID, "", false)
 	if err!=nil {
 		// err "key not found": callee has already signed off - can be ignored
-		if strings.Index(err.Error(),"key not found")<0 {
-			fmt.Printf("# %s (%s) peerConHasEnded clear callerIpInHub err=%v\n",
-				c.connType, c.calleeID, err)
-		}
+		//if strings.Index(err.Error(),"key not found")<0 {
+			fmt.Printf("# %s (%s) peerConHasEnded clr callerIp %s err=%v\n",
+				c.connType, c.calleeID, c.globalCalleeID, err)
+		//}
 	}
 
-	//if logWantedFor("login") {
+	//if logWantedFor("attach") {
 	//	fmt.Printf("%s (%s) peerConHasEnded %s done (%s)\n", c.connType, c.calleeID, peerType, comment)
 	//}
 }

@@ -90,6 +90,8 @@ func (h *Hub) setDeadline(secs int, comment string) {
 						fmt.Printf("setDeadline (%s) reached; end session now (secs=%d %v)\n",
 							h.CalleeClient.calleeID, secs, timeStart.Format("2006-01-02 15:04:05"))
 						h.doBroadcast([]byte("cancel|c"))
+						h.timer = nil
+// careful: peerConHasEnded() may call us back / this is why we set h.timer = nil first
 						h.CalleeClient.peerConHasEnded("deadline")
 						if(h.CallerClient!=nil) {
 							// deleting recentTurnCalleeIps entry, so it does not exist on quick reconnect
@@ -97,6 +99,9 @@ func (h *Hub) setDeadline(secs int, comment string) {
 							delete(recentTurnCalleeIps,h.CallerClient.RemoteAddrNoPort)
 							recentTurnCalleeIpMutex.Unlock()
 						}
+
+// TODO must clear ConnectedCallerIp
+//	err := StoreCallerIpInHubMap(c.globalCalleeID, "", false)
 					}
 				}
 			case <-h.timerCanceled:
@@ -107,8 +112,8 @@ func (h *Hub) setDeadline(secs int, comment string) {
 				if h.timer!=nil {
 					h.timer.Stop()
 				}
+				h.timer = nil
 			}
-			h.timer = nil
 		}()
 	}
 }
