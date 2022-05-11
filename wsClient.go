@@ -121,7 +121,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	}
 	wsClientMutex.Lock()
 	wsClientData,ok = wsClientMap[wsClientID64]
-	if(ok) {
+	if ok {
 		// ensure wsClientMap[wsClientID64] will not be removed
 		wsClientData.removeFlag = false
 		wsClientMap[wsClientID64] = wsClientData
@@ -304,12 +304,12 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				wsClientID64, callerID, client.RemoteAddr)
 		}
 
+		client.isCallee = false
+		client.callerOfferForwarded.Set(false)
 		hub.HubMutex.Lock()
 		hub.CallDurationSecs = 0
 		hub.CallerClient = client
 		hub.HubMutex.Unlock()
-		client.isCallee = false
-		client.callerOfferForwarded.Set(false)
 
 		go func() {
 			// incoming caller will get removed if there is no peerConnect after 10 sec
@@ -319,7 +319,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 			hub.HubMutex.RLock()
 			if hub.CalleeClient!=nil && !hub.CalleeClient.isConnectedToPeer.Get() {
-				// only log NO PEERCON if CallerClient.callerOfferForwarded was set (if "callerOffer" was sent) 
+				// only log NO PEERCON if CallerClient.callerOfferForwarded was set (if "callerOffer" was sent)
 				if hub.CallerClient!=nil && hub.CallerClient.callerOfferForwarded.Get() {
 					// TODO: after 10s, how do we know hub.CallerClient is the same as 10s ago?
 					fmt.Printf("%s (%s) NO PEERCON📵 %ds %s <- %s (%s)\n", client.connType, client.calleeID,
@@ -348,6 +348,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 								client.connType, client.calleeID, err)
 						}
 					}
+				} else {
+					hub.HubMutex.RUnlock()
 				}
 			} else {
 				hub.HubMutex.RUnlock()
@@ -397,7 +399,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 	if cmd=="init" {
 		if !c.isCallee {
 			// only the callee can send "init|"
-			fmt.Printf("# %s (%s) deny 2nd callee %s\n", c.connType, c.calleeID, c.RemoteAddr)
+			fmt.Printf("# %s (%s) deny init is not Callee %s\n", c.connType, c.calleeID, c.RemoteAddr)
 			c.Write([]byte("cancel|busy"))
 			return
 		}
@@ -405,26 +407,27 @@ func (c *WsClient) receiveProcess(message []byte) {
 		if c.calleeInitReceived.Get() {
 			// only the 1st callee "init|" is accepted
 			// don't need to log this
-			//fmt.Printf("# %s (%s) deny 2nd callee init %s\n", c.connType, c.calleeID, c.RemoteAddr)
+			fmt.Printf("# %s (%s) deny 2nd callee init %s\n", c.connType, c.calleeID, c.RemoteAddr)
 			return
 		}
+
+		if c.hub==nil {
+			fmt.Printf("# %s (%s) deny init c.hub==nil %s\n", c.connType, c.calleeID, c.RemoteAddr)
+			return
+		}
+
 		c.calleeInitReceived.Set(true)
-
-		c.hub.HubMutex.RLock()
 		c.hub.CalleeLogin.Set(true)
-		c.hub.HubMutex.RUnlock()
+		// doUnregister() will call setDeadline(0) and processTimeValues() if this is false; then set it true
+		c.clearOnCloseDone = false // TODO make it atomic?
 
-		if c.isCallee {
+		if logWantedFor("login") {
 			fmt.Printf("%s (%s) callee init ws=%d %s ver=%s\n",
-				c.connType, c.calleeID, c.hub.WsClientID, c.RemoteAddr, c.clientVersion)
-		} else {
-			// this is not possible
-			fmt.Printf("# %s (%s) caller init ws=%d %s ver=%s\n",
 				c.connType, c.calleeID, c.hub.WsClientID, c.RemoteAddr, c.clientVersion)
 		}
 
 		// TODO should we clear callerIpInHubMap via StoreCallerIpInHubMap(,"") just to be sure?
-		StoreCallerIpInHubMap(c.globalCalleeID, "", false)
+		//StoreCallerIpInHubMap(c.globalCalleeID, "", false)
 
 		// deliver the callee client version number
 		readConfigLock.RLock()
@@ -433,83 +436,11 @@ func (c *WsClient) receiveProcess(message []byte) {
 		if c.Write([]byte("sessionId|"+calleeClientVersionTmp)) != nil {
 			return
 		}
-		c.clearOnCloseDone = false
-
-		// send list of waitingCaller and missedCalls to callee client
-		var waitingCallerSlice []CallerInfo
-		err := kvCalls.Get(dbWaitingCaller,c.calleeID,&waitingCallerSlice)
-		if err!=nil {
-			// can be ignored
-			//fmt.Printf("# serveWs (%s) failed to read dbWaitingCaller err=%v\n", urlID, err)
-		}
-		// before we send waitingCallerSlice
-		// we remove all entries that are older than 10min
-		countOutdated:=0
-		for idx := range waitingCallerSlice {
-			//fmt.Printf("%s (idx=%d of %d)\n", c.connType,idx,len(waitingCallerSlice))
-			if idx >= len(waitingCallerSlice) {
-				break
-			}
-			if time.Now().Unix() - waitingCallerSlice[idx].CallTime > 10*60 {
-				// remove outdated caller from waitingCallerSlice
-				waitingCallerSlice = append(waitingCallerSlice[:idx],
-					waitingCallerSlice[idx+1:]...)
-				countOutdated++
-			}
-		}
-		if countOutdated>0 {
-			fmt.Printf("%s (%s) deleted %d outdated from waitingCallerSlice\n",
-				c.connType, c.calleeID, countOutdated)
-			err = kvCalls.Put(dbWaitingCaller, c.calleeID, waitingCallerSlice, true) // skipConfirm
-			if err!=nil {
-				fmt.Printf("# %s (%s) failed to store dbWaitingCaller\n",c.connType,c.calleeID)
-			}
-		}
-
-		// read dbUser for StoreMissedCalls flag
-		var missedCallsSlice []CallerInfo
-		userKey := c.calleeID + "_" + strconv.FormatInt(int64(c.hub.registrationStartTime),10)
-		var dbUser DbUser
-		err = kvMain.Get(dbUserBucket, userKey, &dbUser)
-		if err!=nil {
-			fmt.Printf("# %s (%s) failed to get dbUser\n",c.connType,c.calleeID)
-		} else if(dbUser.StoreMissedCalls) {
-			err = kvCalls.Get(dbMissedCalls,c.calleeID,&missedCallsSlice)
-			if err!=nil {
-				//fmt.Printf("# %s (%s) failed to read dbMissedCalls\n",c.connType,c.calleeID)
-			}
-		}
-
-		if logWantedFor("waitingCaller") {
-			fmt.Printf("%s (%s) waitingCaller=%d missedCalls=%d\n",c.connType,c.calleeID,
-				len(waitingCallerSlice),len(missedCallsSlice))
-		}
-		if len(waitingCallerSlice)>0 || len(missedCallsSlice)>0 {
-			// -> httpServer hubclient.Write()
-			waitingCallerToCallee(c.calleeID, waitingCallerSlice, missedCallsSlice, c)
-		}
 
 		if !strings.HasPrefix(c.calleeID,"answie") && !strings.HasPrefix(c.calleeID,"talkback") {
-			/* moved to httpServer.go
-			if clientBlockBelowVersion!="" && c.clientVersion < clientBlockBelowVersion {
-				//fmt.Printf("%s (%s) ver=%s\n",c.connType,c.calleeID,c.clientVersion)
-				// NOTE: msg should be same as in httpLogin.go (search: clientBlockBelowVersion)
-				// NOTE: msg MUST NOT contain apostroph (') characters
-				msg := "The version of WebCall you are using has a technical problem and is no longer supported."+
-						" Please <a href=\"/webcall/update\">upgrade</a> to the new v1.x release."
-				fmt.Printf("%s (%s) send status|%s\n",c.connType,c.calleeID,msg)
-				c.Write([]byte("status|"+msg))
-				go func() {
-					time.Sleep(1500 * time.Millisecond)
-					c.Close("outdated")
-				}()
-				return
-			}
-			*/
 			if clientUpdateBelowVersion!="" && c.clientVersion < clientUpdateBelowVersion {
 				//fmt.Printf("%s (%s) ver=%s\n",c.connType,c.calleeID,c.clientVersion)
 				// NOTE: msg MUST NOT contain apostroph (') characters
-//				msg := "WebCall for Android <a href=\"https://timur.mobi/webcall/update/\">update available.</a>"
 				msg := "This version of WebCall for Android has a technical problem. "+
 						"Support will be phased out soon. "+
 						"Please upgrade to <a href=\"https://timur.mobi/webcall/update/\">v1.0 or newer.</a>"
@@ -517,7 +448,65 @@ func (c *WsClient) receiveProcess(message []byte) {
 					fmt.Printf("%s (%s) send status|%s\n",c.connType,c.calleeID,msg)
 				}
 				c.Write([]byte("status|"+msg))
+				return
 			}
+
+			// send list of waitingCaller and missedCalls to callee client
+			var waitingCallerSlice []CallerInfo
+			// err can be ignored
+			kvCalls.Get(dbWaitingCaller,c.calleeID,&waitingCallerSlice)
+			// before we send waitingCallerSlice
+			// we remove all entries that are older than 10min
+			countOutdated:=0
+			for idx := range waitingCallerSlice {
+				//fmt.Printf("%s (idx=%d of %d)\n", c.connType,idx,len(waitingCallerSlice))
+				if idx >= len(waitingCallerSlice) {
+					break
+				}
+				if time.Now().Unix() - waitingCallerSlice[idx].CallTime > 10*60 {
+					// remove outdated caller from waitingCallerSlice
+					waitingCallerSlice = append(waitingCallerSlice[:idx],
+						waitingCallerSlice[idx+1:]...)
+					countOutdated++
+				}
+			}
+			var err error
+			if countOutdated>0 {
+				fmt.Printf("%s (%s) deleted %d outdated from waitingCallerSlice\n",
+					c.connType, c.calleeID, countOutdated)
+				err = kvCalls.Put(dbWaitingCaller, c.calleeID, waitingCallerSlice, true) // skipConfirm
+				if err!=nil {
+					fmt.Printf("# %s (%s) failed to store dbWaitingCaller\n",c.connType,c.calleeID)
+				}
+			}
+
+			var missedCallsSlice []CallerInfo
+/*
+			// read dbUser for StoreMissedCalls flag
+			userKey := c.calleeID + "_" + strconv.FormatInt(int64(c.hub.registrationStartTime),10)
+			var dbUser DbUser
+			err = kvMain.Get(dbUserBucket, userKey, &dbUser)
+			if err!=nil {
+				fmt.Printf("# %s (%s) failed to get dbUser\n",c.connType,c.calleeID)
+			} else if dbUser.StoreMissedCalls {
+				// err can be ignored
+				kvCalls.Get(dbMissedCalls,c.calleeID,&missedCallsSlice)
+			}
+*/
+			// err can be ignored
+			kvCalls.Get(dbMissedCalls,c.calleeID,&missedCallsSlice)
+
+			if len(waitingCallerSlice)>0 || len(missedCallsSlice)>0 {
+				if logWantedFor("waitingCaller") {
+					fmt.Printf("%s (%s) waitingCaller=%d missedCalls=%d\n",c.connType,c.calleeID,
+						len(waitingCallerSlice),len(missedCallsSlice))
+				}
+				// -> httpServer c.Write()
+				waitingCallerToCallee(c.calleeID, waitingCallerSlice, missedCallsSlice, c)
+			}
+		}
+		if logWantedFor("login") {
+			fmt.Printf("%s (%s) callee init done\n", c.connType, c.calleeID)
 		}
 		return
 	}
@@ -537,21 +526,21 @@ func (c *WsClient) receiveProcess(message []byte) {
 			return
 		}
 
+		//fmt.Printf("%s (%s) callerOffer... %s\n", c.connType, c.calleeID, c.RemoteAddr)
+
 		c.hub.HubMutex.RLock()
 		if c.hub.CalleeClient==nil {
 			c.hub.HubMutex.RUnlock()
-			fmt.Printf("%s (%s) CALL from %s but hub.CalleeClient==nil\n",
+			fmt.Printf("# %s (%s) CALL from %s but hub.CalleeClient==nil\n",
 				c.connType, c.calleeID, c.RemoteAddr)
 			return
 		}
 		if c.hub.CallerClient==nil {
-			c.hub.HubMutex.RUnlock()
-			fmt.Printf("%s (%s) CALL %s <- %s but hub.CallerClient==nil\n",
+			fmt.Printf("# %s (%s) CALL %s <- %s but hub.CallerClient==nil\n",
 				c.connType, c.calleeID, c.hub.CalleeClient.RemoteAddr, c.RemoteAddr)
+			c.hub.HubMutex.RUnlock()
 			return
 		}
-
-		c.hub.CalleeClient.calleeInitReceived.Set(false)
 
 		fmt.Printf("%s (%s) CALL☎️  %s <- %s (%s)\n",
 			c.connType, c.calleeID, c.hub.CalleeClient.RemoteAddr, c.RemoteAddr, c.hub.CallerClient.callerID)
@@ -581,6 +570,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 			c.hub.HubMutex.RUnlock()
 			return
 		}
+		c.hub.HubMutex.RUnlock()
 
 		if c.hub.maxRingSecs>0 {
 			// if callee does NOT pickup the call after c.hub.maxRingSecs, callee will be disconnected
@@ -597,7 +587,6 @@ func (c *WsClient) receiveProcess(message []byte) {
 					c.connType, c.globalCalleeID, c.RemoteAddr)
 			}
 		}
-		c.hub.HubMutex.RUnlock()
 		return
 	}
 
@@ -686,9 +675,9 @@ func (c *WsClient) receiveProcess(message []byte) {
 		// remove this call from dbMissedCalls for c.calleeID
 		// first: load dbMissedCalls for c.calleeID
 		var missedCallsSlice []CallerInfo
-		c.hub.HubMutex.RLock()
+//		c.hub.HubMutex.RLock()
 		userKey := c.calleeID + "_" + strconv.FormatInt(int64(c.hub.registrationStartTime),10)
-		c.hub.HubMutex.RUnlock()
+//		c.hub.HubMutex.RUnlock()
 		var dbUser DbUser
 		err := kvMain.Get(dbUserBucket, userKey, &dbUser)
 		if err!=nil {
@@ -723,7 +712,9 @@ func (c *WsClient) receiveProcess(message []byte) {
 					} else {
 						//fmt.Printf("deleteMissedCall send missedCallsSlice %s\n", c.calleeID)
 						c.hub.HubMutex.RLock()
-						c.hub.CalleeClient.Write([]byte("missedCalls|"+string(json)))
+						if c.hub.CalleeClient!=nil {
+							c.hub.CalleeClient.Write([]byte("missedCalls|"+string(json)))
+						}
 						c.hub.HubMutex.RUnlock()
 					}
 					break
@@ -765,31 +756,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 			c.hub.CallerClient.Write(message)
 			c.pickupSent.Set(true)
 		}
-/*
-// TODO we should move this to PEER callee CONN
-		// switching from maxRingSecs deadline to maxTalkSecsIfNoP2p deadline
-		if c.hub.maxTalkSecsIfNoP2p<=0 || (c.hub.LocalP2p && c.hub.RemoteP2p) {
-			// full p2p con: remove maxRingSecs deadline and do NOT replace it with any talktimer deadline
-			if logWantedFor("calldur") {
-				fmt.Printf("%s (%s) clear setDeadline maxTalkSecsIfNoP2p %v %v\n",
-					c.connType, c.calleeID, c.hub.LocalP2p, c.hub.RemoteP2p)
-			}
-			c.hub.setDeadline(0,"pickup")
-		} else {
-			// relayed con: clear maxRingSecs deadline and replace it with maxTalkSecsIfNoP2p deadline
-			if logWantedFor("calldur") {
-				fmt.Printf("%s (%s) setDeadline maxTalkSecsIfNoP2p %v %v\n",
-					c.connType, c.calleeID, c.hub.LocalP2p, c.hub.RemoteP2p)
-			}
-			c.hub.setDeadline(c.hub.maxTalkSecsIfNoP2p,"pickup")
-
-			// deliver max talktime to both clients
-			c.hub.doBroadcast([]byte("sessionDuration|"+strconv.FormatInt(int64(c.hub.maxTalkSecsIfNoP2p),10)))
-		}
-*/
-		c.hub.setDeadline(0,"pickup")
-
 		c.hub.HubMutex.RUnlock()
+		c.hub.setDeadline(0,"pickup")
 		return
 	}
 
@@ -816,13 +784,22 @@ func (c *WsClient) receiveProcess(message []byte) {
 			return
 		}
 
-		c.hub.HubMutex.Lock()
+		c.hub.HubMutex.RLock()
+// TODO achtung c.hub.setDeadline() below
 		if c.hub.CallerClient==nil {
-			c.hub.HubMutex.Unlock()
-			// # serveWss (83710725871) peer 'callee Connected unknw/unknw'
+			c.hub.HubMutex.RUnlock()
+			// # serveWss (id) peer 'callee Connected unknw/unknw'
 			// this happens when caller disconnects immediately
-			//fmt.Printf("# %s (%s) peer %s c.hub.CallerClient==nil ver=%s\n",
-			//	c.connType, c.calleeID, payload, c.clientVersion)
+			fmt.Printf("# %s (%s) peer %s c.hub.CallerClient==nil ver=%s\n",
+				c.connType, c.calleeID, payload, c.clientVersion)
+			// clear callerIpInHubMap via StoreCallerIpInHubMap(,"") ?
+			StoreCallerIpInHubMap(c.globalCalleeID, "", false)
+			return
+		}
+		if c.hub.CalleeClient==nil {
+			c.hub.HubMutex.RUnlock()
+			fmt.Printf("# %s (%s) peer %s c.hub.CalleeClient==nil ver=%s\n",
+				c.connType, c.calleeID, payload, c.clientVersion)
 			// clear callerIpInHubMap via StoreCallerIpInHubMap(,"") ?
 			StoreCallerIpInHubMap(c.globalCalleeID, "", false)
 			return
@@ -874,10 +851,10 @@ func (c *WsClient) receiveProcess(message []byte) {
 						c.hub.RemoteP2p = true
 					}
 				} else {
-					fmt.Printf("%s tok2string=%s has no slash\n", c.connType, tok2string)
+					fmt.Printf("# %s tok2string=%s has no slash\n", c.connType, tok2string)
 				}
 			} else {
-				fmt.Printf("%s len(tok)<3\n", c.connType)
+				fmt.Printf("# %s len(tok)<3\n", c.connType)
 			}
 
 			if constate=="Connected" || constate=="ConForce" {
@@ -940,10 +917,11 @@ func (c *WsClient) receiveProcess(message []byte) {
 				}
 			}
 		}
-		c.hub.HubMutex.Unlock()
+		c.hub.HubMutex.RUnlock()
 		return
 	}
 
+/* TODO ???
 	if !c.isCallee && c.hub!=nil {
 		// client is caller
 		c.hub.HubMutex.RLock()
@@ -965,23 +943,30 @@ func (c *WsClient) receiveProcess(message []byte) {
 		}
 		c.hub.HubMutex.RUnlock()
 	}
+*/
 
-	if logWantedFor("wsreceive") {
-		fmt.Printf("%s recv %s|%s callee=%v %s\n",
-			c.connType, cmd, payload, c.isCallee, c.RemoteAddr)
-	}
-	if len(payload)>0 && c.hub!=nil {
-		c.hub.HubMutex.RLock()
-		if c.isCallee {
-			if c.hub.CallerClient!=nil {
-				c.hub.CallerClient.Write(message)
+	if len(payload)>0 {
+		// forward cmd/payload to other client
+		if c.hub!=nil {
+			if logWantedFor("wsreceive") {
+				fmt.Printf("%s recv/fw %s|%s iscallee=%v %s\n",
+					c.connType, cmd, payload, c.isCallee, c.RemoteAddr)
+			} else {
+				//fmt.Printf("%s recv/fw %s iscallee=%v %s\n",
+				//	c.connType, cmd, c.isCallee, c.RemoteAddr)
 			}
-		} else {
-			if c.hub.CalleeClient!=nil {
-				c.hub.CalleeClient.Write(message)
+			c.hub.HubMutex.RLock()
+			if c.isCallee {
+				if c.hub.CallerClient!=nil {
+					c.hub.CallerClient.Write(message)
+				}
+			} else {
+				if c.hub.CalleeClient!=nil {
+					c.hub.CalleeClient.Write(message)
+				}
 			}
+			c.hub.HubMutex.RUnlock()
 		}
-		c.hub.HubMutex.RUnlock()
 	} else {
 		//fmt.Printf("%s %s with no payload\n",c.connType,cmd)
 	}
@@ -1006,25 +991,56 @@ func (c *WsClient) Write(b []byte) error {
 func (c *WsClient) peerConHasEnded(comment string) {
 	// the peerConnection has ended, either bc one side has sent cmd "cancel"
 	// or bc callee has unregistered
-	if c==nil || c.hub==nil {
+	if c==nil {
+		fmt.Printf("# peerConHasEnded but c==nil\n")
 		return
 	}
-
-	c.hub.HubMutex.Lock()
-	c.hub.setDeadline(0,comment)
 
 	peerType := "caller"
 	if c.isCallee {
 		peerType = "callee"
 	}
+
+	if c.hub==nil {
+		fmt.Printf("# %s (%s) peerConHasEnded %s con=%v media=%v c.hub==nil (%s)\n",
+			c.connType, c.calleeID, peerType,
+			c.isConnectedToPeer.Get(), c.isMediaConnectedToPeer.Get(), comment)
+		return
+	}
+
+	if c.isCallee {
+		// prepare for next session
+		c.pickupSent.Set(false)
+/*
+		c.hub.HubMutex.RLock()
+		if c.hub.CalleeClient!=nil {
+			// reset double init protection
+			c.hub.CalleeClient.calleeInitReceived.Set(false)
+		}
+		c.hub.HubMutex.RUnlock()
+*/
+		c.calleeInitReceived.Set(false)
+	}
+
+	c.hub.setDeadline(0,comment)	// may call peerConHasEnded()
+
+	if c.hub.lastCallStartTime>0 {
+		c.hub.processTimeValues("peerConHasEnded") // will set c.hub.CallDurationSecs
+		c.hub.lastCallStartTime = 0
+	}
+
 	if !c.isConnectedToPeer.Get() {
-		// hangup before media connect
-		//fmt.Printf("%s (%s) peer %s discon %ds (before connect) %s (%s)\n",
-		//	c.connType, c.calleeID, peerType, c.hub.CallDurationSecs, c.RemoteAddr, comment)
+		// call was hangup before peerconnect
+		if logWantedFor("login") {
+			fmt.Printf("%s (%s) peerConHasEnded %s before peerconnect %s (%s)\n",
+				c.connType, c.calleeID, peerType, c.RemoteAddr, comment)
+		}
 	} else {
-		if c.hub.lastCallStartTime>0 {
-			c.hub.processTimeValues("peerConHasEnded") // set c.hub.CallDurationSecs
-			c.hub.lastCallStartTime = 0
+		// we are disconnection a peer connect
+		if logWantedFor("login") {
+			fmt.Printf("%s (%s) peerConHasEnded %s con=%v media=%v (%s)\n",
+				c.connType, c.calleeID, peerType, c.isConnectedToPeer.Get(),
+				c.isMediaConnectedToPeer.Get(), comment)
 		}
 
 		localPeerCon := "?"
@@ -1035,102 +1051,116 @@ func (c *WsClient) peerConHasEnded(comment string) {
 			remotePeerCon = "p2p"
 			if !c.hub.RemoteP2p { remotePeerCon = "relay" }
 		}
-		// peer callee disc
-		if c.hub.CalleeClient!=nil && c.hub.CallerClient!=nil {
-			fmt.Printf("%s (%s) PEER %s DISC📴 %ds %s/%s %s <- %s (%s) %s\n",
-				c.connType, c.calleeID, peerType, c.hub.CallDurationSecs, localPeerCon, remotePeerCon,
-				c.hub.CalleeClient.RemoteAddrNoPort, 
-				c.hub.CallerClient.RemoteAddrNoPort, c.hub.CallerClient.callerID, comment)
+
+		c.isConnectedToPeer.Set(false)
+		c.isMediaConnectedToPeer.Set(false)
+		// now clear these two flags also on the other side
+		if c.isCallee {
+			c.hub.HubMutex.RLock()
+			if c.hub.CallerClient!=nil {
+				c.hub.CallerClient.isConnectedToPeer.Set(false)
+				c.hub.CallerClient.isMediaConnectedToPeer.Set(false)
+			}
+			c.hub.HubMutex.RUnlock()
+		} else {
+			c.hub.HubMutex.RLock()
+			if c.hub.CalleeClient!=nil {
+				c.hub.CalleeClient.isConnectedToPeer.Set(false)
+				c.hub.CalleeClient.isMediaConnectedToPeer.Set(false)
+			}
+			c.hub.HubMutex.RUnlock()
+		}
+
+		calleeRemoteAddr := ""
+		callerRemoteAddr := ""
+		callerID := ""
+		callerName := ""
+
+		c.hub.HubMutex.RLock()
+		if c.hub.CalleeClient!=nil {
+			calleeRemoteAddr = c.hub.CalleeClient.RemoteAddrNoPort
+		}
+		if c.hub.CallerClient!=nil  {
+			callerRemoteAddr = c.hub.CallerClient.RemoteAddrNoPort
+			callerID = c.hub.CallerClient.callerID
+			callerName = c.hub.CallerClient.callerName
+
 			// clear recentTurnCalleeIps[ipNoPort] entry (if this was a relay session)
 			recentTurnCalleeIpMutex.Lock()
 			delete(recentTurnCalleeIps,c.hub.CallerClient.RemoteAddrNoPort)
 			recentTurnCalleeIpMutex.Unlock()
 		}
+		c.hub.HubMutex.RUnlock()
+		fmt.Printf("%s (%s) PEER %s DISC📴 %ds %s/%s %s <- %s (%s) %s\n",
+			c.connType, c.calleeID, peerType, c.hub.CallDurationSecs, localPeerCon, remotePeerCon,
+			calleeRemoteAddr, callerRemoteAddr, callerID, comment)
 
-		err := StoreCallerIpInHubMap(c.globalCalleeID, "", false)
-		if err!=nil {
-			// err "key not found": callee has already signed off - can be ignored
-			if strings.Index(err.Error(),"key not found")<0 {
-				fmt.Printf("# %s (%s) peerConHasEnded clear callerIpInHub err=%v\n",
-					c.connType, c.calleeID, err)
-			}
-		}
 
 		// add an entry to missed calls, but only if hub.CallDurationSecs==0
 		// TODO is it a missed call if callee himself denied the call? (currently yes)
-		if(c.hub.CallDurationSecs<=0) {
+		if c.hub.CallDurationSecs<=0 {
 			if logWantedFor("missedcall") {
 				fmt.Printf("%s (%s) store missedCall %s ...\n", c.connType, c.calleeID, c.RemoteAddr)
 			}
-			if c.hub.CallerClient!=nil {
+			var missedCallsSlice []CallerInfo
+			userKey := c.calleeID + "_" + strconv.FormatInt(int64(c.hub.registrationStartTime),10)
+			var dbUser DbUser
+			err := kvMain.Get(dbUserBucket, userKey, &dbUser)
+			if err!=nil {
+				fmt.Printf("# %s (%s) failed to get dbUser\n",c.connType,c.calleeID)
+			} else if dbUser.StoreMissedCalls {
 				if logWantedFor("missedcall") {
 					fmt.Printf("%s (%s) store missedCall hub.CallerClient avail %s\n",
 						c.connType, c.calleeID, c.RemoteAddr)
 				}
-				var missedCallsSlice []CallerInfo
-				userKey := c.calleeID + "_" + strconv.FormatInt(int64(c.hub.registrationStartTime),10)
-				var dbUser DbUser
-				err := kvMain.Get(dbUserBucket, userKey, &dbUser)
+				err = kvCalls.Get(dbMissedCalls,c.calleeID,&missedCallsSlice)
 				if err!=nil {
-					fmt.Printf("# %s (%s) failed to get dbUser\n",c.connType,c.calleeID)
-				} else if(dbUser.StoreMissedCalls) {
-					if logWantedFor("missedcall") {
-						fmt.Printf("%s (%s) store missedCall hub.CallerClient avail %s\n",
+					if strings.Index(err.Error(),"key not found")<0 {
+						fmt.Printf("# %s (%s) failed to get missedCalls %s\n",
 							c.connType, c.calleeID, c.RemoteAddr)
 					}
-					err = kvCalls.Get(dbMissedCalls,c.calleeID,&missedCallsSlice)
-					if err!=nil {
-						if strings.Index(err.Error(),"key not found")<0 {
-							fmt.Printf("# %s (%s) failed to get missedCalls %s\n",
-								c.connType, c.calleeID, c.RemoteAddr)
-						}
-					}
-					if logWantedFor("missedcall") {
-						fmt.Printf("%s (%s) store missedCall old count %d %s\n",
-							c.connType, c.calleeID, len(missedCallsSlice), c.RemoteAddr)
-					}
-					// make sure we only keep the latest 10 missed calls
-					if len(missedCallsSlice)>=10 {
-						missedCallsSlice = missedCallsSlice[len(missedCallsSlice)-9:]
-					}
-					caller := CallerInfo{c.RemoteAddr, c.hub.CallerClient.callerName,
-						time.Now().Unix(), c.hub.CallerClient.callerID}
-					missedCallsSlice = append(missedCallsSlice, caller)
-					err = kvCalls.Put(dbMissedCalls, c.calleeID, missedCallsSlice, true) // skipConfirm
-					if err!=nil {
-						fmt.Printf("# %s (%s) failed to store dbMissedCalls %s err=%v\n",
-							c.connType, c.calleeID, c.RemoteAddr, err)
-					} else {
-						if logWantedFor("missedcall") {
-							fmt.Printf("%s (%s) stored missedCall %s\n", c.connType, c.calleeID, c.RemoteAddr)
-						}
-						// TODO send missedCallsSlice to callee?
-					}
 				}
-			} else {
-				fmt.Printf("# %s (%s) store missedCall but hub.CallerClient==nil %s\n",
-					c.connType, c.calleeID, c.RemoteAddr)
+				if logWantedFor("missedcall") {
+					fmt.Printf("%s (%s) store missedCall old count %d %s\n",
+						c.connType, c.calleeID, len(missedCallsSlice), c.RemoteAddr)
+				}
+				// make sure we only keep the latest 10 missed calls
+				if len(missedCallsSlice)>=10 {
+					missedCallsSlice = missedCallsSlice[len(missedCallsSlice)-9:]
+				}
+				caller := CallerInfo{c.RemoteAddr, callerName, time.Now().Unix(), callerID}
+				missedCallsSlice = append(missedCallsSlice, caller)
+				err = kvCalls.Put(dbMissedCalls, c.calleeID, missedCallsSlice, true) // skipConfirm
+				if err!=nil {
+					fmt.Printf("# %s (%s) failed to store dbMissedCalls %s err=%v\n",
+						c.connType, c.calleeID, c.RemoteAddr, err)
+				} else {
+					if logWantedFor("missedcall") {
+						fmt.Printf("%s (%s) stored missedCall %s\n", c.connType, c.calleeID, c.RemoteAddr)
+					}
+					// TODO send missedCallsSlice to callee?
+				}
 			}
 		}
-
-		c.isConnectedToPeer.Set(false)
-		c.isMediaConnectedToPeer.Set(false)
-		if c.isCallee {
-			if c.hub.CallerClient!=nil {
-				c.hub.CallerClient.isConnectedToPeer.Set(false)
-				c.hub.CallerClient.isMediaConnectedToPeer.Set(false)
-			}
-		} else {
-			if c.hub.CalleeClient!=nil {
-				c.hub.CalleeClient.isConnectedToPeer.Set(false)
-				c.hub.CalleeClient.isMediaConnectedToPeer.Set(false)
-			}
-		}
-
-		c.hub.CallerClient = nil
-		c.pickupSent.Set(false)
 	}
+
+	// need to be nil for next session
+	c.hub.HubMutex.Lock()
+	c.hub.CallerClient = nil
 	c.hub.HubMutex.Unlock()
+
+	err := StoreCallerIpInHubMap(c.globalCalleeID, "", false)
+	if err!=nil {
+		// err "key not found": callee has already signed off - can be ignored
+		if strings.Index(err.Error(),"key not found")<0 {
+			fmt.Printf("# %s (%s) peerConHasEnded clear callerIpInHub err=%v\n",
+				c.connType, c.calleeID, err)
+		}
+	}
+
+	if logWantedFor("login") {
+		fmt.Printf("%s (%s) peerConHasEnded %s done (%s)\n", c.connType, c.calleeID, peerType, comment)
+	}
 }
 
 func (c *WsClient) Close(reason string) {

@@ -48,14 +48,18 @@ func newHub(maxRingSecs int, maxTalkSecsIfNoP2p int, startTime int64) *Hub {
 }
 
 func (h *Hub) setDeadline(secs int, comment string) {
-	// likes to be called with h.HubMutex (r)locked
 	if h.timer!=nil {
-		// TODO this does not release <-h.timer.C
 		if logWantedFor("calldur") {
-			fmt.Printf("setDeadline (%s) clear old timer; new secs=%d (%s)\n",
+			fmt.Printf("setDeadline (%s) kill old timer; new secs=%d (%s)\n",
 				h.CalleeClient.calleeID, secs, comment)
 		}
+		// kill old timer early
 		h.timerCanceled <- struct{}{}
+		//if(secs>0) {
+			// let old timer be killed before we set a new one
+			time.Sleep(10 * time.Millisecond)
+		//}
+/*
 		if h.timer!=nil {
 			if !h.timer.Stop() {
 				if(secs>0) {
@@ -65,6 +69,7 @@ func (h *Hub) setDeadline(secs int, comment string) {
 			}
 			h.timer=nil	// will be done below anyway, so just to be sure
 		}
+*/
 	}
 
 	if(secs>0) {
@@ -77,7 +82,7 @@ func (h *Hub) setDeadline(secs int, comment string) {
 			timeStart := time.Now()
 			select {
 			case <-h.timer.C:
-				// do something for timeout, like change state
+				// do something for timeout, such as disconnect
 				// timer valid: we need to disconnect the (relayed) clients (if still connected)
 				if h.CalleeClient!=nil {
 					// otherwise we disconnect this callee
@@ -96,8 +101,11 @@ func (h *Hub) setDeadline(secs int, comment string) {
 				}
 			case <-h.timerCanceled:
 				if logWantedFor("calldur") {
-					fmt.Printf("setDeadline (%s) aborted (secs=%d %v)\n",
+					fmt.Printf("setDeadline (%s) timerCanceled (secs=%d %v)\n",
 						h.CalleeClient.calleeID, secs, timeStart.Format("2006-01-02 15:04:05"))
+				}
+				if h.timer!=nil {
+					h.timer.Stop()
 				}
 			}
 			h.timer = nil
@@ -140,27 +148,23 @@ func (h *Hub) processTimeValues(comment string) {
 // doUnregister() disconnects the client; and if client==callee, calls exitFunc to deactivate hub + wsClientID
 func (h *Hub) doUnregister(client *WsClient, comment string) {
 	if client.isCallee {
-		if logWantedFor("hub") {
+//		if logWantedFor("hub") {
 			fmt.Printf("hub (%s) unregister callee peercon=%v clr=%v (%s)\n",
 				client.calleeID, client.isConnectedToPeer.Get(), client.clearOnCloseDone, comment)
-		}
+//		}
 
 		// NOTE: delete(hubMap,id) might have been executed, caused by timeout15s
 
 		if !client.clearOnCloseDone {
-			h.setDeadline(-1,"doUnregister "+comment)
-			h.HubMutex.RLock()
+			h.setDeadline(0,"doUnregister "+comment)
+			h.HubMutex.Lock()
 			if h.lastCallStartTime>0 {
-				h.HubMutex.RUnlock()
 				h.processTimeValues("doUnregister")
-				h.HubMutex.Lock()
 				h.lastCallStartTime = 0
 				h.LocalP2p = false
 				h.RemoteP2p = false
-				h.HubMutex.Unlock()
-			} else {
-				h.HubMutex.RUnlock()
 			}
+			h.HubMutex.Unlock()
 			client.clearOnCloseDone = true
 		}
 
@@ -169,25 +173,19 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 		client.isMediaConnectedToPeer.Set(false)
 		client.pickupSent.Set(false)
 
-		h.HubMutex.RLock()
-		if h.CallerClient!=nil {
-			h.CallerClient.Close("unregister "+comment)
-			h.CallerClient.isConnectedToPeer.Set(false)
-			h.CallerClient.isMediaConnectedToPeer.Set(false)
-			h.HubMutex.RUnlock()
-			h.HubMutex.Lock()
-			h.CallerClient = nil
-			h.HubMutex.Unlock()
-		} else {
-			h.HubMutex.RUnlock()
-		}
 		// remove callee from hubMap; delete wsClientID from wsClientMap
 		h.exitFunc(client,comment)
 
 		h.HubMutex.Lock()
+		if h.CallerClient!=nil {
+			h.CallerClient.Close("unregister "+comment)
+			h.CallerClient.isConnectedToPeer.Set(false)
+			h.CallerClient.isMediaConnectedToPeer.Set(false)
+			h.CallerClient = nil
+		}
 		h.CalleeClient = nil
 		h.HubMutex.Unlock()
-
+/*
 		if h.timer!=nil {
 			if logWantedFor("calldur") {
 				fmt.Printf("doUnregister clear old timer\n")
@@ -198,6 +196,8 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 			}
 			h.timer=nil
 		}
+*/
+//		setDeadline(0,"doUnregister")
 	} else {
 		if logWantedFor("hub") {
 			fmt.Printf("hub (%s) unregister caller peercon=%v (%s)\n",

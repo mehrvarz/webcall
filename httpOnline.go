@@ -53,7 +53,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 	reportHiddenCallee := true
 	reportBusyCallee := true
 	if logWantedFor("online") {
-		fmt.Printf("/online (%s) %s ver=%s\n", urlID, remoteAddr, clientVersion)
+		fmt.Printf("/online (%s) %s (%s) wait=%v ver=%s\n", urlID, remoteAddr, callerId, wait, clientVersion)
 	}
 	// TODO fmt.Fprintf(w, "clear")
 
@@ -69,7 +69,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 
 	if glUrlID == "" {
 		// callee urlID is not online; try to find out for how long
-		if logWantedFor("hub") {
+		if logWantedFor("online") {
 			fmt.Printf("/online (%s) glUrlID=empty locHub=%v globHub=%v\n",
 				urlID, locHub!=nil, globHub!=nil)
 		}
@@ -105,7 +105,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		if secsSinceLogoff>0 && secsSinceLogoff < 8*60 {
 			// callee may come back very soon
 			if(!wait) {
-				if logWantedFor("login") {
+				if logWantedFor("online") {
 					fmt.Printf("/online (%s) offline temp (for %d secs) %s ver=%s ua=%s\n",
 						urlID, secsSinceLogoff, remoteAddr, clientVersion, r.UserAgent())
 				}
@@ -122,7 +122,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 			// loop: wait for callee
 			loopStartTime := time.Now()
 			for {
-				//if logWantedFor("login") {
+				//if logWantedFor("online") {
 				//	fmt.Printf("/online (%s) offline temp, caller waiting... %s\n",
 				//		urlID, remoteAddr)
 				//}
@@ -130,7 +130,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 				select {
 				case <-r.Context().Done():
 					// client gave up
-					if logWantedFor("login") {
+					if logWantedFor("online") {
 						fmt.Printf("/online (%s) offline temp, caller wait abort %s\n",
 							urlID, remoteAddr)
 					}
@@ -161,14 +161,14 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 
 		} else {
 			if secsSinceLogoff>1651395074 { // offline for >=52 years (since 1970)
-				if logWantedFor("login") {
+				if logWantedFor("online") {
 					fmt.Printf("/online (%s) offline (was never online) %s ver=%s ua=%s\n",
 						urlID, remoteAddr, clientVersion, r.UserAgent())
 				}
 				fmt.Fprintf(w, "notavail")
 				return
 			}
-			if logWantedFor("login") {
+			if logWantedFor("online") {
 				fmt.Printf("/online (%s) offline (for %d secs) %s ver=%s ua=%s\n",
 					urlID, secsSinceLogoff, remoteAddr, clientVersion, r.UserAgent())
 			}
@@ -177,10 +177,10 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		}
 	}
 
-	locHub.HubMutex.RLock()
 	if locHub != nil {
+		locHub.HubMutex.RLock()
 		// callee is managed by this server
-		if logWantedFor("hub") {
+		if logWantedFor("online") {
 			fmt.Printf("/online (%s/%s) locHub callerIp=%s Caller=%v hidden=%v\n",
 				urlID, glUrlID, locHub.ConnectedCallerIp, locHub.CallerClient!=nil, locHub.IsCalleeHidden)
 		}
@@ -227,8 +227,8 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 		}
 		readConfigLock.RUnlock()
 		wsAddr = fmt.Sprintf("%s?wsid=%d", wsAddr, wsClientID)
-		if logWantedFor("login") {
-			if !strings.HasPrefix(glUrlID,"answie") && !strings.HasPrefix(glUrlID,"talkback") {
+		if !strings.HasPrefix(glUrlID,"answie") && !strings.HasPrefix(glUrlID,"talkback") {
+			if logWantedFor("online") {
 				fmt.Printf("/online (%s) avail wsAddr=%s %s <- %s (%s) ver=%s ua=%s\n",
 					glUrlID, wsAddr, locHub.CalleeClient.RemoteAddr,
 					remoteAddr, callerId, clientVersion, r.UserAgent())
@@ -268,7 +268,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 			wsAddr = globHub.WssUrl
 		}
 		wsAddr = fmt.Sprintf("%s?wsid=%d", wsAddr, wsClientID)
-		if logWantedFor("login") {
+		if logWantedFor("online") {
 			if !strings.HasPrefix(glUrlID,"answie") && !strings.HasPrefix(glUrlID,"talkback") {
 				fmt.Printf("/online (%s) avail wsAddr=%s (%s) %s ver=%s ua=%s\n",
 					glUrlID, wsAddr, callerId, remoteAddr, clientVersion, r.UserAgent())
@@ -347,7 +347,7 @@ func httpNewId(w http.ResponseWriter, r *http.Request, urlID string, calleeID st
 	if ok && len(url_arg_array[0]) >= 1 {
 		clientVersion = url_arg_array[0]
 	}
-	if logWantedFor("login") {
+	if logWantedFor("online") {
 		fmt.Printf("/newid (%s) generated %s ver=%s ua=%s\n",
 			tmpCalleeID, remoteAddr, clientVersion, r.UserAgent())
 	}

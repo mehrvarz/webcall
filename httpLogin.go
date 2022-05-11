@@ -379,8 +379,8 @@ fmt.Printf("/login (%s) fail wrong password [%s/shd:%s] %d %s\n",
 
 		if hub == nil {
 			// this means that the connection was most likely cut off by the device
-			//fmt.Printf("exit (%s) ws=%d hub already closed %s rip=%s ver=%s\n",
-			//	globalID, wsClientID, comment, remoteAddrWithPort, clientVersion)
+			fmt.Printf("# exit (%s) ws=%d hub==nil %s rip=%s ver=%s\n",
+				globalID, wsClientID, comment, remoteAddrWithPort, clientVersion)
 			return;
 		}
 
@@ -437,6 +437,7 @@ fmt.Printf("/login (%s) fail wrong password [%s/shd:%s] %d %s\n",
 		    wsClientMutex.Lock()
 		    delete(wsClientMap, wsClientID)
 		    wsClientMutex.Unlock()
+			//fmt.Printf("exit (%s) done\n", urlID)
 		} else {
 			fmt.Printf("# exit (%s) wsClientID==0\n", urlID)
 		}
@@ -546,6 +547,7 @@ fmt.Printf("/login (%s) fail wrong password [%s/shd:%s] %d %s\n",
 					myHubMutex.RUnlock()
 
 					if unregisterNeeded {
+						fmt.Printf("/login (%s) unregisterNeeded\n", urlID)
 						// the next login attempt of urlID/globalID will be denied to break it's reconnecter loop
 						// but we should NOT do this right after server start
 						if time.Now().Sub(serverStartTime) > 60 * time.Second {
