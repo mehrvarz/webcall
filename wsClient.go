@@ -1146,12 +1146,12 @@ func (c *WsClient) peerConHasEnded(comment string) {
 					c.connType, c.calleeID, c.globalCalleeID, err)
 			//}
 		}
-
-		// this will prevent NO PEERCON after hangup or on calls shorter than 10s
-		c.hub.HubMutex.Lock()
-		c.hub.CallerClient = nil
-		c.hub.HubMutex.Unlock()
 	}
+
+	// this will prevent NO PEERCON after hangup or after calls shorter than 10s
+	c.hub.HubMutex.Lock()
+	c.hub.CallerClient = nil
+	c.hub.HubMutex.Unlock()
 
 	//if logWantedFor("attach") {
 	//	fmt.Printf("%s (%s) peerConHasEnded %s done (%s)\n", c.connType, c.calleeID, peerType, comment)
