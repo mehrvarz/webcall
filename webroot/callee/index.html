@@ -53,9 +53,6 @@ button[disabled] {
 
 .menuButton, menuButton:focus {
 	color:white;
-	_background-color:#04c;
-	_transition: background-color 200ms;
-	_border:none;
 	padding: 0 20px 0 20px; /* 20px = margin-left (16px) +4 of labels (see: fullscreenlabel) */
 	user-select:none;
 }
@@ -98,7 +95,7 @@ a, a:link, a:visited, a:active {
     color:#ddd;
 	font-weight:600;
     text-decoration:none;
-	user-select:none;
+	_user-select:none;
 	cursor:pointer;
 }
 @media (hover: hover) {
@@ -187,14 +184,9 @@ select:focus {
 	outline:none;
 }
 .timer {
-	_position:absolute;
-	_top:8vh;
-	_left:50%;
-	_transform:translate(-50%, -50%);
 	position:absolute;
 	right:10px;
 	bottom:10px;
-	_background:#4007;
 
 	width:200px;
 	color:#555;
