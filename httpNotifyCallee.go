@@ -660,7 +660,8 @@ func addMissedCall(urlID string, caller CallerInfo) (error, []CallerInfo) {
 		return err,nil
 	}
 	if logWantedFor("missedcall") {
-		fmt.Printf("addMissedCall (%s) ok (%v)\n", urlID, caller)
+		fmt.Printf("addMissedCall (%s) <- (%s) name=%s ip=%s\n",
+			urlID, caller.CallerID, caller.CallerName, caller.AddrPort)
 	}
 	return err,missedCallsSlice
 }

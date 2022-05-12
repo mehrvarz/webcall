@@ -1119,10 +1119,9 @@ func (c *WsClient) peerConHasEnded(comment string) {
 		c.hub.HubMutex.Unlock()
 	}
 
-	if logWantedFor("attach") {
-		fmt.Printf("%s (%s) peerConHasEnded clr CallerIp %s\n",
-			c.connType, c.calleeID, c.globalCalleeID)
-	}
+	//if logWantedFor("attach") {
+	//	fmt.Printf("%s (%s) peerConHasEnded clr CallerIp %s\n", c.connType, c.calleeID, c.globalCalleeID)
+	//}
 	err := StoreCallerIpInHubMap(c.globalCalleeID, "", false)
 	if err!=nil {
 		// err "key not found": callee has already signed off - can be ignored
