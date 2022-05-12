@@ -452,14 +452,14 @@ func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, r
 	// called by caller.js goodby() via "/missedCall?id=(callerInfo)"
 	// callerInfo is encoded: calleeId+"|"+callerName+"|"+callerId (plus optional: "|"+ageSecs
 	// "timur|92929|92929658912|50" tok[0]=calleeID, tok[1]=callerName, tok[2]=callerID, tok[3]=ageSecs
-	fmt.Printf("/httpMissedCall (%s) rip=%s\n", callerInfo, remoteAddrWithPort)
+	//fmt.Printf("/missedCall (%s) rip=%s\n", callerInfo, remoteAddrWithPort)
 	tok := strings.Split(callerInfo, "|")
 	if len(tok) < 3 {
-		fmt.Printf("# /httpMissedCall (%s) failed len(tok)=%d<3 rip=%s\n",callerInfo,len(tok),remoteAddr)
+		fmt.Printf("# /missedCall (%s) failed len(tok)=%d<3 rip=%s\n",callerInfo,len(tok),remoteAddr)
 		return
 	}
 	if tok[0]=="" || tok[0]=="undefined" {
-		fmt.Printf("# /httpMissedCall (%s) failed no calleeId rip=%s\n",callerInfo,remoteAddr)
+		fmt.Printf("# /missedCall (%s) failed no calleeId rip=%s\n",callerInfo,remoteAddr)
 		return
 	}
 	calleeId := tok[0]
@@ -470,42 +470,42 @@ func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, r
 		var err error
 		ageSecs64, err = strconv.ParseInt(tok[3], 10, 64)
 		if err!=nil {
-			//fmt.Printf("# /httpMissedCall (%s) ParseInt err=%v\n",calleeId,err)
+			//fmt.Printf("# /missedCall (%s) ParseInt err=%v\n",calleeId,err)
 			ageSecs64 = 0
 		} else if ageSecs64<0 {
-			//fmt.Printf("# /httpMissedCall (%s) ageSecs64=%d < 0\n",calleeId,ageSecs64)
+			//fmt.Printf("# /missedCall (%s) ageSecs64=%d < 0\n",calleeId,ageSecs64)
 			ageSecs64 = 0
 		} else {
-			//fmt.Printf("/httpMissedCall (%s) ageSecs64=%d\n",calleeId,ageSecs64)
+			//fmt.Printf("/missedCall (%s) ageSecs64=%d\n",calleeId,ageSecs64)
 		}
 	}
 	// find current state of dbUser.StoreMissedCalls via calleeId
 	var dbEntry DbEntry
 	err := kvMain.Get(dbRegisteredIDs,calleeId,&dbEntry)
 	if err!=nil {
-		fmt.Printf("# /httpMissedCall (%s) failed on get dbRegisteredIDs rip=%s\n",calleeId,remoteAddr)
+		fmt.Printf("# /missedCall (%s) failed on get dbRegisteredIDs rip=%s\n",calleeId,remoteAddr)
 		return
 	}
 	dbUserKey := fmt.Sprintf("%s_%d",calleeId, dbEntry.StartTime)
 	var dbUser DbUser
 	err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 	if err!=nil {
-		fmt.Printf("# /httpMissedCall (%s) failed on dbUserBucket rip=%s\n",dbUserKey,remoteAddr)
+		fmt.Printf("# /missedCall (%s) failed on dbUserBucket rip=%s\n",dbUserKey,remoteAddr)
 		return
 	}
 	if(!dbUser.StoreMissedCalls) {
-		//fmt.Printf("/httpMissedCall (%s) no StoreMissedCalls rip=%s\n",dbUserKey,remoteAddr)
+		//fmt.Printf("/missedCall (%s) no StoreMissedCalls rip=%s\n",dbUserKey,remoteAddr)
 		return
 	}
 
-	//fmt.Printf("/httpMissedCall (%s) missedCall arrived %ds ago\n", calleeId, ageSecs64)
+	//fmt.Printf("/missedCall (%s) missedCall arrived %ds ago\n", calleeId, ageSecs64)
 	callerName := tok[1]
 	callerID := tok[2]
 	// the actual call occured ageSecs64 ago (may be a big number, if caller waits long before aborting the page)
 	timeOfCall := time.Now().Unix() - ageSecs64
 	err,missedCallsSlice := addMissedCall(calleeId, CallerInfo{remoteAddrWithPort,callerName,timeOfCall,callerID})
 	if err==nil {
-		fmt.Printf("/httpMissedCall (%s) caller=%s rip=%s\n", calleeId, callerID, remoteAddr)
+		//fmt.Printf("/missedCall (%s) caller=%s rip=%s\n", calleeId, callerID, remoteAddr)
 
 		// send updated waitingCallerSlice + missedCalls to callee (if (hidden) online)
 		// check if callee is (hidden) online
@@ -514,14 +514,14 @@ func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, r
 		reportHiddenCallee := true
 		reportBusyCallee := false
 		glCalleeId, locHub, globHub, err := GetOnlineCallee(calleeId, ejectOn1stFound, reportBusyCallee,
-			reportHiddenCallee, remoteAddr, "/httpMissedCall")
+			reportHiddenCallee, remoteAddr, "/missedCall")
 		if err != nil {
-			//fmt.Printf("# /httpMissedCall GetOnlineCallee() err=%v\n", err)
+			//fmt.Printf("# /missedCall GetOnlineCallee() err=%v\n", err)
 			return
 		}
 		if glCalleeId != "" {
 			if (locHub!=nil && locHub.IsCalleeHidden) || (globHub!=nil && globHub.IsCalleeHidden) {
-				//fmt.Printf("/httpMissedCall (%s) isHiddenOnline\n", glCalleeId)
+				//fmt.Printf("/missedCall (%s) isHiddenOnline\n", glCalleeId)
 				calleeIsHiddenOnline = true
 			}
 		}
@@ -627,7 +627,6 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 
 	if calleeIsHiddenOnline || calleeHasPushChannel {
 		// yes, urlID can be notified
-		// problem is that we don't get any event if the caller gives up at this point (TODO still true?)
 		fmt.Printf("/canbenotified (%s) yes tw=%s onl=%v nickname=%s rip=%s\n",
 			urlID, dbUser.Email2, calleeIsHiddenOnline, calleeName, remoteAddr)
 		fmt.Fprintf(w,"ok|"+calleeName)
