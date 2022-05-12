@@ -33,8 +33,10 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 	}
 	if urlID!="" && calleeID!=urlID {
 		// this happens bc someone with calleeID in the cookie is now trying to use urlID via url
-		fmt.Printf("# /getsettings fail calleeID(%s) != urlID(%s) rip=%s\n", calleeID, urlID, remoteAddr)
+		fmt.Printf("# /getsettings urlID(%s) != calleeID(%s) rip=%s\n", urlID, calleeID, remoteAddr)
 		return
+// hack
+//		calleeID = urlID
 	}
 
 	var dbEntry DbEntry
@@ -315,6 +317,8 @@ func httpGetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 	if urlID!=calleeID {
 		fmt.Printf("# /getcontacts urlID=%s != calleeID=%s %s\n",urlID,calleeID, remoteAddr)
 		return
+// hack
+//		calleeID = urlID
 	}
 	var callerInfoMap map[string]string // callerID -> name
 	err := kvContacts.Get(dbContactsBucket,calleeID,&callerInfoMap)
@@ -346,6 +350,8 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 	if urlID!="" && urlID!=calleeID {
 		fmt.Printf("# /setcontact urlID=%s != calleeID=%s %s\n", urlID, calleeID, remoteAddr)
 		return
+// hack
+//		calleeID = urlID
 	}
 
 	contactID := ""

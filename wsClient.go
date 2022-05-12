@@ -1095,59 +1095,29 @@ func (c *WsClient) peerConHasEnded(comment string) {
 			c.connType, c.calleeID, peerType, c.hub.CallDurationSecs, localPeerCon, remotePeerCon,
 			calleeRemoteAddr, callerRemoteAddr, callerID, comment)
 
-
 		// add an entry to missed calls, but only if hub.CallDurationSecs==0
 		// TODO is it a missed call if callee himself denied the call? (currently yes)
 		if c.hub.CallDurationSecs<=0 {
 			if logWantedFor("missedcall") {
 				fmt.Printf("%s (%s) store missedCall %s ...\n", c.connType, c.calleeID, c.RemoteAddr)
 			}
-			var missedCallsSlice []CallerInfo
 			userKey := c.calleeID + "_" + strconv.FormatInt(int64(c.hub.registrationStartTime),10)
 			var dbUser DbUser
 			err := kvMain.Get(dbUserBucket, userKey, &dbUser)
 			if err!=nil {
 				fmt.Printf("# %s (%s) failed to get dbUser\n",c.connType,c.calleeID)
 			} else if dbUser.StoreMissedCalls {
-				if logWantedFor("missedcall") {
-					fmt.Printf("%s (%s) store missedCall hub.CallerClient avail %s\n",
-						c.connType, c.calleeID, c.RemoteAddr)
-				}
-				err = kvCalls.Get(dbMissedCalls,c.calleeID,&missedCallsSlice)
-				if err!=nil {
-					if strings.Index(err.Error(),"key not found")<0 {
-						fmt.Printf("# %s (%s) failed to get missedCalls %s\n",
-							c.connType, c.calleeID, c.RemoteAddr)
-					}
-				}
-				if logWantedFor("missedcall") {
-					fmt.Printf("%s (%s) store missedCall old count %d %s\n",
-						c.connType, c.calleeID, len(missedCallsSlice), c.RemoteAddr)
-				}
-				// make sure we only keep the latest 10 missed calls
-				if len(missedCallsSlice)>=10 {
-					missedCallsSlice = missedCallsSlice[len(missedCallsSlice)-9:]
-				}
-				caller := CallerInfo{c.RemoteAddr, callerName, time.Now().Unix(), callerID}
-				missedCallsSlice = append(missedCallsSlice, caller)
-				err = kvCalls.Put(dbMissedCalls, c.calleeID, missedCallsSlice, true) // skipConfirm
-				if err!=nil {
-					fmt.Printf("# %s (%s) failed to store dbMissedCalls %s err=%v\n",
-						c.connType, c.calleeID, c.RemoteAddr, err)
-				} else {
-					if logWantedFor("missedcall") {
-						fmt.Printf("%s (%s) stored missedCall %s\n", c.connType, c.calleeID, c.RemoteAddr)
-					}
-					// TODO send missedCallsSlice to callee?
-				}
+				addMissedCall(c.calleeID, CallerInfo{callerRemoteAddr, callerName, time.Now().Unix(), callerID})
 			}
 		}
 	}
 
-	// need to be nil for next session
-	c.hub.HubMutex.Lock()
-	c.hub.CallerClient = nil
-	c.hub.HubMutex.Unlock()
+	if c.isCallee {
+		// needs to be nil for next session
+		c.hub.HubMutex.Lock()
+		c.hub.CallerClient = nil
+		c.hub.HubMutex.Unlock()
+	}
 
 	if logWantedFor("attach") {
 		fmt.Printf("%s (%s) peerConHasEnded clr CallerIp %s\n",

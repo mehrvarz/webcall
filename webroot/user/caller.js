@@ -890,6 +890,7 @@ function goodby() {
 			let ageSecs = Math.floor((Date.now()-missedCallTime)/1000);
 			needToStoreMissedCall = needToStoreMissedCall+"|"+ageSecs;
 		}
+		// calleeID|callerName|callerID|ageSecs
 		gLog('goodby needToStoreMissedCall '+needToStoreMissedCall);
 		// tell server to store a missed call entry
 		// doing sync xhr in goodby/beforeunload (see: last (7th) parameter = true)

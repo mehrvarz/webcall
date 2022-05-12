@@ -273,22 +273,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 			fmt.Printf("# /notifyCallee (%s) no notification sent\n", urlID)
 			if(dbUser.StoreMissedCalls) {
 				fmt.Printf("# /notifyCallee (%s) no notification sent - store as missed call\n", urlID)
-				caller := CallerInfo{remoteAddrWithPort, callerName, time.Now().Unix(), callerId}
-				var missedCallsSlice []CallerInfo
-				err := kvCalls.Get(dbMissedCalls, urlID, &missedCallsSlice)
-				if err!=nil && strings.Index(err.Error(),"key not found")<0 {
-					fmt.Printf("# /notifyCallee (%s) failed to read dbMissedCalls %s (%s) err=%v\n",
-						urlID, remoteAddr, callerId, err)
-				}
-				// make sure we never have more than 10 missed calls
-				if missedCallsSlice != nil && len(missedCallsSlice) >= 10 {
-					missedCallsSlice = missedCallsSlice[1:]
-				}
-				missedCallsSlice = append(missedCallsSlice, caller)
-				err = kvCalls.Put(dbMissedCalls, urlID, missedCallsSlice, false)
-				if err != nil {
-					fmt.Printf("# /notifyCallee (%s) failed to store dbMissedCalls %v\n", urlID, err)
-				}
+				addMissedCall(urlID, CallerInfo{remoteAddrWithPort,callerName,time.Now().Unix(),callerId})
 			}
 		}
 	}
@@ -450,20 +435,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	if callerGaveUp && dbUser.StoreMissedCalls {
 		// store missed call
 		//fmt.Printf("/notifyCallee (%s) store missed call\n", urlID)
-		err = kvCalls.Get(dbMissedCalls, urlID, &missedCallsSlice)
-		if err!=nil && strings.Index(err.Error(),"key not found")<0 {
-			fmt.Printf("# /notifyCallee (%s) failed to read dbMissedCalls %s (%s) err=%v\n",
-				urlID, remoteAddr, callerId, err)
-		}
-		// make sure we never have more than 10 missed calls
-		if len(missedCallsSlice) >= 10 {
-			missedCallsSlice = missedCallsSlice[len(missedCallsSlice)-9:]
-		}
-		missedCallsSlice = append(missedCallsSlice, waitingCaller)
-		err = kvCalls.Put(dbMissedCalls, urlID, missedCallsSlice, false)
-		if err != nil {
-			fmt.Printf("# /notifyCallee (%s) failed to store dbMissedCalls %v\n", urlID, err)
-		}
+		_,missedCallsSlice = addMissedCall(urlID, waitingCaller)
 	}
 
 	if calleeWsClient==nil {
@@ -525,29 +497,14 @@ func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, r
 		//fmt.Printf("/httpMissedCall (%s) no StoreMissedCalls rip=%s\n",dbUserKey,remoteAddr)
 		return
 	}
-	// load, add, store missedCalls
-	var missedCallsSlice []CallerInfo
-	err = kvCalls.Get(dbMissedCalls,calleeId,&missedCallsSlice)
-	if err!=nil {
-		// no error, just ignore
-		//fmt.Printf("/httpMissedCall (%s) fail read dbMissedCalls %s err=%v\n", calleeId, remoteAddr, err)
-	}
-	// make sure we never show more than 10 missed calls
-	if missedCallsSlice!=nil && len(missedCallsSlice)>=10 {
-		missedCallsSlice = missedCallsSlice[1:]
-	}
+
 	//fmt.Printf("/httpMissedCall (%s) missedCall arrived %ds ago\n", calleeId, ageSecs64)
 	callerName := tok[1]
 	callerID := tok[2]
-
 	// the actual call occured ageSecs64 ago (may be a big number, if caller waits long before aborting the page)
 	timeOfCall := time.Now().Unix() - ageSecs64
-	caller := CallerInfo{remoteAddrWithPort,callerName,timeOfCall,callerID}
-	missedCallsSlice = append(missedCallsSlice, caller)
-	err = kvCalls.Put(dbMissedCalls, calleeId, missedCallsSlice, true) // skipConfirm
-	if err!=nil {
-		fmt.Printf("# /httpMissedCall (%s) fail store dbMissedCalls err=%v rip=%s\n", calleeId, err, remoteAddr)
-	} else {
+	err,missedCallsSlice := addMissedCall(calleeId, CallerInfo{remoteAddrWithPort,callerName,timeOfCall,callerID})
+	if err==nil {
 		fmt.Printf("/httpMissedCall (%s) caller=%s rip=%s\n", calleeId, callerID, remoteAddr)
 
 		// send updated waitingCallerSlice + missedCalls to callee (if (hidden) online)
@@ -680,6 +637,7 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 	// this user can NOT rcv push msg (not pushable)
 	fmt.Printf("/canbenotified (%s) not (hidden) online / no push channel %s (%s)\n",urlID,remoteAddr, callerID)
 	if(dbUser.StoreMissedCalls) {
+/*
 		// store missed call
 		var missedCallsSlice []CallerInfo
 		err := kvCalls.Get(dbMissedCalls,urlID,&missedCallsSlice)
@@ -698,8 +656,33 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 			fmt.Printf("# /canbenotified (%s) failed to store dbMissedCalls %s (%s) err=%v\n",
 				urlID, remoteAddr, callerID, err)
 		}
+*/
+		addMissedCall(urlID, CallerInfo{remoteAddrWithPort,callerName,time.Now().Unix(),callerID})
 	}
 	return
+}
+
+func addMissedCall(urlID string, caller CallerInfo) (error, []CallerInfo) {
+	var missedCallsSlice []CallerInfo
+	err := kvCalls.Get(dbMissedCalls,urlID,&missedCallsSlice)
+	if err!=nil && strings.Index(err.Error(),"key not found")<0 {
+		fmt.Printf("# addMissedCall (%s) failed to read dbMissedCalls (%v) err=%v\n",
+			urlID, caller, err)
+	}
+	// make sure we never show more than 10 missed calls
+	if len(missedCallsSlice)>=10 {
+		missedCallsSlice = missedCallsSlice[len(missedCallsSlice)-9:]
+	}
+	missedCallsSlice = append(missedCallsSlice, caller)
+	err = kvCalls.Put(dbMissedCalls, urlID, missedCallsSlice, true) // skipConfirm
+	if err!=nil {
+		fmt.Printf("# addMissedCall (%s) failed to store dbMissedCalls (%v) err=%v\n", urlID, caller, err)
+		return err,nil
+	}
+	if logWantedFor("missedcall") {
+		fmt.Printf("addMissedCall (%s) ok (%v)\n", urlID, caller)
+	}
+	return err,missedCallsSlice
 }
 
 func addContact(calleeID string, callerID string, callerName string, comment string) error {
