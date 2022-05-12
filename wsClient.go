@@ -422,6 +422,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 
 		c.calleeInitReceived.Set(true)
 		c.hub.CalleeLogin.Set(true)
+		c.pickupSent.Set(false)
 		// doUnregister() will call setDeadline(0) and processTimeValues() if this is false; then set it true
 		c.clearOnCloseDone = false // TODO make it atomic?
 
@@ -600,7 +601,14 @@ func (c *WsClient) receiveProcess(message []byte) {
 
 	if cmd=="cancel" {
 		//fmt.Printf("%s (%s) cmd=cancel payload=%s %s\n",c.connType,c.calleeID,payload,c.RemoteAddr)
-		c.peerConHasEnded("cancel")
+//		c.peerConHasEnded("cancel")
+		if c.hub==nil {
+			fmt.Printf("# %s cmd=cancel but c.hub==nil %s (%s)\n",c.connType,c.RemoteAddr,payload)
+		} else if c.hub.CalleeClient==nil {
+			fmt.Printf("# %s cmd=cancel but c.hub.CalleeClient==nil %s (%s)\n",c.connType,c.RemoteAddr,payload)
+		} else {
+			c.hub.CalleeClient.peerConHasEnded("cancel")
+		}
 		return
 	}
 
@@ -835,10 +843,15 @@ func (c *WsClient) receiveProcess(message []byte) {
 
 		if len(tok)>=2 && (constate=="Incoming" || constate=="Connected" || constate=="ConForce") {
 			//fmt.Printf("%s (%s) set ConnectedToPeer\n", c.connType, c.calleeID)
+			// note: we only make sure that callee has this always set
+			// if we only get "Incoming" for callee, then isConnectedToPeer will not be set for CallerClient
 			c.isConnectedToPeer.Set(true) // this is peer-connect, not full media-connect
 			if !c.isCallee {
 				// when the caller sends "log", the callee also becomes peerConnected
 				c.hub.CalleeClient.isConnectedToPeer.Set(true)
+//			} else {
+//				// test
+//				c.hub.CallerClient.isConnectedToPeer.Set(true)
 			}
 
 			c.hub.LocalP2p = false
@@ -1000,30 +1013,16 @@ func (c *WsClient) peerConHasEnded(comment string) {
 		return
 	}
 
-	peerType := "caller"
-	if c.isCallee {
-		peerType = "callee"
-	}
+//	peerType := "caller"
+//	if c.isCallee {
+//		peerType = "callee"
+//	}
 
 	if c.hub==nil {
-		fmt.Printf("# %s (%s) peerConHasEnded %s con=%v media=%v c.hub==nil (%s)\n",
-			c.connType, c.calleeID, peerType,
+		fmt.Printf("# %s (%s) peerConHasEnded con=%v media=%v c.hub==nil (%s)\n",
+			c.connType, c.calleeID, //peerType,
 			c.isConnectedToPeer.Get(), c.isMediaConnectedToPeer.Get(), comment)
 		return
-	}
-
-	if c.isCallee {
-		// prepare for next session
-		c.pickupSent.Set(false)
-/*
-		c.hub.HubMutex.RLock()
-		if c.hub.CalleeClient!=nil {
-			// reset double init protection
-			c.hub.CalleeClient.calleeInitReceived.Set(false)
-		}
-		c.hub.HubMutex.RUnlock()
-*/
-		c.calleeInitReceived.Set(false)
 	}
 
 	c.hub.setDeadline(0,comment)	// may call peerConHasEnded()
@@ -1033,18 +1032,37 @@ func (c *WsClient) peerConHasEnded(comment string) {
 		c.hub.lastCallStartTime = 0
 	}
 
+// test
+	if !c.isCallee {
+		fmt.Printf("# %s (%s) peerConHasEnded (ignore caller) con=%v media=%v (%s)\n",
+			c.connType, c.calleeID, //peerType,
+			c.isConnectedToPeer.Get(), c.isMediaConnectedToPeer.Get(), comment)
+		return
+	}
+
+//	if c.isCallee {
+		// prepare for next session
+		c.calleeInitReceived.Set(false)
+//		c.pickupSent.Set(false)
+//	}
+
+// TODO bei caller hangup kommt caller mit !c.isConnectedToPeer (auch wenn es bei callee gesetzt ist)
+// so this is only set for callee
+// I think the whole peerConHasEnded() is relevant for callee only
 	if !c.isConnectedToPeer.Get() {
+/*
 		// no peerconnect: call was hangup
 		if logWantedFor("attach") {
 			fmt.Printf("%s (%s) peerConHasEnded %s no peerconnect %s (%s)\n",
 				c.connType, c.calleeID, peerType, c.RemoteAddr, comment)
 		}
+*/
 	} else {
 		// we are disconnection a peer connect
 		if logWantedFor("attach") {
-			fmt.Printf("%s (%s) peerConHasEnded %s con=%v media=%v (%s)\n",
-				c.connType, c.calleeID, peerType, c.isConnectedToPeer.Get(),
-				c.isMediaConnectedToPeer.Get(), comment)
+			fmt.Printf("%s (%s) peerConHasEnded con=%v media=%v (%s)\n",
+				c.connType, c.calleeID, //peerType,
+				c.isConnectedToPeer.Get(), c.isMediaConnectedToPeer.Get(), comment)
 		}
 
 		localPeerCon := "?"
@@ -1095,8 +1113,9 @@ func (c *WsClient) peerConHasEnded(comment string) {
 			recentTurnCalleeIpMutex.Unlock()
 		}
 		c.hub.HubMutex.RUnlock()
-		fmt.Printf("%s (%s) PEER %s DISC📴 %ds %s/%s %s <- %s (%s) %s\n",
-			c.connType, c.calleeID, peerType, c.hub.CallDurationSecs, localPeerCon, remotePeerCon,
+		fmt.Printf("%s (%s) PEER DISC📴 %ds %s/%s %s <- %s (%s) %s\n",
+			c.connType, c.calleeID, //peerType,
+			c.hub.CallDurationSecs, localPeerCon, remotePeerCon,
 			calleeRemoteAddr, callerRemoteAddr, callerID, comment)
 
 		// add an entry to missed calls, but only if hub.CallDurationSecs==0
@@ -1114,29 +1133,18 @@ func (c *WsClient) peerConHasEnded(comment string) {
 				addMissedCall(c.calleeID, CallerInfo{callerRemoteAddr, callerName, time.Now().Unix(), callerID})
 			}
 		}
-	}
 
-/*
-	if c.isCallee {
-		// needs to be nil for next session
-// TODO problem is, if we don't get a peerConHasEnded() by callee,
-// then we get "CallerClient already set" on the next session of this callee
-		c.hub.HubMutex.Lock()
-		c.hub.CallerClient = nil
-		c.hub.HubMutex.Unlock()
-	}
-*/
-
-	//if logWantedFor("attach") {
-	//	fmt.Printf("%s (%s) peerConHasEnded clr CallerIp %s\n", c.connType, c.calleeID, c.globalCalleeID)
-	//}
-	err := StoreCallerIpInHubMap(c.globalCalleeID, "", false)
-	if err!=nil {
-		// err "key not found": callee has already signed off - can be ignored
-		//if strings.Index(err.Error(),"key not found")<0 {
-			fmt.Printf("# %s (%s) peerConHasEnded clr callerIp %s err=%v\n",
-				c.connType, c.calleeID, c.globalCalleeID, err)
+		//if logWantedFor("attach") {
+		//	fmt.Printf("%s (%s) peerConHasEnded clr CallerIp %s\n", c.connType, c.calleeID, c.globalCalleeID)
 		//}
+		err := StoreCallerIpInHubMap(c.globalCalleeID, "", false)
+		if err!=nil {
+			// err "key not found": callee has already signed off - can be ignored
+			//if strings.Index(err.Error(),"key not found")<0 {
+				fmt.Printf("# %s (%s) peerConHasEnded clr callerIp %s err=%v\n",
+					c.connType, c.calleeID, c.globalCalleeID, err)
+			//}
+		}
 	}
 
 	//if logWantedFor("attach") {

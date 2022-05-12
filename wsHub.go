@@ -50,26 +50,13 @@ func newHub(maxRingSecs int, maxTalkSecsIfNoP2p int, startTime int64) *Hub {
 func (h *Hub) setDeadline(secs int, comment string) {
 	if h.timer!=nil {
 		if logWantedFor("calldur") {
-			fmt.Printf("setDeadline (%s) kill old timer; new secs=%d (%s)\n",
+			fmt.Printf("setDeadline (%s) kill running timer; new secs=%d (%s)\n",
 				h.CalleeClient.calleeID, secs, comment)
 		}
-		// kill old timer early
+		// kill running timer early (trigger h.timer.C below)
 		h.timerCanceled <- struct{}{}
-		//if(secs>0) {
-			// let old timer be killed before we set a new one
-			time.Sleep(10 * time.Millisecond)
-		//}
-/*
-		if h.timer!=nil {
-			if !h.timer.Stop() {
-				if(secs>0) {
-					// before we overwrite h.timer (with a NewTimer below), let timerCanceled strike
-					time.Sleep(10 * time.Millisecond)
-				}
-			}
-			h.timer=nil	// will be done below anyway, so just to be sure
-		}
-*/
+		// let running timer be killed before we set a new one
+		time.Sleep(10 * time.Millisecond)
 	}
 
 	if(secs>0) {
@@ -82,27 +69,22 @@ func (h *Hub) setDeadline(secs int, comment string) {
 			timeStart := time.Now()
 			select {
 			case <-h.timer.C:
-				// do something for timeout, such as disconnect
-				// timer valid: we need to disconnect the (relayed) clients (if still connected)
-				if h.CalleeClient!=nil {
-					// otherwise we disconnect this callee
-					if h.CalleeClient.isConnectedToPeer.Get() {
-						fmt.Printf("setDeadline (%s) reached; end session now (secs=%d %v)\n",
-							h.CalleeClient.calleeID, secs, timeStart.Format("2006-01-02 15:04:05"))
-						h.doBroadcast([]byte("cancel|c"))
-						h.timer = nil
-// careful: peerConHasEnded() may call us back / this is why we set h.timer = nil first
-						h.CalleeClient.peerConHasEnded("deadline")
-						if(h.CallerClient!=nil) {
-							// deleting recentTurnCalleeIps entry, so it does not exist on quick reconnect
-							recentTurnCalleeIpMutex.Lock()
-							delete(recentTurnCalleeIps,h.CallerClient.RemoteAddrNoPort)
-							recentTurnCalleeIpMutex.Unlock()
-						}
-
-// TODO must clear ConnectedCallerIp
-//	err := StoreCallerIpInHubMap(c.globalCalleeID, "", false)
+				// timer event: we need to disconnect the (relayed) clients (if still connected)
+				h.timer = nil
+				if h.CalleeClient!=nil && h.CalleeClient.isConnectedToPeer.Get() {
+					fmt.Printf("setDeadline (%s) reached; end session now (secs=%d %v)\n",
+						h.CalleeClient.calleeID, secs, timeStart.Format("2006-01-02 15:04:05"))
+					h.doBroadcast([]byte("cancel|c"))
+					// NOTE: peerConHasEnded() may call us back / this is why we set h.timer = nil first
+					h.CalleeClient.peerConHasEnded("deadline")
+/* peerConHasEnded() takes care of this
+					if(h.CallerClient!=nil) {
+						// deleting recentTurnCalleeIps entry, so it does not exist on quick reconnect
+						recentTurnCalleeIpMutex.Lock()
+						delete(recentTurnCalleeIps,h.CallerClient.RemoteAddrNoPort)
+						recentTurnCalleeIpMutex.Unlock()
 					}
+*/
 				}
 			case <-h.timerCanceled:
 				if logWantedFor("calldur") {
