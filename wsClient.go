@@ -875,59 +875,61 @@ func (c *WsClient) receiveProcess(message []byte) {
 			}
 
 			if constate=="Connected" || constate=="ConForce" {
-				c.isMediaConnectedToPeer.Set(true) // this is full media-connect
-				if !c.isCallee {
-					// when the caller sends "log", the callee also becomes media-Connected
-					c.hub.CalleeClient.isMediaConnectedToPeer.Set(true)
-				} else {
-					// callee reports: peer connected
-					if c.hub.maxTalkSecsIfNoP2p>0 && (!c.hub.LocalP2p || !c.hub.RemoteP2p) {
-						// relayed con: set maxTalkSecsIfNoP2p deadline
-						if logWantedFor("calldur") {
-							fmt.Printf("%s (%s) setDeadline maxTalkSecsIfNoP2p %d %v %v\n",
-								c.connType, c.calleeID, c.hub.maxTalkSecsIfNoP2p, c.hub.LocalP2p, c.hub.RemoteP2p)
-						}
-						c.hub.setDeadline(c.hub.maxTalkSecsIfNoP2p,"peer con")
+				if !c.isMediaConnectedToPeer.Get() {
+					c.isMediaConnectedToPeer.Set(true) // this is full media-connect
+					if !c.isCallee {
+						// when the caller sends "log", the callee also becomes media-Connected
+						c.hub.CalleeClient.isMediaConnectedToPeer.Set(true)
+					} else {
+						// callee reports: peer connected
+						if c.hub.maxTalkSecsIfNoP2p>0 && (!c.hub.LocalP2p || !c.hub.RemoteP2p) {
+							// relayed con: set maxTalkSecsIfNoP2p deadline
+							if logWantedFor("calldur") {
+								fmt.Printf("%s (%s) setDeadline maxTalkSecsIfNoP2p %d %v %v\n", c.connType,
+									c.calleeID, c.hub.maxTalkSecsIfNoP2p, c.hub.LocalP2p, c.hub.RemoteP2p)
+							}
+							c.hub.setDeadline(c.hub.maxTalkSecsIfNoP2p,"peer con")
 
-						// deliver max talktime to both clients
-						c.hub.doBroadcast(
-							[]byte("sessionDuration|"+strconv.FormatInt(int64(c.hub.maxTalkSecsIfNoP2p),10)))
+							// deliver max talktime to both clients
+							c.hub.doBroadcast(
+								[]byte("sessionDuration|"+strconv.FormatInt(int64(c.hub.maxTalkSecsIfNoP2p),10)))
+						}
 					}
-				}
 
-				if maxClientRequestsPer30min>0 && c.RemoteAddr!=outboundIP && c.RemoteAddr!="127.0.0.1" {
-					clientRequestsMutex.Lock()
-					clientRequestsMap[c.RemoteAddrNoPort] = nil
-					clientRequestsMutex.Unlock()
-				}
-				// TODO also reset calleeLoginMap?
+					if maxClientRequestsPer30min>0 && c.RemoteAddr!=outboundIP && c.RemoteAddr!="127.0.0.1" {
+						clientRequestsMutex.Lock()
+						clientRequestsMap[c.RemoteAddrNoPort] = nil
+						clientRequestsMutex.Unlock()
+					}
+					// TODO also reset calleeLoginMap?
 
-				if !c.isCallee {
-					if constate=="ConForce" {
-						// test-caller sends this msg to callee, test-clients do not really connect p2p
-						c.hub.CalleeClient.Write([]byte("callerConnect|"))
-					} else if constate=="Connected" {
-						// caller is reporting peerCon: both peers are now directly connected
-						// now force-disconnect the caller
-						readConfigLock.RLock()
-						myDisconCalleeOnPeerConnected := disconCalleeOnPeerConnected
-						myDisconCallerOnPeerConnected := disconCallerOnPeerConnected
-						readConfigLock.RUnlock()
-						if myDisconCalleeOnPeerConnected || myDisconCallerOnPeerConnected {
-							time.Sleep(20 * time.Millisecond)
-						}
-						if myDisconCalleeOnPeerConnected {
-							// this is currently never done
-							fmt.Printf("%s peer callee disconnect %s %s\n",
-								c.connType, c.calleeID, c.RemoteAddr)
-							c.hub.CalleeClient.Close("disconCalleeOnPeerConnected")
-						}
-						if myDisconCallerOnPeerConnected {
-							// this is currently always done
-							if c.hub.CallerClient != nil {
-								//fmt.Printf("%s (%s) peer caller disconnect %s\n",
-								//	c.connType, c.calleeID, c.RemoteAddr)
-								c.hub.CallerClient.Close("disconCallerOnPeerConnected")
+					if !c.isCallee {
+						if constate=="ConForce" {
+							// test-caller sends this msg to callee, test-clients do not really connect p2p
+							c.hub.CalleeClient.Write([]byte("callerConnect|"))
+						} else if constate=="Connected" {
+							// caller is reporting peerCon: both peers are now directly connected
+							// now force-disconnect the caller
+							readConfigLock.RLock()
+							myDisconCalleeOnPeerConnected := disconCalleeOnPeerConnected
+							myDisconCallerOnPeerConnected := disconCallerOnPeerConnected
+							readConfigLock.RUnlock()
+							if myDisconCalleeOnPeerConnected || myDisconCallerOnPeerConnected {
+								time.Sleep(20 * time.Millisecond)
+							}
+							if myDisconCalleeOnPeerConnected {
+								// this is currently never done
+								fmt.Printf("%s peer callee disconnect %s %s\n",
+									c.connType, c.calleeID, c.RemoteAddr)
+								c.hub.CalleeClient.Close("disconCalleeOnPeerConnected")
+							}
+							if myDisconCallerOnPeerConnected {
+								// this is currently always done
+								if c.hub.CallerClient != nil {
+									//fmt.Printf("%s (%s) peer caller disconnect %s\n",
+									//	c.connType, c.calleeID, c.RemoteAddr)
+									c.hub.CallerClient.Close("disconCallerOnPeerConnected")
+								}
 							}
 						}
 					}
