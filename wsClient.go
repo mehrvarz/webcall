@@ -1035,6 +1035,10 @@ func (c *WsClient) peerConHasEnded(comment string) {
 			fmt.Printf("%s (%s) peerConHasEnded %s no peerconnect %s (%s)\n",
 				c.connType, c.calleeID, peerType, c.RemoteAddr, comment)
 		}
+
+		c.hub.HubMutex.Lock()
+		c.hub.CallerClient = nil
+		c.hub.HubMutex.Unlock()
 	} else {
 		// we are disconnection a peer connect
 		if logWantedFor("attach") {
@@ -1096,27 +1100,27 @@ func (c *WsClient) peerConHasEnded(comment string) {
 			calleeRemoteAddr, callerRemoteAddr, callerID, comment)
 
 		// add an entry to missed calls, but only if hub.CallDurationSecs==0
-		// TODO is it a missed call if callee himself denied the call? (currently yes)
+		// TODO is it a missed call if callee himself denies the call? (currently yes)
 		if c.hub.CallDurationSecs<=0 {
-			if logWantedFor("missedcall") {
-				fmt.Printf("%s (%s) store missedCall %s ...\n", c.connType, c.calleeID, c.RemoteAddr)
-			}
+			//if logWantedFor("missedcall") {
+			//	fmt.Printf("%s (%s) store missedCall %s ...\n", c.connType, c.calleeID, c.RemoteAddr)
+			//}
 			userKey := c.calleeID + "_" + strconv.FormatInt(int64(c.hub.registrationStartTime),10)
 			var dbUser DbUser
 			err := kvMain.Get(dbUserBucket, userKey, &dbUser)
 			if err!=nil {
-				fmt.Printf("# %s (%s) failed to get dbUser\n",c.connType,c.calleeID)
+				fmt.Printf("# %s (%s) failed to get dbUser err=%v\n",c.connType,c.calleeID,err)
 			} else if dbUser.StoreMissedCalls {
 				addMissedCall(c.calleeID, CallerInfo{callerRemoteAddr, callerName, time.Now().Unix(), callerID})
 			}
 		}
-	}
 
-	if c.isCallee {
-		// needs to be nil for next session
-		c.hub.HubMutex.Lock()
-		c.hub.CallerClient = nil
-		c.hub.HubMutex.Unlock()
+		if c.isCallee {
+			// needs to be nil for next session
+			c.hub.HubMutex.Lock()
+			c.hub.CallerClient = nil
+			c.hub.HubMutex.Unlock()
+		}
 	}
 
 	//if logWantedFor("attach") {
