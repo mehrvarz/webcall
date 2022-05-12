@@ -416,6 +416,10 @@ func (c *WsClient) receiveProcess(message []byte) {
 			return
 		}
 
+		c.hub.HubMutex.Lock()
+		c.hub.CallerClient = nil
+		c.hub.HubMutex.Unlock()
+
 		c.calleeInitReceived.Set(true)
 		c.hub.CalleeLogin.Set(true)
 		// doUnregister() will call setDeadline(0) and processTimeValues() if this is false; then set it true
@@ -1035,10 +1039,6 @@ func (c *WsClient) peerConHasEnded(comment string) {
 			fmt.Printf("%s (%s) peerConHasEnded %s no peerconnect %s (%s)\n",
 				c.connType, c.calleeID, peerType, c.RemoteAddr, comment)
 		}
-
-		c.hub.HubMutex.Lock()
-		c.hub.CallerClient = nil
-		c.hub.HubMutex.Unlock()
 	} else {
 		// we are disconnection a peer connect
 		if logWantedFor("attach") {
@@ -1114,14 +1114,18 @@ func (c *WsClient) peerConHasEnded(comment string) {
 				addMissedCall(c.calleeID, CallerInfo{callerRemoteAddr, callerName, time.Now().Unix(), callerID})
 			}
 		}
-
-		if c.isCallee {
-			// needs to be nil for next session
-			c.hub.HubMutex.Lock()
-			c.hub.CallerClient = nil
-			c.hub.HubMutex.Unlock()
-		}
 	}
+
+/*
+	if c.isCallee {
+		// needs to be nil for next session
+// TODO problem is, if we don't get a peerConHasEnded() by callee,
+// then we get "CallerClient already set" on the next session of this callee
+		c.hub.HubMutex.Lock()
+		c.hub.CallerClient = nil
+		c.hub.HubMutex.Unlock()
+	}
+*/
 
 	//if logWantedFor("attach") {
 	//	fmt.Printf("%s (%s) peerConHasEnded clr CallerIp %s\n", c.connType, c.calleeID, c.globalCalleeID)
