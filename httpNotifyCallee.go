@@ -637,26 +637,6 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 	// this user can NOT rcv push msg (not pushable)
 	fmt.Printf("/canbenotified (%s) not (hidden) online / no push channel %s (%s)\n",urlID,remoteAddr, callerID)
 	if(dbUser.StoreMissedCalls) {
-/*
-		// store missed call
-		var missedCallsSlice []CallerInfo
-		err := kvCalls.Get(dbMissedCalls,urlID,&missedCallsSlice)
-		if err!=nil && strings.Index(err.Error(),"key not found")<0 {
-			fmt.Printf("# /canbenotified (%s) failed to read dbMissedCalls %s (%s) err=%v\n",
-				urlID, remoteAddr, callerID, err)
-		}
-		// make sure we never show more than 10 missed calls
-		if len(missedCallsSlice)>=10 {
-			missedCallsSlice = missedCallsSlice[len(missedCallsSlice)-9:]
-		}
-		caller := CallerInfo{remoteAddrWithPort,callerName,time.Now().Unix(),callerID}
-		missedCallsSlice = append(missedCallsSlice, caller)
-		err = kvCalls.Put(dbMissedCalls, urlID, missedCallsSlice, true) // skipConfirm
-		if err!=nil {
-			fmt.Printf("# /canbenotified (%s) failed to store dbMissedCalls %s (%s) err=%v\n",
-				urlID, remoteAddr, callerID, err)
-		}
-*/
 		addMissedCall(urlID, CallerInfo{remoteAddrWithPort,callerName,time.Now().Unix(),callerID})
 	}
 	return
@@ -674,7 +654,7 @@ func addMissedCall(urlID string, caller CallerInfo) (error, []CallerInfo) {
 		missedCallsSlice = missedCallsSlice[len(missedCallsSlice)-9:]
 	}
 	missedCallsSlice = append(missedCallsSlice, caller)
-	err = kvCalls.Put(dbMissedCalls, urlID, missedCallsSlice, true) // skipConfirm
+	err = kvCalls.Put(dbMissedCalls, urlID, missedCallsSlice, true) // TODO: skipConfirm really?
 	if err!=nil {
 		fmt.Printf("# addMissedCall (%s) failed to store dbMissedCalls (%v) err=%v\n", urlID, caller, err)
 		return err,nil
