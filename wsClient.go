@@ -1099,7 +1099,6 @@ func (c *WsClient) peerConHasEnded(comment string) {
 		callerRemoteAddr := ""
 		callerID := ""
 		callerName := ""
-
 		c.hub.HubMutex.RLock()
 		if c.hub.CalleeClient!=nil {
 			calleeRemoteAddr = c.hub.CalleeClient.RemoteAddrNoPort
@@ -1147,6 +1146,11 @@ func (c *WsClient) peerConHasEnded(comment string) {
 					c.connType, c.calleeID, c.globalCalleeID, err)
 			//}
 		}
+
+		// this will prevent NO PEERCON after hangup or on calls shorter than 10s
+		c.hub.HubMutex.Lock()
+		c.hub.CallerClient = nil
+		c.hub.HubMutex.Unlock()
 	}
 
 	//if logWantedFor("attach") {
