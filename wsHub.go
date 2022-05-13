@@ -50,12 +50,12 @@ func newHub(maxRingSecs int, maxTalkSecsIfNoP2p int, startTime int64) *Hub {
 func (h *Hub) setDeadline(secs int, comment string) {
 	if h.timer!=nil {
 		if logWantedFor("calldur") {
-			fmt.Printf("setDeadline (%s) kill running timer; new secs=%d (%s)\n",
+			fmt.Printf("setDeadline (%s) cancel running timer; new secs=%d (%s)\n",
 				h.CalleeClient.calleeID, secs, comment)
 		}
-		// kill running timer early (trigger h.timer.C below)
+		// cancel running timer early (trigger h.timer.C below)
 		h.timerCanceled <- struct{}{}
-		// let running timer be killed before we set a new one
+		// let running timer be canceled before we (might) set a new one
 		time.Sleep(10 * time.Millisecond)
 	}
 
