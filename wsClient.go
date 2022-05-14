@@ -520,6 +520,15 @@ func (c *WsClient) receiveProcess(message []byte) {
 		return
 	}
 
+	if cmd=="missedcall" {
+		// sent by caller on hangup without mediaconnect
+		fmt.Printf("%s (%s) missedcall='%s' callee=%v ip=%s ua=%s\n",
+			c.connType, c.calleeID, payload, c.isCallee, c.RemoteAddr, c.userAgent)
+		//c.hub.CalleeClient.callerTextMsg = payload;
+		httpMissedCall(payload, c.RemoteAddr)
+		return
+	}
+
 	if cmd=="callerOffer" {
 		// caller starting a call - payload is JSON.stringify(localDescription)
 		if c.callerOfferForwarded.Get() {

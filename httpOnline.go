@@ -288,6 +288,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 	return
 }
 
+/*
 func httpAvail(w http.ResponseWriter, r *http.Request, urlID string, urlPath string, remoteAddr string) {
 	checkID := urlPath[7:]
 	if !allowNewAccounts {
@@ -325,6 +326,7 @@ func httpAvail(w http.ResponseWriter, r *http.Request, urlID string, urlPath str
 	fmt.Fprintf(w, "false")
 	return
 }
+*/
 
 func httpNewId(w http.ResponseWriter, r *http.Request, urlID string, calleeID string, remoteAddr string) {
 	// get a random ID that is not yet used in hubmap

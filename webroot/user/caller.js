@@ -820,24 +820,14 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 					}
 					gLog('callee could not be reached (%s)',xhr.responseText);
 					showStatus("Unable to reach "+calleeID+".<br>Please try again later.",-1);
+					wsSend("missedcall|"+goodbyMissedCall);
 					goodbyMissedCall = "";
-					let api = apiPath+"/missedCall?id="+calleeID+"|"+callerName+"|"+callerId;
-					ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-						gLog('/missedCall success');
-					}, function(errString,err) {
-						gLog('# /missedCall xhr error: '+errString+' '+err);
-					});
 				}, function(errString,errcode) {
+					// errcode 504 = timeout
 					gLog('callee could not be reached. xhr err',errString,errcode);
 					showStatus("Unable to reach "+calleeID+".<br>Please try again later.",-1);
+					wsSend("missedcall|"+goodbyMissedCall);
 					goodbyMissedCall = "";
-					// errcode 504 = timeout
-					let api = apiPath+"/missedCall?id="+calleeID+"|"+callerName+"|"+callerId;
-					ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-						gLog('/missedCall success');
-					}, function(errString,err) {
-						gLog('# /missedCall xhr error: '+errString+' '+err);
-					});
 				});
 				return;
 			}
@@ -891,16 +881,8 @@ function goodby() {
 		// in this case the server does NOT call peerConHasEnded(), so we call /missedCall from here
 		// id=format: calleeID|callerName|callerID|ageSecs|msgbox
 		// goodbyMissedCall arrives as urlID but is then tokenized
-		// TODO we must make sure callerName and msgbox are url-encodable
 		gLog('goodbyMissedCall '+goodbyMissedCall);
-		// tell server to store a missed call entry
-		// doing sync xhr in goodby/beforeunload (see: last (7th) parameter = true)
-		let api = apiPath+"/missedCall?id="+goodbyMissedCall;
-		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-			gLog('goodby /missedCall success '+goodbyMissedCall);
-		}, function(errString,err) {
-			gLog('# goodby xhr error '+errString);
-		}, false, true);
+		wsSend("missedcall|"+goodbyTextMsg);
 	} else if(goodbyTextMsg!="" && wsConn) {
 		// goodbyTextMsg is used, when callee is online (peerconnect), but does not pick up (no mediaconnect)
 		// in this case server calls peerConHasEnded() for the callee, where addMissedCall() is generated

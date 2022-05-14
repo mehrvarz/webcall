@@ -16,7 +16,6 @@ import (
 	"strconv"
 	"sort"
 	"encoding/json"
-	"io"
 	"os"
 	"math/rand"
 	"path/filepath"
@@ -462,10 +461,6 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		httpCanbenotified(w, r, urlID, remoteAddr, remoteAddrWithPort)
 		return
 	}
-	if urlPath=="/missedCall" {
-		httpMissedCall(w, r, urlID, remoteAddr, remoteAddrWithPort)
-		return
-	}
 	if urlPath=="/getsettings" {
 		httpGetSettings(w, r, urlID, calleeID, cookie, remoteAddr)
 		return
@@ -475,6 +470,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if urlPath=="/action" {
+		// TODO add cookie check
 		httpActions(w, r, urlID, calleeID, remoteAddr)
 		return
 	}
@@ -491,17 +487,19 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if strings.HasPrefix(urlPath,"/twid") {
+		// TODO add cookie check
 		httpTwId(w, r, urlID, calleeID, cookie, remoteAddr)
 		return
 	}
 	if strings.HasPrefix(urlPath,"/twfollower") {
+		// TODO add cookie check
 		httpTwFollower(w, r, urlID, calleeID, cookie, remoteAddr)
 		return
 	}
-	if strings.HasPrefix(urlPath,"/avail/") {
-		httpAvail(w, r, urlID, urlPath, remoteAddr)
-		return
-	}
+//	if strings.HasPrefix(urlPath,"/avail/") {
+//		httpAvail(w, r, urlID, urlPath, remoteAddr)
+//		return
+//	}
 	if strings.HasPrefix(urlPath,"/register/") {
 		httpRegister(w, r, urlID, urlPath, remoteAddr, startRequestTime)
 		return
@@ -535,6 +533,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w,"normal")
 		return
 	}
+
 	if urlPath=="/message" {
 		// get message from post
 		postBuf := make([]byte, 4096)
@@ -550,6 +549,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+
 	if urlPath=="/logout" {
 		clearCookie(w, r, urlID, remoteAddr, "/logout")
 		return
