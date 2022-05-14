@@ -259,6 +259,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		if client.isCallee && client.isConnectedToPeer.Get() {
 			client.peerConHasEnded("OnClose")
 // TODO tmtmtm call? -> client.hub.CalleeClient.peerConHasEnded("OnClose")
+// we must do this if "onClose isCallee==false" can happen
 		}
 		if err!=nil {
 			client.hub.doUnregister(client, "OnClose "+err.Error())
@@ -1017,7 +1018,7 @@ func (c *WsClient) Write(b []byte) error {
 	return nil
 }
 
-func (c *WsClient) peerConHasEnded(comment string) {
+func (c *WsClient) peerConHasEnded(cause string) {
 	// the peerConnection has ended, either bc one side has sent cmd "cancel"
 	// or bc callee has unregistered
 	if c==nil {
@@ -1033,11 +1034,11 @@ func (c *WsClient) peerConHasEnded(comment string) {
 	if c.hub==nil {
 		fmt.Printf("# %s (%s) peerConHasEnded callee=%v con=%v media=%v c.hub==nil (%s)\n",
 			c.connType, c.calleeID, c.isCallee,
-			c.isConnectedToPeer.Get(), c.isMediaConnectedToPeer.Get(), comment)
+			c.isConnectedToPeer.Get(), c.isMediaConnectedToPeer.Get(), cause)
 		return
 	}
 
-	c.hub.setDeadline(0,comment)	// may call peerConHasEnded()
+	c.hub.setDeadline(0,cause)	// may call peerConHasEnded()
 
 	if c.hub.lastCallStartTime>0 {
 		c.hub.processTimeValues("peerConHasEnded") // will set c.hub.CallDurationSecs
@@ -1048,7 +1049,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 	if !c.isCallee {
 		fmt.Printf("# %s (%s) peerConHasEnded (ignore isCaller) con=%v media=%v (%s)\n",
 			c.connType, c.calleeID, //peerType,
-			c.isConnectedToPeer.Get(), c.isMediaConnectedToPeer.Get(), comment)
+			c.isConnectedToPeer.Get(), c.isMediaConnectedToPeer.Get(), cause)
 		return
 	}
 
@@ -1066,7 +1067,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 		// no peerconnect: was not connected
 		if logWantedFor("attach") {
 			fmt.Printf("%s (%s) peerConHasEnded %s no peerconnect %s (%s)\n",
-				c.connType, c.calleeID, peerType, c.RemoteAddr, comment)
+				c.connType, c.calleeID, peerType, c.RemoteAddr, cause)
 		}
 */
 	} else {
@@ -1074,7 +1075,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 		if logWantedFor("attach") {
 			fmt.Printf("%s (%s) peerConHasEnded isCallee con=%v media=%v (%s)\n",
 				c.connType, c.calleeID,
-				c.isConnectedToPeer.Get(), c.isMediaConnectedToPeer.Get(), comment)
+				c.isConnectedToPeer.Get(), c.isMediaConnectedToPeer.Get(), cause)
 		}
 
 		localPeerCon := "?"
@@ -1127,7 +1128,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 		fmt.Printf("%s (%s) PEER DISC📴 %ds %s/%s %s <- %s (%s) %s\n",
 			c.connType, c.calleeID, //peerType,
 			c.hub.CallDurationSecs, localPeerCon, remotePeerCon,
-			calleeRemoteAddr, callerRemoteAddr, callerID, comment)
+			calleeRemoteAddr, callerRemoteAddr, callerID, cause)
 
 		// add an entry to missed calls, but only if hub.CallDurationSecs==0
 		// TODO is it a missed call if callee denies the call? (currently yes)
@@ -1146,9 +1147,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 				//   but this becomes a double addMissedCall() without msgtext
 				//fmt.Printf("%s (%s) store missedCall msg=(%s)\n", c.connType, c.calleeID, c.callerTextMsg)
 				addMissedCall(c.calleeID, CallerInfo{callerRemoteAddr, callerName, time.Now().Unix(),
-					callerID, c.callerTextMsg}, "client-hangup")
-//				fmt.Printf("%s (%s) NOT store missedCall (%s) (%s) (%s)\n",
-//					c.connType, c.calleeID, callerName, callerID, callerRemoteAddr)
+					callerID, c.callerTextMsg}, cause)
 			}
 		}
 
@@ -1163,12 +1162,12 @@ func (c *WsClient) peerConHasEnded(comment string) {
 					c.connType, c.calleeID, c.globalCalleeID, err)
 			//}
 		}
-	}
 
-	// this will prevent NO PEERCON after hangup or after calls shorter than 10s
-	c.hub.HubMutex.Lock()
-	c.hub.CallerClient = nil
-	c.hub.HubMutex.Unlock()
+		// this will prevent NO PEERCON after hangup or after calls shorter than 10s
+		c.hub.HubMutex.Lock()
+		c.hub.CallerClient = nil
+		c.hub.HubMutex.Unlock()
+	}
 
 	//if logWantedFor("attach") {
 	//	fmt.Printf("%s (%s) peerConHasEnded %s done (%s)\n", c.connType, c.calleeID, peerType, comment)

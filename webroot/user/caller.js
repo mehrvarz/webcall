@@ -1999,8 +1999,8 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 		onlineIndicator.src="";
 	}
 
-	gLog('mustDisconnect='+mustDisconnectCallee+' readyState='+wsConn.readyState+" mediaConnect="+mediaConnect);
 	if(wsConn && wsConn.readyState==1) {
+		gLog('mustDisconnect='+mustDisconnectCallee+' readyState='+wsConn.readyState+" mediaCon="+mediaConnect);
 		if(!mediaConnect) {
 			let msgboxText = msgbox.value.substring(0,300);
 			//gLog('msgboxText=('+msgboxText+')');

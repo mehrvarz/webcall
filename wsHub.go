@@ -74,17 +74,29 @@ func (h *Hub) setDeadline(secs int, comment string) {
 				if h.CalleeClient!=nil && h.CalleeClient.isConnectedToPeer.Get() {
 					fmt.Printf("setDeadline (%s) reached; end session now (secs=%d %v)\n",
 						h.CalleeClient.calleeID, secs, timeStart.Format("2006-01-02 15:04:05"))
-					h.doBroadcast([]byte("cancel|c"))
-					// NOTE: peerConHasEnded() may call us back / this is why we set h.timer = nil first
-					h.CalleeClient.peerConHasEnded("deadline")
-/* peerConHasEnded() takes care of this
-					if(h.CallerClient!=nil) {
-						// deleting recentTurnCalleeIps entry, so it does not exist on quick reconnect
-						recentTurnCalleeIpMutex.Lock()
-						delete(recentTurnCalleeIps,h.CallerClient.RemoteAddrNoPort)
-						recentTurnCalleeIpMutex.Unlock()
+					calleeID := ""
+					if h.CalleeClient!=nil {
+						calleeID = h.CalleeClient.calleeID
 					}
-*/
+					if h.CallerClient!=nil {
+						var message = []byte("cancel|s")
+						fmt.Printf("setDeadline (%s) send to caller (%s) %s\n",
+							calleeID, message, h.CallerClient.RemoteAddr)
+						h.CallerClient.Write(message)
+					}
+
+					// we wait for msg|... (to set callerTextMsg)
+					time.Sleep(1 * time.Second)
+					if h.CalleeClient!=nil && h.CalleeClient.isConnectedToPeer.Get() {
+						var message = []byte("cancel|c")
+						// only cancel callee if canceling caller wasn't possible
+						fmt.Printf("setDeadline (%s) send to callee (%s) %s\n",
+							calleeID, message, h.CalleeClient.RemoteAddr)
+						h.CalleeClient.Write(message)
+
+						// NOTE: peerConHasEnded() may call us back / this is why we set h.timer = nil first
+						h.CalleeClient.peerConHasEnded(fmt.Sprintf("deadline%d",secs))
+					}
 				}
 			case <-h.timerCanceled:
 				if logWantedFor("calldur") {
