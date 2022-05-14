@@ -613,6 +613,8 @@ func (c *WsClient) receiveProcess(message []byte) {
 		}
 		// unlock - don't call peerConHasEnded with lock
 		c.hub.HubMutex.RUnlock()
+		fmt.Printf("%s (%s) cmd=cancel isCallee=%v %s '%s'\n",
+			c.connType, c.calleeID, c.isCallee, c.RemoteAddr, payload)
 		c.hub.CalleeClient.peerConHasEnded("cancel")
 		return
 	}
