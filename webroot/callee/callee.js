@@ -1344,6 +1344,13 @@ function showMissedCalls() {
 			let callerLink = callerID;
 			let callerName = missedCallsSlice[i].CallerName;
 			if(callerName=="") callerName="unknown";
+			let callerMsg = missedCallsSlice[i].Msg;
+			if(callerMsg!="") {
+				//gLog('### callerMsg='+callerMsg+' '+waitingTimeString+' '+
+				//	timeNowSecs+' '+missedCallsSlice[i].CallTime);
+				// TODO we need to somehow show callerMsg
+			}
+
 			if(callerID.length>=5) {
 				// TODO here we could also verify if callerID is a valid calleeID
 				//      and we could check if callerID is currently online

@@ -70,8 +70,8 @@ var fileReceiveStartDate=0;
 var fileReceiveSinceStartSecs=0;
 var fileSendAbort=false;
 var fileReceiveAbort=false;
-var needToStoreMissedCall="";
-var missedCallTime=0;
+var goodbyMissedCall="";
+var goodbyTextMsg=""
 var haveBeenWaitingForCalleeOnline=false;
 var lastOnlineStatus = "";
 var contactAutoStore = false;
@@ -112,8 +112,8 @@ window.onload = function() {
 
 	window.onhashchange = hashchange;
 	window.onbeforeunload = goodby;
-	needToStoreMissedCall = "";
-	missedCallTime = 0;
+	goodbyMissedCall = "";
+	goodbyTextMsg = "";
 
 	let id = getUrlParams("id");
 	if(typeof id!=="undefined" && id!="") {
@@ -790,11 +790,12 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 				}
 				console.log("notifyCallee api="+api+" timeout="+xhrTimeout);
 				// in case caller aborts:
-				needToStoreMissedCall = calleeID+"|"+callerName+"|"+callerId;
+				goodbyMissedCall = calleeID+"|"+callerName+"|"+callerId+
+					"|"+Math.floor(Date.now()/1000)+"|"+msgbox.value.substring(0,300)
 				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 					if(xhr.responseText!=null && xhr.responseText.indexOf("?wsid=")>0) {
 						gLog('callee is now online. switching to call layout. '+xhr.responseText);
-						needToStoreMissedCall = "";
+						goodbyMissedCall = "";
 						lastOnlineStatus = xhr.responseText;
 						let tok = xhr.responseText.split("|");
 						wsAddr = tok[0];
@@ -819,7 +820,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 					}
 					gLog('callee could not be reached (%s)',xhr.responseText);
 					showStatus("Unable to reach "+calleeID+".<br>Please try again later.",-1);
-					needToStoreMissedCall = "";
+					goodbyMissedCall = "";
 					let api = apiPath+"/missedCall?id="+calleeID+"|"+callerName+"|"+callerId;
 					ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 						gLog('/missedCall success');
@@ -829,7 +830,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 				}, function(errString,errcode) {
 					gLog('callee could not be reached. xhr err',errString,errcode);
 					showStatus("Unable to reach "+calleeID+".<br>Please try again later.",-1);
-					needToStoreMissedCall = "";
+					goodbyMissedCall = "";
 					// errcode 504 = timeout
 					let api = apiPath+"/missedCall?id="+calleeID+"|"+callerName+"|"+callerId;
 					ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
@@ -864,10 +865,10 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 					}
 
 					showStatus(msg,-1);
-					needToStoreMissedCall = calleeID+"|"+callerName+"|"+callerId;
-					// needToStoreMissedCall will be cleared by a successful call
+					goodbyMissedCall = calleeID+"|"+callerName+"|"+callerId+
+						"|"+Math.floor(Date.now()/1000)+"|"+msgbox.value.substring(0,300)
+					// goodbyMissedCall will be cleared by a successful call
 					// if it is still set in goodby(), we will ask server to store this as a missed call
-					missedCallTime = Date.now();
 					return;
 				}
 				// calleeID can NOT be notified
@@ -884,22 +885,27 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 }
 
 function goodby() {
-	gLog('goodby ('+needToStoreMissedCall+')');
-	if(needToStoreMissedCall) {
-		if(missedCallTime>0) {
-			let ageSecs = Math.floor((Date.now()-missedCallTime)/1000);
-			needToStoreMissedCall = needToStoreMissedCall+"|"+ageSecs;
-		}
-		// calleeID|callerName|callerID|ageSecs
-		gLog('goodby needToStoreMissedCall '+needToStoreMissedCall);
+	gLog('goodby');
+	if(goodbyMissedCall!="") {
+		// goodbyMissedCall is used, when callee can not be reached (is offline)
+		// in this case the server does NOT call peerConHasEnded(), so we call /missedCall from here
+		// id=format: calleeID|callerName|callerID|ageSecs|msgbox
+		// goodbyMissedCall arrives as urlID but is then tokenized
+		// TODO we must make sure callerName and msgbox are url-encodable
+		gLog('goodbyMissedCall '+goodbyMissedCall);
 		// tell server to store a missed call entry
 		// doing sync xhr in goodby/beforeunload (see: last (7th) parameter = true)
-		let api = apiPath+"/missedCall?id="+needToStoreMissedCall;
+		let api = apiPath+"/missedCall?id="+goodbyMissedCall;
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-			gLog('goodby /missedCall success '+needToStoreMissedCall);
+			gLog('goodby /missedCall success '+goodbyMissedCall);
 		}, function(errString,err) {
 			gLog('# goodby xhr error '+errString);
 		}, false, true);
+	} else if(goodbyTextMsg!="" && wsConn) {
+		// goodbyTextMsg is used, when callee is online (peerconnect), but does not pick up (no mediaconnect)
+		// in this case server calls peerConHasEnded() for the callee, where addMissedCall() is generated
+		gLog('goodbyTextMsg '+goodbyTextMsg);
+		wsSend("msg|"+goodbyTextMsg);
 	}
 
 	if(typeof Android !== "undefined" && Android !== null) {
@@ -1074,7 +1080,7 @@ function notifyConnect(callerName,callerId) {
 		}
 		gLog('callee could not be reached (%s)',xhr.responseText);
 		showStatus("Sorry! I was unable to reach "+calleeID+".<br>Please try again a little later.",-1);
-		needToStoreMissedCall = "";
+		goodbyMissedCall = "";
 	}, function(errString,errcode) {
 		//errorAction(errString)
 		gLog('callee could not be reached. xhr err',errString,errcode);
@@ -1439,7 +1445,7 @@ function signalingCommand(message) {
 				vsendButton.style.display = "inline-block";
 			}
 			mediaConnectStartDate = Date.now();
-			needToStoreMissedCall = false;
+			goodbyMissedCall = "";
 
 			if(fileselectLabel && isDataChlOpen()) {
 				if(isP2pCon()) {
@@ -1484,6 +1490,13 @@ function signalingCommand(message) {
 			console.log('callee hang up');
 			showStatus("Callee ended call",8000);
 			if(wsConn) {
+				// before wsConn.close(): send msgbox text to server
+				if(!mediaConnect) {
+					let msgboxText = msgbox.value.substring(0,300);
+					if(msgboxText!="") {
+						wsSend("msg|"+msgboxText);
+					}
+				}
 				wsConn.close();
 				// wsConn=null prevents hangup() from generating a return cancel msg
 				wsConn=null;
@@ -1494,7 +1507,7 @@ function signalingCommand(message) {
 		}
 
 	} else if(cmd=="sessionDuration") {
-		// longest possible duration
+		// longest possible call duration
 		sessionDuration = parseInt(payload);
 		gLog('sessionDuration '+sessionDuration);
 		if(sessionDuration>0 && mediaConnect && !isP2pCon() && !timerStartDate) {
@@ -1723,6 +1736,12 @@ function dial2() {
 				rtcConnectStartDate = Date.now();
 				mediaConnectStartDate = 0;
 
+				// set goodbyTextMsg (including msgbox text) to be evaluated in goodby
+//				goodbyTextMsg = calleeID+"|"+callerName+"|"+callerId+
+//					"|"+Math.floor(Date.now()/1000)+"|"+msgbox.value.substring(0,300)
+				goodbyTextMsg = msgbox.value.substring(0,300)
+				gLog('set goodbyTextMsg',goodbyTextMsg);
+
 				if(!singlebutton) {
 					let msgboxText = msgbox.value.substring(0,300);
 					if(msgboxText!="") {
@@ -1946,9 +1965,6 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 		progressSendElement.style.display = "none";
 		progressRcvElement.style.display = "none";
 	}
-	if(!singlebutton) {
-		msgbox.value = "";
-	}
 
 	if(doneHangup) {
 		gLog('hangup abort on doneHangup');
@@ -1983,16 +1999,31 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 		onlineIndicator.src="";
 	}
 
-	if(mustDisconnectCallee && wsConn && wsConn.readyState==1) {
-		// if hangup occurs while still ringing
-		gLog('hangup wsSend(cancel)');
-		wsSend("cancel|c");
+	gLog('mustDisconnect='+mustDisconnectCallee+' readyState='+wsConn.readyState+" mediaConnect="+mediaConnect);
+	if(wsConn && wsConn.readyState==1) {
+		if(!mediaConnect) {
+			let msgboxText = msgbox.value.substring(0,300);
+			//gLog('msgboxText=('+msgboxText+')');
+			if(msgboxText!="") {
+				gLog('msg=('+msgboxText+')');
+				wsSend("msg|"+msgboxText);
+			}
+		}
+		if(mustDisconnectCallee) {
+			// if hangup occurs while still ringing, send cancel
+			// before that: send msgbox text to server
+			gLog('hangup wsSend(cancel)');
+			wsSend("cancel|c");
+		}
 	}
 	if(wsConn) {
 		wsConn.close();
 		wsConn=null;
 	}
 
+	if(!singlebutton) {
+		msgbox.value = "";
+	}
 	if(remoteVideoFrame) {
 		gLog('hangup shutdown remoteAV');
 		remoteVideoFrame.pause();

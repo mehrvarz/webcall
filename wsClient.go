@@ -66,6 +66,7 @@ type WsClient struct {
 	callerID string
 	callerName string
 	clientVersion string
+	callerTextMsg string
 	pingSent uint64
 	pongReceived uint64
 	pongSent uint64
@@ -257,6 +258,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		}
 		if client.isCallee && client.isConnectedToPeer.Get() {
 			client.peerConHasEnded("OnClose")
+// TODO tmtmtm call? -> client.hub.CalleeClient.peerConHasEnded("OnClose")
 		}
 		if err!=nil {
 			client.hub.doUnregister(client, "OnClose "+err.Error())
@@ -361,16 +363,13 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		// this code should never be reached; 2nd caller should receive "busy" from /online
 		// it can happen if two /online request in very short order return "avail"
 		// (the 2nd /online request before the 1st gets ws-connected)
-//		if logWantedFor("login") {
-			fmt.Printf("# %s (%s/%s) CallerClient already set [%s] %s ws=%d\n",
-				client.connType, client.calleeID, client.globalCalleeID, hub.CallerClient.RemoteAddr,
-				client.RemoteAddr, wsClientID64)
-//		}
-		//fmt.Printf("# %s existing CallerClient %s ua=%s\n",
-		//	client.connType, hub.CallerClient.RemoteAddr, hub.CallerClient.userAgent)
-		time.Sleep(500 * time.Millisecond)
-		wsConn.WriteMessage(websocket.CloseMessage, nil)
-		wsConn.Close()
+		fmt.Printf("# %s (%s/%s) CallerClient already set [%s] %s ws=%d\n",
+			client.connType, client.calleeID, client.globalCalleeID, hub.CallerClient.RemoteAddr,
+			client.RemoteAddr, wsClientID64)
+		// bc this actually happened (from the SAME caller) we will NOT disconnect
+		//time.Sleep(500 * time.Millisecond)
+		//wsConn.WriteMessage(websocket.CloseMessage, nil)
+		//wsConn.Close()
 	}
 }
 
@@ -426,6 +425,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 		c.pickupSent.Set(false)
 		// doUnregister() will call setDeadline(0) and processTimeValues() if this is false; then set it true
 		c.clearOnCloseDone = false // TODO make it atomic?
+		c.callerTextMsg = ""
 
 		if logWantedFor("attach") {
 			fmt.Printf("%s (%s) callee init ws=%d %s ver=%s\n",
@@ -487,18 +487,6 @@ func (c *WsClient) receiveProcess(message []byte) {
 			}
 
 			var missedCallsSlice []CallerInfo
-/*
-			// read dbUser for StoreMissedCalls flag
-			userKey := c.calleeID + "_" + strconv.FormatInt(int64(c.hub.registrationStartTime),10)
-			var dbUser DbUser
-			err = kvMain.Get(dbUserBucket, userKey, &dbUser)
-			if err!=nil {
-				fmt.Printf("# %s (%s) failed to get dbUser\n",c.connType,c.calleeID)
-			} else if dbUser.StoreMissedCalls {
-				// err can be ignored
-				kvCalls.Get(dbMissedCalls,c.calleeID,&missedCallsSlice)
-			}
-*/
 			// err can be ignored
 			kvCalls.Get(dbMissedCalls,c.calleeID,&missedCallsSlice)
 
@@ -520,6 +508,14 @@ func (c *WsClient) receiveProcess(message []byte) {
 	if cmd=="dummy" {
 		fmt.Printf("%s (%s) dummy %s ip=%s ua=%s\n",
 			c.connType, c.calleeID, payload, c.RemoteAddr, c.userAgent)
+		return
+	}
+
+	if cmd=="msg" {
+		// sent by caller on hangup without mediaconnect
+		fmt.Printf("%s (%s) msg='%s' callee=%v ip=%s ua=%s\n",
+			c.connType, c.calleeID, payload, c.isCallee, c.RemoteAddr, c.userAgent)
+		c.hub.CalleeClient.callerTextMsg = payload;
 		return
 	}
 
@@ -601,15 +597,22 @@ func (c *WsClient) receiveProcess(message []byte) {
 	}
 
 	if cmd=="cancel" {
+		// not sure which client is sending this
 		//fmt.Printf("%s (%s) cmd=cancel payload=%s %s\n",c.connType,c.calleeID,payload,c.RemoteAddr)
-//		c.peerConHasEnded("cancel")
 		if c.hub==nil {
 			fmt.Printf("# %s cmd=cancel but c.hub==nil %s (%s)\n",c.connType,c.RemoteAddr,payload)
-		} else if c.hub.CalleeClient==nil {
-			fmt.Printf("# %s cmd=cancel but c.hub.CalleeClient==nil %s (%s)\n",c.connType,c.RemoteAddr,payload)
-		} else {
-			c.hub.CalleeClient.peerConHasEnded("cancel")
+			return
 		}
+		c.hub.HubMutex.RLock()
+		if c.hub.CalleeClient==nil {
+			c.hub.HubMutex.RUnlock()
+			// we receive a "cmd=cancel|" (from the caller?) but the callee is logged out
+			fmt.Printf("# %s cmd=cancel but c.hub.CalleeClient==nil %s (%s)\n",c.connType,c.RemoteAddr,payload)
+			return
+		}
+		// unlock - don't call peerConHasEnded with lock
+		c.hub.HubMutex.RUnlock()
+		c.hub.CalleeClient.peerConHasEnded("cancel")
 		return
 	}
 
@@ -1124,7 +1127,7 @@ func (c *WsClient) peerConHasEnded(comment string) {
 			calleeRemoteAddr, callerRemoteAddr, callerID, comment)
 
 		// add an entry to missed calls, but only if hub.CallDurationSecs==0
-		// TODO is it a missed call if callee himself denies the call? (currently yes)
+		// TODO is it a missed call if callee denies the call? (currently yes)
 		if c.hub.CallDurationSecs<=0 {
 			//if logWantedFor("missedcall") {
 			//	fmt.Printf("%s (%s) store missedCall %s ...\n", c.connType, c.calleeID, c.RemoteAddr)
@@ -1135,7 +1138,14 @@ func (c *WsClient) peerConHasEnded(comment string) {
 			if err!=nil {
 				fmt.Printf("# %s (%s) failed to get dbUser err=%v\n",c.connType,c.calleeID,err)
 			} else if dbUser.StoreMissedCalls {
-				addMissedCall(c.calleeID, CallerInfo{callerRemoteAddr, callerName, time.Now().Unix(), callerID})
+				// if caller cancels via hangup button, then this is the only addMissedCall() and contains msgtext
+				// if caller exits page, it sends /missedcall with msgtext
+				//   but this becomes a double addMissedCall() without msgtext
+				fmt.Printf("%s (%s) store missedCall msg=(%s)\n", c.connType, c.calleeID, c.callerTextMsg)
+				addMissedCall(c.calleeID, CallerInfo{callerRemoteAddr, callerName, time.Now().Unix(),
+					callerID, c.callerTextMsg}, "wsClient-hangup")
+//				fmt.Printf("%s (%s) NOT store missedCall (%s) (%s) (%s)\n",
+//					c.connType, c.calleeID, callerName, callerID, callerRemoteAddr)
 			}
 		}
 

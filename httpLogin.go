@@ -201,6 +201,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					}
 					fmt.Printf("/login (%s) already/still logged in %v by %s <- %s ver=%s ua=%s\n",
 						key, time.Since(startRequestTime), calleeIP, remoteAddr, clientVersion, userAgent)
+// TODO maybe fatal is wrong?
 					fmt.Fprintf(w,"fatal")
 					return
 				}

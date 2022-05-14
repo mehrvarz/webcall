@@ -273,13 +273,18 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 			fmt.Printf("# /notifyCallee (%s) no notification sent\n", urlID)
 			if(dbUser.StoreMissedCalls) {
 				fmt.Printf("# /notifyCallee (%s) no notification sent - store as missed call\n", urlID)
-				addMissedCall(urlID, CallerInfo{remoteAddrWithPort,callerName,time.Now().Unix(),callerId})
+				// TODO where to get msgbox-text from?
+				addMissedCall(urlID,
+					CallerInfo{remoteAddr,callerName,time.Now().Unix(),callerId,""}, "/notify-notavail")
 			}
+			return
 		}
 	}
 
 	callerGaveUp := true
-	waitingCaller := CallerInfo{remoteAddrWithPort, callerName, time.Now().Unix(), callerId}
+// TODO remoteAddr or remoteAddrWithPort ? (for waitingCaller)
+// TODO where to get msgbox-text from?
+	waitingCaller := CallerInfo{remoteAddr, callerName, time.Now().Unix(), callerId, ""}
 
 	var calleeWsClient *WsClient = nil
 	hubMapMutex.RLock()
@@ -435,7 +440,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	if callerGaveUp && dbUser.StoreMissedCalls {
 		// store missed call
 		//fmt.Printf("/notifyCallee (%s) store missed call\n", urlID)
-		_,missedCallsSlice = addMissedCall(urlID, waitingCaller)
+		_,missedCallsSlice = addMissedCall(urlID, waitingCaller, "/notify-callergaveup")
 	}
 
 	if calleeWsClient==nil {
@@ -450,9 +455,9 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 
 func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, remoteAddr string, remoteAddrWithPort string) {
 	// called by caller.js goodby() via "/missedCall?id=(callerInfo)"
-	// callerInfo is encoded: calleeId+"|"+callerName+"|"+callerId (plus optional: "|"+ageSecs
+	// callerInfo is encoded: calleeId+"|"+callerName+"|"+callerId (plus optional: "|"+ageSecs) +(|msg)
 	// "timur|92929|92929658912|50" tok[0]=calleeID, tok[1]=callerName, tok[2]=callerID, tok[3]=ageSecs
-	//fmt.Printf("/missedCall (%s) rip=%s\n", callerInfo, remoteAddrWithPort)
+	fmt.Printf("/missedCall (%s) rip=%s\n", callerInfo, remoteAddr)
 	tok := strings.Split(callerInfo, "|")
 	if len(tok) < 3 {
 		fmt.Printf("# /missedCall (%s) failed len(tok)=%d<3 rip=%s\n",callerInfo,len(tok),remoteAddr)
@@ -464,19 +469,19 @@ func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, r
 	}
 	calleeId := tok[0]
 
-	var ageSecs64 int64 = 1
+	var timeOfCall int64 = 1
 	if len(tok) >= 4 {
 		// the age of the call is given in number of seconds; below we will substract this from the current time
 		var err error
-		ageSecs64, err = strconv.ParseInt(tok[3], 10, 64)
+		timeOfCall, err = strconv.ParseInt(tok[3], 10, 64)
 		if err!=nil {
 			//fmt.Printf("# /missedCall (%s) ParseInt err=%v\n",calleeId,err)
-			ageSecs64 = 0
-		} else if ageSecs64<0 {
-			//fmt.Printf("# /missedCall (%s) ageSecs64=%d < 0\n",calleeId,ageSecs64)
-			ageSecs64 = 0
+			timeOfCall = 0
+		} else if timeOfCall<0 {
+			//fmt.Printf("# /missedCall (%s) timeOfCall=%d < 0\n",calleeId,timeOfCall)
+			timeOfCall = 0
 		} else {
-			//fmt.Printf("/missedCall (%s) ageSecs64=%d\n",calleeId,ageSecs64)
+			//fmt.Printf("/missedCall (%s) timeOfCall=%d\n",calleeId,timeOfCall)
 		}
 	}
 	// find current state of dbUser.StoreMissedCalls via calleeId
@@ -498,12 +503,17 @@ func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, r
 		return
 	}
 
-	//fmt.Printf("/missedCall (%s) missedCall arrived %ds ago\n", calleeId, ageSecs64)
+	//fmt.Printf("/missedCall (%s) missedCall arrived %ds ago\n", calleeId, timeOfCall)
 	callerName := tok[1]
 	callerID := tok[2]
+	msgtext := ""
+	if len(tok) >= 5 {
+		msgtext = tok[4]
+	}
 	// the actual call occured ageSecs64 ago (may be a big number, if caller waits long before aborting the page)
-	timeOfCall := time.Now().Unix() - ageSecs64
-	err,missedCallsSlice := addMissedCall(calleeId, CallerInfo{remoteAddrWithPort,callerName,timeOfCall,callerID})
+	//ageSecs64 := time.Now().Unix() - timeOfCall
+	err,missedCallsSlice := addMissedCall(calleeId,
+		CallerInfo{remoteAddr,callerName,timeOfCall,callerID,msgtext}, "/missedCall")
 	if err==nil {
 		//fmt.Printf("/missedCall (%s) caller=%s rip=%s\n", calleeId, callerID, remoteAddr)
 
@@ -546,8 +556,9 @@ func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, r
 }
 
 func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr string, remoteAddrWithPort string) {
-	// checks if urlID can be notified of an incoming call
-	// either directly (while callee is hidden online) or via twitter
+	// checks if urlID can be notified (of incoming call)
+	// (via twitter - or directly, while callee is hidden online)
+	// usually called after /online reports a callee being offline
 	if urlID=="" {
 		fmt.Printf("# /canbenotified failed on empty urlID rip=%s\n",remoteAddr)
 		return
@@ -633,15 +644,18 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 		return
 	}
 
-	// this user can NOT rcv push msg (not pushable)
+	// this user can NOT rcv push msg (cannot be notified)
 	fmt.Printf("/canbenotified (%s) not (hidden) online / no push channel %s (%s)\n",urlID,remoteAddr, callerID)
 	if(dbUser.StoreMissedCalls) {
-		addMissedCall(urlID, CallerInfo{remoteAddrWithPort,callerName,time.Now().Unix(),callerID})
+		// TODO where to get msgbox-text from?
+		addMissedCall(urlID,
+			CallerInfo{remoteAddr,callerName,time.Now().Unix(),callerID,""}, "/canbenotified-not")
 	}
 	return
 }
 
-func addMissedCall(urlID string, caller CallerInfo) (error, []CallerInfo) {
+func addMissedCall(urlID string, caller CallerInfo, comment string) (error, []CallerInfo) {
+	// do we need to check StoreMissedCalls here? NO, it is always checked before this is called
 	var missedCallsSlice []CallerInfo
 	err := kvCalls.Get(dbMissedCalls,urlID,&missedCallsSlice)
 	if err!=nil && strings.Index(err.Error(),"key not found")<0 {
@@ -659,8 +673,8 @@ func addMissedCall(urlID string, caller CallerInfo) (error, []CallerInfo) {
 		return err,nil
 	}
 	if logWantedFor("missedcall") {
-		fmt.Printf("missedCall (%s) <- (%s) name=%s ip=%s\n",
-			urlID, caller.CallerID, caller.CallerName, caller.AddrPort)
+		fmt.Printf("missedCall (%s) <- (%s) name=%s ip=%s msg=(%s) comment=(%s)\n",
+			urlID, caller.CallerID, caller.CallerName, caller.AddrPort, caller.Msg, comment)
 	}
 	return err,missedCallsSlice
 }
