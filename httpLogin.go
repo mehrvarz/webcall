@@ -500,7 +500,7 @@ fmt.Printf("/login (%s) fail wrong password [%s/shd:%s] %d %s\n",
 		// if hub.CalleeLogin is still false then, do skv.DeleteFromHubMap(globalID)
 		// to invalidate this callee/hub
 		go func() {
-			waitForClientWsConnectSecs := 22
+			waitForClientWsConnectSecs := 22 // timeout22s
 			waitedFor := 0
 			for i := 0; i < waitForClientWsConnectSecs; i++ {
 				myHubMutex.RLock()

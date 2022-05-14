@@ -325,6 +325,10 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	url_arg_array, ok := r.URL.Query()["id"]
 	if ok && len(url_arg_array[0]) > 0 {
 		urlID = strings.ToLower(url_arg_array[0])
+		// urlID can be total garbage now
+		if len(urlID)>11 {
+			fmt.Printf("httpApi long urlID=(%s) ip=%s\n", urlID, remoteAddr)
+		}
 	} else {
 		idxUserID := strings.Index(referer,"/user/")
 		if idxUserID>=0 && !strings.HasSuffix(referer,"/") {
