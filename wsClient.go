@@ -608,6 +608,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 			c.hub.HubMutex.RUnlock()
 			// we receive a "cmd=cancel|" (from the caller?) but the callee is logged out
 			fmt.Printf("# %s cmd=cancel but c.hub.CalleeClient==nil %s (%s)\n",c.connType,c.RemoteAddr,payload)
+			c.Close("callee already closed")
 			return
 		}
 		// unlock - don't call peerConHasEnded with lock
