@@ -461,6 +461,11 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		httpCanbenotified(w, r, urlID, remoteAddr, remoteAddrWithPort)
 		return
 	}
+	if urlPath=="/missedCall" {
+// TO BE REMOVED after a few days
+		httpMissedCall(w, r, urlID, remoteAddr, remoteAddrWithPort)
+		return
+	}
 	if urlPath=="/getsettings" {
 		httpGetSettings(w, r, urlID, calleeID, cookie, remoteAddr)
 		return
