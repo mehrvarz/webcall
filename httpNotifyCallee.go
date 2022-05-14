@@ -654,7 +654,7 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 	return
 }
 
-func addMissedCall(urlID string, caller CallerInfo, comment string) (error, []CallerInfo) {
+func addMissedCall(urlID string, caller CallerInfo, cause string) (error, []CallerInfo) {
 	// do we need to check StoreMissedCalls here? NO, it is always checked before this is called
 	var missedCallsSlice []CallerInfo
 	err := kvCalls.Get(dbMissedCalls,urlID,&missedCallsSlice)
@@ -673,13 +673,13 @@ func addMissedCall(urlID string, caller CallerInfo, comment string) (error, []Ca
 		return err,nil
 	}
 	if logWantedFor("missedcall") {
-		fmt.Printf("missedCall (%s) <- (%s) name=%s ip=%s msg=(%s) comment=(%s)\n",
-			urlID, caller.CallerID, caller.CallerName, caller.AddrPort, caller.Msg, comment)
+		fmt.Printf("missedCall (%s) <- (%s) name=%s ip=%s msg=(%s) cause=(%s)\n",
+			urlID, caller.CallerID, caller.CallerName, caller.AddrPort, caller.Msg, cause)
 	}
 	return err,missedCallsSlice
 }
 
-func addContact(calleeID string, callerID string, callerName string, comment string) error {
+func addContact(calleeID string, callerID string, callerName string, cause string) error {
 	if strings.HasPrefix(calleeID,"answie") {
 		return nil
 	}
@@ -701,8 +701,8 @@ func addContact(calleeID string, callerID string, callerName string, comment str
 	}
 	oldName,ok := callerInfoMap[callerID]
 	if ok && oldName!="" {
-		//fmt.Printf("# addContact store key=%s callerID=%s EXISTS(%s) newname=%s comment=%s\n",
-		//	calleeID, callerID, oldName, callerName, comment)
+		//fmt.Printf("# addContact store key=%s callerID=%s EXISTS(%s) newname=%s cause=%s\n",
+		//	calleeID, callerID, oldName, callerName, cause)
 		return nil
 	}
 	callerInfoMap[callerID] = callerName
@@ -711,8 +711,8 @@ func addContact(calleeID string, callerID string, callerName string, comment str
 		fmt.Printf("# addContact store key=%s err=%v\n", calleeID, err)
 		return err
 	}
-	//fmt.Printf("addContact stored for id=%s callerID=%s name=%s comment=%s\n",
-	//	calleeID, callerID, callerName, comment)
+	//fmt.Printf("addContact stored for id=%s callerID=%s name=%s cause=%s\n",
+	//	calleeID, callerID, callerName, cause)
 	return nil
 }
 

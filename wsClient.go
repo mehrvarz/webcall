@@ -1144,9 +1144,9 @@ func (c *WsClient) peerConHasEnded(comment string) {
 				// if caller cancels via hangup button, then this is the only addMissedCall() and contains msgtext
 				// if caller exits page, it sends /missedcall with msgtext
 				//   but this becomes a double addMissedCall() without msgtext
-				fmt.Printf("%s (%s) store missedCall msg=(%s)\n", c.connType, c.calleeID, c.callerTextMsg)
+				//fmt.Printf("%s (%s) store missedCall msg=(%s)\n", c.connType, c.calleeID, c.callerTextMsg)
 				addMissedCall(c.calleeID, CallerInfo{callerRemoteAddr, callerName, time.Now().Unix(),
-					callerID, c.callerTextMsg}, "wsClient-hangup")
+					callerID, c.callerTextMsg}, "client-hangup")
 //				fmt.Printf("%s (%s) NOT store missedCall (%s) (%s) (%s)\n",
 //					c.connType, c.calleeID, callerName, callerID, callerRemoteAddr)
 			}
