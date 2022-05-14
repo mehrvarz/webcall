@@ -453,7 +453,12 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	return
 }
 
-func httpMissedCall(callerInfo string, remoteAddr string) {
+func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, remoteAddr string, remoteAddrWithPort string) {
+	missedCall(callerInfo, remoteAddr)
+	// never returns an error 
+}
+
+func missedCall(callerInfo string, remoteAddr string) {
 	// called by wsClient.go
 	// callerInfo is encoded: calleeId+"|"+callerName+"|"+callerId (plus optional: "|"+ageSecs) +(|msg)
 	//   like so: "timur|92929|92929658912|50" tok[0]=calleeID, tok[1]=callerName, tok[2]=callerID, tok[3]=ageSecs

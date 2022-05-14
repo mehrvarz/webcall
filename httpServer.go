@@ -17,6 +17,7 @@ import (
 	"sort"
 	"encoding/json"
 	"os"
+	"io"
 	"math/rand"
 	"path/filepath"
 	"crypto/tls"

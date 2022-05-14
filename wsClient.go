@@ -525,7 +525,7 @@ func (c *WsClient) receiveProcess(message []byte) {
 		fmt.Printf("%s (%s) missedcall='%s' callee=%v ip=%s ua=%s\n",
 			c.connType, c.calleeID, payload, c.isCallee, c.RemoteAddr, c.userAgent)
 		//c.hub.CalleeClient.callerTextMsg = payload;
-		httpMissedCall(payload, c.RemoteAddr)
+		missedCall(payload, c.RemoteAddr)
 		return
 	}
 
