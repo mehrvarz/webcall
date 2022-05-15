@@ -1101,12 +1101,12 @@ function notifyConnect(callerName,callerId) {
 			return;
 		}
 		gLog('notify: callee could not be reached (%s)',xhr.responseText);
-		showStatus("Sorry! I was unable to reach "+calleeID+".<br>Please try again a little later.",-1);
+		showStatus("Sorry! Unable to reach "+calleeID+".<br>Please try again a little later.",-1);
 		goodbyMissedCall = "";
 	}, function(errString,errcode) {
 		//errorAction(errString)
 		gLog('notify: callee could not be reached. xhr err',errString,errcode);
-		showStatus("Sorry! I was unable to reach "+calleeID+".<br>Please try again a little later.",-1);
+		showStatus("Sorry! Unable to reach "+calleeID+".<br>Please try again a little later.",-1);
 	});
 }
 
