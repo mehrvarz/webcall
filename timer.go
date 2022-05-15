@@ -404,6 +404,20 @@ func ticker3min() {
 				}
 			}
 		}
+
+		// tmtmtm cleanup missedCallAllowedMap
+		var deleteIpArray []string  // for deleting
+		missedCallAllowedMutex.Lock()
+		for ip,settime := range missedCallAllowedMap {
+			if time.Now().Sub(settime) > 20*time.Minute {
+				deleteIpArray = append(deleteIpArray, ip)
+			}
+		}
+		for _,ip := range deleteIpArray {
+			fmt.Printf("ticker3min delete (%s) from missedCallAllowedMap\n",ip)
+			delete(missedCallAllowedMap,ip)
+		}
+		missedCallAllowedMutex.Unlock()
 	}
 }
 

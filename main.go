@@ -108,6 +108,9 @@ var clientRequestsMap map[string][]time.Time
 var clientRequestsMutex sync.RWMutex
 var maxClientRequestsPer30min = 0 // ideal value 60
 
+var missedCallAllowedMap map[string]time.Time
+var missedCallAllowedMutex sync.RWMutex
+
 var waitingCallerChanMap map[string]chan int // ip:port -> chan
 var waitingCallerChanLock sync.RWMutex
 
@@ -199,6 +202,7 @@ func main() {
 	blockMap = make(map[string]time.Time)
 	calleeLoginMap = make(map[string][]time.Time)
 	clientRequestsMap = make(map[string][]time.Time)
+	missedCallAllowedMap = make(map[string]time.Time)
 	waitingCallerChanMap = make(map[string]chan int)
 	wsClientMap = make(map[uint64]wsClientDataType) // wsClientID -> wsClientData
 	readConfig(true)

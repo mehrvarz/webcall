@@ -72,6 +72,7 @@ var fileSendAbort=false;
 var fileReceiveAbort=false;
 var goodbyMissedCall="";
 var goodbyTextMsg=""
+var goodbyDone = false;
 var haveBeenWaitingForCalleeOnline=false;
 var lastOnlineStatus = "";
 var contactAutoStore = false;
@@ -818,31 +819,34 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 						});
 						return;
 					}
-					gLog('callee could not be reached (%s)',xhr.responseText);
-					showStatus("Unable to reach "+calleeID+".<br>Please try again later.",-1);
-					//wsSend("missedcall|"+goodbyMissedCall); // this is not possible here
+					if(!goodbyDone) {
+						gLog('online: callee could not be reached (%s)',xhr.responseText);
+						showStatus("Unable to reach "+calleeID+".<br>Please try again later.",-1);
+						//wsSend("missedcall|"+goodbyMissedCall); // this is not possible here
 
-					let api = apiPath+"/missedCall?id="+goodbyMissedCall;
-					ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-						gLog('/missedCall success');
-					}, function(errString,err) {
-						gLog('# /missedCall xhr error: '+errString+' '+err);
-					});
-					goodbyMissedCall = "";
+						let api = apiPath+"/missedCall?id="+goodbyMissedCall;
+						goodbyMissedCall = "";
+						ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+							gLog('/missedCall success');
+						}, function(errString,err) {
+							gLog('# /missedCall xhr error: '+errString+' '+err);
+						});
+					}
 				}, function(errString,errcode) {
 					// errcode 504 = timeout
-					gLog('callee could not be reached. xhr err',errString,errcode);
+					gLog('online: callee could not be reached. xhr err',errString,errcode);
 					// TODO if xhr /online failed, does it make sense to try xhr /missedCall ?
 					showStatus("Unable to reach "+calleeID+".<br>Please try again later.",-1);
 					//wsSend("missedcall|"+goodbyMissedCall); // this is not possible here
-
-					let api = apiPath+"/missedCall?id="+goodbyMissedCall;
-					ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-						gLog('/missedCall success');
-					}, function(errString,err) {
-						gLog('# /missedCall xhr error: '+errString+' '+err);
-					});
-					goodbyMissedCall = "";
+					if(goodbyMissedCall!="") {
+						let api = apiPath+"/missedCall?id="+goodbyMissedCall;
+						ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+							gLog('/missedCall success');
+						}, function(errString,err) {
+							gLog('# /missedCall xhr error: '+errString+' '+err);
+						});
+						goodbyMissedCall = "";
+					}
 				});
 				return;
 			}
@@ -914,15 +918,17 @@ function goodby() {
 	} else if(goodbyTextMsg!="" && wsConn) {
 		// goodbyTextMsg is used, when callee is online (peerconnect), but does not pick up (no mediaconnect)
 		// in this case server calls peerConHasEnded() for the callee, where addMissedCall() is generated
-		gLog('goodbyTextMsg '+goodbyTextMsg);
 // TODO check wsConn instead of wsAddr
 		if(wsAddr!="") {
+			gLog('goodbyTextMsg wsSend='+goodbyTextMsg);
 			wsSend("msg|"+goodbyTextMsg);
 		} else {
 			// sync xhr?
 			// no solution for this yet
+			gLog('goodbyTextMsg syncxhr not yet impl '+goodbyTextMsg);
 		}
 	}
+	goodbyDone = true;
 
 	if(typeof Android !== "undefined" && Android !== null) {
 		Android.peerDisConnect();
@@ -1094,12 +1100,12 @@ function notifyConnect(callerName,callerId) {
 			dialButton.click();
 			return;
 		}
-		gLog('callee could not be reached (%s)',xhr.responseText);
+		gLog('notify: callee could not be reached (%s)',xhr.responseText);
 		showStatus("Sorry! I was unable to reach "+calleeID+".<br>Please try again a little later.",-1);
 		goodbyMissedCall = "";
 	}, function(errString,errcode) {
 		//errorAction(errString)
-		gLog('callee could not be reached. xhr err',errString,errcode);
+		gLog('notify: callee could not be reached. xhr err',errString,errcode);
 		showStatus("Sorry! I was unable to reach "+calleeID+".<br>Please try again a little later.",-1);
 	});
 }

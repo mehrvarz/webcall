@@ -457,8 +457,20 @@ func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, r
 	// TODO must be a caller that has just tried to connect to a callee via /online?id="+calleeID+"&wait=true
 	// others should NOT be accepted (prevent unauthorized users to fill this callee's missed call list)
 	// TODO once validated, allow missedCall() and remove permission to create another missedcall entry
-	missedCall(callerInfo, remoteAddr, "/missedCall")
-	// will never return an error
+	missedCallAllowedMutex.RLock()
+	settime,ok := missedCallAllowedMap[remoteAddr]
+	missedCallAllowedMutex.RUnlock()
+	if ok && time.Now().Sub(settime) < 20 * time.Minute {
+		fmt.Printf("httpMissedCall ip=(%s) is permitted to create /missedcall\n",remoteAddr)
+		missedCallAllowedMutex.Lock()
+		delete(missedCallAllowedMap,remoteAddr)
+		missedCallAllowedMutex.Unlock()
+		missedCall(callerInfo, remoteAddr, "/missedCall")
+// TODO timer.go must remove outdated entries (older than 60s) from missedCallAllowedMap
+	} else {
+		fmt.Printf("# httpMissedCall ip=(%s) is NOT permitted to create /missedcall\n",remoteAddr)
+	}
+	// does never return an error
 }
 
 func missedCall(callerInfo string, remoteAddr string, cause string) {
