@@ -1087,6 +1087,7 @@ function notifyConnect(callerName,callerId) {
 	// nickname form was valid
 	// the next xhr will freeze until hidden callee accepts the call
 	showStatus("Trying to get "+calleeID+" on the phone. Please wait...<br><br><img src='preloader-circles.svg' style='width:95%;max-height:450px;margin-top:-20%;'>",-1);
+	goodbyMissedCall = "";
 	let api = apiPath+"/notifyCallee?id="+calleeID+"&callerId="+callerId+"&name="+callerName;
 	xhrTimeout = 600*1000; // 10 min extended xhr timeout
 	console.log("notifyCallee api="+api+" timeout="+xhrTimeout);
@@ -1102,7 +1103,6 @@ function notifyConnect(callerName,callerId) {
 		}
 		gLog('notify: callee could not be reached (%s)',xhr.responseText);
 		showStatus("Sorry! Unable to reach "+calleeID+".<br>Please try again a little later.",-1);
-		goodbyMissedCall = "";
 	}, function(errString,errcode) {
 		//errorAction(errString)
 		gLog('notify: callee could not be reached. xhr err',errString,errcode);
