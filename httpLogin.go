@@ -197,11 +197,11 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					// abort this login attempt: old/sameId callee is already/still logged in
 					calleeIP := ""
 					if hub!=nil && hub.CalleeClient!=nil {
-						calleeIP = hub.CalleeClient.RemoteAddrNoPort
+						calleeIP = hub.CalleeClient.RemoteAddr
 					}
 					fmt.Printf("/login (%s) already/still logged in %v by %s <- %s ver=%s ua=%s\n",
-						key, time.Since(startRequestTime), calleeIP, remoteAddr, clientVersion, userAgent)
-// TODO maybe fatal is wrong?
+						key, time.Since(startRequestTime), calleeIP, remoteAddrWithPort, clientVersion, userAgent)
+// TODO maybe returning fatal is wrong?
 					fmt.Fprintf(w,"fatal")
 					return
 				}

@@ -462,6 +462,7 @@ func missedCall(callerInfo string, remoteAddr string) {
 	// called by wsClient.go
 	// callerInfo is encoded: calleeId+"|"+callerName+"|"+callerId (plus optional: "|"+ageSecs) +(|msg)
 	//   like so: "timur|92929|92929658912|50" tok[0]=calleeID, tok[1]=callerName, tok[2]=callerID, tok[3]=ageSecs
+// TODO callerInfo cannot be trusted, make sure everything in it is valid
 	fmt.Printf("missedCall (%s) rip=%s\n", callerInfo, remoteAddr)
 	tok := strings.Split(callerInfo, "|")
 	if len(tok) < 3 {
@@ -473,22 +474,8 @@ func missedCall(callerInfo string, remoteAddr string) {
 		return
 	}
 	calleeId := tok[0]
+// TODO check calleeId for size and content
 
-	var timeOfCall int64 = 1
-	if len(tok) >= 4 {
-		// the age of the call is given in number of seconds; below we will substract this from the current time
-		var err error
-		timeOfCall, err = strconv.ParseInt(tok[3], 10, 64)
-		if err!=nil {
-			//fmt.Printf("# missedCall (%s) ParseInt err=%v\n",calleeId,err)
-			timeOfCall = 0
-		} else if timeOfCall<0 {
-			//fmt.Printf("# missedCall (%s) timeOfCall=%d < 0\n",calleeId,timeOfCall)
-			timeOfCall = 0
-		} else {
-			//fmt.Printf("missedCall (%s) timeOfCall=%d\n",calleeId,timeOfCall)
-		}
-	}
 	// find current state of dbUser.StoreMissedCalls via calleeId
 	var dbEntry DbEntry
 	err := kvMain.Get(dbRegisteredIDs,calleeId,&dbEntry)
@@ -508,6 +495,23 @@ func missedCall(callerInfo string, remoteAddr string) {
 		return
 	}
 
+	var timeOfCall int64 = 1
+	if len(tok) >= 4 {
+		// the age of the call is given in number of seconds; below we will substract this from the current time
+		var err error
+// TODO catch format error
+		timeOfCall, err = strconv.ParseInt(tok[3], 10, 64)
+		if err!=nil {
+			//fmt.Printf("# missedCall (%s) ParseInt err=%v\n",calleeId,err)
+			timeOfCall = 0
+		} else if timeOfCall<0 {
+			//fmt.Printf("# missedCall (%s) timeOfCall=%d < 0\n",calleeId,timeOfCall)
+			timeOfCall = 0
+		} else {
+			//fmt.Printf("missedCall (%s) timeOfCall=%d\n",calleeId,timeOfCall)
+		}
+	}
+
 	//fmt.Printf("missedCall (%s) missedCall arrived %ds ago\n", calleeId, timeOfCall)
 	callerName := tok[1]
 	callerID := tok[2]
@@ -515,10 +519,11 @@ func missedCall(callerInfo string, remoteAddr string) {
 	if len(tok) >= 5 {
 		msgtext = tok[4]
 	}
+// TODO check callerName, callerID, msgtext for size and content
 	// the actual call occured ageSecs64 ago (may be a big number, if caller waits long before aborting the page)
 	//ageSecs64 := time.Now().Unix() - timeOfCall
 	err,missedCallsSlice := addMissedCall(calleeId,
-		CallerInfo{remoteAddr,callerName,timeOfCall,callerID,msgtext}, "httpMissedCall")
+		CallerInfo{remoteAddr,callerName,timeOfCall,callerID,msgtext}, "missedCall")
 	if err==nil {
 		//fmt.Printf("missedCall (%s) caller=%s rip=%s\n", calleeId, callerID, remoteAddr)
 
@@ -529,7 +534,7 @@ func missedCall(callerInfo string, remoteAddr string) {
 		reportHiddenCallee := true
 		reportBusyCallee := false
 		glCalleeId, locHub, globHub, err := GetOnlineCallee(calleeId, ejectOn1stFound, reportBusyCallee,
-			reportHiddenCallee, remoteAddr, "httpMissedCall")
+			reportHiddenCallee, remoteAddr, "missedCall")
 		if err != nil {
 			//fmt.Printf("# missedCall GetOnlineCallee() err=%v\n", err)
 			return
