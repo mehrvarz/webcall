@@ -454,16 +454,19 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 }
 
 func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, remoteAddr string, remoteAddrWithPort string) {
-	missedCall(callerInfo, remoteAddr)
-	// never returns an error 
+	// TODO must be a caller that has just tried to connect to a callee via /online?id="+calleeID+"&wait=true
+	// others should NOT be accepted (prevent unauthorized users to fill this callee's missed call list)
+	// TODO once validated, allow missedCall() and remove permission to create another missedcall entry
+	missedCall(callerInfo, remoteAddr, "/missedCall")
+	// will never return an error
 }
 
-func missedCall(callerInfo string, remoteAddr string) {
+func missedCall(callerInfo string, remoteAddr string, cause string) {
 	// called by wsClient.go
 	// callerInfo is encoded: calleeId+"|"+callerName+"|"+callerId (plus optional: "|"+ageSecs) +(|msg)
 	//   like so: "timur|92929|92929658912|50" tok[0]=calleeID, tok[1]=callerName, tok[2]=callerID, tok[3]=ageSecs
 // TODO callerInfo cannot be trusted, make sure everything in it is valid
-	fmt.Printf("missedCall (%s) rip=%s\n", callerInfo, remoteAddr)
+	//fmt.Printf("missedCall (%s) rip=%s\n", callerInfo, remoteAddr)
 	tok := strings.Split(callerInfo, "|")
 	if len(tok) < 3 {
 		fmt.Printf("# missedCall (%s) failed len(tok)=%d<3 rip=%s\n",callerInfo,len(tok),remoteAddr)
@@ -523,7 +526,7 @@ func missedCall(callerInfo string, remoteAddr string) {
 	// the actual call occured ageSecs64 ago (may be a big number, if caller waits long before aborting the page)
 	//ageSecs64 := time.Now().Unix() - timeOfCall
 	err,missedCallsSlice := addMissedCall(calleeId,
-		CallerInfo{remoteAddr,callerName,timeOfCall,callerID,msgtext}, "missedCall")
+		CallerInfo{remoteAddr,callerName,timeOfCall,callerID,msgtext}, cause)
 	if err==nil {
 		//fmt.Printf("missedCall (%s) caller=%s rip=%s\n", calleeId, callerID, remoteAddr)
 
