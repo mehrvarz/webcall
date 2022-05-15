@@ -116,6 +116,8 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 // so for example if secsSinceLogoff==7*60, it would make sense to wait only up to (15-7=8) minutes for callee
 // however, we would need to deliver the max-wait duration (say, 8min) to the caller
 // and the caller would deliver it back with the wait-parameter (currently boolean)
+
+// remoteAddr is now eligible to send xhr /missedCall
 				fmt.Fprintf(w, fmt.Sprintf("notavailtemp%d",secsSinceLogoff))
 				return
 			}
@@ -134,6 +136,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 						fmt.Printf("/online (%s) offline temp, caller wait abort %s\n",
 							urlID, remoteAddr)
 					}
+// remoteAddr is now eligible to send xhr /missedCall
 					return
 				default:
 					glUrlID, locHub, globHub, err = GetOnlineCallee(urlID, ejectOn1stFound, reportBusyCallee,
@@ -142,6 +145,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 						// error: something went wrong
 						fmt.Printf("# /online GetOnlineCallee(%s/%s) %s ver=%s err=%v\n",
 							urlID, glUrlID, remoteAddr, clientVersion, err)
+// remoteAddr is now eligible to send xhr /missedCall
 						fmt.Fprintf(w, "error")
 						return
 					}
@@ -154,6 +158,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 				}
 				if time.Now().Sub(loopStartTime) > 15 * time.Minute {
 					// callee still not online: give up waiting
+// remoteAddr is now eligible to send xhr /missedCall
 					fmt.Fprintf(w, "notavail")
 					return
 				}
@@ -165,6 +170,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 					fmt.Printf("/online (%s) offline (was never online) %s ver=%s ua=%s\n",
 						urlID, remoteAddr, clientVersion, r.UserAgent())
 				}
+// remoteAddr is now eligible to send xhr /missedCall
 				fmt.Fprintf(w, "notavail")
 				return
 			}
@@ -172,6 +178,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 				fmt.Printf("/online (%s) offline (for %d secs) %s ver=%s ua=%s\n",
 					urlID, secsSinceLogoff, remoteAddr, clientVersion, r.UserAgent())
 			}
+// remoteAddr is now eligible to send xhr /missedCall
 			fmt.Fprintf(w, "notavail")
 			return
 		}
@@ -190,6 +197,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 			fmt.Printf("/online (%s) busy callerIp=%s %s ver=%s\n",
 				urlID, locHub.ConnectedCallerIp, remoteAddr, clientVersion)
 			locHub.HubMutex.RUnlock()
+// remoteAddr is now eligible to send xhr /missedCall
 			fmt.Fprintf(w, "busy")
 			return
 		}
@@ -198,6 +206,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 			fmt.Printf("/online (%s) notavail (hidden) %s ver=%s ua=%s\n",
 				urlID, remoteAddr, clientVersion, r.UserAgent())
 			locHub.HubMutex.RUnlock()
+// remoteAddr is now eligible to send xhr /missedCall
 			fmt.Fprintf(w, "notavail")
 			return
 		}
@@ -208,6 +217,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 			// just act as if (urlID) is not curretly online
 			locHub.HubMutex.RUnlock()
 			fmt.Printf("/online (%s) notavail ws=0 %s ver=%s\n", urlID, remoteAddr, clientVersion)
+// remoteAddr is now eligible to send xhr /missedCall
 			fmt.Fprintf(w, "notavail")
 			return
 		}

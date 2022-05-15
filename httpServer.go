@@ -463,7 +463,9 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if urlPath=="/missedCall" {
-// TO BE REMOVED after a few days
+		// TODO must be a caller that has just failed to connect to a callee
+		// using: /online?id="+calleeID+"&wait=true
+		// other clients are not accepted (to prevent unauthorized clients to fill this callees missed call list)
 		httpMissedCall(w, r, urlID, remoteAddr, remoteAddrWithPort)
 		return
 	}

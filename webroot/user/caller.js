@@ -820,13 +820,28 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 					}
 					gLog('callee could not be reached (%s)',xhr.responseText);
 					showStatus("Unable to reach "+calleeID+".<br>Please try again later.",-1);
-					wsSend("missedcall|"+goodbyMissedCall);
+//					wsSend("missedcall|"+goodbyMissedCall);
+
+					let api = apiPath+"/missedCall?id="+goodbyMissedCall;
+					ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+						gLog('/missedCall success');
+					}, function(errString,err) {
+						gLog('# /missedCall xhr error: '+errString+' '+err);
+					});
 					goodbyMissedCall = "";
 				}, function(errString,errcode) {
 					// errcode 504 = timeout
 					gLog('callee could not be reached. xhr err',errString,errcode);
+// TODO if xhr /online failed, does it make sense to try xhr /missedCall ?
 					showStatus("Unable to reach "+calleeID+".<br>Please try again later.",-1);
-					wsSend("missedcall|"+goodbyMissedCall);
+//					wsSend("missedcall|"+goodbyMissedCall);
+
+					let api = apiPath+"/missedCall?id="+goodbyMissedCall;
+					ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+						gLog('/missedCall success');
+					}, function(errString,err) {
+						gLog('# /missedCall xhr error: '+errString+' '+err);
+					});
 					goodbyMissedCall = "";
 				});
 				return;
@@ -881,13 +896,30 @@ function goodby() {
 		// in this case the server does NOT call peerConHasEnded(), so we call /missedCall from here
 		// id=format: calleeID|callerName|callerID|ageSecs|msgbox
 		// goodbyMissedCall arrives as urlID but is then tokenized
-		gLog('goodbyMissedCall '+goodbyMissedCall);
-		wsSend("missedcall|"+goodbyTextMsg);
+		if(wsAddr!="") {
+			gLog('goodbyMissedCall wsSend='+goodbyMissedCall);
+			wsSend("missedcall|"+goodbyMissedCall);
+		} else {
+			// tell server to store a missed call entry
+			// doing sync xhr in goodby/beforeunload (see: last (7th) parameter = true)
+			gLog('goodbyMissedCall syncxhr='+goodbyMissedCall);
+			let api = apiPath+"/missedCall?id="+goodbyMissedCall;
+			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+				   gLog('goodby /missedCall success '+goodbyMissedCall);
+			}, function(errString,err) {
+				   gLog('# goodby xhr error '+errString);
+			}, false, true);
+		}
 	} else if(goodbyTextMsg!="" && wsConn) {
 		// goodbyTextMsg is used, when callee is online (peerconnect), but does not pick up (no mediaconnect)
 		// in this case server calls peerConHasEnded() for the callee, where addMissedCall() is generated
 		gLog('goodbyTextMsg '+goodbyTextMsg);
-		wsSend("msg|"+goodbyTextMsg);
+		if(wsAddr!="") {
+			wsSend("msg|"+goodbyTextMsg);
+		} else {
+			// sync xhr?
+			// no solution for this yet
+		}
 	}
 
 	if(typeof Android !== "undefined" && Android !== null) {
@@ -1146,6 +1178,10 @@ function connectSignaling(message,openedFunc) {
 	if(!window["WebSocket"]) {
 		console.error('connectSignaling: no WebSocket support');
 		showStatus("No WebSocket support");
+		return;
+	}
+	if(wsAddr=="") {
+		gLog('connectSignaling: no wsAddr for callee='+calleeID);
 		return;
 	}
 	gLog('connectSignaling: open ws connection '+calleeID+' '+wsAddr);
