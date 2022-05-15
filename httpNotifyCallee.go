@@ -282,9 +282,9 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	}
 
 	callerGaveUp := true
-// TODO remoteAddr or remoteAddrWithPort ? (for waitingCaller)
-// TODO where to get msgbox-text from?
-	waitingCaller := CallerInfo{remoteAddr, callerName, time.Now().Unix(), callerId, ""}
+	// remoteAddr or remoteAddrWithPort for waitingCaller? waitingCaller needs the port for funtionality
+	// TODO where to get msgbox-text from? looks like there is no msgbox-text for notification (yet?)
+	waitingCaller := CallerInfo{remoteAddrWithPort, callerName, time.Now().Unix(), callerId, ""}
 
 	var calleeWsClient *WsClient = nil
 	hubMapMutex.RLock()
@@ -394,11 +394,11 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 			fmt.Fprintf(w, "ok")
 		case <-r.Context().Done():
 			// caller has disconnected (before callee could wake this channel to answer the call)
+			callerGaveUp = true
 			// in the mean time callee may have gone offline (and is now back online)
-			// so we assume calleeWsClient invalid and re-obtain it
+			// so we consider calleeWsClient to be invalid and re-obtain it
 			calleeWsClient = nil
 			fmt.Printf("/notifyCallee (%s) caller disconnected callerId=(%s) %s\n", urlID, callerId, remoteAddr)
-			callerGaveUp = true
 			glUrlID, _, _, err := GetOnlineCallee(urlID, ejectOn1stFound, reportBusyCallee, 
 				reportHiddenCallee, remoteAddr, "/notifyCallee")
 			if err != nil {
@@ -440,6 +440,13 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	if callerGaveUp && dbUser.StoreMissedCalls {
 		// store missed call
 		//fmt.Printf("/notifyCallee (%s) store missed call\n", urlID)
+		// waitingCaller contains remoteAddrWithPort. for display purposes we need to cut the port
+		addrPort := waitingCaller.AddrPort
+		portIdx := strings.Index(addrPort,":")
+		if portIdx>=0 {
+			addrNoPort := addrPort[:portIdx]
+			waitingCaller.AddrPort = addrNoPort
+		}
 		_,missedCallsSlice = addMissedCall(urlID, waitingCaller, "/notify-callergaveup")
 	}
 
