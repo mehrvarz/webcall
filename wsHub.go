@@ -119,11 +119,15 @@ func (h *Hub) doBroadcast(message []byte) {
 		calleeID = h.CalleeClient.calleeID
 	}
 	if h.CallerClient!=nil {
-		fmt.Printf("hub (%s) doBroadcast caller (%s) %s\n", calleeID, message, h.CallerClient.RemoteAddr)
+		if logWantedFor("calldur") {
+			fmt.Printf("hub (%s) doBroadcast caller (%s) %s\n", calleeID, message, h.CallerClient.RemoteAddr)
+		}
 		h.CallerClient.Write(message)
 	}
 	if h.CalleeClient!=nil {
-		fmt.Printf("hub (%s) doBroadcast callee (%s) %s\n", calleeID, message, h.CalleeClient.RemoteAddr)
+		if logWantedFor("calldur") {
+			fmt.Printf("hub (%s) doBroadcast callee (%s) %s\n", calleeID, message, h.CalleeClient.RemoteAddr)
+		}
 		h.CalleeClient.Write(message)
 	}
 }

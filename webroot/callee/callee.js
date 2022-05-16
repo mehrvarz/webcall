@@ -223,7 +223,7 @@ window.onload = function() {
 			calleeID = calleeID.toLowerCase();
 			gLog('onload calleeID lowercase '+calleeID);
 			if(mode==1 || mode==3 || wsSecret!="") {
-				gLog('onload pw-entry not required with cookie/wsSecret');
+				gLog('onload pw-entry not required with cookie/wsSecret '+mode);
 				// we have a cockie, so no manual pw-entry is needed
 				// turn automatic online off, user needs to interact before we can answer calls
 				onGotStreamGoOnline = false;
@@ -239,12 +239,11 @@ window.onload = function() {
 				return;
 			}
 
+			gLog('onload pw-entry is needed '+mode);
 			// end spinner
 			if(divspinnerframe) {
 				divspinnerframe.style.display = "none";
 			}
-
-			gLog('onload pw-entry is needed '+mode);
 			onGotStreamGoOnline = true;
 			goOnlineButton.disabled = true;
 			goOfflineButton.disabled = true;
@@ -268,7 +267,13 @@ window.onload = function() {
 		}
 
 		if(mode==3) {
-			// mode==3: server is not accessible
+			// mode==3: login is not possible
+			let mainParent = containerElement.parentNode;
+			mainParent.removeChild(containerElement);
+			var msgElement = document.createElement("div");
+			msgElement.style = "margin-top:15%; padding:2%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; font-size:1.2em; line-height:1.5em;";
+			msgElement.innerHTML = "<div>Cannot login "+calleeID+"<br>Stop other session and clear old login-cookie</div>";
+			mainParent.appendChild(msgElement);
 		}
 		return;
 	});
@@ -396,19 +401,24 @@ function checkServerMode(callback) {
 	
 	let api = apiPath+"/mode?id="+calleeID;
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+		console.log('mode='+xhr.responseText);
 		if(xhr.responseText.startsWith("maintenance")) {
 			// maintenance mode
 			callback(2);
 			return;
 		}
-		// normal mode
-		if(xhr.responseText.indexOf("|ok")>0) {
-			// normal mode, cookie + pw are known
-			callback(1);
+		if(xhr.responseText.startsWith("normal")) {
+			// normal mode
+			if(xhr.responseText.indexOf("|ok")>0) {
+				// normal mode, cookie + pw are known
+				callback(1);
+				return;
+			}
+			// normal mode, cookie or pw are NOT know
+			callback(0);
 			return;
 		}
-		// normal mode, cookie or pw are NOT know
-		callback(0);
+		callback(3);
 	}, function(errString,errcode) {
 		console.log('xhr error',errString);
 		callback(3);
@@ -462,7 +472,10 @@ function enablePasswordForm() {
 	missedCallsTitleElement.style.display = "none";
 	setTimeout(function() {
 		formPw.focus();
-		document.getElementById("username").value = calleeID;
+		var usernameForm = document.getElementById("username");
+		if(usernameForm) {
+			usernameForm.value = calleeID;
+		}
 	},800);
 }
 
@@ -793,7 +806,9 @@ function showOnlineReadyMsg(sessionIdPayload) {
 		// show 2 msgs after another
 		showStatus(msg1,2500);
 		setTimeout(function() {
-			showStatus(msg2,-1);
+			if(wsConn!=null) {
+				showStatus(msg2,-1);
+			}
 		},2800);
 	} else {
 		// show 1 msg

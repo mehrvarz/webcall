@@ -387,21 +387,24 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 			cookie = nil
 		} else {
 			calleeIdFromCookie := cookie.Value[:idxAmpasent]
-			// we prefere calleeID from cookie more than from referrer
-			if calleeIdFromCookie!="" {
+			if calleeID=="" {
+				// if we didn't get a calleeID from url-path, then use the one from cookie
 				calleeID = calleeIdFromCookie
 			}
+
 			if logWantedFor("cookie") {
 				fmt.Printf("httpApi cookie avail req=%s ref=%s cookieName=%s cValue=%s calleeID=%s urlID=%s\n",
 					r.URL.Path, referer, cookieName, cookie.Value, calleeID, urlID)
 			}
 			if calleeID!="" && calleeID != calleeIdFromCookie {
-				// client has logged in with a different user-ID than previously (this is no error)
-				fmt.Printf("httpApi calleeIdFromCookie=(%s) != calleeID=(%s) clear cookie\n",
+				fmt.Printf("# httpApi calleeIdFromCookie=(%s) != calleeID=(%s)\n",
 					calleeIdFromCookie, calleeID)
-				// delete clientside cookie
-				clearCookie(w, r, urlID, remoteAddr, "false cookie userID")
-				cookie = nil
+				// WE NEED TO PREVENT THE LOGIN OF A 2ND CALLEE THAT IS NOT THE SAME AS THE ONE WHO OWNS THE COOKIE
+				// THE OTHER CALLEE IS STOPPED AND IT'S COOKIE CLEARED BEFORE THIS ONE CAN LOGIN
+				// BUT THERE IS NO WAY TO TELL THAT TO THE NEW USER
+				// RETURNING "ERROR" ONLY BRINGS UP THE PW FORM
+				fmt.Fprintf(w,"error")
+				return
 			} else {
 				//maxlen:=20; if len(cookie.Value)<20 { maxlen=len(cookie.Value) }
 				//fmt.Printf("httpApi cookie avail(%s) req=(%s) ref=(%s) callee=(%s)\n", 
@@ -526,7 +529,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if cookie!=nil && pw!="" && calleeID==urlID {
-			// if calleeID (from cookie) != urlID, then we need pw-entry on the client
+			// if calleeID (from cookie) == urlID, then we do NOT need pw-entry on the client
 			//fmt.Printf("/mode normal callee avail (cookie:%s) (url:%s) rip=%s\n",
 			//	calleeID, urlID, remoteAddr)
 			if logWantedFor("mode") {
@@ -666,18 +669,18 @@ func clearCookie(w http.ResponseWriter, r *http.Request, urlID string, remoteAdd
 	}
 	cookie, err := r.Cookie(cookieName)
 	if err == nil {
+		fmt.Printf("clearcookie urlID=(%s) cookieName=(%s) cookie.Value=%s ip=%s '%s'\n",
+			urlID, cookieName, cookie.Value, remoteAddr, comment)
 		err = kvHashedPw.Delete(dbHashedPwBucket, cookie.Value)
 		if err==nil {
 			//fmt.Printf("clearCookie (%s) dbHashedPw.Delete OK db=%s bucket=%s key=%s\n",
 			//	urlID, dbHashedPwName, dbHashedPwBucket, cookie.Value)
-			//fmt.Fprintf(w,"ok")
 		} else {
 			// user did logout without being logged in - never mind
 			if strings.Index(err.Error(),"key not found")<0 {
 				fmt.Printf("clearCookie (%s) dbHashedPw.Delete db=%s bucket=%s key=%s err=%s\n",
 					urlID, dbHashedPwName, dbHashedPwBucket, cookie.Value, err)
 			}
-			//fmt.Fprintf(w,"ok")
 		}
 	} else {
 		if strings.Index(err.Error(),"named cookie not present")<0 {
@@ -685,7 +688,8 @@ func clearCookie(w http.ResponseWriter, r *http.Request, urlID string, remoteAdd
 		}
 	}
 	expiration := time.Now().Add(-1 * time.Hour)
-	fmt.Printf("clearcookie (%s) cookieName=(%s) %s '%s'\n",urlID,cookieName,remoteAddr, comment)
+	fmt.Printf("clearcookie urlID=(%s) cookieName=(%s) ip=%s '%s'\n",
+		urlID, cookieName, remoteAddr, comment)
 	cookieObj := http.Cookie{Name:cookieName, Value:"",
 				Path:"/",
 				HttpOnly:false,
