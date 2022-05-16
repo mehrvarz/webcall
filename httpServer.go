@@ -288,7 +288,6 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 						remoteAddr, len(clientRequestsSlice), maxClientRequestsPer30min, urlPath)
 				}
 				fmt.Fprintf(w,"Too many requests in short order. Please take a pause.")
-//TODO now that we have shown this warning, we could (after a few minutes) reduce the clientRequestsSlice a bit
 				clientRequestsMutex.Lock()
 				clientRequestsMap[remoteAddr] = clientRequestsSlice
 				clientRequestsMutex.Unlock()
@@ -392,57 +391,52 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				calleeID = calleeIdFromCookie
 			}
 
+			if calleeID!="" && calleeID != calleeIdFromCookie {
+				fmt.Printf("# httpApi calleeID=(%s) != calleeIdFromCookie=(%s)\n", calleeID, calleeIdFromCookie)
+				// WE NEED TO PREVENT THE LOGIN OF A 2ND CALLEE THAT IS NOT THE SAME AS THE ONE WHO OWNS THE COOKIE
+				// THE OTHER CALLEE IS STOPPED AND IT'S COOKIE CLEARED BEFORE THIS ONE CAN LOGIN
+				// RETURNING "ERROR" BRINGS UP THE PW FORM
+				// but when /mode is used, the user is told that the other session needs to be stopped first
+				fmt.Fprintf(w,"error")
+				return
+			}
+
+			// calleeID == calleeIdFromCookie (this is good) - now get PW from kvHashedPw
 			if logWantedFor("cookie") {
 				fmt.Printf("httpApi cookie avail req=%s ref=%s cookieName=%s cValue=%s calleeID=%s urlID=%s\n",
 					r.URL.Path, referer, cookieName, cookie.Value, calleeID, urlID)
 			}
-			if calleeID!="" && calleeID != calleeIdFromCookie {
-				fmt.Printf("# httpApi calleeIdFromCookie=(%s) != calleeID=(%s)\n",
-					calleeIdFromCookie, calleeID)
-				// WE NEED TO PREVENT THE LOGIN OF A 2ND CALLEE THAT IS NOT THE SAME AS THE ONE WHO OWNS THE COOKIE
-				// THE OTHER CALLEE IS STOPPED AND IT'S COOKIE CLEARED BEFORE THIS ONE CAN LOGIN
-				// BUT THERE IS NO WAY TO TELL THAT TO THE NEW USER
-				// RETURNING "ERROR" ONLY BRINGS UP THE PW FORM
-				fmt.Fprintf(w,"error")
-				return
+			err = kvHashedPw.Get(dbHashedPwBucket,cookie.Value,&pwIdCombo)
+			if err!=nil {
+				// callee is using an unknown cookie
+				fmt.Printf("httpApi %v unknown cookie '%s' err=%v\n", r.URL, cookie.Value, err)
+				// delete clientside cookie
+				clearCookie(w, r, urlID, remoteAddr, "unknown cookie")
+				cookie = nil
 			} else {
-				//maxlen:=20; if len(cookie.Value)<20 { maxlen=len(cookie.Value) }
-				//fmt.Printf("httpApi cookie avail(%s) req=(%s) ref=(%s) callee=(%s)\n", 
-				//	cookie.Value[:maxlen], r.URL.Path, referer, calleeID)
-
-				// calleeIdFromCookie == calleeID (this is good) - now get PW from kvHashedPw
-				err = kvHashedPw.Get(dbHashedPwBucket,cookie.Value,&pwIdCombo)
-				if err!=nil {
-					// callee is using an unknown cookie
-					fmt.Printf("httpApi %v unknown cookie '%s' err=%v\n", r.URL, cookie.Value, err)
+				pwIdComboCalleeId := pwIdCombo.CalleeId
+				argIdx := strings.Index(pwIdComboCalleeId,"&")
+				if argIdx>=0 {
+					pwIdComboCalleeId = pwIdComboCalleeId[0:argIdx]
+					pwIdCombo.CalleeId = pwIdComboCalleeId
+				}
+				if calleeID!="" && pwIdCombo.CalleeId != calleeID {
+					// callee is using wrong cookie
+					fmt.Printf("# httpApi wrong cookie for id=(%s) != calleeID=(%s) clear cookie\n",
+						pwIdCombo.CalleeId, calleeID)
 					// delete clientside cookie
-					clearCookie(w, r, urlID, remoteAddr, "unknown cookie")
+					clearCookie(w, r, urlID, remoteAddr, "wrong cookie")
+					cookie = nil
+				} else if pwIdCombo.Pw=="" {
+					fmt.Printf("# httpApi cookie available, pw empty, pwIdCombo=(%v) ID=%s clear cookie\n",
+						pwIdCombo, calleeID)
+					// delete clientside cookie
+					clearCookie(w, r, urlID, remoteAddr, "cookie pw empty")
 					cookie = nil
 				} else {
-					pwIdComboCalleeId := pwIdCombo.CalleeId
-					argIdx := strings.Index(pwIdComboCalleeId,"&")
-					if argIdx>=0 {
-						pwIdComboCalleeId = pwIdComboCalleeId[0:argIdx]
-						pwIdCombo.CalleeId = pwIdComboCalleeId
-					}
-					if calleeID!="" && pwIdCombo.CalleeId != calleeID {
-						// callee is using wrong cookie
-						fmt.Printf("# httpApi wrong cookie for id=(%s) != calleeID=(%s) clear cookie\n",
-							pwIdCombo.CalleeId, calleeID)
-						// delete clientside cookie
-						clearCookie(w, r, urlID, remoteAddr, "wrong cookie")
-						cookie = nil
-					} else if pwIdCombo.Pw=="" {
-						fmt.Printf("# httpApi cookie available, pw empty, pwIdCombo=(%v) ID=%s clear cookie\n",
-							pwIdCombo, calleeID)
-						// delete clientside cookie
-						clearCookie(w, r, urlID, remoteAddr, "cookie pw empty")
-						cookie = nil
-					} else {
-						//fmt.Printf("httpApi cookie available for id=(%s) (%s)(%s) reqPath=%s ref=%s rip=%s\n",
-						//	pwIdCombo.CalleeId, calleeID, urlID, r.URL.Path, referer, remoteAddrWithPort)
-						pw = pwIdCombo.Pw
-					}
+					//fmt.Printf("httpApi cookie available for id=(%s) (%s)(%s) reqPath=%s ref=%s rip=%s\n",
+					//	pwIdCombo.CalleeId, calleeID, urlID, r.URL.Path, referer, remoteAddrWithPort)
+					pw = pwIdCombo.Pw
 				}
 			}
 		}

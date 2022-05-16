@@ -201,7 +201,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					}
 					fmt.Printf("/login (%s) already/still logged in %v by %s <- %s ver=%s ua=%s\n",
 						key, time.Since(startRequestTime), calleeIP, remoteAddrWithPort, clientVersion, userAgent)
-// TODO maybe returning fatal is wrong?
+					// TODO maybe returning fatal is wrong?
 					fmt.Fprintf(w,"fatal")
 					return
 				}
@@ -292,13 +292,14 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				// pw guessing more difficult if delayed
 				time.Sleep(3000 * time.Millisecond)
 			}
-// TODO clear cookie?
-//			clearCookie(w, r, urlID, remoteAddr)
+			// TODO clear cookie?
+			//clearCookie(w, r, urlID, remoteAddr)
 			fmt.Fprintf(w, "notregistered")
 			return
 		}
 		if pw != dbEntry.Password {
 //			fmt.Printf("/login (%s) fail wrong password %d %s\n", urlID, len(calleeLoginSlice), remoteAddr)
+// TODO
 fmt.Printf("/login (%s) fail wrong password [%s/shd:%s] %d %s\n",
 	urlID, pw, dbEntry.Password, len(calleeLoginSlice), remoteAddr)
 			// must delay to make guessing more difficult
@@ -590,9 +591,6 @@ func createCookie(w http.ResponseWriter, urlID string, pw string, pwIdCombo *PwI
 	// create new cookie with name=webcallid value=urlID
 	// store only if url parameter nocookie is NOT set
 	cookieSecret := fmt.Sprintf("%d", rand.Int63n(99999999999))
-//	if logWantedFor("cookie") {
-//		fmt.Printf("/login cookieSecret=%s\n", cookieSecret)
-//	}
 
 	// we need urlID in cookieName only for answie#
 	cookieName := "webcallid"
@@ -601,10 +599,6 @@ func createCookie(w http.ResponseWriter, urlID string, pw string, pwIdCombo *PwI
 	}
 	expiration := time.Now().Add(6 * 31 * 24 * time.Hour)
 	cookieValue := fmt.Sprintf("%s&%s", urlID, string(cookieSecret))
-//	if logWantedFor("cookie") {
-//		fmt.Printf("/login create cookie cookieName=(%s) cookieValue=(%s)\n",
-//			cookieName, cookieValue)
-//	}
 	cookieObj := http.Cookie{Name: cookieName, Value: cookieValue,
 		Path:     "/",
 		HttpOnly: false,
