@@ -942,7 +942,7 @@ var confirmXhrNickname = false;
 function confirmNotifyConnect() {
 	// offer caller to enter a nickname + callerID and ask to enter confirmWord
 	// using a form with two text fields
-	// TODO change confirmWord ("123") randomly
+	confirmWord = ""+(Math.floor(Math.random() * 900) + 100);
 	if(typeof callerName=="undefined") {
 		callerName = "";
 	}
@@ -970,21 +970,20 @@ function confirmNotifyConnect() {
 		return;
 	}
 
-	var msg = `
-	About to get `+calleeName+` on the phone.<br>
+	var msg = `About to get `+calleeName+` on the phone<br>
 	<form action="javascript:;" onsubmit="confirmNotifyConnect2(this)" style="max-width:550px;" id="confirmNotify">
 
-	<label for="nickname" style="display:inline-block; padding-bottom:4px;">Please enter your nickname:</label><br>
+	<label for="nickname" style="display:inline-block; padding-bottom:4px;">Enter your nickname:</label><br>
 	<input name="nickname" id="nickname" type="text" class="formtext" maxlength="25" value="`+callerName+`" autofocus required>
 	<span onclick="clearForm(0)" style="margin-left:5px; user-select:none;">X</span><br>
 	<br>
-
-	<label for="callerID" style="display:inline-block; padding-bottom:4px;">Please enter your WebCall ID (optional):</label><br>
+<!--
+	<label for="callerID" style="display:inline-block; padding-bottom:4px;">Short text message (optional):</label><br>
 	<input name="callerID" id="callerID" type="text" class="formtext" maxlength="25" value="`+callerId+`">
 	<span onclick="clearForm(1)" style="margin-left:5px; user-select:none;">X</span><br>
 	<br>
-
-	<label for="confirm" style="display:inline-block; padding-bottom:4px;">Please enter '`+confirmWord+`' to continue:</label><br>
+-->
+	<label for="confirm" style="display:inline-block; padding-bottom:4px;">Enter '`+confirmWord+`' to continue:</label><br>
 	<input name="confirm" id="confirm" type="text" class="formtext" maxlength="3" value="`+confirmValue+`">
 	<span onclick="clearForm(2)" style="margin-left:5px; user-select:none;">X</span><br>
 
@@ -994,8 +993,13 @@ function confirmNotifyConnect() {
 	showStatus(msg,-1);
 
 	setTimeout(function() {
-		var formNickname = document.querySelector('input#nickname');
-		formNickname.focus();
+		if(callerName!="" && confirmValue=="") {
+			var formConfirm = document.querySelector('input#confirm');
+			formConfirm.focus();
+		} else {
+			var formNickname = document.querySelector('input#nickname');
+			formNickname.focus();
+		}
 	},500);
 }
 
@@ -1055,12 +1059,15 @@ function errorAction2(errString,err) {
 function confirmNotifyConnect2() {
 	// caller has entered nickname form - lets validate
 	callerName = document.getElementById("nickname").value;
-	callerId = document.getElementById("callerID").value;
-	confirmValue = document.getElementById("confirm").value;
-	//console.log("confirmNotifyConnect2 callerName="+callerName+" callerId="+callerId);
-	// if confirmValue == confirmWord -> notifyConnect()
-	//                           else -> confirmNotifyConnect()
+//	callerId = document.getElementById("callerID").value;
+	var confirmForm = document.getElementById("confirm")
+	if(confirmForm) {
+		confirmValue = confirmForm.value;
+	}
+	//console.log("callerName="+callerName+" callerId="+callerId);
+	console.log("confirmValue="+confirmValue+" confirmWord="+confirmWord);
 	if(confirmValue != confirmWord) {
+		confirmValue = "";
 		confirmNotifyConnect();
 		return;
 	}
@@ -1070,12 +1077,13 @@ function confirmNotifyConnect2() {
 		callerName = callerName.substring(0,25);
 	}
 	//console.log("confirmNotifyConnect2 callerName="+callerName);
-
+/*
 	callerId = callerId.replace(/[^a-zA-Z0-9 ]/g, "");
 	if(callerId.length>11) {
 		callerId = callerId.substring(0,11);
 	}
-	//console.log("confirmNotifyConnect2 callerId="+callerId);
+*/
+	console.log("confirmNotifyConnect2 callerId="+callerId);
 
 	// this short delay prevents "Form submission canceled because the form is not connected" in chrome 56+
 	setTimeout(function() {

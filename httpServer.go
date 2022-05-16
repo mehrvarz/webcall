@@ -678,12 +678,13 @@ func clearCookie(w http.ResponseWriter, r *http.Request, urlID string, remoteAdd
 		}
 	} else {
 		if strings.Index(err.Error(),"named cookie not present")<0 {
-			fmt.Printf("# clearCookie (%s) r.Cookie(%s) err=%s\n", urlID, cookieName, err)
+			fmt.Printf("# clearcookie urlID=(%s) cookieName=(%s) ip=%s '%s' err=%s\n",
+				urlID, cookieName, remoteAddr, comment, err)
 		}
 	}
+	//fmt.Printf("clearcookie urlID=(%s) cookieName=(%s) ip=%s '%s'\n",
+	//	urlID, cookieName, remoteAddr, comment)
 	expiration := time.Now().Add(-1 * time.Hour)
-	fmt.Printf("clearcookie urlID=(%s) cookieName=(%s) ip=%s '%s'\n",
-		urlID, cookieName, remoteAddr, comment)
 	cookieObj := http.Cookie{Name:cookieName, Value:"",
 				Path:"/",
 				HttpOnly:false,
