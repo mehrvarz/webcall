@@ -866,9 +866,6 @@ func (c *WsClient) receiveProcess(message []byte) {
 			if !c.isCallee {
 				// when the caller sends "log", the callee also becomes peerConnected
 				c.hub.CalleeClient.isConnectedToPeer.Set(true)
-//			} else {
-//				// test
-//				c.hub.CallerClient.isConnectedToPeer.Set(true)
 			}
 
 			c.hub.LocalP2p = false
@@ -911,12 +908,13 @@ func (c *WsClient) receiveProcess(message []byte) {
 
 						if c.hub.maxTalkSecsIfNoP2p>0 && (!c.hub.LocalP2p || !c.hub.RemoteP2p) {
 							// relayed con: set deadline maxTalkSecsIfNoP2p
-							if logWantedFor("calldur") {
-								fmt.Printf("%s (%s) setDeadline maxTalkSecsIfNoP2p %d %v %v\n", c.connType,
-									c.calleeID, c.hub.maxTalkSecsIfNoP2p, c.hub.LocalP2p, c.hub.RemoteP2p)
-							}
-// careful: hub.HubMutex is locked
+							//if logWantedFor("deadline") {
+							//	fmt.Printf("%s (%s) setDeadline maxTalkSecsIfNoP2p %d %v %v\n", c.connType,
+							//		c.calleeID, c.hub.maxTalkSecsIfNoP2p, c.hub.LocalP2p, c.hub.RemoteP2p)
+							//}
+							c.hub.HubMutex.RUnlock()
 							c.hub.setDeadline(c.hub.maxTalkSecsIfNoP2p,"peer con")
+							c.hub.HubMutex.RLock()
 
 							// deliver max talktime to both clients
 							c.hub.doBroadcast(

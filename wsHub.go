@@ -49,7 +49,7 @@ func newHub(maxRingSecs int, maxTalkSecsIfNoP2p int, startTime int64) *Hub {
 
 func (h *Hub) setDeadline(secs int, comment string) {
 	if h.timer!=nil {
-		if logWantedFor("calldur") {
+		if logWantedFor("deadline") {
 			fmt.Printf("setDeadline (%s) cancel running timer; new secs=%d (%s)\n",
 				h.CalleeClient.calleeID, secs, comment)
 		}
@@ -60,7 +60,7 @@ func (h *Hub) setDeadline(secs int, comment string) {
 	}
 
 	if(secs>0) {
-		if logWantedFor("calldur") {
+		if logWantedFor("deadline") {
 			fmt.Printf("setDeadline (%s) create %ds (%s)\n", h.CalleeClient.calleeID, secs, comment)
 		}
 		h.timer = time.NewTimer(time.Duration(secs) * time.Second)
@@ -99,7 +99,7 @@ func (h *Hub) setDeadline(secs int, comment string) {
 					}
 				}
 			case <-h.timerCanceled:
-				if logWantedFor("calldur") {
+				if logWantedFor("deadline") {
 					fmt.Printf("setDeadline (%s) timerCanceled (secs=%d %v)\n",
 						h.CalleeClient.calleeID, secs, timeStart.Format("2006-01-02 15:04:05"))
 				}
@@ -119,13 +119,13 @@ func (h *Hub) doBroadcast(message []byte) {
 		calleeID = h.CalleeClient.calleeID
 	}
 	if h.CallerClient!=nil {
-		if logWantedFor("calldur") {
+		if logWantedFor("deadline") {
 			fmt.Printf("hub (%s) doBroadcast caller (%s) %s\n", calleeID, message, h.CallerClient.RemoteAddr)
 		}
 		h.CallerClient.Write(message)
 	}
 	if h.CalleeClient!=nil {
-		if logWantedFor("calldur") {
+		if logWantedFor("deadline") {
 			fmt.Printf("hub (%s) doBroadcast callee (%s) %s\n", calleeID, message, h.CalleeClient.RemoteAddr)
 		}
 		h.CalleeClient.Write(message)
@@ -190,7 +190,7 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 		h.HubMutex.Unlock()
 /*
 		if h.timer!=nil {
-			if logWantedFor("calldur") {
+			if logWantedFor("deadline") {
 				fmt.Printf("doUnregister clear old timer\n")
 			}
 			h.timerCanceled <- struct{}{}
