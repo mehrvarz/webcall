@@ -272,7 +272,7 @@ window.onload = function() {
 			mainParent.removeChild(containerElement);
 			var msgElement = document.createElement("div");
 			msgElement.style = "margin-top:15%; padding:2%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; font-size:1.2em; line-height:1.5em;";
-			msgElement.innerHTML = "<div>cannot login callee ID "+calleeID+"<br>stop other session and clear login-cookie</div>";
+			msgElement.innerHTML = "<div>cannot login "+calleeID+"<br>stop other session<br>and clear login-cookie<br><br><a onclick='exit()'>clear login-cookie</a></div>";
 			mainParent.appendChild(msgElement);
 		}
 		return;
@@ -634,6 +634,8 @@ function login(retryFlag) {
 		} else if(loginStatus=="") {
 			showStatus("No response from server",-1);
 			form.style.display = "none";
+		} else if(loginStatus=="wrongcookie") {
+			window.location.reload(false);
 		} else if(loginStatus=="fatal") {
 			// loginStatus "fatal" = "already logged in" or "db.GetX err"
 			// no use offering pw entry again at this point

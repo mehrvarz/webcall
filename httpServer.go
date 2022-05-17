@@ -391,13 +391,14 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				calleeID = calleeIdFromCookie
 			}
 
-			if calleeID!="" && calleeID != calleeIdFromCookie {
-				fmt.Printf("# httpApi calleeID=(%s) != calleeIdFromCookie=(%s)\n", calleeID, calleeIdFromCookie)
+			if calleeID!="" && calleeID != calleeIdFromCookie && !strings.HasPrefix(urlPath,"/logout") {
+				fmt.Printf("# httpApi calleeID=(%s) != calleeIdFromCookie=(%s) (%s)\n",
+					calleeID, calleeIdFromCookie, urlPath)
 				// WE NEED TO PREVENT THE LOGIN OF A 2ND CALLEE THAT IS NOT THE SAME AS THE ONE WHO OWNS THE COOKIE
 				// THE OTHER CALLEE IS STOPPED AND IT'S COOKIE CLEARED BEFORE THIS ONE CAN LOGIN
 				// RETURNING "ERROR" BRINGS UP THE PW FORM
 				// but when /mode is used, the user is told that the other session needs to be stopped first
-				fmt.Fprintf(w,"error")
+				fmt.Fprintf(w,"wrongcookie")
 				return
 			}
 
