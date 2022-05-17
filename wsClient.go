@@ -205,11 +205,11 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			n := len(data)
 			if n>0 {
 				if logWantedFor("wsreceive") {
-					max := n; if max>10 { max = 10 }
+					max := n; if max>20 { max = 20 }
 					fmt.Printf("%s (%s) received n=%d isCallee=%v (%s)\n",
 						client.connType, client.calleeID, n, client.isCallee, data[:max])
 				}
-				client.receiveProcess(data)
+				client.receiveProcess(data, wsConn)
 			}
 		case websocket.BinaryMessage:
 			fmt.Printf("# %s binary dataLen=%d\n", client.connType, len(data))
@@ -374,7 +374,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	}
 }
 
-func (c *WsClient) receiveProcess(message []byte) {
+func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 	// check message integrity: cmd's can not be longer than 32 chars
 	checkLen := 32
 	if len(message) < checkLen {
@@ -383,17 +383,20 @@ func (c *WsClient) receiveProcess(message []byte) {
 	idxPipe := bytes.Index(message[:checkLen], []byte("|"))
 	if idxPipe<0 {
 		// invalid -> ignore
-		//fmt.Printf("# serveWs no pipe char found; abort; checkLen=%d (%s)\n",
+		//fmt.Printf("# serveWs receive no pipe char found; abort; checkLen=%d (%s)\n",
 		//	checkLen,string(message[:checkLen]))
 		return
 	}
 	tok := strings.Split(string(message),"|")
 	if len(tok)!=2 {
 		// invalid -> ignore
-		fmt.Printf("# serveWs len(tok)=%d is !=2; abort; checkLen=%d idxPipe=%d (%s)\n",
+		fmt.Printf("# serveWs receive len(tok)=%d is !=2; abort; checkLen=%d idxPipe=%d (%s)\n",
 			len(tok), checkLen, idxPipe, string(message[:checkLen]))
 		return
 	}
+
+	//fmt.Printf("_ %s (%s) receive isCallee=%v %s %s\n",
+	//	c.connType, c.calleeID, c.isCallee, c.RemoteAddr, cliWsConn.RemoteAddr().String())
 
 	cmd := tok[0]
 	payload := tok[1]
@@ -623,9 +626,20 @@ func (c *WsClient) receiveProcess(message []byte) {
 		}
 		// unlock - don't call peerConHasEnded with lock
 		c.hub.HubMutex.RUnlock()
-		fmt.Printf("%s (%s) cmd=cancel isCallee=%v %s '%s'\n",
-			c.connType, c.calleeID, c.isCallee, c.RemoteAddr, payload)
-		c.hub.CalleeClient.peerConHasEnded("cancel")
+
+		if c.hub.CalleeClient.isConnectedToPeer.Get() {
+			// only execute cancel, if callee is peer-connected
+			fmt.Printf("%s (%s) cmd=cancel connected=%v byCallee=%v %s '%s'\n",
+				c.connType, c.calleeID, c.hub.CalleeClient.isConnectedToPeer.Get(),
+				c.isCallee, c.RemoteAddr, payload)
+			// tell callee to disconnect
+			c.hub.CalleeClient.peerConHasEnded("cancel")
+		} else {
+			// ignore, already disconnected
+			//fmt.Printf("%s (%s) ignore cmd=cancel connected=%v c.isCallee=%v %s '%s'\n",
+			//	c.connType, c.calleeID, c.hub.CalleeClient.isConnectedToPeer.Get(),
+			//	c.isCallee, c.RemoteAddr, payload)
+		}
 		return
 	}
 
@@ -1033,11 +1047,6 @@ func (c *WsClient) peerConHasEnded(cause string) {
 		return
 	}
 
-//	peerType := "caller"
-//	if c.isCallee {
-//		peerType = "callee"
-//	}
-
 	if c.hub==nil {
 		fmt.Printf("# %s (%s) peerConHasEnded callee=%v con=%v media=%v c.hub==nil (%s)\n",
 			c.connType, c.calleeID, c.isCallee,
@@ -1052,35 +1061,21 @@ func (c *WsClient) peerConHasEnded(cause string) {
 		c.hub.lastCallStartTime = 0
 	}
 
-// test
 	if !c.isCallee {
+		// this does not happen anymore
 		fmt.Printf("# %s (%s) peerConHasEnded (ignore isCaller) con=%v media=%v (%s)\n",
 			c.connType, c.calleeID, //peerType,
 			c.isConnectedToPeer.Get(), c.isMediaConnectedToPeer.Get(), cause)
 		return
 	}
 
-//	if c.isCallee {
-		// prepare for next session
-		c.calleeInitReceived.Set(false)
-//		c.pickupSent.Set(false)
-//	}
+	// prepare for next session
+	c.calleeInitReceived.Set(false)
 
-// TODO bei caller hangup kommt caller mit !c.isConnectedToPeer (auch wenn es bei callee gesetzt ist)
-// so this is only set for callee
-// I think the whole peerConHasEnded() is relevant for callee only
-	if !c.isConnectedToPeer.Get() {
-/*
-		// no peerconnect: was not connected
-		if logWantedFor("attach") {
-			fmt.Printf("%s (%s) peerConHasEnded %s no peerconnect %s (%s)\n",
-				c.connType, c.calleeID, peerType, c.RemoteAddr, cause)
-		}
-*/
-	} else {
+	if c.isConnectedToPeer.Get() {
 		// we are disconnection a peer connect
 		if logWantedFor("attach") {
-			fmt.Printf("%s (%s) peerConHasEnded isCallee con=%v media=%v (%s)\n",
+			fmt.Printf("%s (%s) peerConHasEnded con=%v media=%v (%s)\n",
 				c.connType, c.calleeID,
 				c.isConnectedToPeer.Get(), c.isMediaConnectedToPeer.Get(), cause)
 		}
@@ -1097,21 +1092,22 @@ func (c *WsClient) peerConHasEnded(cause string) {
 		c.isConnectedToPeer.Set(false)
 		c.isMediaConnectedToPeer.Set(false)
 		// now clear these two flags also on the other side
-		if c.isCallee {
+//		if c.isCallee {
 			c.hub.HubMutex.RLock()
 			if c.hub.CallerClient!=nil {
 				c.hub.CallerClient.isConnectedToPeer.Set(false)
 				c.hub.CallerClient.isMediaConnectedToPeer.Set(false)
 			}
 			c.hub.HubMutex.RUnlock()
-		} else {
-			c.hub.HubMutex.RLock()
-			if c.hub.CalleeClient!=nil {
-				c.hub.CalleeClient.isConnectedToPeer.Set(false)
-				c.hub.CalleeClient.isMediaConnectedToPeer.Set(false)
-			}
-			c.hub.HubMutex.RUnlock()
-		}
+//		} else {
+//			// this does not happen anymore
+//			c.hub.HubMutex.RLock()
+//			if c.hub.CalleeClient!=nil {
+//				c.hub.CalleeClient.isConnectedToPeer.Set(false)
+//				c.hub.CalleeClient.isMediaConnectedToPeer.Set(false)
+//			}
+//			c.hub.HubMutex.RUnlock()
+//		}
 
 		calleeRemoteAddr := ""
 		callerRemoteAddr := ""
