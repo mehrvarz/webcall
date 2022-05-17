@@ -553,9 +553,7 @@ function checkCalleeOnline(waitForCallee) {
 	xhrTimeout = 30*1000;
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 		calleeOnlineStatus(xhr.responseText,waitForCallee);
-	}, errorAction
-		// errorAction will switch back; if we don't want this we should handle err like in notifyConnect()
-	);
+	}, errorAction);
 }
 
 function calleeOnlineStatus(onlineStatus,waitForCallee) {
@@ -783,7 +781,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 			if(onlineStatus.startsWith("notavailtemp")) {
 				// callee temporarily offline: have caller wait for callee
 				var offlineFor = parseInt(onlineStatus.substring(12),10);
-				showStatus("Trying to find "+calleeID+". This can take a few minutes. Please wait...<br><br><img src='preloader-circles.svg' style='width:40%;max-height:120px;'>",-1);
+				showStatus("Trying to find "+calleeID+". This can take a while. Please wait...<br><br><img src='preloader-circles.svg' style='width:40%;max-height:120px;'>",-1);
 				let api = apiPath+"/online?id="+calleeID+"&wait=true&callerId="+callerId+"&name="+callerName;
 				xhrTimeout = 15*60*1000; // 15min
 				if(offlineFor>0) {
@@ -910,7 +908,7 @@ function goodby() {
 			gLog('goodbyMissedCall syncxhr='+goodbyMissedCall);
 			let api = apiPath+"/missedCall?id="+goodbyMissedCall;
 			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-				   gLog('goodby /missedCall success '+goodbyMissedCall);
+				   gLog('goodby /missedCall sent to '+goodbyMissedCall);
 			}, function(errString,err) {
 				   gLog('# goodby xhr error '+errString);
 			}, false, true);
@@ -919,7 +917,8 @@ function goodby() {
 		// goodbyTextMsg is used, when callee is online (peerconnect), but does not pick up (no mediaconnect)
 		// in this case server calls peerConHasEnded() for the callee, where addMissedCall() is generated
 // TODO check wsConn instead of wsAddr
-		if(wsAddr!="") {
+//		if(wsAddr!="") {
+		if(wsConn==null) {
 			gLog('goodbyTextMsg wsSend='+goodbyTextMsg);
 			wsSend("msg|"+goodbyTextMsg);
 		} else {
@@ -1227,9 +1226,9 @@ function connectSignaling(message,openedFunc) {
 		}
 	};
 	wsConn.onerror = function(evt) {
-// this could be a network problem
-// but this can also mean that callee has gone offline just a little while ago
-// TODO: should this not generate a /missedcall?
+		// this can be caused by a network problem
+		// this can also mean that callee has gone offline recently and that wsAddr is now outdated
+		// should this generate a /missedcall? no, bc we continue in onClose()
 		console.error("wsConn.onerror: clear wsAddr");
 		showStatus("connect error");
 		wsAddr = "";
@@ -1240,10 +1239,11 @@ function connectSignaling(message,openedFunc) {
 			// likely wsAddr is outdated (may have been cleared by onerror already)
 			console.log('wsConn.onclose: clear wsAddr='+wsAddr);
 			wsAddr = "";
-// TODO clearing wsAddr does not always have the desired effect (of resulting in no err on next try)
-// TODO we might want to: retry with checkCalleeOnline(true)
 			tryingToOpenWebSocket = false;
-			hangupWithBusySound(false,"connect error");
+			// clearing wsAddr does not always have the desired effect (of resulting in no err on next try)
+			// so retry with checkCalleeOnline(true) (since wsConn is closed, we don't need to hangup)
+			//hangupWithBusySound(false,"connect error");
+			checkCalleeOnline(true);
 		} else {
 			// it is common for the signaling server to disconnect the caller early
 			gLog('wsConn.onclose');
