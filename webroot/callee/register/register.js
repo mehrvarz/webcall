@@ -146,7 +146,7 @@ function submitForm(theForm) {
 				"We don't have your Email address and cannot send you this data.<br><br>"+
 				"<b>Your WebCall ID:&nbsp; "+myCalleeID+"</b><br><br>"+
 				"Your full WebCall callee link is shown below. "+
-				"This link works from any web browser."+
+				"This link works from any web browser. "+
 				"Click to start receiving calls:<br><br>"+
 				"<a onclick='exelink(this.href); return false;' href='"+calleeLink+"'>"+calleeLink+"</a>",-1);
 			} else {
