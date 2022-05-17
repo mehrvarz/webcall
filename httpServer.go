@@ -663,8 +663,8 @@ func clearCookie(w http.ResponseWriter, r *http.Request, urlID string, remoteAdd
 	}
 	cookie, err := r.Cookie(cookieName)
 	if err == nil {
-		fmt.Printf("clearcookie urlID=(%s) cookieName=(%s) cookie.Value=%s ip=%s '%s'\n",
-			urlID, cookieName, cookie.Value, remoteAddr, comment)
+		fmt.Printf("clearcookie (%s) cookie.Value=%s ip=%s '%s'\n",
+			urlID, cookie.Value, remoteAddr, comment)
 		err = kvHashedPw.Delete(dbHashedPwBucket, cookie.Value)
 		if err==nil {
 			//fmt.Printf("clearCookie (%s) dbHashedPw.Delete OK db=%s bucket=%s key=%s\n",
@@ -678,12 +678,11 @@ func clearCookie(w http.ResponseWriter, r *http.Request, urlID string, remoteAdd
 		}
 	} else {
 		if strings.Index(err.Error(),"named cookie not present")<0 {
-			fmt.Printf("# clearcookie urlID=(%s) cookieName=(%s) ip=%s '%s' err=%s\n",
-				urlID, cookieName, remoteAddr, comment, err)
+			fmt.Printf("# clearcookie (%s) ip=%s '%s' err=%s\n",
+				urlID, remoteAddr, comment, err)
 		}
 	}
-	//fmt.Printf("clearcookie urlID=(%s) cookieName=(%s) ip=%s '%s'\n",
-	//	urlID, cookieName, remoteAddr, comment)
+	//fmt.Printf("clearcookie (%s) ip=%s '%s'\n", urlID, remoteAddr, comment)
 	expiration := time.Now().Add(-1 * time.Hour)
 	cookieObj := http.Cookie{Name:cookieName, Value:"",
 				Path:"/",
