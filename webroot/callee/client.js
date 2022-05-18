@@ -1451,6 +1451,7 @@ function isP2pCon() {
 function dataChannelOnclose(event) {
 	gLog("dataChannel.onclose",event);
 	dataChannel = null;
+	hangupWithBusySound(false,"dataChannel.close");
 }
 
 function dataChannelOnerror(event) {

@@ -1873,7 +1873,7 @@ function dataChannelOnmessage(event) {
 				gLog("dataChannel.onmessage on '"+event.data+"'");
 				dataChannel.close();
 				dataChannel = null;
-				hangupWithBusySound(false,"dataChannel.close");
+				hangupWithBusySound(false,"dataChannel.onmessage disconnect");
 			} else if(event.data.startsWith("msg|")) {
 				// sanitize incoming data
 				let cleanString = event.data.substring(4).replace(/<(?:.|\n)*?>/gm, "...");
