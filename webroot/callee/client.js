@@ -1451,7 +1451,13 @@ function isP2pCon() {
 function dataChannelOnclose(event) {
 	gLog("dataChannel.onclose",event);
 	dataChannel = null;
-	hangupWithBusySound(false,"dataChannel.close");
+	if(rtcConnect) {
+		if(mediaConnect) {
+			hangupWithBusySound(false,"dataChannel.close");
+		} else {
+			hangup(true,true,"dataChannel.close");
+		}
+	}
 }
 
 function dataChannelOnerror(event) {
