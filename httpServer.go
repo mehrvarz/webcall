@@ -236,7 +236,6 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	altIp := r.Header.Get("X-Real-IP")
 	if len(altIp) >= 7 && !strings.HasPrefix(remoteAddrWithPort,altIp) {
-// TODO looks like header X-Real-IP has ip-addr without a port
 		remoteAddrWithPort = altIp
 		altPort := r.Header.Get("X-Real-Port")
 		if altPort!="" {

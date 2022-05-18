@@ -199,7 +199,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					if hub!=nil && hub.CalleeClient!=nil {
 						calleeIP = hub.CalleeClient.RemoteAddr
 					}
-// TODO remoteAddrWithPort has no port
 					fmt.Printf("/login (%s) already/still logged in %v by %s <- %s ver=%s ua=%s\n",
 						key, time.Since(startRequestTime), calleeIP, remoteAddrWithPort, clientVersion, userAgent)
 					// TODO maybe returning fatal is wrong?

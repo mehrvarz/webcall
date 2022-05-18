@@ -517,9 +517,21 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 
 	if cmd=="msg" {
 		// sent by caller on hangup without mediaconnect
-		fmt.Printf("%s (%s) msg='%s' callee=%v ip=%s ua=%s\n",
-			c.connType, c.calleeID, payload, c.isCallee, c.RemoteAddr, c.userAgent)
-		c.hub.CalleeClient.callerTextMsg = payload;
+		if c.hub==nil {
+			fmt.Printf("# %s (%s) msg='%s' c.hub==nil callee=%v ip=%s ua=%s\n",
+				c.connType, c.calleeID, payload, c.isCallee, c.RemoteAddr, c.userAgent)
+			return
+		}
+		c.hub.HubMutex.Lock()
+		if c.hub.CalleeClient==nil {
+			fmt.Printf("# %s (%s) msg='%s' c.hub.CalleeClient==nil callee=%v ip=%s ua=%s\n",
+				c.connType, c.calleeID, payload, c.isCallee, c.RemoteAddr, c.userAgent)
+		} else {
+			fmt.Printf("%s (%s) msg='%s' callee=%v ip=%s ua=%s\n",
+				c.connType, c.calleeID, payload, c.isCallee, c.RemoteAddr, c.userAgent)
+			c.hub.CalleeClient.callerTextMsg = payload;
+		}
+		c.hub.HubMutex.Unlock()
 		return
 	}
 
