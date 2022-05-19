@@ -361,16 +361,10 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		}()
 
 	} else {
-		// this code should never be reached (but it is); 2nd caller should receive "busy" from /online
-		// it can happen if two /online request in very short order return "avail"
-		// (the 2nd /online request before the 1st gets ws-connected)
-		fmt.Printf("# %s (%s/%s) CallerClient already set [%s] %s ws=%d\n",
-			client.connType, client.calleeID, client.globalCalleeID, hub.CallerClient.RemoteAddr,
-			client.RemoteAddr, wsClientID64)
-		// bc this actually happened (from the SAME caller) we will NOT disconnect
-		//time.Sleep(500 * time.Millisecond)
-		//wsConn.WriteMessage(websocket.CloseMessage, nil)
-		//wsConn.Close()
+		// can be ignored
+		//fmt.Printf("# %s (%s/%s) CallerClient already set [%s] %s ws=%d\n",
+		//	client.connType, client.calleeID, client.globalCalleeID, hub.CallerClient.RemoteAddr,
+		//	client.RemoteAddr, wsClientID64)
 	}
 }
 
