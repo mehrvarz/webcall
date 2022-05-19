@@ -427,17 +427,12 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				}
 				if calleeID!="" && pwIdCombo.CalleeId != calleeID {
 					// callee is using wrong cookie
-					fmt.Printf("# httpApi wrong cookie for id=(%s) != calleeID=(%s) (%s)\n",
-						pwIdCombo.CalleeId, calleeID, urlPath)
-					// delete clientside cookie
-// TODO not sure about this:
-//					clearCookie(w, r, urlID, remoteAddr, "wrong cookie")
+					fmt.Printf("# httpApi wrong cookie for id=(%s) != calleeID=(%s) (%s) %s\n",
+						pwIdCombo.CalleeId, calleeID, urlPath, remoteAddr)
 					cookie = nil
 				} else if pwIdCombo.Pw=="" {
 					fmt.Printf("# httpApi cookie available, pw empty, pwIdCombo=(%v) ID=%s clear cookie\n",
 						pwIdCombo, calleeID)
-					// delete clientside cookie
-//					clearCookie(w, r, urlID, remoteAddr, "cookie pw empty")
 					cookie = nil
 				} else {
 					//fmt.Printf("httpApi cookie available for id=(%s) (%s)(%s) reqPath=%s ref=%s rip=%s\n",
