@@ -328,7 +328,8 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	url_arg_array, ok := r.URL.Query()["id"]
 	if ok && len(url_arg_array[0]) > 0 {
 		urlID = strings.ToLower(url_arg_array[0])
-		// urlID can be total garbage now
+		urlID = strings.TrimSpace(urlID)
+		// don't forget: urlID may be total garbage
 		if len(urlID)>11 {
 			fmt.Printf("httpApi long urlID=(%s) ip=%s\n", urlID, remoteAddr)
 		}
@@ -342,8 +343,8 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				urlID = referer[idxUserID+8:]
 			}
 		}
+		urlID = strings.TrimSpace(urlID)
 	}
-	urlID = strings.TrimSpace(urlID)
 	if logWantedFor("http") {
 		fmt.Printf("httpApi (%s)\n", urlID)
 	}
