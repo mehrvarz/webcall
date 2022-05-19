@@ -328,11 +328,6 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	url_arg_array, ok := r.URL.Query()["id"]
 	if ok && len(url_arg_array[0]) > 0 {
 		urlID = strings.ToLower(url_arg_array[0])
-		urlID = strings.TrimSpace(urlID)
-		// don't forget: urlID may be total garbage
-		if len(urlID)>11 {
-			fmt.Printf("httpApi long urlID=(%s) ip=%s\n", urlID, remoteAddr)
-		}
 	} else {
 		idxUserID := strings.Index(referer,"/user/")
 		if idxUserID>=0 && !strings.HasSuffix(referer,"/") {
@@ -343,10 +338,14 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				urlID = referer[idxUserID+8:]
 			}
 		}
-		urlID = strings.TrimSpace(urlID)
+		urlID = strings.ToLower(urlID)
 	}
-	if logWantedFor("http") {
-		fmt.Printf("httpApi (%s)\n", urlID)
+	urlID = strings.TrimSpace(urlID)
+	// don't forget: urlID may be total garbage
+	if len(urlID)>11 {
+		fmt.Printf("httpApi long urlID=(%s) %s\n", urlID, remoteAddr)
+	} else if logWantedFor("http") {
+		fmt.Printf("httpApi (%s) %s\n", urlID, remoteAddr)
 	}
 
 	nocookie := false
