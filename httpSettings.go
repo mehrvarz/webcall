@@ -362,7 +362,6 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 		}
 		return
 	}
-	contactID = strings.ToLower(contactID)
 
 	name := ""
 	url_arg_array, ok = r.URL.Query()["name"]
@@ -406,10 +405,15 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 		callerInfoMap = make(map[string]string)
 	}
 
-	// check for lowercase contactID
+	// check for contactID
 	oldName,ok := callerInfoMap[contactID]
+	if !ok {
+		// check for lowercase contactID
+		contactID = strings.ToLower(contactID)
+		oldName,ok = callerInfoMap[contactID]
+	}
 	if ok {
-		// lowercase contactID exists
+		// contactID exists
 		if name=="" || name==oldName {
 			// don't overwrite existing name with empty or same name
 			if logWantedFor("contacts") {
@@ -438,7 +442,7 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 			return
 		}
 	}
-
+	// contactID does not yet exist
 	if name=="" {
 		if contactID!="" {
 			name = contactID
@@ -510,7 +514,9 @@ func httpDeleteContact(w http.ResponseWriter, r *http.Request, urlID string, cal
 		fmt.Printf("# /deletecontact store calleeID=%s %s err=%v\n", calleeID, remoteAddr, err)
 		return
 	}
-	fmt.Printf("/deletecontact calleeID=(%s) contactID[%s] %s\n",calleeID, contactID, remoteAddr)
+	if logWantedFor("contacts") {
+		fmt.Printf("/deletecontact calleeID=(%s) contactID[%s] %s\n",calleeID, contactID, remoteAddr)
+	}
 	fmt.Fprintf(w,"ok")
 	return
 }
