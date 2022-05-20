@@ -444,6 +444,7 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 	}
 	// contactID does not yet exist
 	if name=="" {
+		// name is empty when user enters a new userID via Dial-ID form
 		if contactID!="" {
 			name = toUpperContactID
 		} else {
