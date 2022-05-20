@@ -406,14 +406,18 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 		if dbUserKey!="" {
 			// feed LastLogoffTime
-			err := kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
+			var dbUser2 DbUser
+			err := kvMain.Get(dbUserBucket, dbUserKey, &dbUser2)
 			if err != nil {
 				fmt.Printf("# exit (%s) error db=%s bucket=%s get key=%v err=%v\n",
 					globalID, dbMainName, dbUserBucket, dbUserKey, err)
 			} else {
+				//fmt.Printf("exit (%s) dbUserKey=%s isHiddenCallee=%v (%d)\n",
+				//	globalID, dbUserKey, dbUser2.Int2&1!=0, dbUser2.Int2)
+
 				// store dbUser with modified LastLogoffTime
-				dbUser.LastLogoffTime = time.Now().Unix()
-				err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
+				dbUser2.LastLogoffTime = time.Now().Unix()
+				err = kvMain.Put(dbUserBucket, dbUserKey, dbUser2, false)
 				if err!=nil {
 					fmt.Printf("# exit (%s) error db=%s bucket=%s put key=%s err=%v\n",
 						globalID, dbMainName, dbUserBucket, urlID, err)

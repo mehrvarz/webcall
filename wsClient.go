@@ -685,7 +685,8 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			} else {
 				dbUser.Int2 &= ^1
 			}
-			fmt.Printf("%s (%s) set hidden=%v %s\n", c.connType, c.calleeID, calleeHidden, c.RemoteAddr)
+			fmt.Printf("%s (%s) set hidden=%v %d %s %s\n", c.connType, c.calleeID,
+				calleeHidden, dbUser.Int2, userKey, c.RemoteAddr)
 			err := kvMain.Put(dbUserBucket, userKey, dbUser, true) // skipConfirm
 			if err!=nil {
 				fmt.Printf("# serveWs (%s) calleeHidden db=%s bucket=%s put key=%v %s err=%v\n",
@@ -693,17 +694,18 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			} else {
 				//fmt.Printf("%s calleeHidden db=%s bucket=%s put key=%v OK\n",
 				//	c.connType, dbMainName, dbUserBucket, userKey)
-
+				/*
 				// this was used for verification only
-				//var dbUser2 DbUser
-				//err := kvMain.Get(dbUserBucket, userKey, &dbUser2)
-				//if err!=nil {
-				//	fmt.Printf("# serveWs calleeHidden verify db=%s bucket=%s getX key=%v err=%v\n",
-				//		dbMainName, dbUserBucket, userKey, err)
-				//} else {
-				//	fmt.Printf("serveWs calleeHidden verify userKey=%v isHiddenCallee=%v (%d)\n",
-				//		userKey, c.hub.IsCalleeHidden, dbUser2.Int2)
-				//}
+				var dbUser2 DbUser
+				err := kvMain.Get(dbUserBucket, userKey, &dbUser2)
+				if err!=nil {
+					fmt.Printf("# serveWs calleeHidden verify db=%s bucket=%s getX key=%v err=%v\n",
+						dbMainName, dbUserBucket, userKey, err)
+				} else {
+					fmt.Printf("serveWs calleeHidden verify userKey=%v isHiddenCallee=%v (%d)\n",
+						userKey, dbUser2.Int2&1!=0, dbUser2.Int2)
+				}
+				*/
 			}
 		}
 		return

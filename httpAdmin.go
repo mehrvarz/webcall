@@ -43,11 +43,12 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 				if lastActivity > 0 {
 					secsSinceLastActivity = fmt.Sprintf("%d",nowTimeUnix-lastActivity)
 				}
-				fmt.Fprintf(w, "user %22s calls=%4d p2p=%4d/%4d talk=%6d %s %s %s\n",
+				fmt.Fprintf(w, "user %22s calls=%4d p2p=%4d/%4d talk=%6d %d %s %s %s\n",
 					k,
 					dbUser.CallCounter,
 					dbUser.LocalP2pCounter, dbUser.RemoteP2pCounter,
 					dbUser.ConnectedToPeerSecs,
+					dbUser.Int2,
 					time.Unix(dbUser.LastLoginTime,0).Format("2006-01-02 15:04:05"),
 					time.Unix(dbUser.LastLogoffTime,0).Format("2006-01-02 15:04:05"),
 					secsSinceLastActivity)
