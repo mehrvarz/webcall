@@ -331,8 +331,9 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 					// NOTE: msg MUST NOT contain apostroph (') characters
 					msg :=  "Unable to establish a direct P2P connection. "+
-					  "This is likely a WebRTC related issue with your browser/WebView. "+
-					  "It could also be a network/firewall issue. "+
+					  "This is likely a WebRTC related issue with your browser/WebView, "+
+					  "or the browser/WebView on the other side. "+
+					  "It could also be a firewall issue. "+
 					  "On Android, run <a href=\"https://timur.mobi/webcall/android/#webview\">WebRTC-Check</a> "+
 					  "to test your System WebView."
 					hub.CallerClient.Write([]byte("status|"+msg))
