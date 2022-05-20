@@ -343,7 +343,8 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	urlID = strings.TrimSpace(urlID)
 	// don't forget: urlID may be total garbage
 	if len(urlID)>11 {
-		fmt.Printf("httpApi long urlID=(%s) %s\n", urlID, remoteAddr)
+		// TODO: OK if like this: "54281007702||65510272157|1653030153|msgtext"
+		fmt.Printf("# httpApi long urlID=(%s) %s\n", urlID, remoteAddr)
 	} else if logWantedFor("http") {
 		fmt.Printf("httpApi (%s) %s\n", urlID, remoteAddr)
 	}

@@ -533,8 +533,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			if hub==nil {
 				// callee is already gone
 				myHubMutex.RUnlock()
-				fmt.Printf("/login (%s/%s) skip waitForWsConnect hub==nil callee gone %d\n",
-					urlID, globalID, waitedFor)
+				//fmt.Printf("/login (%s/%s) skip waitForWsConnect hub==nil callee gone %ds\n",
+				//	urlID, globalID, waitedFor)
 			} else {
 				if hub.CalleeLogin.Get() {
 					// this is perfect: ws-connect / init did occur

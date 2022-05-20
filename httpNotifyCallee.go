@@ -461,27 +461,25 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 }
 
 func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, remoteAddr string, remoteAddrWithPort string) {
-	// TODO must be a caller that has just tried to connect to a callee via /online?id="+calleeID+"&wait=true
+	// remoteAddr must be a caller that has just tried to connect to a callee via /online?id="+calleeID+"&wait=true
 	// others should NOT be accepted (prevent unauthorized users to fill this callee's missed call list)
-	// TODO once validated, allow missedCall() and remove permission to create another missedcall entry
 	missedCallAllowedMutex.RLock()
 	settime,ok := missedCallAllowedMap[remoteAddr]
 	missedCallAllowedMutex.RUnlock()
 	if ok && time.Now().Sub(settime) < 20 * time.Minute {
-		fmt.Printf("httpMissedCall ip=(%s) is permitted to create /missedcall\n",remoteAddr)
+		//fmt.Printf("httpMissedCall ip=(%s) is permitted to create /missedcall\n",remoteAddr)
 		missedCallAllowedMutex.Lock()
 		delete(missedCallAllowedMap,remoteAddr)
 		missedCallAllowedMutex.Unlock()
 		missedCall(callerInfo, remoteAddr, "/missedCall")
-// TODO timer.go must remove outdated entries (older than 60s) from missedCallAllowedMap
 	} else {
 		fmt.Printf("# httpMissedCall ip=(%s) is NOT permitted to create /missedcall\n",remoteAddr)
 	}
-	// does never return an error
+	// httpMissedCall() never returns an error
 }
 
 func missedCall(callerInfo string, remoteAddr string, cause string) {
-	// called by wsClient.go
+	// called by httpMissedCall() or from wsClient.go
 	// callerInfo is encoded: calleeId+"|"+callerName+"|"+callerId (plus optional: "|"+ageSecs) +(|msg)
 	//   like so: "timur|92929|92929658912|50" tok[0]=calleeID, tok[1]=callerName, tok[2]=callerID, tok[3]=ageSecs
 // TODO callerInfo cannot be trusted, make sure everything in it is valid
@@ -502,14 +500,14 @@ func missedCall(callerInfo string, remoteAddr string, cause string) {
 	var dbEntry DbEntry
 	err := kvMain.Get(dbRegisteredIDs,calleeId,&dbEntry)
 	if err!=nil {
-		fmt.Printf("# missedCall (%s) failed on get dbRegisteredIDs rip=%s\n",calleeId,remoteAddr)
+		fmt.Printf("# missedCall (%s) failed on get dbRegisteredIDs %s err=%v\n",calleeId,remoteAddr,err)
 		return
 	}
 	dbUserKey := fmt.Sprintf("%s_%d",calleeId, dbEntry.StartTime)
 	var dbUser DbUser
 	err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 	if err!=nil {
-		fmt.Printf("# missedCall (%s) failed on dbUserBucket rip=%s\n",dbUserKey,remoteAddr)
+		fmt.Printf("# missedCall (%s) failed on dbUserBucket %s err=%v\n",dbUserKey,remoteAddr,err)
 		return
 	}
 	if(!dbUser.StoreMissedCalls) {
