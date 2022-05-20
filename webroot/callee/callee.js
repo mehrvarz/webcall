@@ -19,6 +19,8 @@ const missedCallsTitleElement = document.getElementById('missedCallsTitle');
 const form = document.querySelector('form#password');
 const formPw = document.querySelector('input#current-password');
 const menuSettingsElement = document.getElementById('menuSettings');
+const menuClearCookieElement = document.getElementById('menuClearcookie');
+const menuExitElement = document.getElementById('menuExit');
 //const menuContactsElement = document.getElementById('menuContacts');
 const iconContactsElement = document.getElementById('iconContacts');
 const dialIdElement = document.getElementById('dialId');
@@ -92,6 +94,10 @@ window.onload = function() {
 	}
 
 	window.onhashchange = hashchange;
+
+	if(typeof Android !== "undefined" && Android !== null) {
+		menuExitElement.style.display = "block";
+	}
 
 	let id = getUrlParams("id");
 	if(typeof id!=="undefined" && id!="") {
@@ -272,7 +278,7 @@ window.onload = function() {
 			mainParent.removeChild(containerElement);
 			var msgElement = document.createElement("div");
 			msgElement.style = "margin-top:15%; padding:2%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; font-size:1.2em; line-height:1.5em;";
-			msgElement.innerHTML = "<div>cannot login "+calleeID+"<br>stop other session<br>and clear its login-cookie<br><br><a onclick='exit()'>clear login-cookie</a><br><br>you can run a 2nd callee session<br>in a separate browser</div>";
+			msgElement.innerHTML = "<div>cannot login "+calleeID+"<br>stop other session<br>and clear its login-cookie<br><br><a onclick='clearcookie()'>clear login-cookie</a><br><br>you can run a 2nd callee session<br>in a separate browser</div>";
 			mainParent.appendChild(msgElement);
 		}
 		return;
@@ -554,6 +560,8 @@ function login(retryFlag) {
 
 			// hide the form
 			form.style.display = "none";
+
+			menuClearCookieElement.style.display = "block";
 
 			if(parts.length>=2) {
 				talkSecs = parseInt(parts[1], 10);
@@ -2217,13 +2225,13 @@ function openSettings() {
 	iframeWindowOpen(url);
 }
 
-function exit() {
-	gLog("exit (id=%s)",calleeID);
+function clearcookie() {
+	gLog("clearcookie (id=%s)",calleeID);
 	containerElement.style.filter = "blur(0.8px) brightness(60%)";
 	goOffline();
 
 	if(iframeWindowOpenFlag || menuDialogOpenElement) {
-		gLog("exit history.back");
+		gLog("clearcookie history.back");
 		history.back();
 	}
 
@@ -2232,17 +2240,9 @@ function exit() {
 		let api = apiPath+"/logout?id="+calleeID;
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 			let logoutStatus = xhr.responseText;
-			gLog('exit logoutStatus (%s)',logoutStatus);
-			if(typeof Android !== "undefined" && Android !== null) {
-				Android.wsExit();
-				return;
-			}
+			gLog('clearcookie logoutStatus (%s)',logoutStatus);
 		}, function(errString,err) {
-			console.log('exit xhr error',errString);
-			if(typeof Android !== "undefined" && Android !== null) {
-				Android.wsExit();
-				return;
-			}
+			console.log('clearcookie xhr error',errString);
 		});
 /*
 		if(pushRegistration) {
@@ -2256,6 +2256,15 @@ function exit() {
 			window.location.reload(false);
 		},1000);
 	},1000);
+}
+
+function exit() {
+	gLog("exit");
+	if(typeof Android !== "undefined" && Android !== null) {
+		Android.wsExit();
+	} else {
+		history.back();
+	}
 }
 
 function wakeGoOnline() {
