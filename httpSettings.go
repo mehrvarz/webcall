@@ -445,7 +445,7 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 	// contactID does not yet exist
 	if name=="" {
 		if contactID!="" {
-			name = contactID
+			name = toUpperContactID
 		} else {
 			name = "unknown"
 		}
