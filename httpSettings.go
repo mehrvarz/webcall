@@ -486,7 +486,6 @@ func httpDeleteContact(w http.ResponseWriter, r *http.Request, urlID string, cal
 		fmt.Printf("# /deletecontact (%s) contactID from client is empty %s\n", calleeID, remoteAddr)
 		return
 	}
-	contactID = strings.ToLower(contactID)
 
 	var callerInfoMap map[string]string // callerID -> name
 	err := kvContacts.Get(dbContactsBucket,calleeID,&callerInfoMap)
@@ -497,8 +496,13 @@ func httpDeleteContact(w http.ResponseWriter, r *http.Request, urlID string, cal
 
 	_,ok = callerInfoMap[contactID]
 	if !ok {
-		fmt.Printf("# /deletecontact (%s) callerInfoMap[%s] does not exist %s\n", calleeID, contactID, remoteAddr)
-		return
+		contactID = strings.ToLower(contactID)
+		_,ok = callerInfoMap[contactID]
+		if !ok {
+			fmt.Printf("# /deletecontact (%s) callerInfoMap[%s] does not exist %s\n",
+				calleeID, contactID, remoteAddr)
+			return
+		}
 	}
 	delete(callerInfoMap,contactID)
 	err = kvContacts.Put(dbContactsBucket, calleeID, callerInfoMap, false)
