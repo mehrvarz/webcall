@@ -33,10 +33,9 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 	}
 	if urlID!="" && calleeID!=urlID {
 		// this happens bc someone with calleeID in the cookie is now trying to use urlID via url
-		fmt.Printf("# /getsettings urlID(%s) != calleeID(%s) rip=%s\n", urlID, calleeID, remoteAddr)
+		fmt.Printf("# /getsettings urlID(%s) != calleeID(%s) %s ua=%s\n",
+			urlID, calleeID, remoteAddr, r.UserAgent())
 		return
-// hack
-//		calleeID = urlID
 	}
 
 	var dbEntry DbEntry
