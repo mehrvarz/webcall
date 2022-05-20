@@ -315,9 +315,9 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		hub.HubMutex.Unlock()
 
 		go func() {
-			// incoming caller will get removed if there is no peerConnect after 10 sec
+			// incoming caller will get removed if there is no peerConnect after 11 sec
 			// (it can take up to 6-8 seconds in some cases for a devices to get fully out of deep sleep)
-			delaySecs := 10
+			delaySecs := 11
 			time.Sleep(time.Duration(delaySecs) * time.Second)
 
 			hub.HubMutex.RLock()
