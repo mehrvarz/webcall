@@ -28,7 +28,7 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		return
 	}
 	if calleeID=="" {
-		fmt.Printf("# /getsettings fail no calleeID rip=%s\n", remoteAddr)
+		fmt.Printf("# /getsettings fail no calleeID %s\n", remoteAddr)
 		return
 	}
 	if urlID!="" && calleeID!=urlID {
@@ -41,7 +41,7 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 	var dbEntry DbEntry
 	err := kvMain.Get(dbRegisteredIDs,calleeID,&dbEntry)
 	if err!=nil {
-		fmt.Printf("# /getsettings (%s) fail on dbRegisteredIDs rip=%s\n", calleeID, remoteAddr)
+		fmt.Printf("# /getsettings (%s) fail on dbRegisteredIDs %s\n", calleeID, remoteAddr)
 		return
 	}
 
@@ -49,7 +49,7 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 	var dbUser DbUser
 	err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 	if err!=nil {
-		fmt.Printf("# /getsettings (%s) fail on dbUserBucket rip=%s\n", calleeID, remoteAddr)
+		fmt.Printf("# /getsettings (%s) fail on dbUserBucket %s\n", calleeID, remoteAddr)
 		return
 	}
 
@@ -69,7 +69,7 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 	})
 	readConfigLock.RUnlock()
 	if err != nil {
-		fmt.Printf("# /getsettings (%s) fail on json.Marshal rip=%s\n", calleeID, remoteAddr)
+		fmt.Printf("# /getsettings (%s) fail on json.Marshal %s\n", calleeID, remoteAddr)
 		return
 	}
 	if logWantedFor("getsettings") {
@@ -349,8 +349,6 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 	if urlID!="" && urlID!=calleeID {
 		fmt.Printf("# /setcontact urlID=%s != calleeID=%s %s\n", urlID, calleeID, remoteAddr)
 		return
-// hack
-//		calleeID = urlID
 	}
 
 	contactID := ""
@@ -442,7 +440,11 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 	}
 
 	if name=="" {
-		name = "unknown"
+		if contactID!="" {
+			name = contactID
+		} else {
+			name = "unknown"
+		}
 	}
 	if name!=oldName {
 		if name!="unknown" {
