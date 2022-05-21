@@ -2252,8 +2252,12 @@ function clearcookie() {
 		}
 */
 		setTimeout(function() {
-			gLog("exit reload");
-			window.location.reload(false);
+			if(typeof Android !== "undefined" && Android !== null) {
+				window.location.replace("file:///android_asset/index.html");
+			} else {
+				gLog("exit reload");
+				window.location.reload(false);
+			}
 		},1000);
 	},1000);
 }
