@@ -69,9 +69,9 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			// this error response string is formated so that callee.js will show it via showStatus()
 			// it also makes Android service (1.0.0-RC3+) abort the reconnecter loop
 			// NOTE: msg MUST NOT contain apostroph (') characters
-			msg :=  "Websocket re-connect failed. Please deactivate battery optimizations for WebCall"+
-					" and/or check your firewall settings."+
-					" <a href=\"https://timur.mobi/webcall/more/#keepawake\">Read this</a>"
+			msg :=  "A Websocket reconnect has failed. Likely in device sleep mode. "+
+					"Please deactivate battery optimizations aka provide keep-awake permission. "+
+					"<a href=\"https://timur.mobi/webcall/more/#keepawake\">More info</a>"
 			fmt.Fprintf(w,msg)
 			blockMapMutex.Lock()
 			delete(blockMap,urlID)
