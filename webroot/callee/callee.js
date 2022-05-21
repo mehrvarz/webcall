@@ -210,8 +210,10 @@ window.onload = function() {
 			// normal mode
 			console.log('onload load audio files '+mode);
 			ringtoneSound = new Audio('1980-phone-ringing.mp3');
-			busySignalSound = new Audio('busy-signal.mp3');
 			notificationSound = new Audio("notification.mp3");
+			if(playDialSounds) {
+				busySignalSound = new Audio('busy-signal.mp3');
+			}
 
 			ringtoneSound.onplaying = function() {
 				ringtoneIsPlaying = true;
@@ -1566,7 +1568,7 @@ function hangup(dummy,dummy2,message) {
 	remoteVideoHide();
 
 	// if mediaConnect -> play short busy tone
-	if(mediaConnect) {
+	if(mediaConnect && playDialSounds) {
 		gLog("hangup short busy sound");
 		busySignalSound.play().catch(function(error) { });
 		setTimeout(function() {
@@ -2008,8 +2010,10 @@ function stopAllAudioEffects(comment) {
 				ringtoneSound.paused, ringtoneIsPlaying);
 		}
 
-		busySignalSound.pause();
-		busySignalSound.currentTime = 0;
+		if(playDialSounds) {
+			busySignalSound.pause();
+			busySignalSound.currentTime = 0;
+		}
 	} catch(ex) {
 		console.log('ex stopAllAudioEffects '+ex.message);
 	}

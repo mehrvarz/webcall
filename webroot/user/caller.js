@@ -8,7 +8,6 @@ const enterIdVal = document.getElementById('enterIdVal');
 const enterDomainVal = document.getElementById('enterDomainVal');
 const divspinnerframe = document.querySelector('div#spinnerframe');
 const bitrate = 280000;
-const playDialSounds = true;
 const calleeMode = false;
 
 var connectingText = "Connecting...";
@@ -16,10 +15,10 @@ var singleButtonReadyText = "Click to make your order<br>Live operator";
 var singleButtonBusyText = "All lines are busy.<br>Please try again a little later.";
 var singleButtonConnectedText = "You are connected.<br>How can we help you?";
 var ringingText = "Ringing... please be patient, answering a web call may take a bit longer than answering a regular phone call...";
-var dtmfDialingSound = null;
-var pickupAfterLocalStream = false; // not used in caller
-var busySignalSound = null;
 var notificationSound = null;
+var dtmfDialingSound = null;
+var busySignalSound = null;
+var pickupAfterLocalStream = false; // not used in caller
 var wsConn = null;
 var peerCon = null;
 var localDescription = null;
@@ -295,9 +294,15 @@ function onload2(checkFlag) {
 					let msg = "Hang up";
 					console.log(msg);
 					if(mediaConnect) {
-						hangupWithBusySound(true,msg);
+						if(playDialSounds) {
+							hangupWithBusySound(true,msg);
+						} else {
+							hangup(true,true,msg);
+						}
 					} else {
-						stopAllAudioEffects();
+						if(playDialSounds) {
+							stopAllAudioEffects();
+						}
 						hangup(true,true,msg);
 					}
 				};
@@ -630,12 +635,12 @@ function calleeOnlineStatus(onlineStatus,waitForCallee) {
 
 function calleeOnlineAction(from) {
 	gLog('calleeOnlineAction from='+from+' dialAfterCalleeOnline='+dialAfterCalleeOnline);
-	if(!busySignalSound) {
+	if(!notificationSound) {
 		gLog('loading audio files');
-		busySignalSound = new Audio('busy-signal.mp3');
 		notificationSound = new Audio("notification.mp3");
 		if(playDialSounds) {
 			dtmfDialingSound = new Audio('dtmf-dial.mp3');
+			busySignalSound = new Audio('busy-signal.mp3');
 		}
 	}
 
@@ -2007,13 +2012,15 @@ function dataChannelOnmessage(event) {
 }
 
 function stopAllAudioEffects() {
-	gLog('stopAllAudioEffects DialSound stop');
-	if(dtmfDialingSound) {
-		dtmfDialingSound.currentTime = 100000;
-	}
-	if(busySignalSound) {
-		busySignalSound.pause();
-		busySignalSound.currentTime = 0;
+	if(playDialSounds) {
+		gLog('stopAllAudioEffects DialSound stop');
+		if(dtmfDialingSound) {
+			dtmfDialingSound.currentTime = 100000;
+		}
+		if(busySignalSound) {
+			busySignalSound.pause();
+			busySignalSound.currentTime = 0;
+		}
 	}
 }
 

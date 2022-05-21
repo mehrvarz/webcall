@@ -39,6 +39,7 @@ var doneHangup = false;
 var onIceCandidates = 0;
 var mediaConnect = false;
 var connectionstatechangeCounter = 0;
+var playDialSounds = true;
 
 var ICE_config = {
 	"iceServers": [
@@ -1476,12 +1477,14 @@ function hangupWithBusySound(mustDisconnectCallee,message) {
 	dialing = false;
 	stopAllAudioEffects();
 	if(peerCon && peerCon.iceConnectionState!="closed") {
+		if(playDialSounds) {
 		gLog(`hangupWithBusySound `+message);
-		busySignalSound.play().catch(function(error) { });
-		setTimeout(function() {
-			gLog(`hangupWithBusySound stopAllAudioEffects`);
-			stopAllAudioEffects();
-		},2500);
+			busySignalSound.play().catch(function(error) { });
+			setTimeout(function() {
+				gLog(`hangupWithBusySound stopAllAudioEffects`);
+				stopAllAudioEffects();
+			},2500);
+		}
 	}
 	hangup(mustDisconnectCallee,true,message);
 }
