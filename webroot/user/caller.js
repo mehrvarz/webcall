@@ -6,6 +6,7 @@ const calleeOnlineElement = document.getElementById("calleeOnline");
 const enterIdElement = document.getElementById('enterId');
 const enterIdVal = document.getElementById('enterIdVal');
 const enterDomainVal = document.getElementById('enterDomainVal');
+const divspinnerframe = document.querySelector('div#spinnerframe');
 const bitrate = 280000;
 const playDialSounds = true;
 const calleeMode = false;
@@ -781,7 +782,11 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 			if(onlineStatus.startsWith("notavailtemp")) {
 				// callee temporarily offline: have caller wait for callee
 				var offlineFor = parseInt(onlineStatus.substring(12),10);
-				showStatus("Trying to find "+calleeID+". This can take a while. Please wait...<br><br><img src='preloader-circles.svg' style='width:40%;max-height:120px;'>",-1);
+//				showStatus("Trying to find "+calleeID+". This can take a while. Please wait...<br><br><img src='preloader-circles.svg' style='width:40%;max-height:120px;'>",-1);
+				showStatus("Trying to find "+calleeID+". This can take a while. Please wait...",-1);
+				if(divspinnerframe) {
+					divspinnerframe.style.display = "block";
+				}
 				let api = apiPath+"/online?id="+calleeID+"&wait=true&callerId="+callerId+"&name="+callerName;
 				xhrTimeout = 15*60*1000; // 15min
 				if(offlineFor>0) {
@@ -792,6 +797,10 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 				goodbyMissedCall = calleeID+"|"+callerName+"|"+callerId+
 					"|"+Math.floor(Date.now()/1000)+"|"+msgbox.value.substring(0,300)
 				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+					// end spinner
+					if(divspinnerframe) {
+						divspinnerframe.style.display = "none";
+					}
 					if(xhr.responseText!=null && xhr.responseText.indexOf("?wsid=")>0) {
 						gLog('callee is now online. switching to call layout. '+xhr.responseText);
 						goodbyMissedCall = "";
@@ -831,6 +840,10 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 						});
 					}
 				}, function(errString,errcode) {
+					// end spinner
+					if(divspinnerframe) {
+						divspinnerframe.style.display = "none";
+					}
 					// errcode 504 = timeout
 					gLog('online: callee could not be reached. xhr err',errString,errcode);
 					// TODO if xhr /online failed, does it make sense to try xhr /missedCall ?
@@ -1093,12 +1106,19 @@ function confirmNotifyConnect2() {
 function notifyConnect(callerName,callerId) {
 	// nickname form was valid
 	// the next xhr will freeze until hidden callee accepts the call
-	showStatus("Trying to get "+calleeID+" on the phone. Please wait...<br><br><img src='preloader-circles.svg' style='width:95%;max-height:450px;margin-top:-20%;'>",-1);
+//	showStatus("Trying to get "+calleeID+" on the phone. Please wait...<br><br><img src='preloader-circles.svg' style='width:95%;max-height:450px;margin-top:-20%;'>",-1);
+	showStatus("Trying to get "+calleeID+" on the phone. Please wait...",-1);
+	if(divspinnerframe) {
+		divspinnerframe.style.display = "block";
+	}
 	goodbyMissedCall = "";
 	let api = apiPath+"/notifyCallee?id="+calleeID+"&callerId="+callerId+"&name="+callerName;
 	xhrTimeout = 600*1000; // 10 min extended xhr timeout
 	console.log("notifyCallee api="+api+" timeout="+xhrTimeout);
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+		if(divspinnerframe) {
+			divspinnerframe.style.display = "none";
+		}
 		if(xhr.responseText=="ok") {
 			gLog('callee is now online. switching to call layout.');
 			// switch to callee-is-online layout
@@ -1111,6 +1131,9 @@ function notifyConnect(callerName,callerId) {
 		gLog('notify: callee could not be reached (%s)',xhr.responseText);
 		showStatus("Sorry! Unable to reach "+calleeID+".<br>Please try again a little later.",-1);
 	}, function(errString,errcode) {
+		if(divspinnerframe) {
+			divspinnerframe.style.display = "none";
+		}
 		//errorAction(errString)
 		gLog('notify: callee could not be reached. xhr err',errString,errcode);
 		showStatus("Sorry! Unable to reach "+calleeID+".<br>Please try again a little later.",-1);

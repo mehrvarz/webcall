@@ -253,11 +253,36 @@ input[type=submit]:focus {
 	padding:0.25em;
 	border:solid 0.08em; border-radius:4px; border-color:#888;
 }
-
+.spinnerframe {
+	width:100%;
+	height:100vh;
+	position:absolute;
+	_background:#a228;
+}
+.spinner {
+	margin: 0 auto;
+	border: 8px solid #f3f3f3;
+	border-radius: 50%;
+	border-top: 8px solid #3468ab;
+	width: 60px;
+	height: 60px;
+	animation: spin 2s linear infinite;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	margin: -34px 0 0 -38px;
+}
+@keyframes spin {
+	0% { transform: rotate(0deg); }
+	100% { transform: rotate(360deg); }
+}
 </style>
 </head>
 
 <body>
+<div id="spinnerframe" class="spinnerframe" style="display:none;">
+    <div id="spinner" class="spinner"></div>
+</div>
 <img src="phone.svg"
    style="position:absolute;right:0;top:2vh;width:440px;max-height:80vh;padding:2%;opacity:0.15;z-index:-1;">
 
