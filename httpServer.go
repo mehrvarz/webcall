@@ -327,7 +327,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	urlID := "" // except for when we login with it, urlID is not our ID but of another party
 	url_arg_array, ok := r.URL.Query()["id"]
 	if ok && len(url_arg_array[0]) > 0 {
-		urlID = strings.ToLower(url_arg_array[0])
+		urlID = url_arg_array[0]
 	} else {
 		idxUserID := strings.Index(referer,"/user/")
 		if idxUserID>=0 && !strings.HasSuffix(referer,"/") {
@@ -338,8 +338,8 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				urlID = referer[idxUserID+8:]
 			}
 		}
-		urlID = strings.ToLower(urlID)
 	}
+	urlID = strings.ToLower(urlID)
 	urlID = strings.TrimSpace(urlID)
 	// don't forget: urlID may be total garbage
 	if len(urlID)>11 {
@@ -347,6 +347,11 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("# httpApi long urlID=(%s) %s\n", urlID, remoteAddr)
 	} else if logWantedFor("http") {
 		fmt.Printf("httpApi (%s) %s\n", urlID, remoteAddr)
+	}
+
+	// TODO translate urlID
+	if urlID=="89921219321" {
+		urlID = "answie7"
 	}
 
 	nocookie := false

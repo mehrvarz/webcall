@@ -710,7 +710,7 @@ function calleeOnlineAction(from) {
 							"and then immediately played back to you (green led).",-1);
 			} else {
 				if(!singlebutton) {
-					showStatus( "You can enter a text message before you start the call (optional):",-1)
+					showStatus( "Enter text message before the call (optional):",-1)
 					msgbox.style.display = "block";
 					gLog('callerName',callerName);
 					/*
@@ -803,7 +803,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 						calleeOnlineElement.style.display = "block";
 						calleeOfflineElement.style.display = "none";
 
-						showStatus("You can enter a text message before you start the call (optional):",-1);
+						showStatus("Enter text message before the call (optional):",-1);
 						msgbox.style.display = "block";
 						haveBeenWaitingForCalleeOnline=true; // will cause notificationSound to play
 
