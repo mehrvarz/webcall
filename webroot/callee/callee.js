@@ -2252,12 +2252,13 @@ function clearcookie() {
 		}
 */
 		setTimeout(function() {
-			//if(typeof Android !== "undefined" && Android !== null) {
-			//	window.location.replace("file:///android_asset/index.html");
-			//} else {
+			if(typeof Android !== "undefined" && Android !== null &&
+					typeof Android.gotoBasepage !== "undefined" && Android.gotoBasepage !== null) {
+				Android.gotoBasepage();
+			} else {
 				gLog("exit reload");
 				window.location.reload(false);
-			//}
+			}
 		},1000);
 	},1000);
 }
