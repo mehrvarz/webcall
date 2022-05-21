@@ -641,9 +641,9 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			c.hub.HubMutex.RUnlock()
 			// only execute cancel, if callee is peer-connected
 			if c.isCallee {
-				fmt.Printf("%s (%s) DISCON by callee %s '%s'\n", c.connType, c.calleeID, c.RemoteAddr, payload)
+				fmt.Printf("%s (%s) DISCON from callee %s '%s'\n", c.connType, c.calleeID, c.RemoteAddr, payload)
 			} else {
-				fmt.Printf("%s (%s) DISCON by caller %s '%s'\n", c.connType, c.calleeID, c.RemoteAddr, payload)
+				fmt.Printf("%s (%s) DISCON from caller %s '%s'\n", c.connType, c.calleeID, c.RemoteAddr, payload)
 			}
 			// tell callee to disconnect
 			c.hub.CalleeClient.peerConHasEnded("cancel")
