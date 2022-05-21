@@ -561,14 +561,15 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			return
 		}
 		if c.hub.CallerClient==nil {
-			fmt.Printf("# %s (%s) CALL %s <- %s but hub.CallerClient==nil\n",
-				c.connType, c.calleeID, c.hub.CalleeClient.RemoteAddr, c.RemoteAddr)
+			fmt.Printf("# %s (%s) CALL☎️ but hub.CallerClient==nil\n",
+				c.connType, c.calleeID)
 			c.hub.HubMutex.RUnlock()
 			return
 		}
 
-		fmt.Printf("%s (%s) CALL☎️  %s <- %s (%s)\n",
-			c.connType, c.calleeID, c.hub.CalleeClient.RemoteAddr, c.RemoteAddr, c.hub.CallerClient.callerID)
+		fmt.Printf("%s (%s) CALL☎️ %s <- %s (%s) ua=%s\n",
+			c.connType, c.calleeID, c.hub.CalleeClient.RemoteAddr,
+			c.hub.CallerClient.RemoteAddr, c.hub.CallerClient.callerID, c.hub.CallerClient.userAgent)
 
 		// forward the callerOffer message to the callee client
 		if c.hub.CalleeClient.Write(message) != nil {
