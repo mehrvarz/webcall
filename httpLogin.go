@@ -466,12 +466,13 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			remoteAddrWithPort, clientVersion, userAgent)
 	}
 
-	responseString := fmt.Sprintf("%s|%d|%s|%d|%v",
+	responseString := fmt.Sprintf("%s|%d|%s|%d|%v|%v",
 		wsAddr,                     // 0
 		dbUser.ConnectedToPeerSecs, // 1
 		outboundIP,                 // 2
 		serviceSecs,                // 3
-		dbUser.Int2&1 != 0)         // 4 isHiddenCallee
+		dbUser.Int2&1 != 0,         // 4 isHiddenCallee
+		dbUser.Int2&4 != 0)         // 5 dialSoundsMuted (if bit is set, dialSounds will be muted)
 	fmt.Fprintf(w, responseString)
 
 	if urlID != "" && globalID != "" {

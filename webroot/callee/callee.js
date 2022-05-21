@@ -9,6 +9,8 @@ const isHiddenCheckbox = document.querySelector('input#isHidden');
 const isHiddenlabel = document.querySelector('label#isHiddenlabel');
 const autoanswerCheckbox = document.querySelector('input#autoanswer');
 const autoanswerlabel = document.querySelector('label#autoanswerlabel');
+const dialsoundsCheckbox = document.querySelector('input#dialsounds');
+const dialsoundslabel = document.querySelector('label#dialsoundslabel');
 const titleElement = document.getElementById('title');
 const statusLine = document.getElementById('status');
 const msgbox = document.querySelector('textarea#msgbox');
@@ -181,6 +183,17 @@ window.onload = function() {
 		setTimeout(function(){history.back();},150);
 	});
 
+	dialsoundsCheckbox.addEventListener('change', function() {
+		if(this.checked) {
+			gLog("dialsoundsCheckbox checked");
+		} else {
+			gLog("dialsoundsCheckbox checked off");
+		}
+		playDialSounds = this.checked;
+		wsSend("dialsoundsmuted|"+!this.checked);
+		setTimeout(function(){history.back();},150);
+	});
+
 	fullscreenCheckbox.addEventListener('change', function() {
 		if(this.checked) {
 			// user is requesting fullscreen mode
@@ -211,9 +224,7 @@ window.onload = function() {
 			console.log('onload load audio files '+mode);
 			ringtoneSound = new Audio('1980-phone-ringing.mp3');
 			notificationSound = new Audio("notification.mp3");
-			if(playDialSounds) {
-				busySignalSound = new Audio('busy-signal.mp3');
-			}
+			busySignalSound = new Audio('busy-signal.mp3');
 
 			ringtoneSound.onplaying = function() {
 				ringtoneIsPlaying = true;
@@ -612,6 +623,19 @@ function login(retryFlag) {
 				autoanswerCheckbox.checked = false;
 			}
 			gLog('isHiddenCheckbox.checked '+isHiddenCheckbox.checked);
+			if(parts.length>=6) {
+				gLog('dialsounds muted parts[5]='+parts[5]);
+				if(parts[5]=="true") {
+					// dialSounds muted
+					dialsoundsCheckbox.checked = false;
+					playDialSounds = false;
+				} else if(parts[5]=="false") {
+					// dialSounds not muted
+					dialsoundsCheckbox.checked = true;
+					playDialSounds = true;
+				}
+			}
+			gLog('dialsoundsCheckbox.checked '+dialsoundsCheckbox.checked);
 			wsSend("init|!"); // -> connectSignaling()
 			return;
 		}
@@ -810,9 +834,12 @@ function showOnlineReadyMsg(sessionIdPayload) {
 	if(idxParameter>=0) {
 		userLink = userLink.substring(0,idxParameter);
 	}
-	//userLink = userLink.replace("calle2/","user/");
+	var userLinkHref = userLink;
+	if(!playDialSounds) {
+		userLinkHref = userLinkHref + "?ds=false";
+	}
 	let msg2 = "You will receive calls made by this link:<br>"+
-		"<a target='_blank' href='"+userLink+"'>"+userLink+"</a><br>";
+		"<a target='_blank' href='"+userLinkHref+"'>"+userLink+"</a><br>";
 
 	if(msg1!="") {
 		// show 2 msgs after another
@@ -881,6 +908,12 @@ function wsOnOpen() {
 	}
 	isHiddenlabel.style.display = "block";
 	autoanswerlabel.style.display = "block";
+
+	if(typeof Android !== "undefined" && Android !== null) {
+		if(Android.getVersionName()>="1.0.3") {
+			dialsoundslabel.style.display = "block";
+		}
+	}
 	menuSettingsElement.style.display = "block";
 	iconContactsElement.style.display = "block";
 	dialIdElement.style.display = "block";
@@ -1387,7 +1420,7 @@ function showMissedCalls() {
 					callerLink = callerLink.substring(0,idxCallee) + "/user/" + callerID;
 					// here we hand over calleeID as URL args
 					// caller.js will try to get nickname from server (using cookie)
-					callerLink = callerLink+"?callerId="+calleeID+"&name="+calleeName;
+					callerLink = callerLink+"?callerId="+calleeID+"&name="+calleeName+"&ds="+playDialSounds;
 					// open caller in iframe
 					callerLink = "<a onclick='iframeWindowOpen(\""+callerLink+"\")'>"+callerID+"</a>";
 				}
@@ -2151,6 +2184,7 @@ function goOffline() {
 
 	isHiddenlabel.style.display = "none";
 	autoanswerlabel.style.display = "none";
+	dialsoundslabel.style.display = "none";
 	var waitingCallersLine = document.getElementById('waitingCallers');
 	if(waitingCallersLine) {
 		waitingCallersLine.innerHTML = "";
@@ -2213,14 +2247,12 @@ function openContacts() {
 }
 
 function openDialId(userId) {
-	let url = "/user/?callerId="+calleeID+"&name="+calleeName+"&i="+counter++;
+	let url = "/user/?callerId="+calleeID+"&name="+calleeName+"&ds="+playDialSounds+"&i="+counter++;
 	if(userId) {
-		url = "/user/"+userId+"?callerId="+calleeID+"&name="+calleeName+"&i="+counter++;
+		url = "/user/"+userId+"?callerId="+calleeID+"&name="+calleeName+"&ds="+playDialSounds+"&i="+counter++;
 	}
 	gLog('openDialId',url);
 	iframeWindowOpen(url);
-// TODO when iframe is closed, we still need to call peerDisConnect()
-// to clear peerConnectFlag.set(0), so that the proximity sensor will get turned off
 }
 
 function openSettings() {

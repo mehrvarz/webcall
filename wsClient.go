@@ -715,6 +715,70 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		return
 	}
 
+	if cmd=="dialsoundsmuted" {
+//tmtmtm
+/*
+		c.hub.HubMutex.Lock()
+		if(payload=="true") {
+			c.hub.IsCalleeHidden = true
+		} else {
+			c.hub.IsCalleeHidden = false
+		}
+		c.hub.IsUnHiddenForCallerAddr = ""
+		calleeHidden := c.hub.IsCalleeHidden
+		c.hub.HubMutex.Unlock()
+
+		// forward state of c.isHiddenCallee to globalHubMap
+		err := SetCalleeHiddenState(c.calleeID, calleeHidden)
+		if err != nil {
+			fmt.Printf("# serveWs (%s) SetCalleeHiddenState %v err=%v\n", c.calleeID, calleeHidden, err)
+		}
+*/
+		dialSoundsMuted := false
+		if(payload=="true") {
+			dialSoundsMuted = true
+		}
+
+		// read dbUser for dialSoundsMuted flag
+		// store dbUser after set/clear dialSoundsMuted in dbUser.Int2&4
+		userKey := c.calleeID + "_" + strconv.FormatInt(int64(c.hub.registrationStartTime),10)
+		var dbUser DbUser
+		err := kvMain.Get(dbUserBucket, userKey, &dbUser)
+		if err!=nil {
+			fmt.Printf("# serveWs (%s) cmd=dialsounds db=%s bucket=%s getX key=%v err=%v\n",
+				c.calleeID, dbMainName, dbUserBucket, userKey, err)
+		} else {
+			if dialSoundsMuted {
+				dbUser.Int2 |= 4
+			} else {
+				dbUser.Int2 &= ^4
+			}
+			fmt.Printf("%s (%s) set dialSoundsMuted=%v %d %s %s\n", c.connType, c.calleeID,
+				dialSoundsMuted, dbUser.Int2, userKey, c.RemoteAddr)
+			err := kvMain.Put(dbUserBucket, userKey, dbUser, true) // skipConfirm
+			if err!=nil {
+				fmt.Printf("# serveWs (%s) dialSoundsMuted db=%s bucket=%s put key=%v %s err=%v\n",
+					c.calleeID, dbMainName, dbUserBucket, userKey, c.RemoteAddr, err)
+			} else {
+				//fmt.Printf("%s calleeHidden db=%s bucket=%s put key=%v OK\n",
+				//	c.connType, dbMainName, dbUserBucket, userKey)
+				/*
+				// this was used for verification only
+				var dbUser2 DbUser
+				err := kvMain.Get(dbUserBucket, userKey, &dbUser2)
+				if err!=nil {
+					fmt.Printf("# serveWs calleeHidden verify db=%s bucket=%s getX key=%v err=%v\n",
+						dbMainName, dbUserBucket, userKey, err)
+				} else {
+					fmt.Printf("serveWs calleeHidden verify userKey=%v isHiddenCallee=%v (%d)\n",
+						userKey, dbUser2.Int2&1!=0, dbUser2.Int2)
+				}
+				*/
+			}
+		}
+		return
+	}
+
 	if cmd=="pickupWaitingCaller" {
 		// for callee only
 		// payload = ip:port

@@ -158,6 +158,14 @@ window.onload = function() {
 		singleButtonConnectedText = decodeURI(text);
 		gLog("onload url arg connectedText",singleButtonConnectedText);
 	}
+	// dialsounds
+	text = getUrlParams("ds");
+	if(typeof text!=="undefined" && text!="") {
+		if(text=="false") {
+			playDialSounds = false;
+		}
+		gLog("dialsounds="+playDialSounds);
+	}
 
 	if(localVideoFrame)
 		localVideoFrame.onresize = showVideoResolutionLocal;
