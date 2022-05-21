@@ -635,19 +635,20 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			c.Close("callee already closed")
 			return
 		}
-		// unlock - don't call peerConHasEnded with lock
-		c.hub.HubMutex.RUnlock()
 
 		if c.hub.CalleeClient.isConnectedToPeer.Get() {
+			// unlock - don't call peerConHasEnded with lock
+			c.hub.HubMutex.RUnlock()
 			// only execute cancel, if callee is peer-connected
 			if c.isCallee {
-				fmt.Printf("%s (%s) DISCON by callee %s '%s'\n", c.connType, c.isCallee, c.RemoteAddr, payload)
+				fmt.Printf("%s (%s) DISCON by callee %s '%s'\n", c.connType, c.calleeID, c.RemoteAddr, payload)
 			} else {
-				fmt.Printf("%s (%s) DISCON by caller %s '%s'\n", c.connType, c.isCallee, c.RemoteAddr, payload)
+				fmt.Printf("%s (%s) DISCON by caller %s '%s'\n", c.connType, c.calleeID, c.RemoteAddr, payload)
 			}
 			// tell callee to disconnect
 			c.hub.CalleeClient.peerConHasEnded("cancel")
 		} else {
+			c.hub.HubMutex.RUnlock()
 			// ignore, already disconnected
 			//fmt.Printf("%s (%s) ignore cmd=cancel connected=%v c.isCallee=%v %s '%s'\n",
 			//	c.connType, c.calleeID, c.hub.CalleeClient.isConnectedToPeer.Get(),
