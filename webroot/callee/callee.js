@@ -2241,7 +2241,7 @@ function getCookieSupport() {
 
 var counter=0;
 function openContacts() {
-	let url = "/callee/contacts?callerId="+calleeID+"&name="+calleeName+"&i="+counter++;
+	let url = "/callee/contacts?callerId="+calleeID+"&name="+calleeName+"&ds="+playDialSounds+"&i="+counter++;
 	gLog('openContacts',url);
 	iframeWindowOpen(url);
 }
