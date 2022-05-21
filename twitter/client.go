@@ -239,7 +239,7 @@ twurl -A 'Content-type: application/json' -X POST /1.1/direct_messages/events/ne
 /*
 response=[{"event":{"type":"message_create","id":"1514380631991627786","created_timestamp":"1649891453155","message_create":{"target":{"recipient_id":"218447389"},"sender_id":"1388595296205250560","message_data":{"text":"Gnut2 is waiting for you to pick up the phone.","entities":{"hashtags":[],"symbols":[],"user_mentions":[],"urls":[]}}}}}]
 
-response=[{"event":{"type":"message_create","id":"1391575599735525381","created_timestamp":"1620612451858","message_create":{"target":{"recipient_id":"218447389"},"sender_id":"1388595296205250560","message_data":{"text":"A call for you https:\/\/t.co\/tmp115RC8V \/user\/123456","entities":{"hashtags":[],"symbols":[],"user_mentions":[],"urls":[{"url":"https:\/\/t.co\/tmp115RC8V","expanded_url":"http:\/\/timur.mobi","display_url":"timur.mobi","indices":[15,38]}]}}}}}]
+response=[{"event":{"type":"message_create","id":"1391575599735525381","created_timestamp":"1620612451858","message_create":{"target":{"recipient_id":"218447389"},"sender_id":"1388595296205250560","message_data":{"text":"A call for you https:\/\/t.co\/tmp115RC8V \/user\/123456","entities":{"hashtags":[],"symbols":[],"user_mentions":[],"urls":[{"url":"https:\/\/t.co\/tmp115RC8V","expanded_url":"http:\/\/tmur.mobi","display_url":"tmur.mobi","indices":[15,38]}]}}}}}]
 
 response=[{"event":{"type":"message_create","id":"1392278525663645703","created_timestamp":"1620780042459","message_create":{"target":{"recipient_id":"1065529529052143616"},"sender_id":"1388595296205250560","message_data":{"text":"A caller is waiting for you now","entities":{"hashtags":[],"symbols":[],"user_mentions":[],"urls":[]}}}}}]
 

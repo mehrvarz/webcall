@@ -50,7 +50,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 			// NOTE: msg MUST NOT contain apostroph (') characters
 			msg := "The version of WebCall you are using has a technical problem and is no longer supported."+
-					" <a href=\"https://timur.mobi/webcall/update/\">Please upgrade.</a>"
+					" <a href=\"/webcall/update/\">Please upgrade.</a>"
 			fmt.Fprintf(w,msg)
 			return
 		}
@@ -71,7 +71,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			// NOTE: msg MUST NOT contain apostroph (') characters
 			msg :=  "A Websocket reconnect has failed. Likely in device sleep mode. "+
 					"Please deactivate battery optimizations aka provide keep-awake permission. "+
-					"<a href=\"https://timur.mobi/webcall/more/#keepawake\">More info</a>"
+					"<a href=\"/webcall/more/#keepawake\">More info</a>"
 			fmt.Fprintf(w,msg)
 			blockMapMutex.Lock()
 			delete(blockMap,urlID)

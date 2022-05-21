@@ -129,11 +129,9 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	}
 	wsClientMutex.Unlock()
 	if !ok {
-		// this callee has just exited
-		// does not to be logged
+		// this callee has just exited, no need to log
 		//fmt.Printf("serveWs ws=%d does not exist %s url=%s\n",
 		//	wsClientID64, remoteAddr, r.URL.String())
-		// TODO why does r.URL start with "//": url=//timur.mobi:8443/ws?wsid=47639023704
 		return
 	}
 
@@ -334,7 +332,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 					  "This is likely a WebRTC related issue with your browser/WebView, "+
 					  "or the browser/WebView on the other side. "+
 					  "It could also be a firewall issue. "+
-					  "On Android, run <a href=\"https://timur.mobi/webcall/android/#webview\">WebRTC-Check</a> "+
+					  "On Android, run <a href=\"/webcall/android/#webview\">WebRTC-Check</a> "+
 					  "to test your System WebView."
 					hub.CallerClient.Write([]byte("status|"+msg))
 					hub.CalleeClient.Write([]byte("status|"+msg))
@@ -448,7 +446,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 				// NOTE: msg MUST NOT contain apostroph (') characters
 				msg := "This version of WebCall for Android has a technical problem. "+
 						"Support will be phased out soon. "+
-						"Please upgrade to <a href=\"https://timur.mobi/webcall/update/\">v1.0 or newer.</a>"
+						"Please upgrade to <a href=\"/webcall/update/\">v1.0 or newer.</a>"
 				if logWantedFor("login") {
 					fmt.Printf("%s (%s) send status|%s\n",c.connType,c.calleeID,msg)
 				}
