@@ -12,6 +12,7 @@ window.onload = function() {
 	callerID = getUrlParams("callerId");
 	callerName = getUrlParams("name");
 	dialsounds = getUrlParams("ds");
+	console.log('contacts onload callerID='+callerID+' callerName='+callerName+' dialsounds='+dialsounds);
 
 	document.onkeydown = function(evt) {
 		//console.log('contacts onload onkeydown event');
