@@ -693,8 +693,9 @@ func addMissedCall(urlID string, caller CallerInfo, cause string) (error, []Call
 			urlID, caller, err)
 	}
 	// make sure we never show more than 10 missed calls
-	if len(missedCallsSlice)>=10 {
-		missedCallsSlice = missedCallsSlice[len(missedCallsSlice)-9:]
+	maxMissedCalls := 10
+	if len(missedCallsSlice) >= maxMissedCalls {
+		missedCallsSlice = missedCallsSlice[len(missedCallsSlice)-(maxMissedCalls-1):]
 	}
 	missedCallsSlice = append(missedCallsSlice, caller)
 	err = kvCalls.Put(dbMissedCalls, urlID, missedCallsSlice, true) // TODO: skipConfirm really?

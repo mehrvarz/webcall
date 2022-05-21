@@ -42,7 +42,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		}
 	}
 
-	// check clientBlockBelowVersion (but not for answie and talkback)
+	// checking clientBlockBelowVersion (but not for answie and talkback)
 	if !strings.HasPrefix(urlID,"answie") && !strings.HasPrefix(urlID,"talkback") {
 		if clientBlockBelowVersion!="" && (clientVersion=="" || clientVersion < clientBlockBelowVersion) {
 			fmt.Printf("/login (%s) deny clientVersion (%s) < clientBlockBelowVersion (%s) %s\n",
@@ -248,120 +248,97 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	globalID := ""
 	dbUserKey := ""
 
-	if strings.HasPrefix(urlID, "random") {
-		// ignore
-	} else if strings.HasPrefix(urlID, "!") {
-		// duo: create new unique wsClientID
-		wsClientMutex.Lock()
-		wsClientID = getNewWsClientID()
-		wsClientMutex.Unlock()
-		//fmt.Printf("/login (%s) set wsClientMap[%d] for \n", globalID, wsClientID)
-		// hub.WsClientID and hub.ConnectedCallerIp will be set by wsclient.go
+	if len(pw) < 6 {
+		// guessing more difficult if delayed
+		fmt.Printf("/login (%s) pw too short %s ver=%s\n", urlID, remoteAddr, clientVersion)
+		time.Sleep(3000 * time.Millisecond)
+		fmt.Fprintf(w, "error")
+		return
+	}
 
-		var err error
-		globalID,_,err = StoreCalleeInHubMap(urlID, myMultiCallees, remoteAddrWithPort, wsClientID, false)
-		if err != nil || globalID == "" {
-			fmt.Printf("# /login (%s) StoreCalleeInHubMap(%s) err=%v ver=%s\n",
-				globalID, urlID, err, clientVersion)
-			fmt.Fprintf(w, "noservice")
+	err := kvMain.Get(dbRegisteredIDs, urlID, &dbEntry)
+	if err != nil {
+		// err is most likely "skv key not found"
+		fmt.Printf("/login (%s) error db=%s bucket=%s %s get registeredID err=%v ver=%s\n",
+			urlID, dbMainName, dbRegisteredIDs, remoteAddr, err, clientVersion)
+		if strings.Index(err.Error(), "disconnect") >= 0 {
+			// TODO admin email notif may be useful
+			fmt.Fprintf(w, "error")
 			return
 		}
-		//fmt.Printf("/login (%s) urlID=(%s) rip=%s rt=%v\n",
-		//	globalID, urlID, remoteAddr, time.Since(startRequestTime))
-	} else {
-		// pw check for everyone other than random and duo
-		if len(pw) < 6 {
-			// guessing more difficult if delayed
-			fmt.Printf("/login (%s) pw too short %s ver=%s\n", urlID, remoteAddr, clientVersion)
+		if strings.Index(err.Error(), "timeout") < 0 {
+			// pw guessing more difficult if delayed
 			time.Sleep(3000 * time.Millisecond)
-			fmt.Fprintf(w, "error")
-			return
 		}
+		// TODO clear cookie?
+		//clearCookie(w, r, urlID, remoteAddr)
+		fmt.Fprintf(w, "notregistered")
+		return
+	}
+	if pw != dbEntry.Password {
+		fmt.Printf("/login (%s) fail wrong password %d %s\n", urlID, len(calleeLoginSlice), remoteAddr)
+		// delay to make pw guessing harder
+		time.Sleep(2000 * time.Millisecond)
+		fmt.Fprintf(w, "error")
+		return
+	}
 
-		err := kvMain.Get(dbRegisteredIDs, urlID, &dbEntry)
+	// pw accepted
+	dbUserKey = fmt.Sprintf("%s_%d", urlID, dbEntry.StartTime)
+	err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
+	if err != nil {
+		fmt.Printf("# /login (%s) error db=%s bucket=%s get %s err=%v ver=%s\n",
+			dbUserKey, dbMainName, dbUserBucket, remoteAddr, err, clientVersion)
+		fmt.Fprintf(w, "error")
+		return
+	}
+	//fmt.Printf("/login dbUserKey=%v dbUser.Int=%d (hidden) rt=%v\n",
+	//	dbUserKey, dbUser.Int2, time.Since(startRequestTime)) // rt=75ms
+
+	// store dbUser with modified LastLoginTime
+	dbUser.LastLoginTime = time.Now().Unix()
+	err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
+	if err!=nil {
+		fmt.Printf("# /login (%s) error db=%s bucket=%s put %s err=%v ver=%s\n",
+			urlID, dbMainName, dbUserBucket, remoteAddr, err, clientVersion)
+		fmt.Fprintf(w, "error")
+		return
+	}
+
+	// create new unique wsClientID
+	wsClientMutex.Lock()
+	wsClientID = getNewWsClientID()
+	wsClientMutex.Unlock()
+	//fmt.Printf("/login (%s) set wsClientMap[%d] for\n", globalID, wsClientID)
+	// hub.WsClientID and hub.ConnectedCallerIp will be set by wsclient.go
+
+	globalID,_,err = StoreCalleeInHubMap(urlID, myMultiCallees, remoteAddrWithPort, wsClientID, false)
+	if err != nil || globalID == "" {
+		fmt.Printf("# /login (%s/%s) StoreCalleeInHubMap err=%v ver=%s\n",
+			urlID, globalID, err, clientVersion)
+		fmt.Fprintf(w, "noservice")
+		return
+	}
+	//fmt.Printf("/login (%s) urlID=(%s) rip=%s rt=%v\n",
+	//	globalID, urlID, remoteAddr, time.Since(startRequestTime))
+
+	if cookie == nil && !nocookie {
+		err,cookieValue := createCookie(w, urlID, pw, &pwIdCombo)
 		if err != nil {
-			// err is most likely "skv key not found"
-			fmt.Printf("/login (%s) error db=%s bucket=%s %s get registeredID err=%v ver=%s\n",
-				urlID, dbMainName, dbRegisteredIDs, remoteAddr, err, clientVersion)
-			if strings.Index(err.Error(), "disconnect") >= 0 {
-				// TODO admin email notif may be useful
-				fmt.Fprintf(w, "error")
-				return
+			if globalID != "" {
+				_,lenGlobalHubMap = DeleteFromHubMap(globalID)
 			}
-			if strings.Index(err.Error(), "timeout") < 0 {
-				// pw guessing more difficult if delayed
-				time.Sleep(3000 * time.Millisecond)
-			}
-			// TODO clear cookie?
-			//clearCookie(w, r, urlID, remoteAddr)
-			fmt.Fprintf(w, "notregistered")
-			return
-		}
-		if pw != dbEntry.Password {
-			fmt.Printf("/login (%s) fail wrong password %d %s\n", urlID, len(calleeLoginSlice), remoteAddr)
-			// delay to make pw guessing harder
-			time.Sleep(2000 * time.Millisecond)
-			fmt.Fprintf(w, "error")
-			return
-		}
-
-		// pw accepted
-		dbUserKey = fmt.Sprintf("%s_%d", urlID, dbEntry.StartTime)
-		err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
-		if err != nil {
-			fmt.Printf("# /login (%s) error db=%s bucket=%s get %s err=%v ver=%s\n",
-				dbUserKey, dbMainName, dbUserBucket, remoteAddr, err, clientVersion)
-			fmt.Fprintf(w, "error")
-			return
-		}
-		//fmt.Printf("/login dbUserKey=%v dbUser.Int=%d (hidden) rt=%v\n",
-		//	dbUserKey, dbUser.Int2, time.Since(startRequestTime)) // rt=75ms
-
-		// store dbUser with modified LastLoginTime
-		dbUser.LastLoginTime = time.Now().Unix()
-		err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
-		if err!=nil {
-			fmt.Printf("# /login (%s) error db=%s bucket=%s put %s err=%v ver=%s\n",
-				urlID, dbMainName, dbUserBucket, remoteAddr, err, clientVersion)
-			fmt.Fprintf(w, "error")
-			return
-		}
-
-		// create new unique wsClientID
-		wsClientMutex.Lock()
-		wsClientID = getNewWsClientID()
-		wsClientMutex.Unlock()
-		//fmt.Printf("/login (%s) set wsClientMap[%d] for\n", globalID, wsClientID)
-		// hub.WsClientID and hub.ConnectedCallerIp will be set by wsclient.go
-
-		globalID,_,err = StoreCalleeInHubMap(urlID, myMultiCallees, remoteAddrWithPort, wsClientID, false)
-		if err != nil || globalID == "" {
-			fmt.Printf("# /login (%s/%s) StoreCalleeInHubMap err=%v ver=%s\n",
-				urlID, globalID, err, clientVersion)
+			fmt.Printf("# /login (%s) persist PwIdCombo error db=%s bucket=%s cookie=%s err=%v ver=%s (%d)\n",
+				urlID, dbHashedPwName, dbHashedPwBucket, cookieValue, err, clientVersion, lenGlobalHubMap)
 			fmt.Fprintf(w, "noservice")
 			return
 		}
-		//fmt.Printf("/login (%s) urlID=(%s) rip=%s rt=%v\n",
-		//	globalID, urlID, remoteAddr, time.Since(startRequestTime))
 
-		if cookie == nil && !nocookie {
-			err,cookieValue := createCookie(w, urlID, pw, &pwIdCombo)
-			if err != nil {
-				if globalID != "" {
-					_,lenGlobalHubMap = DeleteFromHubMap(globalID)
-				}
-				fmt.Printf("# /login (%s) persist PwIdCombo error db=%s bucket=%s cookie=%s err=%v ver=%s (%d)\n",
-					urlID, dbHashedPwName, dbHashedPwBucket, cookieValue, err, clientVersion, lenGlobalHubMap)
-				fmt.Fprintf(w, "noservice")
-				return
-			}
-
-			if logWantedFor("cookie") {
-				fmt.Printf("/login (%s) persisted PwIdCombo db=%s bucket=%s key=%s ver=%s\n",
-					urlID, dbHashedPwName, dbHashedPwBucket, cookieValue, clientVersion)
-			}
-			//fmt.Printf("/login (%s) pwIdCombo stored time=%v\n", urlID, time.Since(startRequestTime))
+		if logWantedFor("cookie") {
+			fmt.Printf("/login (%s) persisted PwIdCombo db=%s bucket=%s key=%s ver=%s\n",
+				urlID, dbHashedPwName, dbHashedPwBucket, cookieValue, clientVersion)
 		}
+		//fmt.Printf("/login (%s) pwIdCombo stored time=%v\n", urlID, time.Since(startRequestTime))
 	}
 
 	readConfigLock.RLock()

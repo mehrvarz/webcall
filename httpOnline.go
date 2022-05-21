@@ -325,46 +325,6 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 	return
 }
 
-/*
-func httpAvail(w http.ResponseWriter, r *http.Request, urlID string, urlPath string, remoteAddr string) {
-	checkID := urlPath[7:]
-	if !allowNewAccounts {
-		fmt.Printf("# /avail (%s) !allowNewAccounts rip=%s\n",checkID,remoteAddr)
-	} else {
-		// checks if ID is free to be registered for a new calle
-		// this is NOT the case if it is listed as registered or blocked
-		fmt.Printf("/avail (%s) rip=%s\n",checkID,remoteAddr)
-		var dbEntryBlocked DbEntry
-		// checkID is blocked in dbBlockedIDs
-		err := kvMain.Get(dbBlockedIDs,checkID,&dbEntryBlocked)
-		if err!=nil {
-			// id is not listed in dbBlockedIDs
-			fmt.Printf("/avail (%s) not found in dbBlockedIDs\n",checkID)
-			var dbEntryRegistered DbEntry
-			err := kvMain.Get(dbRegisteredIDs,checkID,&dbEntryRegistered)
-			if err!=nil {
-				// id is not listed in dbRegisteredIDs
-				//fmt.Printf("avail check id=%s not found in dbRegisteredIDs\n",checkID)
-				fmt.Printf("/avail (%s) for rip=%s is positive\n",checkID,remoteAddr)
-				fmt.Fprintf(w, "true")
-				return
-			}
-			fmt.Printf("/avail (%s) found in dbRegisteredIDs\n",checkID)
-		}
-		// id is listed in dbBlockedIDs
-		// but if it is blocked by the same remoteAddr then we provide access of course
-		if dbEntryBlocked.Ip==remoteAddr {
-			fmt.Printf("/avail (%s) with SAME rip=%s is positive\n",checkID,remoteAddr)
-			fmt.Fprintf(w, "true")
-			return
-		}
-		fmt.Printf("/avail (%s) for rip=%s is negative\n",checkID,remoteAddr)
-	}
-	fmt.Fprintf(w, "false")
-	return
-}
-*/
-
 func httpNewId(w http.ResponseWriter, r *http.Request, urlID string, calleeID string, remoteAddr string) {
 	// get a random ID that is not yet used in hubmap
 	if !allowNewAccounts {

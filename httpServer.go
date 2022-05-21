@@ -467,9 +467,9 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if urlPath=="/missedCall" {
-		// TODO must be a caller that has just failed to connect to a callee
+		// must be a caller that has just failed to connect to a callee
 		// using: /online?id="+calleeID+"&wait=true
-		// other clients are not accepted (to prevent unauthorized clients to fill this callees missed call list)
+		// other clients are not permitted (to prevent unauthorized clients to fill callees list of missed call)
 		httpMissedCall(w, r, urlID, remoteAddr, remoteAddrWithPort)
 		return
 	}
@@ -508,10 +508,6 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		httpTwFollower(w, r, urlID, calleeID, cookie, remoteAddr)
 		return
 	}
-//	if strings.HasPrefix(urlPath,"/avail/") {
-//		httpAvail(w, r, urlID, urlPath, remoteAddr)
-//		return
-//	}
 	if strings.HasPrefix(urlPath,"/register/") {
 		httpRegister(w, r, urlID, urlPath, remoteAddr, startRequestTime)
 		return
