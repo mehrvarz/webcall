@@ -1143,7 +1143,7 @@ func (c *WsClient) peerConHasEnded(cause string) {
 			recentTurnCalleeIpMutex.Unlock()
 		}
 		c.hub.HubMutex.RUnlock()
-		fmt.Printf("%s (%s) PEER DISC📴 %ds %s/%s %s <- %s (%s) %s\n",
+		fmt.Printf("%s (%s) PEER DISCON📴 %ds %s/%s %s <- %s (%s) %s\n",
 			c.connType, c.calleeID, //peerType,
 			c.hub.CallDurationSecs, localPeerCon, remotePeerCon,
 			calleeRemoteAddr, callerRemoteAddr, callerID, cause)
