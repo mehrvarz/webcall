@@ -106,7 +106,7 @@ function processContacts(xhrresponse) {
 			let name = entry[1];
 			//if(!gentle) console.log('obj[%s] (%s)',id, name);
 			dataBoxContent += "<tr><td><a onclick='edit(this,event,\""+id+"\")'>"+name+"</a></td>"+
-			"<td><a href='" + mainLink + id + "?callerId="+callerID+ "&name="+callerName+ "&ds="+dialsounds"'>"+
+			"<td><a href='" + mainLink + id + "?callerId="+callerID+ "&name="+callerName+ "&ds="+dialsounds+"'>"+
 				id+"</a></td></tr>";
 		}
 		dataBoxContent += "</table>";
