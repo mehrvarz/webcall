@@ -325,9 +325,9 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				// only log NO PEERCON if CallerClient.callerOfferForwarded was set (if "callerOffer" was sent)
 				if hub.CallerClient!=nil && hub.CallerClient.callerOfferForwarded.Get() {
 					// TODO: after 10s, how do we know hub.CallerClient is the same as 10s ago?
-					fmt.Printf("%s (%s) NO PEERCON📵 %ds %s <- %s (%s) ua=%s\n", client.connType, client.calleeID,
-						delaySecs, hub.CalleeClient.RemoteAddr, client.RemoteAddr, hub.CallerClient.callerID,
-						hub.CallerClient.userAgent)
+					fmt.Printf("%s (%s) NO PEERCON📵 %ds %s <- %s (%s) ua=%s\n",
+						client.connType, client.calleeID, delaySecs, hub.CalleeClient.RemoteAddr, 
+						hub.CallerClient.RemoteAddr, hub.CallerClient.callerID, hub.CallerClient.userAgent)
 
 					// NOTE: msg MUST NOT contain apostroph (') characters
 					msg :=  "Unable to establish a direct P2P connection. "+
