@@ -640,9 +640,11 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 
 		if c.hub.CalleeClient.isConnectedToPeer.Get() {
 			// only execute cancel, if callee is peer-connected
-			fmt.Printf("%s (%s) cmd=cancel connected=%v byCallee=%v %s '%s'\n",
-				c.connType, c.calleeID, c.hub.CalleeClient.isConnectedToPeer.Get(),
-				c.isCallee, c.RemoteAddr, payload)
+			if c.isCallee {
+				fmt.Printf("%s (%s) DISCON by callee %s '%s'\n", c.connType, c.isCallee, c.RemoteAddr, payload)
+			} else {
+				fmt.Printf("%s (%s) DISCON by caller %s '%s'\n", c.connType, c.isCallee, c.RemoteAddr, payload)
+			}
 			// tell callee to disconnect
 			c.hub.CalleeClient.peerConHasEnded("cancel")
 		} else {
