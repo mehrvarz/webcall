@@ -646,10 +646,10 @@ function calleeOnlineAction(from) {
 	if(!notificationSound) {
 		gLog('loading audio files');
 		notificationSound = new Audio("notification.mp3");
-		if(playDialSounds) {
+//		if(playDialSounds) {
 			dtmfDialingSound = new Audio('dtmf-dial.mp3');
 			busySignalSound = new Audio('busy-signal.mp3');
-		}
+//		}
 	}
 
 	if(haveBeenWaitingForCalleeOnline && notificationSound) {
