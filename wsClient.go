@@ -378,8 +378,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			if hub.CalleeClient.isConnectedToPeer.Get() {
 				// peercon steht; no peercon meldung nicht nötig; force caller ws-disconnect
 				hub.HubMutex.RUnlock()
-				fmt.Printf("%s (%s) no peercon not needed: CalleeClient.isConnectedToPeer\n",
-					client.connType, client.calleeID)
+				//fmt.Printf("%s (%s) no peercon not needed: CalleeClient.isConnectedToPeer\n",
+				//	client.connType, client.calleeID)
 
 				client.reached11s.Set(true) // caller onClose will not anymore disconnect session/peercon
 
@@ -391,8 +391,10 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 					readConfigLock.RUnlock()
 					if myDisconCallerOnPeerConnected {
 						if hub.CallerClient != nil {
-							fmt.Printf("%s (%s) force caller ws-disconnect\n",
-								client.connType, client.calleeID)
+							if logWantedFor("attach") {
+								fmt.Printf("%s (%s) force caller ws-disconnect (11s)\n",
+									client.connType, client.calleeID)
+							}
 							hub.CallerClient.Close("disconCallerAfter11s")
 						}
 					}
@@ -1073,7 +1075,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 						// now force ws-disconnect caller
 						// but only if 11s has passed
 						if !c.hub.CallerClient.reached11s.Get() {
-							fmt.Printf("%s (%s) caller ws-disconnect, but 11s not reached\n",
+							fmt.Printf("%s (%s) 11s not reached, no force caller ws-disconnect\n",
 								c.connType, c.calleeID)
 						} else {
 							readConfigLock.RLock()
@@ -1085,15 +1087,17 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 							}
 							if myDisconCalleeOnPeerConnected {
 								// this is currently never done
-								fmt.Printf("%s callee ws-disconnect %s %s\n",
+								fmt.Printf("%s force callee ws-disconnect %s %s\n",
 									c.connType, c.calleeID, c.RemoteAddr)
 								c.hub.CalleeClient.Close("disconCalleeOnPeerConnected")
 							}
 							if myDisconCallerOnPeerConnected {
 								// this is currently always done
 								if c.hub.CallerClient != nil {
-									fmt.Printf("%s (%s) caller ws-disconnect %s\n",
-										c.connType, c.calleeID, c.RemoteAddr)
+									if logWantedFor("attach") {
+										fmt.Printf("%s (%s) force caller ws-disconnect %s (peercon)\n",
+											c.connType, c.calleeID, c.RemoteAddr)
+									}
 									c.hub.CallerClient.Close("disconCallerOnPeerConnected")
 								}
 							}
@@ -1180,7 +1184,6 @@ func (c *WsClient) peerConHasEnded(cause string) {
 		fmt.Printf("# peerConHasEnded but c==nil\n")
 		return
 	}
-
 	if c.hub==nil {
 		fmt.Printf("# %s (%s) peerConHasEnded callee=%v con=%v media=%v c.hub==nil (%s)\n",
 			c.connType, c.calleeID, c.isCallee,
@@ -1208,11 +1211,11 @@ func (c *WsClient) peerConHasEnded(cause string) {
 
 	if c.isConnectedToPeer.Get() {
 		// we are disconnection a peer connect
-		if logWantedFor("attach") {
-			fmt.Printf("%s (%s) peerConHasEnded con=%v media=%v (%s)\n",
-				c.connType, c.calleeID,
-				c.isConnectedToPeer.Get(), c.isMediaConnectedToPeer.Get(), cause)
-		}
+//		if logWantedFor("attach") {
+//			fmt.Printf("%s (%s) peerConHasEnded con=%v media=%v (%s)\n",
+//				c.connType, c.calleeID,
+//				c.isConnectedToPeer.Get(), c.isMediaConnectedToPeer.Get(), cause)
+//		}
 
 		localPeerCon := "?"
 		remotePeerCon := "?"
