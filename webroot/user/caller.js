@@ -1412,7 +1412,7 @@ function signalingCommand(message) {
 				return
 			}
 
-			gLog('calleeCandidate',calleeCandidate);
+			//gLog('calleeCandidate',calleeCandidate);
 
 			let tok = calleeCandidate.candidate.split(' ');
 			if(tok.length>=5) {
@@ -1674,6 +1674,7 @@ function dial2() {
 	candidateResultString = "";
 	dialDate = Date.now();
 	console.log('start dialing');
+/*
 	setTimeout(function(lastDialDate) {
 		if(dialDate==lastDialDate) {
 			if(!rtcConnect) {
@@ -1699,6 +1700,7 @@ function dial2() {
 			}
 		}
 	},20000,dialDate);
+*/
 
 	addedAudioTrack = null;
 	addedVideoTrack = null;

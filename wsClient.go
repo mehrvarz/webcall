@@ -57,6 +57,7 @@ type WsClient struct {
 	pickupSent atombool.AtomBool
 	calleeInitReceived atombool.AtomBool
 	callerOfferForwarded atombool.AtomBool
+	reached11s atombool.AtomBool
 	RemoteAddr string // with port
 	RemoteAddrNoPort string // no port
 	userAgent string // ws UA
@@ -245,15 +246,47 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	wsConn.OnClose(func(c *websocket.Conn, err error) {
 		keepAliveMgr.Delete(c)
 		client.isOnline.Set(false) // prevent close() from closing this already closed connection
-		if logWantedFor("wsclose") {
-			if err!=nil {
-				fmt.Printf("%s (%s) onclose isCallee=%v err=%v\n",
-					client.connType, client.calleeID, client.isCallee, err)
+		if client.isCallee {
+//			if logWantedFor("wsclose") {
+				if err!=nil {
+					fmt.Printf("%s (%s) onclose callee err=%v\n", client.connType, client.calleeID, err)
+				} else {
+					fmt.Printf("%s (%s) onclose callee noerr\n", client.connType, client.calleeID)
+				}
+//			}
+		} else {
+//			if logWantedFor("wsclose") {
+				if err!=nil {
+					fmt.Printf("%s (%s) onclose caller err=%v\n", client.connType, client.calleeID, err)
+				} else {
+					fmt.Printf("%s (%s) onclose caller noerr\n", client.connType, client.calleeID)
+				}
+//			}
+
+			if !client.reached11s.Get() {
+				// one of the two is needed to shut down the callee on early hangup
+				// but both are NOT correct once we have a stable peercon
+				//   then callee can hangup via the peercon to callee
+				//   and it should not matter if callers ws-con is lost
+				// this whole problem is caused by the webview WebRTC issue !!!!!!!!!!!!
+				//   bc there is a 11s uncertainty about whether we get a peercon
+				fmt.Printf("%s (%s) onclose !reached11s -> peerConHasEnded\n",
+					client.connType, client.calleeID)
+// das folgende kriegt callee nicht immer mit und bleibt hängen / macht keinen hangup
+// should we send a "cancel
+				if client.hub.CalleeClient!=nil {
+					fmt.Printf("%s (%s) onclose !reached11s -> peerConHasEnded send cancel to callee\n",
+						client.connType, client.calleeID)
+					client.hub.CalleeClient.Write([]byte("cancel|c"))
+					client.hub.CalleeClient.peerConHasEnded("callerOnClose")
+				}
+				StoreCallerIpInHubMap(client.calleeID, "", false)
 			} else {
-				fmt.Printf("%s (%s) onclose isCallee=%v noerr\n",
-					client.connType, client.calleeID, client.isCallee)
+				fmt.Printf("%s (%s) onclose after reached11s -> no peerConHasEnded\n",
+					client.connType, client.calleeID)
 			}
 		}
+
 		if client.isCallee && client.isConnectedToPeer.Get() {
 			client.peerConHasEnded("OnClose")
 // TODO tmtmtm call? -> client.hub.CalleeClient.peerConHasEnded("OnClose")
@@ -296,66 +329,114 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		//	client.connType, hub.ConnectedToPeerSecs, hub.ServiceStartTime, hub.ServiceDurationSecs)
 	} else if hub.CallerClient==nil {
 		// caller client (2nd client)
-		if logWantedFor("wsclient") {
+//		if logWantedFor("wsclient") {
 			//callerID := ""
 			//if client.hub!=nil && client.hub.CallerClient!=nil {
 			//	callerID = client.hub.CallerClient.callerID
 			//}
 			fmt.Printf("%s (%s) caller conn ws=%d (%s) %s\n", client.connType, client.calleeID,
 				wsClientID64, callerID, client.RemoteAddr)
-		}
+//		}
 
 		client.isCallee = false
 		client.callerOfferForwarded.Set(false)
+		client.reached11s.Set(false)
 		hub.HubMutex.Lock()
 		hub.CallDurationSecs = 0
 		hub.CallerClient = client
 		hub.HubMutex.Unlock()
-
+//tmtmtm
 		go func() {
 			// incoming caller will get removed if there is no peerConnect after 11 sec
 			// (it can take up to 6-8 seconds in some cases for a devices to get fully out of deep sleep)
 			delaySecs := 11
+			fmt.Printf("%s (%s) caller conn 11s delay start\n", client.connType, client.calleeID)
 			time.Sleep(time.Duration(delaySecs) * time.Second)
+			fmt.Printf("%s (%s) caller conn 11s delay end\n", client.connType, client.calleeID)
 
 			hub.HubMutex.RLock()
-			if hub.CalleeClient!=nil && !hub.CalleeClient.isConnectedToPeer.Get() {
-				// only log NO PEERCON if CallerClient.callerOfferForwarded was set (if "callerOffer" was sent)
-				if hub.CallerClient!=nil && hub.CallerClient.callerOfferForwarded.Get() {
-					// TODO: after 10s, how do we know hub.CallerClient is the same as 10s ago?
-					fmt.Printf("%s (%s) NO PEERCON📵 %ds %s <- %s (%s) ua=%s\n",
-						client.connType, client.calleeID, delaySecs, hub.CalleeClient.RemoteAddr, 
-						hub.CallerClient.RemoteAddr, hub.CallerClient.callerID, hub.CallerClient.userAgent)
+			if hub.CalleeClient==nil {
+				hub.HubMutex.RUnlock()
+				fmt.Printf("%s (%s) no peercon not needed: hub.CalleeClient==nil\n",
+					client.connType, client.calleeID)
+				return
+			}
+			if hub.CallerClient==nil {
+				hub.HubMutex.RUnlock()
+				fmt.Printf("%s (%s) no peercon not needed: hub.CallerClient==nil\n",
+					client.connType, client.calleeID)
+				return
+			}
+			if !hub.CallerClient.isOnline.Get() {
+				// this helps us to NOT throw a false NO PEERCON when the caller hanged up early
+				// we don't ws-disconnect the caller on peercon, so we can detect a hangup shortly after
+				hub.HubMutex.RUnlock()
+				fmt.Printf("%s (%s) no peercon not needed: !CallerClient.isOnline\n",
+					client.connType, client.calleeID)
+				return
+			}
+			if !hub.CallerClient.callerOfferForwarded.Get() {
+				// caller has not sent a calleroffer yet -> it has hanged up early
+				hub.HubMutex.RUnlock()
+				fmt.Printf("%s (%s) no peercon not needed: !CallerClient.callerOfferForwarded\n",
+					client.connType, client.calleeID)
+				return
+			}
+			if hub.CalleeClient.isConnectedToPeer.Get() {
+				// peercon steht; no peercon meldung nicht nötig; force caller ws-disconnect
+				hub.HubMutex.RUnlock()
+				fmt.Printf("%s (%s) no peercon not needed: CalleeClient.isConnectedToPeer\n",
+					client.connType, client.calleeID)
 
-					// NOTE: msg MUST NOT contain apostroph (') characters
-					msg :=  "Unable to establish a direct P2P connection. "+
-					  "This is likely a WebRTC related issue with your browser/WebView, "+
-					  "or the browser/WebView on the other side. "+
-					  "It could also be a firewall issue. "+
-					  "On Android, run <a href=\"/webcall/android/#webview\">WebRTC-Check</a> "+
-					  "to test your System WebView."
-					hub.CallerClient.Write([]byte("status|"+msg))
-					hub.CalleeClient.Write([]byte("status|"+msg))
-					hub.HubMutex.RUnlock()
+				client.reached11s.Set(true) // caller onClose will not anymore disconnect session/peercon
 
-					hub.HubMutex.Lock()
-					hub.CallerClient = nil
-					hub.HubMutex.Unlock()
-
-					// clear CallerIpInHubMap
-					err := StoreCallerIpInHubMap(client.globalCalleeID, "", false)
-					if err!=nil {
-						// err "key not found": callee has already signed off - can be ignored
-						if strings.Index(err.Error(),"key not found")<0 {
-							fmt.Printf("# %s (%s) NO PEERCON clear callerIpInHub err=%v\n",
-								client.connType, client.calleeID, err)
+				if hub.CalleeClient.isMediaConnectedToPeer.Get() {
+					// now force-disconnect caller
+					// but only if already media connected
+					readConfigLock.RLock()
+					myDisconCallerOnPeerConnected := disconCallerOnPeerConnected
+					readConfigLock.RUnlock()
+					if myDisconCallerOnPeerConnected {
+						if hub.CallerClient != nil {
+							fmt.Printf("%s (%s) force caller ws-disconnect\n",
+								client.connType, client.calleeID)
+							hub.CallerClient.Close("disconCallerAfter11s")
 						}
 					}
-				} else {
-					hub.HubMutex.RUnlock()
 				}
-			} else {
-				hub.HubMutex.RUnlock()
+				return
+			}
+
+			// both sides still ws-connected, calleroffer was received, but after 11s still no peer-connect
+			// this is a webrtc issue
+			fmt.Printf("%s (%s) NO PEERCON📵 %ds %s <- %s (%s) %v ua=%s\n",
+				client.connType, client.calleeID, delaySecs, hub.CalleeClient.RemoteAddr, 
+				hub.CallerClient.RemoteAddr, hub.CallerClient.callerID, hub.CallerClient.isOnline.Get(),
+				hub.CallerClient.userAgent)
+
+			// NOTE: msg MUST NOT contain apostroph (') characters
+			msg := "Unable to establish a direct P2P connection. "+
+			  "This is likely a WebRTC related issue with your browser/WebView, "+
+			  "or the browser/WebView on the other side. "+
+			  "It could also be a firewall issue. "+
+			  "On Android, run <a href=\"/webcall/android/#webview\">WebRTC-Check</a> "+
+			  "to test your System WebView."
+			hub.CallerClient.Write([]byte("status|"+msg))
+			hub.CalleeClient.Write([]byte("status|"+msg))
+			hub.HubMutex.RUnlock()
+
+			hub.HubMutex.Lock()
+			hub.CallerClient = nil
+			hub.HubMutex.Unlock()
+
+			// clear CallerIpInHubMap
+			err := StoreCallerIpInHubMap(client.globalCalleeID, "", false)
+			if err!=nil {
+				// err "key not found": callee has already signed off - can be ignored
+				if strings.Index(err.Error(),"key not found")<0 {
+					fmt.Printf("# %s (%s) NO PEERCON clear callerIpInHub err=%v\n",
+						client.connType, client.calleeID, err)
+				}
 			}
 		}()
 
@@ -559,7 +640,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			return
 		}
 		if c.hub.CallerClient==nil {
-			fmt.Printf("# %s (%s) CALL☎️ but hub.CallerClient==nil\n",
+			fmt.Printf("# %s (%s) CALL but hub.CallerClient==nil\n",
 				c.connType, c.calleeID)
 			c.hub.HubMutex.RUnlock()
 			return
@@ -571,6 +652,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 
 		// forward the callerOffer message to the callee client
 		if c.hub.CalleeClient.Write(message) != nil {
+			fmt.Printf("%s (%s) CALL CalleeClient.Write(calleroffer) fail\n", c.connType, c.calleeID)
 			c.hub.HubMutex.RUnlock()
 			return
 		}
@@ -580,17 +662,25 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			// send this directly to the callee: see callee.js if(cmd=="callerInfo")
 			sendCmd := "callerInfo|"+c.hub.CallerClient.callerID+":"+c.hub.CallerClient.callerName
 			if c.hub.CalleeClient.Write([]byte(sendCmd)) != nil {
+				fmt.Printf("%s (%s) CALL CalleeClient.Write(callerInfo) fail\n", c.connType, c.calleeID)
 				c.hub.HubMutex.RUnlock()
 				return
 			}
 		}
 
 		// exchange useragent's
+/*
 		if c.hub.CallerClient.Write([]byte("ua|"+c.hub.CalleeClient.userAgent)) != nil {
+			// caller hang up already
+			fmt.Printf("%s (%s) CALL CallerClient.Write(ua) fail (early caller ws-disconnect?)\n",
+				c.connType, c.calleeID)
 			c.hub.HubMutex.RUnlock()
 			return
 		}
+*/
 		if c.hub.CalleeClient.Write([]byte("ua|"+c.hub.CallerClient.userAgent)) != nil {
+			fmt.Printf("%s (%s) CALL CalleeClient.Write(ua) fail (early callee ws-disconnect?)\n",
+				c.connType, c.calleeID)
 			c.hub.HubMutex.RUnlock()
 			return
 		}
@@ -987,26 +1077,32 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 						c.hub.CalleeClient.Write([]byte("callerConnect|"))
 					} else if constate=="Connected" {
 						// caller is reporting peerCon: both peers are now directly connected
-						// now force-disconnect the caller
-						readConfigLock.RLock()
-						myDisconCalleeOnPeerConnected := disconCalleeOnPeerConnected
-						myDisconCallerOnPeerConnected := disconCallerOnPeerConnected
-						readConfigLock.RUnlock()
-						if myDisconCalleeOnPeerConnected || myDisconCallerOnPeerConnected {
-							time.Sleep(20 * time.Millisecond)
-						}
-						if myDisconCalleeOnPeerConnected {
-							// this is currently never done
-							fmt.Printf("%s peer callee disconnect %s %s\n",
-								c.connType, c.calleeID, c.RemoteAddr)
-							c.hub.CalleeClient.Close("disconCalleeOnPeerConnected")
-						}
-						if myDisconCallerOnPeerConnected {
-							// this is currently always done
-							if c.hub.CallerClient != nil {
-								//fmt.Printf("%s (%s) peer caller disconnect %s\n",
-								//	c.connType, c.calleeID, c.RemoteAddr)
-								c.hub.CallerClient.Close("disconCallerOnPeerConnected")
+						// now force ws-disconnect caller
+						// but only if 11s has passed
+						if !c.hub.CallerClient.reached11s.Get() {
+							fmt.Printf("%s (%s) caller ws-disconnect, but 11s not reached\n",
+								c.connType, c.calleeID)
+						} else {
+							readConfigLock.RLock()
+							myDisconCalleeOnPeerConnected := disconCalleeOnPeerConnected
+							myDisconCallerOnPeerConnected := disconCallerOnPeerConnected
+							readConfigLock.RUnlock()
+							if myDisconCalleeOnPeerConnected || myDisconCallerOnPeerConnected {
+								time.Sleep(20 * time.Millisecond)
+							}
+							if myDisconCalleeOnPeerConnected {
+								// this is currently never done
+								fmt.Printf("%s callee ws-disconnect %s %s\n",
+									c.connType, c.calleeID, c.RemoteAddr)
+								c.hub.CalleeClient.Close("disconCalleeOnPeerConnected")
+							}
+							if myDisconCallerOnPeerConnected {
+								// this is currently always done
+								if c.hub.CallerClient != nil {
+									fmt.Printf("%s (%s) caller ws-disconnect %s\n",
+										c.connType, c.calleeID, c.RemoteAddr)
+									c.hub.CallerClient.Close("disconCallerOnPeerConnected")
+								}
 							}
 						}
 					}

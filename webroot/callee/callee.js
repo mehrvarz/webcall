@@ -1038,7 +1038,7 @@ function signalingCommand(message) {
 			showStatus("Failed to set RemoteDescription",8000);
 		});
 	} else if(cmd=="callerAnswer") {
-		if(!peerCon) {
+		if(!peerCon || peerCon.iceConnectionState=="closed") {
 			console.warn('callerAnswer abort no peerCon');
 			return;
 		}
@@ -1082,7 +1082,7 @@ function signalingCommand(message) {
 		callerCandidate.usernameFragment = null;
 		let addIceReloopCounter=0;
 		var addIceCallerCandidate = function(callerCandidate) {
-			if(!peerCon) {
+			if(!peerCon || peerCon.iceConnectionState=="closed") {
 				console.warn('cmd callerCandidate abort no peerCon');
 				return;
 			}
@@ -1692,7 +1692,7 @@ function goOnline() {
 		gLog("peerCon onicegatheringstatechange "+connection.iceGatheringState);
 	}
 	peerCon.onnegotiationneeded = async () => {
-		if(!peerCon) {
+		if(!peerCon || peerCon.iceConnectionState=="closed") {
 			gLog('peerCon onnegotiationneeded deny: no peerCon');
 			return;
 		}
@@ -1728,7 +1728,7 @@ function goOnline() {
 	peerCon.onconnectionstatechange = event => {
 		connectionstatechangeCounter++;
 		gLog("peerCon connectionstatechange "+peerCon.connectionState);
-		if(!peerCon) {
+		if(!peerCon || peerCon.iceConnectionState=="closed") {
 			hangup(true,true,"onconnectionstatechange no peercon");
 			return;
 		}
@@ -1827,8 +1827,9 @@ function peerConnected2() {
 	blinkButtonFunc();
 
 	setTimeout(function() {
-		if(!peerCon) {
-			// calling peer has quickly aborted the call
+		if(!peerCon || peerCon.iceConnectionState=="closed") {
+			// caller early abort
+			gLog('caller early abort');
 			return;
 		}
 		// TODO if callerID and/or callerName are avail we would rather show them

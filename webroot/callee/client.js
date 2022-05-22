@@ -1077,7 +1077,7 @@ function connectLocalVideo(forceOff) {
 		addLocalVideoEnabled = false;
 		if(!addedVideoTrack) {
 			gLog("connectLocalVideo discon !addedVideoTrack: !removeTrack");
-		} else if(!peerCon) {
+		} else if(!peerCon || peerCon.iceConnectionState=="closed") {
 			gLog("connectLocalVideo discon !peerCon: !removeTrack");
 		} else  {
 			gLog("connectLocalVideo discon peerCon.removeTrack(addedVideoTrack)");
@@ -1317,7 +1317,7 @@ function peerConOntrack(track, streams) {
 //				if(!gentle) console.warn('peerCon.ontrack onunmute was already set');
 //				return;
 //			}
-		gLog('peerCon.ontrack onunmute set remoteVideoFrame.srcObject',streams[0]);
+		gLog('peerCon.ontrack onunmute set remoteVideoFrame.srcObject');
 //		if(remoteStream) {
 //			gLog('peerCon.ontrack onunmute have prev remoteStream');
 //			// TODO treat like localStream in gotStream() ? apparently not needed
@@ -1450,7 +1450,7 @@ function isP2pCon() {
 }
 
 function dataChannelOnclose(event) {
-	gLog("dataChannel.onclose",event);
+	gLog("dataChannel.onclose");
 	dataChannel = null;
 	if(rtcConnect) {
 		if(mediaConnect) {
