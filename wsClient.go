@@ -355,24 +355,25 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				return
 			}
 			if hub.CallerClient==nil {
+				// caller already gone
 				hub.HubMutex.RUnlock()
-				fmt.Printf("%s (%s) no peercon not needed: hub.CallerClient==nil\n",
-					client.connType, client.calleeID)
+				//fmt.Printf("%s (%s) no peercon not needed: hub.CallerClient==nil\n",
+				//	client.connType, client.calleeID)
 				return
 			}
 			if !hub.CallerClient.isOnline.Get() {
 				// this helps us to NOT throw a false NO PEERCON when the caller hanged up early
 				// we don't ws-disconnect the caller on peercon, so we can detect a hangup shortly after
 				hub.HubMutex.RUnlock()
-				fmt.Printf("%s (%s) no peercon not needed: !CallerClient.isOnline\n",
-					client.connType, client.calleeID)
+				//fmt.Printf("%s (%s) no peercon not needed: !CallerClient.isOnline\n",
+				//	client.connType, client.calleeID)
 				return
 			}
 			if !hub.CallerClient.callerOfferForwarded.Get() {
 				// caller has not sent a calleroffer yet -> it has hanged up early
 				hub.HubMutex.RUnlock()
-				fmt.Printf("%s (%s) no peercon not needed: !CallerClient.callerOfferForwarded\n",
-					client.connType, client.calleeID)
+				//fmt.Printf("%s (%s) no peercon not needed: !CallerClient.callerOfferForwarded\n",
+				//	client.connType, client.calleeID)
 				return
 			}
 			if hub.CalleeClient.isConnectedToPeer.Get() {
@@ -641,9 +642,10 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			return
 		}
 
-		fmt.Printf("%s (%s) CALL☎️ %s <- %s (%s) ua=%s\n",
+		fmt.Printf("%s (%s) CALL☎️ %s <- %s (%s) ver=%s ua=%s\n",
 			c.connType, c.calleeID, c.hub.CalleeClient.RemoteAddr,
-			c.hub.CallerClient.RemoteAddr, c.hub.CallerClient.callerID, c.hub.CallerClient.userAgent)
+			c.hub.CallerClient.RemoteAddr, c.hub.CallerClient.callerID,
+			c.clientVersion, c.hub.CallerClient.userAgent)
 
 		// forward the callerOffer message to the callee client
 		if c.hub.CalleeClient.Write(message) != nil {
@@ -724,9 +726,11 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			c.hub.HubMutex.RUnlock()
 			// only execute cancel, if callee is peer-connected
 			if c.isCallee {
-				fmt.Printf("%s (%s) DISCON from callee %s '%s'\n", c.connType, c.calleeID, c.RemoteAddr, payload)
+				fmt.Printf("%s (%s) REQ DISCON from callee %s '%s'\n",
+					c.connType, c.calleeID, c.RemoteAddr, payload)
 			} else {
-				fmt.Printf("%s (%s) DISCON from caller %s '%s'\n", c.connType, c.calleeID, c.RemoteAddr, payload)
+				fmt.Printf("%s (%s) REQ DISCON from caller %s '%s'\n",
+					c.connType, c.calleeID, c.RemoteAddr, payload)
 			}
 			// tell callee to disconnect
 			c.hub.CalleeClient.peerConHasEnded("cancel")

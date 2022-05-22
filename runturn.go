@@ -56,7 +56,7 @@ func runTurnServer() {
 			// - return authKey,true if we find a ConnectedCallerIp in the global hub == srcAddr (without port)
 			// - otherwise we return nil,false
 			//if logWantedFor("turn") {
-			//	fmt.Printf("turn auth username=(%s) srcAddr=(%v)\n", username, srcAddr)
+			//	fmt.Printf("turnauth username=(%s) srcAddr=(%v)\n", username, srcAddr)
 			//}
 			timeNow := time.Now()
 			foundIp := false
@@ -82,7 +82,7 @@ func runTurnServer() {
 					foundIp = true
 					foundCalleeId = turnCallee.CalleeID
 					foundByMap = true
-					//fmt.Printf("turn session foundIp foundByMap %v\n", foundCalleeId)
+					//fmt.Printf("turnauth session foundIp foundByMap %v\n", foundCalleeId)
 				} else {
 					// turn session is outdated, will not anymore be authenticated
 					// check if callee is offline or not connected, in which case we will not log session outdated
@@ -92,7 +92,7 @@ func runTurnServer() {
 					} else if err==nil && locHub.ConnectedCallerIp == "" {
 						// turnCallee.CalleeID is online but not connected: don't log
 					} else {
-						fmt.Printf("turn (%s) session outdated %s %v %d\n",
+						fmt.Printf("turnauth (%s) session outdated %s %v %d\n",
 							turnCallee.CalleeID, ipAddr, timeSinceFirstFound.Seconds(), maxTalkSecsIfNoP2p)
 					}
 				}
@@ -105,7 +105,7 @@ func runTurnServer() {
 				// SearchCallerIpInHubMap() returns the callee ip and ID for the given caller ipAddr
 				foundIp, foundCalleeId, err = SearchCallerIpInHubMap(ipAddr)
 				if err != nil {
-					fmt.Printf("# turn auth for %v err=%v\n", ipAddr, err)
+					fmt.Printf("# turnauth for %s err=%v\n", ipAddr, err)
 					return nil, false
 				}
 				if foundIp {
@@ -129,7 +129,7 @@ func runTurnServer() {
 			if foundIp {
 				if !foundByMap /*&& logWantedFor("turn") */ {
 					recentTurnCalleeIpMutex.RLock()
-					fmt.Printf("turn (%s) authenticated caller %v %d\n",
+					fmt.Printf("turnauth (%s) for caller %v %d\n",
 						foundCalleeId, ipAddr, len(recentTurnCalleeIps))
 					recentTurnCalleeIpMutex.RUnlock()
 				}
@@ -140,7 +140,7 @@ func runTurnServer() {
 			}
 
 			if logWantedFor("turn") {
-				fmt.Printf("turn auth denied for %v\n", ipAddr)
+				fmt.Printf("turnauth denied for %v\n", ipAddr)
 			}
 			return nil, false
 		},
