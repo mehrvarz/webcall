@@ -138,9 +138,9 @@ function submitForm(theForm) {
 				calleeLink = calleeLink.replace("register/","");
 				calleeLink += myCalleeID;
 				if(!gentle) console.log('calleeLink='+calleeLink);
-				showStatus( "A cookie will be used to enable a quick login. "+
-				"Please store your ID and password separately. Just in case. "+
-				"We cannot contact you and cannot send you this data.<br><br>"+
+				showStatus( "A cookie will be used for quick login. "+
+				"Please store your ID and password separately, just in case. "+
+				"We cannot e-mail you and cannot send you this data.<br><br>"+
 				"Your WebCall ID: <b>"+myCalleeID+"</b><br><br>"+
 				"Your full WebCall callee link is shown below. "+
 				"This link works from any web browser. "+
