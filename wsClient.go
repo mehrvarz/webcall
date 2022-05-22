@@ -247,43 +247,36 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		keepAliveMgr.Delete(c)
 		client.isOnline.Set(false) // prevent close() from closing this already closed connection
 		if client.isCallee {
-//			if logWantedFor("wsclose") {
+			if logWantedFor("wsclose") {
 				if err!=nil {
 					fmt.Printf("%s (%s) onclose callee err=%v\n", client.connType, client.calleeID, err)
 				} else {
 					fmt.Printf("%s (%s) onclose callee noerr\n", client.connType, client.calleeID)
 				}
-//			}
+			}
 		} else {
-//			if logWantedFor("wsclose") {
+			if logWantedFor("wsclose") {
 				if err!=nil {
 					fmt.Printf("%s (%s) onclose caller err=%v\n", client.connType, client.calleeID, err)
 				} else {
 					fmt.Printf("%s (%s) onclose caller noerr\n", client.connType, client.calleeID)
 				}
-//			}
+			}
 
 			if !client.reached11s.Get() {
-				// one of the two is needed to shut down the callee on early hangup
-				// but both are NOT correct once we have a stable peercon
-				//   then callee can hangup via the peercon to callee
-				//   and it should not matter if callers ws-con is lost
-				// this whole problem is caused by the webview WebRTC issue !!!!!!!!!!!!
-				//   bc there is a 11s uncertainty about whether we get a peercon
-				fmt.Printf("%s (%s) onclose !reached11s -> peerConHasEnded\n",
-					client.connType, client.calleeID)
-// das folgende kriegt callee nicht immer mit und bleibt hängen / macht keinen hangup
-// should we send a "cancel
+				// shut down the callee on early caller hangup
+				//fmt.Printf("%s (%s) onclose caller !reached11s -> clear CallerIp\n",
+				//	client.connType, client.calleeID)
+				StoreCallerIpInHubMap(client.calleeID, "", false)
 				if client.hub.CalleeClient!=nil {
-					fmt.Printf("%s (%s) onclose !reached11s -> peerConHasEnded send cancel to callee\n",
+					fmt.Printf("%s (%s) onclose caller !reached11s -> send to callee cancel + peerConHasEnded\n",
 						client.connType, client.calleeID)
 					client.hub.CalleeClient.Write([]byte("cancel|c"))
 					client.hub.CalleeClient.peerConHasEnded("callerOnClose")
 				}
-				StoreCallerIpInHubMap(client.calleeID, "", false)
 			} else {
-				fmt.Printf("%s (%s) onclose after reached11s -> no peerConHasEnded\n",
-					client.connType, client.calleeID)
+				//fmt.Printf("%s (%s) onclose caller after reached11s -> do nothing\n",
+				//	client.connType, client.calleeID)
 			}
 		}
 
