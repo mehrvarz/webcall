@@ -277,6 +277,7 @@ func broadcastNewsLink(date string, url string) {
 	hubMapMutex.RLock()
 	defer hubMapMutex.RUnlock()
 	count := 0
+	countAll := 0
 	data := "news|"+date+"|"+url;
 	fmt.Printf("newsLink data=%s\n",data)
 	for calleeID,hub := range hubMap {
@@ -285,6 +286,7 @@ func broadcastNewsLink(date string, url string) {
 		   strings.HasPrefix(calleeID,"!") {
 			continue
 		}
+		countAll++
 		if hub!=nil {
 			hub.HubMutex.RLock()
 			if hub.CalleeClient!=nil {
@@ -294,13 +296,13 @@ func broadcastNewsLink(date string, url string) {
 				count++
 			} else {
 				hub.HubMutex.RUnlock()
-				fmt.Printf("newsLink hub.CalleeClient==nil to=%s data=%s\n",calleeID,data)
+				//fmt.Printf("# newsLink hub.CalleeClient==nil to=%s data=%s\n",calleeID,data)
 			}
 		} else {
 			fmt.Printf("newsLink hub==nil to=%s data=%s\n",calleeID,data)
 		}
 	}
-	fmt.Printf("newsLink sent %d times\n",count)
+	fmt.Printf("newsLink sent %d (%d) times\n",count,countAll)
 	return
 }
 
