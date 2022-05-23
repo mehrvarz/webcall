@@ -18,7 +18,6 @@ var ringingText = "Ringing... please be patient, answering a web call may take a
 var notificationSound = null;
 var dtmfDialingSound = null;
 var busySignalSound = null;
-var pickupAfterLocalStream = false; // not used in caller
 var wsConn = null;
 var peerCon = null;
 var localDescription = null;

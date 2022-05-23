@@ -40,6 +40,7 @@ var onIceCandidates = 0;
 var mediaConnect = false;
 var connectionstatechangeCounter = 0;
 var playDialSounds = true;
+var pickupAfterLocalStream = false; // not used in caller
 
 var ICE_config = {
 	"iceServers": [

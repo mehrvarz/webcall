@@ -67,7 +67,6 @@ var audioStreamDest = null;
 var autoPlaybackAudioBuffer = null;
 var autoPlaybackAudioSource = null;
 var autoPlaybackAudioSourceStarted;
-var pickupAfterLocalStream = false;
 var buttonBlinking = false;
 var onGotStreamGoOnline = false;
 var autoPlaybackFile = "";
@@ -1604,6 +1603,7 @@ function hangup(dummy,dummy2,message) {
 
 	remoteVideoFrame.srcObject = null;
 	remoteVideoHide();
+	pickupAfterLocalStream = false;
 
 	// if mediaConnect -> play short busy tone
 	if(mediaConnect && playDialSounds) {
@@ -2062,6 +2062,7 @@ function stopAllAudioEffects(comment) {
 var goOnlinePending = false;
 function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 	gLog('endWebRtcSession start '+disconnectCaller+" "+goOnlineAfter);
+	pickupAfterLocalStream = false;
 	if(remoteVideoFrame) {
 		remoteVideoFrame.pause();
 		remoteVideoFrame.currentTime = 0;
