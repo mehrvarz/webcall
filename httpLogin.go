@@ -423,7 +423,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		} else {
 			fmt.Printf("# exit (%s) wsClientID==0\n", urlID)
 		}
-//		calleeClient.hub.WsClientID = 0
 	}
 
 	hub.exitFunc = exitFunc
@@ -546,15 +545,17 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 						hub.doUnregister(hub.CalleeClient, msg)
 					} else {
 						// callee has exited early
-						//fmt.Printf("/login (%s/%s) timeout%ds skip hub.doUnregister\n",
-						//	urlID, globalID, waitedFor)
+						if logWantedFor("login") {
+							fmt.Printf("/login (%s/%s) timeout%ds callee gone skip hub.doUnregister\n",
+								urlID, globalID, waitedFor)
+						}
 					}
 
 					if globalID != "" {
 						//_,lenGlobalHubMap =
 							DeleteFromHubMap(globalID)
 					} else {
-						fmt.Printf("# /login (%s/%s) skip DeleteFromHubMap() %d\n",
+						fmt.Printf("# /login (%s/%s) no globalID skip DeleteFromHubMap() %d\n",
 							urlID, globalID, waitedFor)
 					}
 				}
