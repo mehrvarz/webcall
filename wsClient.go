@@ -269,6 +269,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				//	client.connType, client.calleeID)
 				StoreCallerIpInHubMap(client.calleeID, "", false)
 				if client.hub.CalleeClient!=nil {
+// TODO also check if callee is peer connected?
 					fmt.Printf("%s (%s) onclose caller !reached11s -> send to callee cancel + peerConHasEnded\n",
 						client.connType, client.calleeID)
 					client.hub.CalleeClient.Write([]byte("cancel|c"))
@@ -393,7 +394,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 					if myDisconCallerOnPeerConnected {
 						if hub.CallerClient != nil {
 							if logWantedFor("attach") {
-								fmt.Printf("%s (%s) force caller ws-disconnect (11s)\n",
+								fmt.Printf("%s (%s) 11s reached -> force caller ws-disconnect (11s)\n",
 									client.connType, client.calleeID)
 							}
 							hub.CallerClient.Close("disconCallerAfter11s")
@@ -1079,8 +1080,10 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 						// now force ws-disconnect caller
 						// but only if 11s has passed
 						if !c.hub.CallerClient.reached11s.Get() {
-							fmt.Printf("%s (%s) 11s not reached, no force caller ws-disconnect\n",
-								c.connType, c.calleeID)
+							if logWantedFor("attach") {
+							//fmt.Printf("%s (%s) peercon but 11s not reached, no force caller ws-disconnect\n",
+							//	c.connType, c.calleeID)
+							}
 						} else {
 							readConfigLock.RLock()
 							myDisconCalleeOnPeerConnected := disconCalleeOnPeerConnected
@@ -1091,7 +1094,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 							}
 							if myDisconCalleeOnPeerConnected {
 								// this is currently never done
-								fmt.Printf("%s force callee ws-disconnect %s %s\n",
+								fmt.Printf("%s peercon -> force callee ws-disconnect %s %s\n",
 									c.connType, c.calleeID, c.RemoteAddr)
 								c.hub.CalleeClient.Close("disconCalleeOnPeerConnected")
 							}
@@ -1099,7 +1102,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 								// this is currently always done
 								if c.hub.CallerClient != nil {
 									if logWantedFor("attach") {
-										fmt.Printf("%s (%s) force caller ws-disconnect %s (peercon)\n",
+										fmt.Printf("%s (%s) peercon -> force caller ws-disconnect %s\n",
 											c.connType, c.calleeID, c.RemoteAddr)
 									}
 									c.hub.CallerClient.Close("disconCallerOnPeerConnected")
