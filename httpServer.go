@@ -342,16 +342,21 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	urlID = strings.ToLower(urlID)
 	urlID = strings.TrimSpace(urlID)
 	// don't forget: urlID may be total garbage
-	if len(urlID)>11 {
-		// TODO: OK if like this: "54281007702||65510272157|1653030153|msgtext"
-		fmt.Printf("# httpApi long urlID=(%s) %s\n", urlID, remoteAddr)
-	} else if logWantedFor("http") {
-		fmt.Printf("httpApi (%s) %s\n", urlID, remoteAddr)
-	}
 
 	// TODO translate urlID
 	if urlID=="89921219321" {
 		urlID = "answie7"
+	}
+
+	if len(urlID)>11 {
+		tok := strings.Split(urlID, "|")
+		if len(tok) == 5 {
+			// don't log 5-token (like this: "54281001702||65511272157|1653030153|msgtext")
+		} else {
+			fmt.Printf("# httpApi long urlID=(%s) %s\n", urlID, remoteAddr)
+		}
+	} else if logWantedFor("http") {
+		fmt.Printf("httpApi (%s) %s\n", urlID, remoteAddr)
 	}
 
 	nocookie := false

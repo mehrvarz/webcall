@@ -351,14 +351,14 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			hub.HubMutex.RLock()
 			if hub.CalleeClient==nil {
 				hub.HubMutex.RUnlock()
-				fmt.Printf("%s (%s) no peercon not needed: hub.CalleeClient==nil\n",
+				fmt.Printf("%s (%s) no peercon check: callee gone (hub.CalleeClient==nil)\n",
 					client.connType, client.calleeID)
 				return
 			}
 			if hub.CallerClient==nil {
 				// caller already gone
 				hub.HubMutex.RUnlock()
-				//fmt.Printf("%s (%s) no peercon not needed: hub.CallerClient==nil\n",
+				//fmt.Printf("%s (%s) no peercon check: caller gone (hub.CallerClient==nil)\n",
 				//	client.connType, client.calleeID)
 				return
 			}
@@ -366,21 +366,21 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				// this helps us to NOT throw a false NO PEERCON when the caller hanged up early
 				// we don't ws-disconnect the caller on peercon, so we can detect a hangup shortly after
 				hub.HubMutex.RUnlock()
-				//fmt.Printf("%s (%s) no peercon not needed: !CallerClient.isOnline\n",
+				//fmt.Printf("%s (%s) no peercon check: !CallerClient.isOnline\n",
 				//	client.connType, client.calleeID)
 				return
 			}
 			if !hub.CallerClient.callerOfferForwarded.Get() {
 				// caller has not sent a calleroffer yet -> it has hanged up early
 				hub.HubMutex.RUnlock()
-				//fmt.Printf("%s (%s) no peercon not needed: !CallerClient.callerOfferForwarded\n",
+				//fmt.Printf("%s (%s) no peercon check: !CallerClient.callerOfferForwarded\n",
 				//	client.connType, client.calleeID)
 				return
 			}
 			if hub.CalleeClient.isConnectedToPeer.Get() {
 				// peercon steht; no peercon meldung nicht nötig; force caller ws-disconnect
 				hub.HubMutex.RUnlock()
-				//fmt.Printf("%s (%s) no peercon not needed: CalleeClient.isConnectedToPeer\n",
+				//fmt.Printf("%s (%s) no peercon check: CalleeClient.isConnectedToPeer\n",
 				//	client.connType, client.calleeID)
 
 				client.reached11s.Set(true) // caller onClose will not anymore disconnect session/peercon
