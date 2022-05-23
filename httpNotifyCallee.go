@@ -269,13 +269,15 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		}
 
 		if notificationSent==0 {
-			// we could not send any notifications: store call as missed call
-			fmt.Printf("# /notifyCallee (%s) no notification sent\n", urlID)
+			// we could not send any notifications (could be hidden online callee has just gone offline)
+			// store call as missed call
 			if(dbUser.StoreMissedCalls) {
-				fmt.Printf("# /notifyCallee (%s) no notification sent - store as missed call\n", urlID)
+				fmt.Printf("# /notifyCallee (%s) could not send notification: store as missed call\n", urlID)
 				// TODO where to get msgbox-text from?
 				addMissedCall(urlID,
 					CallerInfo{remoteAddr,callerName,time.Now().Unix(),callerId,""}, "/notify-notavail")
+			} else {
+				fmt.Printf("# /notifyCallee (%s) could not send notification\n", urlID)
 			}
 			return
 		}
