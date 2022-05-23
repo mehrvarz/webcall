@@ -281,15 +281,17 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			}
 		}
 
+		onCloseMsg := "OnClose"
 		if client.isCallee && client.isConnectedToPeer.Get() {
-			client.peerConHasEnded("OnClose")
+			onCloseMsg = "OnClose📴"
+			client.peerConHasEnded(onCloseMsg)
 // TODO tmtmtm call? -> client.hub.CalleeClient.peerConHasEnded("OnClose")
 // we must do this if "onClose isCallee==false" can happen
 		}
 		if err!=nil {
-			client.hub.doUnregister(client, "OnClose "+err.Error())
+			client.hub.doUnregister(client, onCloseMsg + err.Error())
 		} else {
-			client.hub.doUnregister(client, "OnClose")
+			client.hub.doUnregister(client, onCloseMsg)
 		}
 	})
 
