@@ -587,19 +587,7 @@ function login(retryFlag) {
 			}
 			gLog('outboundIP '+outboundIP);
 
-			let api = apiPath+"/getsettings?id="+calleeID;
-			gLog('login getsettings api '+api);
-			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-				if(xhr.responseText!="") {
-					let serverSettings = JSON.parse(xhr.responseText);
-					if(typeof serverSettings.nickname!=="undefined") {
-						calleeName = serverSettings.nickname;
-						gLog('login calleeName '+calleeName);
-					}
-				}
-			}, function(errString,errcode) {
-				console.log('login xhr error',errString);
-			});
+			getSettings();
 /*
 			if(!pushRegistration) {
 				// we retrieve the pushRegistration here under /callee/(calleeID),
@@ -723,6 +711,23 @@ function login(retryFlag) {
 			offlineAction();
 		}
 	}, "pw="+wsSecret);
+}
+
+function getSettings() {
+	// main use is to get the calleeName (nickname)
+	let api = apiPath+"/getsettings?id="+calleeID;
+	gLog('getsettings api '+api);
+	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+		if(xhr.responseText!="") {
+			let serverSettings = JSON.parse(xhr.responseText);
+			if(typeof serverSettings.nickname!=="undefined") {
+				calleeName = serverSettings.nickname;
+				gLog('getsettings calleeName '+calleeName);
+			}
+		}
+	}, function(errString,errcode) {
+		console.log('getsettings xhr error',errString);
+	});
 }
 
 function offlineAction() {
@@ -2260,6 +2265,7 @@ function openSettings() {
 	let url = "/callee/settings?id="+calleeID+"&i="+counter++;
 	gLog('openSettings',url);
 	iframeWindowOpen(url);
+	// when iframe closes, client.js:iframeWindowClose() will call getSettings()
 }
 
 function clearcookie() {

@@ -743,6 +743,9 @@ function iframeWindowClose() {
 		if(typeof Android !== "undefined" && Android !== null) {
 			Android.peerDisConnect(); // will reset callInProgress and turn off proximity sensor
 		}
+	} else if(iframeWindowOpenUrl.indexOf("/callee/settings")>=0) {
+		// calling fkt in callee.js
+		getSettings();
 	}
 	iframeWindowOpenUrl=null;
 }
