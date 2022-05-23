@@ -2182,8 +2182,9 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 
 function goOffline() {
 	wsAutoReconnecting = false;
-	goOfflineButton.disabled = true;
-	goOnlineButton.disabled = false;
+	//goOfflineButton.disabled = true;
+	//goOnlineButton.disabled = false;
+	offlineAction();
 	console.log('goOffline',calleeID);
 	showStatus("");
 	stopAllAudioEffects("goOffline");
