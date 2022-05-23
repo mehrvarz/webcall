@@ -734,9 +734,9 @@ function offlineAction() {
 	gLog('offlineAction');
 	goOnlineButton.disabled = false;
 	goOfflineButton.disabled = true;
-	if(!mediaConnect) {
+	//if(!mediaConnect) {
 		onlineIndicator.src="";
-	}
+	//}
 }
 
 function gotStream2() {
@@ -1855,9 +1855,12 @@ function peerConnected2() {
 		rejectButton.style.display = "inline-block";
 		if(autoanswerCheckbox.checked) {
 			setTimeout(function() {
-				console.log("auto-answer call");
-				buttonBlinking = false;
-				pickup();
+				// may have received "onmessage disconnect (caller)" and/or "cmd cancel (server)" in the meantime
+				if(buttonBlinking) {
+					console.log("auto-answer call");
+					buttonBlinking = false;
+					pickup();
+				}
 			},1000);
 		}
 
