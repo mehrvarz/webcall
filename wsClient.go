@@ -287,7 +287,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			client.peerConHasEnded(onCloseMsg)
 		}
 		if err!=nil {
-			client.hub.doUnregister(client, onCloseMsg + err.Error())
+			client.hub.doUnregister(client, onCloseMsg +": "+ err.Error())
 		} else {
 			client.hub.doUnregister(client, onCloseMsg)
 		}
@@ -394,7 +394,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 					if myDisconCallerOnPeerConnected {
 						if hub.CallerClient != nil {
 							if logWantedFor("attach") {
-								fmt.Printf("%s (%s) 11s reached -> force caller ws-disconnect (11s)\n",
+								fmt.Printf("%s (%s) 11s reached -> force caller ws-disconnect\n",
 									client.connType, client.calleeID)
 							}
 							hub.CallerClient.Close("disconCallerAfter11s")

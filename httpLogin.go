@@ -555,7 +555,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 						//_,lenGlobalHubMap =
 							DeleteFromHubMap(globalID)
 					} else {
-						fmt.Printf("# /login (%s/%s) no globalID skip DeleteFromHubMap() %d\n",
+						fmt.Printf("# /login (%s/%s) timeout%ds no globalID skip DeleteFromHubMap()\n",
 							urlID, globalID, waitedFor)
 					}
 				}
