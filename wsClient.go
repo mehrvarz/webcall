@@ -658,7 +658,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 
 		// forward the callerOffer message to the callee client
 		if c.hub.CalleeClient.Write(message) != nil {
-			fmt.Printf("%s (%s) CALL CalleeClient.Write(calleroffer) fail\n", c.connType, c.calleeID)
+			fmt.Printf("# %s (%s) CALL CalleeClient.Write(calleroffer) fail\n", c.connType, c.calleeID)
 			c.hub.HubMutex.RUnlock()
 			return
 		}
@@ -668,24 +668,24 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			// send this directly to the callee: see callee.js if(cmd=="callerInfo")
 			sendCmd := "callerInfo|"+c.hub.CallerClient.callerID+":"+c.hub.CallerClient.callerName
 			if c.hub.CalleeClient.Write([]byte(sendCmd)) != nil {
-				fmt.Printf("%s (%s) CALL CalleeClient.Write(callerInfo) fail\n", c.connType, c.calleeID)
+				fmt.Printf("# %s (%s) CALL CalleeClient.Write(callerInfo) fail\n", c.connType, c.calleeID)
 				c.hub.HubMutex.RUnlock()
 				return
 			}
 		}
 
 		// exchange useragent's
-/*
 		if c.hub.CallerClient.Write([]byte("ua|"+c.hub.CalleeClient.userAgent)) != nil {
-			// caller hang up already
-			fmt.Printf("%s (%s) CALL CallerClient.Write(ua) fail (early caller ws-disconnect?)\n",
+			// caller hang up already?
+			fmt.Printf("# %s (%s) CALL CallerClient.Write(ua) fail (early caller ws-disconnect?)\n",
 				c.connType, c.calleeID)
-			c.hub.HubMutex.RUnlock()
-			return
+// ignore error, don't abort
+//			c.hub.HubMutex.RUnlock()
+//			return
 		}
-*/
+
 		if c.hub.CalleeClient.Write([]byte("ua|"+c.hub.CallerClient.userAgent)) != nil {
-			fmt.Printf("%s (%s) CALL CalleeClient.Write(ua) fail (early callee ws-disconnect?)\n",
+			fmt.Printf("# %s (%s) CALL CalleeClient.Write(ua) fail (early callee ws-disconnect?)\n",
 				c.connType, c.calleeID)
 			c.hub.HubMutex.RUnlock()
 			return
