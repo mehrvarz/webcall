@@ -269,15 +269,9 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				//	client.connType, client.calleeID)
 				StoreCallerIpInHubMap(client.calleeID, "", false)
 
-//				if client.hub.CalleeClient!=nil && client.hub.CalleeClient.isConnectedToPeer.Get() {
 				if client.hub.CalleeClient!=nil {
-//					if client.hub.CalleeClient.isConnectedToPeer.Get() {
-						fmt.Printf("%s (%s) onclose caller !reached11s -> cancel callee📴 + peerConHasEnded\n",
-							client.connType, client.calleeID)
-//					} else {
-//						fmt.Printf("%s (%s) onclose caller !reached11s -> cancel callee + peerConHasEnded\n",
-//							client.connType, client.calleeID)
-//					}
+					fmt.Printf("%s (%s) onclose caller !reached11s -> cancel callee📴 + peerConHasEnded\n",
+						client.connType, client.calleeID)
 					client.hub.CalleeClient.Write([]byte("cancel|c"))
 					client.hub.CalleeClient.peerConHasEnded("callerOnClose")
 				}
@@ -331,14 +325,10 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		//	client.connType, hub.ConnectedToPeerSecs, hub.ServiceStartTime, hub.ServiceDurationSecs)
 	} else if hub.CallerClient==nil {
 		// caller client (2nd client)
-//		if logWantedFor("wsclient") {
-			//callerID := ""
-			//if client.hub!=nil && client.hub.CallerClient!=nil {
-			//	callerID = client.hub.CallerClient.callerID
-			//}
+		if logWantedFor("attach") {
 			fmt.Printf("%s (%s) caller conn ws=%d (%s) %s\n", client.connType, client.calleeID,
 				wsClientID64, callerID, client.RemoteAddr)
-//		}
+		}
 
 		client.isCallee = false
 		client.callerOfferForwarded.Set(false)
@@ -415,9 +405,9 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 // new
 			if hub.WsClientID != mywsClientID64 {
-				// this callee is engaged with a new session
+				// this callee is engaged with a new session already
 				hub.HubMutex.RUnlock()
-				fmt.Printf("%s (%s) no peercon check: outdated\n",
+				fmt.Printf("%s (%s) no peercon check: outdated %d not %d\n",
 					client.connType, client.calleeID, hub.WsClientID, mywsClientID64)
 				return
 			}
