@@ -971,6 +971,14 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		}
 
 		c.hub.HubMutex.RLock()
+		if c.hub.CalleeClient==nil {
+			c.hub.HubMutex.RUnlock()
+			fmt.Printf("# %s (%s) peer %s c.hub.CalleeClient==nil ver=%s\n",
+				c.connType, c.calleeID, payload, c.clientVersion)
+			// TODO this makes no sense if hub.CalleeClient==nil ?
+			//StoreCallerIpInHubMap(c.globalCalleeID, "", false)
+			return
+		}
 		if c.hub.CallerClient==nil {
 			c.hub.HubMutex.RUnlock()
 			// # serveWss (id) peer 'callee Connected unknw/unknw'
@@ -978,16 +986,12 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			// or when caller is late and callee has already peer-disconnected
 			fmt.Printf("# %s (%s) peer %s isCallee=%v c.hub.CallerClient==nil ver=%s\n",
 				c.connType, c.calleeID, payload, c.isCallee, c.clientVersion)
+// TODO must also send cancel to callee? tmtmtm
+			c.hub.CalleeClient.Write([]byte("cancel|c"))
+			c.hub.CalleeClient.peerConHasEnded("callerOnClose")
+
 			// TODO this may come to late?
 			StoreCallerIpInHubMap(c.globalCalleeID, "", false)
-			return
-		}
-		if c.hub.CalleeClient==nil {
-			c.hub.HubMutex.RUnlock()
-			fmt.Printf("# %s (%s) peer %s c.hub.CalleeClient==nil ver=%s\n",
-				c.connType, c.calleeID, payload, c.clientVersion)
-			// TODO this makes no sense if hub.CalleeClient==nil ?
-			//StoreCallerIpInHubMap(c.globalCalleeID, "", false)
 			return
 		}
 
