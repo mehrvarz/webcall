@@ -288,8 +288,10 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		}
 
 		onCloseMsg := "OnClose"
-		if client.isCallee && client.isConnectedToPeer.Get() {
+		if client.isConnectedToPeer.Get() {
 			onCloseMsg = "OnClose📴"
+		}
+		if client.isCallee && client.isConnectedToPeer.Get() {
 			client.peerConHasEnded(onCloseMsg)
 		}
 		if err!=nil {
