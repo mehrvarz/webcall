@@ -406,7 +406,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			}
 
 // new
-			if myCallerContactTime != hub.lastCallerContactTime {
+			if hub!=nil && myCallerContactTime != hub.lastCallerContactTime {
 				// this callee is engaged with a new caller session already (myCallerContactTime is outdated)
 				hub.HubMutex.RUnlock()
 				fmt.Printf("%s (%s) no peercon check: outdated %d not %d\n",
