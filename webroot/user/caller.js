@@ -794,7 +794,6 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 			if(onlineStatus.startsWith("notavailtemp")) {
 				// callee temporarily offline: have caller wait for callee
 				var offlineFor = parseInt(onlineStatus.substring(12),10);
-//				showStatus("Trying to find "+calleeID+". This can take a while. Please wait...<br><br><img src='preloader-circles.svg' style='width:40%;max-height:120px;'>",-1);
 				showStatus("Trying to find "+calleeID+". This can take a while. Please wait...",-1);
 				if(divspinnerframe) {
 					divspinnerframe.style.display = "block";
@@ -1118,7 +1117,6 @@ function confirmNotifyConnect2() {
 function notifyConnect(callerName,callerId) {
 	// nickname form was valid
 	// the next xhr will freeze until hidden callee accepts the call
-//	showStatus("Trying to get "+calleeID+" on the phone. Please wait...<br><br><img src='preloader-circles.svg' style='width:95%;max-height:450px;margin-top:-20%;'>",-1);
 	showStatus("Trying to get "+calleeID+" on the phone. Please wait...",-1);
 	if(divspinnerframe) {
 		divspinnerframe.style.display = "block";
@@ -1674,8 +1672,12 @@ function dial2() {
 	dialDate = Date.now();
 	console.log('start dialing');
 /*
+	// we are doing 3 thing here:
+	// 1a if no peercon (rtcConnect) after 20s and not hangup by the user, hang up the call now
+	// 1b and if no onIceCandidates, show a warning (webrtc check)
+	// 2  if peercon but no mediaConnect after 20s, show ringingText stats text (asking user to be patient)
 	setTimeout(function(lastDialDate) {
-		if(dialDate==lastDialDate) {
+		if(dialDate==lastDialDate) { // still the same call after 20s?
 			if(!rtcConnect) {
 				if(!doneHangup) {
 					// no rtcConnect after 20s: give up dial-waiting
