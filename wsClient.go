@@ -270,7 +270,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				StoreCallerIpInHubMap(client.calleeID, "", false)
 				if client.hub.CalleeClient!=nil {
 // TODO also check if callee is peer connected?
-					fmt.Printf("%s (%s) onclose caller !reached11s -> send to callee cancel + peerConHasEnded\n",
+					fmt.Printf("%s (%s) onclose caller📴 !reached11s -> cancel callee + peerConHasEnded\n",
 						client.connType, client.calleeID)
 					client.hub.CalleeClient.Write([]byte("cancel|c"))
 					client.hub.CalleeClient.peerConHasEnded("callerOnClose")
