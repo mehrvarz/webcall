@@ -271,13 +271,13 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 //				if client.hub.CalleeClient!=nil && client.hub.CalleeClient.isConnectedToPeer.Get() {
 				if client.hub.CalleeClient!=nil {
-					if client.hub.CalleeClient.isConnectedToPeer.Get() {
-						fmt.Printf("%s (%s) onclose caller📴 !reached11s -> cancel callee + peerConHasEnded\n",
+//					if client.hub.CalleeClient.isConnectedToPeer.Get() {
+						fmt.Printf("%s (%s) onclose caller !reached11s -> cancel callee📴 + peerConHasEnded\n",
 							client.connType, client.calleeID)
-					} else {
-						fmt.Printf("%s (%s) onclose caller !reached11s -> cancel callee + peerConHasEnded\n",
-							client.connType, client.calleeID)
-					}
+//					} else {
+//						fmt.Printf("%s (%s) onclose caller !reached11s -> cancel callee + peerConHasEnded\n",
+//							client.connType, client.calleeID)
+//					}
 					client.hub.CalleeClient.Write([]byte("cancel|c"))
 					client.hub.CalleeClient.peerConHasEnded("callerOnClose")
 				}
