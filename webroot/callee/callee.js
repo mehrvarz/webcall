@@ -914,7 +914,8 @@ function wsOnOpen() {
 	autoanswerlabel.style.display = "block";
 
 	if(typeof Android !== "undefined" && Android !== null) {
-		if(Android.getVersionName()!="1.0F") && Android.getVersionName()>="1.0.3") {
+		if(Android.getVersionName()!="1.0F") && Android.getVersionName()!="1.0T") &&
+				Android.getVersionName()>="1.0.3") {
 			dialsoundslabel.style.display = "block";
 		}
 	}
