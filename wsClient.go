@@ -336,12 +336,14 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		hub.HubMutex.Lock()
 		hub.CallDurationSecs = 0
 		hub.CallerClient = client
+		hub.lastCallerContactTime = time.Now().Unix()
 		hub.HubMutex.Unlock()
 
 		go func() {
 			// incoming caller will get removed if there is no peerConnect after 11 sec
 			// (it can take up to 6-8 seconds in some cases for a devices to get fully out of deep sleep)
-			mywsClientID64 := wsClientID64
+			myCallerContactTime := hub.lastCallerContactTime
+
 			delaySecs := 11
 			//fmt.Printf("%s (%s) caller conn 11s delay start\n", client.connType, client.calleeID)
 			time.Sleep(time.Duration(delaySecs) * time.Second)
@@ -404,11 +406,11 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			}
 
 // new
-			if hub.WsClientID != mywsClientID64 {
-				// this callee is engaged with a new session already
+			if myCallerContactTime != hub.lastCallerContactTime {
+				// this callee is engaged with a new caller session already (myCallerContactTime is outdated)
 				hub.HubMutex.RUnlock()
 				fmt.Printf("%s (%s) no peercon check: outdated %d not %d\n",
-					client.connType, client.calleeID, hub.WsClientID, mywsClientID64)
+					client.connType, client.calleeID, myCallerContactTime, hub.lastCallerContactTime)
 				return
 			}
 
@@ -651,7 +653,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			return
 		}
 
-		fmt.Printf("%s (%s) CALL☎️ %s <- %s (%s) ver=%s ua=%s\n",
+		fmt.Printf("%s (%s) CALL☎️  %s <- %s (%s) ver=%s ua=%s\n",
 			c.connType, c.calleeID, c.hub.CalleeClient.RemoteAddr,
 			c.hub.CallerClient.RemoteAddr, c.hub.CallerClient.callerID,
 			c.clientVersion, c.hub.CallerClient.userAgent)

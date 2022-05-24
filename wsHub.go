@@ -27,6 +27,7 @@ type Hub struct {
 	WsClientID uint64 // set by the callee; will be handed over to the caller via /online
 	registrationStartTime int64 // this is the callees registration starttime; may be 0 for testuser
 	lastCallStartTime int64
+	lastCallerContactTime int64
 	ServiceStartTime int64
 	ConnectedToPeerSecs int64 // total secs
 	CallDurationSecs int64 // single call secs
