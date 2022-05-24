@@ -351,6 +351,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		go func() {
 			// incoming caller will get removed if there is no peerConnect after 11 sec
 			// (it can take up to 6-8 seconds in some cases for a devices to get fully out of deep sleep)
+			mywsClientID64 := wsClientID64
 			delaySecs := 11
 			//fmt.Printf("%s (%s) caller conn 11s delay start\n", client.connType, client.calleeID)
 			time.Sleep(time.Duration(delaySecs) * time.Second)
@@ -409,6 +410,15 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 						}
 					}
 				}
+				return
+			}
+
+// new
+			if hub.WsClientID != mywsClientID64 {
+				// this callee is engaged with a new session
+				hub.HubMutex.RUnlock()
+				fmt.Printf("%s (%s) no peercon check: outdated\n",
+					client.connType, client.calleeID, hub.WsClientID, mywsClientID64)
 				return
 			}
 
@@ -984,9 +994,9 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			// # serveWss (id) peer 'callee Connected unknw/unknw'
 			// this happens when caller disconnects immediately
 			// or when caller is late and callee has already peer-disconnected
-			fmt.Printf("# %s (%s) peer %s isCallee=%v c.hub.CallerClient==nil ver=%s\n",
-				c.connType, c.calleeID, payload, c.isCallee, c.clientVersion)
-// TODO must also send cancel to callee? tmtmtm
+			fmt.Printf("%s (%s/%s) peer %s isCallee=%v c.hub.CallerClient==nil📴 ver=%s\n",
+				c.connType, c.calleeID, c.globalCalleeID, payload, c.isCallee, c.clientVersion)
+// TODO must send cancel to callee? tmtmtm
 			c.hub.CalleeClient.Write([]byte("cancel|c"))
 			c.hub.CalleeClient.peerConHasEnded("callerOnClose")
 
