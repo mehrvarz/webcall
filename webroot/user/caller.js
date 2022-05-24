@@ -1671,7 +1671,7 @@ function dial2() {
 	candidateResultString = "";
 	dialDate = Date.now();
 	console.log('start dialing');
-/*
+
 	// we are doing 3 thing here:
 	// 1a if no peercon (rtcConnect) after 20s and not hangup by the user, hang up the call now
 	// 1b and if no onIceCandidates, show a warning (webrtc check)
@@ -1701,7 +1701,7 @@ function dial2() {
 			}
 		}
 	},20000,dialDate);
-*/
+
 
 	addedAudioTrack = null;
 	addedVideoTrack = null;
