@@ -355,7 +355,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 		if hub == nil {
 			// connection was cut off by the device / or timeout22s
-			//fmt.Printf("# exit (%s) ws=%d hub==nil %s rip=%s ver=%s\n",
+			//fmt.Printf("# exitfunc (%s) ws=%d hub==nil %s rip=%s ver=%s\n",
 			//	globalID, wsClientID, comment, remoteAddrWithPort, clientVersion)
 			return;
 		}
@@ -368,16 +368,16 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		}
 		if reqWsClientID != wsClientID {
 			// not the same (already exited, possibly by timeout22s): abort exit / deny deletion
-			// exit (id) abort ws=54553222902/0 'OnClose'
+			// exitfunc (id) abort ws=54553222902/0 'OnClose'
 			if reqWsClientID!=0 {
-				fmt.Printf("exit (%s) abort ws=%d/%d '%s' %s ver=%s\n",
+				fmt.Printf("exitfunc (%s) abort ws=%d/%d '%s' %s ver=%s\n",
 					globalID, wsClientID, reqWsClientID, comment, remoteAddrWithPort, clientVersion)
 			}
 			return;
 		}
 
 		if logWantedFor("attach") {
-			fmt.Printf("exit (%s) ws=%d '%s' %s ver=%s\n",
+			fmt.Printf("exitfunc (%s) ws=%d '%s' %s ver=%s\n",
 				globalID, wsClientID, comment, remoteAddrWithPort, clientVersion)
 		}
 
@@ -386,17 +386,17 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			var dbUser2 DbUser
 			err := kvMain.Get(dbUserBucket, dbUserKey, &dbUser2)
 			if err != nil {
-				fmt.Printf("# exit (%s) error db=%s bucket=%s get key=%v err=%v\n",
+				fmt.Printf("# exitfunc (%s) error db=%s bucket=%s get key=%v err=%v\n",
 					globalID, dbMainName, dbUserBucket, dbUserKey, err)
 			} else {
-				//fmt.Printf("exit (%s) dbUserKey=%s isHiddenCallee=%v (%d)\n",
+				//fmt.Printf("exitfunc (%s) dbUserKey=%s isHiddenCallee=%v (%d)\n",
 				//	globalID, dbUserKey, dbUser2.Int2&1!=0, dbUser2.Int2)
 
 				// store dbUser with modified LastLogoffTime
 				dbUser2.LastLogoffTime = time.Now().Unix()
 				err = kvMain.Put(dbUserBucket, dbUserKey, dbUser2, false)
 				if err!=nil {
-					fmt.Printf("# exit (%s) error db=%s bucket=%s put key=%s err=%v\n",
+					fmt.Printf("# exitfunc (%s) error db=%s bucket=%s put key=%s err=%v\n",
 						globalID, dbMainName, dbUserBucket, urlID, err)
 				}
 			}
@@ -407,11 +407,11 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			if globalID != "" {
 				_,lenGlobalHubMap = DeleteFromHubMap(globalID)
 			} else {
-				fmt.Printf("# exit (%s) globalID is empty\n", urlID)
+				fmt.Printf("# exitfunc (%s) globalID is empty\n", urlID)
 			}
 			hub = nil
 		} else {
-			fmt.Printf("# exit (%s) hub==nil\n", urlID)
+			fmt.Printf("# exitfunc (%s) hub==nil\n", urlID)
 		}
 		myHubMutex.Unlock()
 
@@ -419,9 +419,9 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		    wsClientMutex.Lock()
 		    delete(wsClientMap, wsClientID)
 		    wsClientMutex.Unlock()
-			//fmt.Printf("exit (%s) done\n", urlID)
+			//fmt.Printf("exitfunc (%s) done\n", urlID)
 		} else {
-			fmt.Printf("# exit (%s) wsClientID==0\n", urlID)
+			fmt.Printf("# exitfunc (%s) wsClientID==0\n", urlID)
 		}
 	}
 
