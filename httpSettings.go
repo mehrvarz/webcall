@@ -452,7 +452,7 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 		}
 	}
 	if name!=oldName {
-		if name!="unknown" {
+		if name!="unknown" && name!=contactID {
 			fmt.Printf("/setcontact (%s) store changed name of %s from (%s) to (%s) %s\n",
 				calleeID, contactID, oldName, name, remoteAddr)
 		}

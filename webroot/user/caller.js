@@ -1682,15 +1682,15 @@ function dial2() {
 				if(!doneHangup) {
 					// no rtcConnect after 20s: give up dial-waiting
 					console.log("dialing timeout, giving up on call "+candidateResultString);
-					hangupWithBusySound(true,"Failed to connect "+candidateResultString);
 					if(onIceCandidates==0 && !doneHangup) {
+						console.warn('no ice candidates created');
 						onIceCandidates = -1;
-						console.warn('no ice candidates are being created');
-						showStatus("Cannot make calls. "+
-								   "Your browser engine does not generate WebRTC/ICE candidates.",-1);
 						notificationSound.play().catch(function(error) { });
+						hangup(true,true,"Cannot make calls. "+
+						   "Your browser engine does not generate WebRTC/ICE candidates.");
 						return;
 					}
+					hangupWithBusySound(true,"Failed to connect "+candidateResultString);
 				}
 			} else {
 				if(!mediaConnect) {

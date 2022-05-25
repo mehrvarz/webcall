@@ -1482,7 +1482,7 @@ function hangupWithBusySound(mustDisconnectCallee,message) {
 	stopAllAudioEffects();
 	if(peerCon && peerCon.iceConnectionState!="closed") {
 		if(playDialSounds) {
-		gLog(`hangupWithBusySound `+message);
+			gLog(`hangupWithBusySound `+message);
 			busySignalSound.play().catch(function(error) { });
 			setTimeout(function() {
 				gLog(`hangupWithBusySound stopAllAudioEffects`);

@@ -438,8 +438,8 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				}
 				if calleeID!="" && pwIdCombo.CalleeId != calleeID {
 					// callee is using wrong cookie
-					fmt.Printf("# httpApi wrong cookie for id=(%s) != calleeID=(%s) (%s) %s\n",
-						pwIdCombo.CalleeId, calleeID, urlPath, remoteAddr)
+					fmt.Printf("# httpApi id=(%s) wrong cookie ID=(%s) (%s) %s\n",
+						calleeID, pwIdCombo.CalleeId, urlPath, remoteAddr)
 					cookie = nil
 				} else if pwIdCombo.Pw=="" {
 					fmt.Printf("# httpApi cookie available, pw empty, pwIdCombo=(%v) ID=%s clear cookie\n",

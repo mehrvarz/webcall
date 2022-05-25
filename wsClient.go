@@ -351,9 +351,10 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 			hub.HubMutex.RLock()
 			if hub.CalleeClient==nil {
+				// this happens a lot
 				hub.HubMutex.RUnlock()
-				fmt.Printf("%s (%s) no peercon check: callee gone (hub.CalleeClient==nil)\n",
-					client.connType, client.calleeID)
+				//fmt.Printf("%s (%s) no peercon check: callee gone (hub.CalleeClient==nil)\n",
+				//	client.connType, client.calleeID)
 				return
 			}
 			if hub.CallerClient==nil {
@@ -421,10 +422,11 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				hub.CallerClient.RemoteAddr, hub.CallerClient.callerID, hub.CallerClient.isOnline.Get(),
 				hub.CallerClient.userAgent)
 
+// TODO it can't be the other side, if the other side is answie or talkback
 			// NOTE: msg MUST NOT contain apostroph (') characters
 			msg := "Unable to establish a direct P2P connection. "+
-			  "This is likely a WebRTC related issue with your browser/WebView, "+
-			  "or the browser/WebView on the other side. "+
+			  "This might be a WebRTC related issue with your browser/WebView. "+
+			  "Or with the browser/WebView on the other side. "+
 			  "It could also be a firewall issue. "+
 			  "On Android, run <a href=\"/webcall/android/#webview\">WebRTC-Check</a> "+
 			  "to test your System WebView."
