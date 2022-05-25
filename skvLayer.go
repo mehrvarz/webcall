@@ -223,7 +223,7 @@ func locGetRandomCalleeID() (string,error) {
 			continue;
 		}
 		// newCalleeId not found anywhere - is accepted!
-		if tries>=3 {
+		if tries>=5 {
 			fmt.Printf("getRandomCalleeID (%s) tries=%d\n", newCalleeId, tries)
 		}
 		return newCalleeId, nil
