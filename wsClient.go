@@ -515,7 +515,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		c.callerTextMsg = ""
 
 		if logWantedFor("attach") {
-			fmt.Printf("%s (%s) callee init ws=%d %s ver=%s\n",
+			fmt.Printf("%s (%s) callee init ws=%d %s v=%s\n",
 				c.connType, c.calleeID, c.hub.WsClientID, c.RemoteAddr, c.clientVersion)
 		}
 
@@ -532,7 +532,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 
 		if !strings.HasPrefix(c.calleeID,"answie") && !strings.HasPrefix(c.calleeID,"talkback") {
 			if clientUpdateBelowVersion!="" && c.clientVersion < clientUpdateBelowVersion {
-				//fmt.Printf("%s (%s) ver=%s\n",c.connType,c.calleeID,c.clientVersion)
+				//fmt.Printf("%s (%s) v=%s\n",c.connType,c.calleeID,c.clientVersion)
 				// NOTE: msg MUST NOT contain apostroph (') characters
 				msg := "This version of WebCall for Android has a technical problem. "+
 						"Support will be phased out soon. "+
@@ -655,7 +655,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			return
 		}
 
-		fmt.Printf("%s (%s) CALL☎️  %s <- %s (%s) ver=%s ua=%s\n",
+		fmt.Printf("%s (%s) CALL☎️  %s <- %s (%s) v=%s ua=%s\n",
 			c.connType, c.calleeID, c.hub.CalleeClient.RemoteAddr,
 			c.hub.CallerClient.RemoteAddr, c.hub.CallerClient.callerID,
 			c.clientVersion, c.hub.CallerClient.userAgent)
@@ -970,14 +970,14 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			return
 		}
 		if c.hub==nil {
-			fmt.Printf("# %s (%s) peer c.hub==nil ver=%s\n", c.connType, c.calleeID, c.clientVersion)
+			fmt.Printf("# %s (%s) peer c.hub==nil v=%s\n", c.connType, c.calleeID, c.clientVersion)
 			return
 		}
 
 		c.hub.HubMutex.RLock()
 		if c.hub.CalleeClient==nil {
 			c.hub.HubMutex.RUnlock()
-			fmt.Printf("# %s (%s) peer %s c.hub.CalleeClient==nil ver=%s\n",
+			fmt.Printf("# %s (%s) peer %s c.hub.CalleeClient==nil v=%s\n",
 				c.connType, c.calleeID, payload, c.clientVersion)
 			// TODO this makes no sense if hub.CalleeClient==nil ?
 			//StoreCallerIpInHubMap(c.globalCalleeID, "", false)
@@ -988,7 +988,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			// # serveWss (id) peer 'callee Connected unknw/unknw'
 			// this happens when caller disconnects immediately
 			// or when caller is late and callee has already peer-disconnected
-			fmt.Printf("%s (%s/%s) peer %s isCallee=%v c.hub.CallerClient==nil📴 ver=%s\n",
+			fmt.Printf("%s (%s/%s) peer %s isCallee=%v c.hub.CallerClient==nil📴 v=%s\n",
 				c.connType, c.calleeID, c.globalCalleeID, payload, c.isCallee, c.clientVersion)
 // TODO must send cancel to callee? tmtmtm
 			c.hub.CalleeClient.Write([]byte("cancel|c"))

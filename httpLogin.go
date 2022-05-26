@@ -63,7 +63,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	if ok {
 		if time.Now().Sub(blockedTime) <= 10 * 60 * time.Minute {
 			if logWantedFor("overload") {
-				fmt.Printf("/login (%s) block recon (%v) rip=%s ver=%s ua=%s\n",
+				fmt.Printf("/login (%s) block recon (%v) rip=%s v=%s ua=%s\n",
 					urlID, time.Now().Sub(blockedTime), remoteAddr, clientVersion, userAgent)
 			}
 			// this error response string is formated so that callee.js will show it via showStatus()
@@ -101,7 +101,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			}
 			if len(calleeLoginSlice) >= maxLoginPer30min {
 				if logWantedFor("overload") {
-					fmt.Printf("/login (%s) %d >= %d logins/30m rip=%s ver=%s\n",
+					fmt.Printf("/login (%s) %d >= %d logins/30m rip=%s v=%s\n",
 						urlID, len(calleeLoginSlice), maxLoginPer30min, remoteAddr, clientVersion)
 				}
 				fmt.Fprintf(w,"Too many reconnects / login attempts in short order. Please take a pause.")
@@ -125,7 +125,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	myMaxCallees := maxCallees
 	readConfigLock.RUnlock()
 	if lenHubMap > myMaxCallees {
-		fmt.Printf("# /login lenHubMap %d > myMaxCallees %d rip=%s ver=%s\n",
+		fmt.Printf("# /login lenHubMap %d > myMaxCallees %d rip=%s v=%s\n",
 			lenHubMap, myMaxCallees, remoteAddr, clientVersion)
 		fmt.Fprintf(w, "error")
 		return
@@ -145,7 +145,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		key, _, _, err := GetOnlineCallee(urlID, ejectOn1stFound, reportBusyCallee, 
 			reportHiddenCallee, remoteAddr, "/login")
 		if err != nil {
-			fmt.Printf("# /login (%s) GetOnlineCallee() err=%v ver=%s\n", key, err, clientVersion)
+			fmt.Printf("# /login (%s) GetOnlineCallee() err=%v v=%s\n", key, err, clientVersion)
 		}
 		if key != "" {
 			// found "already logged in"
@@ -155,7 +155,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			key, _, _, err = GetOnlineCallee(urlID, ejectOn1stFound, reportBusyCallee, 
 				reportHiddenCallee, remoteAddr, "/login")
 			if err != nil {
-				fmt.Printf("# /login (%s) GetOnlineCallee() err=%v ver=%s\n", key, err, clientVersion)
+				fmt.Printf("# /login (%s) GetOnlineCallee() err=%v v=%s\n", key, err, clientVersion)
 			}
 			if key != "" {
 				// a login request for a user that is still logged in
@@ -186,7 +186,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 							// CalleeClient is not online anymore (we can accept the new login)
 							offlineReason = 4
 							if logWantedFor("loginex") {
-								fmt.Printf("/login (%s) has logged out after wait %dms/%v %s ver=%s ua=%s\n",
+								fmt.Printf("/login (%s) has logged out after wait %dms/%v %s v=%s ua=%s\n",
 								  key, i*100, time.Since(startRequestTime), remoteAddr, clientVersion, userAgent)
 							}
 							break
@@ -199,7 +199,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					if hub!=nil && hub.CalleeClient!=nil {
 						calleeIP = hub.CalleeClient.RemoteAddr
 					}
-					fmt.Printf("/login (%s) already/still logged in %v by %s <- %s ver=%s ua=%s\n",
+					fmt.Printf("/login (%s) already/still logged in %v by %s <- %s v=%s ua=%s\n",
 						key, time.Since(startRequestTime), calleeIP, remoteAddrWithPort, clientVersion, userAgent)
 					// TODO maybe returning fatal is wrong?
 					fmt.Fprintf(w,"fatal")
@@ -233,7 +233,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 	// pw must be available now
 	if pw == "" {
-		fmt.Printf("/login (%s) no pw %s ver=%s ua=%s\n", urlID, remoteAddr, clientVersion, userAgent)
+		fmt.Printf("/login (%s) no pw %s v=%s ua=%s\n", urlID, remoteAddr, clientVersion, userAgent)
 		fmt.Fprintf(w, "error")
 		return
 	}
@@ -250,7 +250,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 	if len(pw) < 6 {
 		// guessing more difficult if delayed
-		fmt.Printf("/login (%s) pw too short %s ver=%s\n", urlID, remoteAddr, clientVersion)
+		fmt.Printf("/login (%s) pw too short %s v=%s\n", urlID, remoteAddr, clientVersion)
 		time.Sleep(3000 * time.Millisecond)
 		fmt.Fprintf(w, "error")
 		return
@@ -259,7 +259,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	err := kvMain.Get(dbRegisteredIDs, urlID, &dbEntry)
 	if err != nil {
 		// err is most likely "skv key not found"
-		fmt.Printf("/login (%s) error db=%s bucket=%s %s get registeredID err=%v ver=%s\n",
+		fmt.Printf("/login (%s) error db=%s bucket=%s %s get registeredID err=%v v=%s\n",
 			urlID, dbMainName, dbRegisteredIDs, remoteAddr, err, clientVersion)
 		if strings.Index(err.Error(), "disconnect") >= 0 {
 			// TODO admin email notif may be useful
@@ -287,7 +287,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	dbUserKey = fmt.Sprintf("%s_%d", urlID, dbEntry.StartTime)
 	err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 	if err != nil {
-		fmt.Printf("# /login (%s) error db=%s bucket=%s get %s err=%v ver=%s\n",
+		fmt.Printf("# /login (%s) error db=%s bucket=%s get %s err=%v v=%s\n",
 			dbUserKey, dbMainName, dbUserBucket, remoteAddr, err, clientVersion)
 		fmt.Fprintf(w, "error")
 		return
@@ -299,7 +299,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	dbUser.LastLoginTime = time.Now().Unix()
 	err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
 	if err!=nil {
-		fmt.Printf("# /login (%s) error db=%s bucket=%s put %s err=%v ver=%s\n",
+		fmt.Printf("# /login (%s) error db=%s bucket=%s put %s err=%v v=%s\n",
 			urlID, dbMainName, dbUserBucket, remoteAddr, err, clientVersion)
 		fmt.Fprintf(w, "error")
 		return
@@ -314,7 +314,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 	globalID,_,err = StoreCalleeInHubMap(urlID, myMultiCallees, remoteAddrWithPort, wsClientID, false)
 	if err != nil || globalID == "" {
-		fmt.Printf("# /login (%s/%s) StoreCalleeInHubMap err=%v ver=%s\n",
+		fmt.Printf("# /login (%s/%s) StoreCalleeInHubMap err=%v v=%s\n",
 			urlID, globalID, err, clientVersion)
 		fmt.Fprintf(w, "noservice")
 		return
@@ -328,14 +328,14 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			if globalID != "" {
 				_,lenGlobalHubMap = DeleteFromHubMap(globalID)
 			}
-			fmt.Printf("# /login (%s) persist PwIdCombo error db=%s bucket=%s cookie=%s err=%v ver=%s (%d)\n",
+			fmt.Printf("# /login (%s) persist PwIdCombo error db=%s bucket=%s cookie=%s err=%v v=%s (%d)\n",
 				urlID, dbHashedPwName, dbHashedPwBucket, cookieValue, err, clientVersion, lenGlobalHubMap)
 			fmt.Fprintf(w, "noservice")
 			return
 		}
 
 		if logWantedFor("cookie") {
-			fmt.Printf("/login (%s) persisted PwIdCombo db=%s bucket=%s key=%s ver=%s\n",
+			fmt.Printf("/login (%s) persisted PwIdCombo db=%s bucket=%s key=%s v=%s\n",
 				urlID, dbHashedPwName, dbHashedPwBucket, cookieValue, clientVersion)
 		}
 		//fmt.Printf("/login (%s) pwIdCombo stored time=%v\n", urlID, time.Since(startRequestTime))
@@ -355,7 +355,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 		if hub == nil {
 			// connection was cut off by the device / or timeout22s
-			//fmt.Printf("# exitfunc (%s) ws=%d hub==nil %s rip=%s ver=%s\n",
+			//fmt.Printf("# exitfunc (%s) ws=%d hub==nil %s rip=%s v=%s\n",
 			//	globalID, wsClientID, comment, remoteAddrWithPort, clientVersion)
 			return;
 		}
@@ -370,14 +370,14 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			// not the same (already exited, possibly by timeout22s): abort exit / deny deletion
 			// exitfunc (id) abort ws=54553222902/0 'OnClose'
 			if reqWsClientID!=0 {
-				fmt.Printf("exitfunc (%s) abort ws=%d/%d '%s' %s ver=%s\n",
+				fmt.Printf("exitfunc (%s) abort ws=%d/%d '%s' %s v=%s\n",
 					globalID, wsClientID, reqWsClientID, comment, remoteAddrWithPort, clientVersion)
 			}
 			return;
 		}
 
 		if logWantedFor("attach") {
-			fmt.Printf("exitfunc (%s) ws=%d '%s' %s ver=%s\n",
+			fmt.Printf("exitfunc (%s) ws=%d '%s' %s v=%s\n",
 				globalID, wsClientID, comment, remoteAddrWithPort, clientVersion)
 		}
 
@@ -460,7 +460,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	//}
 
 	if logWantedFor("login") {
-		fmt.Printf("/login (%s) ws=%v %d %v %s ver=%s ua=%s\n",
+		fmt.Printf("/login (%s) ws=%v %d %v %s v=%s ua=%s\n",
 			urlID, wsClientID, len(calleeLoginSlice), time.Since(startRequestTime),
 			remoteAddrWithPort, clientVersion, userAgent)
 	}
@@ -536,7 +536,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 						if time.Now().Sub(serverStartTime) < 120 * time.Second {
 							// shortly after server restart: don't block
 						} else {
-							//fmt.Printf("/login (%s) ws-conn timeout%ds %s ver=%s\n",
+							//fmt.Printf("/login (%s) ws-conn timeout%ds %s v=%s\n",
 							//	urlID, waitedFor, remoteAddrWithPort, clientVersion)
 							blockMapMutex.Lock()
 							blockMap[urlID] = time.Now()
