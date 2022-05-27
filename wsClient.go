@@ -249,28 +249,28 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		if client.isCallee {
 			if logWantedFor("wsclose") {
 				if err!=nil {
-					fmt.Printf("%s (%s) onclose callee err=%v\n", client.connType, client.calleeID, err)
+					fmt.Printf("%s (%s) close callee err=%v\n", client.connType, client.calleeID, err)
 				} else {
-					fmt.Printf("%s (%s) onclose callee noerr\n", client.connType, client.calleeID)
+					fmt.Printf("%s (%s) close callee noerr\n", client.connType, client.calleeID)
 				}
 			}
 		} else {
 			if logWantedFor("wsclose") {
 				if err!=nil {
-					fmt.Printf("%s (%s) onclose caller err=%v\n", client.connType, client.calleeID, err)
+					fmt.Printf("%s (%s) close caller err=%v\n", client.connType, client.calleeID, err)
 				} else {
-					fmt.Printf("%s (%s) onclose caller noerr\n", client.connType, client.calleeID)
+					fmt.Printf("%s (%s) close caller noerr\n", client.connType, client.calleeID)
 				}
 			}
 
 			if !client.reached11s.Get() {
 				// shut down the callee on early caller hangup
-				//fmt.Printf("%s (%s) onclose caller !reached11s -> clear CallerIp\n",
+				//fmt.Printf("%s (%s) close caller !reached11s -> clear CallerIp\n",
 				//	client.connType, client.calleeID)
 				StoreCallerIpInHubMap(client.calleeID, "", false)
 
 				if client.hub.CalleeClient!=nil {
-					fmt.Printf("%s (%s) onclose caller !reached11s -> cancel callee📴 + peerConHasEnded\n",
+					fmt.Printf("%s (%s) close caller !reached11s -> cancel callee📴 + peerConHasEnded\n",
 						client.connType, client.calleeID)
 					client.hub.CalleeClient.Write([]byte("cancel|c"))
 					client.hub.CalleeClient.peerConHasEnded("callerOnClose")
@@ -281,9 +281,9 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			}
 		}
 
-		onCloseMsg := "OnClose"
+		onCloseMsg := "close"
 		if client.isConnectedToPeer.Get() {
-			onCloseMsg = "OnClose📴"
+			onCloseMsg = "close📴"
 		}
 		if client.isCallee && client.isConnectedToPeer.Get() {
 			client.peerConHasEnded(onCloseMsg)
