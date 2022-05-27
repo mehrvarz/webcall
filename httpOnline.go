@@ -83,7 +83,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 				fmt.Printf("/online (%s) error (%v) (%s) %s v=%s ua=%s\n",
 					urlID, err, callerId, remoteAddr, clientVersion, r.UserAgent())
 			} else {
-				// delay brute
+				// key not found: delay brute
 				time.Sleep(1000 * time.Millisecond)
 			}
 			fmt.Fprintf(w, "error")
@@ -109,21 +109,18 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 					fmt.Printf("/online (%s) offline temp (for %d secs) %s v=%s ua=%s\n",
 						urlID, secsSinceLogoff, remoteAddr, clientVersion, r.UserAgent())
 				}
-// "notavailtemp" is evaluated by caller.js, which will respond by requesting /online with &wait=true
-// and it will start to wait up to 15min for callee to come online
-// this &wait= request is handeled below, where also up to 15min will be waited for the caller to come online
-// TODO it would be good if we would reduce the wait-time depending on our secsSinceLogoff
-// so for example if secsSinceLogoff==7*60, it would make sense to wait only up to (15-7=8) minutes for callee
-// however, we would need to deliver the max-wait duration (say, 8min) to the caller
-// and the caller would deliver it back with the wait-parameter (currently boolean)
-
 				// remoteAddr is now eligible to send xhr /missedCall
 				missedCallAllowedMutex.Lock()
 				missedCallAllowedMap[remoteAddr] = time.Now()
 				missedCallAllowedMutex.Unlock()
+
+				// caller.js will respond to "notavailtemp" by requesting /online with &wait=true
+				// and it will wait up to (15min - secsSinceLogoff) for callee to come online
+				// this &wait= request is handeled below, waiting for the caller to come online
 				fmt.Fprintf(w, fmt.Sprintf("notavailtemp%d",secsSinceLogoff))
 				return
 			}
+
 			// loop: wait for callee
 			loopStartTime := time.Now()
 			for {
@@ -177,21 +174,17 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 			}
 
 		} else {
+			// callee is offline for more than 8 min
 			if secsSinceLogoff>1651395074 { // offline for >=52 years (since 1970)
 				if logWantedFor("online") {
 					fmt.Printf("/online (%s) offline (was never online) %s v=%s ua=%s\n",
 						urlID, remoteAddr, clientVersion, r.UserAgent())
 				}
-				// remoteAddr is now eligible to send xhr /missedCall
-				missedCallAllowedMutex.Lock()
-				missedCallAllowedMap[remoteAddr] = time.Now()
-				missedCallAllowedMutex.Unlock()
-				fmt.Fprintf(w, "notavail")
-				return
-			}
-			if logWantedFor("online") {
-				fmt.Printf("/online (%s) offline (for %d secs) %s v=%s ua=%s\n",
-					urlID, secsSinceLogoff, remoteAddr, clientVersion, r.UserAgent())
+			} else {
+				if logWantedFor("online") {
+					fmt.Printf("/online (%s) offline (for %d secs) %s v=%s ua=%s\n",
+						urlID, secsSinceLogoff, remoteAddr, clientVersion, r.UserAgent())
+				}
 			}
 			// remoteAddr is now eligible to send xhr /missedCall
 			missedCallAllowedMutex.Lock()
