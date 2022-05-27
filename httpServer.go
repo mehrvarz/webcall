@@ -175,6 +175,7 @@ func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 	remoteAddr := remoteAddrWithPort
 
 	// deny bot's
+/*
 	userAgent := r.UserAgent()
 	if userAgent=="" || 
 		strings.Index(userAgent, "bot") >= 0 ||
@@ -188,6 +189,12 @@ func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 		strings.Index(userAgent, "Twitter") >= 0 {
 		fmt.Printf("# substitute bot denied path=(%s) userAgent=(%s) %s\n",
 			r.URL.Path, userAgent, remoteAddr)
+		return
+	}
+*/
+	if isBot(r.UserAgent()) {
+		fmt.Printf("# substitute bot denied path=(%s) userAgent=(%s) %s\n",
+			r.URL.Path, r.UserAgent(), remoteAddr)
 		return
 	}
 
@@ -259,6 +266,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// deny bot's
+/*
 	userAgent := r.UserAgent()
 	if userAgent=="" || 
 		strings.Index(userAgent, "bot") >= 0 ||
@@ -271,6 +279,12 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		strings.Index(userAgent, "node-fetch") >= 0 ||
 		strings.Index(userAgent, "Twitter") >= 0 {
 		fmt.Printf("# httpApi bot denied path=(%s) userAgent=(%s) rip=%s\n", r.URL.Path, userAgent, remoteAddr)
+		return
+	}
+*/
+	if isBot(r.UserAgent()) {
+		fmt.Printf("# httpApi bot denied path=(%s) userAgent=(%s) rip=%s\n",
+			r.URL.Path, r.UserAgent(), remoteAddr)
 		return
 	}
 
@@ -460,7 +474,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 
 	if urlPath=="/login" {
 		httpLogin(w, r, urlID, cookie, pw, remoteAddr, remoteAddrWithPort,
-				 nocookie, startRequestTime, pwIdCombo, userAgent)
+				 nocookie, startRequestTime, pwIdCombo, r.UserAgent())
 		return
 	}
 	if urlPath=="/online" {
@@ -666,6 +680,23 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Printf("# [%s] (%s) unknown request rip=%s\n",urlPath,urlID,remoteAddr)
 	return
+}
+
+func isBot(userAgent string) bool {
+	// detect bot's
+	if userAgent=="" || 
+		strings.Index(userAgent, "bot") >= 0 ||
+		strings.Index(userAgent, "spider") >= 0 ||
+		strings.Index(userAgent, "scan") >= 0 ||
+		strings.Index(userAgent, "search") >= 0 ||
+		strings.Index(userAgent, "acebook") >= 0 ||
+		strings.Index(userAgent, "WhatsApp") >= 0 ||
+		strings.Index(userAgent, "Telegram") >= 0 ||
+		strings.Index(userAgent, "node-fetch") >= 0 ||
+		strings.Index(userAgent, "Twitter") >= 0 {
+		return true
+	}
+	return false
 }
 
 func clearCookie(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr string, comment string) {
