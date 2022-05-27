@@ -183,15 +183,17 @@ func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 		strings.Index(userAgent, "search") >= 0 ||
 		strings.Index(userAgent, "acebook") >= 0 ||
 		strings.Index(userAgent, "WhatsApp") >= 0 ||
-		strings.Index(userAgent, "Telegram") >= 0 {
-		fmt.Printf("# substituteUserNameHandler bot denied path=(%s) userAgent=(%s) rip=%s\n",
+		strings.Index(userAgent, "Telegram") >= 0 ||
+		strings.Index(userAgent, "node-fetch") >= 0 ||
+		strings.Index(userAgent, "Twitter") >= 0 {
+		fmt.Printf("# substitute bot denied path=(%s) userAgent=(%s) %s\n",
 			r.URL.Path, userAgent, remoteAddr)
 		return
 	}
 
 	if strings.Index(urlPath,"..")>=0 {
 		// suspicious! do not respond
-		fmt.Printf("# substituteUserNameHandler abort on '..' in urlPath=(%s)\n", urlPath)
+		fmt.Printf("# substitute abort on '..' in urlPath=(%s)\n", urlPath)
 		return
 	}
 	curdir, err := filepath.Abs(filepath.Dir(os.Args[0]))
@@ -265,7 +267,9 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		strings.Index(userAgent, "search") >= 0 ||
 		strings.Index(userAgent, "acebook") >= 0 ||
 		strings.Index(userAgent, "WhatsApp") >= 0 ||
-		strings.Index(userAgent, "Telegram") >= 0 {
+		strings.Index(userAgent, "Telegram") >= 0 ||
+		strings.Index(userAgent, "node-fetch") >= 0 ||
+		strings.Index(userAgent, "Twitter") >= 0 {
 		fmt.Printf("# httpApi bot denied path=(%s) userAgent=(%s) rip=%s\n", r.URL.Path, userAgent, remoteAddr)
 		return
 	}
