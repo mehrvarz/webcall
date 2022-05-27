@@ -355,7 +355,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 		if hub == nil {
 			// connection was cut off by the device / or timeout22s
-			//fmt.Printf("# exitfunc (%s) ws=%d hub==nil %s rip=%s v=%s\n",
+			//fmt.Printf("# exitfunc (%s) hub==nil ws=%d %s rip=%s v=%s\n",
 			//	globalID, wsClientID, comment, remoteAddrWithPort, clientVersion)
 			return;
 		}
@@ -377,8 +377,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		}
 
 		if logWantedFor("attach") {
-			fmt.Printf("exitfunc (%s) ws=%d '%s' %s v=%s\n",
-				globalID, wsClientID, comment, remoteAddrWithPort, clientVersion)
+			fmt.Printf("exitfunc (%s) '%s' ws=%d %s v=%s\n",
+				globalID, comment, wsClientID, remoteAddrWithPort, clientVersion)
 		}
 
 		if dbUserKey!="" {
