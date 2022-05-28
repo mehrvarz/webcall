@@ -18,54 +18,78 @@ import (
 	"encoding/json"
 	"os"
 	"io"
+	"io/fs"
 	"math/rand"
+	"mime"
 	"path/filepath"
 	"crypto/tls"
+	"embed"
 	"github.com/mehrvarz/webcall/skv"
 )
 
-func httpServer() {
-	curdir, err := filepath.Abs(filepath.Dir(os.Args[0]))
-	if err!=nil {
-		fmt.Printf("# httpServer current dir not found err=(%v)\n", err)
-		return
-	}
+// note: if we use go:embed, config keyword 'htmlPath' must be set to the default value "webroot"
+// in order to NOT use go:embed, put 3 slash instead of 2 in front of go:embed
+///go:embed webroot
+var embeddedFS embed.FS
+var embeddedFSExists = false
 
+func httpServer() {
 	http.HandleFunc("/rtcsig/", httpApiHandler)
 
 	http.HandleFunc("/callee/", substituteUserNameHandler)
 	http.HandleFunc("/user/", substituteUserNameHandler)
 	http.HandleFunc("/button/", substituteUserNameHandler)
 
-	if htmlPath != "" {
-		webroot := curdir + "/" + htmlPath
-		fmt.Printf("httpServer htmlPath=%s fullPath=%s\n", htmlPath, webroot)
-		http.Handle("/", http.FileServer(http.Dir(webroot)))
-		/*
-		// if we wanted to set a header before http.FileServer() we would use this
-		setHeaderThenServe := func(h http.Handler) http.HandlerFunc {
-			return func(w http.ResponseWriter, r *http.Request) {
-				readConfigLock.RLock()
-				myCspString := cspString
-				readConfigLock.RUnlock()
-				if myCspString!="" {
-					if logWantedFor("csp") {
-						fmt.Printf("csp file (%s) (%s)\n", r.URL.Path, myCspString)
-					}
-					header := w.Header()
-					header.Set("Content-Security-Policy", myCspString)
-				}
-				h.ServeHTTP(w, r)
-			}
+	_,err := embeddedFS.ReadFile(htmlPath+"/index.html")
+	if err!=nil {
+		// embeddedFS is empty
+		fmt.Printf("httpServer embeddedFS is empty\n")
+		curdir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+		if err!=nil {
+			fmt.Printf("# httpServer current dir not found err=(%v)\n", err)
+			return
 		}
-		http.Handle("/", setHeaderThenServe(http.FileServer(http.Dir(webroot))))
-		*/
-	}
+		if htmlPath != "" {
+			webroot := curdir + "/" + htmlPath
+			fmt.Printf("httpServer htmlPath=%s fullPath=%s\n", htmlPath, webroot)
+			http.Handle("/", http.FileServer(http.Dir(webroot)))
+
+			// if we wanted to set a header before http.FileServer() we would use this
+			//setHeaderThenServe := func(h http.Handler) http.HandlerFunc {
+			//	return func(w http.ResponseWriter, r *http.Request) {
+			//		readConfigLock.RLock()
+			//		myCspString := cspString
+			//		readConfigLock.RUnlock()
+			//		if myCspString!="" {
+			//			if logWantedFor("csp") {
+			//				fmt.Printf("csp file (%s) (%s)\n", r.URL.Path, myCspString)
+			//			}
+			//			header := w.Header()
+			//			header.Set("Content-Security-Policy", myCspString)
+			//		}
+			//		h.ServeHTTP(w, r)
+			//	}
+			//}
+			//http.Handle("/", setHeaderThenServe(http.FileServer(http.Dir(webroot))))
+		}
+	} else {
+		// embeddedFS is initialized
+		embeddedFSExists = true
+		fmt.Printf("httpServer embeddedFS is initialized\n")
+		webRoot, err := fs.Sub(embeddedFS, htmlPath)
+		if err != nil {
+			fmt.Printf("httpServer fatal %v\n", err)
+			return
+		}
+		http.Handle("/", http.FileServer(http.FS(webRoot)))
+	}	
 
 	if httpsPort>0 {
 		httpsFunc := func() {
 			addrPort := fmt.Sprintf(":%d",httpsPort)
 			fmt.Printf("httpServer https listening on %v\n", addrPort)
+
+			//http.ListenAndServeTLS(addrPort, "tls.pem", "tls.key", http.DefaultServeMux)
 			cer, err := tls.LoadX509KeyPair("tls.pem","tls.key")
 			if err != nil {
 				fmt.Printf("# httpServer tls.LoadX509KeyPair err=(%v)\n", err)
@@ -103,7 +127,7 @@ func httpServer() {
 				//MaxIdleConns: 100, // TODO
 				TLSConfig: tlsConfig,
 			}
-			err = srv.ListenAndServeTLS("","")
+			err = srv.ListenAndServeTLS("","") // use certFile and keyFile from src.TLSConfig
 			if err != nil {
 				fmt.Printf("# httpServer ListenAndServeTLS err=%v\n", err)
 			} else {
@@ -125,6 +149,8 @@ func httpServer() {
 	if httpPort>0 {
 		addrPort := fmt.Sprintf(":%d",httpPort)
 		fmt.Printf("httpServer http listening on %v\n", addrPort)
+
+		//err := http.ListenAndServe(addrPort, http.DefaultServeMux)
 		srv := &http.Server{
 			// this http.Server redirects to https
 			Addr: addrPort,
@@ -148,7 +174,7 @@ func httpServer() {
 				//MaxIdleConns: 100, // TODO
 			}
 		}
-		err = srv.ListenAndServe()
+		err := srv.ListenAndServe()
 		fmt.Printf("# httpServer ListenAndServe err=%v\n", err)
 	}
 }
@@ -175,23 +201,6 @@ func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 	remoteAddr := remoteAddrWithPort
 
 	// deny bot's
-/*
-	userAgent := r.UserAgent()
-	if userAgent=="" || 
-		strings.Index(userAgent, "bot") >= 0 ||
-		strings.Index(userAgent, "spider") >= 0 ||
-		strings.Index(userAgent, "scan") >= 0 ||
-		strings.Index(userAgent, "search") >= 0 ||
-		strings.Index(userAgent, "acebook") >= 0 ||
-		strings.Index(userAgent, "WhatsApp") >= 0 ||
-		strings.Index(userAgent, "Telegram") >= 0 ||
-		strings.Index(userAgent, "node-fetch") >= 0 ||
-		strings.Index(userAgent, "Twitter") >= 0 {
-		fmt.Printf("# substitute bot denied path=(%s) userAgent=(%s) %s\n",
-			r.URL.Path, userAgent, remoteAddr)
-		return
-	}
-*/
 	if isBot(r.UserAgent()) {
 		fmt.Printf("# substitute bot denied path=(%s) userAgent=(%s) %s\n",
 			r.URL.Path, r.UserAgent(), remoteAddr)
@@ -203,22 +212,37 @@ func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("# substitute abort on '..' in urlPath=(%s)\n", urlPath)
 		return
 	}
-	curdir, err := filepath.Abs(filepath.Dir(os.Args[0]))
-	if err!=nil {
-		fmt.Printf("# substituteUserNameHandler current dir not found err=(%v)\n", err)
-		return
-	}
-	//fmt.Printf("substitute curdir=(%s) root(%s) (url=%s)\n", curdir, htmlPath, urlPath)
-	fullpath := curdir + "/webroot" + urlPath
-	//fmt.Printf("substitute (%s)\n", fullpath)
-	if _, err := os.Stat(fullpath); os.IsNotExist(err) {
-		// fullpath does not exist
-		idxLastSlash := strings.LastIndex(fullpath,"/")
-		if idxLastSlash>=0 {
-			fullpath = fullpath[:idxLastSlash+1] + "index.html"
-			//fmt.Printf("substitute try (%s)\n", fullpath)
+
+	fullpath := ""
+	if !embeddedFSExists {
+		curdir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+		if err!=nil {
+			fmt.Printf("# substituteUserNameHandler current dir not found err=(%v)\n", err)
+			return
+		}
+		fullpath = curdir + "/"+htmlPath+"/" + urlPath
+		fmt.Printf("substitute curdir(%s) root(%s) url(%s) full(%s)\n", curdir, htmlPath, urlPath, fullpath)
+		//fmt.Printf("substitute (%s)\n", fullpath)
+		if _, err := os.Stat(fullpath); os.IsNotExist(err) {
+			idxLastSlash := strings.LastIndex(fullpath,"/")
+			if idxLastSlash>=0 {
+				fullpath = fullpath[:idxLastSlash+1] + "index.html"
+				//fmt.Printf("substitute try (%s)\n", fullpath)
+			}
+		}
+	} else {
+		fullpath = htmlPath + urlPath
+		//fmt.Printf("substitute (%s)\n", fullpath)
+		if _, err := fs.Stat(embeddedFS,fullpath); os.IsNotExist(err) {
+			// fullpath does not exist
+			idxLastSlash := strings.LastIndex(fullpath,"/")
+			if idxLastSlash>=0 {
+				fullpath = fullpath[:idxLastSlash+1] + "index.html"
+				//fmt.Printf("substitute try (%s)\n", fullpath)
+			}
 		}
 	}
+
 	if logWantedFor("http") {
 		fmt.Printf("substituteUserNameHandler (%s) try (%s)\n", r.URL.Path, fullpath)
 	}
@@ -233,7 +257,20 @@ func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 		header := w.Header()
 		header.Set("Content-Security-Policy", myCspString)
 	}
-	http.ServeFile(w, r, fullpath)
+
+	if !embeddedFSExists {
+		http.ServeFile(w, r, fullpath)
+	} else {
+		data,err := embeddedFS.ReadFile(fullpath)
+		if err!=nil {
+			fmt.Printf("substituteUserNameHandler (%s) err (%s)\n", fullpath,err)
+			return
+		}
+		// set content-type
+		mimetype := mime.TypeByExtension(filepath.Ext(fullpath))
+		w.Header().Set("Content-Type", mimetype)
+		w.Write(data)
+	}
 }
 
 func httpApiHandler(w http.ResponseWriter, r *http.Request) {
@@ -266,22 +303,6 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// deny bot's
-/*
-	userAgent := r.UserAgent()
-	if userAgent=="" || 
-		strings.Index(userAgent, "bot") >= 0 ||
-		strings.Index(userAgent, "spider") >= 0 ||
-		strings.Index(userAgent, "scan") >= 0 ||
-		strings.Index(userAgent, "search") >= 0 ||
-		strings.Index(userAgent, "acebook") >= 0 ||
-		strings.Index(userAgent, "WhatsApp") >= 0 ||
-		strings.Index(userAgent, "Telegram") >= 0 ||
-		strings.Index(userAgent, "node-fetch") >= 0 ||
-		strings.Index(userAgent, "Twitter") >= 0 {
-		fmt.Printf("# httpApi bot denied path=(%s) userAgent=(%s) rip=%s\n", r.URL.Path, userAgent, remoteAddr)
-		return
-	}
-*/
 	if isBot(r.UserAgent()) {
 		fmt.Printf("# httpApi bot denied path=(%s) userAgent=(%s) rip=%s\n",
 			r.URL.Path, r.UserAgent(), remoteAddr)

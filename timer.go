@@ -127,6 +127,14 @@ func isOnlyNumericString(s string) bool {
 }
 
 func ticker20min() {
+	readConfigLock.RLock()
+	mytwitterKey := twitterKey
+	//mytwitterSecret := twitterSecret
+	readConfigLock.RUnlock()
+	if mytwitterKey=="" {
+		return
+	}
+
 	twentyMinTicker := time.NewTicker(20*60*time.Second)
 	defer twentyMinTicker.Stop()
 	for {
