@@ -1677,26 +1677,23 @@ function dial2() {
 	// 1b and if no onIceCandidates, show a warning (webrtc check)
 	// 2  if peercon but no mediaConnect after 20s, show ringingText stats text (asking user to be patient)
 	setTimeout(function(lastDialDate) {
-		if(dialDate==lastDialDate) { // still the same call after 20s?
+		if(dialDate==lastDialDate && !doneHangup) { // still the same call after 20s?
 			if(!rtcConnect) {
-				if(!doneHangup) {
-					// no rtcConnect after 20s: give up dial-waiting
-					console.log("dialing timeout, giving up on call "+candidateResultString);
-					if(onIceCandidates==0 && !doneHangup) {
-						console.warn('no ice candidates created');
-						onIceCandidates = -1;
-						notificationSound.play().catch(function(error) { });
-						hangup(true,true,"Cannot make calls. "+
-						   "Your browser engine does not generate WebRTC/ICE candidates.");
-						return;
-					}
-					hangupWithBusySound(true,"Failed to connect "+candidateResultString);
+				// no rtcConnect after 20s: give up dial-waiting
+				console.log("dialing timeout, giving up on call "+candidateResultString);
+				if(onIceCandidates==0 && !doneHangup) {
+					console.warn('no ice candidates created');
+					onIceCandidates = -1;
+					notificationSound.play().catch(function(error) { });
+					hangup(true,true,"Cannot make calls. "+
+					   "Your browser engine does not generate WebRTC/ICE candidates.");
+					return;
 				}
+				hangupWithBusySound(true,"Failed to connect "+candidateResultString);
 			} else {
 				if(!mediaConnect) {
-					if(!doneHangup) {
-						showStatus(ringingText,-1);
-					}
+					// rtcConnect but no mediaConnect after 20s: tell caller to be parient
+					showStatus(ringingText,-1);
 				}
 			}
 		}
