@@ -522,11 +522,8 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		// TODO should we clear callerIpInHubMap via StoreCallerIpInHubMap(,"") just to be sure?
 		//StoreCallerIpInHubMap(c.globalCalleeID, "", false)
 
-		// deliver the callee client version number
-		readConfigLock.RLock()
-		calleeClientVersionTmp := calleeClientVersion
-		readConfigLock.RUnlock()
-		if c.Write([]byte("sessionId|"+calleeClientVersionTmp)) != nil {
+		// deliver the webcall codetag version string
+		if c.Write([]byte("sessionId|"+codetag)) != nil {
 			return
 		}
 

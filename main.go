@@ -172,7 +172,6 @@ var logeventMap map[string]bool
 var logeventMutex sync.RWMutex
 var disconCalleeOnPeerConnected = false
 var disconCallerOnPeerConnected = true
-var calleeClientVersion = ""
 var maxRingSecs = 0
 var maxTalkSecsIfNoP2p = 0
 var adminEmail = ""
@@ -536,7 +535,6 @@ func readConfig(init bool) {
 		"disconCalleeOnPeerConnected", disconCalleeOnPeerConnected, false)
 	disconCallerOnPeerConnected = readIniBoolean(configIni,
 		"disconCallerOnPeerConnected", disconCallerOnPeerConnected, true)
-	calleeClientVersion = readIniString(configIni, "calleeClientVersion", calleeClientVersion, "2.0.0")
 
 	maxRingSecs = readIniInt(configIni, "maxRingSecs", maxRingSecs, 120, 1)
 	maxTalkSecsIfNoP2p = readIniInt(configIni, "maxTalkSecsIfNoP2p", maxTalkSecsIfNoP2p, 600, 1)
