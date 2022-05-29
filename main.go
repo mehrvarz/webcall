@@ -498,7 +498,7 @@ func readConfig(init bool) {
 		httpToHttps = readIniBoolean(configIni, "httpToHttps", httpToHttps, false)
 		wsPort = readIniInt(configIni, "wsPort", wsPort, 8071, 1)
 		wssPort = readIniInt(configIni, "wssPort", wssPort, 0, 1)
-		htmlPath = readIniString(configIni, "htmlPath", htmlPath, "webroot")
+		htmlPath = readIniString(configIni, "htmlPath", htmlPath, "")
 		insecureSkipVerify = readIniBoolean(configIni, "insecureSkipVerify", insecureSkipVerify, false)
 		turnIP = readIniString(configIni, "turnIP", turnIP, "")
 		turnPort = readIniInt(configIni, "turnPort", turnPort, 0, 1) // 3739
