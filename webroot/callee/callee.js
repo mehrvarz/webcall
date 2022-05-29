@@ -29,7 +29,7 @@ const dialIdElement = document.getElementById('dialId');
 const exclamationElement = document.getElementById('exclamation');
 const bitrate = 280000;
 const autoReconnectDelay = 15;
-const clientVersion = "2.0.10";
+const clientVersion = "3.0.0-rc1";
 const singlebutton = false;
 const calleeMode = true;
 
@@ -809,8 +809,7 @@ function delayedWsAutoReconnect(reconPauseSecs) {
 	},reconPauseSecs*1000);
 }
 
-function showOnlineReadyMsg(sessionIdPayload) {
-	// sessionIdPayload may contain a string with the client version number
+function showOnlineReadyMsg() {
 	if(!wsConn) {
 		console.log('showOnlineReadyMsg not online');
 		return;
@@ -823,10 +822,6 @@ function showOnlineReadyMsg(sessionIdPayload) {
 		msg1 =  "Your online status is hidden. "+
 				"Go to Menu to turn this off.<br>"
 	}
-//	gLog('showOnlineReadyMsg', clientVersion, sessionIdPayload);
-//	if(sessionIdPayload!="" && clientVersion<sessionIdPayload) {
-//		msg1 += "Software update available. Reload to update.<br>";
-//	}
 
 	let calleeLink = window.location.href;
 	let userLink = calleeLink.replace("callee/","user/");
@@ -848,14 +843,18 @@ function showOnlineReadyMsg(sessionIdPayload) {
 	if(msg1!="") {
 		// show 2 msgs after another
 		showStatus(msg1,2500);
-		setTimeout(function() {
-			if(wsConn!=null) {
-				showStatus(msg2,-1);
-			}
-		},2800);
+		if(msg2!="") {
+			setTimeout(function() {
+				if(wsConn!=null) {
+					showStatus(msg2,-1);
+				}
+			},2800);
+		}
 	} else {
 		// show 1 msg
-		showStatus(msg2,-1);
+		if(msg2!="") {
+			showStatus(msg2,-1);
+		}
 	}
 }
 
@@ -1187,7 +1186,8 @@ function signalingCommand(message) {
 
 	} else if(cmd=="sessionId") {
 		// callee has checked in
-		showOnlineReadyMsg(payload);
+		//clientVersion = payload;
+		showOnlineReadyMsg();
 
 	} else if(cmd=="sessionDuration") { // in call
 		if(isP2pCon()) {
@@ -2327,7 +2327,7 @@ function wakeGoOnline() {
 	wsOnOpen(); // green led
 	goOnlineButton.disabled = false; // prevent goOnline() abort
 	goOnline(); // wsSend("init|!")
-	showOnlineReadyMsg('');
+	showOnlineReadyMsg();
 	gLog("wakeGoOnline done");
 }
 
