@@ -57,7 +57,7 @@ type WsClient struct {
 	pickupSent atombool.AtomBool
 	calleeInitReceived atombool.AtomBool
 	callerOfferForwarded atombool.AtomBool
-	reached11s atombool.AtomBool
+	reached13s atombool.AtomBool
 	RemoteAddr string // with port
 	RemoteAddrNoPort string // no port
 	userAgent string // ws UA
@@ -263,20 +263,20 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				}
 			}
 
-			if !client.reached11s.Get() {
+			if !client.reached13s.Get() {
 				// shut down the callee on early caller hangup
-				//fmt.Printf("%s (%s) close caller !reached11s -> clear CallerIp\n",
+				//fmt.Printf("%s (%s) close caller !reached13s -> clear CallerIp\n",
 				//	client.connType, client.calleeID)
 				StoreCallerIpInHubMap(client.calleeID, "", false)
 
 				if client.hub.CalleeClient!=nil {
-					fmt.Printf("%s (%s) close caller !reached11s -> cancel callee📴 + peerConHasEnded\n",
+					fmt.Printf("%s (%s) close caller !reached13s -> cancel callee📴 + peerConHasEnded\n",
 						client.connType, client.calleeID)
 					client.hub.CalleeClient.Write([]byte("cancel|c"))
 					client.hub.CalleeClient.peerConHasEnded("callerOnClose")
 				}
 			} else {
-				//fmt.Printf("%s (%s) onclose caller after reached11s -> do nothing\n",
+				//fmt.Printf("%s (%s) onclose caller after reached13s -> do nothing\n",
 				//	client.connType, client.calleeID)
 			}
 		}
@@ -332,7 +332,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 		client.isCallee = false
 		client.callerOfferForwarded.Set(false)
-		client.reached11s.Set(false)
+		client.reached13s.Set(false)
 		hub.HubMutex.Lock()
 		hub.CallDurationSecs = 0
 		hub.CallerClient = client
@@ -340,14 +340,14 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		hub.HubMutex.Unlock()
 
 		go func() {
-			// incoming caller will get removed if there is no peerConnect after 11 sec
+			delaySecs := 13
+			// incoming caller will get removed if there is no peerConnect after 13s
 			// (it can take up to 6-8 seconds in some cases for a devices to get fully out of deep sleep)
 			myCallerContactTime := hub.lastCallerContactTime
 
-			delaySecs := 13
-			//fmt.Printf("%s (%s) caller conn 11s delay start\n", client.connType, client.calleeID)
+			//fmt.Printf("%s (%s) caller conn 13s delay start\n", client.connType, client.calleeID)
 			time.Sleep(time.Duration(delaySecs) * time.Second)
-			//fmt.Printf("%s (%s) caller conn 11s delay end\n", client.connType, client.calleeID)
+			//fmt.Printf("%s (%s) caller conn 13s delay end\n", client.connType, client.calleeID)
 
 			hub.HubMutex.RLock()
 			if hub.CalleeClient==nil {
@@ -385,7 +385,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				//fmt.Printf("%s (%s) no peercon check: CalleeClient.isConnectedToPeer\n",
 				//	client.connType, client.calleeID)
 
-				client.reached11s.Set(true) // caller onClose will not anymore disconnect session/peercon
+				client.reached13s.Set(true) // caller onClose will not anymore disconnect session/peercon
 
 				if hub.CalleeClient.isMediaConnectedToPeer.Get() {
 					// now force-disconnect caller
@@ -396,10 +396,10 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 					if myDisconCallerOnPeerConnected {
 						if hub.CallerClient != nil {
 							if logWantedFor("attach") {
-								fmt.Printf("%s (%s) 11s reached -> force caller ws-disconnect\n",
+								fmt.Printf("%s (%s) 13s reached -> force caller ws-disconnect\n",
 									client.connType, client.calleeID)
 							}
-							hub.CallerClient.Close("disconCallerAfter11s")
+							hub.CallerClient.Close("disconCallerAfter13s")
 						}
 					}
 				}
@@ -415,7 +415,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				return
 			}
 
-			// both sides still ws-connected, calleroffer was received, but after 11s still no peer-connect
+			// both sides still ws-connected, calleroffer was received, but after 13s still no peer-connect
 			// this is a webrtc issue
 			fmt.Printf("%s (%s) NO PEERCON📵 %ds %s <- %s (%s) %v ua=%s\n",
 				client.connType, client.calleeID, delaySecs, hub.CalleeClient.RemoteAddr, 
@@ -1091,10 +1091,10 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 					} else if constate=="Connected" {
 						// caller is reporting peerCon: both peers are now directly connected
 						// now force ws-disconnect caller
-						// but only if 11s has passed
-						if !c.hub.CallerClient.reached11s.Get() {
+						// but only if 13s has passed
+						if !c.hub.CallerClient.reached13s.Get() {
 							if logWantedFor("attach") {
-							//fmt.Printf("%s (%s) peercon but 11s not reached, no force caller ws-disconnect\n",
+							//fmt.Printf("%s (%s) peercon but 13s not reached, no force caller ws-disconnect\n",
 							//	c.connType, c.calleeID)
 							}
 						} else {
