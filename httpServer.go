@@ -29,7 +29,7 @@ import (
 
 // note: if we use go:embed, config keyword 'htmlPath' must be set to the default value "webroot"
 // in order to NOT use go:embed, put 3 slash instead of 2 in front of go:embed
-///go:embed webroot
+//go:embed webroot
 var embeddedFS embed.FS
 var embeddedFSExists = false
 
@@ -40,49 +40,52 @@ func httpServer() {
 	http.HandleFunc("/user/", substituteUserNameHandler)
 	http.HandleFunc("/button/", substituteUserNameHandler)
 
-	_,err := embeddedFS.ReadFile(htmlPath+"/index.html")
-	if err!=nil {
-		// embeddedFS is empty
-		fmt.Printf("httpServer embeddedFS is empty\n")
-		curdir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	embeddedFSExists = false
+	if htmlPath=="" {
+		_,err := embeddedFS.ReadFile("webroot/index.html")
 		if err!=nil {
-			fmt.Printf("# httpServer current dir not found err=(%v)\n", err)
+			fmt.Printf("# httpServer fatal htmlPath not set, but no embeddedFS (%v)\n",err)
 			return
 		}
-		if htmlPath != "" {
-			webroot := curdir + "/" + htmlPath
-			fmt.Printf("httpServer htmlPath=%s fullPath=%s\n", htmlPath, webroot)
-			http.Handle("/", http.FileServer(http.Dir(webroot)))
-
-			// if we wanted to set a header before http.FileServer() we would use this
-			//setHeaderThenServe := func(h http.Handler) http.HandlerFunc {
-			//	return func(w http.ResponseWriter, r *http.Request) {
-			//		readConfigLock.RLock()
-			//		myCspString := cspString
-			//		readConfigLock.RUnlock()
-			//		if myCspString!="" {
-			//			if logWantedFor("csp") {
-			//				fmt.Printf("csp file (%s) (%s)\n", r.URL.Path, myCspString)
-			//			}
-			//			header := w.Header()
-			//			header.Set("Content-Security-Policy", myCspString)
-			//		}
-			//		h.ServeHTTP(w, r)
-			//	}
-			//}
-			//http.Handle("/", setHeaderThenServe(http.FileServer(http.Dir(webroot))))
-		}
-	} else {
-		// embeddedFS is initialized
 		embeddedFSExists = true
-		fmt.Printf("httpServer embeddedFS is initialized\n")
-		webRoot, err := fs.Sub(embeddedFS, htmlPath)
+	}
+	if embeddedFSExists {
+		embeddedFSExists = true
+		fmt.Printf("httpServer using embeddedFS\n")
+		webRoot, err := fs.Sub(embeddedFS, "webroot")
 		if err != nil {
-			fmt.Printf("httpServer fatal %v\n", err)
+			fmt.Printf("# httpServer fatal %v\n", err)
 			return
 		}
 		http.Handle("/", http.FileServer(http.FS(webRoot)))
-	}	
+	} else {
+		curdir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+		if err!=nil {
+			fmt.Printf("# httpServer fatal current dir not found err=(%v)\n", err)
+			return
+		}
+		webroot := curdir + "/" + htmlPath
+		fmt.Printf("httpServer using filesystem (%s)\n", webroot)
+		http.Handle("/", http.FileServer(http.Dir(webroot)))
+
+		// if we wanted to set a header before http.FileServer() we would use this
+		//setHeaderThenServe := func(h http.Handler) http.HandlerFunc {
+		//	return func(w http.ResponseWriter, r *http.Request) {
+		//		readConfigLock.RLock()
+		//		myCspString := cspString
+		//		readConfigLock.RUnlock()
+		//		if myCspString!="" {
+		//			if logWantedFor("csp") {
+		//				fmt.Printf("csp file (%s) (%s)\n", r.URL.Path, myCspString)
+		//			}
+		//			header := w.Header()
+		//			header.Set("Content-Security-Policy", myCspString)
+		//		}
+		//		h.ServeHTTP(w, r)
+		//	}
+		//}
+		//http.Handle("/", setHeaderThenServe(http.FileServer(http.Dir(webroot))))
+	}
 
 	if httpsPort>0 {
 		httpsFunc := func() {
