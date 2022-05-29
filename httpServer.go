@@ -224,8 +224,7 @@ func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		fullpath = curdir + "/"+htmlPath+"/" + urlPath
-		fmt.Printf("substitute curdir(%s) root(%s) url(%s) full(%s)\n", curdir, htmlPath, urlPath, fullpath)
-		//fmt.Printf("substitute (%s)\n", fullpath)
+		//fmt.Printf("substitute curdir(%s) root(%s) url(%s) full(%s)\n", curdir, htmlPath, urlPath, fullpath)
 		if _, err := os.Stat(fullpath); os.IsNotExist(err) {
 			idxLastSlash := strings.LastIndex(fullpath,"/")
 			if idxLastSlash>=0 {
