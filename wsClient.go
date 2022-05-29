@@ -344,7 +344,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			// (it can take up to 6-8 seconds in some cases for a devices to get fully out of deep sleep)
 			myCallerContactTime := hub.lastCallerContactTime
 
-			delaySecs := 11
+			delaySecs := 13
 			//fmt.Printf("%s (%s) caller conn 11s delay start\n", client.connType, client.calleeID)
 			time.Sleep(time.Duration(delaySecs) * time.Second)
 			//fmt.Printf("%s (%s) caller conn 11s delay end\n", client.connType, client.calleeID)
