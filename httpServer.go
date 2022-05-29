@@ -233,7 +233,7 @@ func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	} else {
-		fullpath = htmlPath + urlPath
+		fullpath = "webroot" + urlPath
 		//fmt.Printf("substitute (%s)\n", fullpath)
 		if _, err := fs.Stat(embeddedFS,fullpath); os.IsNotExist(err) {
 			// fullpath does not exist
