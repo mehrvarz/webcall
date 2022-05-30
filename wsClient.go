@@ -515,8 +515,15 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		c.callerTextMsg = ""
 
 		if logWantedFor("attach") {
-			fmt.Printf("%s (%s) callee init ws=%d %s v=%s\n",
-				c.connType, c.calleeID, c.hub.WsClientID, c.RemoteAddr, c.clientVersion)
+			loginCount := -1
+			calleeLoginMutex.RLock()
+			calleeLoginSlice,ok := calleeLoginMap[c.calleeID]
+			calleeLoginMutex.RUnlock()
+			if ok {
+				loginCount = len(calleeLoginSlice)
+			}
+			fmt.Printf("%s (%s) callee init %d ws=%d %s v=%s\n",
+				c.connType, c.calleeID, loginCount, c.hub.WsClientID, c.RemoteAddr, c.clientVersion)
 		}
 
 		// TODO should we clear callerIpInHubMap via StoreCallerIpInHubMap(,"") just to be sure?
