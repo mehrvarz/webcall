@@ -92,6 +92,7 @@ const configFileName = "config.ini"
 const statsFileName = "stats.ini"
 var readConfigLock sync.RWMutex
 var	shutdownStarted atombool.AtomBool
+var queryFollowerIDsNeeded atombool.AtomBool
 
 var hubMap map[string]*Hub
 var hubMapMutex sync.RWMutex
@@ -282,6 +283,7 @@ func main() {
 	}
 
 	rand.Seed(time.Now().UnixNano())
+	queryFollowerIDsNeeded.Set(true)
 
 	readStatsFile()
 
@@ -513,6 +515,7 @@ func readConfig(init bool) {
 		twitterKey = readIniString(configIni, "twitterKey", twitterKey, "")
 		twitterSecret = readIniString(configIni, "twitterSecret", twitterSecret, "")
 
+		// currently not used
 		vapidPublicKey = readIniString(configIni, "vapidPublicKey", vapidPublicKey, "")
 		vapidPrivateKey = readIniString(configIni, "vapidPrivateKey", vapidPrivateKey, "")
 	}

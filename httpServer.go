@@ -40,15 +40,19 @@ func httpServer() {
 	http.HandleFunc("/user/", substituteUserNameHandler)
 	http.HandleFunc("/button/", substituteUserNameHandler)
 
+	readConfigLock.RLock()
 	embeddedFSExists = false
 	if htmlPath=="" {
 		_,err := embeddedFS.ReadFile("webroot/index.html")
 		if err!=nil {
+			readConfigLock.RUnlock()
 			fmt.Printf("# httpServer fatal htmlPath not set, but no embeddedFS (%v)\n",err)
 			return
 		}
 		embeddedFSExists = true
 	}
+	readConfigLock.RUnlock()
+
 	if embeddedFSExists {
 		embeddedFSExists = true
 		fmt.Printf("httpServer using embeddedFS\n")
@@ -64,7 +68,9 @@ func httpServer() {
 			fmt.Printf("# httpServer fatal current dir not found err=(%v)\n", err)
 			return
 		}
+		readConfigLock.RLock()
 		webroot := curdir + "/" + htmlPath
+		readConfigLock.RUnlock()
 		fmt.Printf("httpServer using filesystem (%s)\n", webroot)
 		http.Handle("/", http.FileServer(http.Dir(webroot)))
 
@@ -223,8 +229,10 @@ func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Printf("# substituteUserNameHandler current dir not found err=(%v)\n", err)
 			return
 		}
+		readConfigLock.RLock()
 		fullpath = curdir + "/"+htmlPath+"/" + urlPath
 		//fmt.Printf("substitute curdir(%s) root(%s) url(%s) full(%s)\n", curdir, htmlPath, urlPath, fullpath)
+		readConfigLock.RUnlock()
 		if _, err := os.Stat(fullpath); os.IsNotExist(err) {
 			idxLastSlash := strings.LastIndex(fullpath,"/")
 			if idxLastSlash>=0 {

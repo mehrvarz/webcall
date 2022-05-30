@@ -131,9 +131,6 @@ func ticker20min() {
 	mytwitterKey := twitterKey
 	//mytwitterSecret := twitterSecret
 	readConfigLock.RUnlock()
-	if mytwitterKey=="" {
-		return
-	}
 
 	twentyMinTicker := time.NewTicker(20*60*time.Second)
 	defer twentyMinTicker.Stop()
@@ -142,34 +139,36 @@ func ticker20min() {
 			break
 		}
 
-		// fetch list of all twitter followers
-		twitterClientLock.Lock()
-		if twitterClient==nil {
-			twitterAuth()
-		}
-		if twitterClient==nil {
-			fmt.Printf("# ticker20min no twitterClient\n")
-		} else {
-			fmt.Printf("ticker20min fetch list of twitter followers...\n")
-			// TODO we must later support more than 5000 followers
-			var err error
-			followerIDsLock.Lock()
-			var data []byte
-			followerIDs, data, err = twitterClient.QueryFollowerIDs(5000)
-			if err!=nil {
-				fmt.Printf("# ticker20min QueryFollowerIDs err=%v [%v]\n", err, data)
+		if mytwitterKey!="" && queryFollowerIDsNeeded.Get() {
+			// fetch list of all twitter followers
+			twitterClientLock.Lock()
+			if twitterClient==nil {
+				twitterAuth()
+			}
+			if twitterClient==nil {
+				fmt.Printf("# ticker20min no twitterClient\n")
 			} else {
-				fmt.Printf("ticker20min QueryFollowerIDs count=%d\n", len(followerIDs.Ids))
-				if logWantedFor("twitter") {
-					for idx,id := range followerIDs.Ids {
-						fmt.Printf("ticker20min %d followerIDs.Id=%v\n", idx+1, int64(id))
+				fmt.Printf("ticker20min fetch list of twitter followers...\n")
+				// TODO we must later support more than 5000 followers
+				var err error
+				followerIDsLock.Lock()
+				var data []byte
+				followerIDs, data, err = twitterClient.QueryFollowerIDs(5000)
+				if err!=nil {
+					fmt.Printf("# ticker20min QueryFollowerIDs err=%v [%v]\n", err, data)
+				} else {
+					fmt.Printf("ticker20min QueryFollowerIDs count=%d\n", len(followerIDs.Ids))
+					if logWantedFor("twitter") {
+						for idx,id := range followerIDs.Ids {
+							fmt.Printf("ticker20min %d followerIDs.Id=%v\n", idx+1, int64(id))
+						}
 					}
 				}
+				followerIDsLock.Unlock()
 			}
-			followerIDsLock.Unlock()
+			twitterClientLock.Unlock()
+			queryFollowerIDsNeeded.Set(false)
 		}
-		twitterClientLock.Unlock()
-
 
 		// load "news.ini", file should contain two lines: date= and url=
 		newsIni, err := ini.Load("news.ini")

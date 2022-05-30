@@ -146,6 +146,7 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 			if val != dbUser.Str1 {
 				fmt.Printf("/setsettings (%s) new twid (%s) (old:%s) %s\n", calleeID, val, dbUser.Str1, remoteAddr)
 				dbUser.Str1 = val
+				queryFollowerIDsNeeded.Set(true)
 			}
 		case "storeContacts":
 			if(val=="true") {
