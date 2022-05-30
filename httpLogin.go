@@ -104,7 +104,9 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					fmt.Printf("/login (%s) %d >= %d logins/30m rip=%s v=%s\n",
 						urlID, len(calleeLoginSlice), maxLoginPer30min, remoteAddr, clientVersion)
 				}
-				fmt.Fprintf(w,"Too many reconnects / login attempts in short order. Please take a pause.")
+				fmt.Fprintf(w,"Too many reconnects / login attempts in short order. "+
+							  "Is your network connection stable? "+
+							  "Please take a pause.")
 				calleeLoginMutex.Lock()
 				calleeLoginMap[urlID] = calleeLoginSlice
 				calleeLoginMutex.Unlock()
