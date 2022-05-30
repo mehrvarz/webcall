@@ -660,7 +660,8 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		}
 		// prevent this callee from receiving a call, when already in a call
 		if c.hub.ConnectedCallerIp!="" {
-			// TODO question is why this is not caught by "/online (id) busy callerIp=..."
+			// ConnectedCallerIp is set below by StoreCallerIpInHubMap()
+			// TODO tmtmtm question is why this is not caught by "/online (id) busy callerIp=..."
 			fmt.Printf("# %s (%s) CALL but hub.ConnectedCallerIp not empty (%s)\n",
 				c.connType, c.calleeID, c.hub.ConnectedCallerIp)
 			c.hub.HubMutex.RUnlock()
@@ -712,7 +713,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			// if callee does NOT pickup the call after c.hub.maxRingSecs, callee will be disconnected
 			c.hub.setDeadline(c.hub.maxRingSecs,"serveWs ringsecs")
 		}
-		// this is needed for turn AuthHandler: store caller RemoteAddr
+		// this is (also) needed for turn AuthHandler: store caller RemoteAddr
 		err := StoreCallerIpInHubMap(c.globalCalleeID, c.RemoteAddr, false)
 		if err!=nil {
 			fmt.Printf("# %s (%s) callerOffer StoreCallerIp %s err=%v\n",
