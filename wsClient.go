@@ -406,7 +406,6 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				return
 			}
 
-// new
 			if hub!=nil && myCallerContactTime != hub.lastCallerContactTime {
 				// this callee is engaged with a new caller session already (myCallerContactTime is outdated)
 				hub.HubMutex.RUnlock()
@@ -422,7 +421,6 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				hub.CallerClient.RemoteAddr, hub.CallerClient.callerID, hub.CallerClient.isOnline.Get(),
 				hub.CallerClient.userAgent)
 
-// TODO it can't be the other side, if the other side is answie or talkback
 			// NOTE: msg MUST NOT contain apostroph (') characters
 			msg := "Unable to establish a direct P2P connection. "+
 			  "This might be a WebRTC related issue with your browser/WebView. "+
@@ -431,8 +429,19 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			  "On Android, run <a href=\"/webcall/android/#webview\">WebRTC-Check</a> "+
 			  "to test your System WebView."
 			hub.CallerClient.Write([]byte("status|"+msg))
-			hub.CalleeClient.Write([]byte("status|"+msg))
+			if strings.HasPrefix(hub.CalleeClient.calleeID,"answie") ||
+				strings.HasPrefix(hub.CalleeClient.calleeID,"talkback") {
+				// the problem can't be the callee side, if callee is answie or talkback
+				// so in this case don't send msg to callee
+			} else {
+				hub.CalleeClient.Write([]byte("status|"+msg))
+			}
 			hub.HubMutex.RUnlock()
+
+			addMissedCall(hub.CalleeClient.calleeID,
+				CallerInfo{hub.CallerClient.RemoteAddr, hub.CallerClient.callerName,
+							time.Now().Unix(), hub.CallerClient.callerID, "no peercon"},
+				"NO PEERCON")
 
 			hub.HubMutex.Lock()
 			hub.CallerClient = nil
