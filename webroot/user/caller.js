@@ -10,7 +10,7 @@ const divspinnerframe = document.querySelector('div#spinnerframe');
 const bitrate = 280000;
 const calleeMode = false;
 
-var connectingText = "Connecting...";
+var connectingText = "Wait up to 15s for P2P connection...";
 var singleButtonReadyText = "Click to make your order<br>Live operator";
 var singleButtonBusyText = "All lines are busy.<br>Please try again a little later.";
 var singleButtonConnectedText = "You are connected.<br>How can we help you?";
@@ -298,7 +298,7 @@ function onload2(checkFlag) {
 				hangupButton.onclick = function() {
 					dialButton.style.backgroundColor = "";
 					hangupButton.style.backgroundColor = "";
-					let msg = "Hang up";
+					let msg = "Hanging up...";
 					console.log(msg);
 					if(mediaConnect) {
 						if(playDialSounds) {
@@ -1615,7 +1615,7 @@ let dialDate;
 function dial() {
 	if(!localStream) {
 		console.warn('dial abort no localStream');
-		showStatus("abort no localStream");
+		showStatus("Dialup canceled");
 		hangupWithBusySound(true,"dial no localStream");
 		return;
 	}
@@ -1804,6 +1804,7 @@ function dial2() {
 		} else if(peerCon.connectionState=="connected") {
 			// if we see this despite being mediaConnect already, it is caused by createDataChannel
 			gLog('peerCon connected');
+			showStatus("Ringing...",-1);
 			if(!rtcConnect && !mediaConnect) {
 				// the caller got peer-connected to the callee; callee now starts ringing
 				rtcConnect = true;
@@ -1836,7 +1837,7 @@ function dial2() {
 		}
 	}
 	if(!localStream) {
-		showStatus("abort no localStream");
+		showStatus("Dialup canceled");
 		return;
 	}
 	// add selected local audioTrack (audio input / mic) to peerCon
