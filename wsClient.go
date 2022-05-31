@@ -763,12 +763,15 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			if c.isCallee {
 				fmt.Printf("%s (%s) REQ DISCON from callee %s '%s'\n",
 					c.connType, c.calleeID, c.RemoteAddr, payload)
+				// tell callee to disconnect
+				// TODO don't add missed call
+				c.hub.CalleeClient.peerConHasEnded("callee cancel")
 			} else {
 				fmt.Printf("%s (%s) REQ DISCON from caller %s '%s'\n",
 					c.connType, c.calleeID, c.RemoteAddr, payload)
+				// tell callee to disconnect
+				c.hub.CalleeClient.peerConHasEnded("cancel")
 			}
-			// tell callee to disconnect
-			c.hub.CalleeClient.peerConHasEnded("cancel")
 		} else {
 			c.hub.HubMutex.RUnlock()
 			// ignore, already disconnected
@@ -1274,22 +1277,12 @@ func (c *WsClient) peerConHasEnded(cause string) {
 		c.isConnectedToPeer.Set(false)
 		c.isMediaConnectedToPeer.Set(false)
 		// now clear these two flags also on the other side
-//		if c.isCallee {
-			c.hub.HubMutex.RLock()
-			if c.hub.CallerClient!=nil {
-				c.hub.CallerClient.isConnectedToPeer.Set(false)
-				c.hub.CallerClient.isMediaConnectedToPeer.Set(false)
-			}
-			c.hub.HubMutex.RUnlock()
-//		} else {
-//			// this does not happen anymore
-//			c.hub.HubMutex.RLock()
-//			if c.hub.CalleeClient!=nil {
-//				c.hub.CalleeClient.isConnectedToPeer.Set(false)
-//				c.hub.CalleeClient.isMediaConnectedToPeer.Set(false)
-//			}
-//			c.hub.HubMutex.RUnlock()
-//		}
+		c.hub.HubMutex.RLock()
+		if c.hub.CallerClient!=nil {
+			c.hub.CallerClient.isConnectedToPeer.Set(false)
+			c.hub.CallerClient.isMediaConnectedToPeer.Set(false)
+		}
+		c.hub.HubMutex.RUnlock()
 
 		calleeRemoteAddr := ""
 		callerRemoteAddr := ""
@@ -1316,7 +1309,6 @@ func (c *WsClient) peerConHasEnded(cause string) {
 			calleeRemoteAddr, callerRemoteAddr, callerID, cause)
 
 		// add an entry to missed calls, but only if hub.CallDurationSecs==0
-		// TODO is it a missed call if callee denies the call? (currently yes)
 		if c.hub.CallDurationSecs<=0 {
 			//if logWantedFor("missedcall") {
 			//	fmt.Printf("%s (%s) store missedCall %s ...\n", c.connType, c.calleeID, c.RemoteAddr)
@@ -1330,9 +1322,13 @@ func (c *WsClient) peerConHasEnded(cause string) {
 				// if caller cancels via hangup button, then this is the only addMissedCall() and contains msgtext
 				// if caller exits page, it sends /missedcall with msgtext
 				//   but this becomes a double addMissedCall() without msgtext
-				//fmt.Printf("%s (%s) store missedCall msg=(%s)\n", c.connType, c.calleeID, c.callerTextMsg)
-				addMissedCall(c.calleeID, CallerInfo{callerRemoteAddr, callerName, time.Now().Unix(),
-					callerID, c.callerTextMsg}, cause)
+				if strings.HasPrefix(cause,"callee") {
+					// not a missed call if callee denies the call
+				} else {
+					//fmt.Printf("%s (%s) store missedCall msg=(%s)\n", c.connType, c.calleeID, c.callerTextMsg)
+					addMissedCall(c.calleeID, CallerInfo{callerRemoteAddr, callerName, time.Now().Unix(),
+						callerID, c.callerTextMsg}, cause)
+				}
 			}
 		}
 

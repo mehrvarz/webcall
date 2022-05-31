@@ -74,7 +74,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		return
 	}
 
-	fmt.Printf("/notifyCallee (%s) for callerId=(%s) %s\n", urlID, callerId, remoteAddr)
+	fmt.Printf("/notifyCallee (%s) from callerId=(%s) name=(%s) %s\n", urlID, callerId, callerName, remoteAddr)
 	if dbUser.StoreContacts && callerId != "" {
 		addContact(urlID, callerId, callerName, "/notifyCallee")
 	}
@@ -163,10 +163,10 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 					userDetail, _, err := twitterClient.QueryFollowerByName(dbUser.Email2)
 					twitterClientLock.Unlock()
 					if err!=nil {
-						fmt.Printf("# /notifyCallee (%s) dbUser.Email2=(%s) err=%v (%s)\n",
+						fmt.Printf("# /notifyCallee (%s) twhandle=(%s) err=%v (%s)\n",
 							urlID, dbUser.Email2, err, msg)
 					} else {
-						fmt.Printf("/notifyCallee (%s) dbUser.Email2=(%s) fetched id=%v\n",
+						fmt.Printf("/notifyCallee (%s) twhandle=(%s) fetched id=%v\n",
 							urlID, dbUser.Email2, userDetail.ID)
 						if userDetail.ID > 0 {
 							// dbUser.Email2 is a real twitter handle
@@ -180,7 +180,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 						}
 					}
 				} else {
-					fmt.Printf("/notifyCallee (%s) dbUser.Email2=(%s) stored Str1=%s\n",
+					fmt.Printf("/notifyCallee (%s) twhandle=(%s) stored Str1=%s\n",
 						urlID, dbUser.Email2, dbUser.Str1)
 					// tw-id is given
 					i64, err := strconv.ParseInt(dbUser.Str1, 10, 64)

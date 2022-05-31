@@ -715,8 +715,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 
 func isBot(userAgent string) bool {
 	// detect bot's
-	if userAgent=="" || 
-		strings.Index(userAgent, "bot") >= 0 ||
+	if  strings.Index(userAgent, "bot") >= 0 ||
 		strings.Index(userAgent, "spider") >= 0 ||
 		strings.Index(userAgent, "scan") >= 0 ||
 		strings.Index(userAgent, "search") >= 0 ||
