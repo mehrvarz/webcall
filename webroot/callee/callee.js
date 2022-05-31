@@ -1855,14 +1855,21 @@ function peerConnected2() {
 		answerButton.style.display = "inline-block";
 		rejectButton.style.display = "inline-block";
 		if(autoanswerCheckbox.checked) {
-			setTimeout(function() {
+			var pickupFunc = function() {
 				// may have received "onmessage disconnect (caller)" and/or "cmd cancel (server)" in the meantime
-				if(buttonBlinking) {
-					console.log("auto-answer call");
-					buttonBlinking = false;
-					pickup();
+				if(!buttonBlinking) {
+					return;
 				}
-			},1000);
+				// only auto-pickup if iframeWindow (caller widget) is NOT active
+				if(iframeWindowOpenFlag) {
+					setTimeout(pickupFunc,1000);
+					return;
+				}
+				console.log("auto-answer call");
+				buttonBlinking = false;
+				pickup();
+			}
+			setTimeout(pickupFunc,1000);
 		}
 
 		answerButton.onclick = function() {
