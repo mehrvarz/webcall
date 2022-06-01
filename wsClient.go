@@ -340,9 +340,9 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		hub.HubMutex.Unlock()
 
 		go func() {
-			delaySecs := 13
+			delaySecs := 14
 			// incoming caller will get removed if there is no peerConnect after 13s
-			// (it can take up to 6-8 seconds in some cases for a devices to get fully out of deep sleep)
+			// (it can take up to 14 seconds in some cases for a devices to get fully out of deep sleep)
 			myCallerContactTime := hub.lastCallerContactTime
 
 			//fmt.Printf("%s (%s) caller conn 13s delay start\n", client.connType, client.calleeID)
