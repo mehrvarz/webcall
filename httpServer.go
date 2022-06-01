@@ -644,14 +644,16 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 			sortableIpAddrFunc := func(remoteAddr string) string {
-				// takes "192.168.3.209" and returns "192168003209"
+				// takes "192.168.3.29" and returns "192168003029"
 				toks := strings.Split(remoteAddr, ".")
 				sortableIpAddr := ""
 				for _,tok := range(toks) {
-					if len(tok) < 2 {
+					if len(tok) == 1 {
 						sortableIpAddr += "00"+tok
-					} else if len(tok) < 3 {
+					} else if len(tok) == 2 {
 						sortableIpAddr += "0"+tok
+					} else { // len(tok) == 3
+						sortableIpAddr += tok
 					}
 				} 
 
