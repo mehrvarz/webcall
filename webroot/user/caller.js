@@ -298,7 +298,7 @@ function onload2(checkFlag) {
 				hangupButton.onclick = function() {
 					dialButton.style.backgroundColor = "";
 					hangupButton.style.backgroundColor = "";
-					let msg = "Hanging up...";
+					let msg = "hanging up...";
 					console.log(msg);
 					if(mediaConnect) {
 						if(playDialSounds) {
@@ -1265,8 +1265,8 @@ function connectSignaling(message,openedFunc) {
 		console.error("wsConn.onerror: clear wsAddr");
 		showStatus("connect error");
 		wsAddr = "";
-		dialButton.disabled = false;
 		hangupButton.disabled = true;
+		dialButton.disabled = false;
 	}
 	wsConn.onclose = function (evt) {
 		if(tryingToOpenWebSocket) {
@@ -1275,8 +1275,8 @@ function connectSignaling(message,openedFunc) {
 			console.log('wsConn.onclose: clear wsAddr='+wsAddr);
 			wsAddr = "";
 			tryingToOpenWebSocket = false;
-			dialButton.disabled = false;
 			hangupButton.disabled = true;
+			dialButton.disabled = false;
 			// clearing wsAddr does not always have the desired effect (of resulting in no err on next try)
 			// so retry with checkCalleeOnline(true) (since wsConn is closed, we don't need to hangup)
 			//hangupWithBusySound(false,"connect error");
@@ -1633,7 +1633,7 @@ function dial() {
 			let loop = 0;
 			var playDialSound = function() {
 				if(!wsConn || mediaConnect) {
-					console.log('playDialSound abort');
+					gLog('playDialSound abort');
 					return;
 				}
 				gLog('DialSound play()');
