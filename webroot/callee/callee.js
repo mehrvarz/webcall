@@ -29,7 +29,6 @@ const dialIdElement = document.getElementById('dialId');
 const exclamationElement = document.getElementById('exclamation');
 const bitrate = 280000;
 const autoReconnectDelay = 15;
-const clientVersion = "3.0.0-rc1";
 const singlebutton = false;
 const calleeMode = true;
 

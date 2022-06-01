@@ -1265,6 +1265,8 @@ function connectSignaling(message,openedFunc) {
 		console.error("wsConn.onerror: clear wsAddr");
 		showStatus("connect error");
 		wsAddr = "";
+		dialButton.disabled = false;
+		hangupButton.disabled = true;
 	}
 	wsConn.onclose = function (evt) {
 		if(tryingToOpenWebSocket) {
@@ -1273,6 +1275,8 @@ function connectSignaling(message,openedFunc) {
 			console.log('wsConn.onclose: clear wsAddr='+wsAddr);
 			wsAddr = "";
 			tryingToOpenWebSocket = false;
+			dialButton.disabled = false;
+			hangupButton.disabled = true;
 			// clearing wsAddr does not always have the desired effect (of resulting in no err on next try)
 			// so retry with checkCalleeOnline(true) (since wsConn is closed, we don't need to hangup)
 			//hangupWithBusySound(false,"connect error");

@@ -1,5 +1,6 @@
 // WebCall Copyright 2022 timur.mobi. All rights reserved.
 'use strict';
+const clientVersion = '3.0.0-rc2';
 const avSelect = document.querySelector("select#avSelect");
 const localVideoDiv = document.querySelector('div#localVideoDiv');
 const localVideoFrame = document.getElementById("localVideoFrame");
