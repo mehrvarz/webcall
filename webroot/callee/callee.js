@@ -152,8 +152,12 @@ window.onload = function() {
 		if(element) element.href = "https://timur.mobi/webcall/update/";
 	}
 
-
-	minNewsDate = localStorage.getItem('newsdate');
+	try {
+		minNewsDate = localStorage.getItem('newsdate');
+	} catch(ex) {
+		console.warn('access to localStorage failed',ex);
+		minNewsDate=0
+	}
 	if(minNewsDate==null) minNewsDate=0;
 	// we show news from the server if they are newer than minNewsDate
 	// when we show them, we set localStorage.setItem('newsdate', Date.now()/1000) // ms since Jan 1, 1970
