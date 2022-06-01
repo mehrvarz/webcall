@@ -814,8 +814,8 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			} else {
 				dbUser.Int2 &= ^1
 			}
-			fmt.Printf("%s (%s) set hidden=%v %d %s %s\n", c.connType, c.calleeID,
-				calleeHidden, dbUser.Int2, userKey, c.RemoteAddr)
+			fmt.Printf("%s (%s) set hidden=%v %d %s\n", c.connType, c.calleeID,
+				calleeHidden, dbUser.Int2, c.RemoteAddr)
 			err := kvMain.Put(dbUserBucket, userKey, dbUser, true) // skipConfirm
 			if err!=nil {
 				fmt.Printf("# serveWs (%s) calleeHidden db=%s bucket=%s put key=%v %s err=%v\n",

@@ -677,9 +677,10 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 	}
 
 	// this user can NOT rcv push msg (cannot be notified)
-	fmt.Printf("/canbenotified (%s) not (hidden) online / no push channel %s (%s)\n",urlID,remoteAddr, callerID)
+	fmt.Printf("/canbenotified (%s) not online, not hidden online, no push chl %s (%s)\n",
+		urlID, remoteAddr, callerID)
 	if(dbUser.StoreMissedCalls) {
-		// TODO where to get msgbox-text from?
+		// no msgbox-text given for /canbenotified
 		addMissedCall(urlID,
 			CallerInfo{remoteAddr,callerName,time.Now().Unix(),callerID,""}, "/canbenotified-not")
 	}
