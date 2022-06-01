@@ -629,35 +629,38 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if urlPath=="/dumponline" {
-			// show the list of callee-IDs that are online (and their ports)
+			// show list of online callees (with their ports) sorted by CalleeClient.RemoteAddrNoPort
 			printFunc(w,"/dumponline rip=%s\n",remoteAddr)
 			hubMapMutex.RLock()
 			defer hubMapMutex.RUnlock()
-			for calleeID,hub := range hubMap {
-				//hub := hubMap[calleeID]
+			var hubSlice []*Hub
+			for _,hub := range hubMap {
 				if hub!=nil {
 					hub.HubMutex.RLock()
-					ua := ""
-					remoteAddr := ""
-					clientVersion := ""
 					if hub.CalleeClient != nil {
-						ua = hub.CalleeClient.userAgent
-						remoteAddr = hub.CalleeClient.RemoteAddrNoPort
-						clientVersion = hub.CalleeClient.clientVersion
+						hubSlice = append(hubSlice,hub)
 					}
-					if ua=="" {
-						ua = hub.calleeUserAgent
-					}
-					boldString, _ := strconv.Unquote(`"\033[1m` + fmt.Sprintf("%-19s",calleeID) + `\033[0m"`)
-					fmt.Fprintf(w,"%s ip=%-21s ws=%d caller=%-21s v=%s ua=%s\n",
-						boldString,
-						remoteAddr,
-						hub.WsClientID,
-						hub.ConnectedCallerIp,
-						clientVersion,
-						ua)
 					hub.HubMutex.RUnlock()
 				}
+			}
+			sort.Slice(hubSlice, func(i, j int) bool {
+				return hubSlice[i].CalleeClient.RemoteAddrNoPort <
+						hubSlice[j].CalleeClient.RemoteAddrNoPort
+			})
+			for idx := range hubSlice {
+				ua := hubSlice[idx].CalleeClient.userAgent
+				if ua=="" {
+					ua = hubSlice[idx].calleeUserAgent
+				}
+				calleeID := hubSlice[idx].CalleeClient.calleeID
+				boldString, _ := strconv.Unquote(`"\033[1m` + fmt.Sprintf("%-19s",calleeID) + `\033[0m"`)
+				fmt.Fprintf(w,"%s ip=%-21s ws=%d caller=%-21s v=%s ua=%s\n",
+					boldString,
+					hubSlice[idx].CalleeClient.RemoteAddrNoPort,
+					hubSlice[idx].WsClientID,
+					hubSlice[idx].ConnectedCallerIp,
+					hubSlice[idx].CalleeClient.clientVersion,
+					ua)
 			}
 			printFunc(w,"\n")
 			return
