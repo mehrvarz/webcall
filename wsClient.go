@@ -267,7 +267,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				// shut down the callee on early caller hangup
 				//fmt.Printf("%s (%s) caller close !reached14s -> clear CallerIp\n",
 				//	client.connType, client.calleeID)
-				StoreCallerIpInHubMap(client.calleeID, "", false)
+				StoreCallerIpInHubMap(client.globalCalleeID, "", false)
 
 				if client.hub.CalleeClient!=nil {
 					fmt.Printf("%s (%s) caller close !reached14s -> cancel callee📴 + peerConHasEnded\n",
@@ -1015,7 +1015,6 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			// or when caller is late and callee has already peer-disconnected
 			fmt.Printf("%s (%s/%s) peer %s isCallee=%v c.hub.CallerClient==nil📴 v=%s\n",
 				c.connType, c.calleeID, c.globalCalleeID, payload, c.isCallee, c.clientVersion)
-// TODO must send cancel to callee? tmtmtm
 			c.hub.CalleeClient.Write([]byte("cancel|c"))
 			c.hub.CalleeClient.peerConHasEnded("callerOnClose")
 
