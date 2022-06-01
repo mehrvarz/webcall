@@ -10,7 +10,7 @@ const divspinnerframe = document.querySelector('div#spinnerframe');
 const bitrate = 280000;
 const calleeMode = false;
 
-var connectingText = "Wait up to 15s for P2P connection...";
+var connectingText = "P2P connect... may take up to 15s";
 var singleButtonReadyText = "Click to make your order<br>Live operator";
 var singleButtonBusyText = "All lines are busy.<br>Please try again a little later.";
 var singleButtonConnectedText = "You are connected.<br>How can we help you?";
@@ -1808,7 +1808,7 @@ function dial2() {
 		} else if(peerCon.connectionState=="connected") {
 			// if we see this despite being mediaConnect already, it is caused by createDataChannel
 			gLog('peerCon connected');
-			showStatus("Ringing...",-1);
+			showStatus("P2P contact, ringing...",-1);
 			if(!rtcConnect && !mediaConnect) {
 				// the caller got peer-connected to the callee; callee now starts ringing
 				rtcConnect = true;
