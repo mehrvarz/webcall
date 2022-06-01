@@ -643,9 +643,24 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 					hub.HubMutex.RUnlock()
 				}
 			}
+			sortableIpAddrFunc := func(remoteAddr string) string {
+				// takes "192.168.3.209" and returns "192168003209"
+				toks := strings.Split(remoteAddr, ".")
+				sortableIpAddr := ""
+				for _,tok := range(toks) {
+					if len(tok) < 2 {
+						sortableIpAddr += "00"+tok
+					} else if len(tok) < 3 {
+						sortableIpAddr += "0"+tok
+					}
+				} 
+
+				return sortableIpAddr
+			}
 			sort.Slice(hubSlice, func(i, j int) bool {
-				return hubSlice[i].CalleeClient.RemoteAddrNoPort <
-						hubSlice[j].CalleeClient.RemoteAddrNoPort
+				// TODO problem: 123.x.x.x now sorted before 23.x.x.x
+				return sortableIpAddrFunc(hubSlice[i].CalleeClient.RemoteAddrNoPort) <
+						sortableIpAddrFunc(hubSlice[j].CalleeClient.RemoteAddrNoPort)
 			})
 			for idx := range hubSlice {
 				ua := hubSlice[idx].CalleeClient.userAgent
