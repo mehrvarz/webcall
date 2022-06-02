@@ -10,7 +10,7 @@ const divspinnerframe = document.querySelector('div#spinnerframe');
 const bitrate = 280000;
 const calleeMode = false;
 
-var connectingText = "P2P connect... may take up to 15s";
+var connectingText = "Connecting P2P...";
 var singleButtonReadyText = "Click to make your order<br>Live operator";
 var singleButtonBusyText = "All lines are busy.<br>Please try again a little later.";
 var singleButtonConnectedText = "You are connected.<br>How can we help you?";
@@ -298,7 +298,7 @@ function onload2(checkFlag) {
 				hangupButton.onclick = function() {
 					dialButton.style.backgroundColor = "";
 					hangupButton.style.backgroundColor = "";
-					let msg = "hanging up...";
+					let msg = "Hanging up...";
 					console.log(msg);
 					if(mediaConnect) {
 						if(playDialSounds) {
@@ -345,7 +345,7 @@ function dialButtonClick() {
 
 	if(singlebutton) {
 		// switch from dialButton to hangupButton "Connecting..."
-		hangupButton.innerHTML = connectingText;
+		hangupButton.innerHTML = "Connecting...";
 		dialButton.style.display = "none";
 		hangupButton.style.display = "inline-block";
 		// animate hangupButton background
@@ -1313,7 +1313,7 @@ function signalingCommand(message) {
 			console.warn('calleeAnswer abort no peerCon');
 			return;
 		}
-
+/*
 		setTimeout(function() {
 			// rtcConnect timeout check
 			if(!doneHangup) {
@@ -1341,7 +1341,7 @@ function signalingCommand(message) {
 				}
 			}
 		},9000);
-
+*/
 		let hostDescription = JSON.parse(payload);
 		gLog("calleeAnswer setLocalDescription (onIceCandidates="+onIceCandidates+")");
 		// setLocalDescription will cause "onsignalingstate have-local-offer"
@@ -1623,35 +1623,35 @@ function dial() {
 		hangupWithBusySound(true,"dial no localStream");
 		return;
 	}
-	showStatus(connectingText,-1);
+
+	gLog('dial');
 	otherUA = "";
 	dialing = true;
 
-	gLog('dial');
 	if(playDialSounds) {
-		setTimeout(function() {
-			let loop = 0;
-			var playDialSound = function() {
-				if(!wsConn || mediaConnect) {
-					gLog('playDialSound abort');
-					return;
-				}
-				gLog('DialSound play()');
-				if(loop>0) {
-					dtmfDialingSound.currentTime = 2;
-				}
-				loop++;
-				dtmfDialingSound.play().catch(function(error) {
-					gLog('# DialSound err='+error);
-				});
-				dtmfDialingSound.onended = playDialSound;
-			}
-			playDialSound();
-		},100);
-
+		// postpone dialing, so we can start dialsound before
 		setTimeout(function() {
 			dial2();
-		},1800);
+		},1500);
+
+		let loop = 0;
+		var playDialSound = function() {
+			if(!wsConn || mediaConnect) {
+				gLog('playDialSound abort');
+				return;
+			}
+			gLog('DialSound play()');
+			if(loop>0) {
+				dtmfDialingSound.currentTime = 2;
+			}
+			loop++;
+			dtmfDialingSound.play().catch(function(error) {
+				gLog('# DialSound err='+error);
+			});
+			dtmfDialingSound.onended = playDialSound;
+		}
+		playDialSound();
+
 	} else {
 		dial2();
 	}
@@ -1674,17 +1674,29 @@ function dial2() {
 	candidateArray = [];
 	candidateResultString = "";
 	dialDate = Date.now();
-	console.log('start dialing');
+	gLog('dial2 dialDate='+dialDate);
+
+	// show connectingText with additional dots - in case we don't get a quick peerConnect
+	// when this msg shows up, either peerCon is really slow, or there is a webrtc problem
+	// if peerConnect is quick (as in most cases), we will see "ringing..." instead (with rtcConnect set)
+	setTimeout(function(lastDialDate) {
+		if(dialDate==lastDialDate && !doneHangup && !rtcConnect) { // still the same call after 3s?
+			showStatus(connectingText+"...",-1);
+		}
+	},3000,dialDate);
 
 	// we are doing 3 thing here:
 	// 1a if no peercon (rtcConnect) after 20s and not hangup by the user, hang up the call now
 	// 1b and if no onIceCandidates, show a warning (webrtc check)
 	// 2  if peercon but no mediaConnect after 20s, show ringingText stats text (asking user to be patient)
 	setTimeout(function(lastDialDate) {
+		//console.log('dial2 20s timer '+dialDate+' '+lastDialDate+' '+doneHangup+' '+rtcConnect);
 		if(dialDate==lastDialDate && !doneHangup) { // still the same call after 20s?
+			console.log('dial2 20s timer '+dialDate+' '+lastDialDate+' '+doneHangup+' '+rtcConnect);
 			if(!rtcConnect) {
 				// no rtcConnect after 20s: give up dial-waiting
-				console.log("dialing timeout, giving up on call "+candidateResultString);
+				console.log("dialing timeout, giving up on call "+candidateResultString+
+					dialDate,lastDialDate);
 				if(onIceCandidates==0 && !doneHangup) {
 					console.warn('no ice candidates created');
 					onIceCandidates = -1;
@@ -1802,13 +1814,12 @@ function dial2() {
 
 		if(peerCon.connectionState=="connecting") {
 			// if we see this despite being mediaConnect already, it is caused by createDataChannel
-			if(!mediaConnect) {
-				showStatus(connectingText,-1);
-			}
+			//if(!mediaConnect) {
+			//	showStatus(connectingText,-1);
+			//}
 		} else if(peerCon.connectionState=="connected") {
 			// if we see this despite being mediaConnect already, it is caused by createDataChannel
 			gLog('peerCon connected');
-			showStatus("P2P contact, ringing...",-1);
 			if(!rtcConnect && !mediaConnect) {
 				// the caller got peer-connected to the callee; callee now starts ringing
 				rtcConnect = true;
@@ -1838,6 +1849,7 @@ function dial2() {
 				}
 			}
 			dialing = false;
+			showStatus("Ringing...",-1);
 		}
 	}
 	if(!localStream) {
