@@ -399,6 +399,10 @@ func setContacts(calleeID string, contactID string, contactName string, remoteAd
 		}
 		return true
 	}
+	if contactID=="" {
+		fmt.Printf("# /setcontact (%s) abort on empty contactID %s\n", calleeID, remoteAddr)
+		return false
+	}
 
 	var callerInfoMap map[string]string // callerID -> contactName
 	err = kvContacts.Get(dbContactsBucket,calleeID,&callerInfoMap)
