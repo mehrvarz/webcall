@@ -483,7 +483,7 @@ func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, r
 func missedCall(callerInfo string, remoteAddr string, cause string) {
 	// called by httpMissedCall() or from wsClient.go
 	// callerInfo is encoded: calleeId+"|"+callerName+"|"+callerId (plus optional: "|"+ageSecs) +(|msg)
-	//   like so: "timur|92929|92929658912|50" tok[0]=calleeID, tok[1]=callerName, tok[2]=callerID, tok[3]=ageSecs
+	//   like so: "id|92929|92929658912|50" tok[0]=calleeID, tok[1]=callerName, tok[2]=callerID, tok[3]=ageSecs
 // TODO callerInfo cannot be trusted, make sure everything in it is valid
 	//fmt.Printf("missedCall (%s) rip=%s\n", callerInfo, remoteAddr)
 	tok := strings.Split(callerInfo, "|")

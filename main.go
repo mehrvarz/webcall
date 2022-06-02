@@ -175,6 +175,7 @@ var disconCalleeOnPeerConnected = false
 var disconCallerOnPeerConnected = true
 var maxRingSecs = 0
 var maxTalkSecsIfNoP2p = 0
+var adminID = ""
 var adminEmail = ""
 var	backupScript = ""
 var	backupPauseMinutes = 0
@@ -543,6 +544,8 @@ func readConfig(init bool) {
 	maxTalkSecsIfNoP2p = readIniInt(configIni, "maxTalkSecsIfNoP2p", maxTalkSecsIfNoP2p, 600, 1)
 
 	turnDebugLevel = readIniInt(configIni, "turnDebugLevel", turnDebugLevel, 3, 1)
+
+	adminID = readIniString(configIni, "adminID", adminID, "!!!!!!!!!!!")
 	adminEmail = readIniString(configIni, "adminEmail", adminEmail, "")
 
 	backupScript = readIniString(configIni, "backupScript", backupScript, "")
