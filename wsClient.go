@@ -1107,6 +1107,11 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 							c.hub.doBroadcast(
 								[]byte("sessionDuration|"+strconv.FormatInt(int64(c.hub.maxTalkSecsIfNoP2p),10)))
 						}
+
+// NEW
+						// store callerID and callerName in contacts httpSetContacts()
+						setContacts(c.calleeID, c.hub.CallerClient.callerID,
+							c.hub.CallerClient.callerName, c.RemoteAddrNoPort)
 					}
 				} else {
 					// caller reports: peer connected

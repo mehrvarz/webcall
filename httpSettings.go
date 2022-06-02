@@ -317,8 +317,6 @@ func httpGetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 	if urlID!=calleeID {
 		fmt.Printf("# /getcontacts urlID=%s != calleeID=%s %s\n",urlID,calleeID, remoteAddr)
 		return
-// hack
-//		calleeID = urlID
 	}
 	var callerInfoMap map[string]string // callerID -> name
 	err := kvContacts.Get(dbContactsBucket,calleeID,&callerInfoMap)
@@ -339,6 +337,8 @@ func httpGetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 }
 
 func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calleeID string, cookie *http.Cookie, remoteAddr string) {
+	// store contactID with name into contacts of calleeID
+	// httpSetContacts does not report errors back to the client (only logs them)
 	if urlID=="" || urlID=="undefined" {
 		//fmt.Printf("# /setcontact urlID empty\n")
 		return
@@ -364,40 +364,48 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 		return
 	}
 
-	name := ""
+	contactName := ""
 	url_arg_array, ok = r.URL.Query()["name"]
 	if ok && len(url_arg_array[0]) >= 1 {
-		name = url_arg_array[0]
+		contactName = url_arg_array[0]
 	}
 
+	if setContacts(calleeID, contactID, contactName, remoteAddr) {
+		// an error has occured
+		return
+	}
+	// no error has occured
+	return
+}
+
+func setContacts(calleeID string, contactID string, contactName string, remoteAddr string) bool {
 	// if dbUser.StoreContacts==false (not checked), just return fmt.Fprintf(w,"ok")
 	var dbEntry DbEntry
 	err := kvMain.Get(dbRegisteredIDs,calleeID,&dbEntry)
 	if err!=nil {
 		fmt.Printf("# /setcontact (%s) fail on dbRegisteredIDs %s\n", calleeID, remoteAddr)
-		return
+		return false
 	}
 	dbUserKey := fmt.Sprintf("%s_%d",calleeID, dbEntry.StartTime)
 	var dbUser DbUser
 	err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 	if err!=nil {
 		fmt.Printf("# /setcontact (%s) fail on dbUserBucket %s\n", calleeID, remoteAddr)
-		return
+		return false
 	}
 	if !dbUser.StoreContacts {
 		if logWantedFor("contacts") {
 			fmt.Printf("/setcontact (%s) !StoreContacts %s\n", calleeID, remoteAddr)
 		}
-		fmt.Fprintf(w,"ok")
-		return
+		return true
 	}
 
-	var callerInfoMap map[string]string // callerID -> name
+	var callerInfoMap map[string]string // callerID -> contactName
 	err = kvContacts.Get(dbContactsBucket,calleeID,&callerInfoMap)
 	if err!=nil {
 		if(strings.Index(err.Error(),"key not found")<0) {
 			fmt.Printf("# /setcontact db get calleeID=%s %s err=%v\n", calleeID, remoteAddr, err)
-			return
+			return false
 		}
 		// "key not found" is just an empty contacts list
 		if logWantedFor("contacts") {
@@ -408,65 +416,66 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 
 	// check for contactID
 	oldName,ok := callerInfoMap[contactID]
-	if !ok {
+	if !ok || oldName=="" {
 		// check for lowercase contactID
 		contactID = strings.ToLower(contactID)
 		oldName,ok = callerInfoMap[contactID]
 	}
 	if ok {
 		// contactID exists
-		if name=="" || name==oldName {
-			// don't overwrite existing name with empty or same name
+		if contactName=="" || contactName==oldName {
+			// don't overwrite existing contactName with empty or same contactName
 			if logWantedFor("contacts") {
 				fmt.Printf("/setcontact (%s) contactID=%s already exists (%s) %s\n",
 					calleeID, contactID, oldName, remoteAddr)
 			}
-			return
+			return true
 		}
 	}
 
 	// check for uppercase contactID
+	// (contactID = the calleeID that was called)
+	// (calleeID = the callerID making the call)
 	toUpperContactID := strings.ToUpper(contactID[0:1])+contactID[1:]
 	if logWantedFor("contacts") {
-		fmt.Printf("/setcontact (%s) check toUpperContactID=%s\n",
-			calleeID, toUpperContactID)
+		fmt.Printf("/setcontact (%s->%s) check toUpperContactID=%s\n",
+			calleeID, contactName, toUpperContactID)
 	}
-	oldName,ok = callerInfoMap[toUpperContactID]
-	if ok {
+	oldName2,ok := callerInfoMap[toUpperContactID]
+	if ok && oldName2!="" {
+		oldName = oldName2
 		// uppercase contactID exists
-		if name=="" || name==oldName {
-			// don't overwrite existing name with empty or same name
+		if contactName=="" || contactName==oldName {
+			// don't overwrite existing contactName with empty or same contactName
 			if logWantedFor("contacts") {
 				fmt.Printf("/setcontact (%s) contactID=%s already exists (%s) %s\n",
 					calleeID, toUpperContactID, oldName, remoteAddr)
 			}
-			return
+			return true
 		}
 	}
 	// contactID does not yet exist
-	if name=="" {
-		// name is empty when user enters a new userID via Dial-ID form
+	if contactName=="" {
+		// contactName is empty when user enters a new userID via Dial-ID form
 		if contactID!="" {
-			name = toUpperContactID
+			contactName = toUpperContactID
 		} else {
-			name = "unknown"
+			contactName = "unknown"
 		}
 	}
-	if name!=oldName {
-		if name!="unknown" && name!=contactID {
+	if contactName!=oldName {
+		if contactName!="unknown" && contactName!=contactID {
 			fmt.Printf("/setcontact (%s) store changed name of %s from (%s) to (%s) %s\n",
-				calleeID, contactID, oldName, name, remoteAddr)
+				calleeID, contactID, oldName, contactName, remoteAddr)
 		}
-		callerInfoMap[contactID] = name
+		callerInfoMap[contactID] = contactName
 		err = kvContacts.Put(dbContactsBucket, calleeID, callerInfoMap, false)
 		if err!=nil {
 			fmt.Printf("# /setcontact store calleeID=%s %s err=%v\n", calleeID, remoteAddr, err)
-			return
+			return false
 		}
 	}
-	// name has not changed
-	fmt.Fprintf(w,"ok")
-	return
+	return true
 }
 
 func httpDeleteContact(w http.ResponseWriter, r *http.Request, urlID string, calleeID string, cookie *http.Cookie, remoteAddr string) {
