@@ -705,9 +705,9 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			// caller hang up already?
 			fmt.Printf("# %s (%s) CALL CallerClient.Write(ua) fail (early caller ws-disconnect?)\n",
 				c.connType, c.calleeID)
-// ignore error, don't abort
-//			c.hub.HubMutex.RUnlock()
-//			return
+			// ignore this, don't abort
+			//			c.hub.HubMutex.RUnlock()
+			//			return
 		}
 
 		if c.hub.CalleeClient.Write([]byte("ua|"+c.hub.CallerClient.userAgent)) != nil {
@@ -741,7 +741,6 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 	}
 
 	if cmd=="cancel" {
-		// not sure which client is sending this
 		//fmt.Printf("%s (%s) cmd=cancel payload=%s %s\n",c.connType,c.calleeID,payload,c.RemoteAddr)
 		if c.hub==nil {
 			fmt.Printf("# %s cmd=cancel but c.hub==nil %s (%s)\n",c.connType,c.RemoteAddr,payload)
@@ -759,12 +758,11 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		if c.hub.CalleeClient.isConnectedToPeer.Get() {
 			// unlock - don't call peerConHasEnded with lock
 			c.hub.HubMutex.RUnlock()
-			// only execute cancel, if callee is peer-connected
 			if c.isCallee {
 				fmt.Printf("%s (%s) REQ DISCON from callee %s '%s'\n",
 					c.connType, c.calleeID, c.RemoteAddr, payload)
 				// tell callee to disconnect
-				// TODO don't add missed call
+				// don't add missed call, see: HasPrefix(cause,"callee")
 				c.hub.CalleeClient.peerConHasEnded("callee cancel")
 			} else {
 				fmt.Printf("%s (%s) REQ DISCON from caller %s '%s'\n",
@@ -1159,30 +1157,6 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		c.hub.HubMutex.RUnlock()
 		return
 	}
-
-/* TODO ???
-	if !c.isCallee && c.hub!=nil {
-		// client is caller
-		c.hub.HubMutex.RLock()
-		if !c.hub.CalleeClient.isOnline.Get() {
-			c.hub.HubMutex.RUnlock()
-			// but there is no callee
-			fmt.Printf("# %s client %s without callee not allowed (%s)\n",
-				c.connType, c.RemoteAddr, cmd)
-			c.Write([]byte("cancel|busy"))
-			return
-		}
-		if c.hub.CallerClient!=nil && c.hub.CallerClient!=c {
-			c.hub.HubMutex.RUnlock()
-			// but there is already another caller-client
-			fmt.Printf("# %s client %s is 2nd client not allowed\n",
-				c.connType, c.RemoteAddr)
-			c.Write([]byte("cancel|busy"))
-			return
-		}
-		c.hub.HubMutex.RUnlock()
-	}
-*/
 
 	if len(payload)>0 {
 		// forward cmd/payload to other client

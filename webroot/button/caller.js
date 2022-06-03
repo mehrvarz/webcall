@@ -1561,17 +1561,18 @@ function signalingCommand(message) {
 
 	} else if(cmd=="cancel") {
 		if(payload!="c") {
-			// this is coming from the callee
 			console.log('callee hang up');
 			showStatus("Callee ended call",8000);
 			if(wsConn) {
-				// before wsConn.close(): send msgbox text to server
 				if(!mediaConnect) {
+					// before wsConn.close(): send msgbox text to server
 					let msgboxText = msgbox.value.substring(0,300);
 					if(msgboxText!="") {
 						wsSend("msg|"+msgboxText);
 					}
 				}
+				// make sure server will generate a missed call
+				wsSend("cancel|");
 				wsConn.close();
 				// wsConn=null prevents hangup() from generating a return cancel msg
 				wsConn=null;

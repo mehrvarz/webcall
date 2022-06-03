@@ -84,6 +84,7 @@ func (h *Hub) setDeadline(secs int, comment string) {
 						fmt.Printf("setDeadline (%s) send to caller (%s) %s\n",
 							calleeID, message, h.CallerClient.RemoteAddr)
 						h.CallerClient.Write(message)
+						// in response, caller will send msgboxText to server and will hangup
 					}
 
 					// we wait for msg|... (to set callerTextMsg)
