@@ -438,16 +438,24 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			}
 			hub.HubMutex.RUnlock()
 
-			addMissedCall(hub.CalleeClient.calleeID,
-				CallerInfo{hub.CallerClient.RemoteAddr, hub.CallerClient.callerName,
+			// add missed call if dbUser.StoreMissedCalls is set
+			userKey := client.calleeID + "_" + strconv.FormatInt(int64(client.hub.registrationStartTime),10)
+			var dbUser DbUser
+			err := kvMain.Get(dbUserBucket, userKey, &dbUser)
+			if err!=nil {
+				fmt.Printf("# %s (%s) failed to get dbUser\n",client.connType,client.calleeID)
+			} else if dbUser.StoreMissedCalls {
+				addMissedCall(hub.CalleeClient.calleeID,
+					CallerInfo{hub.CallerClient.RemoteAddr, hub.CallerClient.callerName,
 					time.Now().Unix(), hub.CallerClient.callerID, hub.CalleeClient.callerTextMsg}, "NO PEERCON")
+			}
 
 			hub.HubMutex.Lock()
 			hub.CallerClient = nil
 			hub.HubMutex.Unlock()
 
 			// clear CallerIpInHubMap
-			err := StoreCallerIpInHubMap(client.globalCalleeID, "", false)
+			err = StoreCallerIpInHubMap(client.globalCalleeID, "", false)
 			if err!=nil {
 				// err "key not found": callee has already signed off - can be ignored
 				if strings.Index(err.Error(),"key not found")<0 {
@@ -663,19 +671,36 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		if c.hub.CallerClient==nil {
 			c.hub.HubMutex.RUnlock()
 			fmt.Printf("# %s (%s) CALL☎️  but hub.CallerClient==nil\n", c.connType, c.calleeID)
-			addMissedCall(c.calleeID, CallerInfo{c.RemoteAddr, "", time.Now().Unix(), "", c.callerTextMsg},
-				"err no CallerClient")
+
+			// add missed call if dbUser.StoreMissedCalls is set
+			userKey := c.calleeID + "_" + strconv.FormatInt(int64(c.hub.registrationStartTime),10)
+			var dbUser DbUser
+			err := kvMain.Get(dbUserBucket, userKey, &dbUser)
+			if err!=nil {
+				fmt.Printf("# %s (%s) failed to get dbUser\n",c.connType,c.calleeID)
+			} else if dbUser.StoreMissedCalls {
+				addMissedCall(c.calleeID, CallerInfo{c.RemoteAddr, "", time.Now().Unix(), "", c.callerTextMsg},
+					"err no CallerClient")
+			}
 			return
 		}
 		// prevent this callee from receiving a call, when already in a call
 		if c.hub.ConnectedCallerIp!="" {
 			// ConnectedCallerIp is set below by StoreCallerIpInHubMap()
-			// TODO question is why this is not caught by "/online (id) busy callerIp=..."
 			fmt.Printf("# %s (%s) CALL☎️  but hub.ConnectedCallerIp not empty (%s) %s (%s)\n",
 				c.connType, c.calleeID, c.hub.ConnectedCallerIp, c.hub.CallerClient.RemoteAddr,
 				c.hub.CallerClient.callerID)
-			addMissedCall(c.calleeID, CallerInfo{c.hub.CallerClient.RemoteAddr, c.hub.CallerClient.callerName,
-				time.Now().Unix(), c.hub.CallerClient.callerID, c.callerTextMsg}, "callee busy")
+
+			// add missed call if dbUser.StoreMissedCalls is set
+			userKey := c.calleeID + "_" + strconv.FormatInt(int64(c.hub.registrationStartTime),10)
+			var dbUser DbUser
+			err := kvMain.Get(dbUserBucket, userKey, &dbUser)
+			if err!=nil {
+				fmt.Printf("# %s (%s) failed to get dbUser\n",c.connType,c.calleeID)
+			} else if dbUser.StoreMissedCalls {
+				addMissedCall(c.calleeID, CallerInfo{c.hub.CallerClient.RemoteAddr, c.hub.CallerClient.callerName,
+					time.Now().Unix(), c.hub.CallerClient.callerID, c.callerTextMsg}, "callee busy")
+			}
 			c.hub.HubMutex.RUnlock()
 			return
 		}
@@ -891,14 +916,12 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		// remove this call from dbMissedCalls for c.calleeID
 		// first: load dbMissedCalls for c.calleeID
 		var missedCallsSlice []CallerInfo
-//		c.hub.HubMutex.RLock()
 		userKey := c.calleeID + "_" + strconv.FormatInt(int64(c.hub.registrationStartTime),10)
-//		c.hub.HubMutex.RUnlock()
 		var dbUser DbUser
 		err := kvMain.Get(dbUserBucket, userKey, &dbUser)
 		if err!=nil {
 			fmt.Printf("# %s (%s) failed to get dbUser\n",c.connType,c.calleeID)
-		} else if(dbUser.StoreMissedCalls) {
+		} else if dbUser.StoreMissedCalls {
 			err = kvCalls.Get(dbMissedCalls,c.calleeID,&missedCallsSlice)
 			if err!=nil {
 				fmt.Printf("# serveWs deleteMissedCall (%s) failed to read dbMissedCalls\n",c.calleeID)
@@ -1289,26 +1312,19 @@ func (c *WsClient) peerConHasEnded(cause string) {
 			calleeRemoteAddr, callerRemoteAddr, callerID, cause)
 
 		// add an entry to missed calls, but only if hub.CallDurationSecs==0
-		if c.hub.CallDurationSecs<=0 {
-			//if logWantedFor("missedcall") {
-			//	fmt.Printf("%s (%s) store missedCall %s ...\n", c.connType, c.calleeID, c.RemoteAddr)
-			//}
+		// if caller cancels via hangup button, then this is the only addMissedCall() and contains msgtext
+		// this is NOT a missed call if callee denies the call
+		if c.hub.CallDurationSecs<=0 && !strings.HasPrefix(cause,"callee") {
+			// add missed call if dbUser.StoreMissedCalls is set
 			userKey := c.calleeID + "_" + strconv.FormatInt(int64(c.hub.registrationStartTime),10)
 			var dbUser DbUser
 			err := kvMain.Get(dbUserBucket, userKey, &dbUser)
 			if err!=nil {
 				fmt.Printf("# %s (%s) failed to get dbUser err=%v\n",c.connType,c.calleeID,err)
 			} else if dbUser.StoreMissedCalls {
-				// if caller cancels via hangup button, then this is the only addMissedCall() and contains msgtext
-				// if caller exits page, it sends /missedcall with msgtext
-				//   but this becomes a double addMissedCall() without msgtext
-				if strings.HasPrefix(cause,"callee") {
-					// not a missed call if callee denies the call
-				} else {
-					//fmt.Printf("%s (%s) store missedCall msg=(%s)\n", c.connType, c.calleeID, c.callerTextMsg)
-					addMissedCall(c.calleeID, CallerInfo{callerRemoteAddr, callerName, time.Now().Unix(),
-						callerID, c.callerTextMsg}, cause)
-				}
+				//fmt.Printf("%s (%s) store missedCall msg=(%s)\n", c.connType, c.calleeID, c.callerTextMsg)
+				addMissedCall(c.calleeID, CallerInfo{callerRemoteAddr, callerName, time.Now().Unix(),
+					callerID, c.callerTextMsg}, cause)
 			}
 		}
 
