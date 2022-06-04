@@ -657,23 +657,26 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		c.hub.HubMutex.RLock()
 		if c.hub.CalleeClient==nil {
 			c.hub.HubMutex.RUnlock()
-			fmt.Printf("# %s (%s) CALL from %s but hub.CalleeClient==nil\n",
+			fmt.Printf("# %s (%s) CALL☎️  from %s but hub.CalleeClient==nil\n",
 				c.connType, c.calleeID, c.RemoteAddr)
 			return
 		}
 		if c.hub.CallerClient==nil {
-			fmt.Printf("# %s (%s) CALL but hub.CallerClient==nil\n",
-				c.connType, c.calleeID)
 			c.hub.HubMutex.RUnlock()
+			fmt.Printf("# %s (%s) CALL☎️  but hub.CallerClient==nil\n", c.connType, c.calleeID)
+			addMissedCall(c.calleeID, CallerInfo{c.RemoteAddr, "", time.Now().Unix(), "", c.callerTextMsg},
+				"err no CallerClient")
 			return
 		}
 		// prevent this callee from receiving a call, when already in a call
 		if c.hub.ConnectedCallerIp!="" {
 			// ConnectedCallerIp is set below by StoreCallerIpInHubMap()
 			// TODO question is why this is not caught by "/online (id) busy callerIp=..."
-			fmt.Printf("# %s (%s) CALL but hub.ConnectedCallerIp not empty (%s) %s (%s)\n",
+			fmt.Printf("# %s (%s) CALL☎️  but hub.ConnectedCallerIp not empty (%s) %s (%s)\n",
 				c.connType, c.calleeID, c.hub.ConnectedCallerIp, c.hub.CallerClient.RemoteAddr,
 				c.hub.CallerClient.callerID)
+			addMissedCall(c.calleeID, CallerInfo{c.hub.CallerClient.RemoteAddr, c.hub.CallerClient.callerName,
+				time.Now().Unix(), c.hub.CallerClient.callerID, c.callerTextMsg}, "callee busy")
 			c.hub.HubMutex.RUnlock()
 			return
 		}
