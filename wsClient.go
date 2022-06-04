@@ -440,8 +440,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 			addMissedCall(hub.CalleeClient.calleeID,
 				CallerInfo{hub.CallerClient.RemoteAddr, hub.CallerClient.callerName,
-							time.Now().Unix(), hub.CallerClient.callerID, "no peercon"},
-				"NO PEERCON")
+					time.Now().Unix(), hub.CallerClient.callerID, hub.CalleeClient.callerTextMsg}, "NO PEERCON")
 
 			hub.HubMutex.Lock()
 			hub.CallerClient = nil
