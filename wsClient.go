@@ -670,9 +670,10 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		// prevent this callee from receiving a call, when already in a call
 		if c.hub.ConnectedCallerIp!="" {
 			// ConnectedCallerIp is set below by StoreCallerIpInHubMap()
-			// TODO tmtmtm question is why this is not caught by "/online (id) busy callerIp=..."
-			fmt.Printf("# %s (%s) CALL but hub.ConnectedCallerIp not empty (%s)\n",
-				c.connType, c.calleeID, c.hub.ConnectedCallerIp)
+			// TODO question is why this is not caught by "/online (id) busy callerIp=..."
+			fmt.Printf("# %s (%s) CALL but hub.ConnectedCallerIp not empty (%s) %s (%s)\n",
+				c.connType, c.calleeID, c.hub.ConnectedCallerIp, c.hub.CallerClient.RemoteAddr,
+				c.hub.CallerClient.callerID)
 			c.hub.HubMutex.RUnlock()
 			return
 		}
