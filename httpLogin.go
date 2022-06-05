@@ -180,8 +180,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					}
 					hub.CalleeClient.SendPing(2000)
 
-					// now we wait max 50x100ms = 5000ms for id=key to maybe log out...
-					for i := 0; i < 50; i++ {
+					// now we wait up to 60x100ms = 6000ms for id=key to possibly log out...
+					for i := 0; i < 60; i++ {
 						time.Sleep(100 * time.Millisecond)
 						// is hub.CalleeClient still online now?
 						if hub==nil || hub.CalleeClient==nil || !hub.CalleeClient.isOnline.Get() {
