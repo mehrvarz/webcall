@@ -18,3 +18,4 @@ require (
 
 //replace github.com/mehrvarz/turn/v2 => ../turn
 //replace github.com/pion/turn/v2 => ../../temp/turn
+//replace github.com/lesismal/nbio => ../nbio
