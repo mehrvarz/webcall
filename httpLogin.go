@@ -167,40 +167,43 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				hub := hubMap[key]
 				hubMapMutex.RUnlock()
 				offlineReason := 0
+				calleeIP := ""
+
 				if hub==nil {
 					offlineReason = 1 // callee's hub is gone
 				} else if hub.CalleeClient==nil {
 					offlineReason = 2 // CalleeClient is gone
-				} else if !hub.CalleeClient.isOnline.Get() {
-					offlineReason = 3 // CalleeClient is not online anymore
 				} else {
-					// hub.CalleeClient seems to (still) be online; let's see if this holds if we ping it
-					if logWantedFor("loginex") {
-						fmt.Printf("/login (%s) send ping to prev rip=%s\n", key, remoteAddr)
-					}
-					hub.CalleeClient.SendPing(2000)
+					calleeIP = hub.CalleeClient.RemoteAddr
+					if !hub.CalleeClient.isOnline.Get() {
+						offlineReason = 3 // CalleeClient is not online anymore
+					} else {
+						// hub.CalleeClient seems to (still) be online; let's see if this holds if we ping it
+//						if logWantedFor("loginex") {
+							fmt.Printf("/login (%s) ping-wait %s <- %s v=%s\n",
+								key, calleeIP, remoteAddrWithPort, clientVersion)
+//						}
+						hub.CalleeClient.SendPing(2000)
 
-					// now we wait up to 70x100ms = 6000ms for id=key to possibly log out...
-					for i := 0; i < 70; i++ {
-						time.Sleep(100 * time.Millisecond)
-						// is hub.CalleeClient still online now?
-						if hub==nil || hub.CalleeClient==nil || !hub.CalleeClient.isOnline.Get() {
-							// CalleeClient is not online anymore (we can accept the new login)
-							offlineReason = 4
-							if logWantedFor("loginex") {
-								fmt.Printf("/login (%s) has logged out after wait %dms/%v %s v=%s ua=%s\n",
-								  key, i*100, time.Since(startRequestTime), remoteAddr, clientVersion, userAgent)
+						// now we wait up to 40x100ms = 4000ms for id=key to possibly log out...
+						for i := 0; i < 40; i++ {
+							time.Sleep(100 * time.Millisecond)
+							// is hub.CalleeClient still online now?
+							if hub==nil || hub.CalleeClient==nil || !hub.CalleeClient.isOnline.Get() {
+								// CalleeClient is not online anymore (we can accept the new login)
+								offlineReason = 4
+//								if logWantedFor("loginex") {
+									fmt.Printf("/login (%s) logged out after wait %dms/%v %s v=%s\n",
+									  key, i*100, time.Since(startRequestTime), remoteAddr, clientVersion)
+//								}
+								break
 							}
-							break
 						}
 					}
 				}
+
 				if offlineReason==0 {
 					// abort this login attempt: old/sameId callee is already/still logged in
-					calleeIP := ""
-					if hub!=nil && hub.CalleeClient!=nil {
-						calleeIP = hub.CalleeClient.RemoteAddr
-					}
 					fmt.Printf("/login (%s) already/still logged in %v by %s <- %s v=%s ua=%s\n",
 						key, time.Since(startRequestTime), calleeIP, remoteAddrWithPort, clientVersion, userAgent)
 					// TODO maybe returning fatal is wrong?
