@@ -9,6 +9,6 @@ rm -f webroot/user/client.js
 ln webroot/callee/client.js webroot/user/client.js
 rm -f webroot/button/client.js
 ln webroot/callee/client.js webroot/button/client.js
-
-
+rm -f webroot/button/caller.js
+ln webroot/user/caller.js webroot/button/caller.js
 
