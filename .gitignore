@@ -3,9 +3,9 @@ webcall
 tls.*
 *.db
 stats.ini
-webroot/callee/custom.js
-webroot/user/custom.js
-webroot/button/custom.js
+#webroot/callee/custom.js
+#webroot/user/custom.js
+#webroot/button/custom.js
 accessToken.txt
 *.pdf
 *.txt
