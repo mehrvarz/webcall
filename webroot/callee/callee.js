@@ -23,7 +23,6 @@ const formPw = document.querySelector('input#current-password');
 const menuSettingsElement = document.getElementById('menuSettings');
 const menuClearCookieElement = document.getElementById('menuClearcookie');
 const menuExitElement = document.getElementById('menuExit');
-//const menuContactsElement = document.getElementById('menuContacts');
 const iconContactsElement = document.getElementById('iconContacts');
 const dialIdElement = document.getElementById('dialId');
 const exclamationElement = document.getElementById('exclamation');

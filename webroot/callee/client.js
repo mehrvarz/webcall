@@ -1,6 +1,6 @@
 // WebCall Copyright 2022 timur.mobi. All rights reserved.
 'use strict';
-const clientVersion = '3.0.0-rc2';
+const clientVersion = '3.0.0-rc3';
 const avSelect = document.querySelector("select#avSelect");
 const localVideoDiv = document.querySelector('div#localVideoDiv');
 const localVideoFrame = document.getElementById("localVideoFrame");
@@ -22,7 +22,6 @@ const fullscreenCheckbox = document.querySelector('input#fullscreen');
 const mainElement = document.getElementById('main');
 const containerElement = document.getElementById('container');
 const menuDialogElement = document.getElementById('menuDialog');
-//const vresDialogElement = document.getElementById('vresDialog');
 const fullScreenOverlayElement = document.getElementById('fullScreenOverlay');
 const progressSendElement = document.getElementById('progressSend');
 const progressSendLabel = document.getElementById('progressSendLabel');
@@ -663,7 +662,6 @@ function onIceCandidate(event,myCandidateName) {
 		//console.warn('onIce skip event.candidate.address==null');
 	} else if(isDataChlOpen()) {
 		onIceCandidates++;
-//		gLog("onIce "+myCandidateName+" dataChl "+event.candidate.address+" "+onIceCandidates);
 		gLog("onIce "+myCandidateName+" dataChl doneHangup="+doneHangup);
 
 		dataChannel.send("cmd|"+myCandidateName+"|"+JSON.stringify(event.candidate));
