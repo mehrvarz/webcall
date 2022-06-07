@@ -3,16 +3,14 @@ webcall
 tls.*
 *.db
 stats.ini
-#webroot/callee/custom.js
-#webroot/user/custom.js
-#webroot/button/custom.js
 accessToken.txt
 *.pdf
 *.txt
 favicon.ico
 showlogs.sh
-webcall.prev
+webcall.prev*
 news.ini
 dumponline.sh
 backupdb.sh
+webcall*
 
