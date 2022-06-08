@@ -87,8 +87,10 @@ document.onkeydown = function(evt) {
 		isEscape = (evt.keyCode === 27);
 	}
 	if(isEscape) {
-		console.log('esc key');
+		console.log('prefercodec: esc key -> exitPage');
 		exitPage();
+	} else {
+        console.log('prefercodec: no esc key (ignore)');
 	}
 };
 

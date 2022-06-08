@@ -24,15 +24,18 @@ window.onload = function() {
 			isEscape = (evt.keyCode === 27);
 		}
 		if(isEscape) {
-			console.log('contacts esc key');
 			if(formForNameOpen) {
+				console.log('contacts.js esc key (formForNameOpen)');
 				let parentElement = formElement.parentNode;
 				parentElement.removeChild(formElement);
 				formElement = null;
 				formForNameOpen = false;
 			} else {
+				console.log('contacts.js esc key -> exit');
 				exitPage();
 			}
+		} else {
+			console.log('contacts.js no esc key');
 		}
 	};
 

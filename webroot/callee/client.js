@@ -1504,12 +1504,13 @@ function onkeydownFunc(evt) {
 	}
 	if(isEscape) {
 		if(iframeWindowOpenFlag || menuDialogOpenElement) {
-			gLog('esc key -> history.back()');
+			console.log('client.js: esc key -> back');
 			history.back();
 		} else {
-			gLog('esc key -> no action');
+			console.log('client.js: esc key (ignore)');
 		}
 	} else if(evt.key=="!") {
+		console.log('client.js: no esc key -> menuDialogOpen()');
 		menuDialogOpen();
 	}
 }
