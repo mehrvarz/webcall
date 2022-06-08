@@ -153,7 +153,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	if ok && len(url_arg_array[0]) > 0 {
 		clientVersion = url_arg_array[0]
 	}
-	//fmt.Printf("serve callerID=%s (%v)\n", callerID, r.URL.Query())
+	//fmt.Printf("serve callerID=%s callerName=%s ver=%s\n", callerID, callerName, clientVersion)
 
 	upgrader := websocket.NewUpgrader()
 	//upgrader.EnableCompression = true // TODO
