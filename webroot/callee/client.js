@@ -31,6 +31,7 @@ const downloadList = document.getElementById('download');
 const progressRcvElement = document.getElementById('progressRcv');
 const progressRcvLabel = document.getElementById('progressRcvLabel');
 const progressRcvBar = document.getElementById('fileProgressRcv');
+const bitrate = 320000;
 
 var videoEnabled = false;
 var localVideoMonitorPaused = false;

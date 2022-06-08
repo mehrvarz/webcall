@@ -7,7 +7,6 @@ const enterIdElement = document.getElementById('enterId');
 const enterIdVal = document.getElementById('enterIdVal');
 const enterDomainVal = document.getElementById('enterDomainVal');
 const divspinnerframe = document.querySelector('div#spinnerframe');
-const bitrate = 280000;
 const calleeMode = false;
 
 var connectingText = "Connecting P2P...";

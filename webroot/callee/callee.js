@@ -26,7 +26,6 @@ const menuExitElement = document.getElementById('menuExit');
 const iconContactsElement = document.getElementById('iconContacts');
 const dialIdElement = document.getElementById('dialId');
 const exclamationElement = document.getElementById('exclamation');
-const bitrate = 280000;
 const autoReconnectDelay = 15;
 const singlebutton = false;
 const calleeMode = true;
