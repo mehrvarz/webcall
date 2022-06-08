@@ -1235,7 +1235,7 @@ function connectSignaling(message,openedFunc) {
 	gLog('connectSignaling: open ws connection '+calleeID+' '+wsAddr);
 	let tryingToOpenWebSocket = true;
     var wsUrl = wsAddr;
-	wsUrl += "&callerId="+callerId+"&name="+callerName;
+	wsUrl += "&callerId="+callerId+"&name="+callerName+"&ver="+clientVersion;
 	gLog('connectSignaling: wsUrl='+wsUrl);
 	wsConn = new WebSocket(wsUrl);
 	wsConn.onopen = function () {

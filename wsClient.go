@@ -147,6 +147,12 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	if ok && len(url_arg_array[0]) > 0 {
 		callerName = url_arg_array[0]
 	}
+
+	clientVersion := ""
+	url_arg_array, ok = r.URL.Query()["ver"]
+	if ok && len(url_arg_array[0]) > 0 {
+		clientVersion = url_arg_array[0]
+	}
 	//fmt.Printf("serve callerID=%s (%v)\n", callerID, r.URL.Query())
 
 	upgrader := websocket.NewUpgrader()
@@ -170,6 +176,9 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	client.calleeID = wsClientData.calleeID // this is the local ID
 	client.globalCalleeID = wsClientData.globalID
 	client.clientVersion = wsClientData.clientVersion
+	if clientVersion!="" {
+		client.clientVersion = clientVersion
+	}
 	client.callerID = callerID
 	client.callerName = callerName
 	if tls {
