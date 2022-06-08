@@ -392,10 +392,11 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	urlID = strings.TrimSpace(urlID)
 	// don't forget: urlID may be total garbage
 
-	// TODO translate urlID
+	/* TODO translate urlID
 	if urlID=="89921219321" {
 		urlID = "answie7"
 	}
+	*/
 
 	if len(urlID)>11 {
 		tok := strings.Split(urlID, "|")

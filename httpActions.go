@@ -5,8 +5,8 @@ package main
 import (
 	"net/http"
 	"fmt"
-	"strings"
-	"time"
+	//"strings"
+	//"time"
 	"os"
 	"runtime/pprof"
 )
@@ -22,6 +22,7 @@ func httpActions(w http.ResponseWriter, r *http.Request, actionString string, ca
 		fmt.Printf("/action 001001 dump goroutines (%s) exec now %s\n", calleeID, remoteAddr)
 		pprof.Lookup("goroutine").WriteTo(os.Stdout, 2)
 		return
+	/*
 	case actionString=="callback":
 		// schedule callback calleeID
 		if calleeID=="" {
@@ -35,6 +36,8 @@ func httpActions(w http.ResponseWriter, r *http.Request, actionString string, ca
 			// TODO implement callback 'calleeID'
 		}()
 		return
+	*/
+	/*
 	case strings.HasPrefix(actionString, "block:"):
 		blockID := actionString[6:]
 		if calleeID != adminID {
@@ -67,6 +70,7 @@ func httpActions(w http.ResponseWriter, r *http.Request, actionString string, ca
 		blockMapMutex.Unlock()
 		fmt.Fprintf(w, "ok")
 		return
+	*/
 	default:
 		fmt.Printf("/action (%s) not implemented (%s) %s\n", actionString, calleeID, remoteAddr)
 	}
