@@ -500,6 +500,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 	cmd := tok[0]
 	payload := tok[1]
 	if cmd=="init" {
+		// note: c == c.hub.CalleeClient
 		if !c.isCallee {
 			// only the callee can send "init|"
 			fmt.Printf("# %s (%s) deny init is not Callee %s\n", c.connType, c.calleeID, c.RemoteAddr)
@@ -652,6 +653,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 
 	if cmd=="callerOffer" {
 		// caller starting a call - payload is JSON.stringify(localDescription)
+		// note: c == c.hub.CallerClient
 		if c.callerOfferForwarded.Get() {
 			// prevent double callerOffer
 			//fmt.Printf("# %s (%s) CALL from %s was already forwarded\n",
@@ -662,12 +664,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		//fmt.Printf("%s (%s) callerOffer... %s\n", c.connType, c.calleeID, c.RemoteAddr)
 
 		c.hub.HubMutex.RLock()
-		if c.hub.CalleeClient==nil {
-			c.hub.HubMutex.RUnlock()
-			fmt.Printf("# %s (%s) CALL☎️  from %s but hub.CalleeClient==nil\n",
-				c.connType, c.calleeID, c.RemoteAddr)
-			return
-		}
+		/* this is not required, since we don't use c.hub.CallerClient below
 		if c.hub.CallerClient==nil {
 			c.hub.HubMutex.RUnlock()
 			fmt.Printf("# %s (%s) CALL☎️  but hub.CallerClient==nil\n", c.connType, c.calleeID)
@@ -684,12 +681,19 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			}
 			return
 		}
+		*/
+
+		if c.hub.CalleeClient==nil {
+			fmt.Printf("# %s (%s) CALL☎️  from (%s) %s but hub.CalleeClient==nil\n",
+				c.connType, c.calleeID, c.callerID, c.RemoteAddr)
+			c.hub.HubMutex.RUnlock()
+			return
+		}
 		// prevent this callee from receiving a call, when already in a call
 		if c.hub.ConnectedCallerIp!="" {
 			// ConnectedCallerIp is set below by StoreCallerIpInHubMap()
-			fmt.Printf("# %s (%s) CALL☎️  but hub.ConnectedCallerIp not empty (%s) %s (%s)\n",
-				c.connType, c.calleeID, c.hub.ConnectedCallerIp, c.hub.CallerClient.RemoteAddr,
-				c.hub.CallerClient.callerID)
+			fmt.Printf("# %s (%s) CALL☎️  but hub.ConnectedCallerIp not empty (%s) <- (%s) %s\n",
+				c.connType, c.calleeID, c.hub.ConnectedCallerIp, c.callerID, c.RemoteAddr)
 
 			// add missed call if dbUser.StoreMissedCalls is set
 			userKey := c.calleeID + "_" + strconv.FormatInt(int64(c.hub.registrationStartTime),10)
@@ -698,8 +702,8 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			if err!=nil {
 				fmt.Printf("# %s (%s) failed to get dbUser\n",c.connType,c.calleeID)
 			} else if dbUser.StoreMissedCalls {
-				addMissedCall(c.calleeID, CallerInfo{c.hub.CallerClient.RemoteAddr, c.hub.CallerClient.callerName,
-					time.Now().Unix(), c.hub.CallerClient.callerID, c.callerTextMsg}, "callee busy")
+				addMissedCall(c.calleeID, CallerInfo{c.RemoteAddr, c.callerName,
+					time.Now().Unix(), c.callerID, c.callerTextMsg}, "callee busy")
 			}
 			c.hub.HubMutex.RUnlock()
 			return
@@ -707,8 +711,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 
 		fmt.Printf("%s (%s) CALL☎️  %s <- %s (%s) v=%s ua=%s\n",
 			c.connType, c.calleeID, c.hub.CalleeClient.RemoteAddr,
-			c.hub.CallerClient.RemoteAddr, c.hub.CallerClient.callerID,
-			c.hub.CallerClient.clientVersion, c.hub.CallerClient.userAgent)
+				c.RemoteAddr, c.callerID, c.clientVersion, c.userAgent)
 
 		// forward the callerOffer message to the callee client
 		if c.hub.CalleeClient.Write(message) != nil {
@@ -718,9 +721,9 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		}
 		c.callerOfferForwarded.Set(true)
 
-		if c.hub.CallerClient.callerID!="" || c.hub.CallerClient.callerName!="" {
+		if c.callerID!="" || c.callerName!="" {
 			// send this directly to the callee: see callee.js if(cmd=="callerInfo")
-			sendCmd := "callerInfo|"+c.hub.CallerClient.callerID+":"+c.hub.CallerClient.callerName
+			sendCmd := "callerInfo|"+c.callerID+":"+c.callerName
 			if c.hub.CalleeClient.Write([]byte(sendCmd)) != nil {
 				fmt.Printf("# %s (%s) CALL CalleeClient.Write(callerInfo) fail\n", c.connType, c.calleeID)
 				c.hub.HubMutex.RUnlock()
@@ -729,7 +732,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		}
 
 		// exchange useragent's
-		if c.hub.CallerClient.Write([]byte("ua|"+c.hub.CalleeClient.userAgent)) != nil {
+		if c.Write([]byte("ua|"+c.hub.CalleeClient.userAgent)) != nil {
 			// caller hang up already?
 			fmt.Printf("# %s (%s) CALL CallerClient.Write(ua) fail (early caller ws-disconnect?)\n",
 				c.connType, c.calleeID)
@@ -738,7 +741,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			//			return
 		}
 
-		if c.hub.CalleeClient.Write([]byte("ua|"+c.hub.CallerClient.userAgent)) != nil {
+		if c.hub.CalleeClient.Write([]byte("ua|"+c.userAgent)) != nil {
 			fmt.Printf("# %s (%s) CALL CalleeClient.Write(ua) fail (early callee ws-disconnect?)\n",
 				c.connType, c.calleeID)
 			c.hub.HubMutex.RUnlock()
