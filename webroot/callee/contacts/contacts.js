@@ -170,8 +170,8 @@ function editSubmit(formElement,id) {
 		let api = apiPath+"/setcontact?id="+callerID+"&contactID="+id+"&name="+newName;
 		if(!gentle) console.log('request api',api);
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-			console.log('xhr setcontact OK',xhr.responseText);
-			if(xhr.responseText=="ok") {
+			console.log('xhr setcontact resp='+xhr.responseText);
+			if(xhr.responseText=="") {
 				obj[id] = newName;
 				myTableElement.innerHTML = newName;
 			}
