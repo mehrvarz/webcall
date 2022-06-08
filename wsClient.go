@@ -708,7 +708,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		fmt.Printf("%s (%s) CALL☎️  %s <- %s (%s) v=%s ua=%s\n",
 			c.connType, c.calleeID, c.hub.CalleeClient.RemoteAddr,
 			c.hub.CallerClient.RemoteAddr, c.hub.CallerClient.callerID,
-			c.clientVersion, c.hub.CallerClient.userAgent)
+			c.hub.CallerClient.clientVersion, c.hub.CallerClient.userAgent)
 
 		// forward the callerOffer message to the callee client
 		if c.hub.CalleeClient.Write(message) != nil {
