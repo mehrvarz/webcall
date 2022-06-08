@@ -1632,7 +1632,12 @@ function dial() {
 	if(playDialSounds) {
 		// postpone dialing, so we can start dialsound before
 		setTimeout(function() {
-			dial2();
+			if(doneHangup) {
+				gLog('abort post playDialSound dial2()');
+			} else {
+				gLog('post playDialSound dial2()...');
+				dial2();
+			}
 		},1500);
 
 		let loop = 0;
