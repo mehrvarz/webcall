@@ -520,7 +520,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		if c.calleeInitReceived.Get() {
 			// only the 1st callee "init|" is accepted
 			// don't need to log this
-			fmt.Printf("# %s (%s) deny 2nd callee init %s\n", c.connType, c.calleeID, c.RemoteAddr)
+			//fmt.Printf("# %s (%s) deny 2nd callee init %s\n", c.connType, c.calleeID, c.RemoteAddr)
 			return
 		}
 

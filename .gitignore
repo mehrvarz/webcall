@@ -1,5 +1,5 @@
 config.ini
-webcall
+webcall*
 tls.*
 *.db
 stats.ini
@@ -12,7 +12,6 @@ webcall.prev*
 news.ini
 dumponline.sh
 backupdb.sh
-webcall*
 webroot/button/adapter-latest.js
 webroot/button/caller.js
 webroot/button/client.js
