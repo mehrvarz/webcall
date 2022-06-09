@@ -801,8 +801,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			if c.isCallee {
 				fmt.Printf("%s (%s) REQ DISCON from callee %s '%s'\n",
 					c.connType, c.calleeID, c.RemoteAddr, payload)
-				// tell callee to disconnect
-				// don't add missed call, see: HasPrefix(cause,"callee")
+				// do not add missed call, see: HasPrefix(cause,"callee")
 				c.hub.CalleeClient.peerConHasEnded("callee cancel")
 			} else {
 				fmt.Printf("%s (%s) REQ DISCON from caller %s '%s'\n",
@@ -1254,8 +1253,6 @@ func (c *WsClient) peerConHasEnded(cause string) {
 		return
 	}
 
-	c.hub.setDeadline(0,cause)	// may call peerConHasEnded()
-
 	if c.hub.lastCallStartTime>0 {
 		c.hub.processTimeValues("peerConHasEnded") // will set c.hub.CallDurationSecs
 		c.hub.lastCallStartTime = 0
@@ -1272,14 +1269,13 @@ func (c *WsClient) peerConHasEnded(cause string) {
 	// prepare for next session
 	c.calleeInitReceived.Set(false)
 
-	if c.isConnectedToPeer.Get() {
-		// we are disconnection a peer connect
-//		if logWantedFor("attach") {
-//			fmt.Printf("%s (%s) peerConHasEnded con=%v media=%v (%s)\n",
-//				c.connType, c.calleeID,
-//				c.isConnectedToPeer.Get(), c.isMediaConnectedToPeer.Get(), cause)
-//		}
+//	if logWantedFor("attach") {
+//		fmt.Printf("%s (%s) peerConHasEnded con=%v media=%v (%s)\n",
+//			c.connType, c.calleeID, c.isConnectedToPeer.Get(), c.isMediaConnectedToPeer.Get(), cause)
+//	}
 
+	if c.isConnectedToPeer.Get() {
+		// we are disconnecting a peer connect
 		localPeerCon := "?"
 		remotePeerCon := "?"
 		if c.hub!=nil {
@@ -1357,6 +1353,8 @@ func (c *WsClient) peerConHasEnded(cause string) {
 		c.hub.CallerClient = nil
 		c.hub.HubMutex.Unlock()
 	}
+
+	c.hub.setDeadline(0,cause)	// may call peerConHasEnded()
 
 	//if logWantedFor("attach") {
 	//	fmt.Printf("%s (%s) peerConHasEnded %s done (%s)\n", c.connType, c.calleeID, peerType, comment)
