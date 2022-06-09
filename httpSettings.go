@@ -379,7 +379,10 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 }
 
 func setContacts(calleeID string, contactID string, contactName string, remoteAddr string) bool {
-	// if dbUser.StoreContacts==false (not checked), just return fmt.Fprintf(w,"ok")
+	// (calleeID = the callee making the call)
+	// (contactID = the callee to be added / changed)
+
+	// if dbUser.StoreContacts==false (not checked), just return true
 	var dbEntry DbEntry
 	err := kvMain.Get(dbRegisteredIDs,calleeID,&dbEntry)
 	if err!=nil {
@@ -404,7 +407,7 @@ func setContacts(calleeID string, contactID string, contactName string, remoteAd
 		return false
 	}
 
-	var callerInfoMap map[string]string // callerID -> contactName
+	var callerInfoMap map[string]string // calleeID -> contactName
 	err = kvContacts.Get(dbContactsBucket,calleeID,&callerInfoMap)
 	if err!=nil {
 		if(strings.Index(err.Error(),"key not found")<0) {
@@ -438,8 +441,6 @@ func setContacts(calleeID string, contactID string, contactName string, remoteAd
 	}
 
 	// check for uppercase contactID
-	// (contactID = the calleeID that was called)
-	// (calleeID = the callerID making the call)
 	toUpperContactID := strings.ToUpper(contactID[0:1])+contactID[1:]
 	if logWantedFor("contacts") {
 		fmt.Printf("/setcontact (%s->%s) check toUpperContactID=%s\n",
