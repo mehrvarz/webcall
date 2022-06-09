@@ -1561,23 +1561,25 @@ function signalingCommand(message) {
 
 	} else if(cmd=="cancel") {
 		if(payload!="c") {
-			console.log('callee hang up');
-			showStatus("Callee ended call",8000);
-			if(wsConn) {
-				if(!mediaConnect) {
-					// before wsConn.close(): send msgbox text to server
-					let msgboxText = msgbox.value.substring(0,300);
-					if(msgboxText!="") {
-						wsSend("msg|"+msgboxText);
+			console.log('peer disconnect');
+			//showStatus("peer disconnect",8000);
+			setTimeout(function() {
+				if(wsConn) {
+					if(!mediaConnect) {
+						// before wsConn.close(): send msgbox text to server
+						let msgboxText = msgbox.value.substring(0,300);
+						if(msgboxText!="") {
+							wsSend("msg|"+msgboxText);
+						}
 					}
+					// make sure server will generate a missed call
+					wsSend("cancel|");
+					wsConn.close();
+					// wsConn=null prevents hangup() from generating a return cancel msg
+					wsConn=null;
 				}
-				// make sure server will generate a missed call
-				wsSend("cancel|");
-				wsConn.close();
-				// wsConn=null prevents hangup() from generating a return cancel msg
-				wsConn=null;
-			}
-			hangupWithBusySound(false,"Peer hang up");
+				hangupWithBusySound(false,"Peer hang up");
+			},250);
 		} else {
 			console.log("ignore cancel",payload);
 		}
@@ -1690,7 +1692,7 @@ function dial2() {
 			showStatus(connectingText+"...",-1);
 		}
 	},3000,dialDate);
-
+/*
 	// we are doing 3 thing here:
 	// 1a if no peercon (rtcConnect) after 20s and not hangup by the user, hang up the call now
 	// 1b and if no onIceCandidates, show a warning (webrtc check)
@@ -1701,8 +1703,8 @@ function dial2() {
 			console.log('dial2 20s timer '+dialDate+' '+lastDialDate+' '+doneHangup+' '+rtcConnect);
 			if(!rtcConnect) {
 				// no rtcConnect after 20s: give up dial-waiting
-				console.log("dialing timeout, giving up on call "+candidateResultString+
-					dialDate,lastDialDate);
+				console.log("dialing timeout, giving up on call "+candidateResultString+" "+
+					dialDate+" "+lastDialDate);
 				if(onIceCandidates==0 && !doneHangup) {
 					console.warn('no ice candidates created');
 					onIceCandidates = -1;
@@ -1720,7 +1722,7 @@ function dial2() {
 			}
 		}
 	},20000,dialDate);
-
+*/
 
 	addedAudioTrack = null;
 	addedVideoTrack = null;
