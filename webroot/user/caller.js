@@ -8,6 +8,7 @@ const enterIdVal = document.getElementById('enterIdVal');
 const enterDomainVal = document.getElementById('enterDomainVal');
 const divspinnerframe = document.querySelector('div#spinnerframe');
 const calleeMode = false;
+const bitrate = 320000;
 
 var connectingText = "Connecting P2P...";
 var singleButtonReadyText = "Click to make your order<br>Live operator";

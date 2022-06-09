@@ -13,4 +13,12 @@ news.ini
 dumponline.sh
 backupdb.sh
 webcall*
+webroot/button/adapter-latest.js
+webroot/button/caller.js
+webroot/button/client.js
+webroot/button/prefercodec.js
+webroot/callee/adapter-latest.js
+webroot/user/adapter-latest.js
+webroot/user/client.js
+webroot/user/prefercodec.js
 

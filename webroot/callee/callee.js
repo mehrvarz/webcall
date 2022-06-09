@@ -29,6 +29,7 @@ const exclamationElement = document.getElementById('exclamation');
 const autoReconnectDelay = 15;
 const singlebutton = false;
 const calleeMode = true;
+const bitrate = 320000;
 
 var ringtoneSound = null;
 var ringtoneIsPlaying = false;
@@ -2057,8 +2058,8 @@ function stopAllAudioEffects(comment) {
 			ringtoneSound.pause();
 			ringtoneSound.currentTime = 0;
 		} else {
-			gLog('stopAllAudioEffects NO ringtoneSound.pause',
-				ringtoneSound.paused, ringtoneIsPlaying);
+			//gLog('stopAllAudioEffects NO ringtoneSound.pause',
+			//	ringtoneSound.paused, ringtoneIsPlaying);
 		}
 
 		if(playDialSounds) {
