@@ -16,7 +16,7 @@ func httpActions(w http.ResponseWriter, r *http.Request, actionString string, ca
 	case actionString=="001001":
 		// dump goroutines
 		if calleeID != adminID { // TODO make configurable
-			fmt.Printf("/action 001001 dump goroutines (%s) not admin %s\n", calleeID, remoteAddr)
+			fmt.Printf("/action 001001 dump goroutines (%s) not admin (%s)\n", calleeID, remoteAddr)
 			return
 		}
 		fmt.Printf("/action 001001 dump goroutines (%s) exec now %s\n", calleeID, remoteAddr)

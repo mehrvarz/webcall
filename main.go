@@ -545,7 +545,7 @@ func readConfig(init bool) {
 
 	turnDebugLevel = readIniInt(configIni, "turnDebugLevel", turnDebugLevel, 3, 1)
 
-	adminID = readIniString(configIni, "adminID", adminID, "!!!!!!!!!!!")
+	adminID = readIniString(configIni, "adminID", adminID, "")
 	adminEmail = readIniString(configIni, "adminEmail", adminEmail, "")
 
 	backupScript = readIniString(configIni, "backupScript", backupScript, "")
