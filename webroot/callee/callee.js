@@ -29,8 +29,8 @@ const exclamationElement = document.getElementById('exclamation');
 const autoReconnectDelay = 15;
 const singlebutton = false;
 const calleeMode = true;
-const bitrate = 320000;
 
+var bitrate = 320000;
 var ringtoneSound = null;
 var ringtoneIsPlaying = false;
 var busySignalSound = null;
