@@ -2285,7 +2285,7 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 			gLog('hangup -> calleeOnlineStatus');
 			// show msgbox etc.
 			//calleeOnlineStatus(lastOnlineStatus,false);
-			checkCalleeOnline(true);
+			checkCalleeOnline(false);
 			dialButton.disabled = false;
 		},3000);
 	}
