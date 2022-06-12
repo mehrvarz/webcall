@@ -1045,7 +1045,7 @@ function signalingCommand(message) {
 		});
 	} else if(cmd=="callerAnswer") {
 		if(!peerCon || peerCon.iceConnectionState=="closed") {
-			console.warn('callerAnswer abort no peerCon');
+			console.log('callerAnswer abort no peerCon');
 			return;
 		}
 		callerDescription = JSON.parse(payload);
@@ -1089,7 +1089,9 @@ function signalingCommand(message) {
 		let addIceReloopCounter=0;
 		var addIceCallerCandidate = function(callerCandidate) {
 			if(!peerCon || peerCon.iceConnectionState=="closed") {
-				console.warn('cmd callerCandidate abort no peerCon');
+				console.log('cmd callerCandidate abort no peerCon');
+				stopAllAudioEffects();
+				endWebRtcSession(true,true); // -> peerConCloseFunc
 				return;
 			}
 			if(!peerCon.remoteDescription) {
