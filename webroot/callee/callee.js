@@ -1733,7 +1733,6 @@ function goOnline() {
 		gLog("peerCon signalingstatechange "+peerCon.signalingState);
 	}
 	peerCon.oniceconnectionstatechange = event => {
-		// "failed" could be an early caller hangup
 		gLog("peerCon oniceconnectionstatechange", peerCon.iceConnectionState);
 	}
 	peerCon.onconnectionstatechange = event => {
@@ -1743,11 +1742,20 @@ function goOnline() {
 			hangup(true,true,"onconnectionstatechange no peercon");
 			return;
 		}
-		if(peerCon.connectionState=="disconnected" || peerCon.connectionState=="failed") {
-			// "failed" could be an early caller hangup
+		if(peerCon.connectionState=="disconnected") {
 			console.log('peerCon disconnected '+rtcConnect+" "+mediaConnect);
 			stopAllAudioEffects();
 			endWebRtcSession(true,true); // -> peerConCloseFunc
+		} else if(peerCon.connectionState=="failed") {
+			// "failed" could be an early caller hangup
+			// this may come with a red "WebRTC: ICE failed, see about:webrtc for more details"
+			// in which case the callee webrtc stack seems to be hosed, until the callee is reloaded
+			// or until offline/online
+			console.log('peerCon failed '+rtcConnect+" "+mediaConnect);
+			stopAllAudioEffects();
+			endWebRtcSession(true,true); // -> peerConCloseFunc
+			goOffline();
+			goOnline();
 		} else if(peerCon.connectionState=="connected") {
 			peerConnected2();
 		}
