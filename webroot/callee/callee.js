@@ -1731,6 +1731,7 @@ function goOnline() {
 		gLog("peerCon signalingstatechange "+peerCon.signalingState);
 	}
 	peerCon.oniceconnectionstatechange = event => {
+		// "failed" could be an early caller hangup
 		gLog("peerCon oniceconnectionstatechange", peerCon.iceConnectionState);
 	}
 	peerCon.onconnectionstatechange = event => {
@@ -1741,6 +1742,7 @@ function goOnline() {
 			return;
 		}
 		if(peerCon.connectionState=="disconnected" || peerCon.connectionState=="failed") {
+			// "failed" could be an early caller hangup
 			console.log('peerCon disconnected '+rtcConnect+" "+mediaConnect);
 			stopAllAudioEffects();
 			endWebRtcSession(true,true); // -> peerConCloseFunc
@@ -1839,7 +1841,9 @@ function peerConnected2() {
 			// caller early abort
 			buttonBlinking = false;
 			gLog('caller early abort');
-			hangup(true,true,"caller early abort");
+			//hangup(true,true,"caller early abort");
+			stopAllAudioEffects();
+			endWebRtcSession(true,true); // -> peerConCloseFunc
 			return;
 		}
 		// TODO if callerID and/or callerName are avail we would rather show them

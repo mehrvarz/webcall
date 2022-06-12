@@ -1366,21 +1366,13 @@ function peerConOntrack(track, streams) {
 					return;
 				}
 
-				gLog('peerCon.ontrack connectionstatechangeCounter='+connectionstatechangeCounter);
 				gLog('peerCon.ontrack onIceCandidates='+onIceCandidates);
-/*
-				if(connectionstatechangeCounter<1) {
-					// most likely this is a problem with bromite / no-webrtc patch
-					var statusMsg = "WARNING: Your browser engine does not generate "+
-						"WebRTC connection state change events";
-					if(typeof Android !== "undefined" && Android !== null) {
-						statusMsg += " <a href='https://timur.mobi/webcall/android/#webview'>More info</a>";
-					}
-					showStatus(statusMsg);
-					wsSend("dummy|no connectionstatechanges");
-					notificationSound.play().catch(function(error) { });
+				gLog('peerCon.ontrack connectionstatechangeCounter='+connectionstatechangeCounter);
+				/*
+				if(connectionstatechangeCounter<=0) {
+					// this is a problem 
 				}
-*/
+				*/
 				let videoTracks = remoteStream.getVideoTracks();
 				gLog('peerCon.ontrack unmute track.enabled: delay vtracks',videoTracks.length);
 				if(videoTracks.length>0) {
