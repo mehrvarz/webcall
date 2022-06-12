@@ -1837,6 +1837,7 @@ function peerConnected2() {
 	setTimeout(function() {
 		if(!peerCon || peerCon.iceConnectionState=="closed") {
 			// caller early abort
+			buttonBlinking = false;
 			gLog('caller early abort');
 			return;
 		}
