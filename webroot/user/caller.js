@@ -1644,7 +1644,7 @@ function dial() {
 
 		let loop = 0;
 		var playDialSound = function() {
-			if(!wsConn || mediaConnect) {
+			if(!wsConn || mediaConnect || dtmfDialingSound==null) {
 				gLog('playDialSound abort');
 				return;
 			}
