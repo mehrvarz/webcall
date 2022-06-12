@@ -1473,7 +1473,7 @@ function hangupWithBusySound(mustDisconnectCallee,message) {
 	dialing = false;
 	stopAllAudioEffects();
 	if(peerCon && peerCon.iceConnectionState!="closed") {
-		if(playDialSounds) {
+		if(playDialSounds && busySignalSound!=null) {
 			gLog(`hangupWithBusySound `+message);
 			busySignalSound.play().catch(function(error) { });
 			setTimeout(function() {
