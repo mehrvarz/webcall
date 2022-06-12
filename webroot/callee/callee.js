@@ -1839,6 +1839,7 @@ function peerConnected2() {
 			// caller early abort
 			buttonBlinking = false;
 			gLog('caller early abort');
+			hangup(true,true,"caller early abort");
 			return;
 		}
 		// TODO if callerID and/or callerName are avail we would rather show them
