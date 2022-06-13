@@ -1648,7 +1648,7 @@ function goOnline() {
 	goOfflineButton.disabled = false;
 	rtcConnectStartDate = 0;
 	mediaConnectStartDate = 0;
-	gLog('goOnline '+calleeID);
+	console.log('goOnline '+calleeID);
 	addedAudioTrack = null;
 	addedVideoTrack = null;
 	if(divspinnerframe) {
@@ -1663,6 +1663,18 @@ function goOnline() {
 			},200);
 		}
 	}
+	newPeerCon();
+
+	if(wsConn==null || wsConn.readyState!=1) {
+		gLog('goOnline have no wsConn');
+		login(false);
+	} else {
+		gLog('goOnline have wsConn send init');
+		wsSend("init|!");
+	}
+}
+
+function newPeerCon() {
 	try {
 		peerCon = new RTCPeerConnection(ICE_config);
 		console.log("new RTCPeerConnection ready");
@@ -1754,23 +1766,22 @@ function goOnline() {
 			console.log('peerCon failed '+rtcConnect+" "+mediaConnect);
 			stopAllAudioEffects();
 			endWebRtcSession(true,true); // -> peerConCloseFunc
-			goOffline();
-			setTimeout(goOnline(),300);
+			//goOffline();
+			//setTimeout(goOnline(),300);
+			newPeerCon();
+			if(!wsConn) {
+				gLog('have no wsConn');
+				login(false);
+			} else {
+				gLog('have wsConn send init');
+				wsSend("init|!");
+			}
 		} else if(peerCon.connectionState=="connected") {
 			peerConnected2();
 		}
 	}
-
-	if(!wsConn) {
-		gLog('goOnline have no wsConn');
-		login(false);
-	} else {
-		gLog('goOnline have wsConn send init');
-		//setTimeout(function() {
-			wsSend("init|!");
-		//},500);
-	}
 }
+
 
 function peerConnected2() {
 	// called when peerCon.connectionState=="connected"

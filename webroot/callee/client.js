@@ -1479,7 +1479,7 @@ function hangupWithBusySound(mustDisconnectCallee,message) {
 			setTimeout(function() {
 				gLog(`hangupWithBusySound stopAllAudioEffects`);
 				stopAllAudioEffects();
-			},2500);
+			},1500);
 		}
 	}
 	hangup(mustDisconnectCallee,true,message);

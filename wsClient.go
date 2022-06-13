@@ -520,7 +520,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		if c.calleeInitReceived.Get() {
 			// only the 1st callee "init|" is accepted
 			// don't need to log this
-			//fmt.Printf("# %s (%s) deny 2nd callee init %s\n", c.connType, c.calleeID, c.RemoteAddr)
+			fmt.Printf("# %s (%s) deny 2nd callee init %s\n", c.connType, c.calleeID, c.RemoteAddr)
 			return
 		}
 
@@ -729,6 +729,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			return
 		}
 		c.callerOfferForwarded.Set(true)
+		c.hub.CalleeClient.calleeInitReceived.Set(false)
 
 		if c.callerID!="" || c.callerName!="" {
 			// send this directly to the callee: see callee.js if(cmd=="callerInfo")
@@ -810,11 +811,17 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 				c.hub.CalleeClient.peerConHasEnded("cancel")
 			}
 		} else {
+			// we should still forward "cancel" to the other side
+			if c.isCallee {
+				//fmt.Printf("%s (%s) FW DISCON from callee %s '%s'\n",
+				//	c.connType, c.calleeID, c.RemoteAddr, payload)
+			} else {
+				fmt.Printf("%s (%s) FW DISCON from caller %s '%s'\n",
+					c.connType, c.calleeID, c.RemoteAddr, payload)
+				// fw disconnect to callee
+				c.hub.CalleeClient.Write([]byte(message))
+			}
 			c.hub.HubMutex.RUnlock()
-			// ignore, already disconnected
-			//fmt.Printf("%s (%s) ignore cmd=cancel connected=%v c.isCallee=%v %s '%s'\n",
-			//	c.connType, c.calleeID, c.hub.CalleeClient.isConnectedToPeer.Get(),
-			//	c.isCallee, c.RemoteAddr, payload)
 		}
 		return
 	}
