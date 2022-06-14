@@ -1665,7 +1665,7 @@ function goOnline() {
 	}
 	newPeerCon();
 
-	if(wsConn==null || wsConn.readyState!=1) {
+	if(wsConn==null /*|| wsConn.readyState!=1*/) {
 		gLog('goOnline have no wsConn');
 		login(false);
 	} else {
