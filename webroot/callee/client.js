@@ -1404,13 +1404,13 @@ function hashchange() {
 }
 
 function showStatus(msg,timeoutMs) {
-	if(!gentle && msg && msg!="") {
+	if(/*!gentle &&*/ msg && msg!="") {
 		// msg may contain html, which we don't want to console.log
 		let idx = msg.indexOf("<");
 		if(idx>=0) {
-			gLog('showStatus: '+msg.substring(0,idx)+"...");
+			console.log('showStatus: '+msg.substring(0,idx)+"...");
 		} else {
-			gLog('showStatus: '+msg);
+			console.log('showStatus: '+msg);
 		}
 	}
 	if(!singlebutton) {
