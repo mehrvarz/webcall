@@ -359,7 +359,7 @@ function dialButtonClick() {
 			return;
 		}
 		dialButton.disabled = true;
-		hangupButton.disabled = false;
+		//hangupButton.disabled = false;
 		msgbox.style.display = "none";
 	}
 
@@ -1731,6 +1731,7 @@ function dial2() {
 	try {
 		gLog("dial peerCon = new RTCPeerConnection");
 		peerCon = new RTCPeerConnection(ICE_config);
+		hangupButton.disabled = false;
 	} catch(ex) {
 		console.error("RTCPeerConnection "+ex.message);
 		var statusMsg = "RTCPeerConnection "+ex.message;
