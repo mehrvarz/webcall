@@ -561,16 +561,22 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		}
 
 		if !strings.HasPrefix(c.calleeID,"answie") && !strings.HasPrefix(c.calleeID,"talkback") {
-			if clientUpdateBelowVersion!="" && (c.clientVersion < clientUpdateBelowVersion || 
-					c.clientVersion=="1.0F" || c.clientVersion=="1.0T") {
-				//fmt.Printf("%s (%s) v=%s\n",c.connType,c.calleeID,c.clientVersion)
-				// NOTE: msg MUST NOT contain apostroph (') characters
-				msg := "A new release of WebCall for Android is available. "+
-						"<a href=\"/webcall/update/\">More...</a>"
-				if logWantedFor("login") {
-					fmt.Printf("%s (%s) send status|%s\n",c.connType,c.calleeID,msg)
+			if clientUpdateBelowVersion!="" {
+				if c.clientVersion < clientUpdateBelowVersion || 
+					c.clientVersion=="1.0F" || c.clientVersion=="1.0T" {
+					//fmt.Printf("%s (%s) v=%s\n",c.connType,c.calleeID,c.clientVersion)
+					// NOTE: msg MUST NOT contain apostroph (') characters
+					msg := "A new release of WebCall for Android is available. "+
+							"<a href=\"/webcall/update/\">More...</a>"
+					if logWantedFor("login") {
+						fmt.Printf("%s (%s) send status|%s\n",c.connType,c.calleeID,msg)
+					}
+					c.Write([]byte("status|"+msg))
+				} else {
+					if logWantedFor("login") {
+						fmt.Printf("%s (%s) not send status (%s)\n",c.connType,c.calleeID,c.clientVersion)
+					}
 				}
-				c.Write([]byte("status|"+msg))
 			}
 
 			// send list of waitingCaller and missedCalls to callee client
