@@ -574,9 +574,9 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 					}
 					c.Write([]byte("status|"+msg))
 				} else {
-					if logWantedFor("login") {
-						fmt.Printf("%s (%s) not send status msg (%s)\n",c.connType,c.calleeID,c.clientVersion)
-					}
+					//if logWantedFor("login") {
+					//	fmt.Printf("%s (%s) not send status msg (%s)\n",c.connType,c.calleeID,c.clientVersion)
+					//}
 				}
 			}
 
