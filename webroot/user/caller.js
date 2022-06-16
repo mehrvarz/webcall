@@ -1267,6 +1267,7 @@ function connectSignaling(message,openedFunc) {
 		wsAddr = "";
 		hangupButton.disabled = true;
 		dialButton.disabled = false;
+		stopAllAudioEffects();
 	}
 	wsConn.onclose = function (evt) {
 		if(tryingToOpenWebSocket) {
