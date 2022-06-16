@@ -563,7 +563,8 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		if !strings.HasPrefix(c.calleeID,"answie") && !strings.HasPrefix(c.calleeID,"talkback") {
 			if clientUpdateBelowVersion!="" {
 				if c.clientVersion < clientUpdateBelowVersion || 
-					c.clientVersion=="1.0F" || c.clientVersion=="1.0T" {
+						strings.HasPrefix(c.clientVersion,"1.0F") ||
+						strings.HasPrefix(c.clientVersion,"1.0T") {
 					//fmt.Printf("%s (%s) v=%s\n",c.connType,c.calleeID,c.clientVersion)
 					// NOTE: msg MUST NOT contain apostroph (') characters
 					msg := "A new release of WebCall for Android is available. "+
@@ -574,7 +575,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 					c.Write([]byte("status|"+msg))
 				} else {
 					if logWantedFor("login") {
-						fmt.Printf("%s (%s) not send status (%s)\n",c.connType,c.calleeID,c.clientVersion)
+						fmt.Printf("%s (%s) not send status msg (%s)\n",c.connType,c.calleeID,c.clientVersion)
 					}
 				}
 			}
