@@ -1263,11 +1263,11 @@ function connectSignaling(message,openedFunc) {
 		// this can also mean that callee has gone offline recently and that wsAddr is now outdated
 		// should this generate a /missedcall? no, bc we continue in onClose()
 		console.error("wsConn.onerror: clear wsAddr");
-		showStatus("connect error");
+		showStatus("connect error "+evt.data);
 		wsAddr = "";
+		stopAllAudioEffects();
 		hangupButton.disabled = true;
 		dialButton.disabled = false;
-		stopAllAudioEffects();
 	}
 	wsConn.onclose = function (evt) {
 		if(tryingToOpenWebSocket) {
