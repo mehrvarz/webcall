@@ -564,14 +564,12 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			if clientUpdateBelowVersion!="" && c.clientVersion < clientUpdateBelowVersion {
 				//fmt.Printf("%s (%s) v=%s\n",c.connType,c.calleeID,c.clientVersion)
 				// NOTE: msg MUST NOT contain apostroph (') characters
-				msg := "This version of WebCall for Android has a technical problem. "+
-						"Support will be phased out soon. "+
-						"Please upgrade to <a href=\"/webcall/update/\">v1.0 or newer.</a>"
+				msg := "A new release of WebCall for Android is available. "+
+						"<a href=\"/webcall/update/\">More...</a>"
 				if logWantedFor("login") {
 					fmt.Printf("%s (%s) send status|%s\n",c.connType,c.calleeID,msg)
 				}
 				c.Write([]byte("status|"+msg))
-				return
 			}
 
 			// send list of waitingCaller and missedCalls to callee client
