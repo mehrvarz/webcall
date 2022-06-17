@@ -266,8 +266,16 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	err := kvMain.Get(dbRegisteredIDs, urlID, &dbEntry)
 	if err != nil {
 		// err is most likely "skv key not found"
-		fmt.Printf("/login (%s) error db=%s bucket=%s %s get registeredID err=%v v=%s\n",
-			urlID, dbMainName, dbRegisteredIDs, remoteAddr, err, clientVersion)
+		// log "skv key not found" only if "login" is wanted
+		if strings.Index(err.Error(), "skv key not found") >= 0 {
+			if logWantedFor("login") {
+				fmt.Printf("/login (%s) error db=%s bucket=%s %s get registeredID err=%v v=%s\n",
+					urlID, dbMainName, dbRegisteredIDs, remoteAddr, err, clientVersion)
+			}
+		} else {
+			fmt.Printf("/login (%s) error db=%s bucket=%s %s get registeredID err=%v v=%s\n",
+				urlID, dbMainName, dbRegisteredIDs, remoteAddr, err, clientVersion)
+		}
 		if strings.Index(err.Error(), "disconnect") >= 0 {
 			// TODO admin email notif may be useful
 			fmt.Fprintf(w, "error")

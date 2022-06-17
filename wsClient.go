@@ -279,8 +279,10 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				StoreCallerIpInHubMap(client.globalCalleeID, "", false)
 
 				if client.hub.CalleeClient!=nil && client.hub.CalleeClient.isConnectedToPeer.Get() {
-					fmt.Printf("%s (%s) caller close !reached14s -> cancel callee📴 + peerConHasEnded\n",
-						client.connType, client.calleeID)
+					if logWantedFor("attachex") {
+						fmt.Printf("%s (%s) caller close !reached14s -> cancel callee📴 + peerConHasEnded\n",
+							client.connType, client.calleeID)
+					}
 					client.hub.CalleeClient.Write([]byte("cancel|c"))
 					client.hub.CalleeClient.peerConHasEnded("callerOnClose")
 				}
@@ -404,7 +406,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 					readConfigLock.RUnlock()
 					if myDisconCallerOnPeerConnected {
 						if hub.CallerClient != nil {
-							if logWantedFor("attach") {
+							if logWantedFor("attachex") {
 								fmt.Printf("%s (%s) 14s reached -> force caller ws-disconnect\n",
 									client.connType, client.calleeID)
 							}
@@ -520,7 +522,9 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		if c.calleeInitReceived.Get() {
 			// only the 1st callee "init|" is accepted
 			// don't need to log this
-			fmt.Printf("# %s (%s) deny 2nd callee init %s\n", c.connType, c.calleeID, c.RemoteAddr)
+			if logWantedFor("attachex") {
+				fmt.Printf("# %s (%s) deny 2nd callee init %s\n", c.connType, c.calleeID, c.RemoteAddr)
+			}
 			return
 		}
 
@@ -1172,7 +1176,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 						// now force ws-disconnect caller
 						// but only if 14s has passed
 						if !c.hub.CallerClient.reached14s.Get() {
-							if logWantedFor("attach") {
+							if logWantedFor("attachex") {
 							//fmt.Printf("%s (%s) peercon but 14s not reached, no force caller ws-disconnect\n",
 							//	c.connType, c.calleeID)
 							}
