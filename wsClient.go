@@ -1403,7 +1403,10 @@ func (c *WsClient) SendPing(maxWaitMS int) {
 	if maxWaitMS<0 {
 		maxWaitMS = 20000
 	}
-	c.wsConn.SetReadDeadline(time.Now().Add(time.Duration(maxWaitMS)*time.Millisecond))
+
+	if maxWaitMS>0 {
+		c.wsConn.SetReadDeadline(time.Now().Add(time.Duration(maxWaitMS)*time.Millisecond))
+	}
 
 	c.wsConn.WriteMessage(websocket.PingMessage, nil)
 	c.pingSent++

@@ -394,7 +394,7 @@ func main() {
 	hubMapMutex.RLock()
 	for _,hub := range hubMap {
 		if hub!=nil && hub.CalleeClient!=nil {
-			hub.CalleeClient.SendPing(2500)
+			hub.CalleeClient.SendPing(0)
 		}
 	}
 	hubMapMutex.RUnlock()
