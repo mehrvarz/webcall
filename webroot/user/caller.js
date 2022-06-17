@@ -312,6 +312,8 @@ function onload2(checkFlag) {
 						}
 						hangup(true,true,msg);
 					}
+					// focus back to background, so that esc-key via onkeydown works
+					hangupButton.blur();
 				};
 			}
 
