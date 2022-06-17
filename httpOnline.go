@@ -339,7 +339,7 @@ func httpNewId(w http.ResponseWriter, r *http.Request, urlID string, calleeID st
 	if ok && len(url_arg_array[0]) >= 1 {
 		clientVersion = url_arg_array[0]
 	}
-	if logWantedFor("online") {
+	if logWantedFor("login") {
 		fmt.Printf("/newid (%s) generated %s v=%s ua=%s\n",
 			tmpCalleeID, remoteAddr, clientVersion, r.UserAgent())
 	}
