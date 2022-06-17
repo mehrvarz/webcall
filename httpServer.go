@@ -661,7 +661,6 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				return sortableIpAddr
 			}
 			sort.Slice(hubSlice, func(i, j int) bool {
-				// TODO problem: 123.x.x.x now sorted before 23.x.x.x
 				return sortableIpAddrFunc(hubSlice[i].CalleeClient.RemoteAddrNoPort) <
 						sortableIpAddrFunc(hubSlice[j].CalleeClient.RemoteAddrNoPort)
 			})
@@ -670,9 +669,14 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				if ua=="" {
 					ua = hubSlice[idx].calleeUserAgent
 				}
+				idxUaAppleWebKit := strings.Index(ua," AppleWebKit/")
+				if idxUaAppleWebKit>=0 {
+					ua = ua[:idxUaAppleWebKit]
+				}
+
 				calleeID := hubSlice[idx].CalleeClient.calleeID
 				boldString, _ := strconv.Unquote(`"\033[1m` + fmt.Sprintf("%-19s",calleeID) + `\033[0m"`)
-				fmt.Fprintf(w,"%s ip=%-21s ws=%d caller=%-21s v=%s ua=%s\n",
+				fmt.Fprintf(w,"%s %-21s %d caller=%-21s v=%s ua=%s\n",
 					boldString,
 					hubSlice[idx].CalleeClient.RemoteAddrNoPort,
 					hubSlice[idx].WsClientID,
