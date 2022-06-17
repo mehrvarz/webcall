@@ -826,10 +826,13 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 				//fmt.Printf("%s (%s) FW DISCON from callee %s '%s'\n",
 				//	c.connType, c.calleeID, c.RemoteAddr, payload)
 			} else {
-				fmt.Printf("%s (%s) FW DISCON from caller %s '%s'\n",
-					c.connType, c.calleeID, c.RemoteAddr, payload)
 				// fw disconnect to callee
-				c.hub.CalleeClient.Write([]byte(message))
+				// but only if caller-client still connected
+				if c.hub.CallerClient!=nil {
+					fmt.Printf("%s (%s) FW DISCON from caller %s '%s'\n",
+						c.connType, c.calleeID, c.RemoteAddr, payload)
+					c.hub.CalleeClient.Write([]byte(message))
+				}
 			}
 			c.hub.HubMutex.RUnlock()
 		}
