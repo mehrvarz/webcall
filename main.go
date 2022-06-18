@@ -197,7 +197,7 @@ func main() {
 		return
 	}
 
-	fmt.Printf("--------------- webcall startup ---------------\n")
+	fmt.Printf("--------------- webcall %s %s startup ---------------\n", codetag, builddate)
 	serverStartTime = time.Now()
 	hubMap = make(map[string]*Hub) // calleeID -> *Hub
 	blockMap = make(map[string]time.Time)

@@ -631,7 +631,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 
 		if urlPath=="/dumponline" {
 			// show list of online callees (with their ports) sorted by CalleeClient.RemoteAddrNoPort
-			printFunc(w,"/dumponline rip=%s\n",remoteAddr)
+			printFunc(w,"/dumponline %s %s\n", time.Now().Format("2006-01-02 15:04:05"), remoteAddr)
 			hubMapMutex.RLock()
 			defer hubMapMutex.RUnlock()
 			var hubSlice []*Hub
@@ -649,6 +649,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				toks := strings.Split(remoteAddr, ".")
 				sortableIpAddr := ""
 				if toks[0]=="127" {
+					// sort localhost on top
 					toks[0]="000"
 				}
 				for _,tok := range(toks) {
