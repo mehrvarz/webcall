@@ -389,6 +389,7 @@ func main() {
 	writeStatsFile()
 	time.Sleep(2 * time.Second)
 
+	/*
 	// send pings to all clients, so they find out quickly that the server is gone
 	fmt.Printf("send pings to all ws-clients...\n")
 	hubMapMutex.RLock()
@@ -398,6 +399,7 @@ func main() {
 		}
 	}
 	hubMapMutex.RUnlock()
+	*/
 
 	fmt.Printf("kvContacts.Close...\n")
 	err = kvContacts.Close()

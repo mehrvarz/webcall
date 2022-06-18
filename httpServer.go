@@ -648,6 +648,9 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				// takes "192.168.3.29" and returns "192168003029"
 				toks := strings.Split(remoteAddr, ".")
 				sortableIpAddr := ""
+				if toks[0]=="127" {
+					toks[0]="000"
+				}
 				for _,tok := range(toks) {
 					if len(tok) == 1 {
 						sortableIpAddr += "00"+tok
@@ -674,8 +677,9 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 					ua = ua[:idxUaAppleWebKit]
 				}
 
+				//calleeID := hubSlice[idx].CalleeClient.globalCalleeID
 				calleeID := hubSlice[idx].CalleeClient.calleeID
-				boldString, _ := strconv.Unquote(`"\033[1m` + fmt.Sprintf("%-19s",calleeID) + `\033[0m"`)
+				boldString, _ := strconv.Unquote(`"\033[1m` + fmt.Sprintf("%-11s",calleeID) + `\033[0m"`)
 				fmt.Fprintf(w,"%s %-16s %-16s %s ua=%s\n",
 					boldString,
 					hubSlice[idx].CalleeClient.RemoteAddrNoPort,
