@@ -1266,7 +1266,6 @@ function connectSignaling(message,openedFunc) {
 		// this can be caused by a network problem
 		// this can also mean that callee has gone offline recently and that wsAddr is now outdated
 		// should this generate a /missedcall? no, bc we continue in onClose()
-		//console.log("wsConn.onerror: clear wsAddr");
 		if(evt && evt.data) {
 			showStatus("connect error "+evt.data);
 		} else {
