@@ -75,6 +75,7 @@ type WsClient struct {
 	authenticationShown bool // whether to show "pion auth for client (%v) SUCCESS"
 	isCallee bool
 	clearOnCloseDone bool
+	autologin bool
 }
 
 func serveWs(w http.ResponseWriter, r *http.Request) {
@@ -153,6 +154,12 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	if ok && len(url_arg_array[0]) > 0 {
 		clientVersion = url_arg_array[0]
 	}
+
+	auto := ""
+	url_arg_array, ok = r.URL.Query()["auto"]
+	if ok && len(url_arg_array[0]) > 0 {
+		auto = url_arg_array[0]
+	}
 	//fmt.Printf("serve callerID=%s callerName=%s ver=%s\n", callerID, callerName, clientVersion)
 
 	upgrader := websocket.NewUpgrader()
@@ -178,6 +185,9 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	client.clientVersion = wsClientData.clientVersion
 	if clientVersion!="" {
 		client.clientVersion = clientVersion
+	}
+	if auto=="true" {
+		client.autologin = true
 	}
 	client.callerID = callerID
 	client.callerName = callerName
@@ -565,7 +575,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		}
 
 		if !strings.HasPrefix(c.calleeID,"answie") && !strings.HasPrefix(c.calleeID,"talkback") {
-			if clientUpdateBelowVersion!="" {
+			if clientUpdateBelowVersion!="" && !c.autologin {
 				if c.clientVersion < clientUpdateBelowVersion || 
 						strings.HasPrefix(c.clientVersion,"1.0F") ||
 						strings.HasPrefix(c.clientVersion,"1.0T") {
