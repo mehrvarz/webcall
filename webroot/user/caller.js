@@ -906,8 +906,6 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 				}
 				// calleeID can NOT be notified
 				showStatus(calleeID+" is not available at this time. Please try again a little later.",-1);
-
-				// TODO tmtmtm create missedcall?
 			}, // xhr error
 				errorAction
 				// TODO errorAction will switch back
