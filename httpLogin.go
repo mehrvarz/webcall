@@ -548,15 +548,9 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 						//fmt.Printf("/login (%s) unregisterNeeded\n", urlID)
 						// the next login attempt of urlID/globalID will be denied to break it's reconnecter loop
 						// but we should NOT do this right after server start
-						//if time.Now().Sub(serverStartTime) < 120 * time.Second {
-						//	// shortly after server restart: don't block
-						//} else {
-							//fmt.Printf("/login (%s) ws-conn timeout%ds %s v=%s\n",
-							//	urlID, waitedFor, remoteAddrWithPort, clientVersion)
-							blockMapMutex.Lock()
-							blockMap[urlID] = time.Now()
-							blockMapMutex.Unlock()
-						//}
+						blockMapMutex.Lock()
+						blockMap[urlID] = time.Now()
+						blockMapMutex.Unlock()
 
 						msg := fmt.Sprintf("timeout%ds",waitedFor)
 						hub.doUnregister(hub.CalleeClient, msg)

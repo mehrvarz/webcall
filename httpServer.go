@@ -390,9 +390,9 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	urlID = strings.ToLower(urlID)
 	urlID = strings.TrimSpace(urlID)
-	// don't forget: urlID may be total garbage
+	// keep in mind: urlID may be total garbage
 
-	/* TODO translate urlID
+	/* translate urlID
 	if urlID=="89921219321" {
 		urlID = "answie7"
 	}
@@ -537,8 +537,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if urlPath=="/action" {
-		// TODO add cookie check
-		httpActions(w, r, urlID, calleeID, remoteAddr)
+		httpActions(w, r, urlID, calleeID, cookie, remoteAddr)
 		return
 	}
 	if strings.HasPrefix(urlPath,"/getcontacts") {
@@ -554,12 +553,10 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if strings.HasPrefix(urlPath,"/twid") {
-		// TODO add cookie check
 		httpTwId(w, r, urlID, calleeID, cookie, remoteAddr)
 		return
 	}
 	if strings.HasPrefix(urlPath,"/twfollower") {
-		// TODO add cookie check
 		httpTwFollower(w, r, urlID, calleeID, cookie, remoteAddr)
 		return
 	}
@@ -607,7 +604,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				// skip this
 			} else {
 				fmt.Printf("/message=(%s)\n", message)
-				// TODO here could send an email to admin
+				// TODO here could send an email to adminEmail
 			}
 		}
 		return
@@ -678,8 +675,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 					ua = ua[:idxUaAppleWebKit]
 				}
 
-				//calleeID := hubSlice[idx].CalleeClient.globalCalleeID
-				calleeID := hubSlice[idx].CalleeClient.calleeID
+				calleeID := hubSlice[idx].CalleeClient.calleeID // or globalCalleeID
 				boldString, _ := strconv.Unquote(`"\033[1m` + fmt.Sprintf("%-11s",calleeID) + `\033[0m"`)
 				fmt.Fprintf(w,"%s %-15s %-21s %s %s\n",
 					boldString,
@@ -837,7 +833,7 @@ func getNewWsClientID() uint64 {
 			// already in use
 			continue
 		}
-		// wsClientMap[intID] is NOT in use yet
+		// good: wsClientMap[intID] is NOT yet in use
 		return intID
 	}
 }

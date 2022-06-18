@@ -543,6 +543,10 @@ func httpTwId(w http.ResponseWriter, r *http.Request, twHandle string, calleeID 
 		fmt.Printf("# /twid (%s) cookie==nil twHandle=%s %s\n", calleeID, twHandle, remoteAddr)
 		return
 	}
+	if calleeID=="" {
+		fmt.Printf("# /twid fail no calleeID %s\n", remoteAddr)
+		return
+	}
 
 	twitterClientLock.Lock()
 	if twitterClient == nil {
@@ -579,6 +583,10 @@ func httpTwFollower(w http.ResponseWriter, r *http.Request, twId string, calleeI
 	if(cookie==nil) {
 		fmt.Printf("# /twfollower (%s) cookie==nil twId=%s %s\n", calleeID, twId, remoteAddr)
 		fmt.Fprintf(w,"error denied")
+		return
+	}
+	if calleeID=="" {
+		fmt.Printf("# /twid fail no calleeID %s\n", remoteAddr)
 		return
 	}
 
