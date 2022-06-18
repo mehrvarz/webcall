@@ -688,7 +688,6 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 					hubSlice[idx].CalleeClient.clientVersion,
 					ua)
 			}
-			printFunc(w,"\n")
 			return
 		}
 
