@@ -906,6 +906,8 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 				}
 				// calleeID can NOT be notified
 				showStatus(calleeID+" is not available at this time. Please try again a little later.",-1);
+
+				// TODO tmtmtm create missedcall?
 			}, // xhr error
 				errorAction
 				// TODO errorAction will switch back
@@ -1264,8 +1266,12 @@ function connectSignaling(message,openedFunc) {
 		// this can be caused by a network problem
 		// this can also mean that callee has gone offline recently and that wsAddr is now outdated
 		// should this generate a /missedcall? no, bc we continue in onClose()
-		console.error("wsConn.onerror: clear wsAddr");
-		showStatus("connect error "+evt.data);
+		//console.log("wsConn.onerror: clear wsAddr");
+		if(evt && evt.data) {
+			showStatus("connect error "+evt.data);
+		} else {
+			showStatus("connect error");
+		}
 		wsAddr = "";
 		stopAllAudioEffects();
 		hangupButton.disabled = true;
