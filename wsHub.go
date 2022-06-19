@@ -73,7 +73,7 @@ func (h *Hub) setDeadline(secs int, comment string) {
 				// timer event: we need to disconnect the (relayed) clients (if still connected)
 				h.timer = nil
 				if h.CalleeClient!=nil && h.CalleeClient.isConnectedToPeer.Get() {
-					fmt.Printf("setDeadline (%s) reached; end session now (secs=%d %v)\n",
+					fmt.Printf("setDeadline (%s) reached; quit session now (secs=%d %v)\n",
 						h.CalleeClient.calleeID, secs, timeStart.Format("2006-01-02 15:04:05"))
 					calleeID := ""
 					if h.CalleeClient!=nil {

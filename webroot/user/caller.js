@@ -562,7 +562,7 @@ function checkCalleeOnline(waitForCallee) {
 			api = api + "_" + Android.webviewVersion();
 		}
 	} else {
-		//api = api + "&ver="+clientVersion;
+		api = api + "&ver="+clientVersion;
 	}
 	gLog('checkCalleeOnline api',api);
 	xhrTimeout = 30*1000;
@@ -1237,7 +1237,18 @@ function connectSignaling(message,openedFunc) {
 	gLog('connectSignaling: open ws connection '+calleeID+' '+wsAddr);
 	let tryingToOpenWebSocket = true;
     var wsUrl = wsAddr;
-	wsUrl += "&callerId="+callerId+"&name="+callerName+"&ver="+clientVersion;
+	wsUrl += "&callerId="+callerId+"&name="+callerName; //+"&ver="+clientVersion;
+	if(typeof Android !== "undefined" && Android !== null) {
+		if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
+			wsUrl = wsUrl + "&ver="+Android.getVersionName();
+		}
+		if(typeof Android.webviewVersion !== "undefined" && Android.webviewVersion !== null) {
+			wsUrl = wsUrl + "_" + Android.webviewVersion();
+		}
+	} else {
+		wsUrl = wsUrl + "&ver="+clientVersion;
+	}
+
 	gLog('connectSignaling: wsUrl='+wsUrl);
 	wsConn = new WebSocket(wsUrl);
 	wsConn.onopen = function () {
