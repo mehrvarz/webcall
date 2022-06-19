@@ -559,7 +559,7 @@ function checkCalleeOnline(waitForCallee) {
 			api = api + "&ver="+Android.getVersionName();
 		}
 		if(typeof Android.webviewVersion !== "undefined" && Android.webviewVersion !== null) {
-			api = api + "_" + Android.webviewVersion();
+			api = api + "_" + Android.webviewVersion() +"_"+ clientVersion;
 		}
 	} else {
 		api = api + "&ver="+clientVersion;
@@ -1243,7 +1243,7 @@ function connectSignaling(message,openedFunc) {
 			wsUrl = wsUrl + "&ver="+Android.getVersionName();
 		}
 		if(typeof Android.webviewVersion !== "undefined" && Android.webviewVersion !== null) {
-			wsUrl = wsUrl + "_" + Android.webviewVersion();
+			wsUrl = wsUrl + "_" + Android.webviewVersion() +"_"+ clientVersion;
 		}
 	} else {
 		wsUrl = wsUrl + "&ver="+clientVersion;
