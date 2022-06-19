@@ -550,7 +550,7 @@ function login(retryFlag) {
 			api = api + "&ver="+Android.getVersionName();
 		}
 		if(typeof Android.webviewVersion !== "undefined" && Android.webviewVersion !== null) {
-			api = api + "_" + Android.webviewVersion();
+			api = api + "_" + Android.webviewVersion() +"_"+ clientVersion;
 		}
 	} else {
 		api = api + "&ver="+clientVersion;
