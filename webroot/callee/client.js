@@ -3,6 +3,7 @@
 const clientVersion = '3.0.3';
 
 const avSelect = document.querySelector("select#avSelect");
+const vresDialogElement = document.getElementById('vresDialog');
 const localVideoDiv = document.querySelector('div#localVideoDiv');
 const localVideoFrame = document.getElementById("localVideoFrame");
 const remoteVideoDiv = document.querySelector('div#remoteVideoDiv');
