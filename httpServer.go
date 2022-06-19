@@ -31,7 +31,7 @@ import (
 // in order to NOT use go:embed, put 3 slash instead of 2 in front of go:embed
 //go:embed webroot
 var embeddedFS embed.FS
-var embeddedFSExists = false
+var embeddedFsShouldBeUsed = false
 
 func httpServer() {
 	http.HandleFunc("/rtcsig/", httpApiHandler)
@@ -41,7 +41,7 @@ func httpServer() {
 	http.HandleFunc("/button/", substituteUserNameHandler)
 
 	readConfigLock.RLock()
-	embeddedFSExists = false
+	embeddedFsShouldBeUsed = false
 	if htmlPath=="" {
 		_,err := embeddedFS.ReadFile("webroot/index.html")
 		if err!=nil {
@@ -49,12 +49,11 @@ func httpServer() {
 			fmt.Printf("# httpServer fatal htmlPath not set, but no embeddedFS (%v)\n",err)
 			return
 		}
-		embeddedFSExists = true
+		embeddedFsShouldBeUsed = true
 	}
 	readConfigLock.RUnlock()
 
-	if embeddedFSExists {
-		embeddedFSExists = true
+	if embeddedFsShouldBeUsed {
 		fmt.Printf("httpServer using embeddedFS\n")
 		webRoot, err := fs.Sub(embeddedFS, "webroot")
 		if err != nil {
@@ -195,9 +194,11 @@ func httpServer() {
 func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 	// serve file - if file does not exist, serve index.html
 	urlPath := r.URL.Path
+/* ???
 	if strings.HasSuffix(urlPath,"/") {
 		urlPath = urlPath[:len(urlPath)-1]
 	}
+*/
 
 	remoteAddrWithPort := r.RemoteAddr
 	if strings.HasPrefix(remoteAddrWithPort,"[::1]") {
@@ -223,7 +224,7 @@ func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fullpath := ""
-	if !embeddedFSExists {
+	if !embeddedFsShouldBeUsed {
 		curdir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 		if err!=nil {
 			fmt.Printf("# substituteUserNameHandler current dir not found err=(%v)\n", err)
@@ -242,13 +243,40 @@ func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		fullpath = "webroot" + urlPath
-		//fmt.Printf("substitute (%s)\n", fullpath)
-		if _, err := fs.Stat(embeddedFS,fullpath); os.IsNotExist(err) {
-			// fullpath does not exist
+		if logWantedFor("http") {
+			fmt.Printf("substitute (%s)(%s)\n", fullpath, r.URL.RawQuery)
+		}
+		fileinfo, err := fs.Stat(embeddedFS,fullpath)
+		if os.IsNotExist(err) {
+			// fullpath does not exist: replace everything after the last slash with "index.html"
+			if logWantedFor("http") {
+				fmt.Printf("substitute notExist (%s)\n", fullpath)
+			}
 			idxLastSlash := strings.LastIndex(fullpath,"/")
 			if idxLastSlash>=0 {
 				fullpath = fullpath[:idxLastSlash+1] + "index.html"
-				//fmt.Printf("substitute try (%s)\n", fullpath)
+				if logWantedFor("http") {
+					fmt.Printf("substitute try (%s)\n", fullpath)
+				}
+			}
+		} else if fileinfo!=nil && fileinfo.IsDir() {
+			// fullpath does exist but is a folder: if ends with slash add "index.html", else add "/index.html"
+			if logWantedFor("http") {
+				fmt.Printf("substitute IsDir (%s)\n", fullpath)
+			}
+			if strings.HasSuffix(fullpath,"/") {
+				fullpath += "index.html"
+				if logWantedFor("http") {
+					fmt.Printf("substitute try (%s)\n", fullpath)
+				}
+			} else {
+				// http forward to
+				newpath := urlPath+"/?"+r.URL.RawQuery
+				if logWantedFor("http") {
+					fmt.Printf("substitute redirect to (%s)\n", newpath)
+				}
+				http.Redirect(w, r, newpath, http.StatusSeeOther)
+				return
 			}
 		}
 	}
@@ -268,7 +296,7 @@ func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 		header.Set("Content-Security-Policy", myCspString)
 	}
 
-	if !embeddedFSExists {
+	if !embeddedFsShouldBeUsed {
 		http.ServeFile(w, r, fullpath)
 	} else {
 		data,err := embeddedFS.ReadFile(fullpath)
@@ -367,6 +395,9 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	idxCalleeID := strings.Index(referer,"/callee/")
 	if idxCalleeID>=0 && !strings.HasSuffix(referer,"/") {
 		calleeID = strings.ToLower(referer[idxCalleeID+8:])
+		if calleeID=="register" || calleeID=="settings" || calleeID=="contacts" {
+			calleeID = ""
+		}
 	}
 	argIdx := strings.Index(calleeID,"&")
 	if argIdx>=0 {
@@ -403,10 +434,10 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		if len(tok) == 5 {
 			// don't log 5-token (like this: "54281001702||65511272157|1653030153|msgtext")
 		} else {
-			fmt.Printf("# httpApi long urlID=(%s) %s (%s)\n", urlID, remoteAddr, urlPath)
+			fmt.Printf("# httpApi (%s) long urlID=(%s) %s (%s)\n", calleeID, urlID, remoteAddr, urlPath)
 		}
 	} else if logWantedFor("http") {
-		fmt.Printf("httpApi (%s) %s\n", urlID, remoteAddr)
+		fmt.Printf("httpApi (%s) urlID=(%s) %s (%s)\n", calleeID, urlID, remoteAddr, urlPath)
 	}
 
 	nocookie := false
@@ -488,7 +519,8 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				}
 				if calleeID!="" && pwIdCombo.CalleeId != calleeID {
 					// callee is using wrong cookie
-					fmt.Printf("# httpApi id=(%s) wrong cookie ID=(%s) (%s) %s\n",
+					// this happens for instance if calleeID=="register"
+					fmt.Printf("httpApi id=(%s) ignore existing cookie pwID=(%s) (%s) %s\n",
 						calleeID, pwIdCombo.CalleeId, urlPath, remoteAddr)
 					cookie = nil
 				} else if pwIdCombo.Pw=="" {

@@ -102,7 +102,7 @@ window.onload = function() {
 	if(typeof id!=="undefined" && id!="") {
 		calleeID = id;
 	}
-	gLog("calleeID "+calleeID);
+	console.log("calleeID="+calleeID);
 
 	if(calleeID=="") {
 		// if callee was started without a calleeID, reload with calleeID from cookie
@@ -720,7 +720,13 @@ function getSettings() {
 	gLog('getsettings api '+api);
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 		if(xhr.responseText!="") {
-			let serverSettings = JSON.parse(xhr.responseText);
+			let serverSettings = "";
+			try {
+				serverSettings = JSON.parse(xhr.responseText);
+			} catch(ex) {
+				console.log("# getSettings JSON.parse err "+ex);
+				return;
+			}
 			if(typeof serverSettings.nickname!=="undefined") {
 				calleeName = serverSettings.nickname;
 				gLog('getsettings calleeName '+calleeName);
@@ -2305,7 +2311,7 @@ function openDialId(userId) {
 
 function openSettings() {
 	let url = "/callee/settings?id="+calleeID+"&i="+counter++;
-	gLog('openSettings',url);
+	console.log('openSettings='+url);
 	iframeWindowOpen(url);
 	// when iframe closes, client.js:iframeWindowClose() will call getSettings()
 }

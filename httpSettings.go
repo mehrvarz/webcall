@@ -31,12 +31,16 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		fmt.Printf("# /getsettings fail no calleeID %s\n", remoteAddr)
 		return
 	}
+
+	// if calleeID!=urlID, that's likely someone trying to run more than one callee in the same browser
 	if urlID!="" && calleeID!=urlID {
 		// this happens bc someone with calleeID in the cookie is now trying to use urlID via url
 		fmt.Printf("# /getsettings urlID(%s) != calleeID(%s) %s ua=%s\n",
 			urlID, calleeID, remoteAddr, r.UserAgent())
 		return
 	}
+
+	//fmt.Printf("/getsettings (%s) %s ua=%s\n", calleeID, remoteAddr, r.UserAgent())
 
 	var dbEntry DbEntry
 	err := kvMain.Get(dbRegisteredIDs,calleeID,&dbEntry)
@@ -89,7 +93,8 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		return
 	}
 
-	if calleeID!=urlID {
+	// if calleeID!=urlID, that's likely someone trying to run more than one callee in the same browser
+	if urlID!="" && calleeID!=urlID {
 		fmt.Printf("# /setsettings fail calleeID(%s) != urlID(%s) %s\n", calleeID, urlID, remoteAddr)
 		return
 	}
@@ -223,16 +228,16 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 								" you receive while not being connected to the WebCall server."
 						err,statusCode := webpushSend(dbUser.Str2,msg,calleeID)
 						if err!=nil {
-							fmt.Printf("# setsettings (%s) webpush fail device1 err=%v\n",urlID,err)
+							fmt.Printf("# setsettings (%s) webpush fail device1 err=%v\n",calleeID,err)
 						} else if statusCode==201 {
 							// success
 						} else if statusCode==410 {
 							fmt.Printf("# setsettings (%s) webpush fail device1 delete subscr\n",
-								urlID)
+								calleeID)
 							dbUser.Str2 = ""
 						} else {
 							fmt.Printf("# setsettings (%s) webpush fail device1 status=%d\n",
-								urlID, statusCode)
+								calleeID, statusCode)
 						}
 					}
 				}
@@ -265,16 +270,16 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 								" you receive while not being connected to the WebCall server."
 						err,statusCode := webpushSend(dbUser.Str3,msg,calleeID)
 						if err!=nil {
-							fmt.Printf("# /setsettings (%s) webpush fail device2 err=%v\n",urlID,err)
+							fmt.Printf("# /setsettings (%s) webpush fail device2 err=%v\n",calleeID,err)
 						} else if statusCode==201 {
 							// success
 						} else if statusCode==410 {
 							fmt.Printf("# /setsettings (%s) webpush fail device2 delete subscr\n",
-								urlID)
+								calleeID)
 							dbUser.Str3 = ""
 						} else {
 							fmt.Printf("# /setsettings (%s) webpush fail device2 status=%d\n",
-								urlID, statusCode)
+								calleeID, statusCode)
 						}
 					}
 				}
@@ -314,7 +319,9 @@ func httpGetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 		fmt.Printf("# /getcontacts (%s) fail no cookie %s\n", calleeID, remoteAddr)
 		return
 	}
-	if urlID!=calleeID {
+
+	// if calleeID!=urlID, that's likely someone trying to run more than one callee in the same browser
+	if urlID!="" && urlID!=calleeID {
 		fmt.Printf("# /getcontacts urlID=%s != calleeID=%s %s\n",urlID,calleeID, remoteAddr)
 		return
 	}
@@ -339,7 +346,7 @@ func httpGetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calleeID string, cookie *http.Cookie, remoteAddr string) {
 	// store contactID with name into contacts of calleeID
 	// httpSetContacts does not report errors back to the client (only logs them)
-	if urlID=="" || urlID=="undefined" {
+	if calleeID=="" || calleeID=="undefined" {
 		//fmt.Printf("# /setcontact urlID empty\n")
 		return
 	}
@@ -347,6 +354,8 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 		fmt.Printf("# /setcontact (%s) fail no cookie %s\n", calleeID, remoteAddr)
 		return
 	}
+
+	// if calleeID!=urlID, that's likely someone trying to run more than one callee in the same browser
 	if urlID!="" && urlID!=calleeID {
 		fmt.Printf("# /setcontact urlID=%s != calleeID=%s %s\n", urlID, calleeID, remoteAddr)
 		return
@@ -492,6 +501,8 @@ func httpDeleteContact(w http.ResponseWriter, r *http.Request, urlID string, cal
 		fmt.Printf("# /deletecontact cookie==nil urlID=%s calleeID=%s %s\n", urlID, calleeID, remoteAddr)
 		return
 	}
+
+	// if calleeID!=urlID, that's likely someone trying to run more than one callee in the same browser
 	if urlID!=calleeID {
 		fmt.Printf("# /deletecontact urlID=%s != calleeID=%s %s\n", urlID, calleeID, remoteAddr)
 		return

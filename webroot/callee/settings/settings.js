@@ -18,7 +18,7 @@ window.onload = function() {
 	if(typeof id!=="undefined" && id!="") {
 		calleeID = id;
 	}
-	console.log("calleeID (%s)",calleeID);
+	console.log("calleeID="+calleeID);
 	// XHR to get current settings; server will use the cookie to authenticate us
 	requestSettings();
 }
@@ -41,6 +41,18 @@ function requestSettings() {
 	if(!gentle) console.log('request getsettings api',api);
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 		//if(!gentle) console.log('xhr.responseText',xhr.responseText);
+		if(xhr.responseText=="") {
+			console.log('/getsettings failed');
+			// create user visible error message
+			let container = document.getElementById("container");
+			if(container) {
+				var aDivElement = document.createElement("div");
+				aDivElement.innerHTML = "Failed to access settings. "+
+					"This could be a cookie issue, or due to access of multiple users.";
+				container.appendChild(aDivElement);
+			}
+			return;
+		}
 		prepareSettings(xhr.responseText);
 	}, errorAction);
 }
