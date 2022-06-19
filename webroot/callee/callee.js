@@ -292,7 +292,7 @@ window.onload = function() {
 			mainParent.removeChild(containerElement);
 			var msgElement = document.createElement("div");
 			msgElement.style = "margin-top:15%; padding:2%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; font-size:1.2em; line-height:1.5em;";
-			msgElement.innerHTML = "<div>cannot login "+calleeID+"<br>stop other session<br>and clear its login-cookie<br><br><a onclick='clearcookie()'>clear login-cookie</a><br><br>you can run a 2nd callee session<br>in a separate browser</div>";
+			msgElement.innerHTML = "<div>cannot login "+calleeID+"<br>stop other session<br>and clear its login-cookie<br><br><a onclick='clearcookie()'>clear login-cookie</a><br><br>you can run a 2nd callee session<br>in a separate browser (or in incognito mode / private window)</div>";
 			mainParent.appendChild(msgElement);
 		}
 		return;
