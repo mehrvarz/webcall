@@ -589,7 +589,7 @@ function login(retryFlag) {
 			gLog('outboundIP '+outboundIP);
 
 			getSettings();
-/*
+			/*
 			if(!pushRegistration) {
 				// we retrieve the pushRegistration here under /callee/(calleeID),
 				// so that the pushRegistration.scope will also be /callee/(calleeID)
@@ -606,7 +606,7 @@ function login(retryFlag) {
 					console.log("serviceWorker.ready err",err.message);
 				});
 			}
-*/
+			*/
 			if(parts.length>=5 && parts[4]=="true") {
 				isHiddenCheckbox.checked = true;
 				autoanswerCheckbox.checked = false;
@@ -634,13 +634,13 @@ function login(retryFlag) {
 		if(idx>0) {
 			mainLink = mainLink.substring(0,idx); //+ "/webcall";
 		}
-/*
+		/*
 		if(loginStatus=="noservice") {
 			wsSecret = "";
 			showStatus("Service error<br><a href='"+mainLink+"'>Main page</a>",-1);
 			form.style.display = "none";
 		} else
-*/
+		*/
 		if(loginStatus=="notregistered") {
 			wsSecret = "";
 			showStatus("User ID unknown<br>",-1);
@@ -742,9 +742,7 @@ function offlineAction() {
 	gLog('offlineAction');
 	goOnlineButton.disabled = false;
 	goOfflineButton.disabled = true;
-	//if(!mediaConnect) {
-		onlineIndicator.src="";
-	//}
+	onlineIndicator.src="";
 }
 
 function gotStream2() {
@@ -919,13 +917,7 @@ function wsOnOpen() {
 	}
 	isHiddenlabel.style.display = "block";
 	autoanswerlabel.style.display = "block";
-
-	if(typeof Android !== "undefined" && Android !== null) {
-		if(Android.getVersionName()!="1.0F" && Android.getVersionName()!="1.0T" &&
-				Android.getVersionName()>="1.0.3") {
-			dialsoundslabel.style.display = "block";
-		}
-	}
+	dialsoundslabel.style.display = "block";
 	menuSettingsElement.style.display = "block";
 	iconContactsElement.style.display = "block";
 	dialIdElement.style.display = "block";
@@ -1133,8 +1125,8 @@ function signalingCommand(message) {
 // candidate:1151307505 1 tcp 1518280447 192.168.3.209 9 typ host tcptype active generation 0 ufrag /RrR network-id 1
 // candidate:2337567925 1 udp 1686052607 37.201.195.49 47218 typ srflx raddr 192.168.3.209 rport 19890 generation 0 ufrag /RrR network-id 1 L1451
 // candidate:240334351 1 udp 41885439 66.228.46.43 50178 typ relay raddr 37.201.195.49 rport 47218 generation 0 ufrag /RrR network-id 1
-			gLog("peerCon.addIceCandidate accept address", address, callerCandidate.candidate);
-//			gLog("peerCon.addIceCandidate accept address="+address);
+//			gLog("peerCon.addIceCandidate accept address", address, callerCandidate.candidate);
+			gLog("peerCon.addIceCandidate accept address="+address+" "+callerCandidate.candidate);
 			if(address.indexOf(":")>=0
 					|| address==outboundIP
 					|| address.endsWith(".local")
