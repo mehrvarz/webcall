@@ -38,7 +38,7 @@ function isAvailAction() {
 		showStatus("Registration of new callee ID's is not possible at this time. Please try again later. Thank you.<br><br><a href='..'>Back</a>",-1);
 		return;
 	}
-	showStatus("Your phone number for the web:<br><br><b>"+myCalleeID+"</b><br><br>Anybody with a web browser will be able to call you. Enter a password so only you can receive these calls.",-1);
+	showStatus("Anybody with a web browser can call you. Your phone number for the web:<br><br><b>"+myCalleeID+"</b><br><br>Enter a password so only you can receive these calls.",-1);
 	// show form and clear pw input field
 	document.getElementById("pw").value = "";
 	document.getElementById("username").value = myCalleeID;
