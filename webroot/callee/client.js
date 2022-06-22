@@ -483,7 +483,7 @@ function showStatsPostCall() {
 function openPostCallStats() {
 	let str = "string:<h2>Call Statistics</h2>"+showStatsPostCall();
 	gLog('openPostCallStats');
-	iframeWindowOpen(str,"background:#33ad; color:#eee; padding:20px; max-width:400px; left:5.0%; top:3%; font-size:1.1em; line-height:1.4em;");
+	iframeWindowOpen(str,false,"background:#33ad; color:#eee; padding:20px; max-width:400px; left:5.0%; top:3%; font-size:1.1em; line-height:1.4em;");
 }
 
 function stopProgressSend() {
@@ -687,7 +687,7 @@ function onIceCandidate(event,myCandidateName) {
 
 var iframeWindowOpenFlag = false;
 var iframeWindowOpenUrl = null;
-function iframeWindowOpen(url,addStyleString) {
+function iframeWindowOpen(url, horiCenterBound, addStyleString) {
 	if(iframeWindowOpenFlag) {
 		gLog('iframeWindowOpen iframeWindowOpenFlag');
 		return;
@@ -719,7 +719,16 @@ function iframeWindowOpen(url,addStyleString) {
 	gLog('iframeWindowOpen '+url);
 	iframeWindowOpenUrl = url;
 	iframeWindowOpenFlag = true;
-	let styleString = "width:90%; max-width:440px; height:94%; position:absolute; left:3.2%; top:1%; padding:10px; z-index:200;";
+
+	let styleString = "width:90%; max-width:440px; height:94%; position:absolute; padding:10px; z-index:200;";
+	if(horiCenterBound) {
+		// center hori
+		styleString += "top:50%; left:50%; transform:translate(-50%,-50%);"
+	} else {
+		// left-bound
+		styleString += "left:3.2%; top:1%;"
+	}
+
 	if(addStyleString) {
 		styleString += addStyleString;
 	}
