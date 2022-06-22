@@ -708,9 +708,9 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString) {
 			connect = window.frames[0].window.mediaConnect;
 		} catch(ex) {}
 		if(connect==true) {
-			gLog('onclick fullScreenOverlayElement ignored (no history.back)');
+			//gLog('onclick fullScreenOverlayElement ignored (no history.back)');
 		} else {
-			gLog('onclick fullScreenOverlayElement no mediaConnect ('+connect+') -> history.back');
+			//gLog('onclick fullScreenOverlayElement no mediaConnect -> history.back');
 			history.back();
 		}
 	}
@@ -721,7 +721,7 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString) {
 	iframeWindowOpenUrl = url;
 	iframeWindowOpenFlag = true;
 
-	let styleString = "width:90%; max-width:440px; height:94%; position:absolute; padding:10px; z-index:200;";
+	let styleString = "width:90%; max-width:440px; height:94%; position:absolute; _padding:10px; z-index:200;";
 	if(horiCenterBound) {
 		// center hori
 		styleString += "top:50%; left:50%; transform:translate(-50%,-50%);"

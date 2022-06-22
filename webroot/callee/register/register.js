@@ -9,7 +9,7 @@ var myCalleeID = "";
 var calleeLink = "";
 
 window.onload = function() {
-	showStatus("<br><br><br><br><br>",-1);
+	showStatus("<br><br>please wait...<br><br><br><br><br>",-1);
 	makeNewId(); // -> isAvailAction()
 }
 
@@ -38,7 +38,7 @@ function isAvailAction() {
 		showStatus("Registration of new callee ID's is not possible at this time. Please try again later. Thank you.<br><br><a href='..'>Back</a>",-1);
 		return;
 	}
-	showStatus("Your new WebCall callee ID: <b>"+myCalleeID+"</b><br><br>This ID is like a phone number. With it you can receive phone calls from anyone on the Web. Enter a password so only you can receive these calls.",-1);
+	showStatus("Your phone number for the web:<br><br><b>"+myCalleeID+"</b><br><br>Anybody with a web browser will be able to call you. Enter a password so only you can receive these calls.",-1);
 	// show form and clear pw input field
 	document.getElementById("pw").value = "";
 	document.getElementById("username").value = myCalleeID;
@@ -138,12 +138,11 @@ function submitForm(theForm) {
 				calleeLink = calleeLink.replace("register/","");
 				calleeLink += myCalleeID;
 				if(!gentle) console.log('calleeLink='+calleeLink);
-				showStatus( "A cookie will be created to enable quick logins. "+
-				"Please store your ID and password separately, just in case. "+
-				"We cannot e-mail you and cannot send you this data.<br><br>"+
-				"Your WebCall ID: <b>"+myCalleeID+"</b><br><br>"+
+				showStatus( "Please store your ID and password in a safe place. "+
+				"We can not to send you this data.<br><br>"+
+				"ID: <b>"+myCalleeID+"</b><br><br>"+
 				"Your full WebCall callee link is shown below. "+
-				"This link works from any web browser. "+
+				"This link works in any web browser. "+
 				"Click to start:<br><br>"+
 				"<a onclick='exelink(this.href); return false;' href='"+calleeLink+"'>"+calleeLink+"</a>",-1);
 			} else {
@@ -158,11 +157,11 @@ function exelink(url) {
 	console.log("exelink parent", window.location, window.parent.location);
 	if(window.location !== window.parent.location) {
 		// running inside an iframe -> open in a new tab
-		console.log("exelink open",calleeLink);
+		//console.log("exelink open",calleeLink);
 		window.open(calleeLink, '_blank');
 	} else {
 		// not running inside an iframe -> continue in the same tab
-		console.log("exelink replace",calleeLink);
+		//console.log("exelink replace",calleeLink);
 		window.location.replace(calleeLink+"?auto=1");
 	}
 }
