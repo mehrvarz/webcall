@@ -13,10 +13,11 @@ type DbUser struct {
 	UserAgent string        // used for httpRegister
 	Email2 string           // now used as tw_handle
 	Str1 string             // now used as tw_user_id
-	Str2 string             // web push device 1 subscription
-	Str2ua string           // web push device 1 user agent
-	Str3 string             // web push device 2 subscription
-	Str3ua string           // web push device 2 user agent
+	Str2 string             //  web push device 1 subscription
+	Str2ua string           //  web push device 1 user agent
+	Str3 string             //  web push device 2 subscription
+	Str3ua string           //  web push device 2 user agent
+	AltIDs string
 	LastLoginTime int64
 	LastLogoffTime int64
 	Int2 int                // bit 0: hidden callee mode 0/1

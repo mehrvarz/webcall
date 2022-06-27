@@ -90,7 +90,7 @@ document.onkeydown = function(evt) {
 		console.log('prefercodec: esc key -> exitPage');
 		exitPage();
 	} else {
-        console.log('prefercodec: no esc key (ignore)');
+		//console.log('prefercodec: no esc key (ignore)');
 	}
 };
 

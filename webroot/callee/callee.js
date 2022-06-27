@@ -22,6 +22,7 @@ const form = document.querySelector('form#password');
 const formPw = document.querySelector('input#current-password');
 const menuSettingsElement = document.getElementById('menuSettings');
 const menuClearCookieElement = document.getElementById('menuClearcookie');
+const menuClearCacheElement = document.getElementById('menuClearCache');
 const menuExitElement = document.getElementById('menuExit');
 const iconContactsElement = document.getElementById('iconContacts');
 const dialIdElement = document.getElementById('dialId');
@@ -96,6 +97,13 @@ window.onload = function() {
 
 	if(typeof Android !== "undefined" && Android !== null) {
 		menuExitElement.style.display = "block";
+
+		// menuClearCacheElement only for 1.0.8+
+		if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
+			if(Android.getVersionName()>="1.0.8") {
+				menuClearCacheElement.style.display = "block"; // calls clearcache()
+			}
+		}
 	}
 
 	let id = getUrlParams("id");
@@ -2344,6 +2352,19 @@ function clearcookie() {
 			}
 		},1000);
 	},1000);
+}
+
+function clearcache() {
+	if(typeof Android !== "undefined" && Android !== null) {
+		if(typeof Android.reload !== "undefined" && Android.reload !== null) {
+			Android.wsClearCache();
+			Android.wsClose();
+			setTimeout(function() {
+				Android.reload();
+			},100);
+		}
+	}
+	history.back();
 }
 
 function exit() {

@@ -30,6 +30,9 @@ func httpActions(w http.ResponseWriter, r *http.Request, actionString string, ca
 		fmt.Printf("/action (%s) 001001 dump goroutines exec now %s\n", calleeID, remoteAddr)
 		pprof.Lookup("goroutine").WriteTo(os.Stdout, 2)
 		return
+	case actionString=="006001":
+		fmt.Fprintf(w,"widget=/callee/mapping/")
+		return
 	/*
 	case actionString=="callback":
 		// schedule callback calleeID

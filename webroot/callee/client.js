@@ -689,8 +689,9 @@ function onIceCandidate(event,myCandidateName) {
 var iframeWindowOpenFlag = false;
 var iframeWindowOpenUrl = null;
 function iframeWindowOpen(url, horiCenterBound, addStyleString) {
+	//console.log('iframeWindowOpen='+url);
 	if(iframeWindowOpenFlag) {
-		gLog('iframeWindowOpen iframeWindowOpenFlag');
+		console.log('iframeWindowOpen iframeWindowOpenFlag');
 		return;
 	}
 	if(menuDialogOpenElement) {
@@ -738,28 +739,32 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString) {
 		iframeWindowElement.innerHTML = url.substring(7);
 	} else {
 		iframeWindowElement.style = styleString;
-		iframeWindowElement.innerHTML = "<iframe src='"+url+"' scrolling='yes' frameborder='no' width='100%' height='100%' allow='microphone;camera' onload='this.contentWindow.focus()'></iframe>";
+		iframeWindowElement.innerHTML = "<iframe id='child' src='"+url+"' scrolling='yes' frameborder='no' width='100%' height='100%' allow='microphone;camera' onload='this.contentWindow.focus()'></iframe>";
 	}
 }
 
 function iframeWindowClose() {
-	gLog('iframeWindowClose '+iframeWindowOpenUrl);
-	containerElement.style.filter="";
-	iframeWindowElement.innerHTML = "";
-	iframeWindowElement.style.display = "none";
-	fullScreenOverlayElement.style.display = "none";
-	fullScreenOverlayElement.onclick = null;
-	iframeWindowOpenFlag = false;
+	if(iframeWindowOpenUrl && iframeWindowOpenUrl!="") {
+		console.log('iframeWindowClose '+iframeWindowOpenUrl);
+		containerElement.style.filter="";
+		iframeWindowElement.innerHTML = "";
+		iframeWindowElement.style.display = "none";
+		fullScreenOverlayElement.style.display = "none";
+		fullScreenOverlayElement.onclick = null;
+		iframeWindowOpenFlag = false;
 
-	if(iframeWindowOpenUrl.indexOf("/user/")>=0 && iframeWindowOpenUrl.indexOf("?callerId=")>=0) {
-		if(typeof Android !== "undefined" && Android !== null) {
-			Android.peerDisConnect(); // will reset callInProgress and turn off proximity sensor
+		if(iframeWindowOpenUrl.indexOf("/user/")>=0 && iframeWindowOpenUrl.indexOf("?callerId=")>=0) {
+			if(typeof Android !== "undefined" && Android !== null) {
+				Android.peerDisConnect(); // will reset callInProgress and turn off proximity sensor
+			}
+		} else if(iframeWindowOpenUrl.indexOf("/callee/settings")>=0) {
+			// calling fkt in callee.js
+			getSettings();
 		}
-	} else if(iframeWindowOpenUrl.indexOf("/callee/settings")>=0) {
-		// calling fkt in callee.js
-		getSettings();
+		iframeWindowOpenUrl=null;
+	} else {
+		console.log('iframeWindowClose was not open');
 	}
-	iframeWindowOpenUrl=null;
 }
 
 let lastGoodMediaConstraints;

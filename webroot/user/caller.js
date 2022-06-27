@@ -75,6 +75,7 @@ var goodbyDone = false;
 var haveBeenWaitingForCalleeOnline=false;
 var lastOnlineStatus = "";
 var contactAutoStore = false;
+var counter=0;
 
 var extMessage = function(e) {
 	// prevent an error on split() below when extensions emit unrelated, non-string 'message' events to the window
@@ -266,11 +267,23 @@ function onload2(checkFlag) {
 
 			gLog('start caller with calleeID',calleeID);
 			if(calleeID.startsWith("#")) {
-				// example: calleeID=="#007" -> ask server for callback to callerId
 				let api = apiPath+"/action?id="+calleeID.substring(1)+"&callerId="+callerId+"&name="+callerName;
 				xhrTimeout = 5*1000;
 				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-					history.back();
+					console.log("xhr.resp="+xhr.responseText);
+					if(xhr.responseText.startsWith("widget=")) {
+						// switch widget: replace parent iframe src
+						let url = xhr.responseText.substring(7) +
+							"?callerId="+callerId+"&name="+callerName+"&ds="+playDialSounds+"&i="+counter;
+						counter++;
+						let iframeElement = parent.document.querySelector('iframe#child');
+						console.log("widget("+url+") iframeElement="+iframeElement);
+						if(parent!=null && iframeElement!=null) {
+							iframeElement.src = url;
+						}
+					} else {
+						history.back();
+					}
 				}, errorAction2);
 				return;
 			}
