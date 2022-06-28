@@ -267,14 +267,14 @@ function onload2(checkFlag) {
 
 			gLog('start caller with calleeID',calleeID);
 			if(calleeID.startsWith("#")) {
-				let api = apiPath+"/action?id="+calleeID.substring(1)+"&callerId="+callerId+"&name="+callerName;
+// TODO only for Android version >= v1.0.8
+				let api = apiPath+"/action?id="+calleeID.substring(1)+"&callerId="+callerId;
 				xhrTimeout = 5*1000;
 				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 					console.log("xhr.resp="+xhr.responseText);
 					if(xhr.responseText.startsWith("widget=")) {
 						// switch widget: replace parent iframe src
-						let url = xhr.responseText.substring(7) +
-							"?callerId="+callerId+"&name="+callerName+"&ds="+playDialSounds+"&i="+counter;
+						let url = xhr.responseText.substring(7) + "?callerId="+callerId+"&i="+counter;
 						counter++;
 						let iframeElement = parent.document.querySelector('iframe#child');
 						console.log("widget("+url+") iframeElement="+iframeElement);

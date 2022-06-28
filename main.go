@@ -40,6 +40,11 @@ import (
 	"runtime"
 	"math/rand"
 	"gopkg.in/ini.v1"
+
+	"bytes"
+	"encoding/gob"
+	bolt "go.etcd.io/bbolt"
+
 	_ "net/http/pprof"
 	"github.com/mehrvarz/webcall/atombool"
 	"github.com/mehrvarz/webcall/iptools"
@@ -114,6 +119,13 @@ var missedCallAllowedMutex sync.RWMutex
 
 var waitingCallerChanMap map[string]chan int // ip:port -> chan
 var waitingCallerChanLock sync.RWMutex
+
+type MappingDataType struct {
+	CalleeId string
+	Assign string
+}
+var mapping map[string]MappingDataType
+var mappingMutex sync.RWMutex
 
 var numberOfCallsToday = 0 // will be incremented by wshub.go processTimeValues()
 var numberOfCallSecondsToday int64 = 0
@@ -205,6 +217,8 @@ func main() {
 	clientRequestsMap = make(map[string][]time.Time)
 	missedCallAllowedMap = make(map[string]time.Time)
 	waitingCallerChanMap = make(map[string]chan int)
+	mapping = make(map[string]MappingDataType)
+
 	wsClientMap = make(map[uint64]wsClientDataType) // wsClientID -> wsClientData
 	readConfig(true)
 
@@ -290,6 +304,45 @@ func main() {
 
 	outboundIP,err = iptools.GetOutboundIP()
 	fmt.Printf("outboundIP %s\n",outboundIP)
+
+	// init mapping from dbUserBucket
+	kv := kvMain.(skv.SKV)
+	bucketName := dbUserBucket
+	db := kv.Db
+	skv.DbMutex.Lock()
+	err = db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(bucketName))
+		c := b.Cursor()
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			// k = ID ("timur_1619008491")
+			// v = dbUser []byte
+
+			calleeID := string(k)
+			idxUline := strings.Index(calleeID,"_")
+			if idxUline>= 0 {
+				calleeID = calleeID[:idxUline]
+			}
+
+			var dbUser DbUser // DbEntry{unixTime, remoteAddr, urlPw}
+			d := gob.NewDecoder(bytes.NewReader(v))
+			d.Decode(&dbUser)
+			if dbUser.AltIDs!="" {
+				fmt.Printf("initloop %s (%s)->%s\n",k,calleeID,dbUser.AltIDs)
+				toks := strings.Split(dbUser.AltIDs, "|")
+				for tok := range toks {
+					toks2 := strings.Split(toks[tok], ",")
+					if toks2[0] != "" { // tmpID
+						if toks2[1] == "true" {
+							mapping[toks2[0]] = MappingDataType{calleeID,toks2[2]}
+							fmt.Printf("initloop set %s -> %s (%s)\n",toks2[0],calleeID,toks2[2])
+						}
+					}
+				}
+			}
+		}
+		return nil
+	})
+	skv.DbMutex.Unlock()
 
 	// websocket handler
 	if wsPort > 0 {

@@ -653,6 +653,7 @@ function login(retryFlag) {
 			wsSecret = "";
 			showStatus("User ID unknown<br>",-1);
 			form.style.display = "none";
+			offlineAction();
 		} else if(loginStatus=="busy") {
 			showStatus("User is busy",-1);
 			form.style.display = "none";
@@ -2355,6 +2356,7 @@ function clearcookie() {
 }
 
 function clearcache() {
+	// will only be called if Android.getVersionName() >= "1.0.8"
 	if(typeof Android !== "undefined" && Android !== null) {
 		if(typeof Android.reload !== "undefined" && Android.reload !== null) {
 			Android.wsClearCache();

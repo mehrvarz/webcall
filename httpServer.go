@@ -429,6 +429,18 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	*/
 
+	// always check mapping[urlID], except for "/deletemapping"
+	if !strings.HasPrefix(urlPath,"/deletemapping") {
+		mappingMutex.RLock()
+		mappingData,ok := mapping[urlID]
+		mappingMutex.RUnlock()
+		if ok {
+			fmt.Printf("httpApi mapping urlID (%s) -> (%s,%s)\n", urlID, mappingData.CalleeId, mappingData.Assign)
+			urlID = mappingData.CalleeId
+			// ... = mappingData.Assign
+		}
+	}
+
 	if len(urlID)>11 {
 		tok := strings.Split(urlID, "|")
 		if len(tok) == 5 {
@@ -582,6 +594,26 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if strings.HasPrefix(urlPath,"/deletecontact") {
 		httpDeleteContact(w, r, urlID, calleeID, cookie, remoteAddr)
+		return
+	}
+	if strings.HasPrefix(urlPath,"/getmapping") {
+		httpGetMapping(w, r, urlID, calleeID, cookie, remoteAddr)
+		return
+	}
+	if strings.HasPrefix(urlPath,"/setmapping") {
+		httpSetMapping(w, r, urlID, calleeID, cookie, remoteAddr)
+		return
+	}
+	if strings.HasPrefix(urlPath,"/fetchid") {
+		httpFetchID(w, r, urlID, calleeID, cookie, remoteAddr, startRequestTime)
+		return
+	}
+	if strings.HasPrefix(urlPath,"/deletemapping") {
+		httpDeleteMapping(w, r, urlID, calleeID, cookie, remoteAddr)
+		return
+	}
+	if strings.HasPrefix(urlPath,"/setassign") {
+		httpSetAssign(w, r, urlID, calleeID, cookie, remoteAddr)
 		return
 	}
 	if strings.HasPrefix(urlPath,"/twid") {
