@@ -55,7 +55,7 @@ function errorAction(errString,err) {
 	showStatus('xhr error '+errString,-1);
 }
 
-var xhrTimeout = 50000;
+var xhrTimeout = 5000;
 function ajaxFetch(xhr, type, apiPath, processData, errorFkt, postData) {
 	xhr.onreadystatechange = function() {
 		if(xhr.readyState == 4 && (xhr.status==200 || xhr.status==0)) {

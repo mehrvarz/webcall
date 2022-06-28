@@ -430,7 +430,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	*/
 
 	// always check mapping[urlID], except for "/deletemapping"
-	if !strings.HasPrefix(urlPath,"/deletemapping") {
+	if !strings.HasPrefix(urlPath,"/deletemapping") && !strings.HasPrefix(urlPath,"/setassign") {
 		mappingMutex.RLock()
 		mappingData,ok := mapping[urlID]
 		mappingMutex.RUnlock()

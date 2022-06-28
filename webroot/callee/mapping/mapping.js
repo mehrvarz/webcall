@@ -186,37 +186,14 @@ function storeData() {
 	}, errorAction, altIDs);
 }
 
+var myTableElement;
 function edit(tableElement,ev,key,assign) {
 	console.log("edit key="+key+" assign="+assign);
-	// TODO edit assign string (see below on how)
-// TODO need tmpID + assign
+	// edit assign string (see below on how)
 // TODO make sure assign string has a certain max len
-
-/*
-	// store assign string
-	let api = apiPath+"/setassign?id="+tmpID+"&assign=";
-	if(!gentle) console.log('request getmapping api',api);
-	ajaxFetch(new XMLHttpRequest(), "POST", api, function(xhr) {
-		if(xhr.responseText.startsWith("error")) {
-			console.log('# /setmapping err='+xhr.responseText);
-		} else if(xhr.responseText=="") {
-			console.log('# /setmapping empty response');
-		} else {
-			// all is well
-			displayMapping();
-		}
-	}, errorAction, altIDs);
-*/
-}
-
-/*
-// edit is only needed to enter/modify usage string
-var myTableElement;
-function edit(tableElement,ev,key) {
-	let name = obj[key];
 	let rect = tableElement.getBoundingClientRect();
 	console.log('edit',key,name,rect,ev.pageX,ev.pageY);
-	if(formElement!=null) {
+	if(formForNameOpen) {
 		let parentElement = formElement.parentNode;
 		parentElement.removeChild(formElement);
 		formElement = null;
@@ -225,65 +202,71 @@ function edit(tableElement,ev,key) {
 	// offer a form for the user to edit the name at pos rect.x / rect.y and rect.width
 	formElement = document.createElement("div");
 	formElement.style = "position:absolute; left:"+rect.x+"px; top:"+(rect.y+window.scrollY)+"px; z-index:100;";
-	formElement.innerHTML = "<form action='javascript:;' onsubmit='editSubmit(this,\""+key+"\")' id='user-comment'> <input type='text' id='formtext' value='"+name+"' autofocus> <input type='submit' id='submit' value='Store'> </form>";
-	databox.appendChild(formElement);
+	formElement.innerHTML = "<form action='javascript:;' onsubmit='editSubmit(this,\""+key+"\",\""+assign+"\")' id='user-comment'> <input type='text' id='formtext' value='"+name+"' autofocus> <input type='submit' id='submit' value='Store'> </form>";
+	databoxElement.appendChild(formElement);
 	formForNameOpen = true;
 }
 
-function editSubmit(formElement,id) {
-	//console.log('editSubmit',id);
+function editSubmit(formElement, id, assign) {
+	console.log("editSubmit id="+id+" assign="+assign);
 	let formtextElement = document.getElementById("formtext");
-	let oldName = obj[id];
-	let newName = formtextElement.value;
-	console.log('editSubmit value',oldName,newName,id);
-
-	if(newName=="") {
-		//prevent nameless element by aborting edit form
-		let parentElement = formElement.parentNode;
-		parentElement.removeChild(formElement);
-		formElement = null;
-		formForNameOpen = false;
-		return;
-	}
-
-	if(newName.toLowerCase()=="delete" || newName=="...") {
-		// special case
-		let api = apiPath+"/deletecontact?id="+callerID+"&contactID="+id;
-		if(!gentle) console.log('request api',api);
-		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-			console.log('xhr deletecontact OK',xhr.responseText);
-			if(xhr.responseText=="ok") {
-				// delete myTableElement <tr> 2nd parent of myTableElement
-				let trElement = myTableElement.parentNode.parentNode;
-				// remove trElement from DOM
-				let parentElement = trElement.parentNode;
-				parentElement.removeChild(trElement);
-			}
-		}, errorAction);
-
-	} else if(newName!=oldName) {
-		// name change
-		// deliver newName change for id back to the server (/setcontact?id=callerID&contactID=id&name=newName)
-		let api = apiPath+"/setcontact?id="+callerID+"&contactID="+id+"&name="+newName;
-		if(!gentle) console.log('request api',api);
-		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-			console.log('xhr setcontact resp='+xhr.responseText);
-			if(xhr.responseText=="") {
-				obj[id] = newName;
-				myTableElement.innerHTML = newName;
-			}
-		}, errorAction);
-	}
+	let newAssign = formtextElement.value;
+	console.log('editSubmit value change',assign,newAssign);
 
 	// remove formElement from DOM
 	let parentElement = formElement.parentNode;
 	parentElement.removeChild(formElement);
 	formElement = null;
 	formForNameOpen = false;
-}
-*/
 
-//var xhrTimeout = 50000;
+	if(newAssign=="") {
+		//prevent nameless element by aborting edit form
+		return;
+	}
+
+	if(newAssign!=assign) {
+		// store assign string
+		let api = apiPath+"/setassign?id="+id+"&assign="+newAssign;
+		if(!gentle) console.log('/setassign api',api);
+		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+			if(xhr.responseText.startsWith("error")) {
+				console.log('# /setassign err='+xhr.responseText);
+			} else if(xhr.responseText!="ok") {
+				console.log('# /setassign response not ok (%s)',xhr.responseText);
+			} else {
+				// all is well
+				//myTableElement.innerHTML = newAssign;
+
+				// patch altIDs and call storeData() (will automatically call displayMapping())
+				let newAltIDs = "";
+				let tok = altIDs.split("|");
+				for(var i=0; i<tok.length; i++) {
+					console.log("old tok["+i+"]="+tok[i]);
+					if(tok[i]!="") {
+						let tok2 = tok[i].split(",");
+						let oldid = tok2[0].trim();
+						let oldactive = tok2[1].trim();
+						let oldassign = tok2[2].trim();
+						if(oldid==id) {
+							tok[i] = id+","+oldactive+","+newAssign;
+						}
+					}
+					console.log("new tok["+i+"]="+tok[i]);
+					if(i==0) {
+						newAltIDs += tok[i];
+					} else {
+						newAltIDs += "|"+tok[i];
+					}
+				}
+				console.log("new altIDs="+newAltIDs);
+				altIDs = newAltIDs;
+				storeData();
+			}
+		}, errorAction);
+	}
+}
+
+var xhrTimeout = 5000;
 function ajaxFetch(xhr, type, apiPath, processData, errorFkt, postData) {
 	xhr.onreadystatechange = function() {
 		if(xhr.readyState == 4 && (xhr.status==200 || xhr.status==0)) {
@@ -292,7 +275,6 @@ function ajaxFetch(xhr, type, apiPath, processData, errorFkt, postData) {
 			errorFkt("fetch error",xhr.status);
 		}
 	}
-//	xhr.timeout = xhrTimeout;
 	xhr.ontimeout = function () {
 		errorFkt("timeout",0);
 	}

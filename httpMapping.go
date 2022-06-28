@@ -176,13 +176,14 @@ func httpSetAssign(w http.ResponseWriter, r *http.Request, urlID string, calleeI
 	url_arg_array, ok := r.URL.Query()["assign"]
 	if ok {
 		assign = url_arg_array[0]
-	}
 
-	fmt.Printf("/setassign (%s) urlID=%s assign=%s %s\n", calleeID, urlID, assign, remoteAddr)
-	mappingMutex.Lock()
-	mappingData := mapping[urlID]
-	mapping[urlID] = MappingDataType{mappingData.CalleeId,assign}
-	mappingMutex.Unlock()
+		fmt.Printf("/setassign (%s) urlID=%s assign=%s %s\n", calleeID, urlID, assign, remoteAddr)
+		mappingMutex.Lock()
+		mappingData := mapping[urlID]
+		mapping[urlID] = MappingDataType{mappingData.CalleeId,assign}
+		mappingMutex.Unlock()
+		fmt.Fprintf(w,"ok")
+	}
 }
 
 func httpDeleteMapping(w http.ResponseWriter, r *http.Request, urlID string, calleeID string, cookie *http.Cookie, remoteAddr string) {
