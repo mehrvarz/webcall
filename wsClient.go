@@ -156,17 +156,18 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		mappingData,ok := mapping[dialID]
 		mappingMutex.RUnlock()
 		if ok {
-			// caller is using a temporary calleeID (being mapped)
+			// caller is using a temporary (mapped) calleeID
 			// if a name was assigned, we attach it to the caller name
 			assignedName := mappingData.Assign
-			if callerName=="" {
-				callerName = "("+assignedName+")"
-			} else {
-				callerName += " ("+assignedName+")"
+			if assignedName!="" && assignedName!="none" {
+				if callerName=="" {
+					callerName = "("+assignedName+")"
+				} else {
+					callerName += " ("+assignedName+")"
+				}
 			}
 		}
 	}
-
 
 	clientVersion := ""
 	url_arg_array, ok = r.URL.Query()["ver"]
