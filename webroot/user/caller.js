@@ -1250,7 +1250,7 @@ function connectSignaling(message,openedFunc) {
 	gLog('connectSignaling: open ws connection '+calleeID+' '+wsAddr);
 	let tryingToOpenWebSocket = true;
     var wsUrl = wsAddr;
-	wsUrl += "&callerId="+callerId+"&name="+callerName; //+"&ver="+clientVersion;
+	wsUrl += "&callerId="+callerId+"&name="+callerName+"&dialID="+calleeID;
 	if(typeof Android !== "undefined" && Android !== null) {
 		if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
 			wsUrl = wsUrl + "&ver="+Android.getVersionName();
@@ -1261,7 +1261,6 @@ function connectSignaling(message,openedFunc) {
 	} else {
 		wsUrl = wsUrl + "&ver="+clientVersion;
 	}
-	wsUrl = wsUrl + "&dialID="+calleeID;
 
 	gLog('connectSignaling: wsUrl='+wsUrl);
 	wsConn = new WebSocket(wsUrl);
