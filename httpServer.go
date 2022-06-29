@@ -421,24 +421,15 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	urlID = strings.ToLower(urlID)
 	urlID = strings.TrimSpace(urlID)
-	// keep in mind: urlID may be total garbage
+	// keep in mind: urlID may be total garbage; don't trust it
 
-	/* translate urlID
-	if urlID=="89921219321" {
-		urlID = "answie7"
-	}
-	*/
-
-	// always check mapping[urlID], except for "/deletemapping"
-	if !strings.HasPrefix(urlPath,"/deletemapping") && !strings.HasPrefix(urlPath,"/setassign") {
-		mappingMutex.RLock()
-		mappingData,ok := mapping[urlID]
-		mappingMutex.RUnlock()
-		if ok {
-			fmt.Printf("httpApi mapping urlID (%s) -> (%s,%s)\n", urlID, mappingData.CalleeId, mappingData.Assign)
-			urlID = mappingData.CalleeId
-			// ... = mappingData.Assign
-		}
+	// translate urlID
+	mappingMutex.RLock()
+	mappingData,ok := mapping[urlID]
+	mappingMutex.RUnlock()
+	if ok {
+		fmt.Printf("httpApi mapping urlID (%s) -> (%s,%s)\n", urlID, mappingData.CalleeId, mappingData.Assign)
+		urlID = mappingData.CalleeId
 	}
 
 	if len(urlID)>11 {

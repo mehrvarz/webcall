@@ -171,18 +171,31 @@ func httpSetAssign(w http.ResponseWriter, r *http.Request, urlID string, calleeI
 		fmt.Printf("# /setassign (%s) fail urlID empty %s\n", calleeID, urlID, remoteAddr)
 		return
 	}
+	if calleeID!=urlID {
+		// this happens bc someone with calleeID in the cookie is now trying to use urlID via url
+		fmt.Printf("# /setassign urlID(%s) != calleeID(%s) %s ua=%s\n",
+			urlID, calleeID, remoteAddr, r.UserAgent())
+		return
+	}
 
-	assign := "none"
-	url_arg_array, ok := r.URL.Query()["assign"]
+	setID := ""
+	url_arg_array, ok := r.URL.Query()["setid"]
 	if ok {
-		assign = url_arg_array[0]
+		setID = url_arg_array[0]
+		if setID!="" {
+			assign := "none"
+			url_arg_array, ok = r.URL.Query()["assign"]
+			if ok {
+				assign = url_arg_array[0]
 
-		fmt.Printf("/setassign (%s) urlID=%s assign=%s %s\n", calleeID, urlID, assign, remoteAddr)
-		mappingMutex.Lock()
-		mappingData := mapping[urlID]
-		mapping[urlID] = MappingDataType{mappingData.CalleeId,assign}
-		mappingMutex.Unlock()
-		fmt.Fprintf(w,"ok")
+				fmt.Printf("/setassign (%s) setID=%s assign=%s %s\n", calleeID, setID, assign, remoteAddr)
+				mappingMutex.Lock()
+				mappingData := mapping[setID]
+				mapping[setID] = MappingDataType{mappingData.CalleeId,assign}
+				mappingMutex.Unlock()
+				fmt.Fprintf(w,"ok")
+			}
+		}
 	}
 }
 
@@ -196,20 +209,37 @@ func httpDeleteMapping(w http.ResponseWriter, r *http.Request, urlID string, cal
 		fmt.Printf("# /deletemapping (%s) fail no cookie %s\n", calleeID, remoteAddr)
 		return
 	}
-
-	// unregister urlID from dbRegisteredIDs
-	err := kvMain.Delete(dbRegisteredIDs, urlID)
-	if err!=nil {
-		fmt.Printf("# /deletemapping fail to delete id=%s\n", urlID)
-		fmt.Fprintf(w,"errorDeleteRegistered")
+	if urlID=="" {
+		fmt.Printf("# /deletemapping (%s) fail urlID empty %s\n", calleeID, urlID, remoteAddr)
+		return
+	}
+	if calleeID!=urlID {
+		// this happens bc someone with calleeID in the cookie is now trying to use urlID via url
+		fmt.Printf("# /deletemapping urlID(%s) != calleeID(%s) %s ua=%s\n",
+			urlID, calleeID, remoteAddr, r.UserAgent())
 		return
 	}
 
-	fmt.Printf("/deletemapping (%s) delID=%s %s\n", calleeID, urlID, remoteAddr)
-	// remove urlID -> calleeID from mapping.map
-	mappingMutex.Lock()
-	delete(mapping,urlID)
-	mappingMutex.Unlock()
-	fmt.Fprintf(w,"ok")
+	delID := ""
+	url_arg_array, ok := r.URL.Query()["delid"]
+	if ok {
+		delID = url_arg_array[0]
+		if delID!="" {
+			// unregister delID from dbRegisteredIDs
+			err := kvMain.Delete(dbRegisteredIDs, delID)
+			if err!=nil {
+				fmt.Printf("# /deletemapping fail to delete delid=%s\n", delID)
+				fmt.Fprintf(w,"errorDeleteRegistered")
+				return
+			}
+
+			fmt.Printf("/deletemapping (%s) delid=%s %s\n", calleeID, delID, remoteAddr)
+			// remove delID from mapping.map
+			mappingMutex.Lock()
+			delete(mapping,delID)
+			mappingMutex.Unlock()
+			fmt.Fprintf(w,"ok")
+		}
+	}
 }
 

@@ -10,7 +10,7 @@ var formElement = null;
 
 window.onload = function() {
 	callerID = getUrlParams("callerId");
-	console.log('mapping onload callerID='+callerID);
+	if(!gentle) console.log('mapping onload callerID='+callerID);
 
 	document.onkeydown = function(evt) {
 		//console.log('mapping onload onkeydown event');
@@ -23,13 +23,13 @@ window.onload = function() {
 		}
 		if(isEscape) {
 			if(formForNameOpen) {
-				console.log('mapping.js esc key (formForNameOpen)');
+				if(!gentle) console.log('mapping.js esc key (formForNameOpen)');
 				let parentElement = formElement.parentNode;
 				parentElement.removeChild(formElement);
 				formElement = null;
 				formForNameOpen = false;
 			} else {
-				console.log('mapping.js esc key -> exit');
+				if(!gentle) console.log('mapping.js esc key -> exit');
 				exitPage();
 			}
 		} else {
@@ -89,7 +89,7 @@ function displayMapping() {
 		let tok = altIDs.split("|");
 		count = tok.length;
 		for(var i=0; i<tok.length; i++) {
-			console.log("tok["+i+"]="+tok[i]);
+			//console.log("tok["+i+"]="+tok[i]);
 			if(tok[i]!="") {
 				let tok2 = tok[i].split(",");
 				let id = tok2[0].trim();
@@ -98,7 +98,7 @@ function displayMapping() {
 				if(assign=="") {
 					assign = "none";
 				}
-				console.log("assign=("+assign+")");
+				//console.log("assign=("+assign+")");
 
 				dataBoxContent += "<tr><td><a href='" + mainLink + id + "' target='_blank'>"+id+"</a></td>"+
 					"<td><a onclick='edit(this,event,\""+id+"\",\""+assign+"\")'>"+ assign +"</a></td>"+
@@ -142,7 +142,7 @@ function add() {
 
 function remove(idx,id) {
 	console.log('remove',idx,id);
-	let api = apiPath+"/deletemapping?id="+id;
+	let api = apiPath+"/deletemapping?id="+callerID+"&delid="+id;
 	if(!gentle) console.log('request api',api);
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 		if(xhr.responseText.startsWith("error")) {
@@ -188,11 +188,11 @@ function storeData() {
 
 var myTableElement;
 function edit(tableElement,ev,key,assign) {
-	console.log("edit key="+key+" assign="+assign);
+	if(!gentle) console.log("edit key="+key+" assign="+assign);
 	// edit assign string (see below on how)
-// TODO make sure assign string has a certain max len
+// TODO make sure assign string has a certain MAX length
 	let rect = tableElement.getBoundingClientRect();
-	console.log('edit',key,name,rect,ev.pageX,ev.pageY);
+	if(!gentle) console.log('edit',key,name,ev.pageX,ev.pageY);
 	if(formForNameOpen) {
 		let parentElement = formElement.parentNode;
 		parentElement.removeChild(formElement);
@@ -208,10 +208,10 @@ function edit(tableElement,ev,key,assign) {
 }
 
 function editSubmit(formElement, id, assign) {
-	console.log("editSubmit id="+id+" assign="+assign);
+	if(!gentle) console.log("editSubmit id="+id+" assign="+assign);
 	let formtextElement = document.getElementById("formtext");
 	let newAssign = formtextElement.value;
-	console.log('editSubmit value change',assign,newAssign);
+	if(!gentle) console.log('editSubmit value change',assign,newAssign);
 
 	// remove formElement from DOM
 	let parentElement = formElement.parentNode;
@@ -226,7 +226,7 @@ function editSubmit(formElement, id, assign) {
 
 	if(newAssign!=assign) {
 		// store assign string
-		let api = apiPath+"/setassign?id="+id+"&assign="+newAssign;
+		let api = apiPath+"/setassign?id="+callerID+"&setid="+id+"&assign="+newAssign;
 		if(!gentle) console.log('/setassign api',api);
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 			if(xhr.responseText.startsWith("error")) {
@@ -241,7 +241,7 @@ function editSubmit(formElement, id, assign) {
 				let newAltIDs = "";
 				let tok = altIDs.split("|");
 				for(var i=0; i<tok.length; i++) {
-					console.log("old tok["+i+"]="+tok[i]);
+					if(!gentle) console.log("old tok["+i+"]="+tok[i]);
 					if(tok[i]!="") {
 						let tok2 = tok[i].split(",");
 						let oldid = tok2[0].trim();
@@ -251,14 +251,14 @@ function editSubmit(formElement, id, assign) {
 							tok[i] = id+","+oldactive+","+newAssign;
 						}
 					}
-					console.log("new tok["+i+"]="+tok[i]);
+					if(!gentle) console.log("new tok["+i+"]="+tok[i]);
 					if(i==0) {
 						newAltIDs += tok[i];
 					} else {
 						newAltIDs += "|"+tok[i];
 					}
 				}
-				console.log("new altIDs="+newAltIDs);
+				if(!gentle) console.log("newAltIDs="+newAltIDs);
 				altIDs = newAltIDs;
 				storeData();
 			}
