@@ -1261,6 +1261,7 @@ function connectSignaling(message,openedFunc) {
 	} else {
 		wsUrl = wsUrl + "&ver="+clientVersion;
 	}
+	wsUrl = wsUrl + "&dialID="+calleeID;
 
 	gLog('connectSignaling: wsUrl='+wsUrl);
 	wsConn = new WebSocket(wsUrl);

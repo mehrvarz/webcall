@@ -149,6 +149,25 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		callerName = url_arg_array[0]
 	}
 
+	url_arg_array, ok = r.URL.Query()["dialID"]
+	if ok && len(url_arg_array[0]) > 0 {
+		dialID := url_arg_array[0]
+		mappingMutex.RLock()
+		mappingData,ok := mapping[dialID]
+		mappingMutex.RUnlock()
+		if ok {
+			// caller is using a temporary calleeID (being mapped)
+			// if a name was assigned, we attach it to the caller name
+			assignedName := mappingData.Assign
+			if callerName=="" {
+				callerName = "("+assignedName+")"
+			} else {
+				callerName += " ("+assignedName+")"
+			}
+		}
+	}
+
+
 	clientVersion := ""
 	url_arg_array, ok = r.URL.Query()["ver"]
 	if ok && len(url_arg_array[0]) > 0 {
@@ -160,7 +179,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	if ok && len(url_arg_array[0]) > 0 {
 		auto = url_arg_array[0]
 	}
-	//fmt.Printf("serve callerID=%s callerName=%s ver=%s\n", callerID, callerName, clientVersion)
+	//fmt.Printf("serve callerID=%s callerName=%s auto=%s ver=%s\n",
+	//	callerID, callerName, auto, clientVersion)
 
 	upgrader := websocket.NewUpgrader()
 	//upgrader.EnableCompression = true // TODO

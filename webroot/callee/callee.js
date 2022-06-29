@@ -1874,7 +1874,6 @@ function peerConnected2() {
 			endWebRtcSession(true,true); // -> peerConCloseFunc
 			return;
 		}
-		// TODO if callerID and/or callerName are avail we would rather show them
 		// instead of listOfClientIps
 		gLog('accept incoming call?',listOfClientIps);
 		peerCon.getStats(null)
