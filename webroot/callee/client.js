@@ -595,6 +595,10 @@ function menuDialogOpen(menuDialog) {
 		gLog('# menuDialogOpen menuDialogOpenElement');
 		return;
 	}
+	if(typeof menuDialog=="undefined" || menuDialog==null) {
+		gLog('# menuDialog undefined');
+		return;
+	}
 	menuDialogOpenElement = menuDialog;
 
 	hashcounter++;
@@ -1515,11 +1519,11 @@ function onkeydownFunc(evt) {
 			console.log('client.js: esc key -> back');
 			history.back();
 		} else {
-			console.log('client.js: esc key (ignore)');
+			//console.log('client.js: esc key (ignore)');
 		}
 	} else if(evt.key=="!") {
-		console.log("client.js: excl-key -> menuDialogOpen()");
-		menuDialogOpen();
+		//console.log("client.js: excl-key -> menuDialogOpen()");
+		//menuDialogOpen(menuDialogElement);
 	}
 }
 
