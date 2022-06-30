@@ -312,7 +312,7 @@ function onload2(checkFlag) {
 					dialButton.style.backgroundColor = "";
 					hangupButton.style.backgroundColor = "";
 					let msg = "Hanging up...";
-					console.log(msg);
+					//console.log(msg);
 					if(mediaConnect) {
 						if(playDialSounds) {
 							hangupWithBusySound(true,msg);

@@ -5,5 +5,5 @@ rm -f webroot/user/adapter-latest.js
 ln webroot/callee/adapter-latest.js webroot/user/adapter-latest.js
 rm -f webroot/button/adapter-latest.js
 ln webroot/callee/adapter-latest.js webroot/button/adapter-latest.js
-./initwebr.sh
+#./initwebr.sh
 
