@@ -62,8 +62,9 @@ func ticker3hours() {
 				var dbUser DbUser
 				err2 := kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 				if err2 != nil {
-					fmt.Printf("# ticker3hours %d error read db=%s bucket=%s get key=%v err=%v\n",
-						counter, dbMainName, dbUserBucket, dbUserKey, err2)
+					// this occurs with mapping tmpID's - is not an error
+					//fmt.Printf("# ticker3hours %d error read db=%s bucket=%s get key=%v err=%v\n",
+					//	counter, dbMainName, dbUserBucket, dbUserKey, err2)
 				} else {
 					lastLoginTime := dbUser.LastLoginTime
 					if(lastLoginTime==0) {
@@ -92,8 +93,8 @@ func ticker3hours() {
 							// this user account is not outdated
 						}
 					}
+					counter++
 				}
-				counter++
 			}
 			return nil
 		})
