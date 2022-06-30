@@ -1518,7 +1518,7 @@ function onkeydownFunc(evt) {
 			console.log('client.js: esc key (ignore)');
 		}
 	} else if(evt.key=="!") {
-		console.log('client.js: no esc key -> menuDialogOpen()');
+		console.log("client.js: excl-key -> menuDialogOpen()");
 		menuDialogOpen();
 	}
 }

@@ -35,7 +35,7 @@ window.onload = function() {
 				exitPage();
 			}
 		} else {
-			console.log('contacts.js no esc key');
+			//console.log('contacts.js no esc key');
 		}
 	};
 
