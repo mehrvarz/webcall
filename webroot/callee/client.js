@@ -1,6 +1,6 @@
 // WebCall Copyright 2022 timur.mobi. All rights reserved.
 'use strict';
-const clientVersion = '3.0.3';
+const clientVersion = '3.0.4';
 
 const avSelect = document.querySelector("select#avSelect");
 const vresDialogElement = document.getElementById('vresDialog');
