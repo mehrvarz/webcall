@@ -267,7 +267,6 @@ function onload2(checkFlag) {
 
 			gLog('start caller with calleeID',calleeID);
 			if(calleeID.startsWith("#")) {
-// TODO only for Android version >= v1.0.8
 				let api = apiPath+"/action?id="+calleeID.substring(1)+"&callerId="+callerId;
 				xhrTimeout = 5*1000;
 				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {

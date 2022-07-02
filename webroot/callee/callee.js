@@ -26,7 +26,9 @@ const menuClearCacheElement = document.getElementById('menuClearCache');
 const menuExitElement = document.getElementById('menuExit');
 const iconContactsElement = document.getElementById('iconContacts');
 const dialIdElement = document.getElementById('dialId');
+const idMappingElement = document.getElementById('idMapping');
 const exclamationElement = document.getElementById('exclamation');
+const ownlinkElement = document.getElementById('ownlink');
 const autoReconnectDelay = 15;
 const singlebutton = false;
 const calleeMode = true;
@@ -832,12 +834,11 @@ function showOnlineReadyMsg() {
 
 	msgbox.style.display = "none";
 
-	let msg1 = "";
 	if(isHiddenCheckbox.checked) {
-		msg1 =  "Your online status is hidden. "+
-				"Go to Menu to turn this off.<br>"
+		showStatus("Your online status is hidden.<br>",2500);
 	}
 
+	// "You receive calls made by this link"
 	let calleeLink = window.location.href;
 	let userLink = calleeLink.replace("callee/","user/");
 	let idxParameter = userLink.indexOf("?");
@@ -852,25 +853,9 @@ function showOnlineReadyMsg() {
 	if(!playDialSounds) {
 		userLinkHref = userLinkHref + "?ds=false";
 	}
-	let msg2 = "You will receive calls made by this link:<br>"+
+	let msg2 = "You receive calls made by this link:<br>"+
 		"<a target='_blank' href='"+userLinkHref+"'>"+userLink+"</a><br>";
-
-	if(msg1!="") {
-		// show 2 msgs after another
-		showStatus(msg1,2500);
-		if(msg2!="") {
-			setTimeout(function() {
-				if(wsConn!=null) {
-					showStatus(msg2,-1);
-				}
-			},2800);
-		}
-	} else {
-		// show 1 msg
-		if(msg2!="") {
-			showStatus(msg2,-1);
-		}
-	}
+	ownlinkElement.innerHTML = msg2;
 }
 
 let tryingToOpenWebSocket = false;
@@ -930,6 +915,14 @@ function wsOnOpen() {
 	menuSettingsElement.style.display = "block";
 	iconContactsElement.style.display = "block";
 	dialIdElement.style.display = "block";
+
+// TODO
+//	if(typeof Android !== "undefined" && Android !== null) {
+//		if(Android.getVersionName()!="1.0F" && Android.getVersionName()!="1.0T" &&
+//				Android.getVersionName()>="1.1.0") {
+			idMappingElement.style.display = "block";
+//		}
+//	}
 	goOfflineButton.disabled = false;
 }
 
@@ -2233,6 +2226,7 @@ function goOffline() {
 	offlineAction();
 	console.log('goOffline',calleeID);
 	showStatus("");
+	ownlinkElement.innerHTML = "";
 	stopAllAudioEffects("goOffline");
 	waitingCallerSlice = null;
 
@@ -2306,6 +2300,12 @@ function openDialId(userId) {
 		url = "/user/"+userId+"?callerId="+calleeID+"&name="+calleeName+"&ds="+playDialSounds+"&i="+counter++;
 	}
 	gLog('openDialId',url);
+	iframeWindowOpen(url);
+}
+
+function openIdMapping() {
+	let url = "/callee/mapping/?callerId="+calleeID+"&i="+counter++;
+	gLog('openIdMapping',url);
 	iframeWindowOpen(url);
 }
 

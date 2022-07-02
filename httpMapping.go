@@ -101,17 +101,18 @@ func httpSetMapping(w http.ResponseWriter, r *http.Request, urlID string, callee
 }
 
 func httpFetchID(w http.ResponseWriter, r *http.Request, urlID string, calleeID string, cookie *http.Cookie, remoteAddr string, startRequestTime time.Time) {
+	// fetch a new unused callee-ID
 	if calleeID=="" || calleeID=="undefined" {
-		//fmt.Printf("# /setmapping calleeID empty\n")
+		//fmt.Printf("# /fetchid calleeID empty\n")
 		return
 	}
 	if cookie==nil {
-		fmt.Printf("# /setmapping (%s) fail no cookie %s\n", calleeID, remoteAddr)
+		fmt.Printf("# /fetchid (%s) fail no cookie %s\n", calleeID, remoteAddr)
 		return
 	}
 	// if calleeID!=urlID, that's likely someone trying to run more than one callee in the same browser
 	if urlID!="" && urlID!=calleeID {
-		fmt.Printf("# /setmapping urlID=%s != calleeID=%s %s\n", urlID, calleeID, remoteAddr)
+		fmt.Printf("# /fetchid urlID=%s != calleeID=%s %s\n", urlID, calleeID, remoteAddr)
 		return
 	}
 
@@ -119,11 +120,11 @@ func httpFetchID(w http.ResponseWriter, r *http.Request, urlID string, calleeID 
 		// create new random, free ID, register it and return it
 		registerID,err := GetRandomCalleeID()
 		if err!=nil {
-			fmt.Printf("# /setmapping (%s) GetRandomCalleeID err=%v\n",calleeID,err)
+			fmt.Printf("# /fetchid (%s) GetRandomCalleeID err=%v\n",calleeID,err)
 			return
 		}
 		if registerID=="" {
-			fmt.Printf("# /setmapping (%s) registerID is empty\n",calleeID)
+			fmt.Printf("# /fetchid (%s) registerID is empty\n",calleeID)
 			return
 		}
 
@@ -131,7 +132,7 @@ func httpFetchID(w http.ResponseWriter, r *http.Request, urlID string, calleeID 
 		err = kvMain.Get(dbRegisteredIDs,registerID,&dbEntryRegistered)
 		if err==nil {
 			// registerID is already registered
-			fmt.Printf("# /setmapping (%s) newid=%s already registered db=%s bucket=%s\n",
+			fmt.Printf("# /fetchid (%s) newid=%s already registered db=%s bucket=%s\n",
 				calleeID, registerID, dbMainName, dbRegisteredIDs)
 			fmt.Fprintf(w, "error already registered")
 			return
@@ -141,7 +142,7 @@ func httpFetchID(w http.ResponseWriter, r *http.Request, urlID string, calleeID 
 		// "nopw": tmpID's don't have passwords
 		err = kvMain.Put(dbRegisteredIDs, registerID, DbEntry{unixTime, remoteAddr, "nopw"}, false)
 		if err!=nil {
-			fmt.Printf("# /setmapping (%s) error db=%s bucket=%s put err=%v\n",
+			fmt.Printf("# /fetchid (%s) error db=%s bucket=%s put err=%v\n",
 				registerID,dbMainName,dbRegisteredIDs,err)
 			fmt.Fprintf(w,"error cannot register ID")
 			// TODO this is bad! got to role back kvMain.Put((dbUser...) from above

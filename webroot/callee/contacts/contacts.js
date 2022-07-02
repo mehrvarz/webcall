@@ -131,7 +131,7 @@ function edit(tableElement,ev,key) {
 	// offer a form for the user to edit the name at pos rect.x / rect.y and rect.width
 	formElement = document.createElement("div");
 	formElement.style = "position:absolute; left:"+rect.x+"px; top:"+(rect.y+window.scrollY)+"px; z-index:100;";
-	formElement.innerHTML = "<form action='javascript:;' onsubmit='editSubmit(this,\""+key+"\")' id='user-comment'> <input type='text' id='formtext' value='"+name+"' autofocus> <input type='submit' id='submit' value='Store'> </form>";
+	formElement.innerHTML = "<form action='javascript:;' onsubmit='editSubmit(this,\""+key+"\")' id='user-comment'> <input type='text' id='formtext' value='"+name+"' size='14' maxlength='14' autofocus> <input type='submit' id='submit' value='Store'> </form>";
 	databox.appendChild(formElement);
 	formForNameOpen = true;
 }

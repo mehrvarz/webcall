@@ -81,7 +81,7 @@ button[disabled] {
 
 div#container {
 	padding: 0.7em;
-	max-width:520px;
+	max-width:600px;
 }
 h1 {
 	font-size:1.7em;
@@ -292,10 +292,11 @@ input[type=submit]:focus {
 
 <div id="iframeWindow" style="display:none"></div>
 
-<div id="menuDialog" style="position:relative; max-width:520px; user-select:none;">
-	<div style="position:absolute; left:-999em; _min-width:150px; top:0px; z-index:110; background:#45dd; color:#fff; padding:10px 0px; line-height:2.6em; border-radius:3px; cursor:pointer;">
-		<!--div id="menuContacts" class="menuButton" style="display:none" onclick="openContacts()">Contacts</div-->
+<!-- max-width same as for container -->
+<div id="menuDialog" style="position:relative; max-width:600px; user-select:none; display:none;">
+	<div style="position:absolute; right:0px; top:0px; z-index:110; background:#45dd; color:#fff; padding:10px 0px; line-height:2.6em; border-radius:3px; cursor:pointer;">
 		<div id="dialId" class="menuButton" style="display:none" onclick="openDialId('')">Dial ID</div>
+		<div id="idMapping" class="menuButton" style="display:none" onclick="openIdMapping()">ID Mapping</div>
 		<div id="menuSettings" class="menuButton" style="display:none" onclick="openSettings()">Settings</div>
 		<div class="menuButton" onclick="openPostCallStats()">Call Stats</div>
 		<label class="menuButton" id="fileselectlabel" for="fileselect" 
@@ -316,7 +317,7 @@ input[type=submit]:focus {
 			<input type="checkbox" id="dialsounds" class="checkbox"> Dial sounds</label>
 		</label>
 		<div class="menuButton" id="nativeMenu" style="display:none"
-			onclick="Android.menu()">Device menu</div>
+			onclick="history.back(); Android.menu()">Device menu</div>
 		<!-- enabled by login -->
 		<div class="menuButton" id="menuClearcookie" onclick="clearcookie()"
 			style="display:none;">Clear cookie</div>
@@ -395,6 +396,7 @@ input[type=submit]:focus {
 	<textarea id="msgbox" class="msgbox" spellcheck="false" style="display:none"></textarea>
 
 	<div id="status" class="status"></div>
+	<div id="ownlink" style="opacity:0.9;margin-top:10px;"></div>
 
 	<div id="progressSend" style="width:100%;max-width:360px;display:none;">
 		<div id="progressSendLabel">sending:</div>
@@ -412,7 +414,7 @@ input[type=submit]:focus {
 	<div id="missedCalls" class="callList"></div>
 
 	<div id="timer" class="timer">4:32</div>
-	<div style="opacity:0.7;margin-top:30px;user-select:none;">WebCall by <a id="webcallhome" href="https://timur.mobi/webcall">timur.mobi</a></div>
+	<div style="opacity:0.7;margin-top:15px;user-select:none;">WebCall by <a id="webcallhome" href="https://timur.mobi/webcall">timur.mobi</a></div>
 </div>
 
 <script src="custom.js"></script>

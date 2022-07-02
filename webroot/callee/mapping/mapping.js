@@ -81,9 +81,29 @@ function displayMapping() {
 
 	let count = 0;
 	dataBoxContent="";
+/*
+	// TODO add own link?
+	let calleeLink = window.location.href;
+	let userLink = calleeLink.replace("callee/","user/");
+	let idxParameter = userLink.indexOf("?");
+	if(idxParameter>=0) {
+		userLink = userLink.substring(0,idxParameter);
+	}
+	idxParameter = userLink.indexOf("#");
+	if(idxParameter>=0) {
+		userLink = userLink.substring(0,idxParameter);
+	}
+	var userLinkHref = userLink;
+	if(!playDialSounds) {
+		userLinkHref = userLinkHref + "?ds=false";
+	}
+	let msg2 = "You will receive calls made by this link:<br>"+
+		"<a target='_blank' href='"+userLinkHref+"'>"+userLink+"</a><br>";
+*/
+
 	if(altIDs!="") {
-		dataBoxContent += "<table style='width:100%; border-collapse:separate; border-spacing:6px 2px; line-height:1.7em;'>"
-		dataBoxContent += "<tr style='color:#7c0;font-weight:600;user-select:none;'><td>ID (copy)</td><td>assign (edit)</td></tr>";
+		dataBoxContent += "<table style='width:100%; border-collapse:separate; _border-spacing:6px 2px; line-height:1.7em;'>"
+		dataBoxContent += "<tr style='color:#7c0;font-weight:600;user-select:none;'><td>ID</td><td>Assign</td></tr>";
 
 		// parse altIDs, format: id,true,assign|id,true,assign|...
 		let tok = altIDs.split("|");
@@ -112,9 +132,10 @@ function displayMapping() {
 	dataBoxContent += "<br>";
 	if(count<10) {
 		// no more than 10 tmpID's per callee
-		dataBoxContent += "<a onclick='add()'>Add New-ID</a> &nbsp; ";
+		dataBoxContent += "<button onclick='add()'>Add New-ID</button> &nbsp; ";
 	}
-	dataBoxContent += "<a onclick='exitPage()'>Close</a>";
+	dataBoxContent += "<button onclick='exitPage()'>Close</button>";
+
 	databoxElement.innerHTML = dataBoxContent;
 }
 
@@ -130,6 +151,7 @@ function add() {
 		} else {
 			let newID = xhr.responseText;
 			console.log("add newID="+newID);
+			// ",true," = activated and without an assigned name
 			if(altIDs=="") {
 				altIDs = newID+",true,";
 			} else {
@@ -142,6 +164,7 @@ function add() {
 
 function remove(idx,id) {
 	console.log('remove',idx,id);
+// TODO: we need a yes/no confirm dialog
 	let api = apiPath+"/deletemapping?id="+callerID+"&delid="+id;
 	if(!gentle) console.log('request api',api);
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
@@ -186,11 +209,14 @@ function storeData() {
 	}, errorAction, altIDs);
 }
 
+// TODO need a active/inactive checkbox (default = activated)
+// on deactivate: remove mapping[urlID] (via server) and patch altIDs and call storeData()
+// on reactivate: add mapping[urlID] (via server) and patch altIDs and call storeData()
+
 var myTableElement;
 function edit(tableElement,ev,key,assign) {
 	if(!gentle) console.log("edit key="+key+" assign="+assign);
 	// edit assign string (see below on how)
-// TODO make sure assign string has a certain MAX length
 	let rect = tableElement.getBoundingClientRect();
 	if(!gentle) console.log('edit',key,name,ev.pageX,ev.pageY);
 	if(formForNameOpen) {
@@ -202,7 +228,7 @@ function edit(tableElement,ev,key,assign) {
 	// offer a form for the user to edit the name at pos rect.x / rect.y and rect.width
 	formElement = document.createElement("div");
 	formElement.style = "position:absolute; left:"+rect.x+"px; top:"+(rect.y+window.scrollY)+"px; z-index:100;";
-	formElement.innerHTML = "<form action='javascript:;' onsubmit='editSubmit(this,\""+key+"\",\""+assign+"\")' id='user-comment'> <input type='text' id='formtext' value='"+name+"' autofocus> <input type='submit' id='submit' value='Store'> </form>";
+	formElement.innerHTML = "<form action='javascript:;' onsubmit='editSubmit(this,\""+key+"\",\""+assign+"\")' id='user-comment'> <input type='text' id='formtext' value='"+assign+"' size='8' maxlength='8' autofocus> <input type='submit' id='submit' value='Store'> </form>";
 	databoxElement.appendChild(formElement);
 	formForNameOpen = true;
 }

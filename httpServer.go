@@ -194,11 +194,6 @@ func httpServer() {
 func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 	// serve file - if file does not exist, serve index.html
 	urlPath := r.URL.Path
-/* ???
-	if strings.HasSuffix(urlPath,"/") {
-		urlPath = urlPath[:len(urlPath)-1]
-	}
-*/
 
 	remoteAddrWithPort := r.RemoteAddr
 	if strings.HasPrefix(remoteAddrWithPort,"[::1]") {

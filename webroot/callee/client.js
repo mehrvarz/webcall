@@ -622,6 +622,8 @@ function menuDialogOpen(menuDialog) {
 		}
 	}
 
+	const menuDialogOpenChildElement = menuDialogOpenElement.firstElementChild;
+/*
 	// position menuDialog at mouse coordinate
     var e = window.event;
     var posX = e.clientX * 0.70 -40;
@@ -629,11 +631,11 @@ function menuDialogOpen(menuDialog) {
     var posY = e.clientY;
 	if(posY>50) posY-=50;
 	//gLog('menuDialogOpen x/y',posX,e.clientX,posY,e.clientY);
-	const menuDialogOpenChildElement = menuDialogOpenElement.firstElementChild;
 	menuDialogOpenChildElement.style.left = posX+"px";
 	menuDialogOpenChildElement.style.top = (posY+window.scrollY)+"px"; // add scrollY-offset to posY
+*/
 	menuDialogOpenElement.style.display = "block";
-
+/*
 	// move popup-menu up to prevent bottom cut-off (if there is room on top)
 	setTimeout(function() {
 		let menuHeight = menuDialogOpenChildElement.clientHeight;
@@ -645,6 +647,7 @@ function menuDialogOpen(menuDialog) {
 		//gLog('menuDialogOpen up2',posY, menuHeight, pageHeight);
 		menuDialogOpenChildElement.style.top = (posY+window.scrollY)+"px"; // add scrollY-offset to posY
 	},60);
+*/
 }
 
 function menuDialogClose() {
@@ -695,7 +698,7 @@ var iframeWindowOpenUrl = null;
 function iframeWindowOpen(url, horiCenterBound, addStyleString) {
 	//console.log('iframeWindowOpen='+url);
 	if(iframeWindowOpenFlag) {
-		console.log('iframeWindowOpen iframeWindowOpenFlag');
+		console.log('iframeWindowOpen fail iframeWindowOpenFlag');
 		return;
 	}
 	if(menuDialogOpenElement) {
@@ -726,13 +729,13 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString) {
 	iframeWindowOpenUrl = url;
 	iframeWindowOpenFlag = true;
 
-	let styleString = "width:90%; max-width:440px; height:94%; position:absolute; _padding:10px; z-index:200;";
+	let styleString = "width:94%; max-width:600px; height:94%; position:absolute; z-index:200;";
 	if(horiCenterBound) {
 		// center hori
 		styleString += "top:50%; left:50%; transform:translate(-50%,-50%);"
 	} else {
 		// left-bound
-		styleString += "left:3.2%; top:1%;"
+		styleString += "left:3.2%; top:2%;"
 	}
 
 	if(addStyleString) {

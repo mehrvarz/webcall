@@ -883,17 +883,21 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		calleeHidden := c.hub.IsCalleeHidden
 		c.hub.HubMutex.Unlock()
 
+		/* only need to do this if a global hub is being used (c.hub.IsCalleeHidden already set above)
 		// forward state of c.isHiddenCallee to globalHubMap
 		err := SetCalleeHiddenState(c.calleeID, calleeHidden)
 		if err != nil {
+			// via dbLayer.go: return locSetCalleeHiddenState(calleeId, hidden)
+			// hubMap[c.calleeID] == nil (in skvLayer.go)
 			fmt.Printf("# serveWs (%s) SetCalleeHiddenState %v err=%v\n", c.calleeID, calleeHidden, err)
 		}
+		*/
 
 		// read dbUser for IsCalleeHidden flag
 		// store dbUser after set/clear IsCalleeHidden in dbUser.Int2&1
 		userKey := c.calleeID + "_" + strconv.FormatInt(int64(c.hub.registrationStartTime),10)
 		var dbUser DbUser
-		err = kvMain.Get(dbUserBucket, userKey, &dbUser)
+		err := kvMain.Get(dbUserBucket, userKey, &dbUser)
 		if err!=nil {
 			fmt.Printf("# serveWs (%s) cmd=calleeHidden db=%s bucket=%s getX key=%v err=%v\n",
 				c.calleeID, dbMainName, dbUserBucket, userKey, err)

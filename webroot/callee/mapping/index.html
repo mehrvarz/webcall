@@ -12,7 +12,9 @@
 ::-webkit-scrollbar { display:none; }
 html {
 	width:100%; height:100%; min-height:1200px;
-	background:#339;
+	_background:#134;
+	_background-image:linear-gradient(#022,#157);
+	background-image:linear-gradient(#039, #004);
 	color:#eee;
 	scrollbar-width:none;
 }
@@ -41,6 +43,28 @@ label {
     display:inline-block;
 }
 
+button, button:focus {
+	background-color:#04c;
+	transition: background-color 200ms;
+	border:none;
+	border-radius:3px;
+	color:white;
+	font-size: 1.0em;
+	margin: 0 0.8em 0.8em 0;
+	padding: 0.7em 0.7em 0.6em 0.7em;
+	min-width: 60px;
+	outline:none;
+	user-select:none;
+}
+button:active {
+	background-color: #02a;
+	outline:none;
+}
+button:hover {
+	background-color: #b82a68;
+	outline:none;
+}
+
 a, a:link, a:visited, a:active {
     color:#ddd;
 	font-weight:600;
@@ -56,7 +80,7 @@ a:hover {
 </head>
 <body>
 <div id="container">
-	<h1>WebCall Mapping</h1>
+	<h1>ID Mapping</h1>
 	<div id="databox" style="overflow-y:auto; padding:5px;"></div>
 </div>
 </body>
