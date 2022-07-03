@@ -25,7 +25,7 @@ const menuClearCookieElement = document.getElementById('menuClearcookie');
 const menuClearCacheElement = document.getElementById('menuClearCache');
 const menuExitElement = document.getElementById('menuExit');
 const iconContactsElement = document.getElementById('iconContacts');
-const dialIdElement = document.getElementById('dialId');
+//const dialIdElement = document.getElementById('dialId');
 const idMappingElement = document.getElementById('idMapping');
 const exclamationElement = document.getElementById('exclamation');
 const ownlinkElement = document.getElementById('ownlink');
@@ -914,7 +914,7 @@ function wsOnOpen() {
 	dialsoundslabel.style.display = "block";
 	menuSettingsElement.style.display = "block";
 	iconContactsElement.style.display = "block";
-	dialIdElement.style.display = "block";
+//	dialIdElement.style.display = "block";
 
 // TODO
 //	if(typeof Android !== "undefined" && Android !== null) {
@@ -1269,14 +1269,17 @@ function signalingCommand(message) {
 				exclamationElement.style.display = "block";
 				exclamationElement.style.opacity = 1;
 				exclamationElement.onclick = function() {
-
+/*
 					if(typeof Android !== "undefined" && Android !== null) {
 						Android.browse(newsUrl);
 					} else {
-						// open iframe for newsUrl
-						//iframeWindowOpen(newsUrl,"max-width:640px;");
 						window.open(newsUrl, "_blank");
 					}
+*/
+					if(divspinnerframe) {
+						divspinnerframe.style.display = "block";
+					}
+					iframeWindowOpen(newsUrl,true,"max-width:800px;");
 
 					minNewsDate = Math.floor(Date.now()/1000);
 					localStorage.setItem('newsdate', minNewsDate);

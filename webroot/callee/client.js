@@ -1,6 +1,6 @@
 // WebCall Copyright 2022 timur.mobi. All rights reserved.
 'use strict';
-const clientVersion = '3.0.4';
+const clientVersion = '3.0.5';
 
 const avSelect = document.querySelector("select#avSelect");
 const vresDialogElement = document.getElementById('vresDialog');
@@ -747,6 +747,10 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString) {
 	} else {
 		iframeWindowElement.style = styleString;
 		iframeWindowElement.innerHTML = "<iframe id='child' src='"+url+"' scrolling='yes' frameborder='no' width='100%' height='100%' allow='microphone;camera' onload='this.contentWindow.focus()'></iframe>";
+	}
+
+	if(divspinnerframe) {
+		divspinnerframe.style.display = "none";
 	}
 }
 
