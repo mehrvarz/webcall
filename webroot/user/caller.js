@@ -211,7 +211,7 @@ window.onload = function() {
 	}
 
 	if(calleeID=="") {
-		// Dial ID
+		// Dial-ID
 		gLog("onload no calleeID; switch to enterId");
 		containerElement.style.display = "none";
 		enterIdElement.style.display = "block";
