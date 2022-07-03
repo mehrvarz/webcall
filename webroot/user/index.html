@@ -290,8 +290,8 @@ input[type=submit]:focus {
 
 <div id="iframeWindow" style="display:none"></div>
 
-<div id="menuDialog" style="position:relative; max-width:520px; user-select:none;">
-	<div style="position:absolute; left:-999em; _min-width:150px; top:0px; z-index:110; background:#45dd; color:#fff; padding:10px 0px; line-height:2.6em; border-radius:3px; cursor:pointer;">
+<div id="menuDialog" style="position:relative; max-width:520px; user-select:none; display:none;">
+	<div style="position:absolute; right:0px; top:0px; z-index:110; background:#45dd; color:#fff; padding:10px 0px; line-height:2.6em; border-radius:3px; cursor:pointer;">
 		<div class="menuButton" onclick="openPostCallStats()">Call Stats</div>
 		<label class="menulabel" id="fileselectlabel" style="display:none;">
 			Send File
@@ -339,8 +339,8 @@ input[type=submit]:focus {
 
 
 <div id="container">
-	<img id="menu" onclick="menuDialogOpen(menuDialogElement)" src="menu.svg" style="position:relative; float:right; width:25px; margin-top:6px; z-index:100; user-select:none; cursor:pointer;">
-	<img id="camera" src="camera.svg" style="position:relative; float:right; width:30px; margin-top:5.5px; margin-right:24px; z-index:100; user-select:none; cursor:pointer; transition:opacity 500ms;" onclick="videoSwitch(false)">
+	<img id="menu" onclick="menuDialogOpen(menuDialogElement)" src="menu.svg" style="position:relative; float:right; width:25px; margin-top:6px; margin-right:10px; margin-left:22px; z-index:100; user-select:none; cursor:pointer;">
+	<img id="camera" src="camera.svg" style="position:relative; float:right; width:30px; margin-top:5.5px; margin-left:22px; z-index:100; user-select:none; cursor:pointer; transition:opacity 500ms;" onclick="videoSwitch(false)">
 
 	<h1 id="title">WebCall</h1>
 	<div id="calleeOnline" style="display:none">

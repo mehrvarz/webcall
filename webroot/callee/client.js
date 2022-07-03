@@ -599,6 +599,7 @@ function menuDialogOpen(menuDialog) {
 		gLog('# menuDialog undefined');
 		return;
 	}
+	//gLog('menuDialogOpen '+menuDialog);
 	menuDialogOpenElement = menuDialog;
 
 	hashcounter++;
@@ -611,19 +612,20 @@ function menuDialogOpen(menuDialog) {
 	containerElement.style.filter = "blur(0.8px) brightness(60%)";
 	if(calleeMode) {
 		if(wsConn && navigator.cookieEnabled && getCookieSupport()) {
-			// cookies avail: "Settings" allowed
+			// cookies avail: "Settings" visible
 			if(menuSettingsElement) {
 				menuSettingsElement.style.display = "block";
 			}
 		} else {
+			// "Settings" hidden
 			if(menuSettingsElement) {
 				menuSettingsElement.style.display = "none";
 			}
 		}
 	}
 
-	const menuDialogOpenChildElement = menuDialogOpenElement.firstElementChild;
 /*
+	const menuDialogOpenChildElement = menuDialogOpenElement.firstElementChild;
 	// position menuDialog at mouse coordinate
     var e = window.event;
     var posX = e.clientX * 0.70 -40;
