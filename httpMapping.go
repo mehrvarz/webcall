@@ -135,6 +135,7 @@ func httpFetchID(w http.ResponseWriter, r *http.Request, urlID string, calleeID 
 			fmt.Printf("# /fetchid (%s) newid=%s already registered db=%s bucket=%s\n",
 				calleeID, registerID, dbMainName, dbRegisteredIDs)
 			fmt.Fprintf(w, "error already registered")
+// TODO jump to GetRandomCalleeID()?
 			return
 		}
 
@@ -235,10 +236,22 @@ func httpDeleteMapping(w http.ResponseWriter, r *http.Request, urlID string, cal
 			}
 
 			fmt.Printf("/deletemapping (%s) delid=%s %s\n", calleeID, delID, remoteAddr)
+
 			// remove delID from mapping.map
 			mappingMutex.Lock()
 			delete(mapping,delID)
 			mappingMutex.Unlock()
+
+			// create a dbBlockedIDs entry (will be deleted after 60 days by timer)
+			unixTime := time.Now().Unix()
+			dbUserKey := fmt.Sprintf("%s_%d",delID, unixTime)
+			dbUser := DbUser{/*Ip1:remoteAddr*/}
+			err = kvMain.Put(dbBlockedIDs, dbUserKey, dbUser, false)
+			if err!=nil {
+				fmt.Printf("# /deletemapping error db=%s bucket=%s put key=%s err=%v\n",
+					dbMainName,dbBlockedIDs,delID,err)
+			}
+
 			fmt.Fprintf(w,"ok")
 		}
 	}

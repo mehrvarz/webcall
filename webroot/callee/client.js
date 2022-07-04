@@ -758,7 +758,7 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString) {
 
 function iframeOnload(obj) {
 	let iframeHeight = obj.contentWindow.document.documentElement.scrollHeight + 10 + 'px';
-	console.log("#####iframeHeight="+iframeHeight);
+	//console.log("iframeOnload height="+iframeHeight);
 	obj.style.height = iframeHeight;
 	obj.contentWindow.focus();
 }

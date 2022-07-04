@@ -25,7 +25,6 @@ var followerIDsLock sync.RWMutex
 func ticker3hours() {
 	fmt.Printf("ticker3hours start\n")
 	kv := kvMain.(skv.SKV)
-	bucketName := dbRegisteredIDs
 	db := kv.Db
 
 	// put ticker3hours out of step with other tickers
@@ -35,30 +34,35 @@ func ticker3hours() {
 	defer threeHoursTicker.Stop()
 	for {
 		<-threeHoursTicker.C
-		fmt.Printf("ticker3hours loop\n")
 		if shutdownStarted.Get() {
 			break
 		}
 
-		// loop all dbRegisteredIDs to delete outdated accounts
+		timeNowUnix := time.Now().Unix()
+
+		// loop all dbRegisteredIDs to delete outdated dbUserBucket entries (not online for 180+ days)
+		fmt.Printf("ticker3hours start looking for outdated users...\n")
+		var maxDaysOffline int64 = 180
+		var deleteKeyArray []string  // for deleting
 		skv.DbMutex.Lock()
-		var dbUserBucketKeyArray1 []string  // for deleting
 		counterDeleted := 0
 		err := db.Update(func(tx *bolt.Tx) error {
-			b := tx.Bucket([]byte(bucketName))
+			b := tx.Bucket([]byte(dbRegisteredIDs))
 			c := b.Cursor()
 			counter := 0
 			for k, v := c.First(); k != nil; k, v = c.Next() {
-				// k = ID
-				//if strings.HasPrefix(k,"answie") || strings.HasPrefix(k,"talkback") 
-				if !isOnlyNumericString(string(k)) {
+				userID := string(k)
+				if strings.HasPrefix(userID,"answie") || strings.HasPrefix(userID,"talkback") {
+					continue
+				}
+				if !isOnlyNumericString(userID) {
 					continue
 				}
 				var dbEntry DbEntry // DbEntry{unixTime, remoteAddr, urlPw}
 				d := gob.NewDecoder(bytes.NewReader(v))
 				d.Decode(&dbEntry)
 				// we now must find out when this user was using the account the last time
-				dbUserKey := fmt.Sprintf("%s_%d", k, dbEntry.StartTime)
+				dbUserKey := fmt.Sprintf("%s_%d", userID, dbEntry.StartTime)
 				var dbUser DbUser
 				err2 := kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 				if err2 != nil {
@@ -66,6 +70,7 @@ func ticker3hours() {
 					//fmt.Printf("# ticker3hours %d error read db=%s bucket=%s get key=%v err=%v\n",
 					//	counter, dbMainName, dbUserBucket, dbUserKey, err2)
 				} else {
+					counter++
 					lastLoginTime := dbUser.LastLoginTime
 					if(lastLoginTime==0) {
 						lastLoginTime = dbEntry.StartTime // created by httpRegister()
@@ -73,48 +78,111 @@ func ticker3hours() {
 					if(lastLoginTime==0) {
 						fmt.Printf("ticker3hours %d id=%s sinceLastLogin=0 StartTime=0\n", counter, k)
 					} else {
-						sinceLastLoginSecs := time.Now().Unix() - lastLoginTime
+						sinceLastLoginSecs := timeNowUnix - lastLoginTime
 						sinceLastLoginDays := sinceLastLoginSecs/(24*60*60)
-						if sinceLastLoginDays>180 { // maxUserIdleDays
+						if sinceLastLoginDays > maxDaysOffline {
 							// account is outdated, delete this entry
 							fmt.Printf("ticker3hours %d id=%s regist delete sinceLastLogin=%ds days=%d\n",
 								counter, k, sinceLastLoginSecs, sinceLastLoginDays)
 							err2 = c.Delete()
 							if err2!=nil {
+								// this is bad
 								fmt.Printf("ticker3hours %d id=%s regist delete err=%v\n", counter, k, err2)
 							} else {
 								counterDeleted++
 								//fmt.Printf("ticker3hours %d id=%s regist deleted %d\n",
 								//	counter, k, counterDeleted)
 								// we will delete dbUserKey from dbUserBucket after db.Update() is finished
-								dbUserBucketKeyArray1 = append(dbUserBucketKeyArray1,dbUserKey)
+								deleteKeyArray = append(deleteKeyArray,dbUserKey)
 							}
-						} else {
-							// this user account is not outdated
 						}
 					}
-					counter++
 				}
 			}
 			return nil
 		})
 		skv.DbMutex.Unlock()
 		if err!=nil {
-			fmt.Printf("ticker3hours db.Update deleted=%d err=%v\n", counterDeleted, err)
+			// this is bad
+			fmt.Printf("# ticker3hours delete=%d offline for %d days err=%v\n", counterDeleted,maxDaysOffline,err)
 		} else if counterDeleted>0 {
-			fmt.Printf("ticker3hours db.Update deleted=%d no err\n",counterDeleted)
+			fmt.Printf("ticker3hours delete=%d offline for %d days (no err)\n", counterDeleted, maxDaysOffline)
 		}
-		for _,key := range dbUserBucketKeyArray1 {
-			fmt.Printf("ticker3hours id=%s user delete...\n", key)
+		for _,key := range deleteKeyArray {
+			fmt.Printf("ticker3hours delete outdated user-id=%s\n", key)
 			err = kv.Delete(dbUserBucket, key)
 			if err!=nil {
-				fmt.Printf("ticker3hours key=%s user delete err=%v\n", key, err)
+				// this is bad
+				fmt.Printf("# ticker3hours delete user-id=%s err=%v\n", key, err)
 			} else {
+				// all is well
 				//fmt.Printf("ticker3hours key=%s user deleted\n", key)
-				// TODO I think we need to generate a blocked entry for each deleted account
+				// create a dbBlockedIDs entry (will be deleted after 60 days)
+				dbUserKey := fmt.Sprintf("%s_%d",key, timeNowUnix)
+				dbUser := DbUser{/*Ip1:remoteAddr*/}
+				err = kvMain.Put(dbBlockedIDs, dbUserKey, dbUser, false)
+				if err!=nil {
+					// this is bad
+					fmt.Printf("# /deletemapping error db=%s bucket=%s put key=%s err=%v\n",
+						dbMainName,dbBlockedIDs,key,err)
+				}
 			}
 		}
-		//fmt.Printf("ticker3hours done\n")
+
+
+		// loop all dbBlockedIDs to delete blocked entries
+		fmt.Printf("ticker3hours start looking for outdated blocked entries...\n")
+		var blockedForDays int64 = 60
+		counterDeleted2 := 0
+		skv.DbMutex.Lock()
+		err = db.Update(func(tx *bolt.Tx) error {
+			b := tx.Bucket([]byte(dbBlockedIDs))
+			c := b.Cursor()
+			counter := 0
+			for k, v := c.First(); k != nil; k, v = c.Next() {
+				userID := string(k)
+				if strings.HasPrefix(userID,"answie") || strings.HasPrefix(userID,"talkback") {
+					continue
+				}
+				if !isOnlyNumericString(userID) {
+					continue
+				}
+
+				counter++
+				var dbEntry DbEntry // DbEntry{unixTime, remoteAddr, urlPw}
+				d := gob.NewDecoder(bytes.NewReader(v))
+				d.Decode(&dbEntry)
+
+				sinceDeletedInSecs := timeNowUnix - dbEntry.StartTime
+				if sinceDeletedInSecs > blockedForDays * 24*60*60 {
+					deleteKeyArray = append(deleteKeyArray,userID)
+					counterDeleted2++
+				}
+			}
+			return nil
+		})
+		skv.DbMutex.Unlock()
+		if err!=nil {
+			// this is bad
+			fmt.Printf("# ticker3hours delete=%d blocked for %d days err=%v\n",blockedForDays,counterDeleted2,err)
+		} else if counterDeleted2>0 {
+			fmt.Printf("ticker3hours delete=%d id's blocked for %d days (no err)\n",blockedForDays,counterDeleted2)
+		}
+		for _,key := range deleteKeyArray {
+			fmt.Printf("ticker3hours delete blocked user-id=%s\n", key)
+			err = kv.Delete(dbBlockedIDs, key)
+			if err!=nil {
+				// this is bad
+				fmt.Printf("# ticker3hours delete blocked user-id=%s err=%v\n", key, err)
+			} else {
+				// all is well
+				//fmt.Printf("ticker3hours key=%s user deleted\n", key)
+			}
+		}
+
+		if counterDeleted>0 || counterDeleted2>0 {
+			fmt.Printf("ticker3hours done\n")
+		}
 	}
 }
 
