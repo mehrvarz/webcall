@@ -11,7 +11,7 @@
 <style>
 ::-webkit-scrollbar { display:none; }
 html {
-	width:100%; min-height:100%;
+	width:100%; height:100%; min-height:420px;
 	background-image:linear-gradient(#039, #004);
 	color:#ddd;
 	scrollbar-width:none;
@@ -87,8 +87,8 @@ div#container {
 	max-width:600px;
 }
 div#enterId {
-	padding: 1em;
-	margin: 1em;
+	padding: 0.5em;
+	margin: 0.5em;
 	max-width:520px;
 }
 h1 {
@@ -97,7 +97,7 @@ h1 {
 	user-select:none;
 	margin-block-start:0;
 	margin-block-end:0;
-	margin-bottom:10px;
+	margin-bottom:0px;
 }
 a, a:link, a:visited, a:active {
     color:#ddd;
@@ -141,6 +141,7 @@ a, a:link, a:visited, a:active {
 	transition:opacity 600ms;
     color:#ddd;
 }
+
 .msgbox {
 	font-size:1.2em;
 	margin-top:6px;
@@ -190,7 +191,7 @@ select:focus {
 }
 
 form {
-	margin-top:18px;
+	margin-top:12px;
 	font-size:1.1em;
 }
 .formtext {
@@ -283,8 +284,8 @@ input[type=submit]:focus {
 <div id="spinnerframe" class="spinnerframe" style="display:none;">
     <div id="spinner" class="spinner"></div>
 </div>
-<img src="phone.svg"
-   style="position:absolute;right:0;top:2vh;width:440px;max-height:80vh;padding:2%;opacity:0.15;z-index:-1;">
+<!--img src="phone.svg"
+   style="position:absolute;right:0;top:2vh;width:440px;max-height:80vh;padding:2%;opacity:0.15;z-index:-1;"-->
 
 <div id="fullScreenOverlay" style="position:absolute; left:0; top:0; margin:0; padding:0; width:100%; height:100%; z-index:105; display:none;"></div>
 
@@ -372,29 +373,33 @@ input[type=submit]:focus {
 	<div id="timer" class="timer">0:00</div>
 	<div style="opacity:0.7;margin-top:30px;user-select:none;">WebCall by <a href="https://timur.mobi/webcall">timur.mobi</a></div>
 </div>
+
 <!-- dial-id -->
 <div id="enterId" style="display:none">
 	<h1>WebCall Dial ID</h1>
-	<div id="status" class="status"></div>
-	<form action="javascript:;" onsubmit="submitForm(this)" id="mnumber">
+	<form action="javascript:;" style="margin-top:6px;" onsubmit="submitForm(this)" id="mnumber">
 		<label for="enterDomain">Domain:</label><br>
 		<input name="enterDomain" id="enterDomainVal" type="text" class="formtext" required>
-		<span class="lbutton" onclick="clearForm(4)">Clear</span><br><br>
+		<span class="lbutton" onclick="clearForm(4)">Clear</span><br>
+		<br>
 
-		<label for="enterId">11-digit ID:</label><br>
+		<label for="enterId">ID:</label>
+		<br>
+
 		<!-- type="number" below will pop-up a digit-only-form (number field) on Android -->
 		<input name="enterId" id="enterIdVal" type="text" class="formtext" autofocus required>
 		<span class="lbutton" onclick="clearForm(3)">Clear</span>
 		<br>
-		<button style="padding: 0.2em 0.2em 0.2em 0.2em; margin: 4px 4px 0 0;"
-			onclick="document.getElementById('enterIdVal').setAttribute('type','text')">Alpha</button>
-		<button style="padding: 0.2em 0.2em 0.2em 0.2em; margin: 4px 4px 0 0;"
-			onclick="document.getElementById('enterIdVal').setAttribute('type','number')">Numeric</button>
+
+		<label class="menulabel" id="numericIdLabel" for="enterId" style="margin-left:-4px;">
+			<input type="checkbox" id="numericId" class="checkbox" _style="float:right;"> numeric</label>
+		</label>
 		<br>
-		<input type="submit" name="Submit" id="submit" value="Dial" style="width:100px; margin-top:25px;">
-		<div id="dialIdAutoStore" style="margin-top:25px;opacity:0.9;display:none;">On connect, ID will be added to contacts.</div>
+
+		<input type="submit" name="Submit" id="submit" value="Dial" style="width:100px; margin-top:15px;">
+
+		<div id="dialIdAutoStore" style="font-size:0.9em;opacity:0;margin-top:12px;">ID will be added to contacts</div>
 	</form>
-	<br>
 </div>
 <script src="custom.js"></script>
 <script src="../callee/client.js"></script>

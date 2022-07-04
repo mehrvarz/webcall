@@ -11,7 +11,7 @@
 <style>
 ::-webkit-scrollbar { display:none; }
 html {
-	width:100%; min-height:100%;
+	width:100%; min-height:100%; min-height:510px;
 	_background-image:linear-gradient(#003, #46f);
 	background:#339;
 	color:#eee;
@@ -30,6 +30,7 @@ h1 {
 	font-size:1.7em;
 	font-weight:600;
 	opacity:0.9;
+	margin-top:0;
 }
 
 button, button:focus {
@@ -143,7 +144,7 @@ input[type=submit]:focus {
 		<span id="twnameWithId" style="display:none;">@</span>
 		<input name="twname2" id="twname2" type="text" class="formtext" style="display:none">
 		<span onclick="clearForm(1)" style="margin-left:5px; user-select:none;">X</span><br>
-		<div style="margin-top:6px;font-size:0.90em;">When you are not connected to WebCall we use your Twitter handle to tweet you in realtime about calls you receive. We ask your callers to wait, so you have time to pick up the call. For this to work you need to enter your twitter name and follow the <a href="https://twitter.com/webcall" target="_blank">@WebCall</a> Twitter bot. Click to follow. No spam never.</div>
+		<div style="margin-top:6px;font-size:0.90em;">When you are not connected to WebCall we use your Twitter handle to tweet you in realtime about calls you receive. We ask your callers to wait, so you have time to pick up the call. For this to work you need to enter your twitter name and follow the <a href="https://twitter.com/webcall" target="_blank">@WebCall</a> Twitter bot. Click to follow.</div>
 
 		<div style="display:none;"> <!-- not being displayed, but holds the twid needed in submitForm() -->
 		<br>
@@ -154,17 +155,17 @@ input[type=submit]:focus {
 		</div>
 
 		<br>
-		<label id="storeContactsLabel" style="margin-left:-4px; display:block; margin-bottom:8px;">
+		<label id="storeContactsLabel" style="margin-left:-4px; display:block; margin-bottom:5px;">
 			<input type="checkbox" id="storeContacts" class="checkbox"> Save contacts</label>
 		</label>
 
-		<label id="storeMissedCallsLabel" style="margin-left:-4px; display:block; margin-bottom:8px;">
+		<label id="storeMissedCallsLabel" style="margin-left:-4px; display:block; margin-bottom:5px;">
 			<input type="checkbox" id="storeMissedCalls" class="checkbox"> Save missed calls</label>
 		</label>
 		<br>
 		<div id="errstring" style="color:#ff0;"></div>
 
-		<input type="submit" name="Submit" id="submit" value="Save" style="width:100px; margin-top:20px; border-radius:3px;">
+		<input type="submit" name="Submit" id="submit" value="Save" style="width:100px; border-radius:3px;">
 	</form>
 	<br>
 <!--

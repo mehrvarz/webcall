@@ -731,7 +731,7 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString) {
 	iframeWindowOpenUrl = url;
 	iframeWindowOpenFlag = true;
 
-	let styleString = "width:94%; max-width:600px; height:94%; position:absolute; z-index:200;";
+	let styleString = "width:94%; max-width:600px; _height:94%; position:absolute; z-index:200;";
 	if(horiCenterBound) {
 		// center hori
 		styleString += "top:50%; left:50%; transform:translate(-50%,-50%);"
@@ -748,12 +748,19 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString) {
 		iframeWindowElement.innerHTML = url.substring(7);
 	} else {
 		iframeWindowElement.style = styleString;
-		iframeWindowElement.innerHTML = "<iframe id='child' src='"+url+"' scrolling='yes' frameborder='no' width='100%' height='100%' allow='microphone;camera' onload='this.contentWindow.focus()'></iframe>";
+		iframeWindowElement.innerHTML = "<iframe id='child' src='"+url+"' scrolling='yes' frameborder='no' width='100%' height='100%' allow='microphone;camera' onload='iframeOnload(this)'></iframe>";
 	}
 
 	if(divspinnerframe) {
 		divspinnerframe.style.display = "none";
 	}
+}
+
+function iframeOnload(obj) {
+	let iframeHeight = obj.contentWindow.document.documentElement.scrollHeight + 10 + 'px';
+	console.log("#####iframeHeight="+iframeHeight);
+	obj.style.height = iframeHeight;
+	obj.contentWindow.focus();
 }
 
 function iframeWindowClose() {

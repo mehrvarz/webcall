@@ -159,6 +159,7 @@ window.onload = function() {
 		if(element) element.style.display = "block";
 		element = document.getElementById("webcallhome");
 		if(element) element.href = "https://timur.mobi/webcall/update/";
+// TODO open this in iframe
 	}
 
 	try {

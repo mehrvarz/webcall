@@ -7,6 +7,7 @@ const enterIdElement = document.getElementById('enterId');
 const enterIdVal = document.getElementById('enterIdVal');
 const enterDomainVal = document.getElementById('enterDomainVal');
 const divspinnerframe = document.querySelector('div#spinnerframe');
+const numericIdCheckbox = document.querySelector('input#numericId');
 const calleeMode = false;
 
 var bitrate = 320000;
@@ -201,6 +202,23 @@ window.onload = function() {
 		}
 	});
 
+	// default numeric (TODO: set only on smartphone type device?)
+	numericIdCheckbox.checked = true;
+	let enterIdValElement = document.getElementById('enterIdVal');
+	enterIdValElement.setAttribute('type','number');
+	enterIdValElement.focus();
+
+	numericIdCheckbox.addEventListener('change', function() {
+		if(this.checked) {
+			gLog("numericIdCheckbox checked");
+			enterIdValElement.setAttribute('type','number');
+		} else {
+			gLog("numericIdCheckbox unchecked");
+			enterIdValElement.setAttribute('type','text');
+		}
+		enterIdValElement.focus();
+	});
+
 	if(window.self == window.top) {
 		// not running in iframe mode
 		gLog("onload setup onkeydownFunc");
@@ -220,22 +238,24 @@ window.onload = function() {
 		// if serverSettings.storeContacts=="true", turn element "dialIdAutoStore" on
 		contactAutoStore = false;
 		let api = apiPath+"/getsettings?id="+calleeID;
-		if(!gentle) console.log('request getsettings api '+api);
+		gLog('request getsettings api '+api);
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 			var xhrresponse = xhr.responseText
-			//if(!gentle) console.log('xhr.responseText '+xhrresponse);
+			//gLog('xhr.responseText '+xhrresponse);
 			if(xhrresponse=="") {
 				serverSettings = null;
 				return;
 			}
 			var serverSettings = JSON.parse(xhrresponse);
 			if(typeof serverSettings!=="undefined") {
-				if(!gentle) console.log('serverSettings.storeContacts',serverSettings.storeContacts);
+				gLog('serverSettings.storeContacts',serverSettings.storeContacts);
 				if(serverSettings.storeContacts=="true") {
 					contactAutoStore = true;
 					var dialIdAutoStoreElement = document.getElementById("dialIdAutoStore");
 					if(dialIdAutoStoreElement) {
-						dialIdAutoStoreElement.style.display = "block";
+						gLog('dialIdAutoStore on');
+						//dialIdAutoStoreElement.style.display = "block";
+						dialIdAutoStoreElement.style.opacity = "0.8";
 					}
 				}
 			}
