@@ -139,7 +139,7 @@ function submitForm(theForm) {
 				calleeLink += myCalleeID;
 				if(!gentle) console.log('calleeLink='+calleeLink);
 				showStatus( "Please store your ID and password in a safe place. "+
-				"We can not to send you this data.<br><br>"+
+				"We can not send you this data.<br><br>"+
 				"ID: <b>"+myCalleeID+"</b><br><br>"+
 				"Your full WebCall callee link is shown below. "+
 				"This link works in any web browser. "+

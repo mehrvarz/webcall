@@ -60,21 +60,17 @@ function getUrlParams(param) {
 	return "";
 }
 
+var altIDs = "";
 function requestData() {
 	let api = apiPath+"/getmapping?id="+calleeID;
 	if(!gentle) console.log('request getmapping api',api);
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-		processMapping(xhr.responseText);
+		altIDs = xhr.responseText;
+		displayMapping();
 	}, errorAction);
 }
 
-var altIDs = "";
 var dataBoxContent="";
-function processMapping(xhrresponse) {
-	altIDs = xhrresponse;
-	displayMapping();
-}
-
 function displayMapping() {
 	if(!gentle) console.log("displayMapping("+altIDs+")");
 	let mainLink = window.location.href;

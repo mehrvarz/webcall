@@ -38,6 +38,9 @@ var candidateResultString = "";
 var wsAddr = "";
 var wsAddrTime;
 var calleeID = ""; // who we are calling
+var callerId = ""; // our own id
+var callerName = ""; // our name
+var otherUA="";
 var sessionDuration = 0;
 var dataChannelSendMsg = "";
 var iframeParent;
@@ -58,9 +61,6 @@ if(!singlebutton) {
 	calleeOfflineElement = document.getElementById("calleeOffline");
 	onlineIndicator = document.querySelector('img#onlineIndicator');
 }
-var callerId = ""; // our id
-var callerName = ""; // our name
-var otherUA="";
 var microphoneIsNeeded = true;
 var fileReceiveBuffer = [];
 var fileReceivedSize = 0;
@@ -168,6 +168,53 @@ window.onload = function() {
 		gLog("dialsounds="+playDialSounds);
 	}
 
+	// if cookie webcallid is available, fetch mapping and offer idSelect
+	if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
+		let cookieName = document.cookie.substring(10);
+		let idxAmpasent = cookieName.indexOf("&");
+		if(idxAmpasent>0) {
+			cookieName = cookieName.substring(0,idxAmpasent);
+		}
+		gLog('cookieName='+cookieName);
+		if(cookieName!="") {
+			// fetch mapping
+			let api = apiPath+"/getmapping?id="+cookieName;
+			gLog('request getmapping api',api);
+			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+				gLog('response getmapping api',xhr.responseText);
+				if(xhr.responseText!="") {
+					idSelect.style.display = "block";
+					let idOption = document.createElement('option');
+					idOption.text = cookieName + " (main id)";
+					idOption.value = cookieName;
+					idSelect.appendChild(idOption);
+
+					let altIDs = xhr.responseText;
+					let tok = altIDs.split("|");
+					for(var i=0; i<tok.length; i++) {
+						//console.log("tok["+i+"]="+tok[i]);
+						if(tok[i]!="") {
+							let tok2 = tok[i].split(",");
+							let id = tok2[0].trim();
+							let active = tok2[1].trim();
+							let assign = tok2[2].trim();
+							if(assign=="") {
+								assign = "none";
+							}
+							//console.log("assign=("+assign+")");
+							let idOption = document.createElement('option');
+							idOption.text = id + " ("+assign+")";
+							idOption.value = id;
+							idSelect.appendChild(idOption);
+						}
+					}
+
+				}
+			} /*, errorAction*/);
+		}
+	}
+
+
 	if(localVideoFrame)
 		localVideoFrame.onresize = showVideoResolutionLocal;
 	if(remoteVideoFrame)
@@ -202,22 +249,24 @@ window.onload = function() {
 		}
 	});
 
-	// default numeric (TODO: set only on smartphone type device?)
-	numericIdCheckbox.checked = true;
-	let enterIdValElement = document.getElementById('enterIdVal');
-	enterIdValElement.setAttribute('type','number');
-	enterIdValElement.focus();
-
-	numericIdCheckbox.addEventListener('change', function() {
-		if(this.checked) {
-			gLog("numericIdCheckbox checked");
-			enterIdValElement.setAttribute('type','number');
-		} else {
-			gLog("numericIdCheckbox unchecked");
-			enterIdValElement.setAttribute('type','text');
-		}
+	if(typeof numericIdCheckbox!=="undefined" && numericIdCheckbox!=null) {
+		// default numeric (TODO: set for smartphone type device only?)
+		numericIdCheckbox.checked = true;
+		let enterIdValElement = document.getElementById('enterIdVal');
+		enterIdValElement.setAttribute('type','number');
 		enterIdValElement.focus();
-	});
+
+		numericIdCheckbox.addEventListener('change', function() {
+			if(this.checked) {
+				gLog("numericIdCheckbox checked");
+				enterIdValElement.setAttribute('type','number');
+			} else {
+				gLog("numericIdCheckbox unchecked");
+				enterIdValElement.setAttribute('type','text');
+			}
+			enterIdValElement.focus();
+		});
+	}
 
 	if(window.self == window.top) {
 		// not running in iframe mode
@@ -229,7 +278,7 @@ window.onload = function() {
 	}
 
 	if(calleeID=="") {
-		// Dial-ID
+		// no one to call? show Dial-ID dialog
 		gLog("onload no calleeID; switch to enterId");
 		containerElement.style.display = "none";
 		enterIdElement.style.display = "block";
@@ -237,7 +286,7 @@ window.onload = function() {
 
 		// if serverSettings.storeContacts=="true", turn element "dialIdAutoStore" on
 		contactAutoStore = false;
-		let api = apiPath+"/getsettings?id="+calleeID;
+		let api = apiPath+"/getsettings?id="+callerId;
 		gLog('request getsettings api '+api);
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 			var xhrresponse = xhr.responseText
@@ -273,6 +322,22 @@ window.onload = function() {
 	onload2(true);
 }
 
+function changeId(selectObject) {
+	gLog("changeId",selectObject);
+	if(selectObject) {
+		// selectObject is (only) set if user operates idSelect manually
+		// parse for deviceId (selectObject.value in idSelect.options)
+		for(var i = idSelect.options.length - 1; i >= 0; i--) {
+			if(idSelect.options[i].value == selectObject.value) {
+				// found deviceId
+				callerId = selectObject.value;
+				gLog('changeId callerId='+callerId);
+				break;
+			}
+		}
+	}
+}
+
 function onload2(checkFlag) {
 	haveBeenWaitingForCalleeOnline=false;
 	checkServerMode(function(mode) {
@@ -285,8 +350,8 @@ function onload2(checkFlag) {
 				titleElement.innerHTML = "WebCall "+calleeIdTitle;
 			}
 
-			gLog('start caller with calleeID',calleeID);
 			if(calleeID.startsWith("#")) {
+				gLog('start call action calleeID='+calleeID);
 				let api = apiPath+"/action?id="+calleeID.substring(1)+"&callerId="+callerId;
 				xhrTimeout = 5*1000;
 				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
