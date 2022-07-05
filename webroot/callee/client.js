@@ -604,6 +604,7 @@ function menuDialogOpen(menuDialog) {
 
 	hashcounter++;
 	location.hash = hashcounter;
+	gLog("menuDialogOpen hashcounter="+hashcounter+" "+location.hash);
 	fullScreenOverlayElement.style.display = "block";
 	fullScreenOverlayElement.onclick = function() {
 		gLog('fullScreenOverlayElement.onclick');
@@ -624,7 +625,6 @@ function menuDialogOpen(menuDialog) {
 		}
 	}
 
-/*
 	const menuDialogOpenChildElement = menuDialogOpenElement.firstElementChild;
 	// position menuDialog at mouse coordinate
     var e = window.event;
@@ -635,9 +635,10 @@ function menuDialogOpen(menuDialog) {
 	//gLog('menuDialogOpen x/y',posX,e.clientX,posY,e.clientY);
 	menuDialogOpenChildElement.style.left = posX+"px";
 	menuDialogOpenChildElement.style.top = (posY+window.scrollY)+"px"; // add scrollY-offset to posY
-*/
+	//gLog('menuDialogOpen2 x/y',posX,posY+window.scrollY);
+
 	menuDialogOpenElement.style.display = "block";
-/*
+
 	// move popup-menu up to prevent bottom cut-off (if there is room on top)
 	setTimeout(function() {
 		let menuHeight = menuDialogOpenChildElement.clientHeight;
@@ -649,7 +650,6 @@ function menuDialogOpen(menuDialog) {
 		//gLog('menuDialogOpen up2',posY, menuHeight, pageHeight);
 		menuDialogOpenChildElement.style.top = (posY+window.scrollY)+"px"; // add scrollY-offset to posY
 	},60);
-*/
 }
 
 function menuDialogClose() {

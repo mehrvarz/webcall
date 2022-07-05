@@ -1,16 +1,20 @@
 // WebCall mapping client by timur.mobi
 'use strict';
 const databoxElement = document.getElementById('databox');
+const calleeMode = false;
 
-var callerID = "";
+var calleeID = "";
 var callerName = "";
 var dialsounds = "";
 var formForNameOpen = false;
 var formElement = null;
 
 window.onload = function() {
-	callerID = getUrlParams("callerId");
-	if(!gentle) console.log('mapping onload callerID='+callerID);
+	calleeID = getUrlParams("callerId");
+	if(!gentle) console.log('mapping onload calleeID='+calleeID);
+
+	hashcounter = 1;
+	window.onhashchange = hashchange;
 
 	document.onkeydown = function(evt) {
 		//console.log('mapping onload onkeydown event');
@@ -57,7 +61,7 @@ function getUrlParams(param) {
 }
 
 function requestData() {
-	let api = apiPath+"/getmapping?id="+callerID;
+	let api = apiPath+"/getmapping?id="+calleeID;
 	if(!gentle) console.log('request getmapping api',api);
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 		processMapping(xhr.responseText);
@@ -81,29 +85,14 @@ function displayMapping() {
 
 	let count = 0;
 	dataBoxContent="";
-/*
-	// TODO add own link?
-	let calleeLink = window.location.href;
-	let userLink = calleeLink.replace("callee/","user/");
-	let idxParameter = userLink.indexOf("?");
-	if(idxParameter>=0) {
-		userLink = userLink.substring(0,idxParameter);
-	}
-	idxParameter = userLink.indexOf("#");
-	if(idxParameter>=0) {
-		userLink = userLink.substring(0,idxParameter);
-	}
-	var userLinkHref = userLink;
-	if(!playDialSounds) {
-		userLinkHref = userLinkHref + "?ds=false";
-	}
-	let msg2 = "You will receive calls made by this link:<br>"+
-		"<a target='_blank' href='"+userLinkHref+"'>"+userLink+"</a><br>";
-*/
 
 	if(altIDs!="") {
 		dataBoxContent += "<table style='width:100%; border-collapse:separate; _border-spacing:6px 2px; line-height:1.7em;'>"
+
 		dataBoxContent += "<tr style='color:#7c0;font-weight:600;user-select:none;'><td>ID</td><td>Assign</td></tr>";
+
+		dataBoxContent += "<tr><td><a href='/user/"+calleeID+"' target='_blank'>"+calleeID+"</a></td>"+
+			"<td>(Main-ID)</td></tr>";
 
 		// parse altIDs, format: id,true,assign|id,true,assign|...
 		let tok = altIDs.split("|");
@@ -141,7 +130,7 @@ function displayMapping() {
 
 function add() {
 	// fetch and register a new/free id
-	let api = apiPath+"/fetchid?id="+callerID;
+	let api = apiPath+"/fetchid?id="+calleeID;
 	if(!gentle) console.log('request fetchid api',api);
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 		if(xhr.responseText.startsWith("error")) {
@@ -162,10 +151,18 @@ function add() {
 	}, errorAction);
 }
 
+var removeIdx = 0;
+var removeId = 0;
 function remove(idx,id) {
-	console.log('remove',idx,id);
-// TODO: we need a yes/no confirm dialog
-	let api = apiPath+"/deletemapping?id="+callerID+"&delid="+id;
+	gLog("remove "+idx+" "+id);
+	removeIdx = idx;
+	removeId = id;
+	// yesNoDialog will call removeDo() for 'yes'
+	menuDialogOpen(yesNoDialog);
+}
+
+function removeDo() {
+	let api = apiPath+"/deletemapping?id="+calleeID+"&delid="+removeId;
 	if(!gentle) console.log('request api',api);
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 		if(xhr.responseText.startsWith("error")) {
@@ -180,7 +177,7 @@ function remove(idx,id) {
 			let tok = oldAltIDs.split("|");
 			let writeCount=0;
 			for(var i=0; i<tok.length; i++) {
-				if(i!=idx) {
+				if(i!=removeIdx) {
 					console.log("tok["+i+"]="+tok[i]);
 					if(writeCount==0) {
 						altIDs += tok[i];
@@ -197,7 +194,7 @@ function remove(idx,id) {
 }
 
 function storeData() {
-	let api = apiPath+"/setmapping?id="+callerID;
+	let api = apiPath+"/setmapping?id="+calleeID;
 	if(!gentle) console.log('/setmapping api',api);
 	ajaxFetch(new XMLHttpRequest(), "POST", api, function(xhr) {
 		if(xhr.responseText.startsWith("error")) {
@@ -252,7 +249,7 @@ function editSubmit(formElement, id, assign) {
 
 	if(newAssign!=assign) {
 		// store assign string
-		let api = apiPath+"/setassign?id="+callerID+"&setid="+id+"&assign="+newAssign;
+		let api = apiPath+"/setassign?id="+calleeID+"&setid="+id+"&assign="+newAssign;
 		if(!gentle) console.log('/setassign api',api);
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 			if(xhr.responseText.startsWith("error")) {
