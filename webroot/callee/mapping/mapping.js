@@ -84,11 +84,10 @@ function displayMapping() {
 
 	if(altIDs!="") {
 		dataBoxContent += "<table style='width:100%; border-collapse:separate; _border-spacing:6px 2px; line-height:1.7em;'>"
-
 		dataBoxContent += "<tr style='color:#7c0;font-weight:600;user-select:none;'><td>ID</td><td>Assign</td></tr>";
 
-		dataBoxContent += "<tr><td><a href='/user/"+calleeID+"' target='_blank'>"+calleeID+"</a></td>"+
-			"<td>(Main-ID)</td></tr>";
+		// main callee id
+		dataBoxContent += "<tr><td><a href='/user/"+calleeID+"' onclick='clickID("+calleeID+");return false;'>"+calleeID+"</a></td>" + "<td>(Main-ID)</td></tr>";
 
 		// parse altIDs, format: id,true,assign|id,true,assign|...
 		let tok = altIDs.split("|");
@@ -105,7 +104,7 @@ function displayMapping() {
 				}
 				//console.log("assign=("+assign+")");
 
-				dataBoxContent += "<tr><td><a href='" + mainLink + id + "' target='_blank'>"+id+"</a></td>"+
+				dataBoxContent += "<tr><td><a href='" + mainLink + id + "' onclick='clickID("+id+");return false;'>"+id+"</a></td>"+
 					"<td><a onclick='edit(this,event,\""+id+"\",\""+assign+"\")'>"+ assign +"</a></td>"+
 					"<td><a onclick='remove("+i+","+id+")'>X</a></td></tr>";
 			}
@@ -124,10 +123,15 @@ function displayMapping() {
 	databoxElement.innerHTML = dataBoxContent;
 }
 
+function clickID(id) {
+	// prevent click-open id-link
+	gLog('clickID='+id);
+}
+
 function add() {
 	// fetch and register a new/free id
 	let api = apiPath+"/fetchid?id="+calleeID;
-	if(!gentle) console.log('request fetchid api',api);
+	gLog('request fetchid api='+api);
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 		if(xhr.responseText.startsWith("error")) {
 			console.log("# add error("+xhr.responseText+")");
