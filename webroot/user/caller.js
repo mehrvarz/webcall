@@ -100,7 +100,7 @@ var extMessage = function(e) {
 	}
 }
 window.addEventListener('message', extMessage, false); 
-gLog("caller client extMessage now listening");
+gLog("caller now listening for extMessage");
 
 window.onload = function() {
 	gLog("caller onload");
@@ -167,7 +167,7 @@ window.onload = function() {
 		}
 		gLog("dialsounds="+playDialSounds);
 	}
-
+/*
 	// if cookie webcallid is available, fetch mapping and offer idSelect
 	if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
 		let cookieName = document.cookie.substring(10);
@@ -210,10 +210,10 @@ window.onload = function() {
 					}
 
 				}
-			} /*, errorAction*/);
+			}); //, errorAction);
 		}
 	}
-
+*/
 
 	if(localVideoFrame)
 		localVideoFrame.onresize = showVideoResolutionLocal;
@@ -286,31 +286,33 @@ window.onload = function() {
 
 		// if serverSettings.storeContacts=="true", turn element "dialIdAutoStore" on
 		contactAutoStore = false;
-		let api = apiPath+"/getsettings?id="+callerId;
-		gLog('request getsettings api '+api);
-		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-			var xhrresponse = xhr.responseText
-			//gLog('xhr.responseText '+xhrresponse);
-			if(xhrresponse=="") {
-				serverSettings = null;
-				return;
-			}
-			var serverSettings = JSON.parse(xhrresponse);
-			if(typeof serverSettings!=="undefined") {
-				gLog('serverSettings.storeContacts',serverSettings.storeContacts);
-				if(serverSettings.storeContacts=="true") {
-					contactAutoStore = true;
-					var dialIdAutoStoreElement = document.getElementById("dialIdAutoStore");
-					if(dialIdAutoStoreElement) {
-						gLog('dialIdAutoStore on');
-						//dialIdAutoStoreElement.style.display = "block";
-						dialIdAutoStoreElement.style.opacity = "0.8";
+		if(callerId!="") {
+			let api = apiPath+"/getsettings?id="+callerId;
+			gLog('request getsettings api '+api);
+			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+				var xhrresponse = xhr.responseText
+				//gLog('xhr.responseText '+xhrresponse);
+				if(xhrresponse=="") {
+					serverSettings = null;
+					return;
+				}
+				var serverSettings = JSON.parse(xhrresponse);
+				if(typeof serverSettings!=="undefined") {
+					gLog('serverSettings.storeContacts',serverSettings.storeContacts);
+					if(serverSettings.storeContacts=="true") {
+						contactAutoStore = true;
+						var dialIdAutoStoreElement = document.getElementById("dialIdAutoStore");
+						if(dialIdAutoStoreElement) {
+							gLog('dialIdAutoStore on');
+							//dialIdAutoStoreElement.style.display = "block";
+							dialIdAutoStoreElement.style.opacity = "0.8";
+						}
 					}
 				}
-			}
-		}, function(errString,err) {
-			console.log('xhr error',errString);
-		});
+			}, function(errString,err) {
+				console.log('xhr error',errString);
+			});
+		}
 
 		setTimeout(function() {
 			enterIdVal.focus();
@@ -343,79 +345,67 @@ function onload2(checkFlag) {
 	checkServerMode(function(mode) {
 		if(mode==0) {
 			// normal mode
+/*
 			var calleeIdTitle = calleeID.charAt(0).toUpperCase() + calleeID.slice(1);
-
 			document.title = "WebCall "+calleeIdTitle;
 			if(titleElement) {
 				titleElement.innerHTML = "WebCall "+calleeIdTitle;
 			}
+*/
+			// if cookie webcallid is available, fetch mapping and offer idSelect
+			if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
+				let cookieName = document.cookie.substring(10);
+				let idxAmpasent = cookieName.indexOf("&");
+				if(idxAmpasent>0) {
+					cookieName = cookieName.substring(0,idxAmpasent);
+				}
+				gLog('onload2 cookieName='+cookieName);
+				if(cookieName!="") {
+					// fetch mapping
+					let api = apiPath+"/getmapping?id="+cookieName;
+					gLog('onload2 request getmapping api',api);
+					ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+						gLog('response getmapping api',xhr.responseText);
+						if(xhr.responseText!="") {
+							idSelect.style.display = "block";
+							let idOption = document.createElement('option');
+							idOption.text = cookieName + " (main id)";
+							idOption.value = cookieName;
+							idSelect.appendChild(idOption);
 
-			if(calleeID.startsWith("#")) {
-				gLog('start call action calleeID='+calleeID);
-				let api = apiPath+"/action?id="+calleeID.substring(1)+"&callerId="+callerId;
-				xhrTimeout = 5*1000;
-				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-					console.log("xhr.resp="+xhr.responseText);
-					if(xhr.responseText.startsWith("widget=")) {
-						// switch widget: replace parent iframe src
-						let url = xhr.responseText.substring(7) + "?callerId="+callerId+"&i="+counter;
-						counter++;
-						let iframeElement = parent.document.querySelector('iframe#child');
-						console.log("widget("+url+") iframeElement="+iframeElement);
-						if(parent!=null && iframeElement!=null) {
-							iframeElement.src = url;
+							let altIDs = xhr.responseText;
+							let tok = altIDs.split("|");
+							for(var i=0; i<tok.length; i++) {
+								//console.log("tok["+i+"]="+tok[i]);
+								if(tok[i]!="") {
+									let tok2 = tok[i].split(",");
+									let id = tok2[0].trim();
+									let active = tok2[1].trim();
+									let assign = tok2[2].trim();
+									if(assign=="") {
+										assign = "none";
+									}
+									//console.log("assign=("+assign+")");
+									let idOption = document.createElement('option');
+									idOption.text = id + " ("+assign+")";
+									idOption.value = id;
+									idSelect.appendChild(idOption);
+								}
+							}
 						}
-					} else {
-						history.back();
-					}
-				}, errorAction2);
+						onload3(checkFlag,"1");
+					}, function(errString,errcode) {
+						onload3(checkFlag,"2 "+errString+" "+errcode);
+					});
+					return;
+				} else {
+					onload3(checkFlag,"3");
+					return;
+				}
+			} else {
+				onload3(checkFlag,"4");
 				return;
 			}
-
-			if(checkFlag) {
-				// need to know if calleeID is online asap (will switch to callee-online-layout if it is)
-				dialAfterCalleeOnline = false;
-				checkCalleeOnline(true);
-			}
-
-			if(dialButton) {
-				if(singlebutton) {
-					dialButton.innerHTML = "<b>W E B C A L L</b><br>"+singleButtonReadyText;
-				} else {
-					if(calleeID.match(/^[0-9]*$/) != null) {
-						// calleeID is pure numeric - don't show
-					} else {
-						dialButton.innerHTML = "Call "+calleeIdTitle;
-					}
-				}
-
-				dialButton.onclick = dialButtonClick;
-			}
-			if(hangupButton) {
-				hangupButton.onclick = function() {
-					dialButton.style.backgroundColor = "";
-					hangupButton.style.backgroundColor = "";
-					let msg = "Hanging up...";
-					//console.log(msg);
-					if(mediaConnect) {
-						if(playDialSounds) {
-							hangupWithBusySound(true,msg);
-						} else {
-							hangup(true,true,msg);
-						}
-					} else {
-						if(playDialSounds) {
-							stopAllAudioEffects();
-						}
-						hangup(true,true,msg);
-					}
-					// focus back to background, so that esc-key via onkeydown works
-					hangupButton.blur();
-				};
-			}
-
-			calleeID = calleeID.toLowerCase();
-			return;
 		}
 		if(mode==1) {
 			// maintenance mode
@@ -430,6 +420,85 @@ function onload2(checkFlag) {
 			return;
 		}
 	});
+}
+
+function onload3(checkFlag,comment) {
+	gLog('onload3 '+comment);
+
+	var calleeIdTitle = calleeID.charAt(0).toUpperCase() + calleeID.slice(1);
+	document.title = "WebCall "+calleeIdTitle;
+	if(titleElement) {
+		titleElement.innerHTML = "WebCall "+calleeIdTitle;
+	}
+
+	if(calleeID.startsWith("#")) {
+		gLog('start action calleeID='+calleeID);
+		let api = apiPath+"/action?id="+calleeID.substring(1)+"&callerId="+callerId;
+		xhrTimeout = 5*1000;
+		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+			console.log("xhr.resp="+xhr.responseText);
+			if(xhr.responseText.startsWith("widget=")) {
+				// switch widget: replace parent iframe src
+				let url = xhr.responseText.substring(7) + "?callerId="+callerId+"&i="+counter;
+				counter++;
+				let iframeElement = parent.document.querySelector('iframe#child');
+				console.log("widget("+url+") iframeElement="+iframeElement);
+				if(parent!=null && iframeElement!=null) {
+					iframeElement.src = url;
+				}
+			} else {
+				history.back();
+			}
+		}, errorAction2);
+		return;
+	}
+
+/*
+	if(checkFlag) {
+		// need to know if calleeID is online asap (will switch to callee-online-layout if it is)
+		dialAfterCalleeOnline = false;
+		checkCalleeOnline(true,"onload3 checkFlag");
+	}
+*/
+calleeOnlineAction("fake");
+
+	if(dialButton) {
+		if(singlebutton) {
+			dialButton.innerHTML = "<b>W E B C A L L</b><br>"+singleButtonReadyText;
+		} else {
+			if(calleeID.match(/^[0-9]*$/) != null) {
+				// calleeID is pure numeric - don't show
+			} else {
+				dialButton.innerHTML = "Call "+calleeIdTitle;
+			}
+		}
+
+		dialButton.onclick = dialButtonClick;
+	}
+	if(hangupButton) {
+		hangupButton.onclick = function() {
+			dialButton.style.backgroundColor = "";
+			hangupButton.style.backgroundColor = "";
+			let msg = "Hanging up...";
+			//console.log(msg);
+			if(mediaConnect) {
+				if(playDialSounds) {
+					hangupWithBusySound(true,msg);
+				} else {
+					hangup(true,true,msg);
+				}
+			} else {
+				if(playDialSounds) {
+					stopAllAudioEffects();
+				}
+				hangup(true,true,msg);
+			}
+			// focus back to background, so that esc-key via onkeydown works
+			hangupButton.blur();
+		};
+	}
+
+	calleeID = calleeID.toLowerCase();
 }
 
 function dialButtonClick() {
@@ -470,7 +539,7 @@ function dialButtonClick() {
 	if(wsAddr!="" && wsAddrAgeSecs<30) {
 		calleeOnlineAction("dialButton");
 	} else {
-		checkCalleeOnline(true);
+		checkCalleeOnline(true,"dialButtonClick");
 	}
 }
 
@@ -646,7 +715,7 @@ function getUrlParams(param) {
 	}
 }
 
-function checkCalleeOnline(waitForCallee) {
+function checkCalleeOnline(waitForCallee,comment) {
 	let api = apiPath+"/online?id="+calleeID;
 	if(callerId!=="" && callerId!=="undefined") {
 		api += "&callerId="+callerId+"&name="+callerName;
@@ -661,7 +730,7 @@ function checkCalleeOnline(waitForCallee) {
 	} else {
 		api = api + "&ver="+clientVersion;
 	}
-	gLog('checkCalleeOnline api',api);
+	gLog("checkCalleeOnline api="+api+" ("+comment+")");
 	xhrTimeout = 30*1000;
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 		calleeOnlineStatus(xhr.responseText,waitForCallee);
@@ -692,6 +761,8 @@ function calleeOnlineStatus(onlineStatus,waitForCallee) {
 				// onlineStatus arrived before iframeParent was set (before action=="reqActiveNotification")
 				iframeParentArg = "occured";
 			}
+		} else {
+// TODO tmtmtm /getmapping
 		}
 		calleeOnlineAction("calleeOnlineStatus");
 		return;
@@ -732,7 +803,7 @@ function calleeOnlineStatus(onlineStatus,waitForCallee) {
 	}
 
 	if(onlineStatus=="error") {
-		showStatus("ID not found.",-1)
+		showStatus("ID not found",-1)
 		waitForCallee = false;
 	}
 	// switch to offline mode and (if waitForCallee is set) check if calleeID can be notified
@@ -1166,7 +1237,7 @@ function submitForm(theForm) {
 		window.open("https://"+enterDomainVal.value+"/user/"+calleeID, ""); //"_blank"
 		history.back();
 	} else {
-		dialButtonAfterCalleeOnline = true;
+//		dialButtonAfterCalleeOnline = true;
 		onload2(true);
 	}
 }
@@ -1394,7 +1465,7 @@ function connectSignaling(message,openedFunc) {
 			// clearing wsAddr does not always have the desired effect (of resulting in no err on next try)
 			// so retry with checkCalleeOnline(true) (since wsConn is closed, we don't need to hangup)
 			//hangupWithBusySound(false,"connect error");
-			checkCalleeOnline(true);
+			checkCalleeOnline(true,"onclose");
 		} else {
 			// it is common for the signaling server to disconnect the caller early
 			gLog('wsConn.onclose');
@@ -2400,7 +2471,7 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 			gLog('hangup -> calleeOnlineStatus');
 			// show msgbox etc.
 			//calleeOnlineStatus(lastOnlineStatus,false);
-			checkCalleeOnline(false);
+			checkCalleeOnline(false,"hangup");
 			dialButton.disabled = false;
 		},3000);
 	}
