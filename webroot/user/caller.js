@@ -30,7 +30,6 @@ var mediaConnectStartDate = 0;
 var dataChannel = null;
 var dialAfterLocalStream = false;
 var dialAfterCalleeOnline = false;
-//var dialButtonAfterCalleeOnline = false;
 var lastResult;
 var candidateArray = [];
 var candidateResultGenerated = true;
@@ -872,10 +871,6 @@ function calleeOnlineAction(comment) {
 			return;
 		}
 
-//		if(dialButtonAfterCalleeOnline) {
-//			dialButtonAfterCalleeOnline = false;
-//			dialButtonClick();
-//		} else
 		if(dialAfterCalleeOnline) {
 			// autodial after detected callee is online
 			// normally set by gotStream, if dialAfterLocalStream was set (by dialButton.onclick)
@@ -1202,7 +1197,6 @@ function submitForm(theForm) {
 		window.open("https://"+enterDomainVal.value+"/user/"+calleeID, ""); //"_blank"
 		history.back();
 	} else {
-//		dialButtonAfterCalleeOnline = true;
 		onload2(true);
 	}
 }
