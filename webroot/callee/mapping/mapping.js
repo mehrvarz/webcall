@@ -115,7 +115,7 @@ function displayMapping() {
 	}
 
 	dataBoxContent += "<br>";
-	if(count<6) {
+	if(count<5) {
 		// no more than 10 tmpID's per callee
 		dataBoxContent += "<button onclick='add()'>Add New-ID</button> &nbsp; ";
 	}
