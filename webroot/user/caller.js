@@ -30,7 +30,7 @@ var mediaConnectStartDate = 0;
 var dataChannel = null;
 var dialAfterLocalStream = false;
 var dialAfterCalleeOnline = false;
-var dialButtonAfterCalleeOnline = false;
+//var dialButtonAfterCalleeOnline = false;
 var lastResult;
 var candidateArray = [];
 var candidateResultGenerated = true;
@@ -813,12 +813,11 @@ function calleeOnlineAction(comment) {
 			return;
 		}
 
-		if(dialButtonAfterCalleeOnline) {
-// TODO I think this is not anymore being used
-			dialButtonAfterCalleeOnline = false;
-			dialButtonClick();
-
-		} else if(dialAfterCalleeOnline) {
+//		if(dialButtonAfterCalleeOnline) {
+//			dialButtonAfterCalleeOnline = false;
+//			dialButtonClick();
+//		} else
+		if(dialAfterCalleeOnline) {
 			// autodial after detected callee is online
 			// normally set by gotStream, if dialAfterLocalStream was set (by dialButton.onclick)
 			dialAfterCalleeOnline = false;
