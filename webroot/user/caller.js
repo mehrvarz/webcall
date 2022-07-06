@@ -167,53 +167,6 @@ window.onload = function() {
 		}
 		gLog("dialsounds="+playDialSounds);
 	}
-/*
-	// if cookie webcallid is available, fetch mapping and offer idSelect
-	if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
-		let cookieName = document.cookie.substring(10);
-		let idxAmpasent = cookieName.indexOf("&");
-		if(idxAmpasent>0) {
-			cookieName = cookieName.substring(0,idxAmpasent);
-		}
-		gLog('cookieName='+cookieName);
-		if(cookieName!="") {
-			// fetch mapping
-			let api = apiPath+"/getmapping?id="+cookieName;
-			gLog('request getmapping api',api);
-			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-				gLog('response getmapping api',xhr.responseText);
-				if(xhr.responseText!="") {
-					idSelect.style.display = "block";
-					let idOption = document.createElement('option');
-					idOption.text = cookieName + " (main id)";
-					idOption.value = cookieName;
-					idSelect.appendChild(idOption);
-
-					let altIDs = xhr.responseText;
-					let tok = altIDs.split("|");
-					for(var i=0; i<tok.length; i++) {
-						//console.log("tok["+i+"]="+tok[i]);
-						if(tok[i]!="") {
-							let tok2 = tok[i].split(",");
-							let id = tok2[0].trim();
-							let active = tok2[1].trim();
-							let assign = tok2[2].trim();
-							if(assign=="") {
-								assign = "none";
-							}
-							//console.log("assign=("+assign+")");
-							let idOption = document.createElement('option');
-							idOption.text = id + " ("+assign+")";
-							idOption.value = id;
-							idSelect.appendChild(idOption);
-						}
-					}
-
-				}
-			}); //, errorAction);
-		}
-	}
-*/
 
 	if(localVideoFrame)
 		localVideoFrame.onresize = showVideoResolutionLocal;
@@ -345,13 +298,6 @@ function onload2(checkFlag) {
 	checkServerMode(function(mode) {
 		if(mode==0) {
 			// normal mode
-/*
-			var calleeIdTitle = calleeID.charAt(0).toUpperCase() + calleeID.slice(1);
-			document.title = "WebCall "+calleeIdTitle;
-			if(titleElement) {
-				titleElement.innerHTML = "WebCall "+calleeIdTitle;
-			}
-*/
 			// if cookie webcallid is available, fetch mapping and offer idSelect
 			if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
 				let cookieName = document.cookie.substring(10);
@@ -403,6 +349,7 @@ function onload2(checkFlag) {
 					return;
 				}
 			} else {
+// TODO add '123' form 
 				onload3(checkFlag,"4");
 				return;
 			}
@@ -460,7 +407,7 @@ function onload3(checkFlag,comment) {
 		checkCalleeOnline(true,"onload3 checkFlag");
 	}
 */
-calleeOnlineAction("fake");
+	calleeOnlineAction("init");
 
 	if(dialButton) {
 		if(singlebutton) {
@@ -761,8 +708,6 @@ function calleeOnlineStatus(onlineStatus,waitForCallee) {
 				// onlineStatus arrived before iframeParent was set (before action=="reqActiveNotification")
 				iframeParentArg = "occured";
 			}
-		} else {
-// TODO tmtmtm /getmapping
 		}
 		calleeOnlineAction("calleeOnlineStatus");
 		return;
@@ -810,8 +755,8 @@ function calleeOnlineStatus(onlineStatus,waitForCallee) {
 	calleeOfflineAction(onlineStatus,waitForCallee);
 }
 
-function calleeOnlineAction(from) {
-	gLog('calleeOnlineAction from='+from+' dialAfterCalleeOnline='+dialAfterCalleeOnline);
+function calleeOnlineAction(comment) {
+	gLog('calleeOnlineAction='+comment+' dialAfterCalleeOnline='+dialAfterCalleeOnline);
 	if(!notificationSound) {
 		gLog('loading audio files');
 		notificationSound = new Audio("notification.mp3");
@@ -1093,7 +1038,8 @@ function goodby() {
 		// id=format: calleeID|callerName|callerID|ageSecs|msgbox
 		// goodbyMissedCall arrives as urlID but is then tokenized
 // TODO check wsConn instead of wsAddr
-		if(wsAddr!="") {
+//		if(wsAddr!="") {
+		if(wsConn!=null) {
 			gLog('goodbyMissedCall wsSend='+goodbyMissedCall);
 			wsSend("missedcall|"+goodbyMissedCall);
 		} else {
@@ -1112,7 +1058,7 @@ function goodby() {
 		// in this case server calls peerConHasEnded() for the callee, where addMissedCall() is generated
 // TODO check wsConn instead of wsAddr
 //		if(wsAddr!="") {
-		if(wsConn==null) {
+		if(wsConn!=null) {
 			gLog('goodbyTextMsg wsSend='+goodbyTextMsg);
 			wsSend("msg|"+goodbyTextMsg);
 		} else {
