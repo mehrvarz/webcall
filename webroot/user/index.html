@@ -353,7 +353,12 @@ input[type=submit]:focus {
 		</div>
 
 		<select id="avSelect" class="select" onchange="getStream(this)"></select>
-		<select id="idSelect" class="select" onchange="changeId(this)" style="width:270px;display:none"></select>
+
+		<!-- idSelect and nickname: visible only if more than one id-mapping has been specified -->
+		<select id="idSelect" class="select" onchange="changeId(this)" style="width:220px;float:left;margin-right:10px;display:none;"></select>
+		<form action='javascript:;' id='nickname' style="margin-top:6px;display:none;"><input type='text' id='formtext' value='' size='9' maxlength='10' style="font-size:1.0em;background:#04e;border:none;outline:none;box-shadow:none;padding:2px;color:#ddd;"> </form>
+		<div style="clear:both;"></div>
+
 	</div>
 	<div id="calleeOffline" style="display:none">
 	</div>

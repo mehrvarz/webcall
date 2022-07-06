@@ -77,6 +77,7 @@ var haveBeenWaitingForCalleeOnline=false;
 var lastOnlineStatus = "";
 var contactAutoStore = false;
 var counter=0;
+var altIdCount = 0;
 
 var extMessage = function(e) {
 	// prevent an error on split() below when extensions emit unrelated, non-string 'message' events to the window
@@ -295,6 +296,7 @@ function changeId(selectObject) {
 
 function onload2(checkFlag) {
 	haveBeenWaitingForCalleeOnline=false;
+	altIdCount = 0;
 	checkServerMode(function(mode) {
 		if(mode==0) {
 			// normal mode
@@ -313,7 +315,6 @@ function onload2(checkFlag) {
 					ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 						gLog('response getmapping api',xhr.responseText);
 						if(xhr.responseText!="") {
-							idSelect.style.display = "block";
 							let idOption = document.createElement('option');
 							idOption.text = cookieName + " (main id)";
 							idOption.value = cookieName;
@@ -324,6 +325,7 @@ function onload2(checkFlag) {
 							for(var i=0; i<tok.length; i++) {
 								//console.log("tok["+i+"]="+tok[i]);
 								if(tok[i]!="") {
+									altIdCount++;
 									let tok2 = tok[i].split(",");
 									let id = tok2[0].trim();
 									let active = tok2[1].trim();
@@ -337,6 +339,16 @@ function onload2(checkFlag) {
 									idOption.value = id;
 									idSelect.appendChild(idOption);
 								}
+							}
+							if(altIdCount>1) {
+// TODO where do idSelect and nickname come from?
+								idSelect.style.display = "block";
+								// if we show idSelect, we also need to show username-form
+								// fill nickname.child.value with nickname from settings (or with callerName?)
+								console.log("set callerName="+callerName);
+								nickname.firstChild.value = callerName;
+								nickname.style.display = "block";
+								// will fetch callername from form in checkCalleeOnline()
 							}
 						}
 						onload3(checkFlag,"1");
@@ -369,6 +381,7 @@ function onload2(checkFlag) {
 	});
 }
 
+// TODO checkFlag is now ignored
 function onload3(checkFlag,comment) {
 	gLog('onload3 '+comment);
 
@@ -401,6 +414,7 @@ function onload3(checkFlag,comment) {
 	}
 
 /*
+// TODO checkFlag is now ignored
 	if(checkFlag) {
 		// need to know if calleeID is online asap (will switch to callee-online-layout if it is)
 		dialAfterCalleeOnline = false;
@@ -451,6 +465,7 @@ function onload3(checkFlag,comment) {
 function dialButtonClick() {
 	gLog("dialButtonClick");
 	showStatus(connectingText,-1);
+console.log("dialButtonClick callerId="+callerId+" callerName="+callerName);
 
 	doneHangup = false;
 	onIceCandidates = 0;
@@ -482,12 +497,12 @@ function dialButtonClick() {
 	gLog("dialButtonClick set dialAfterCalleeOnline");
 	dialAfterCalleeOnline = true;
 
-	let wsAddrAgeSecs = Math.floor((Date.now()-wsAddrTime)/1000);
-	if(wsAddr!="" && wsAddrAgeSecs<30) {
-		calleeOnlineAction("dialButton");
-	} else {
+//	let wsAddrAgeSecs = Math.floor((Date.now()-wsAddrTime)/1000);
+//	if(wsAddr!="" && wsAddrAgeSecs<30) {
+//		calleeOnlineAction("dialButton");
+//	} else {
 		checkCalleeOnline(true,"dialButtonClick");
-	}
+//	}
 }
 
 function videoOn() {
@@ -663,6 +678,13 @@ function getUrlParams(param) {
 }
 
 function checkCalleeOnline(waitForCallee,comment) {
+	if(altIdCount>1) {
+		// fetch nickname from nickname.firstChild.value to set callerName
+		callerName = nickname.firstChild.value;
+	}
+
+	// Connecting P2P...
+	//console.log("checkCalleeOnline callerId="+callerId+" callerName="+callerName);
 	let api = apiPath+"/online?id="+calleeID;
 	if(callerId!=="" && callerId!=="undefined") {
 		api += "&callerId="+callerId+"&name="+callerName;
@@ -792,6 +814,7 @@ function calleeOnlineAction(comment) {
 		}
 
 		if(dialButtonAfterCalleeOnline) {
+// TODO I think this is not anymore being used
 			dialButtonAfterCalleeOnline = false;
 			dialButtonClick();
 
@@ -799,6 +822,7 @@ function calleeOnlineAction(comment) {
 			// autodial after detected callee is online
 			// normally set by gotStream, if dialAfterLocalStream was set (by dialButton.onclick)
 			dialAfterCalleeOnline = false;
+
 			if(localStream) {
 				connectSignaling("",dial); 
 			} else {
@@ -840,7 +864,7 @@ function calleeOnlineAction(comment) {
 				if(!singlebutton) {
 					showStatus( "Enter text message before the call (optional):",-1)
 					msgbox.style.display = "block";
-					gLog('callerName',callerName);
+					gLog('callerName='+callerName);
 					/*
 					if(typeof callerName!=="undefined" && callerName!="") {
 						msgbox.value = "Hi, this is "+callerName;
@@ -1074,6 +1098,7 @@ function goodby() {
 	}
 }
 
+// TODO must reconsinder confirmNotifyConnect() + confirmNotifyConnect2()
 var calleeName = "";
 var confirmValue = "";
 var confirmWord = "123";
