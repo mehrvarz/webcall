@@ -137,7 +137,7 @@ window.onload = function() {
 	if(typeof callerName=="undefined") {
 		callerName = "";
 	}
-	gLog("onload callerId=("+callerId+") callerName=("+callerName+")");
+	gLog("onload callerId=("+callerId+") callerName=("+callerName+") via urlParam");
 
 	let text = getUrlParams("readyText");
 	if(typeof text!=="undefined" && text!="") {
@@ -240,8 +240,22 @@ window.onload = function() {
 
 		// if serverSettings.storeContacts=="true", turn element "dialIdAutoStore" on
 		contactAutoStore = false;
-		if(callerId!="") {
-			let api = apiPath+"/getsettings?id="+callerId;
+
+		// use cookiename to fetch /getsettings
+		let cookieName = "";
+		if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
+			// cookie webcallid exists
+			cookieName = document.cookie.substring(10);
+			let idxAmpasent = cookieName.indexOf("&");
+			if(idxAmpasent>0) {
+				cookieName = cookieName.substring(0,idxAmpasent);
+			}
+			gLog('onload cookieName='+cookieName);
+		}
+		if(cookieName!="") {
+			callerId = cookieName;
+
+			let api = apiPath+"/getsettings?id="+cookieName;
 			gLog('request getsettings api '+api);
 			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 				var xhrresponse = xhr.responseText
@@ -262,7 +276,13 @@ window.onload = function() {
 							dialIdAutoStoreElement.style.opacity = "0.8";
 						}
 					}
+
+					if(serverSettings.nickname!="") {
+						callerName = serverSettings.nickname;
+					}
 				}
+				console.log("onload callerId=("+callerId+") callerName=("+callerName+") after /getsettings");
+
 			}, function(errString,err) {
 				console.log('xhr error',errString);
 			});
@@ -295,76 +315,115 @@ function changeId(selectObject) {
 }
 
 function onload2(checkFlag) {
+	gLog("onload2");
 	haveBeenWaitingForCalleeOnline=false;
 	altIdCount = 0;
 	checkServerMode(function(mode) {
 		if(mode==0) {
 			// normal mode
-			// if cookie webcallid is available, fetch mapping and offer idSelect
+			console.log("onload2 normal mode");
+			let cookieName = "";
 			if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
-				let cookieName = document.cookie.substring(10);
+				// cookie webcallid exists
+				cookieName = document.cookie.substring(10);
 				let idxAmpasent = cookieName.indexOf("&");
 				if(idxAmpasent>0) {
 					cookieName = cookieName.substring(0,idxAmpasent);
 				}
 				gLog('onload2 cookieName='+cookieName);
-				if(cookieName!="") {
-					// fetch mapping
-					let api = apiPath+"/getmapping?id="+cookieName;
-					gLog('onload2 request getmapping api',api);
-					ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-						gLog('response getmapping api',xhr.responseText);
-						if(xhr.responseText!="") {
-							let idOption = document.createElement('option');
-							idOption.text = cookieName + " (main id)";
-							idOption.value = cookieName;
-							idSelect.appendChild(idOption);
+			}
 
-							let altIDs = xhr.responseText;
-							let tok = altIDs.split("|");
-							for(var i=0; i<tok.length; i++) {
-								//console.log("tok["+i+"]="+tok[i]);
-								if(tok[i]!="") {
-									altIdCount++;
-									let tok2 = tok[i].split(",");
-									let id = tok2[0].trim();
-									let active = tok2[1].trim();
-									let assign = tok2[2].trim();
-									if(assign=="") {
-										assign = "none";
-									}
-									//console.log("assign=("+assign+")");
-									let idOption = document.createElement('option');
-									idOption.text = id + " ("+assign+")";
-									idOption.value = id;
-									idSelect.appendChild(idOption);
+			let showNickNameConfirm = function() {
+				// enable nickname form
+				nickname.value = callerName;
+				nicknameDiv.style.display = "block";
+				// enable randomized '123' confirm form
+				let codeString = ""+(Math.floor(Math.random() * 900) + 100);
+				codeLabel.innerHTML = "Enter "+codeString+":";
+				code.value = "";
+				codeDiv.style.display = "block";
+				setTimeout(function() {
+					code.focus();
+				},500);
+
+				// disable call button for as long as code.value does not have the right value
+				dialButton.disabled = true;
+
+				let keyupEventFkt = function() {
+					if(code.value==codeString) {
+						dialButton.disabled = false;
+						// disable EventListener
+						this.removeEventListener("keyup",keyupEventFkt);
+						codeDiv.style.display = "none";
+						setTimeout(function() {
+							nickname.focus();
+						},500);
+					}
+				}
+				document.addEventListener("keyup", keyupEventFkt);
+				//console.log("showNickNameConfirm start");
+				// checkCalleeOnline() will fetch callername from form
+			}
+
+			// if cookie webcallid is available, fetch mapping and offer idSelect
+			if(cookieName!="") {
+				// fetch mapping
+				let api = apiPath+"/getmapping?id="+cookieName;
+				gLog('onload2 request getmapping api',api);
+				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+					gLog('response getmapping api',xhr.responseText);
+					if(xhr.responseText!="") {
+						let idOption = document.createElement('option');
+						idOption.text = cookieName + " (main id)";
+						idOption.value = cookieName;
+						idSelect.appendChild(idOption);
+
+						let altIDs = xhr.responseText;
+						let tok = altIDs.split("|");
+						for(var i=0; i<tok.length; i++) {
+							//console.log("tok["+i+"]="+tok[i]);
+							if(tok[i]!="") {
+								altIdCount++;
+								let tok2 = tok[i].split(",");
+								let id = tok2[0].trim();
+								let active = tok2[1].trim();
+								let assign = tok2[2].trim();
+								if(assign=="") {
+									assign = "none";
 								}
-							}
-							if(altIdCount>1) {
-// TODO where do idSelect and nickname come from?
-								idSelect.style.display = "block";
-								// if we show idSelect, we also need to show username-form
-								// fill nickname.child.value with nickname from settings (or with callerName?)
-								console.log("set callerName="+callerName);
-								nickname.firstChild.value = callerName;
-								nickname.style.display = "block";
-								// will fetch callername from form in checkCalleeOnline()
+								//console.log("assign=("+assign+")");
+								let idOption = document.createElement('option');
+								idOption.text = id + " ("+assign+")";
+								idOption.value = id;
+								idSelect.appendChild(idOption);
 							}
 						}
-						onload3(checkFlag,"1");
-					}, function(errString,errcode) {
-						onload3(checkFlag,"2 "+errString+" "+errcode);
-					});
-					return;
-				} else {
-					onload3(checkFlag,"3");
-					return;
-				}
-			} else {
-// TODO add '123' form 
-				onload3(checkFlag,"4");
+					}
+					if(altIdCount>1) {
+// TODO where do idSelect and nickname come from?
+						// enable idSelect
+						idSelect.style.display = "block";
+						// if we show idSelect, we also need to show username-form
+						// fill nickname.child.value with nickname from settings (or with callerName?)
+// TODO callerName may be empty; in this case get nickname from /getsettings
+						console.log("set callerName="+callerName);
+						nickname.value = callerName;
+						nicknameDiv.style.display = "block";
+						// will fetch callername from form in checkCalleeOnline()
+					}
+					onload3(checkFlag,"1");
+				}, function(errString,errcode) {
+					// /getmapping has failed
+					showNickNameConfirm();
+					onload3(checkFlag,"2 "+errString+" "+errcode);
+				});
 				return;
 			}
+
+			// cookie webcallid does not exist
+			showNickNameConfirm();
+			onload3(checkFlag,"4");
+			return;
 		}
 		if(mode==1) {
 			// maintenance mode
@@ -678,9 +737,9 @@ function getUrlParams(param) {
 }
 
 function checkCalleeOnline(waitForCallee,comment) {
-	if(altIdCount>1) {
-		// fetch nickname from nickname.firstChild.value to set callerName
-		callerName = nickname.firstChild.value;
+//	if(altIdCount>1) {
+	if(nickname.value!="") {
+		callerName = nickname.value;
 	}
 
 	// Connecting P2P...
@@ -861,7 +920,7 @@ function calleeOnlineAction(comment) {
 							"and then immediately played back to you (green led).",-1);
 			} else {
 				if(!singlebutton) {
-					showStatus( "Enter text message before the call (optional):",-1)
+					showStatus("Enter text message (optional):",-1)
 					msgbox.style.display = "block";
 					gLog('callerName='+callerName);
 					/*
@@ -1019,7 +1078,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 				if(xhr.responseText.startsWith("ok")) {
 					// calleeID can be notified (or is hidden)
 					// if caller is willing to wait, caller can invoke confirmNotifyConnect() to enter own name
-					calleeName = xhr.responseText.substring(3);
+					let calleeName = xhr.responseText.substring(3);
 					if(calleeName=="" || calleeName.length<3) {
 						calleeName = calleeID;
 					}
@@ -1097,73 +1156,9 @@ function goodby() {
 	}
 }
 
-// TODO must reconsinder confirmNotifyConnect() + confirmNotifyConnect2()
-var calleeName = "";
-var confirmValue = "";
-var confirmWord = "123";
-var confirmXhrNickname = false;
 function confirmNotifyConnect() {
-	// offer caller to enter a nickname + callerID and ask to enter confirmWord
-	// using a form with two text fields
-	confirmWord = ""+(Math.floor(Math.random() * 900) + 100);
-	if(typeof callerName=="undefined") {
-		callerName = "";
-	}
-	if(typeof callerId=="undefined") {
-		callerId = "";
-	}
-	if(callerName=="" && callerId!="" && !confirmXhrNickname) {
-		// try to get callerName from server based on (possibly existing) cookie
-		confirmXhrNickname = true;
-		let api = apiPath+"/getsettings"; //?id="+callerId;
-		xhrTimeout = 3*1000;
-		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-			if(xhr.responseText!="") {
-				var obj = JSON.parse(xhr.responseText);
-				if(typeof obj.nickname!=="undefined") {
-					callerName = obj.nickname;
-					gLog('callerName',callerName);
-				}
-			}
-			confirmNotifyConnect();
-		}, function(errString,err) {
-			console.log('# xhr error',errString);
-			confirmNotifyConnect();
-		});
-		return;
-	}
-
-	var msg = `About to get `+calleeName+` on the phone<br>
-	<form action="javascript:;" onsubmit="confirmNotifyConnect2(this)" style="max-width:550px;" id="confirmNotify">
-
-	<label for="nickname" style="display:inline-block; padding-bottom:4px;">Enter your nickname:</label><br>
-	<input name="nickname" id="nickname" type="text" class="formtext" maxlength="25" value="`+callerName+`" autofocus required>
-	<span onclick="clearForm(0)" style="margin-left:5px; user-select:none;">X</span><br>
-	<br>
-<!--
-	<label for="callerID" style="display:inline-block; padding-bottom:4px;">Short text message (optional):</label><br>
-	<input name="callerID" id="callerID" type="text" class="formtext" maxlength="25" value="`+callerId+`">
-	<span onclick="clearForm(1)" style="margin-left:5px; user-select:none;">X</span><br>
-	<br>
--->
-	<label for="confirm" style="display:inline-block; padding-bottom:4px;">Enter '`+confirmWord+`' to continue:</label><br>
-	<input name="confirm" id="confirm" type="text" class="formtext" maxlength="3" value="`+confirmValue+`">
-	<span onclick="clearForm(2)" style="margin-left:5px; user-select:none;">X</span><br>
-
-	<input type="submit" name="Submit" id="submit" value="Start" style="width:100px; margin-top:26px;">
-	</form>
-`;
-	showStatus(msg,-1);
-
-	setTimeout(function() {
-		if(callerName!="" && confirmValue=="") {
-			var formConfirm = document.querySelector('input#confirm');
-			formConfirm.focus();
-		} else {
-			var formNickname = document.querySelector('input#nickname');
-			formNickname.focus();
-		}
-	},500);
+	console.log("callerName="+callerName+" callerId="+callerId);
+	notifyConnect(callerName,callerId);
 }
 
 // not for singlebutton
@@ -1216,42 +1211,6 @@ function errorAction2(errString,err) {
 	console.log('xhr error',errString);
 	// let user know via alert
 	//alert("xhr error "+errString);
-}
-
-
-function confirmNotifyConnect2() {
-	// caller has entered nickname form - lets validate
-	callerName = document.getElementById("nickname").value;
-//	callerId = document.getElementById("callerID").value;
-	var confirmForm = document.getElementById("confirm")
-	if(confirmForm) {
-		confirmValue = confirmForm.value;
-	}
-	//console.log("callerName="+callerName+" callerId="+callerId);
-	console.log("confirmValue="+confirmValue+" confirmWord="+confirmWord);
-	if(confirmValue != confirmWord) {
-		confirmValue = "";
-		confirmNotifyConnect();
-		return;
-	}
-	// make sure callerName is not longer than 25 chars and is alphanumeric only (plus space)
-	callerName = callerName.replace(/[^a-zA-Z0-9 ]/g, "");
-	if(callerName.length>25) {
-		callerName = callerName.substring(0,25);
-	}
-	//console.log("confirmNotifyConnect2 callerName="+callerName);
-/*
-	callerId = callerId.replace(/[^a-zA-Z0-9 ]/g, "");
-	if(callerId.length>11) {
-		callerId = callerId.substring(0,11);
-	}
-*/
-	console.log("confirmNotifyConnect2 callerId="+callerId);
-
-	// this short delay prevents "Form submission canceled because the form is not connected" in chrome 56+
-	setTimeout(function() {
-		notifyConnect(callerName,callerId);
-	},200);
 }
 
 function notifyConnect(callerName,callerId) {
