@@ -2284,8 +2284,7 @@ function getCookieSupport() {
 
 var counter=0;
 function openContacts() {
-// TODO not sure we need to send callerId and calleeName to contacts-widget anymore
-	let url = "/callee/contacts?callerId="+calleeID+"&name="+calleeName+"&ds="+playDialSounds+"&i="+counter++;
+	let url = "/callee/contacts?ds="+playDialSounds+"&i="+counter++;
 	gLog('openContacts',url);
 	iframeWindowOpen(url);
 }

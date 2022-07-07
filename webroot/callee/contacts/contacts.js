@@ -1,20 +1,33 @@
-// WebCall contacts client by timur.mobi
+// WebCall Copyright 2022 timur.mobi. All rights reserved.
 'use strict';
 const databoxElement = document.getElementById('databox');
 
-var callerID = "";
-var callerName = "";
+var calleeID = "";
 var dialsounds = "";
 var formForNameOpen = false;
 var formElement = null;
 
 window.onload = function() {
-// TODO not sure we really need callerID and callerName anymore
-// but if we do, we should probably fetch them via cookiename
-	callerID = getUrlParams("callerId");
-	callerName = getUrlParams("name");
+	if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
+		// cookie webcallid exists
+		let cookieName = document.cookie.substring(10);
+		let idxAmpasent = cookieName.indexOf("&");
+		if(idxAmpasent>0) {
+			cookieName = cookieName.substring(0,idxAmpasent);
+		}
+		console.log('onload cookieName='+cookieName);
+		if(cookieName!="") {
+			calleeID = cookieName
+		}
+	}
+	if(calleeID=="") {
+		// no access without cookie
+		databoxElement.innerHTML = "no cookie";
+		return;
+	}
+
 	dialsounds = getUrlParams("ds");
-	console.log('contacts onload callerID='+callerID+' callerName='+callerName+' dialsounds='+dialsounds);
+	console.log('contacts onload calleeID='+calleeID+' dialsounds='+dialsounds);
 
 	document.onkeydown = function(evt) {
 		//console.log('contacts onload onkeydown event');
@@ -61,7 +74,7 @@ function getUrlParams(param) {
 }
 
 function requestData() {
-	let api = apiPath+"/getcontacts?id="+callerID;
+	let api = apiPath+"/getcontacts?id="+calleeID;
 	if(!gentle) console.log('request getcontacts api',api);
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 		processContacts(xhr.responseText);
@@ -111,10 +124,7 @@ function processContacts(xhrresponse) {
 			let name = entry[1];
 			//if(!gentle) console.log('obj[%s] (%s)',id, name);
 			dataBoxContent += "<tr><td><a onclick='edit(this,event,\""+id+"\")'>"+name+"</a></td>"+
-// we don't need to send callerId and name to caller widget anymore
-//			"<td><a href='" + mainLink + id + "?callerId="+callerID+ "&name="+callerName+ "&ds="+dialsounds+"'>"+
-//				id+"</a></td></tr>";
-			"<td><a href='" + mainLink + id + "?ds="+dialsounds+"'>"+id+"</a></td></tr>";
+				"<td><a href='" + mainLink + id + "?ds="+dialsounds+"'>"+id+"</a></td></tr>";
 		}
 		dataBoxContent += "</table>";
 		databoxElement.innerHTML = dataBoxContent;
@@ -158,7 +168,7 @@ function editSubmit(formElement,id) {
 
 	if(newName.toLowerCase()=="delete" || newName=="...") {
 		// special case
-		let api = apiPath+"/deletecontact?id="+callerID+"&contactID="+id;
+		let api = apiPath+"/deletecontact?id="+calleeID+"&contactID="+id;
 		if(!gentle) console.log('request api',api);
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 			console.log('xhr deletecontact OK',xhr.responseText);
@@ -173,8 +183,8 @@ function editSubmit(formElement,id) {
 
 	} else if(newName!=oldName) {
 		// name change
-		// deliver newName change for id back to the server (/setcontact?id=callerID&contactID=id&name=newName)
-		let api = apiPath+"/setcontact?id="+callerID+"&contactID="+id+"&name="+newName;
+		// deliver newName change for id back to the server (/setcontact?id=calleeID&contactID=id&name=newName)
+		let api = apiPath+"/setcontact?id="+calleeID+"&contactID="+id+"&name="+newName;
 		if(!gentle) console.log('request api',api);
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 			console.log('xhr setcontact resp='+xhr.responseText);

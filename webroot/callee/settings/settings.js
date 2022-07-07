@@ -1,4 +1,4 @@
-// WebCall callee settings client by timur.mobi
+// WebCall Copyright 2022 timur.mobi. All rights reserved.
 'use strict';
 const form = document.querySelector('form#settings');
 const formPw = document.querySelector('input#nickname');

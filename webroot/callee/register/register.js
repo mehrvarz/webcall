@@ -1,4 +1,4 @@
-// WebCall callee register client by timur.mobi
+// WebCall Copyright 2022 timur.mobi. All rights reserved.
 'use strict';
 const registerButton = document.querySelector('button#register');
 const statusLine = document.getElementById('status');
