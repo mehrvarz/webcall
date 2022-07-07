@@ -7,6 +7,7 @@ const enterIdElement = document.getElementById('enterId');
 const enterIdVal = document.getElementById('enterIdVal');
 const enterDomainVal = document.getElementById('enterDomainVal');
 const divspinnerframe = document.querySelector('div#spinnerframe');
+const numericIdLabel = document.querySelector('label#numericIdLabel');
 const numericIdCheckbox = document.querySelector('input#numericId');
 const calleeMode = false;
 
@@ -203,22 +204,31 @@ window.onload = function() {
 	});
 
 	if(typeof numericIdCheckbox!=="undefined" && numericIdCheckbox!=null) {
-		// default numeric (TODO: set for smartphone type device only?)
-		numericIdCheckbox.checked = true;
-		let enterIdValElement = document.getElementById('enterIdVal');
-		enterIdValElement.setAttribute('type','number');
-		enterIdValElement.focus();
-
-		numericIdCheckbox.addEventListener('change', function() {
-			if(this.checked) {
-				gLog("numericIdCheckbox checked");
-				enterIdValElement.setAttribute('type','number');
-			} else {
-				gLog("numericIdCheckbox unchecked");
-				enterIdValElement.setAttribute('type','text');
-			}
+		// umericIdCheckbox (activated for Android only) for switching input-type text/number
+		let ua = navigator.userAgent;
+		//console.log("navigator.userAgent=("+ua+")");
+		if(ua.indexOf("Android")>=0) {
+			// enable and activate numericId checkbox
+			//console.log("numericIdCheckbox enable");
+			numericIdCheckbox.checked = true;
+			let enterIdValElement = document.getElementById('enterIdVal');
+			enterIdValElement.setAttribute('type','number');
 			enterIdValElement.focus();
-		});
+
+			numericIdCheckbox.addEventListener('change', function() {
+				if(this.checked) {
+					gLog("numericIdCheckbox checked");
+					enterIdValElement.setAttribute('type','number');
+				} else {
+					gLog("numericIdCheckbox unchecked");
+					enterIdValElement.setAttribute('type','text');
+				}
+				enterIdValElement.focus();
+			});
+		} else {
+			// disable numericId checkbox: default to text-id input
+			numericIdLabel.style.display = "none";
+		}
 	}
 
 	if(window.self == window.top) {
