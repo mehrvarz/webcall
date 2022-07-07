@@ -1435,15 +1435,13 @@ function showMissedCalls() {
 					callerLink + "</td><td style='text-align:right;'>"+
 					waitingTimeString + "</td><td>"+
 					"<a onclick='deleteMissedCall(\""+
-						missedCallsSlice[i].AddrPort+"_"+missedCallsSlice[i].CallTime+"\")'>"+
-					"X</a></td>";
+						missedCallsSlice[i].AddrPort+"_"+missedCallsSlice[i].CallTime+"\")'>X</a></td>";
 			} else {
 				str += "<td>"+callerName + "</td><td>"+
 					halfShowIpAddr(callerIp) + "</td><td style='text-align:right;'>"+
 					waitingTimeString + "</td><td>"+
 					"<a onclick='deleteMissedCall(\""+
-						missedCallsSlice[i].AddrPort+"_"+missedCallsSlice[i].CallTime+"\")'>"+
-					"X</a></td>";
+						missedCallsSlice[i].AddrPort+"_"+missedCallsSlice[i].CallTime+"\")'>X</a></td>";
 			}
 		}
 		str += "</table>"

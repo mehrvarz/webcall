@@ -106,7 +106,7 @@ function displayMapping() {
 
 				dataBoxContent += "<tr><td><a href='" + mainLink + id + "' onclick='clickID("+id+");return false;'>"+id+"</a></td>"+
 					"<td><a onclick='edit(this,event,\""+id+"\",\""+assign+"\")'>"+ assign +"</a></td>"+
-					"<td><a onclick='remove("+i+","+id+")'>X</a></td></tr>";
+					"<td><a onclick='remove("+i+","+id+")' style='font-weight:600;'>X</a></td></tr>";
 			}
 		}
 		dataBoxContent += "</table>";
