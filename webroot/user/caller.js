@@ -204,7 +204,7 @@ window.onload = function() {
 	});
 
 	if(typeof numericIdCheckbox!=="undefined" && numericIdCheckbox!=null) {
-		// umericIdCheckbox (activated for Android only) for switching input-type text/number
+		// numericIdCheckbox (activated for Android only) for switching input-type text/number
 		let ua = navigator.userAgent;
 		//console.log("navigator.userAgent=("+ua+")");
 		if(ua.indexOf("Android")>=0) {
