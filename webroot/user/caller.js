@@ -294,7 +294,7 @@ window.onload = function() {
 		return;
 	}
 
-	onload2(true);
+	onload2();
 }
 
 function changeId(selectObject) {
@@ -313,7 +313,7 @@ function changeId(selectObject) {
 	}
 }
 
-function onload2(checkFlag) {
+function onload2() {
 	gLog("onload2");
 	haveBeenWaitingForCalleeOnline=false;
 	altIdCount = 0;
@@ -404,24 +404,23 @@ function onload2(checkFlag) {
 						idSelect.style.display = "block";
 						// if we show idSelect, we also need to show username-form
 						// fill nickname.child.value with nickname from settings (or with callerName?)
-// TODO callerName may be empty; in this case get nickname from /getsettings
 						console.log("set callerName="+callerName);
 						nickname.value = callerName;
 						nicknameDiv.style.display = "block";
-						// will fetch callername from form in checkCalleeOnline()
+						// callername will be fetched from form in checkCalleeOnline()
 					}
-					onload3(checkFlag,"1");
+					onload3("1");
 				}, function(errString,errcode) {
 					// /getmapping has failed
 					showNickNameConfirm();
-					onload3(checkFlag,"2 "+errString+" "+errcode);
+					onload3("2 "+errString+" "+errcode);
 				});
 				return;
 			}
 
 			// cookie webcallid does not exist
 			showNickNameConfirm();
-			onload3(checkFlag,"4");
+			onload3("3");
 			return;
 		}
 		if(mode==1) {
@@ -439,8 +438,7 @@ function onload2(checkFlag) {
 	});
 }
 
-// TODO checkFlag is now ignored
-function onload3(checkFlag,comment) {
+function onload3(comment) {
 	gLog('onload3 '+comment);
 
 	var calleeIdTitle = calleeID.charAt(0).toUpperCase() + calleeID.slice(1);
@@ -471,14 +469,6 @@ function onload3(checkFlag,comment) {
 		return;
 	}
 
-/*
-// TODO checkFlag is now ignored
-	if(checkFlag) {
-		// need to know if calleeID is online asap (will switch to callee-online-layout if it is)
-		dialAfterCalleeOnline = false;
-		checkCalleeOnline(true,"onload3 checkFlag");
-	}
-*/
 	calleeOnlineAction("init");
 
 	if(dialButton) {
@@ -637,7 +627,6 @@ function videoOff() {
 			gLog('videoOff removeTrack local mic audioTracks.length',audioTracks.length);
 			if(audioTracks.length>0) {
 				gLog('videoOff removeTrack local mic',audioTracks[0]);
-				// TODO would it be enough to do only this?
 				audioTracks[0].enabled = false;
 				audioTracks[0].stop();
 				localStream.removeTrack(audioTracks[0]);
@@ -647,7 +636,6 @@ function videoOff() {
 			gLog('videoOff removeTrack local vid videoTracks.length',videoTracks.length);
 			if(videoTracks.length>0) {
 				gLog('videoOff removeTrack local vid',videoTracks[0]);
-				// TODO would it be enough to do only this?
 				videoTracks[0].enabled = false;
 				videoTracks[0].stop();
 				localStream.removeTrack(videoTracks[0]);
@@ -1114,7 +1102,6 @@ function goodby() {
 		// in this case the server does NOT call peerConHasEnded(), so we call /missedCall from here
 		// id=format: calleeID|callerName|callerID|ageSecs|msgbox
 		// goodbyMissedCall arrives as urlID but is then tokenized
-// TODO check wsConn instead of wsAddr
 //		if(wsAddr!="") {
 		if(wsConn!=null) {
 			gLog('goodbyMissedCall wsSend='+goodbyMissedCall);
@@ -1133,7 +1120,6 @@ function goodby() {
 	} else if(goodbyTextMsg!="" && wsConn) {
 		// goodbyTextMsg is used, when callee is online (peerconnect), but does not pick up (no mediaconnect)
 		// in this case server calls peerConHasEnded() for the callee, where addMissedCall() is generated
-// TODO check wsConn instead of wsAddr
 //		if(wsAddr!="") {
 		if(wsConn!=null) {
 			gLog('goodbyTextMsg wsSend='+goodbyTextMsg);
@@ -1197,7 +1183,7 @@ function submitForm(theForm) {
 		window.open("https://"+enterDomainVal.value+"/user/"+calleeID, ""); //"_blank"
 		history.back();
 	} else {
-		onload2(true);
+		onload2();
 	}
 }
 
