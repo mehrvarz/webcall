@@ -590,7 +590,7 @@ function getStatsCandidateTypesEx(results,eventString1,eventString2) {
 }
 
 var menuDialogOpenElement = null;
-function menuDialogOpen(menuDialog) {
+function menuDialogOpen(menuDialog,atMousePos) {
 	if(menuDialogOpenElement) {
 		gLog('# menuDialogOpen menuDialogOpenElement');
 		return;
@@ -626,16 +626,18 @@ function menuDialogOpen(menuDialog) {
 	}
 
 	const menuDialogOpenChildElement = menuDialogOpenElement.firstElementChild;
-	// position menuDialog at mouse coordinate
-    var e = window.event;
-    var posX = e.clientX * 0.70 -40;
-	if(posX<0) posX=0;
-    var posY = e.clientY;
-	if(posY>50) posY-=50;
-	//gLog('menuDialogOpen x/y',posX,e.clientX,posY,e.clientY);
-	menuDialogOpenChildElement.style.left = posX+"px";
-	menuDialogOpenChildElement.style.top = (posY+window.scrollY)+"px"; // add scrollY-offset to posY
-	//gLog('menuDialogOpen2 x/y',posX,posY+window.scrollY);
+	if(atMousePos) {
+		// position menuDialog at mouse coordinate
+		var e = window.event;
+		var posX = e.clientX * 0.70 -40;
+		if(posX<0) posX=0;
+		var posY = e.clientY;
+		if(posY>50) posY-=50;
+		//gLog('menuDialogOpen x/y',posX,e.clientX,posY,e.clientY);
+		menuDialogOpenChildElement.style.left = posX+"px";
+		menuDialogOpenChildElement.style.top = (posY+window.scrollY)+"px"; // add scrollY-offset to posY
+		//gLog('menuDialogOpen2 x/y',posX,posY+window.scrollY);
+	}
 
 	menuDialogOpenElement.style.display = "block";
 

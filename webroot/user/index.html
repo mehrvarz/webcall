@@ -89,7 +89,7 @@ div#container {
 div#enterId {
 	padding: 0.5em;
 	margin: 0.5em;
-	max-width:520px;
+	_max-width:520px;	/* ??? */
 }
 h1 {
 	font-size:1.7em;
@@ -292,7 +292,7 @@ input[type=submit]:focus {
 
 <div id="iframeWindow" style="display:none"></div>
 
-<div id="menuDialog" style="position:relative; max-width:540px; user-select:none; display:none;">
+<div id="menuDialog" style="position:relative; max-width:600px; user-select:none; display:none;">
 	<div style="position:absolute; right:0px; top:0px; z-index:110; background:#45dd; color:#fff; padding:10px 0px; line-height:2.6em; border-radius:3px; cursor:pointer;">
 		<div class="menuButton" onclick="openPostCallStats()">Call Stats</div>
 		<label class="menulabel" id="fileselectlabel" style="display:none;">
@@ -329,7 +329,7 @@ input[type=submit]:focus {
 			<span id="localVideoMsg" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50% ); text-align:center; background:#000b; padding:5px 10px; z-index:20; font-size:0.8em; opacity:0;"></span>
 			<span id="localVideoRes" style="position:absolute; bottom:10%; left:50%; transform:translate(-50%,-50% ); text-align:center; background:#000b; padding:5px 10px; z-index:20; font-size:0.7em; visibility:hidden;"></span>
 			<div id="localVideoLabel" style="position:absolute; bottom:0; width:100%; z-index:30; opacity:0.7; text-align:center; background:#000b; transition:opacity 500ms;">
-				<span id="vres" onclick="menuDialogOpen(vresDialogElement)">res</span>
+				<span id="vres" onclick="menuDialogOpen(vresDialogElement,true)">res</span>
 				<span id="vmonitor" onclick="vmonitorSwitch()" style="margin-left:3%">monitor</span>
 				<span id="vsend" onclick="connectLocalVideo(false)" style="margin-left:3%;display:none;">send</span>
 				<span id="vclose" onclick="videoSwitch(true)" style="margin-left:3%">close</span>
@@ -341,7 +341,7 @@ input[type=submit]:focus {
 
 
 <div id="container">
-	<img id="menu" onclick="menuDialogOpen(menuDialogElement)" src="menu.svg" style="position:relative; float:right; width:25px; margin-top:6px; margin-right:10px; margin-left:22px; z-index:100; user-select:none; cursor:pointer;">
+	<img id="menu" onclick="menuDialogOpen(menuDialogElement,false)" src="menu.svg" style="position:relative; float:right; width:25px; margin-top:6px; margin-right:10px; margin-left:22px; z-index:100; user-select:none; cursor:pointer;">
 	<img id="camera" src="camera.svg" style="position:relative; float:right; width:30px; margin-top:5.5px; margin-left:22px; z-index:100; user-select:none; cursor:pointer; transition:opacity 500ms;" onclick="videoSwitch(false)">
 
 	<h1 id="title">WebCall</h1>

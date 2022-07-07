@@ -158,7 +158,7 @@ function remove(idx,id) {
 	removeIdx = idx;
 	removeId = id;
 	// yesNoDialog will call removeDo() for 'yes'
-	menuDialogOpen(yesNoDialog);
+	menuDialogOpen(yesNoDialog,true);
 }
 
 function removeDo() {

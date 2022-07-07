@@ -25,7 +25,6 @@ const menuClearCookieElement = document.getElementById('menuClearcookie');
 const menuClearCacheElement = document.getElementById('menuClearCache');
 const menuExitElement = document.getElementById('menuExit');
 const iconContactsElement = document.getElementById('iconContacts');
-//const dialIdElement = document.getElementById('dialId');
 const idMappingElement = document.getElementById('idMapping');
 const exclamationElement = document.getElementById('exclamation');
 const ownlinkElement = document.getElementById('ownlink');
@@ -915,15 +914,10 @@ function wsOnOpen() {
 	dialsoundslabel.style.display = "block";
 	menuSettingsElement.style.display = "block";
 	iconContactsElement.style.display = "block";
-//	dialIdElement.style.display = "block";
 
-// TODO
-//	if(typeof Android !== "undefined" && Android !== null) {
-//		if(Android.getVersionName()!="1.0F" && Android.getVersionName()!="1.0T" &&
-//				Android.getVersionName()>="1.1.0") {
-			idMappingElement.style.display = "block";
-//		}
-//	}
+	if(typeof Android !== "undefined" && Android !== null && Android.getVersionName()>="1.1.0") {
+		idMappingElement.style.display = "block";
+	}
 	goOfflineButton.disabled = false;
 }
 
@@ -2304,7 +2298,7 @@ function openDialId(userId) {
 		url = "/user/"+userId+"?callerId="+calleeID+"&name="+calleeName+"&ds="+playDialSounds+"&i="+counter++;
 	}
 	gLog('openDialId',url);
-	iframeWindowOpen(url);
+	iframeWindowOpen(url,false,"");
 }
 
 function openIdMapping() {
