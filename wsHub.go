@@ -22,6 +22,7 @@ type Hub struct {
 	WsUrl string
 	WssUrl string
 	calleeUserAgent string // http UA
+	lastNews string
 	HubMutex sync.RWMutex
 	CalleeLogin atombool.AtomBool // CalleeClient is connected to signaling server and has sent "init"
 	WsClientID uint64 // set by the callee; will be handed over to the caller via /online

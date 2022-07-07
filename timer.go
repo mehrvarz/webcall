@@ -358,17 +358,21 @@ func broadcastNewsLink(date string, url string) {
 	fmt.Printf("newsLink data=%s\n",data)
 	for calleeID,hub := range hubMap {
 		if strings.HasPrefix(calleeID,"answie") || 
-		   strings.HasPrefix(calleeID,"talkback") ||
-		   strings.HasPrefix(calleeID,"!") {
+		   strings.HasPrefix(calleeID,"talkback") {
 			continue
 		}
 		countAll++
 		if hub!=nil {
 			hub.HubMutex.RLock()
-			if hub.CalleeClient!=nil {
+			// we make sure to send each news with a particular date string only once
+			if hub.CalleeClient!=nil && hub.lastNews < date {
 				//fmt.Printf("newsLink to=%s data=%s\n",calleeID,data)
 				hub.CalleeClient.Write([]byte(data))
 				hub.HubMutex.RUnlock()
+
+				hub.HubMutex.Lock()
+				hub.lastNews = date
+				hub.HubMutex.Unlock()
 				count++
 			} else {
 				hub.HubMutex.RUnlock()

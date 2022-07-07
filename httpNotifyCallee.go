@@ -541,6 +541,8 @@ func missedCall(callerInfo string, remoteAddr string, cause string) {
 	if len(tok) >= 5 {
 		msgtext = tok[4]
 	}
+// TODO if callerName=="" get if from contacts via calleeId?
+
 // TODO check callerName, callerID, msgtext for size and content
 	// the actual call occured ageSecs64 ago (may be a big number, if caller waits long before aborting the page)
 	//ageSecs64 := time.Now().Unix() - timeOfCall
@@ -695,7 +697,7 @@ func addMissedCall(urlID string, caller CallerInfo, cause string) (error, []Call
 		fmt.Printf("# addMissedCall (%s) failed to read dbMissedCalls (%v) err=%v\n",
 			urlID, caller, err)
 	}
-	// make sure we never show more than 10 missed calls
+	// make sure we never keep/show more than 10 missed calls
 	maxMissedCalls := 10
 	if len(missedCallsSlice) >= maxMissedCalls {
 		missedCallsSlice = missedCallsSlice[len(missedCallsSlice)-(maxMissedCalls-1):]
