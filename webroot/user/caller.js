@@ -10,6 +10,7 @@ const divspinnerframe = document.querySelector('div#spinnerframe');
 const numericIdLabel = document.querySelector('label#numericIdLabel');
 const numericIdCheckbox = document.querySelector('input#numericId');
 const calleeMode = false;
+const msgBoxMaxLen = 137;
 
 var bitrate = 320000;
 var connectingText = "Connecting P2P...";
@@ -290,10 +291,10 @@ window.onload = function() {
 						callerName = serverSettings.nickname;
 					}
 				}
-				console.log("onload callerId=("+callerId+") callerName=("+callerName+") after /getsettings");
+				gLog("onload callerId=("+callerId+") callerName=("+callerName+") after /getsettings");
 
 			}, function(errString,err) {
-				console.log('xhr error',errString);
+				console.log("# xhr error "+errString+" "+err);
 			});
 		}
 
@@ -330,7 +331,7 @@ function onload2() {
 	checkServerMode(function(mode) {
 		if(mode==0) {
 			// normal mode
-			console.log("onload2 normal mode");
+			gLog("onload2 normal mode");
 			let cookieName = "";
 			if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
 				// cookie webcallid exists
@@ -386,13 +387,13 @@ function onload2() {
 						idOption.text = cookieName + " (main id)";
 						idOption.value = cookieName;
 						idSelect.appendChild(idOption);
+						altIdCount++;
 
 						let altIDs = xhr.responseText;
 						let tok = altIDs.split("|");
 						for(var i=0; i<tok.length; i++) {
 							//console.log("tok["+i+"]="+tok[i]);
 							if(tok[i]!="") {
-								altIdCount++;
 								let tok2 = tok[i].split(",");
 								let id = tok2[0].trim();
 								let active = tok2[1].trim();
@@ -405,16 +406,23 @@ function onload2() {
 								idOption.text = id + " ("+assign+")";
 								idOption.value = id;
 								idSelect.appendChild(idOption);
+								altIdCount++;
 							}
 						}
+						let idOptionAnon = document.createElement('option');
+						idOptionAnon.text = "00000000000 (incognito)";
+						idOptionAnon.value = "";
+						idSelect.appendChild(idOptionAnon);
+						altIdCount++;
 					}
+
 					if(altIdCount>1) {
 // TODO where do idSelect and nickname come from?
 						// enable idSelect
 						idSelect.style.display = "block";
 						// if we show idSelect, we also need to show username-form
 						// fill nickname.child.value with nickname from settings (or with callerName?)
-						console.log("set callerName="+callerName);
+						gLog("set callerName="+callerName);
 						nickname.value = callerName;
 						nicknameDiv.style.display = "block";
 						// callername will be fetched from form in checkCalleeOnline()
@@ -462,13 +470,13 @@ function onload3(comment) {
 		let api = apiPath+"/action?id="+calleeID.substring(1)+"&callerId="+callerId;
 		xhrTimeout = 5*1000;
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-			console.log("xhr.resp="+xhr.responseText);
+			gLog("xhr.resp="+xhr.responseText);
 			if(xhr.responseText.startsWith("widget=")) {
 				// switch widget: replace parent iframe src
 				let url = xhr.responseText.substring(7) + "?callerId="+callerId+"&i="+counter;
 				counter++;
 				let iframeElement = parent.document.querySelector('iframe#child');
-				console.log("widget("+url+") iframeElement="+iframeElement);
+				gLog("widget("+url+") iframeElement="+iframeElement);
 				if(parent!=null && iframeElement!=null) {
 					iframeElement.src = url;
 				}
@@ -522,8 +530,8 @@ function onload3(comment) {
 
 function dialButtonClick() {
 	gLog("dialButtonClick");
+	//gLog("dialButtonClick callerId="+callerId+" callerName="+callerName);
 	showStatus(connectingText,-1);
-console.log("dialButtonClick callerId="+callerId+" callerName="+callerName);
 
 	doneHangup = false;
 	onIceCandidates = 0;
@@ -709,7 +717,7 @@ function checkServerMode(callback) {
 		// normal mode
 		callback(0);
 	}, function(errString,err) {
-		console.log('# xhr error',errString);
+		console.log("# xhr error "+errString+" "+err);
 		callback(2);
 	});
 }
@@ -913,14 +921,9 @@ function calleeOnlineAction(comment) {
 							"and then immediately played back to you (green led).",-1);
 			} else {
 				if(!singlebutton) {
-					showStatus("Enter text message (optional):",-1)
+					showStatus("Enter greeting message (optional):",-1)
 					msgbox.style.display = "block";
 					gLog('callerName='+callerName);
-					/*
-					if(typeof callerName!=="undefined" && callerName!="") {
-						msgbox.value = "Hi, this is "+callerName;
-					}
-					*/
 					let placeholderText = "";
 					msgbox.onfocus = function() {
 						placeholderText = msgbox.placeholder;
@@ -993,10 +996,10 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 				if(offlineFor>0) {
 					xhrTimeout = xhrTimeout - offlineFor*1000;
 				}
-				console.log("notifyCallee api="+api+" timeout="+xhrTimeout);
+				gLog("notifyCallee api="+api+" timeout="+xhrTimeout);
 				// in case caller aborts:
 				goodbyMissedCall = calleeID+"|"+callerName+"|"+callerId+
-					"|"+Math.floor(Date.now()/1000)+"|"+msgbox.value.substring(0,300)
+					"|"+Math.floor(Date.now()/1000)+"|"+msgbox.value.substring(0,msgBoxMaxLen)
 				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 					// end spinner
 					if(divspinnerframe) {
@@ -1087,7 +1090,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 
 					showStatus(msg,-1);
 					goodbyMissedCall = calleeID+"|"+callerName+"|"+callerId+
-						"|"+Math.floor(Date.now()/1000)+"|"+msgbox.value.substring(0,300)
+						"|"+Math.floor(Date.now()/1000)+"|"+msgbox.value.substring(0,msgBoxMaxLen)
 					// goodbyMissedCall will be cleared by a successful call
 					// if it is still set in goodby(), we will ask server to store this as a missed call
 					return;
@@ -1148,7 +1151,7 @@ function goodby() {
 }
 
 function confirmNotifyConnect() {
-	console.log("callerName="+callerName+" callerId="+callerId);
+	gLog("callerName="+callerName+" callerId="+callerId);
 	notifyConnect(callerName,callerId);
 }
 
@@ -1198,7 +1201,7 @@ function submitForm(theForm) {
 }
 
 function errorAction2(errString,err) {
-	console.log('xhr error',errString);
+	console.log("# xhr error "+errString+" "+err);
 	// let user know via alert
 	//alert("xhr error "+errString);
 }
@@ -1213,7 +1216,7 @@ function notifyConnect(callerName,callerId) {
 	goodbyMissedCall = "";
 	let api = apiPath+"/notifyCallee?id="+calleeID+"&callerId="+callerId+"&name="+callerName;
 	xhrTimeout = 600*1000; // 10 min extended xhr timeout
-	console.log("notifyCallee api="+api+" timeout="+xhrTimeout);
+	gLog("notifyCallee api="+api+" timeout="+xhrTimeout);
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 		if(divspinnerframe) {
 			divspinnerframe.style.display = "none";
@@ -1240,7 +1243,7 @@ function notifyConnect(callerName,callerId) {
 }
 
 function errorAction(errString,errcode) {
-	console.log('errorAction',errString,errcode);
+	console.log("# errorAction "+errString+" "+errcode);
 	if(errString.startsWith("fetch")) {
 		showStatus("No response from signaling server",-1);
 	} else {
@@ -1376,7 +1379,7 @@ function connectSignaling(message,openedFunc) {
 		if(tryingToOpenWebSocket) {
 			// onclose before a ws-connection could be established
 			// likely wsAddr is outdated (may have been cleared by onerror already)
-			console.log('wsConn.onclose: clear wsAddr='+wsAddr);
+			gLog("wsConn.onclose: clear wsAddr="+wsAddr);
 			wsAddr = "";
 			tryingToOpenWebSocket = false;
 			hangupButton.disabled = true;
@@ -1406,9 +1409,9 @@ function signalingCommand(message) {
 		if(contactAutoStore) {
 			if(callerId!=="" && callerId!=="undefined") {
 				let api = apiPath+"/setcontact?id="+callerId+"&contactID="+calleeID; //+"&name="+newName;
-				if(!gentle) console.log('request api',api);
+				gLog("request api="+api);
 				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-					console.log('xhr setcontact OK',xhr.responseText);
+					gLog("xhr setcontact OK "+xhr.responseText);
 				}, errorAction2);
 			}
 		}
@@ -1492,7 +1495,7 @@ function signalingCommand(message) {
 					showStatus("Failed to createAnswer",8000);
 				});
 			} else {
-				console.log("calleeOffer received no offer:",hostDescription.type);
+				gLog("calleeOffer received no offer:",hostDescription.type);
 			}
 
 		}, err => {
@@ -1563,7 +1566,7 @@ function signalingCommand(message) {
 			return
 		}
 
-		console.log('callee is answering call');
+		gLog("callee is answering call");
 		if(!localStream) {
 			console.warn("cmd pickup no localStream");
 			// I see this when I quickly re-dial while busy signal of last call is still playing
@@ -1633,7 +1636,7 @@ function signalingCommand(message) {
 			}
 
 			// getting stats (p2p or relayed connection)
-			console.log('full mediaConnect, getting stats...');
+			gLog("full mediaConnect, getting stats...");
 			peerCon.getStats(null)
 				.then((results) => getStatsCandidateTypes(results,"Connected",micStatus),
 				err => console.log(err));
@@ -1665,13 +1668,13 @@ function signalingCommand(message) {
 
 	} else if(cmd=="cancel") {
 		if(payload!="c") {
-			console.log('peer disconnect');
+			console.log("peer disconnect");
 			//showStatus("peer disconnect",8000);
 			setTimeout(function() {
 				if(wsConn) {
 					if(!mediaConnect) {
 						// before wsConn.close(): send msgbox text to server
-						let msgboxText = msgbox.value.substring(0,300);
+						let msgboxText = msgbox.value.substring(0,msgBoxMaxLen);
 						if(msgboxText!="") {
 							wsSend("msg|"+msgboxText);
 						}
@@ -1685,7 +1688,7 @@ function signalingCommand(message) {
 				hangupWithBusySound(false,"Peer hang up");
 			},250);
 		} else {
-			console.log("ignore cancel",payload);
+			gLog("ignore cancel "+payload);
 		}
 
 	} else if(cmd=="sessionDuration") {
@@ -1912,7 +1915,7 @@ function dial2() {
 		}
 		gLog("peerCon onconnectionstatechange "+peerCon.connectionState);
 		if(peerCon.connectionState=="disconnected") {
-			console.log('peerCon disconnected',rtcConnect,mediaConnect);
+			gLog("peerCon disconnected",rtcConnect,mediaConnect);
 			if(typeof Android !== "undefined" && Android !== null) {
 				Android.peerDisConnect();
 			}
@@ -1942,11 +1945,11 @@ function dial2() {
 				// set goodbyTextMsg (including msgbox text) to be evaluated in goodby
 //				goodbyTextMsg = calleeID+"|"+callerName+"|"+callerId+
 //					"|"+Math.floor(Date.now()/1000)+"|"+msgbox.value.substring(0,300)
-				goodbyTextMsg = msgbox.value.substring(0,300)
+				goodbyTextMsg = msgbox.value.substring(0,msgBoxMaxLen)
 				gLog('set goodbyTextMsg',goodbyTextMsg);
 
 				if(!singlebutton) {
-					let msgboxText = msgbox.value.substring(0,300);
+					let msgboxText = msgbox.value.substring(0,msgBoxMaxLen);
 					if(msgboxText!="") {
 						if(dataChannel) {
 							if(dataChannel.readyState=="open") {
@@ -2208,7 +2211,7 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 	if(wsConn && wsConn.readyState==1) {
 		gLog('mustDisconnect='+mustDisconnectCallee+' readyState='+wsConn.readyState+" mediaCon="+mediaConnect);
 		if(!mediaConnect) {
-			let msgboxText = msgbox.value.substring(0,300);
+			let msgboxText = msgbox.value.substring(0,msgBoxMaxLen);
 			//gLog('msgboxText=('+msgboxText+')');
 			if(msgboxText!="") {
 				gLog('msg=('+msgboxText+')');

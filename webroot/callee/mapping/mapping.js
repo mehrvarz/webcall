@@ -110,7 +110,6 @@ function displayMapping() {
 			}
 		}
 		dataBoxContent += "</table>";
-
 	}
 
 	dataBoxContent += "<br>";

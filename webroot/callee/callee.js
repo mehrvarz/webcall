@@ -111,7 +111,7 @@ window.onload = function() {
 	if(typeof id!=="undefined" && id!="") {
 		calleeID = id;
 	}
-	console.log("calleeID="+calleeID);
+	gLog("onload calleeID="+calleeID);
 
 	if(calleeID=="") {
 		// if callee was started without a calleeID, reload with calleeID from cookie
@@ -232,7 +232,7 @@ window.onload = function() {
 	checkServerMode(function(mode) {
 		if(mode==0 || mode==1) {
 			// normal mode
-			console.log('onload load audio files '+mode);
+			gLog("onload load audio files more="+mode);
 			ringtoneSound = new Audio('1980-phone-ringing.mp3');
 			notificationSound = new Audio("notification.mp3");
 			busySignalSound = new Audio('busy-signal.mp3');
@@ -431,7 +431,7 @@ function checkServerMode(callback) {
 	
 	let api = apiPath+"/mode?id="+calleeID;
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-		console.log('mode='+xhr.responseText);
+		gLog('mode='+xhr.responseText);
 		if(xhr.responseText.startsWith("maintenance")) {
 			// maintenance mode
 			callback(2);
@@ -450,7 +450,7 @@ function checkServerMode(callback) {
 		}
 		callback(3);
 	}, function(errString,errcode) {
-		console.log('xhr error',errString);
+		console.log("# xhr error "+errString+" "+errcode);
 		callback(3);
 	});
 }
@@ -544,7 +544,7 @@ function start() {
 		getStream().then(() => navigator.mediaDevices.enumerateDevices()).then(gotDevices);
 		//getStream() -> getUserMedia(constraints) -> gotStream() -> goOnline() -> login()
 	} catch(ex) {
-		console.log('ex while searching for audio devices',ex.message);
+		console.log("# ex while searching for audio devices "+ex.message);
 		// end spinner
 		if(divspinnerframe) {
 			divspinnerframe.style.display = "none";
@@ -684,7 +684,7 @@ function login(retryFlag) {
 
 	}, function(errString,err) {
 		// errorFkt
-		console.log('xhr error '+errString+" "+err);
+		console.log("# xhr error "+errString+" "+err);
 		if(err==502 || errString.startsWith("fetch")) {
 			showStatus("No response from server",-1);
 		} else {
@@ -740,11 +740,11 @@ function getSettings() {
 			}
 			if(typeof serverSettings.nickname!=="undefined") {
 				calleeName = serverSettings.nickname;
-				gLog('getsettings calleeName '+calleeName);
+				gLog("getsettings calleeName "+calleeName);
 			}
 		}
 	}, function(errString,errcode) {
-		console.log('getsettings xhr error',errString);
+		console.log("# getsettings xhr error "+errString);
 	});
 }
 
@@ -783,7 +783,7 @@ function delayedWsAutoReconnect(reconPauseSecs) {
 	if((remainingTalkSecs<0 || remainingServiceSecs<0) && !calleeID.startsWith("answie")) {
 		offlineAction();
 		wsAutoReconnecting = false;
-		console.log('give up reconnecting',	remainingTalkSecs, remainingServiceSecs);
+		console.log("# give up reconnecting "+remainingTalkSecs+" "+remainingServiceSecs);
 		let mainLink = window.location.href;
 		let idx = mainLink.indexOf("user/callee");
 		if(idx>0) {
@@ -828,7 +828,7 @@ function delayedWsAutoReconnect(reconPauseSecs) {
 
 function showOnlineReadyMsg() {
 	if(!wsConn) {
-		console.log('showOnlineReadyMsg not online');
+		console.log("# showOnlineReadyMsg not online");
 		return;
 	}
 
@@ -861,7 +861,7 @@ function showOnlineReadyMsg() {
 let tryingToOpenWebSocket = false;
 let wsSendMessage = "";
 function connectSignaling(message,comment) {
-	console.log('connect to signaling server '+comment);
+	gLog("connect to signaling server "+comment);
     var wsUrl = wsAddr;
 
 	tryingToOpenWebSocket = true;
@@ -926,7 +926,7 @@ function wsOnError(evt) {
 }
 
 function wsOnError2(str) {
-	//console.log("wsOnError2 "+str);
+	//console.log("# wsOnError2 "+str);
 	if(str!="") {
 		showStatus(str,-1);
 	}
@@ -936,7 +936,7 @@ function wsOnError2(str) {
 
 function wsOnClose(evt) {
 	// called by wsConn.onclose
-	console.log("wsOnClose "+calleeID);
+	gLog("wsOnClose "+calleeID);
 	wsOnClose2();
 	if(tryingToOpenWebSocket) {
 		// onclose occured while trying to establish a ws-connection (before this could be finished)
@@ -959,7 +959,7 @@ function wsOnClose(evt) {
 
 function wsOnClose2() {
 	// called by wsOnClose() or from android service
-	console.log("wsOnClose2 "+calleeID);
+	gLog("wsOnClose2 "+calleeID);
 	wsConn=null;
 	buttonBlinking=false;
 	stopAllAudioEffects("wsOnClose");
@@ -979,7 +979,7 @@ function wsOnMessage2(str) {
 }
 
 function signalingCommand(message) {
-	//console.log('signalingCommand '+message);
+	//gLog("signalingCommand "+message);
 	let tok = message.split("|");
 	let cmd = tok[0];
 	let payload = "";
@@ -1040,7 +1040,7 @@ function signalingCommand(message) {
 		});
 	} else if(cmd=="callerAnswer") {
 		if(!peerCon || peerCon.iceConnectionState=="closed") {
-			console.log('callerAnswer abort no peerCon');
+			console.log("# callerAnswer abort no peerCon");
 			return;
 		}
 		callerDescription = JSON.parse(payload);
@@ -1084,7 +1084,7 @@ function signalingCommand(message) {
 		let addIceReloopCounter=0;
 		var addIceCallerCandidate = function(callerCandidate) {
 			if(!peerCon || peerCon.iceConnectionState=="closed") {
-				console.log('cmd callerCandidate abort no peerCon');
+				console.log("# cmd callerCandidate abort no peerCon");
 				stopAllAudioEffects();
 				endWebRtcSession(true,true); // -> peerConCloseFunc
 				return;
@@ -1147,7 +1147,7 @@ function signalingCommand(message) {
 	} else if(cmd=="cancel") {
 		if(payload=="c") {
 			// this is a remote cancel
-			console.log('cmd cancel');
+			gLog('cmd cancel');
 			answerButton.style.display = "none";
 			rejectButton.style.display = "none";
 			stopAllAudioEffects("incoming cancel");
@@ -1353,7 +1353,7 @@ function showWaitingCallers() {
 }
 
 function pickupWaitingCaller(addrPort) {
-	console.log('pickupWaitingCaller',addrPort);
+	gLog('pickupWaitingCaller',addrPort);
 	wsSend("pickupWaitingCaller|"+addrPort);
 }
 
@@ -1524,7 +1524,7 @@ function wsSend(message) {
 }
 
 function pickup() {
-	console.log('pickup -> open mic');
+	gLog('pickup -> open mic');
 	pickupAfterLocalStream = true;
 	getStream(); // -> pickup2()
 
@@ -1598,7 +1598,6 @@ function pickup2() {
 
 function hangup(dummy,dummy2,message) {
 	showStatus("Hang up",4000);
-	console.log("hangup");
 	answerButton.style.display = "none";
 	rejectButton.style.display = "none";
 
@@ -1644,7 +1643,7 @@ function goOnline() {
 	goOfflineButton.disabled = false;
 	rtcConnectStartDate = 0;
 	mediaConnectStartDate = 0;
-	console.log('goOnline '+calleeID);
+	gLog('goOnline '+calleeID);
 	addedAudioTrack = null;
 	addedVideoTrack = null;
 	if(divspinnerframe) {
@@ -1673,7 +1672,7 @@ function goOnline() {
 function newPeerCon() {
 	try {
 		peerCon = new RTCPeerConnection(ICE_config);
-		console.log("new RTCPeerConnection ready");
+		gLog("new RTCPeerConnection ready");
 	} catch(ex) {
 		console.error("RTCPeerConnection "+ex.message);
 		var statusMsg = "RTCPeerConnection "+ex.message;
@@ -1751,7 +1750,7 @@ function newPeerCon() {
 			return;
 		}
 		if(peerCon.connectionState=="disconnected") {
-			console.log('peerCon disconnected '+rtcConnect+" "+mediaConnect);
+			console.log("# peerCon disconnected "+rtcConnect+" "+mediaConnect);
 			stopAllAudioEffects();
 			endWebRtcSession(true,true); // -> peerConCloseFunc
 		} else if(peerCon.connectionState=="failed") {
@@ -1759,7 +1758,7 @@ function newPeerCon() {
 			// this may come with a red "WebRTC: ICE failed, see about:webrtc for more details"
 			// in which case the callee webrtc stack seems to be hosed, until the callee is reloaded
 			// or until offline/online
-			console.log('peerCon failed '+rtcConnect+" "+mediaConnect);
+			console.log("# peerCon failed "+rtcConnect+" "+mediaConnect);
 			stopAllAudioEffects();
 			endWebRtcSession(true,true); // -> peerConCloseFunc
 			//goOffline();
@@ -2089,7 +2088,7 @@ function stopAllAudioEffects(comment) {
 			busySignalSound.currentTime = 0;
 		}
 	} catch(ex) {
-		console.log('ex stopAllAudioEffects '+ex.message);
+		console.log('# ex stopAllAudioEffects '+ex.message);
 	}
 	//gLog('stopAllAudioEffects done');
 }
@@ -2220,7 +2219,7 @@ function goOffline() {
 	//goOfflineButton.disabled = true;
 	//goOnlineButton.disabled = false;
 	offlineAction();
-	console.log('goOffline',calleeID);
+	gLog("goOffline "+calleeID);
 	showStatus("");
 	ownlinkElement.innerHTML = "";
 	stopAllAudioEffects("goOffline");
@@ -2246,7 +2245,7 @@ function goOffline() {
 
 	if(wsConn) {
 		// callee going offline
-		console.log('wsClose');
+		gLog('wsClose');
 		if(typeof Android !== "undefined" && Android !== null) {
 			Android.wsClose();
 		} else {
@@ -2307,7 +2306,7 @@ function openIdMapping() {
 
 function openSettings() {
 	let url = "/callee/settings?id="+calleeID+"&i="+counter++;
-	console.log('openSettings='+url);
+	gLog('openSettings='+url);
 	iframeWindowOpen(url);
 	// when iframe closes, client.js:iframeWindowClose() will call getSettings()
 }
@@ -2329,7 +2328,7 @@ function clearcookie() {
 			let logoutStatus = xhr.responseText;
 			gLog('clearcookie logoutStatus (%s)',logoutStatus);
 		}, function(errString,err) {
-			console.log('clearcookie xhr error',errString);
+			console.log("# clearcookie xhr error "+errString);
 		});
 /*
 		if(pushRegistration) {

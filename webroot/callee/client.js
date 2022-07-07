@@ -209,7 +209,7 @@ if(fileSelectElement) {
 }
 
 function sendFile(file) {
-	console.log("fileSelect: "+file.name, file.size, file.type, file.lastModified);
+	gLog("fileSelect: "+file.name, file.size, file.type, file.lastModified);
 	dataChannel.send("file|"+file.name+","+file.size+","+file.type+","+file.lastModified);
 	fileselectLabel.style.display = "none";
 	showStatus("",-1);
@@ -223,16 +223,16 @@ function sendFile(file) {
 	progressSendBar.max = file.size;
 	progressSendElement.style.display = "block";
 	progressSendLabel.innerHTML = "Sending: "+file.name.substring(0,25);
-	fileReader.addEventListener('error', error => console.error('Error reading file:', error));
-	fileReader.addEventListener('abort', event => console.log('File reading aborted:', event));
+	fileReader.addEventListener('error', error => console.error("# Error reading file:", error));
+	fileReader.addEventListener('abort', event => console.log("# File reading aborted:", event));
 	fileReader.addEventListener('load', e => {
 		if(fileSendAbort) {
-			console.log('file send user abort');
+			gLog("file send user abort");
 			fileReader.abort();
 			return;
 		}
 		if(!isDataChlOpen()) {
-			console.log('file send no dataChannel');
+			console.log("# file send no dataChannel");
 			fileReader.abort();
 			return;
 		}
@@ -255,7 +255,7 @@ function sendFile(file) {
 					setTimeout(sendComplete,200);
 					return;
 				}
-				console.log('file send complete', file.size);
+				gLog("file send complete", file.size);
 				offset = 0;
 				progressSendElement.style.display = "none";
 				showStatus("sent '"+file.name.substring(0,25)+"' "+Math.floor(file.size/1000)+" KB",-1);
@@ -270,12 +270,12 @@ function sendFile(file) {
 	});
 	const readSlice = o => {
 		if(fileSendAbort) {
-			console.log('file send user abort');
+			console.log("file send user abort");
 			fileReader.abort();
 			return;
 		}
 		if(!isDataChlOpen()) {
-			console.log('file send abort on dataChannel');
+			console.log("file send abort on dataChannel");
 			return;
 		}
 		if(dataChannel.bufferedAmount > 10*chunkSize) {
@@ -487,7 +487,7 @@ function openPostCallStats() {
 }
 
 function stopProgressSend() {
-	console.log("stopProgressSend");
+	gLog("stopProgressSend");
 	showStatus("file send aborted");
 	fileSendAbort = true;
 	progressSendElement.style.display = "none";
@@ -502,7 +502,7 @@ function stopProgressSend() {
 }
 
 function stopProgressRcv() {
-	console.log("stopProgressRcv");
+	gLog("stopProgressRcv");
 	showStatus("file receive aborted");
 	fileReceiveAbort = true;
 	progressRcvElement.style.display = "none";
@@ -702,7 +702,7 @@ var iframeWindowOpenUrl = null;
 function iframeWindowOpen(url, horiCenterBound, addStyleString) {
 	//console.log('iframeWindowOpen='+url);
 	if(iframeWindowOpenFlag) {
-		console.log('iframeWindowOpen fail iframeWindowOpenFlag');
+		console.log("# iframeWindowOpen fail iframeWindowOpenFlag");
 		return;
 	}
 	if(menuDialogOpenElement) {
@@ -767,7 +767,7 @@ function iframeOnload(obj) {
 
 function iframeWindowClose() {
 	if(iframeWindowOpenUrl && iframeWindowOpenUrl!="") {
-		console.log('iframeWindowClose '+iframeWindowOpenUrl);
+		gLog('iframeWindowClose '+iframeWindowOpenUrl);
 		containerElement.style.filter="";
 		iframeWindowElement.innerHTML = "";
 		iframeWindowElement.style.display = "none";
@@ -785,7 +785,7 @@ function iframeWindowClose() {
 		}
 		iframeWindowOpenUrl=null;
 	} else {
-		console.log('iframeWindowClose was not open');
+		//console.log("iframeWindowClose was not open");
 	}
 }
 
@@ -1496,7 +1496,7 @@ function dataChannelOnclose(event) {
 }
 
 function dataChannelOnerror(event) {
-	console.log("dataChannel.onerror",event);
+	console.log("# dataChannel.onerror",event);
 	if(rtcConnect) {
 		showStatus("# dataChannel error "+event.error,-1);
 		hangup(true,true,"dataChannelOnerror");
@@ -1534,7 +1534,7 @@ function onkeydownFunc(evt) {
 	}
 	if(isEscape) {
 		if(iframeWindowOpenFlag || menuDialogOpenElement) {
-			console.log('client.js: esc key -> back');
+			gLog("client.js: esc key -> back");
 			history.back();
 		} else {
 			//console.log('client.js: esc key (ignore)');
