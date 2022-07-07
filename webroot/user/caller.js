@@ -129,6 +129,8 @@ window.onload = function() {
 		window.location.replace("/user/"+calleeID);
 		return;
 	}
+
+/* TODO don't need this anymore - using cookie below
 	// the following args may be used in confirmNotifyConnect()
 	callerId = getUrlParams("callerId"); // our id
 	if(typeof callerId=="undefined") {
@@ -139,6 +141,7 @@ window.onload = function() {
 		callerName = "";
 	}
 	gLog("onload callerId=("+callerId+") callerName=("+callerName+") via urlParam");
+*/
 
 	let text = getUrlParams("readyText");
 	if(typeof text!=="undefined" && text!="") {
@@ -241,62 +244,61 @@ window.onload = function() {
 		gLog("onload no onkeydownFunc in iframe mode");
 	}
 
+	let cookieName = "";
+	if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
+		// cookie webcallid exists
+		cookieName = document.cookie.substring(10);
+		let idxAmpasent = cookieName.indexOf("&");
+		if(idxAmpasent>0) {
+			cookieName = cookieName.substring(0,idxAmpasent);
+		}
+		gLog('onload cookieName='+cookieName);
+	}
+	// if serverSettings.storeContacts=="true", turn element "dialIdAutoStore" on
+	contactAutoStore = false;
+	if(cookieName!="") {
+		// use cookiename to fetch /getsettings
+		callerId = cookieName;
+
+		let api = apiPath+"/getsettings?id="+cookieName;
+		gLog('onload request getsettings api '+api);
+		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+			var xhrresponse = xhr.responseText
+			//gLog('xhr.responseText '+xhrresponse);
+			if(xhrresponse=="") {
+				serverSettings = null;
+				return;
+			}
+			var serverSettings = JSON.parse(xhrresponse);
+			if(typeof serverSettings!=="undefined") {
+				gLog('serverSettings.storeContacts',serverSettings.storeContacts);
+				if(serverSettings.storeContacts=="true") {
+					contactAutoStore = true;
+					var dialIdAutoStoreElement = document.getElementById("dialIdAutoStore");
+					if(dialIdAutoStoreElement) {
+						gLog('dialIdAutoStore on');
+						//dialIdAutoStoreElement.style.display = "block";
+						dialIdAutoStoreElement.style.opacity = "0.8";
+					}
+				}
+
+				if(serverSettings.nickname!="") {
+					callerName = serverSettings.nickname;
+				}
+			}
+			gLog("onload callerId=("+callerId+") callerName=("+callerName+") after /getsettings");
+
+		}, function(errString,err) {
+			console.log("# onload xhr error "+errString+" "+err);
+		});
+	}
+
 	if(calleeID=="") {
-		// no one to call? show Dial-ID dialog
+		// no ID to call? show Dial-ID dialog
 		gLog("onload no calleeID; switch to enterId");
 		containerElement.style.display = "none";
 		enterIdElement.style.display = "block";
 		enterDomainVal.value = location.hostname;
-
-		// if serverSettings.storeContacts=="true", turn element "dialIdAutoStore" on
-		contactAutoStore = false;
-
-		// use cookiename to fetch /getsettings
-		let cookieName = "";
-		if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
-			// cookie webcallid exists
-			cookieName = document.cookie.substring(10);
-			let idxAmpasent = cookieName.indexOf("&");
-			if(idxAmpasent>0) {
-				cookieName = cookieName.substring(0,idxAmpasent);
-			}
-			gLog('onload cookieName='+cookieName);
-		}
-		if(cookieName!="") {
-			callerId = cookieName;
-
-			let api = apiPath+"/getsettings?id="+cookieName;
-			gLog('request getsettings api '+api);
-			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-				var xhrresponse = xhr.responseText
-				//gLog('xhr.responseText '+xhrresponse);
-				if(xhrresponse=="") {
-					serverSettings = null;
-					return;
-				}
-				var serverSettings = JSON.parse(xhrresponse);
-				if(typeof serverSettings!=="undefined") {
-					gLog('serverSettings.storeContacts',serverSettings.storeContacts);
-					if(serverSettings.storeContacts=="true") {
-						contactAutoStore = true;
-						var dialIdAutoStoreElement = document.getElementById("dialIdAutoStore");
-						if(dialIdAutoStoreElement) {
-							gLog('dialIdAutoStore on');
-							//dialIdAutoStoreElement.style.display = "block";
-							dialIdAutoStoreElement.style.opacity = "0.8";
-						}
-					}
-
-					if(serverSettings.nickname!="") {
-						callerName = serverSettings.nickname;
-					}
-				}
-				gLog("onload callerId=("+callerId+") callerName=("+callerName+") after /getsettings");
-
-			}, function(errString,err) {
-				console.log("# xhr error "+errString+" "+err);
-			});
-		}
 
 		setTimeout(function() {
 			enterIdVal.focus();
@@ -1408,7 +1410,7 @@ function signalingCommand(message) {
 	if(cmd=="calleeAnswer") {
 		if(contactAutoStore) {
 			if(callerId!=="" && callerId!=="undefined") {
-				let api = apiPath+"/setcontact?id="+callerId+"&contactID="+calleeID; //+"&name="+newName;
+				let api = apiPath+"/setcontact?id="+callerId+"&contactID="+calleeID+"&name="+callerName;
 				gLog("request api="+api);
 				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 					gLog("xhr setcontact OK "+xhr.responseText);
