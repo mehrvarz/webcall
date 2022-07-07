@@ -10,8 +10,20 @@ var formForNameOpen = false;
 var formElement = null;
 
 window.onload = function() {
-	calleeID = getUrlParams("callerId");
-	if(!gentle) console.log('mapping onload calleeID='+calleeID);
+	let cookieName = "";
+	if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
+		// cookie webcallid exists
+		cookieName = document.cookie.substring(10);
+		let idxAmpasent = cookieName.indexOf("&");
+		if(idxAmpasent>0) {
+			cookieName = cookieName.substring(0,idxAmpasent);
+		}
+		gLog('onload cookieName='+cookieName);
+		if(cookieName!="") {
+			calleeID = cookieName
+		}
+	}
+
 
 	hashcounter = 1;
 	window.onhashchange = hashchange;

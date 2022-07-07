@@ -1427,7 +1427,7 @@ function showMissedCalls() {
 					callerLink = callerLink.substring(0,idxCallee) + "/user/" + callerID;
 					// here we hand over calleeID as URL args
 					// caller.js will try to get nickname from server (using cookie)
-					callerLink = callerLink+"?callerId="+calleeID+"&name="+calleeName+"&ds="+playDialSounds;
+					callerLink = callerLink+"?ds="+playDialSounds;
 					// open caller in iframe
 					callerLink = "<a onclick='iframeWindowOpen(\""+callerLink+"\")'>"+callerID+"</a>";
 				}
@@ -2284,22 +2284,23 @@ function getCookieSupport() {
 
 var counter=0;
 function openContacts() {
+// TODO not sure we need to send callerId and calleeName to contacts-widget anymore
 	let url = "/callee/contacts?callerId="+calleeID+"&name="+calleeName+"&ds="+playDialSounds+"&i="+counter++;
 	gLog('openContacts',url);
 	iframeWindowOpen(url);
 }
 
 function openDialId(userId) {
-	let url = "/user/?callerId="+calleeID+"&name="+calleeName+"&ds="+playDialSounds+"&i="+counter++;
+	let url = "/user/?ds="+playDialSounds+"&i="+counter++;
 	if(userId) {
-		url = "/user/"+userId+"?callerId="+calleeID+"&name="+calleeName+"&ds="+playDialSounds+"&i="+counter++;
+		url = "/user/"+userId+"?ds="+playDialSounds+"&i="+counter++;
 	}
 	gLog('openDialId',url);
 	iframeWindowOpen(url,false,"");
 }
 
 function openIdMapping() {
-	let url = "/callee/mapping/?callerId="+calleeID+"&i="+counter++;
+	let url = "/callee/mapping/?i="+counter++;
 	gLog('openIdMapping',url);
 	iframeWindowOpen(url);
 }

@@ -9,6 +9,8 @@ var formForNameOpen = false;
 var formElement = null;
 
 window.onload = function() {
+// TODO not sure we really need callerID and callerName anymore
+// but if we do, we should probably fetch them via cookiename
 	callerID = getUrlParams("callerId");
 	callerName = getUrlParams("name");
 	dialsounds = getUrlParams("ds");
@@ -109,8 +111,10 @@ function processContacts(xhrresponse) {
 			let name = entry[1];
 			//if(!gentle) console.log('obj[%s] (%s)',id, name);
 			dataBoxContent += "<tr><td><a onclick='edit(this,event,\""+id+"\")'>"+name+"</a></td>"+
-			"<td><a href='" + mainLink + id + "?callerId="+callerID+ "&name="+callerName+ "&ds="+dialsounds+"'>"+
-				id+"</a></td></tr>";
+// we don't need to send callerId and name to caller widget anymore
+//			"<td><a href='" + mainLink + id + "?callerId="+callerID+ "&name="+callerName+ "&ds="+dialsounds+"'>"+
+//				id+"</a></td></tr>";
+			"<td><a href='" + mainLink + id + "?ds="+dialsounds+"'>"+id+"</a></td></tr>";
 		}
 		dataBoxContent += "</table>";
 		databoxElement.innerHTML = dataBoxContent;
