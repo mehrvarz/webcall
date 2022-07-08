@@ -352,32 +352,34 @@ func broadcastNewsLink(date string, url string) {
 		countAll++
 		if hub!=nil {
 
-			newsDateMutex.RLock()
-			lastNews := newsDateMap[calleeID]
-			newsDateMutex.RUnlock()
-
 			hub.HubMutex.RLock()
 			// we make sure to send each news with a particular date string only once
 			if hub.CalleeClient==nil {
 				hub.HubMutex.RUnlock()
 				fmt.Printf("# newsLink hub.CalleeClient==nil to=%s data=%s\n",calleeID,data)
-			} else if date <= lastNews {
-				// calleeID has been sent this news-msg already
-				hub.HubMutex.RUnlock()
-				//fmt.Printf("# newsLink date(%s) <= lastNews(%s) to=%s\n",date,lastNews,calleeID)
 			} else {
-				err := hub.CalleeClient.Write([]byte(data))
-				hub.HubMutex.RUnlock()
-				countSent++
-
-				if err!=nil {
-					fmt.Printf("# newsLink done write to=%s err=%v\n",calleeID,err)
+				// we don't need newsDateMutex bc no one else is using newsDateMap
+				//newsDateMutex.RLock()
+				lastNews := newsDateMap[calleeID]
+				//newsDateMutex.RUnlock()
+				if date <= lastNews {
+					// this news-msg was sent to calleeID already
+					hub.HubMutex.RUnlock()
+					//fmt.Printf("# newsLink date(%s) <= lastNews(%s) to=%s\n",date,lastNews,calleeID)
 				} else {
-					newsDateMutex.Lock()
-					newsDateMap[calleeID] = date
-					newsDateMutex.Unlock()
+					err := hub.CalleeClient.Write([]byte(data))
+					hub.HubMutex.RUnlock()
+					countSent++
 
-					countSentNoErr++
+					if err!=nil {
+						fmt.Printf("# newsLink done write to=%s err=%v\n",calleeID,err)
+					} else {
+						//newsDateMutex.Lock()
+						newsDateMap[calleeID] = date
+						//newsDateMutex.Unlock()
+
+						countSentNoErr++
+					}
 				}
 			}
 		} else {

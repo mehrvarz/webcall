@@ -129,7 +129,7 @@ var mappingMutex sync.RWMutex
 
 // newsDateMap[calleeID] returns the datestring of the last news.ini delivery
 var newsDateMap map[string]string
-var newsDateMutex sync.RWMutex
+//var newsDateMutex sync.RWMutex
 
 var numberOfCallsToday = 0 // will be incremented by wshub.go processTimeValues()
 var numberOfCallSecondsToday int64 = 0
