@@ -1083,12 +1083,12 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 				if(xhr.responseText.startsWith("ok")) {
 					// calleeID can be notified (or is hidden)
 					// if caller is willing to wait, caller can invoke confirmNotifyConnect() to enter own name
-					let calleeName = xhr.responseText.substring(3);
-					if(calleeName=="" || calleeName.length<3) {
-						calleeName = calleeID;
-					}
-					var msg = calleeName+" is currently not available.<br><br>"+
-						"We can try to get "+calleeName+" on the phone. Can you wait a few minutes while we try to establish a connection?<br><br><a onclick='confirmNotifyConnect()'>Yes, please try</a>";
+//					let calleeName = xhr.responseText.substring(3);
+//					if(calleeName=="" || calleeName.length<3) {
+//						calleeName = calleeID;
+//					}
+					var msg = "This user is currently not available.<br><br>"+
+						"We can try to get this person on the phone. Can you wait a few minutes while we try to establish a connection?<br><br><a onclick='confirmNotifyConnect()'>Yes, please try</a>";
 					if(window.self == window.top) {
 						// not running in iframe mode: no -> jump on directory up
 						msg += "<br><br><a href='..'>No, I have to go</a>";
