@@ -168,8 +168,9 @@ window.onload = function() {
 		minNewsDate=0
 	}
 	if(minNewsDate==null) minNewsDate=0;
-	// we show news from the server if they are newer than minNewsDate
-	// when we show them, we set localStorage.setItem('newsdate', Date.now()/1000) // ms since Jan 1, 1970
+	// we will show news from the server if the timestamp is newer than minNewsDate
+	// when we show the news, we set localStorage.setItem('newsdate', Date.now()/1000) // ms since Jan 1, 1970
+	// to only show the next news
 
 	document.onkeydown = (evt) => onkeydownFunc(evt);
 
@@ -1263,18 +1264,24 @@ function signalingCommand(message) {
 			if(exclamationElement!=null) {
 				exclamationElement.style.display = "block";
 				exclamationElement.style.opacity = 1;
+
 				exclamationElement.onclick = function() {
-/*
 					if(typeof Android !== "undefined" && Android !== null) {
-						Android.browse(newsUrl);
+						//Android.browse(newsUrl);
+						if(divspinnerframe) {
+							divspinnerframe.style.display = "block";
+						}
+						// attach &i=counter to make document get fully loaded each time
+						if(newsUrl.indexOf("?")>=0) {
+							newsUrl = newsUrl + "&i="+counter;
+						} else {
+							newsUrl = newsUrl + "?i="+counter;
+						}
+						counter++;
+						iframeWindowOpen(newsUrl,true,"max-width:800px;",true);
 					} else {
 						window.open(newsUrl, "_blank");
 					}
-*/
-					if(divspinnerframe) {
-						divspinnerframe.style.display = "block";
-					}
-					iframeWindowOpen(newsUrl,true,"max-width:800px;");
 
 					minNewsDate = Math.floor(Date.now()/1000);
 					localStorage.setItem('newsdate', minNewsDate);

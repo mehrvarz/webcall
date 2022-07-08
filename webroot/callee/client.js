@@ -699,7 +699,12 @@ function onIceCandidate(event,myCandidateName) {
 
 var iframeWindowOpenFlag = false;
 var iframeWindowOpenUrl = null;
-function iframeWindowOpen(url, horiCenterBound, addStyleString) {
+function iframeWindowOpen(url, horiCenterBound, addStyleString, dontIframeOnload) {
+	// dontIframeOnload=false: the document (height or min-height) determines the iframe height
+	// dontIframeOnload=true:  the styleString (addStyleString) determines the iframe height
+	// for webcall widgets we use dontIframeOnload=false, because they use height to set the iframe height
+	// ext html pages may not set a fixed height, in this case we use dontIframeOnload=true
+
 	//console.log('iframeWindowOpen='+url);
 	if(iframeWindowOpenFlag) {
 		console.log("# iframeWindowOpen fail iframeWindowOpenFlag");
@@ -729,7 +734,7 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString) {
 
 	containerElement.style.filter = "blur(0.8px) brightness(60%)";
 
-	gLog('iframeWindowOpen '+url);
+	console.log('iframeWindowOpen '+url);
 	iframeWindowOpenUrl = url;
 	iframeWindowOpenFlag = true;
 
@@ -750,7 +755,15 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString) {
 		iframeWindowElement.innerHTML = url.substring(7);
 	} else {
 		iframeWindowElement.style = styleString;
-		iframeWindowElement.innerHTML = "<iframe id='child' src='"+url+"' scrolling='yes' frameborder='no' width='100%' height='100%' allow='microphone;camera' onload='iframeOnload(this)'></iframe>";
+		// we call iframeOnload() so that the iframe height becomes same as the content height
+		// for this to work, the document at url needs to have a fixed height or min-height
+		// if the document does not have fixed height or min-height, scrollHeight = 150px
+		// in this case dontIframeOnload should be set to skip onload='iframeOnload(this)'
+		if(dontIframeOnload) {
+			iframeWindowElement.innerHTML = "<iframe id='child' src='"+url+"' scrolling='yes' frameborder='no' width='100%' height='100%' allow='microphone;camera'></iframe>";
+		} else {
+			iframeWindowElement.innerHTML = "<iframe id='child' src='"+url+"' scrolling='yes' frameborder='no' width='100%' height='100%' allow='microphone;camera' onload='iframeOnload(this)'></iframe>";
+		}
 	}
 
 	if(divspinnerframe) {
@@ -759,8 +772,10 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString) {
 }
 
 function iframeOnload(obj) {
+// Uncaught DOMException: Permission denied to access property "document" on cross-origin object
+// happens if url of iframeWindowOpen() contains a differen domain
 	let iframeHeight = obj.contentWindow.document.documentElement.scrollHeight + 10 + 'px';
-	//console.log("iframeOnload height="+iframeHeight);
+	console.log("iframeOnload height="+iframeHeight);
 	obj.style.height = iframeHeight;
 	obj.contentWindow.focus();
 }
