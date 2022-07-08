@@ -386,8 +386,10 @@ func broadcastNewsLink(date string, url string) {
 			fmt.Printf("# newsLink hub==nil to=%s data=%s\n",calleeID,data)
 		}
 	}
-	fmt.Printf("newsLink sent=%d noerr=%d devices=%d data=%s\n",
-		countSent, countSentNoErr, countAll, data)
+	if countSent>0 {
+		fmt.Printf("newsLink sent=%d noerr=%d devices=%d data=%s\n",
+			countSent, countSentNoErr, countAll, data)
+	}
 	return
 }
 

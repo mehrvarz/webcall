@@ -1287,18 +1287,18 @@ function signalingCommand(message) {
 					minNewsDate = Math.floor(Date.now()/1000);
 					localStorage.setItem('newsdate', minNewsDate);
 
-					let expireInSecs = 5*60;
-					gLog("exclamationElement expire in "+expireInSecs);
-					setTimeout(function(oldMinNewsDate) {
-						gLog("exclamationElement expire "+oldMinNewsDate+" "+minNewsDate);
-						if(oldMinNewsDate==minNewsDate) {
-							// did NOT receive a new news notification
+//					let expireInSecs = 5*60;
+//					gLog("exclamationElement expire in "+expireInSecs);
+//					setTimeout(function(oldMinNewsDate) {
+//						gLog("exclamationElement expire "+oldMinNewsDate+" "+minNewsDate);
+//						if(oldMinNewsDate==minNewsDate) {
+//							// did NOT receive a new news notification
 							exclamationElement.style.opacity = 0;
 							setTimeout(function() {
 								exclamationElement.style.display = "none";
 							},1000);
-						}
-					},expireInSecs*1000,minNewsDate);
+//						}
+//					},expireInSecs*1000,minNewsDate);
 				};
 			} else {
 				gLog("exclamationElement not defined");
@@ -1417,13 +1417,18 @@ function showMissedCalls() {
 			}
 			let callerID = missedCallsSlice[i].CallerID;
 			let callerLink = callerID;
+
 			let callerName = missedCallsSlice[i].CallerName;
 			if(callerName=="") callerName="unknown";
+			let callerNameMarkup = callerName;
+
 			let callerMsg = missedCallsSlice[i].Msg;
 			if(callerMsg!="") {
 				//gLog('### callerMsg='+callerMsg+' '+waitingTimeString+' '+
 				//	timeNowSecs+' '+missedCallsSlice[i].CallTime);
 				// TODO we need to somehow show callerMsg
+				callerNameMarkup = "<a onclick='showMsg(\""+callerMsg+"\");return false;'>"+callerName+"</a>";
+				//console.log("callerNameMarkup("+callerNameMarkup+")");
 			}
 
 			if(callerID.length>=5) {
@@ -1439,13 +1444,13 @@ function showMissedCalls() {
 					// open caller in iframe
 					callerLink = "<a onclick='iframeWindowOpen(\""+callerLink+"\")'>"+callerID+"</a>";
 				}
-				str += "<td>"+callerName + "</td><td>"+
+				str += "<td>" + callerNameMarkup + "</td><td>"+
 					callerLink + "</td><td style='text-align:right;'>"+
 					waitingTimeString + "</td><td>"+
 					"<a onclick='deleteMissedCall(\""+
 						missedCallsSlice[i].AddrPort+"_"+missedCallsSlice[i].CallTime+"\")'>X</a></td>";
 			} else {
-				str += "<td>"+callerName + "</td><td>"+
+				str += "<td>" + callerNameMarkup + "</td><td>"+
 					halfShowIpAddr(callerIp) + "</td><td style='text-align:right;'>"+
 					waitingTimeString + "</td><td>"+
 					"<a onclick='deleteMissedCall(\""+
@@ -1468,6 +1473,11 @@ function showMissedCalls() {
 			},10000);
 		}
 	}
+}
+
+function showMsg(msg) {
+	document.getElementById("showMsgInner").innerHTML = msg;
+	menuDialogOpen(document.getElementById("showMsg"),true);
 }
 
 function halfShowIpAddr(ipAddr) {

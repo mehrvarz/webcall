@@ -626,17 +626,18 @@ function menuDialogOpen(menuDialog,atMousePos) {
 	}
 
 	const menuDialogOpenChildElement = menuDialogOpenElement.firstElementChild;
+	var posY = 0;
 	if(atMousePos) {
 		// position menuDialog at mouse coordinate
 		var e = window.event;
 		var posX = e.clientX * 0.70 -40;
 		if(posX<0) posX=0;
-		var posY = e.clientY;
+		posY = e.clientY;
 		if(posY>50) posY-=50;
 		//gLog('menuDialogOpen x/y',posX,e.clientX,posY,e.clientY);
 		menuDialogOpenChildElement.style.left = posX+"px";
 		menuDialogOpenChildElement.style.top = (posY+window.scrollY)+"px"; // add scrollY-offset to posY
-		//gLog('menuDialogOpen2 x/y',posX,posY+window.scrollY);
+		gLog('menuDialogOpen2 x/y',posX,posY+window.scrollY);
 	}
 
 	menuDialogOpenElement.style.display = "block";
@@ -649,7 +650,7 @@ function menuDialogOpen(menuDialog,atMousePos) {
 		while(posY>10 && posY + menuHeight > pageHeight) {
 			posY -= 10;
 		}
-		//gLog('menuDialogOpen up2',posY, menuHeight, pageHeight);
+		gLog('menuDialogOpen up2',posY, menuHeight, pageHeight);
 		menuDialogOpenChildElement.style.top = (posY+window.scrollY)+"px"; // add scrollY-offset to posY
 	},60);
 }
