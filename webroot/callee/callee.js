@@ -99,10 +99,12 @@ window.onload = function() {
 	if(typeof Android !== "undefined" && Android !== null) {
 		menuExitElement.style.display = "block";
 
-		// menuClearCacheElement only for 1.0.8+
-		if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
-			if(Android.getVersionName()>="1.0.8") {
-				menuClearCacheElement.style.display = "block"; // calls clearcache()
+		// menuClearCacheElement only for 1.1.0+
+		if(typeof Android !== "undefined" && Android !== null) {
+			if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
+				if(Android.getVersionName()>="1.1.0") {
+					menuClearCacheElement.style.display = "block"; // calls clearcache()
+				}
 			}
 		}
 	}
@@ -916,8 +918,12 @@ function wsOnOpen() {
 	menuSettingsElement.style.display = "block";
 	iconContactsElement.style.display = "block";
 
-	if(typeof Android !== "undefined" && Android !== null && Android.getVersionName()>="1.1.0") {
-		idMappingElement.style.display = "block";
+	if(typeof Android !== "undefined" && Android !== null) {
+		if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
+			if(Android.getVersionName()>="1.1.0") {
+				idMappingElement.style.display = "block";
+			}
+		}
 	}
 	goOfflineButton.disabled = false;
 }
