@@ -1271,14 +1271,9 @@ function signalingCommand(message) {
 						if(divspinnerframe) {
 							divspinnerframe.style.display = "block";
 						}
-						// attach &i=counter to make document get fully loaded each time
-						if(newsUrl.indexOf("?")>=0) {
-							newsUrl = newsUrl + "&i="+counter;
-						} else {
-							newsUrl = newsUrl + "?i="+counter;
-						}
-						counter++;
-						iframeWindowOpen(newsUrl,true,"max-width:800px;",true);
+						// here we set horiCenterBound=true
+						// we also set dontIframeOnload=true so that height:100% determines the iframe height
+						iframeWindowOpen(newsUrl,true,"max-width:800px;height:100%;",true);
 					} else {
 						window.open(newsUrl, "_blank");
 					}
