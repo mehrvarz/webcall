@@ -239,18 +239,6 @@ func ticker20min() {
 			queryFollowerIDsNeeded.Set(false)
 		}
 
-		// load "news.ini", file should contain two lines: date= and url=
-		newsIni, err := ini.Load("news.ini")
-		if err == nil {
-			dateValue,ok := readIniEntry(newsIni,"date")
-			if(ok && dateValue!="") {
-				urlValue,ok := readIniEntry(newsIni,"url")
-				if(ok && urlValue!="") {
-					broadcastNewsLink(dateValue,urlValue)
-				}
-			}
-		}
-
 		cleanupCalleeLoginMap(os.Stdout, 3, "ticker20min")
 		cleanupClientRequestsMap(os.Stdout, 10, "ticker20min")
 
@@ -352,10 +340,10 @@ func cleanupClientRequestsMap(w io.Writer, min int, title string) {
 func broadcastNewsLink(date string, url string) {
 	hubMapMutex.RLock()
 	defer hubMapMutex.RUnlock()
-	count := 0
 	countAll := 0
+	countSent := 0
+	countSentNoErr := 0
 	data := "news|"+date+"|"+url;
-	fmt.Printf("newsLink data=%s\n",data)
 	for calleeID,hub := range hubMap {
 		if strings.HasPrefix(calleeID,"answie") || 
 		   strings.HasPrefix(calleeID,"talkback") {
@@ -363,26 +351,41 @@ func broadcastNewsLink(date string, url string) {
 		}
 		countAll++
 		if hub!=nil {
+
+			newsDateMutex.RLock()
+			lastNews := newsDateMap[calleeID]
+			newsDateMutex.RUnlock()
+
 			hub.HubMutex.RLock()
 			// we make sure to send each news with a particular date string only once
-			if hub.CalleeClient!=nil && hub.lastNews < date {
-				//fmt.Printf("newsLink to=%s data=%s\n",calleeID,data)
-				hub.CalleeClient.Write([]byte(data))
+			if hub.CalleeClient==nil {
 				hub.HubMutex.RUnlock()
-
-				hub.HubMutex.Lock()
-				hub.lastNews = date
-				hub.HubMutex.Unlock()
-				count++
+				fmt.Printf("# newsLink hub.CalleeClient==nil to=%s data=%s\n",calleeID,data)
+			} else if date <= lastNews {
+				// calleeID has been sent this news-msg already
+				hub.HubMutex.RUnlock()
+				//fmt.Printf("# newsLink date(%s) <= lastNews(%s) to=%s\n",date,lastNews,calleeID)
 			} else {
+				err := hub.CalleeClient.Write([]byte(data))
 				hub.HubMutex.RUnlock()
-				//fmt.Printf("# newsLink hub.CalleeClient==nil to=%s data=%s\n",calleeID,data)
+				countSent++
+
+				if err!=nil {
+					fmt.Printf("# newsLink done write to=%s err=%v\n",calleeID,err)
+				} else {
+					newsDateMutex.Lock()
+					newsDateMap[calleeID] = date
+					newsDateMutex.Unlock()
+
+					countSentNoErr++
+				}
 			}
 		} else {
-			fmt.Printf("newsLink hub==nil to=%s data=%s\n",calleeID,data)
+			fmt.Printf("# newsLink hub==nil to=%s data=%s\n",calleeID,data)
 		}
 	}
-	fmt.Printf("newsLink sent %d (%d) times\n",count,countAll)
+	fmt.Printf("newsLink sent=%d noerr=%d devices=%d data=%s\n",
+		countSent, countSentNoErr, countAll, data)
 	return
 }
 
@@ -502,6 +505,18 @@ func ticker3min() {
 			delete(missedCallAllowedMap,ip)
 		}
 		missedCallAllowedMutex.Unlock()
+
+		// load "news.ini", file should contain two lines: date= and url=
+		newsIni, err := ini.Load("news.ini")
+		if err == nil {
+			dateValue,ok := readIniEntry(newsIni,"date")
+			if(ok && dateValue!="") {
+				urlValue,ok := readIniEntry(newsIni,"url")
+				if(ok && urlValue!="") {
+					broadcastNewsLink(dateValue,urlValue)
+				}
+			}
+		}
 	}
 }
 

@@ -1291,8 +1291,7 @@ func (c *WsClient) Write(b []byte) error {
 			c.connType, b[:max], c.calleeID, c.isCallee, c.isConnectedToPeer.Get())
 	}
 
-	c.wsConn.WriteMessage(websocket.TextMessage, b)
-	return nil
+	return c.wsConn.WriteMessage(websocket.TextMessage, b)
 }
 
 func (c *WsClient) peerConHasEnded(cause string) {

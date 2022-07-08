@@ -127,6 +127,10 @@ type MappingDataType struct {
 var mapping map[string]MappingDataType
 var mappingMutex sync.RWMutex
 
+// newsDateMap[calleeID] returns the datestring of the last news.ini delivery
+var newsDateMap map[string]string
+var newsDateMutex sync.RWMutex
+
 var numberOfCallsToday = 0 // will be incremented by wshub.go processTimeValues()
 var numberOfCallSecondsToday int64 = 0
 var numberOfCallsTodayMutex sync.RWMutex
@@ -218,6 +222,7 @@ func main() {
 	missedCallAllowedMap = make(map[string]time.Time)
 	waitingCallerChanMap = make(map[string]chan int)
 	mapping = make(map[string]MappingDataType)
+	newsDateMap = make(map[string]string)
 
 	wsClientMap = make(map[uint64]wsClientDataType) // wsClientID -> wsClientData
 	readConfig(true)
