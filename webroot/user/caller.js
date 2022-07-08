@@ -211,8 +211,8 @@ window.onload = function() {
 		// numericIdCheckbox (activated for Android only) for switching input-type text/number
 		let ua = navigator.userAgent;
 		//console.log("navigator.userAgent=("+ua+")");
-		if(ua.indexOf("Android")>=0) {
-			// enable and activate numericId checkbox
+		if(ua.indexOf("Android")>=0 || ua.indexOf("iPhone")>=0 || ua.indexOf("iPad")>=0) {
+			// enable and activate numericIdCheckbox
 			//console.log("numericIdCheckbox enable");
 			numericIdCheckbox.checked = true;
 			let enterIdValElement = document.getElementById('enterIdVal');
@@ -353,6 +353,13 @@ function onload2() {
 				let codeString = ""+(Math.floor(Math.random() * 900) + 100);
 				codeLabel.innerHTML = "Enter "+codeString+":";
 				code.value = "";
+
+				let ua = navigator.userAgent;
+				if(ua.indexOf("Android")>=0 || ua.indexOf("iPhone")>=0 || ua.indexOf("iPad")>=0) {
+					// enable type="number" for code form
+					code.type = "number";
+				}
+
 				codeDiv.style.display = "block";
 				setTimeout(function() {
 					code.focus();
