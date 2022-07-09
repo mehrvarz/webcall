@@ -59,6 +59,11 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	if ok && len(url_arg_array[0]) >= 1 {
 		callerName = url_arg_array[0]
 	}
+	callerMsg := ""
+	url_arg_array, ok = r.URL.Query()["msg"]
+	if ok && len(url_arg_array[0]) >= 1 {
+		callerMsg = url_arg_array[0]
+	}
 
 	var dbEntry DbEntry
 	err := kvMain.Get(dbRegisteredIDs, urlID, &dbEntry)
@@ -74,8 +79,9 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		return
 	}
 
-	fmt.Printf("/notifyCallee (%s) from callerId=(%s) name=(%s) %s\n", urlID, callerId, callerName, remoteAddr)
-	if dbUser.StoreContacts && callerId != "" {
+	fmt.Printf("/notifyCallee (%s) from callerId=(%s) name=(%s) msg=(%s) %s\n",
+		urlID, callerId, callerName, callerMsg, remoteAddr)
+	if dbUser.StoreContacts && callerId != "" && callerName != "" {
 		addContact(urlID, callerId, callerName, "/notifyCallee")
 	}
 
@@ -102,12 +108,17 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	notificationSent := 0
 	if glUrlID == "" {
 		// callee (urlID) is offline - send push notification(s)
-		msg := "Unknown caller is waiting for you to pick up the phone."
+		msg := "Unknown caller"
 		if callerName!="" {
-			msg = callerName + " is waiting for you to pick up the phone."
+			if callerId!="" {
+				msg = callerName + "("+callerId+")"
+			} else {
+				msg = callerName
+			}
 		} else if callerId!="" {
-			msg = callerId + " is waiting for you to pick up the phone."
+			msg = callerId
 		}
+		msg += " is waiting for you to pick up the phone."
 /*
 		if dbUser.Str2 != "" {
 			// web push device 1 subscription is specified
@@ -275,7 +286,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 				fmt.Printf("# /notifyCallee (%s) could not send notification: store as missed call\n", urlID)
 				// TODO where to get msgbox-text from?
 				addMissedCall(urlID,
-					CallerInfo{remoteAddr,callerName,time.Now().Unix(),callerId,""}, "/notify-notavail")
+					CallerInfo{remoteAddr,callerName,time.Now().Unix(),callerId,callerMsg}, "/notify-notavail")
 			} else {
 				fmt.Printf("# /notifyCallee (%s) could not send notification\n", urlID)
 			}
@@ -286,7 +297,10 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	callerGaveUp := true
 	// remoteAddr or remoteAddrWithPort for waitingCaller? waitingCaller needs the port for funtionality
 	// TODO where to get msgbox-text from? looks like there is no msgbox-text for notification (yet?)
-	waitingCaller := CallerInfo{remoteAddrWithPort, callerName, time.Now().Unix(), callerId, ""}
+// tmtmtm missedCall() gets a callerInfo string
+	// callerInfo is encoded: calleeId+"|"+callerName+"|"+callerId (plus optional: "|"+ageSecs) +(|msg)
+
+	waitingCaller := CallerInfo{remoteAddrWithPort, callerName, time.Now().Unix(), callerId, callerMsg}
 
 	var calleeWsClient *WsClient = nil
 	hubMapMutex.RLock()

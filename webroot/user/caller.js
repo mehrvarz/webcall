@@ -1164,6 +1164,7 @@ function confirmNotifyConnect() {
 	notifyConnect(callerName,callerId);
 }
 
+/*
 // not for singlebutton
 function clearForm(idx) {
 	if(idx==0) {
@@ -1190,6 +1191,7 @@ function clearForm(idx) {
 		},400);
 	}
 }
+*/
 
 function submitForm(theForm) {
 	// DialID: switch back to default container
@@ -1223,7 +1225,8 @@ function notifyConnect(callerName,callerId) {
 		divspinnerframe.style.display = "block";
 	}
 	goodbyMissedCall = "";
-	let api = apiPath+"/notifyCallee?id="+calleeID+"&callerId="+callerId+"&name="+callerName;
+	let api = apiPath+"/notifyCallee?id="+calleeID+
+		"&callerId="+callerId+"&name="+callerName+"&msg="+msgbox.value.substring(0,msgBoxMaxLen);
 	xhrTimeout = 600*1000; // 10 min extended xhr timeout
 	gLog("notifyCallee api="+api+" timeout="+xhrTimeout);
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {

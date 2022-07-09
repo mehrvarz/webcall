@@ -1340,7 +1340,14 @@ function showWaitingCallers() {
 //			if(callerIpIdxPort>0) {
 //				callerIp = callerIp.substring(0,callerIpIdxPort);
 //			}
-			str += "<td>" + waitingCallerSlice[i].CallerName + "</td><td>"+
+			let callerName = waitingCallerSlice[i].CallerName;
+			let callerNameShow = callerName;
+gLog('waitingCallerSlice[i].Msg',waitingCallerSlice[i].Msg);
+			if(waitingCallerSlice[i].Msg!="") {
+				callerNameShow =
+					"<a onclick='showMsg(\""+waitingCallerSlice[i].Msg+"\");return false;'>"+callerName+"</a>";
+			}
+			str += "<td>" + callerNameShow + "</td><td>"+
 			    waitingCallerSlice[i].CallerID + "</td>"+
 //				"<td>"+halfShowIpAddr(callerIp) + "</td>"+
 				"<td style='text-align:right;'>since "+
@@ -1373,7 +1380,7 @@ function showMissedCalls() {
 	}
 	if(missedCallsElement) {
 		if(missedCallsSlice==null || missedCallsSlice.length<=0) {
-			gLog('showWaitingCallers fkt missedCallsSlice == null');
+			gLog('showMissedCalls fkt missedCallsSlice == null');
 			missedCallsElement.style.display = "none";
 			missedCallsElement.innerHTML = "";
 			if(missedCallsTitleElement) {
@@ -1426,7 +1433,6 @@ function showMissedCalls() {
 			if(callerMsg!="") {
 				//gLog('### callerMsg='+callerMsg+' '+waitingTimeString+' '+
 				//	timeNowSecs+' '+missedCallsSlice[i].CallTime);
-				// TODO we need to somehow show callerMsg
 				callerNameMarkup = "<a onclick='showMsg(\""+callerMsg+"\");return false;'>"+callerName+"</a>";
 				//console.log("callerNameMarkup("+callerNameMarkup+")");
 			}
