@@ -130,19 +130,6 @@ window.onload = function() {
 		return;
 	}
 
-/* TODO don't need this anymore - using cookie below
-	// the following args may be used in confirmNotifyConnect()
-	callerId = getUrlParams("callerId"); // our id
-	if(typeof callerId=="undefined") {
-		callerId = "";
-	}
-	callerName = getUrlParams("name");
-	if(typeof callerName=="undefined") {
-		callerName = "";
-	}
-	gLog("onload callerId=("+callerId+") callerName=("+callerName+") via urlParam");
-*/
-
 	let text = getUrlParams("readyText");
 	if(typeof text!=="undefined" && text!="") {
 		singleButtonReadyText = decodeURI(text);
@@ -244,6 +231,8 @@ window.onload = function() {
 		gLog("onload no onkeydownFunc in iframe mode");
 	}
 
+// TODO do checkServerMode() here
+
 	let cookieName = "";
 	if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
 		// cookie webcallid exists
@@ -344,6 +333,8 @@ function onload2() {
 				}
 				gLog('onload2 cookieName='+cookieName);
 			}
+
+// TODO do /getsettings here to get callerName
 
 			let showNickNameConfirm = function() {
 				// enable nickname form
@@ -702,14 +693,14 @@ function videoOff() {
 			if(optionElements[i].text.startsWith("Audio")) {
 				gLog("videoOff avSelect idx",i);
 				avSelect.selectedIndex = i;
-// TODO tmtmtm not sure this is really required
-//				getStream(optionElements[i]);
+				// TODO tmtmtm not sure this is really required
+				//getStream(optionElements[i]);
 				break;
 			}
 		}
 		if(rtcConnect) {
 			// if still peer connected, activate the selected audio device
-// TODO tmtmtm not sure this is really needed
+			// TODO tmtmtm not sure this is really needed
 			getStream();
 		}
 	}
@@ -855,6 +846,7 @@ function calleeOnlineAction(comment) {
 	if(!notificationSound) {
 		gLog('loading audio files');
 		notificationSound = new Audio("notification.mp3");
+// TODO why can I not do this?
 //		if(playDialSounds) {
 			dtmfDialingSound = new Audio('dtmf-dial.mp3');
 			busySignalSound = new Audio('busy-signal.mp3');
@@ -1124,7 +1116,6 @@ function goodby() {
 		// in this case the server does NOT call peerConHasEnded(), so we call /missedCall from here
 		// id=format: calleeID|callerName|callerID|ageSecs|msgbox
 		// goodbyMissedCall arrives as urlID but is then tokenized
-//		if(wsAddr!="") {
 		if(wsConn!=null) {
 			gLog('goodbyMissedCall wsSend='+goodbyMissedCall);
 			wsSend("missedcall|"+goodbyMissedCall);
@@ -1142,7 +1133,6 @@ function goodby() {
 	} else if(goodbyTextMsg!="" && wsConn) {
 		// goodbyTextMsg is used, when callee is online (peerconnect), but does not pick up (no mediaconnect)
 		// in this case server calls peerConHasEnded() for the callee, where addMissedCall() is generated
-//		if(wsAddr!="") {
 		if(wsConn!=null) {
 			gLog('goodbyTextMsg wsSend='+goodbyTextMsg);
 			wsSend("msg|"+goodbyTextMsg);
@@ -1163,35 +1153,6 @@ function confirmNotifyConnect() {
 	gLog("callerName="+callerName+" callerId="+callerId);
 	notifyConnect(callerName,callerId);
 }
-
-/*
-// not for singlebutton
-function clearForm(idx) {
-	if(idx==0) {
-		var formNickname = document.querySelector('input#nickname');
-		formNickname.value = "";
-		formNickname.focus();
-	} else if(idx==1) {
-		var formCallerID = document.querySelector('input#callerID');
-		formCallerID.value = "";
-		formCallerID.focus();
-	} else if(idx==2) {
-		var formConfirm = document.querySelector('input#confirm');
-		formConfirm.value = "";
-		formConfirm.focus();
-	} else if(idx==3) {
-		enterIdVal.value = "";
-		setTimeout(function() {
-			enterIdVal.focus();
-		},400);
-	} else if(idx==4) {
-		enterDomainVal.value = "";
-		setTimeout(function() {
-			enterDomainVal.focus();
-		},400);
-	}
-}
-*/
 
 function submitForm(theForm) {
 	// DialID: switch back to default container
@@ -1432,7 +1393,7 @@ function signalingCommand(message) {
 			console.warn('calleeAnswer abort no peerCon');
 			return;
 		}
-/*
+		/*
 		setTimeout(function() {
 			// rtcConnect timeout check
 			if(!doneHangup) {
@@ -1460,7 +1421,7 @@ function signalingCommand(message) {
 				}
 			}
 		},9000);
-*/
+		*/
 		let hostDescription = JSON.parse(payload);
 		gLog("calleeAnswer setLocalDescription (onIceCandidates="+onIceCandidates+")");
 		// setLocalDescription will cause "onsignalingstate have-local-offer"
@@ -1811,7 +1772,7 @@ function dial2() {
 			showStatus(connectingText+"...",-1);
 		}
 	},3000,dialDate);
-/*
+	/*
 	// we are doing 3 thing here:
 	// 1a if no peercon (rtcConnect) after 20s and not hangup by the user, hang up the call now
 	// 1b and if no onIceCandidates, show a warning (webrtc check)
@@ -1841,7 +1802,7 @@ function dial2() {
 			}
 		}
 	},20000,dialDate);
-*/
+	*/
 
 	addedAudioTrack = null;
 	addedVideoTrack = null;
@@ -1954,13 +1915,13 @@ function dial2() {
 				rtcConnectStartDate = Date.now();
 				mediaConnectStartDate = 0;
 
-				// set goodbyTextMsg (including msgbox text) to be evaluated in goodby
-//				goodbyTextMsg = calleeID+"|"+callerName+"|"+callerId+
-//					"|"+Math.floor(Date.now()/1000)+"|"+msgbox.value.substring(0,300)
-				goodbyTextMsg = msgbox.value.substring(0,msgBoxMaxLen)
-				gLog('set goodbyTextMsg',goodbyTextMsg);
-
 				if(!singlebutton) {
+					// set goodbyTextMsg (including msgbox text) to be evaluated in goodby
+//					goodbyTextMsg = calleeID+"|"+callerName+"|"+callerId+
+//						"|"+Math.floor(Date.now()/1000)+"|"+msgbox.value.substring(0,300)
+					goodbyTextMsg = msgbox.value.substring(0,msgBoxMaxLen)
+					gLog('set goodbyTextMsg='+goodbyTextMsg);
+
 					let msgboxText = msgbox.value.substring(0,msgBoxMaxLen);
 					if(msgboxText!="") {
 						if(dataChannel) {

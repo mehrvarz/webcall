@@ -775,10 +775,14 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString, dontIframeOnload
 function iframeOnload(obj) {
 // Uncaught DOMException: Permission denied to access property "document" on cross-origin object
 // happens if url of iframeWindowOpen() contains a differen domain
-	let iframeHeight = obj.contentWindow.document.documentElement.scrollHeight + 10 + 'px';
-	console.log("iframeOnload height="+iframeHeight);
-	obj.style.height = iframeHeight;
-	obj.contentWindow.focus();
+	try {
+		let iframeHeight = obj.contentWindow.document.documentElement.scrollHeight + 10 + 'px';
+		console.log("iframeOnload height="+iframeHeight);
+		obj.style.height = iframeHeight;
+		obj.contentWindow.focus();
+	} catch(ex) {
+		console.error("iframeOnload "+ex.message);
+	}
 }
 
 function iframeWindowClose() {

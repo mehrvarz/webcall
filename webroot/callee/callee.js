@@ -1279,6 +1279,8 @@ function signalingCommand(message) {
 						}
 						// here we set horiCenterBound=true
 						// we also set dontIframeOnload=true so that height:100% determines the iframe height
+						// also: dontIframeOnload=true may be required if newsUrl points to a different domain
+						// to avoid DOMException in iframeOnload()
 						iframeWindowOpen(newsUrl,true,"max-width:800px;height:100%;",true);
 					} else {
 						window.open(newsUrl, "_blank");
@@ -2308,7 +2310,7 @@ function getCookieSupport() {
 
 var counter=0;
 function openContacts() {
-	let url = "/callee/contacts?ds="+playDialSounds+"&i="+counter++;
+	let url = "/callee/contacts?ds="+playDialSounds; //+"&i="+counter++;
 	gLog('openContacts',url);
 	iframeWindowOpen(url);
 }
@@ -2316,20 +2318,20 @@ function openContacts() {
 function openDialId(userId) {
 	let url = "/user/?ds="+playDialSounds+"&i="+counter++;
 	if(userId) {
-		url = "/user/"+userId+"?ds="+playDialSounds+"&i="+counter++;
+		url = "/user/"+userId+"?ds="+playDialSounds; //+"&i="+counter++;
 	}
 	gLog('openDialId',url);
 	iframeWindowOpen(url,false,"");
 }
 
 function openIdMapping() {
-	let url = "/callee/mapping/?i="+counter++;
+	let url = "/callee/mapping/"; //+"?i="+counter++;
 	gLog('openIdMapping',url);
 	iframeWindowOpen(url);
 }
 
 function openSettings() {
-	let url = "/callee/settings?id="+calleeID+"&i="+counter++;
+	let url = "/callee/settings?id="+calleeID; //+"&i="+counter++;
 	gLog('openSettings='+url);
 	iframeWindowOpen(url);
 	// when iframe closes, client.js:iframeWindowClose() will call getSettings()
