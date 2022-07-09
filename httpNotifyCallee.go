@@ -296,9 +296,6 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 
 	callerGaveUp := true
 	// remoteAddr or remoteAddrWithPort for waitingCaller? waitingCaller needs the port for funtionality
-	// TODO where to get msgbox-text from? looks like there is no msgbox-text for notification (yet?)
-// tmtmtm missedCall() gets a callerInfo string
-	// callerInfo is encoded: calleeId+"|"+callerName+"|"+callerId (plus optional: "|"+ageSecs) +(|msg)
 
 	waitingCaller := CallerInfo{remoteAddrWithPort, callerName, time.Now().Unix(), callerId, callerMsg}
 
@@ -512,6 +509,16 @@ func missedCall(callerInfo string, remoteAddr string, cause string) {
 	calleeId := tok[0]
 // TODO check calleeId for size and content
 
+	// calleeId may be a tmp-id
+	mappingMutex.RLock()
+	mappingData,ok := mapping[calleeId]
+	mappingMutex.RUnlock()
+	if ok {
+		//fmt.Printf("httpApi mapping urlID (%s) -> (%s,%s) (%s)\n",
+		//	urlID, mappingData.CalleeId, mappingData.Assign, urlPath)
+		calleeId = mappingData.CalleeId
+	}
+
 	// find current state of dbUser.StoreMissedCalls via calleeId
 	var dbEntry DbEntry
 	err := kvMain.Get(dbRegisteredIDs,calleeId,&dbEntry)
@@ -519,6 +526,7 @@ func missedCall(callerInfo string, remoteAddr string, cause string) {
 		fmt.Printf("# missedCall (%s) failed on get dbRegisteredIDs %s err=%v\n",calleeId,remoteAddr,err)
 		return
 	}
+
 	dbUserKey := fmt.Sprintf("%s_%d",calleeId, dbEntry.StartTime)
 	var dbUser DbUser
 	err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)

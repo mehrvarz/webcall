@@ -70,6 +70,7 @@ function setDefaultCodec(mLine, payload) {
 	return newLine.join(' ');
 }
 
+/*
 function exitPage() {
 	if(!gentle) console.log('exitPage');
 	if(parent!=null && parent.iframeWindowClose) {
@@ -93,4 +94,5 @@ document.onkeydown = function(evt) {
 		//console.log('prefercodec: no esc key (ignore)');
 	}
 };
+*/
 

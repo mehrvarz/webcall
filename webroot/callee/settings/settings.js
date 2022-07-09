@@ -515,7 +515,7 @@ document.onkeydown = function(evt) {
 		isEscape = (evt.keyCode === 27);
 	}
 	if(isEscape) {
-		console.log('esc key');
+		console.log('settings: esc key');
 		exitPage();
 	}
 };
