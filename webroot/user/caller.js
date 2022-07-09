@@ -336,10 +336,13 @@ function onload2() {
 
 // TODO do /getsettings here to get callerName
 
-			let showNickNameConfirm = function() {
-				// enable nickname form
-				nickname.value = callerName;
-				nicknameDiv.style.display = "block";
+			// enable nickname form
+			gLog("set nickname form with callerName="+callerName);
+			nickname.value = callerName;
+			nicknameDiv.style.display = "block";
+			// callername will be fetched from form in checkCalleeOnline()
+
+			let showConfirmCodeForm = function() {
 				// enable randomized '123' confirm form
 				let codeString = ""+(Math.floor(Math.random() * 900) + 100);
 				codeLabel.innerHTML = "Enter "+codeString+":";
@@ -371,7 +374,7 @@ function onload2() {
 					}
 				}
 				document.addEventListener("keyup", keyupEventFkt);
-				//console.log("showNickNameConfirm start");
+				//console.log("showConfirmCodeForm start");
 				// checkCalleeOnline() will fetch callername from form
 			}
 
@@ -420,24 +423,19 @@ function onload2() {
 // TODO where do idSelect and nickname come from?
 						// enable idSelect
 						idSelect.style.display = "block";
-						// if we show idSelect, we also need to show username-form
-						// fill nickname.child.value with nickname from settings (or with callerName?)
-						gLog("set callerName="+callerName);
-						nickname.value = callerName;
-						nicknameDiv.style.display = "block";
-						// callername will be fetched from form in checkCalleeOnline()
 					}
+
 					onload3("1");
 				}, function(errString,errcode) {
 					// /getmapping has failed
-					showNickNameConfirm();
+					showConfirmCodeForm();
 					onload3("2 "+errString+" "+errcode);
 				});
 				return;
 			}
 
 			// cookie webcallid does not exist
-			showNickNameConfirm();
+			showConfirmCodeForm();
 			onload3("3");
 			return;
 		}
