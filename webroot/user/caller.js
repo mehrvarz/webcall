@@ -740,7 +740,6 @@ function getUrlParams(param) {
 }
 
 function checkCalleeOnline(waitForCallee,comment) {
-//	if(altIdCount>1) {
 	if(nickname.value!="") {
 		callerName = nickname.value;
 	}
@@ -2367,6 +2366,20 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 			checkCalleeOnline(false,"hangup");
 			dialButton.disabled = false;
 		},3000);
+	}
+}
+
+function clearForm(idx) {
+	if(idx==3) {
+		enterIdVal.value = "";
+		setTimeout(function() {
+			   enterIdVal.focus();
+		},400);
+	} else if(idx==4) {
+		enterDomainVal.value = "";
+		setTimeout(function() {
+			   enterDomainVal.focus();
+		},400);
 	}
 }
 

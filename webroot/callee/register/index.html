@@ -11,7 +11,6 @@
 ::-webkit-scrollbar { display:none; }
 html {
 	width:100%; height:100%; min-height:420px;
-	_background-image:linear-gradient(#003, #46f);
 	background-image:linear-gradient(#12d,#117);
 	color:#ddd;
 	scrollbar-width:none;
@@ -107,7 +106,7 @@ input[type=submit]:focus {
 		<!-- value="" must be set to an instance-specific value (calleeID) -->
 		<input type="text" autocomplete="username" id="username" name="username" value="" style="display:none;">
 		<input name="pw" id="pw" type="password" class="formtext" _autocomplete="new-password" autofocus required>
-		<span onclick="clearForm(0)" style="margin-left:5px; user-select:none;">X</span>
+		<span onclick="clearForm()" style="margin-left:5px; user-select:none;">X</span>
 		<br>
 		<input type="submit" name="Submit" id="submit" value="OK" style="width:100px; margin-top:16px;">
 	</form>
