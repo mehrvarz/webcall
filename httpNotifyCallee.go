@@ -80,7 +80,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	}
 
 	fmt.Printf("/notifyCallee (%s) from callerId=(%s) name=(%s) msg=(%s) %s\n",
-		urlID, callerId, callerName, callerMsg, remoteAddr)
+		urlID, callerId, callerName, /*callerMsg*/ "...", remoteAddr)
 	if dbUser.StoreContacts && callerId != "" && callerName != "" {
 		addContact(urlID, callerId, callerName, "/notifyCallee")
 	}
@@ -724,6 +724,7 @@ func addMissedCall(urlID string, caller CallerInfo, cause string) (error, []Call
 	if len(missedCallsSlice) >= maxMissedCalls {
 		missedCallsSlice = missedCallsSlice[len(missedCallsSlice)-(maxMissedCalls-1):]
 	}
+	// TODO: maybe NOT save urlID == caller.CallerID (sending to self)
 	missedCallsSlice = append(missedCallsSlice, caller)
 	err = kvCalls.Put(dbMissedCalls, urlID, missedCallsSlice, true) // TODO: skipConfirm really?
 	if err!=nil {
@@ -731,9 +732,8 @@ func addMissedCall(urlID string, caller CallerInfo, cause string) (error, []Call
 		return err,nil
 	}
 	if logWantedFor("missedcall") {
-		// TODO: maybe NOT save urlID == caller.CallerID
 		fmt.Printf("missedCall (%s) <- (%s) name=%s ip=%s msg=(%s) cause=(%s)\n",
-			urlID, caller.CallerID, caller.CallerName, caller.AddrPort, caller.Msg, cause)
+			urlID, caller.CallerID, caller.CallerName, caller.AddrPort, /*caller.Msg*/ "...", cause)
 	}
 	return err,missedCallsSlice
 }

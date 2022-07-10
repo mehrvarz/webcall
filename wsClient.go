@@ -675,6 +675,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		cleanMsg := strings.Replace(payload, "\n", " ", -1)
 		cleanMsg = strings.Replace(cleanMsg, "\r", " ", -1)
 		cleanMsg = strings.TrimSpace(cleanMsg)
+		cleanMsg = "..." // don't log actual msg
 		if c.hub==nil {
 			fmt.Printf("# %s (%s) msg='%s' c.hub==nil callee=%v ip=%s ua=%s\n",
 				c.connType, c.calleeID, cleanMsg, c.isCallee, c.RemoteAddr, c.userAgent)
