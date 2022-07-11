@@ -152,18 +152,31 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	url_arg_array, ok = r.URL.Query()["dialID"]
 	if ok && len(url_arg_array[0]) > 0 {
 		dialID := url_arg_array[0]
-		mappingMutex.RLock()
-		mappingData,ok := mapping[dialID]
-		mappingMutex.RUnlock()
-		if ok {
-			// caller is using a temporary (mapped) calleeID
-			// if a name was assigned, we attach it to the caller name
-			assignedName := mappingData.Assign
-			if assignedName!="" && assignedName!="none" {
-				if callerName=="" {
-					callerName = "("+assignedName+")"
+		if dialID!="" {
+			if callerName=="" && callerID!="" {
+				// search contacts for callerName
+				var callerInfoMap map[string]string // callerID -> name
+				err := kvContacts.Get(dbContactsBucket,dialID,&callerInfoMap)
+				if err!=nil {
+					fmt.Printf("# wsClient db get calleeID=%s (ignore) err=%v\n", dialID, err)
 				} else {
-					callerName += " ("+assignedName+")"
+					callerName = callerInfoMap[callerID]
+				}
+			}
+
+			mappingMutex.RLock()
+			mappingData,ok := mapping[dialID]
+			mappingMutex.RUnlock()
+			if ok {
+				// caller is using a temporary (mapped) calleeID
+				// if a name was assigned, we attach it to the caller name
+				assignedName := mappingData.Assign
+				if assignedName!="" && assignedName!="none" {
+					if callerName=="" {
+						callerName = "("+assignedName+")"
+					} else {
+						callerName += " ("+assignedName+")"
+					}
 				}
 			}
 		}

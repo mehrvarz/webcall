@@ -1344,7 +1344,7 @@ function showWaitingCallers() {
 //			}
 			let callerName = waitingCallerSlice[i].CallerName;
 			let callerNameShow = callerName;
-gLog('waitingCallerSlice[i].Msg',waitingCallerSlice[i].Msg);
+			//gLog('waitingCallerSlice[i].Msg',waitingCallerSlice[i].Msg);
 			if(waitingCallerSlice[i].Msg!="") {
 				callerNameShow =
 					"<a onclick='showMsg(\""+waitingCallerSlice[i].Msg+"\");return false;'>"+callerName+"</a>";

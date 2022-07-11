@@ -743,9 +743,7 @@ function getUrlParams(param) {
 }
 
 function checkCalleeOnline(waitForCallee,comment) {
-	if(nickname.value!="") {
-		callerName = nickname.value;
-	}
+	callerName = nickname.value;
 
 	// Connecting P2P...
 	//console.log("checkCalleeOnline callerId="+callerId+" callerName="+callerName);
