@@ -773,10 +773,20 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString, dontIframeOnload
 }
 
 function iframeOnload(obj) {
+	// scrollHeight without delay = min-height (set on the html element)
+	// scrollHeight with delay    = actual height of content
+	// this is why we run scrollHeight twice
+	try {
+		let iframeHeight = obj.contentWindow.document.documentElement.scrollHeight + 10 + 'px';
+		console.log("iframeOnload height="+iframeHeight);
+		obj.style.height = iframeHeight;
+		obj.contentWindow.focus();
+	} catch(ex) {
+		console.error("iframeOnload "+ex.message);
+	}
+
 	setTimeout(function() {
 		try {
-			// without delay: scrollHeight <- min-height (set on the html element)
-			// with delay: scrollHeight <- actual height of content
 			let iframeHeight = obj.contentWindow.document.documentElement.scrollHeight + 10 + 'px';
 			console.log("iframeOnload delayed height="+iframeHeight);
 			obj.style.height = iframeHeight;
@@ -784,7 +794,7 @@ function iframeOnload(obj) {
 		} catch(ex) {
 			console.error("iframeOnload "+ex.message);
 		}
-	},50);
+	},150);
 }
 
 function iframeWindowClose() {
