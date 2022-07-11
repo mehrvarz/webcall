@@ -354,10 +354,13 @@ function onload2() {
 					code.type = "number";
 				}
 
-				codeDiv.style.display = "block";
-				setTimeout(function() {
-					code.focus();
-				},500);
+				// enable 123 codeDiv, if not answie or talkback
+				if(!calleeID.startsWith("answie") && !calleeID.startsWith("talkback")) {
+					codeDiv.style.display = "block";
+					setTimeout(function() {
+						code.focus();
+					},500);
+				}
 
 				// disable call button for as long as code.value does not have the right value
 				dialButton.disabled = true;
