@@ -339,8 +339,12 @@ function onload2() {
 			// enable nickname form
 			gLog("set nickname form with callerName="+callerName);
 			nickname.value = callerName;
-			nicknameDiv.style.display = "block";
-			// callername will be fetched from form in checkCalleeOnline()
+
+			// enable nickname form, if not answie or talkback
+			if(!calleeID.startsWith("answie") && !calleeID.startsWith("talkback")) {
+				nicknameDiv.style.display = "block";
+				// callername will be fetched from form in checkCalleeOnline()
+			}
 
 			let showConfirmCodeForm = function() {
 				// enable randomized '123' confirm form
