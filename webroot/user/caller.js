@@ -367,22 +367,22 @@ function onload2() {
 
 					// disable call button for as long as code.value does not have the right value
 					dialButton.disabled = true;
-				}
 
-				let keyupEventFkt = function() {
-					if(code.value==codeString) {
-						dialButton.disabled = false;
-						// disable EventListener
-						this.removeEventListener("keyup",keyupEventFkt);
-						codeDiv.style.display = "none";
-						setTimeout(function() {
-							nickname.focus();
-						},500);
+					let keyupEventFkt = function() {
+						if(code.value==codeString) {
+							dialButton.disabled = false;
+							// disable EventListener
+							this.removeEventListener("keyup",keyupEventFkt);
+							codeDiv.style.display = "none";
+							setTimeout(function() {
+								nickname.focus();
+							},500);
+						}
 					}
+					document.addEventListener("keyup", keyupEventFkt);
+					//console.log("showConfirmCodeForm start");
+					// checkCalleeOnline() will fetch callername from form
 				}
-				document.addEventListener("keyup", keyupEventFkt);
-				//console.log("showConfirmCodeForm start");
-				// checkCalleeOnline() will fetch callername from form
 			}
 
 			// if cookie webcallid is available, fetch mapping and offer idSelect
