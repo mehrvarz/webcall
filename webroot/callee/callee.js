@@ -1891,7 +1891,8 @@ function peerConnected2() {
 		// instead of listOfClientIps
 		gLog('accept incoming call?',listOfClientIps);
 		peerCon.getStats(null)
-		.then((results) => getStatsCandidateTypes(results,"Incoming", ""), err => console.log(err.message)); // -> wsSend("log|callee Incoming p2p/p2p")
+		.then((results) => getStatsCandidateTypes(results,"Incoming", ""),
+			err => console.log(err.message)); // -> wsSend("log|callee Incoming p2p/p2p")
 
 		answerButton.disabled = false;
 		// only show msgbox if not empty
