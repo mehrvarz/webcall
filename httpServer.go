@@ -423,7 +423,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	mappingData,ok := mapping[urlID]
 	mappingMutex.RUnlock()
 	if ok {
-		fmt.Printf("httpApi mapping urlID (%s) -> (%s,%s) (%s)\n",
+		fmt.Printf("httpApi urlID=(%s) mapping->(%s) (assign=%s) urlPath=(%s)\n",
 			urlID, mappingData.CalleeId, mappingData.Assign, urlPath)
 		urlID = mappingData.CalleeId
 	}

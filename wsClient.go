@@ -149,27 +149,36 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		callerName = url_arg_array[0]
 	}
 
+	if callerName=="" && callerID!="" && wsClientData.calleeID!="" {
+		// callerName is empty, but we got callerID and calleeID
+		// try to fetch callerName by searching for callerID in the contacts of calleeID
+		//fmt.Printf("serveWs try to get callerName for callerID=%s via calleeID=%s\n",
+		//	callerID, wsClientData.calleeID)
+		var callerInfoMap map[string]string // callerID -> name
+		err := kvContacts.Get(dbContactsBucket,wsClientData.calleeID,&callerInfoMap)
+		if err!=nil {
+			fmt.Printf("# wsClient db get calleeID=%s (ignore) err=%v\n", wsClientData.calleeID, err)
+		} else {
+			callerName = callerInfoMap[callerID]
+			fmt.Printf("serveWs got callerName=%s for callerID=%s via calleeID=%s\n",
+				callerName, callerID, wsClientData.calleeID)
+		}
+	}
+
+	// urlArg dialID is the unmapped id dialed by the caller
+	// if it is a mapped id, we use it to fetch the assigned name
 	url_arg_array, ok = r.URL.Query()["dialID"]
 	if ok && len(url_arg_array[0]) > 0 {
 		dialID := url_arg_array[0]
 		if dialID!="" {
-			if callerName=="" && callerID!="" {
-				// search contacts for callerName
-				var callerInfoMap map[string]string // callerID -> name
-				err := kvContacts.Get(dbContactsBucket,dialID,&callerInfoMap)
-				if err!=nil {
-					fmt.Printf("# wsClient db get calleeID=%s (ignore) err=%v\n", dialID, err)
-				} else {
-					callerName = callerInfoMap[callerID]
-				}
-			}
-
+			// check id mapping for dialID (dialed calleeID)
 			mappingMutex.RLock()
 			mappingData,ok := mapping[dialID]
 			mappingMutex.RUnlock()
+
 			if ok {
-				// caller is using a temporary (mapped) calleeID
-				// if a name was assigned, we attach it to the caller name
+				// dialID is mapped (caller is using a temporary (mapped) calleeID)
+				// if a name was assigned for dialID, we attach it to callerName
 				assignedName := mappingData.Assign
 				if assignedName!="" && assignedName!="none" {
 					if callerName=="" {
@@ -178,6 +187,12 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 						callerName += " ("+assignedName+")"
 					}
 				}
+				fmt.Printf("serveWs assignedName=%s for dialID=%s isMappedTo=%s (shouldBeSame=%s)\n",
+					assignedName, dialID, mappingData.CalleeId, wsClientData.calleeID)
+			} else {
+				// dialID is not mapped
+				//fmt.Printf("serveWs dialID=%s notMapped (shouldBeSame=%s)\n",
+				//	dialID, wsClientData.calleeID)
 			}
 		}
 	}
