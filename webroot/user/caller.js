@@ -347,27 +347,27 @@ function onload2() {
 			}
 
 			let showConfirmCodeForm = function() {
-				// enable randomized '123' confirm form
-				let codeString = ""+(Math.floor(Math.random() * 900) + 100);
-				codeLabel.innerHTML = "Enter "+codeString+":";
-				code.value = "";
-
-				let ua = navigator.userAgent;
-				if(ua.indexOf("Android")>=0 || ua.indexOf("iPhone")>=0 || ua.indexOf("iPad")>=0) {
-					// enable type="number" for code form
-					code.type = "number";
-				}
-
 				// enable 123 codeDiv, if not answie or talkback
 				if(!calleeID.startsWith("answie") && !calleeID.startsWith("talkback")) {
+					// enable randomized '123' confirm form
+					let codeString = ""+(Math.floor(Math.random() * 900) + 100);
+					codeLabel.innerHTML = "Enter "+codeString+":";
+					code.value = "";
+
+					let ua = navigator.userAgent;
+					if(ua.indexOf("Android")>=0 || ua.indexOf("iPhone")>=0 || ua.indexOf("iPad")>=0) {
+						// enable type="number" for code form
+						code.type = "number";
+					}
+
 					codeDiv.style.display = "block";
 					setTimeout(function() {
 						code.focus();
 					},500);
-				}
 
-				// disable call button for as long as code.value does not have the right value
-				dialButton.disabled = true;
+					// disable call button for as long as code.value does not have the right value
+					dialButton.disabled = true;
+				}
 
 				let keyupEventFkt = function() {
 					if(code.value==codeString) {
