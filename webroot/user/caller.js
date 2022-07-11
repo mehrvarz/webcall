@@ -557,6 +557,9 @@ function dialButtonClick() {
 		msgbox.style.display = "none";
 	}
 
+	// focus back to background, so that esc-key via onkeydown works
+	dialButton.blur();
+
 	// -> checkCalleeOnline -> ajax -> calleeOnlineAction -> gotStream -> connectSignaling
 	gLog("dialButtonClick set dialAfterCalleeOnline");
 	dialAfterCalleeOnline = true;
