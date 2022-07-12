@@ -301,6 +301,7 @@ window.onload = function() {
 		if(typeof str!=="undefined" && str!="") {
 			callerHost = str;
 		}
+        gLog("onload nocookie callerId=("+callerId+") callerName=("+callerName+") callerHost=("+callerHost+")");
 	}
 
 	if(calleeID=="") {
@@ -309,7 +310,8 @@ window.onload = function() {
 		containerElement.style.display = "none";
 		enterIdElement.style.display = "block";
 		// set target domain name with local hostname
-		enterDomainVal.value = location.hostname;
+		// note: .hostname does not contain the :port (use .host instead)
+		enterDomainVal.value = location.host; 
 
 		setTimeout(function() {
 			enterIdVal.focus();
@@ -1193,13 +1195,19 @@ function submitForm(theForm) {
 		if(calleeID.length>11) calleeID = calleeID.substring(0,11);
 	}
 	gLog('submitForm set calleeID='+calleeID+" targetDomain="+enterDomainVal.value);
-	if(enterDomainVal.value != location.hostname) {
+// TODO ACHTUNG .host may have :443 set, while DomainVal may not
+	if(enterDomainVal.value != location.host) {
 		// the callee to call is hosted on a different server
 		// if we are running on Android, callUrl will be handled by onNewIntent() in the activity
 		//   which will forward callUrl via iframeWindowOpen() to the remote host
 		// tmtmtm
+// if location.host is an internal ip-addr:port, which cannot be adressed over he internet
+// sending callerHost=location.host is futile
+// TODO can we send our real public ip instead?
+
+// TODO must add :port to callerHost
 		let callUrl = "https://"+enterDomainVal.value+"/user/"+calleeID+
-			"?callerId="+callerId+"&callerName="+callerName+"&callerHost="+location.hostname+
+			"?callerId="+callerId+"&callerName="+callerName+"&callerHost="+location.host+
 			"&ds="+playDialSounds;
 		console.log("submitForm remote callUrl="+callUrl);
 // TODO do we need to add "_blank" for the callee web-client?

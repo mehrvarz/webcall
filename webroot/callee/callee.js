@@ -1495,6 +1495,7 @@ function showMissedCalls() {
 			// already updating itself
 		} else {
 			showCallsWhileInAbsenceCallingItself = true;
+// TODO unfortunately this timeout occurs also when the screen is off
 			setTimeout(function() {
 				showCallsWhileInAbsenceCallingItself = false;
 				showMissedCalls();
