@@ -1019,7 +1019,8 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 				if(divspinnerframe) {
 					divspinnerframe.style.display = "block";
 				}
-				let api = apiPath+"/online?id="+calleeID+"&wait=true&callerId="+callerId+"&name="+callerName;
+				let api = apiPath+"/online?id="+calleeID+"&wait=true&callerId="+callerId+
+					"&name="+callerName+"&callerHost="+callerHost;
 				xhrTimeout = 15*60*1000; // 15min
 				if(offlineFor>0) {
 					xhrTimeout = xhrTimeout - offlineFor*1000;
@@ -1027,7 +1028,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 				gLog("notifyCallee api="+api+" timeout="+xhrTimeout);
 				// in case caller aborts:
 				goodbyMissedCall = calleeID+"|"+callerName+"|"+callerId+
-					"|"+Math.floor(Date.now()/1000)+"|"+msgbox.value.substring(0,msgBoxMaxLen)
+					"|"+Math.floor(Date.now()/1000)+"|"+msgbox.value.substring(0,msgBoxMaxLen)+"|"+callerHost;
 				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 					// end spinner
 					if(divspinnerframe) {
@@ -1095,7 +1096,8 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 			}
 
 			// calleeID is currently offline - check if calleeID can be notified (via twitter msg)
-			let api = apiPath+"/canbenotified?id="+calleeID+"&callerId="+callerId+"&name="+callerName;
+			let api = apiPath+"/canbenotified?id="+calleeID+"&callerId="+callerId+
+				"&name="+callerName+"&callerHost="+callerHost;
 			gLog('canbenotified api',api);
 			xhrTimeout = 30*1000;
 			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
@@ -1118,7 +1120,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 
 					showStatus(msg,-1);
 					goodbyMissedCall = calleeID+"|"+callerName+"|"+callerId+
-						"|"+Math.floor(Date.now()/1000)+"|"+msgbox.value.substring(0,msgBoxMaxLen)
+						"|"+Math.floor(Date.now()/1000)+"|"+msgbox.value.substring(0,msgBoxMaxLen)+"|"+callerHost;
 					// goodbyMissedCall will be cleared by a successful call
 					// if it is still set in goodby(), we will ask server to store this as a missed call
 					return;
@@ -1177,8 +1179,8 @@ function goodby() {
 }
 
 function confirmNotifyConnect() {
-	gLog("callerName="+callerName+" callerId="+callerId);
-	notifyConnect(callerName,callerId);
+	gLog("callerName="+callerName+" callerId="+callerId+" callerHost="+callerHost);
+	notifyConnect(callerName,callerId,callerHost);
 }
 
 function submitForm(theForm) {
@@ -1215,7 +1217,7 @@ function errorAction2(errString,err) {
 	//alert("xhr error "+errString);
 }
 
-function notifyConnect(callerName,callerId) {
+function notifyConnect(callerName,callerId,callerHost) {
 	// nickname form was valid
 	// the next xhr will freeze until hidden callee accepts the call
 	showStatus("Trying to get "+calleeID+" on the phone. Please wait...",-1);
@@ -1223,8 +1225,9 @@ function notifyConnect(callerName,callerId) {
 		divspinnerframe.style.display = "block";
 	}
 	goodbyMissedCall = "";
-	let api = apiPath+"/notifyCallee?id="+calleeID+
-		"&callerId="+callerId+"&name="+callerName+"&msg="+msgbox.value.substring(0,msgBoxMaxLen);
+	let api = apiPath+"/notifyCallee?id="+calleeID +
+		"&callerId="+callerId + "&name="+callerName +
+		"&msg="+msgbox.value.substring(0,msgBoxMaxLen) + "&host="+callerHost;
 	xhrTimeout = 600*1000; // 10 min extended xhr timeout
 	gLog("notifyCallee api="+api+" timeout="+xhrTimeout);
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
@@ -1418,7 +1421,8 @@ function signalingCommand(message) {
 	if(cmd=="calleeAnswer") {
 		if(contactAutoStore) {
 			if(callerId!=="" && callerId!=="undefined") {
-				let api = apiPath+"/setcontact?id="+callerId+"&contactID="+calleeID+"&name="+callerName;
+				let api = apiPath+"/setcontact?id="+callerId+"&contactID="+calleeID+
+					"&name="+callerName + "&callerHost="+callerHost;
 				gLog("request api="+api);
 				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 					gLog("xhr setcontact OK "+xhr.responseText);
