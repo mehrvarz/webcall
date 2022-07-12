@@ -708,8 +708,10 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString, dontIframeOnload
 
 	//console.log('iframeWindowOpen='+url);
 	if(iframeWindowOpenFlag) {
-		console.log("# iframeWindowOpen fail iframeWindowOpenFlag");
-		return;
+		//tmtmtm
+		//console.log("# iframeWindowOpen fail iframeWindowOpenFlag");
+		//return;
+		iframeWindowClose();
 	}
 	if(menuDialogOpenElement) {
 		menuDialogClose();

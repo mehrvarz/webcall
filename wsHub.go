@@ -18,7 +18,7 @@ type Hub struct {
 	timerCanceled chan struct{}
 	exitFunc func(*WsClient, string)
 	IsUnHiddenForCallerAddr string
-	ConnectedCallerIp string
+	ConnectedCallerIp string // will be set on callerOffer
 	WsUrl string
 	WssUrl string
 	calleeUserAgent string // http UA

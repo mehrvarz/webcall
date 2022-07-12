@@ -99,8 +99,8 @@ window.onload = function() {
 	if(typeof Android !== "undefined" && Android !== null) {
 		menuExitElement.style.display = "block";
 
-		// menuClearCacheElement only for 1.1.0+
 		if(typeof Android !== "undefined" && Android !== null) {
+			// menuClearCacheElement only for 1.1.0+
 			if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
 				if(Android.getVersionName()>="1.1.0") {
 					menuClearCacheElement.style.display = "block"; // calls clearcache()
@@ -2317,7 +2317,7 @@ function openContacts() {
 }
 
 function openDialId(userId) {
-	let url = "/user/?ds="+playDialSounds+"&i="+counter++;
+	let url = "/user/?ds="+playDialSounds; //+"&i="+counter++;
 	if(userId) {
 		url = "/user/"+userId+"?ds="+playDialSounds; //+"&i="+counter++;
 	}

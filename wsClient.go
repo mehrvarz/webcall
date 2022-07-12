@@ -410,6 +410,28 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		hub.lastCallerContactTime = time.Now().Unix()
 		hub.HubMutex.Unlock()
 
+/* tmtmtm
+// TODO client.calleeID could be busy (making a call) but can, so far, not be detected as busy
+// TODO if callerID is not empty, we should mark it as busy
+		if callerID!="" {
+			// the caller is also a callee
+			// we need to make sure this callee is busy why itself making a call
+			// so lets set hub.ConnectedCallerIp
+			tmpRemoteIP := "aaa"
+			err := StoreCallerIpInHubMap(callerID, tmpRemoteIP, false)
+			if err!=nil {
+				fmt.Printf("# %s (%s) set hub.CallerClient StoreCallerIp %s err=%v\n",
+					client.connType, callerID, tmpRemoteIP, err)
+			} else {
+				if logWantedFor("wscall") {
+					fmt.Printf("%s (%s) callerOffer StoreCallerIp %s\n",
+						client.connType, callerID, tmpRemoteIP)
+				}
+// TODO this has worked, but now we must also clear this CallerIpInHubMap after the call
+			}
+		}
+*/
+
 		go func() {
 			delaySecs := 14
 			// incoming caller will get removed if there is no peerConnect after 14s
@@ -703,19 +725,22 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		cleanMsg := strings.Replace(payload, "\n", " ", -1)
 		cleanMsg = strings.Replace(cleanMsg, "\r", " ", -1)
 		cleanMsg = strings.TrimSpace(cleanMsg)
-		cleanMsg = "..." // don't log actual msg
 		if c.hub==nil {
+			// don't log actual cleanMsg
 			fmt.Printf("# %s (%s) msg='%s' c.hub==nil callee=%v ip=%s ua=%s\n",
-				c.connType, c.calleeID, cleanMsg, c.isCallee, c.RemoteAddr, c.userAgent)
+				c.connType, c.calleeID, /*cleanMsg*/ "(hidden)", c.isCallee, c.RemoteAddr, c.userAgent)
 			return
 		}
 		c.hub.HubMutex.Lock()
 		if c.hub.CalleeClient==nil {
+			// don't log actual cleanMsg
 			fmt.Printf("# %s (%s) msg='%s' c.hub.CalleeClient==nil callee=%v ip=%s ua=%s\n",
-				c.connType, c.calleeID, cleanMsg, c.isCallee, c.RemoteAddr, c.userAgent)
+				c.connType, c.calleeID, /*cleanMsg*/ "(hidden)", c.isCallee, c.RemoteAddr, c.userAgent)
 		} else {
+			// don't log actual cleanMsg
 			fmt.Printf("%s (%s) msg='%s' callee=%v ip=%s ua=%s\n",
-				c.connType, c.calleeID, cleanMsg, c.isCallee, c.RemoteAddr, c.userAgent)
+				c.connType, c.calleeID, /*cleanMsg*/ "(hidden)", c.isCallee, c.RemoteAddr, c.userAgent)
+
 			c.hub.CalleeClient.callerTextMsg = cleanMsg;
 		}
 		c.hub.HubMutex.Unlock()
@@ -1124,8 +1149,6 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			c.hub.HubMutex.RUnlock()
 			fmt.Printf("# %s (%s) peer %s c.hub.CalleeClient==nil v=%s\n",
 				c.connType, c.calleeID, payload, c.clientVersion)
-			// TODO this makes no sense if hub.CalleeClient==nil ?
-			//StoreCallerIpInHubMap(c.globalCalleeID, "", false)
 			return
 		}
 		if c.hub.CallerClient==nil {

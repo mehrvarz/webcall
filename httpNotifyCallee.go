@@ -79,8 +79,9 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		return
 	}
 
+	// don't log actual callerMsg
 	fmt.Printf("/notifyCallee (%s) from callerId=(%s) name=(%s) msg=(%s) %s\n",
-		urlID, callerId, callerName, /*callerMsg*/ "...", remoteAddr)
+		urlID, callerId, callerName, /*callerMsg*/ "(hidden)", remoteAddr)
 	if dbUser.StoreContacts && callerId != "" && callerName != "" {
 		addContact(urlID, callerId, callerName, "/notifyCallee")
 	}
@@ -732,8 +733,9 @@ func addMissedCall(urlID string, caller CallerInfo, cause string) (error, []Call
 		return err,nil
 	}
 	if logWantedFor("missedcall") {
+		// don't log actual caller.Msg
 		fmt.Printf("missedCall (%s) <- (%s) name=%s ip=%s msg=(%s) cause=(%s)\n",
-			urlID, caller.CallerID, caller.CallerName, caller.AddrPort, /*caller.Msg*/ "...", cause)
+			urlID, caller.CallerID, caller.CallerName, caller.AddrPort, /*caller.Msg*/ "(hidden)", cause)
 	}
 	return err,missedCallsSlice
 }
