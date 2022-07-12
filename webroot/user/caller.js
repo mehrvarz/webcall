@@ -41,6 +41,7 @@ var wsAddrTime;
 var calleeID = ""; // who we are calling
 var callerId = ""; // our own id
 var callerName = ""; // our name
+var callerHost = "";
 var otherUA="";
 var sessionDuration = 0;
 var dataChannelSendMsg = "";
@@ -245,6 +246,9 @@ window.onload = function() {
 	}
 	// if serverSettings.storeContacts=="true", turn element "dialIdAutoStore" on
 	contactAutoStore = false;
+	callerId = "";
+	callerName = "";
+	callerHost = "";
 	if(cookieName!="") {
 		// use cookiename to fetch /getsettings
 		callerId = cookieName;
@@ -275,11 +279,28 @@ window.onload = function() {
 					callerName = serverSettings.nickname;
 				}
 			}
+
 			gLog("onload callerId=("+callerId+") callerName=("+callerName+") after /getsettings");
 
 		}, function(errString,err) {
 			console.log("# onload xhr error "+errString+" "+err);
 		});
+	} else {
+		// cookie/cookiename does not exist for this caller
+		// in this case we do accept callerId, callerName and callerHost from urlArg
+
+		let str = getUrlParams("callerId");
+		if(typeof str!=="undefined" && str!="") {
+			callerId = str;
+		}
+		str = getUrlParams("callerName");
+		if(typeof str!=="undefined" && str!="") {
+			callerName = str;
+		}
+		str = getUrlParams("callerHost");
+		if(typeof str!=="undefined" && str!="") {
+			callerHost = str;
+		}
 	}
 
 	if(calleeID=="") {
@@ -287,12 +308,13 @@ window.onload = function() {
 		gLog("onload no calleeID; switch to enterId");
 		containerElement.style.display = "none";
 		enterIdElement.style.display = "block";
+		// set target domain name with local hostname
 		enterDomainVal.value = location.hostname;
 
 		setTimeout(function() {
 			enterIdVal.focus();
 		},400);
-		// will continue in submitForm()
+		// will continue in submitForm(theForm)
 		return;
 	}
 
@@ -1168,11 +1190,21 @@ function submitForm(theForm) {
 	if(!calleeID.startsWith("#")) {
 		if(calleeID.length>11) calleeID = calleeID.substring(0,11);
 	}
-	gLog('submitForm set calleeID='+calleeID+" "+enterDomainVal.value);
-	if(enterDomainVal.value!=location.hostname) {
-		window.open("https://"+enterDomainVal.value+"/user/"+calleeID, ""); //"_blank"
+	gLog('submitForm set calleeID='+calleeID+" targetDomain="+enterDomainVal.value);
+	if(enterDomainVal.value != location.hostname) {
+		// the callee to call is hosted on a different server
+		// if we are running on Android, callUrl will be handled by onNewIntent() in the activity
+		//   which will forward callUrl via iframeWindowOpen() to the remote host
+		// tmtmtm
+		let callUrl = "https://"+enterDomainVal.value+"/user/"+calleeID+
+			"?callerId="+callerId+"&callerName="+callerName+"&callerHost="+location.hostname+
+			"&ds="+playDialSounds;
+		console.log("submitForm remote callUrl="+callUrl);
+// TODO do we need to add "_blank" for the callee web-client?
+		window.open(callUrl, "");
 		history.back();
 	} else {
+		// the callee to call is hosted on the same server
 		onload2();
 	}
 }

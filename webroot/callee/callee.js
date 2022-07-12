@@ -155,12 +155,16 @@ window.onload = function() {
 	}
 
 	if(typeof Android !== "undefined" && Android !== null) {
+		// running on Android
 		fullscreenLabel.style.display = "none";
+
 		let element = document.getElementById("nativeMenu");
 		if(element) element.style.display = "block";
+
+		// change timur.mobi/webcall/ link to timur.mobi/webcall/update/
 		element = document.getElementById("webcallhome");
 		if(element) element.href = "https://timur.mobi/webcall/update/";
-// TODO open this in iframe
+		// TODO ideally open Update Page in an iframe
 	}
 
 	try {
@@ -1444,7 +1448,7 @@ function showMissedCalls() {
 			if(callerID.length>=5) {
 				// TODO here we could also verify if callerID is a valid calleeID
 				//      and we could check if callerID is currently online
-				if(callerHost=="") {
+				if(typeof callerHost == "undefined" || callerHost=="") {
 					// caller is hosted on this server
 					callerLink = window.location.href;
 					let idxCallee = callerLink.indexOf("/callee/");
@@ -1458,8 +1462,15 @@ function showMissedCalls() {
 					}
 				} else {
 					// caller is hosted on a different server
-					callerLink = "https://"+callerHost+"/user/"+callerID+"?ds="+playDialSounds;
-					callerLink = "<a onclick='iframeWindowOpen(\""+callerLink+"\")'>"+callerID+"</a>";
+					// callerHost is the domain given by the original caller (for callback)
+					console.log("callerHost=("+callerHost+")");
+					// (this may be confusing: when calling back, the callee on this host becomes a caller)
+// tmtmtm
+					callerLink = "https://"+callerHost+"/user/"+callerID +
+						"?callerId="+calleeID + "&callerName="+calleeName +
+						"&callerHost="+location.hostname + "&ds="+playDialSounds;
+
+					callerLink = "<a onclick='iframeWindowOpen(\""+callerLink+"\")'>R"+callerID+"</a>";
 				}
 				str += "<td>" + callerNameMarkup + "</td><td>"+
 					callerLink + "</td><td style='text-align:right;'>"+
