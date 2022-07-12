@@ -287,7 +287,8 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 				fmt.Printf("# /notifyCallee (%s) could not send notification: store as missed call\n", urlID)
 				// TODO where to get msgbox-text from?
 				addMissedCall(urlID,
-					CallerInfo{remoteAddr,callerName,time.Now().Unix(),callerId,callerMsg}, "/notify-notavail")
+					CallerInfo{remoteAddr,callerName,time.Now().Unix(),callerId,callerMsg,""}, // TODO: empty host
+					"/notify-notavail")
 			} else {
 				fmt.Printf("# /notifyCallee (%s) could not send notification\n", urlID)
 			}
@@ -298,7 +299,8 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	callerGaveUp := true
 	// remoteAddr or remoteAddrWithPort for waitingCaller? waitingCaller needs the port for funtionality
 
-	waitingCaller := CallerInfo{remoteAddrWithPort, callerName, time.Now().Unix(), callerId, callerMsg}
+	// TODO: empty host
+	waitingCaller := CallerInfo{remoteAddrWithPort, callerName, time.Now().Unix(), callerId, callerMsg, ""}
 
 	var calleeWsClient *WsClient = nil
 	hubMapMutex.RLock()
@@ -570,7 +572,8 @@ func missedCall(callerInfo string, remoteAddr string, cause string) {
 	// the actual call occured ageSecs64 ago (may be a big number, if caller waits long before aborting the page)
 	//ageSecs64 := time.Now().Unix() - timeOfCall
 	err,missedCallsSlice := addMissedCall(calleeId,
-		CallerInfo{remoteAddr,callerName,timeOfCall,callerID,msgtext}, cause)
+		CallerInfo{remoteAddr,callerName,timeOfCall,callerID,msgtext,""}, // TODO: empty host
+		cause)
 	if err==nil {
 		//fmt.Printf("missedCall (%s) caller=%s rip=%s\n", calleeId, callerID, remoteAddr)
 
@@ -707,7 +710,8 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 	if(dbUser.StoreMissedCalls) {
 		// no msgbox-text given for /canbenotified
 		addMissedCall(urlID,
-			CallerInfo{remoteAddr,callerName,time.Now().Unix(),callerID,""}, "/canbenotified-not")
+			CallerInfo{remoteAddr,callerName,time.Now().Unix(),callerID,"",""}, // TODO: empty msg + host
+			"/canbenotified-not")
 	}
 	return
 }

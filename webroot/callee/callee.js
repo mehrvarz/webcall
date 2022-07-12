@@ -1425,12 +1425,12 @@ function showMissedCalls() {
 				callerIp = callerIp.substring(0,callerIpIdxPort);
 			}
 			let callerID = missedCallsSlice[i].CallerID;
-			let callerLink = callerID;
+			let callerLink = ""; //callerID;
 
 			let callerName = missedCallsSlice[i].CallerName;
 			if(callerName=="") callerName="unknown";
-			let callerNameMarkup = callerName;
 
+			let callerNameMarkup = callerName;
 			let callerMsg = missedCallsSlice[i].Msg;
 			if(callerMsg!="") {
 				//gLog('### callerMsg='+callerMsg+' '+waitingTimeString+' '+
@@ -1439,17 +1439,26 @@ function showMissedCalls() {
 				//console.log("callerNameMarkup("+callerNameMarkup+")");
 			}
 
+			let callerHost = missedCallsSlice[i].Host;
+
 			if(callerID.length>=5) {
 				// TODO here we could also verify if callerID is a valid calleeID
 				//      and we could check if callerID is currently online
-				callerLink = window.location.href;
-				let idxCallee = callerLink.indexOf("/callee/");
-				if(idxCallee>=0) {
-					callerLink = callerLink.substring(0,idxCallee) + "/user/" + callerID;
-					// here we hand over calleeID as URL args
-					// caller.js will try to get nickname from server (using cookie)
-					callerLink = callerLink+"?ds="+playDialSounds;
-					// open caller in iframe
+				if(callerHost=="") {
+					// caller is hosted on this server
+					callerLink = window.location.href;
+					let idxCallee = callerLink.indexOf("/callee/");
+					if(idxCallee>=0) {
+						callerLink = callerLink.substring(0,idxCallee) + "/user/" + callerID;
+						// here we hand over calleeID as URL args
+						// caller.js will try to get nickname from server (using cookie)
+						callerLink = callerLink+"?ds="+playDialSounds;
+						// open caller in iframe
+						callerLink = "<a onclick='iframeWindowOpen(\""+callerLink+"\")'>"+callerID+"</a>";
+					}
+				} else {
+					// caller is hosted on a different server
+					callerLink = "https://"+callerHost+"/user/"+callerID+"?ds="+playDialSounds;
 					callerLink = "<a onclick='iframeWindowOpen(\""+callerLink+"\")'>"+callerID+"</a>";
 				}
 				str += "<td>" + callerNameMarkup + "</td><td>"+

@@ -411,12 +411,9 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		hub.HubMutex.Unlock()
 
 /* tmtmtm
-// TODO client.calleeID could be busy (making a call) but can, so far, not be detected as busy
-// TODO if callerID is not empty, we should mark it as busy
 		if callerID!="" {
-			// the caller is also a callee
-			// we need to make sure this callee is busy why itself making a call
-			// so lets set hub.ConnectedCallerIp
+// TODO when callee is making a call, he will NOT be in busy state when receiving a call
+			// so lets set hub.ConnectedCallerIp? doesn't work
 			tmpRemoteIP := "aaa"
 			err := StoreCallerIpInHubMap(callerID, tmpRemoteIP, false)
 			if err!=nil {
@@ -539,8 +536,9 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				fmt.Printf("# %s (%s) failed to get dbUser\n",client.connType,client.calleeID)
 			} else if dbUser.StoreMissedCalls {
 				addMissedCall(hub.CalleeClient.calleeID,
-					CallerInfo{hub.CallerClient.RemoteAddr, hub.CallerClient.callerName,
-					time.Now().Unix(), hub.CallerClient.callerID, hub.CalleeClient.callerTextMsg}, "NO PEERCON")
+					CallerInfo{hub.CallerClient.RemoteAddr, hub.CallerClient.callerName, time.Now().Unix(),
+					hub.CallerClient.callerID, hub.CalleeClient.callerTextMsg, ""}, // TODO: empty host
+					"NO PEERCON")
 			}
 
 			hub.HubMutex.Lock()
@@ -781,7 +779,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			if err!=nil {
 				fmt.Printf("# %s (%s) failed to get dbUser\n",c.connType,c.calleeID)
 			} else if dbUser.StoreMissedCalls {
-				addMissedCall(c.calleeID, CallerInfo{c.RemoteAddr, "", time.Now().Unix(), "", c.callerTextMsg},
+				addMissedCall(c.calleeID, CallerInfo{c.RemoteAddr, "", time.Now().Unix(), "",c.callerTextMsg, ""},
 					"err no CallerClient")
 			}
 			return
@@ -808,7 +806,8 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 				fmt.Printf("# %s (%s) failed to get dbUser\n",c.connType,c.calleeID)
 			} else if dbUser.StoreMissedCalls {
 				addMissedCall(c.calleeID, CallerInfo{c.RemoteAddr, c.callerName,
-					time.Now().Unix(), c.callerID, c.callerTextMsg}, "callee busy")
+					time.Now().Unix(), c.callerID, c.callerTextMsg, ""}, // TODO: empty host
+					"callee busy")
 			}
 			c.hub.HubMutex.RUnlock()
 			return
@@ -1439,7 +1438,8 @@ func (c *WsClient) peerConHasEnded(cause string) {
 			} else if dbUser.StoreMissedCalls {
 				//fmt.Printf("%s (%s) store missedCall msg=(%s)\n", c.connType, c.calleeID, c.callerTextMsg)
 				addMissedCall(c.calleeID, CallerInfo{callerRemoteAddr, callerName, time.Now().Unix(),
-					callerID, c.callerTextMsg}, cause)
+					callerID, c.callerTextMsg, ""}, // TODO empty host
+					cause)
 			}
 		}
 
