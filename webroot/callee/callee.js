@@ -1470,7 +1470,7 @@ function showMissedCalls() {
 						"?callerId="+calleeID + "&callerName="+calleeName +
 						"&callerHost="+location.hostname + "&ds="+playDialSounds;
 
-					callerLink = "<a onclick='iframeWindowOpen(\""+callerLink+"\")'>R"+callerID+"</a>";
+					callerLink = "<a onclick='iframeWindowOpen(\""+callerLink+"\")'>rem:"+callerID+"</a>";
 				}
 				str += "<td>" + callerNameMarkup + "</td><td>"+
 					callerLink + "</td><td style='text-align:right;'>"+

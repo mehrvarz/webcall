@@ -379,7 +379,13 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 		contactName = url_arg_array[0]
 	}
 
-	if setContacts(calleeID, contactID, contactName, remoteAddr) {
+	callerHost := ""
+	url_arg_array, ok = r.URL.Query()["callerHost"]
+	if ok && len(url_arg_array[0]) >= 1 {
+		callerHost = url_arg_array[0]
+	}
+
+	if setContacts(calleeID, contactID, contactName, callerHost, remoteAddr) {
 		// an error has occured
 		return
 	}
@@ -387,7 +393,7 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 	return
 }
 
-func setContacts(calleeID string, contactID string, contactName string, remoteAddr string) bool {
+func setContacts(calleeID string, contactID string, contactName string, callerHost string, remoteAddr string) bool {
 	// (calleeID = the callee making the call)
 	// (contactID = the callee to be added / changed)
 
@@ -414,6 +420,10 @@ func setContacts(calleeID string, contactID string, contactName string, remoteAd
 	if contactID=="" {
 		fmt.Printf("# /setcontact (%s) abort on empty contactID %s\n", calleeID, remoteAddr)
 		return false
+	}
+
+	if callerHost!="" {
+		contactID = contactID+"@"+callerHost
 	}
 
 	var callerInfoMap map[string]string // calleeID -> contactName
