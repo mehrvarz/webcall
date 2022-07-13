@@ -430,7 +430,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 
 	if len(urlID)>11 {
 		tok := strings.Split(urlID, "|")
-		if len(tok) == 5 {
+		if len(tok) >= 5 {
 			// don't log 5-token (like this: "54281001702||65511272157|1653030153|msgtext")
 		} else {
 			fmt.Printf("# httpApi (%s) long urlID=(%s) %s (%s)\n", calleeID, urlID, remoteAddr, urlPath)
