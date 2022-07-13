@@ -2401,14 +2401,14 @@ function clearcookie() {
 }
 
 function clearcache() {
-	// will only be called if Android.getVersionName() >= "1.0.8"
+	// will only be enabled if Android.getVersionName() >= "1.0.8"
 	if(typeof Android !== "undefined" && Android !== null) {
 		if(typeof Android.reload !== "undefined" && Android.reload !== null) {
-			Android.wsClearCache();
 			Android.wsClose();
+			Android.wsClearCache();
 			setTimeout(function() {
 				Android.reload();
-			},100);
+			},200);
 		}
 	}
 	history.back();
