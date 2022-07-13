@@ -1187,15 +1187,14 @@ function confirmNotifyConnect() {
 
 function submitForm(theForm) {
 	// DialID: switch back to default container
-	enterIdElement.style.display = "none";
-	containerElement.style.display = "block";
 	calleeID = enterIdVal.value;
 	calleeID = calleeID.replace(/ /g,''); // remove all white spaces
 	if(!calleeID.startsWith("#")) {
 		if(calleeID.length>11) calleeID = calleeID.substring(0,11);
 	}
-	gLog('submitForm set calleeID='+calleeID+" targetDomain="+enterDomainVal.value);
+	gLog("submitForm calleeID="+calleeID);
 // TODO ACHTUNG .host may have :443 set, while DomainVal may not
+	gLog("submitForm targetDomain="+enterDomainVal.value+" location.host="+location.host);
 	if(enterDomainVal.value != location.host) {
 		// the callee to call is hosted on a different server
 		// if we are running on Android, callUrl will be handled by onNewIntent() in the activity
@@ -1205,16 +1204,41 @@ function submitForm(theForm) {
 // sending callerHost=location.host is futile
 // TODO can we send our real public ip instead?
 
-// TODO must add :port to callerHost
-		let callUrl = "https://"+enterDomainVal.value+"/user/"+calleeID+
-			"?callerId="+callerId+"&callerName="+callerName+"&callerHost="+location.host+
-			"&ds="+playDialSounds;
-		console.log("submitForm remote callUrl="+callUrl);
+
+// TODO make sure a typo in enterDomainVal does not result in ugly browser err-msg
+		let api = "https://"+enterDomainVal.value+"/rtcsig/online?id="+calleeID; //+"&ver="+Android.getVersionName()+"_"+Android.webviewVersion();
+		//console.log('xhr api '+api);
+		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+			if(xhr.responseText=="") {
+				console.log('xhr response empty');
+			} else if(xhr.responseText.startsWith("error")) {
+				console.log('xhr response '+xhr.responseText);
+			} else { // any other
+				console.log('xhr response ('+xhr.responseText+')');
+				let callUrl = "https://"+enterDomainVal.value+"/user/"+calleeID+
+					"?callerId="+callerId+"&callerName="+callerName+"&callerHost="+location.host+
+					"&ds="+playDialSounds;
+				console.log("submitForm remote callUrl="+callUrl);
 // TODO do we need to add "_blank" for the callee web-client?
-		window.open(callUrl, "");
-		history.back();
+				enterIdElement.style.display = "none";
+				containerElement.style.display = "block";
+				window.open(callUrl, "");
+				history.back();
+				return;
+			}
+		}, function(errString,errcode) {
+			console.log('xhr error ('+errString+') errcode='+errcode);
+		});
+
+		// if we end here, the domain cannot be reached, so we don't do window.open()
+		alert("Connection failed. Please check the server address.");
+		//de-focus submit button
+		document.activeElement.blur();
+
 	} else {
 		// the callee to call is hosted on the same server
+		enterIdElement.style.display = "none";
+		containerElement.style.display = "block";
 		onload2();
 	}
 }
