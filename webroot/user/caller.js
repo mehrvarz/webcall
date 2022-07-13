@@ -1141,7 +1141,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 }
 
 function goodby() {
-	gLog('goodby');
+	gLog("goodby");
 	if(goodbyMissedCall!="") {
 		// goodbyMissedCall is used, when callee can not be reached (is offline)
 		// in this case the server does NOT call peerConHasEnded(), so we call /missedCall from here
@@ -1161,7 +1161,7 @@ function goodby() {
 				   gLog('# goodby xhr error '+errString);
 			}, false, true);
 		}
-	} else if(goodbyTextMsg!="" && wsConn) {
+	} else if(goodbyTextMsg!="" && wsConn!=null) {
 		// goodbyTextMsg is used, when callee is online (peerconnect), but does not pick up (no mediaconnect)
 		// in this case server calls peerConHasEnded() for the callee, where addMissedCall() is generated
 		if(wsConn!=null) {
@@ -1175,8 +1175,11 @@ function goodby() {
 	}
 	goodbyDone = true;
 
-	if(typeof Android !== "undefined" && Android !== null) {
-		Android.peerDisConnect();
+	if(wsConn!=null) {
+		// only peerDisConnect() if this session has established a wsConn
+		if(typeof Android !== "undefined" && Android !== null) {
+			Android.peerDisConnect();
+		}
 	}
 }
 
@@ -1207,13 +1210,16 @@ function submitForm(theForm) {
 
 		// below code tries to catch an window.open() error ("host not found")
 		// and throw an alert() instead of relying on an ugly browser err-msg
+		let randId = ""+Math.floor(Math.random()*1000000);
 		let callUrl = "https://"+enterDomainVal.value+"/user/"+calleeID+
-			"?callerId="+callerId+"&callerName="+callerName+"&callerHost="+location.host+
-			"&ds="+playDialSounds;
+			"?callerId="+callerId + "&callerName="+callerName + "&callerHost="+location.host +
+			"&ds="+playDialSounds + "&i="+randId;
 		var openOK = null;
 		try {
+			gLog("submitForm window.open "+callUrl);
+			// in WebCallAndroid: callUrl being opened will trigger onNewIntent()
 			openOK = window.open(callUrl, "");
-			console.log("openOK="+openOK);
+			console.log("submitForm openOK="+openOK);
 		} catch(e) {
 			// if we end here, the domain cannot be reached, so we don't do window.open()
 			alert("Connection failed. Please check the server address.");
@@ -1227,7 +1233,7 @@ function submitForm(theForm) {
 				document.activeElement.blur();
 			} else {
 				// everything OK
-				console.log("window.open() no err");
+				console.log("submitForm window.open() no err");
 				enterIdElement.style.display = "none";
 				containerElement.style.display = "block";
 				history.back();
