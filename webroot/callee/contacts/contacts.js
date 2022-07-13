@@ -131,7 +131,7 @@ function processContacts(xhrresponse) {
 				let callerHost = id.substring(idxAt);
 				let idOnly = id.substring(0,idxAt);
 				// TODO may need to make id shorter
-				dataBoxContent += "<td><a href='https://" + callerHost + "/user/" + idOnly + "?ds="+dialsounds+"'>"+id+"</a></td></tr>";
+				dataBoxContent += "<td><a href='https://" + callerHost + "/user/" + idOnly + "?ds="+dialsounds+"' target='_blank'>"+id+"</a></td></tr>";
 			} else {
 				// local user
 				dataBoxContent += "<td><a href='" + mainLink + id + "?ds="+dialsounds+"'>"+id+"</a></td></tr>";
