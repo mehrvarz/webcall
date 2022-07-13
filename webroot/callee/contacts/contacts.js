@@ -91,7 +91,7 @@ function processContacts(xhrresponse) {
 			mainLink = mainLink.substring(0,idx) + "/user/";
 		}
 
-		// json parse xhrresponse
+		// parse json response of xhr /getcontacts
 		obj = JSON.parse(xhrresponse);
 		//if(!gentle) console.log('xhrresponse obj',obj);
 
@@ -120,11 +120,22 @@ function processContacts(xhrresponse) {
 		var dataBoxContent = "<table style='width:100%; border-collapse:separate; border-spacing:6px 2px; line-height:1.7em;'>"
 		dataBoxContent += "<tr style='color:#7c0;font-weight:600;user-select:none;'><td>Name (edit)</td><td>ID (call)</td></tr>";
 		for(let entry of entries) {
-			let id = entry[0];
+			let id = entry[0]; // just a local id, or id@host
 			let name = entry[1];
 			//if(!gentle) console.log('obj[%s] (%s)',id, name);
-			dataBoxContent += "<tr><td><a onclick='edit(this,event,\""+id+"\")'>"+name+"</a></td>"+
-				"<td><a href='" + mainLink + id + "?ds="+dialsounds+"'>"+id+"</a></td></tr>";
+			dataBoxContent += "<tr><td><a onclick='edit(this,event,\""+id+"\")'>"+name+"</a></td>";
+
+			let idxAt = id.indexOf("@");
+			if(idxAt>=0) {
+				// remote user
+				let callerHost = id.substring(idxAt);
+				let idOnly = id.substring(0,idxAt);
+				// TODO may need to make id shorter
+				dataBoxContent += "<td><a href='https://" + callerHost + "/user/" + idOnly + "?ds="+dialsounds+"'>"+id+"</a></td></tr>";
+			} else {
+				// local user
+				dataBoxContent += "<td><a href='" + mainLink + id + "?ds="+dialsounds+"'>"+id+"</a></td></tr>";
+			}
 		}
 		dataBoxContent += "</table>";
 		databoxElement.innerHTML = dataBoxContent;
