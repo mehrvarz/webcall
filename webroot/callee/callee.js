@@ -1469,8 +1469,6 @@ function showMissedCalls() {
 					callerLink = "https://"+callerHost+"/user/"+callerID +
 						"?callerId="+calleeID + "&callerName="+calleeName +
 						"&callerHost="+location.hostname + "&ds="+playDialSounds;
-
-//					callerLink = "<a onclick='iframeWindowOpen(\""+callerLink+"\")'>rem:"+callerID+"</a>";
 					callerLink = "<a href='"+callerLink+"' target='_blank'>rem:"+callerID+"</a>";
 				}
 				str += "<td>" + callerNameMarkup + "</td><td>"+

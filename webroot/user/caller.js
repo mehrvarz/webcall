@@ -1202,11 +1202,10 @@ function submitForm(theForm) {
 		// the callee to call is hosted on a different server
 		// if we are running on Android, callUrl will be handled by onNewIntent() in the activity
 		//   which will forward callUrl via iframeWindowOpen() to the remote host
-		// tmtmtm
-// if location.host is an internal ip-addr:port, which cannot be adressed over he internet
-// sending callerHost=location.host is futile
-// TODO can we send our real public ip instead?
 
+		// if location.host is an internal ip-addr:port, which cannot be adressed over he internet
+		// then sending callerHost=location.host is futile
+		// TODO can we send our real public ip instead?
 
 		// below code tries to catch an window.open() error ("host not found")
 		// and throw an alert() instead of relying on an ugly browser err-msg
@@ -1264,8 +1263,8 @@ function notifyConnect(callerName,callerId,callerHost) {
 	}
 	goodbyMissedCall = "";
 	let api = apiPath+"/notifyCallee?id="+calleeID +
-		"&callerId="+callerId + "&name="+callerName +
-		"&msg="+msgbox.value.substring(0,msgBoxMaxLen) + "&host="+callerHost;
+		"&callerId="+callerId + "&name="+callerName + "&callerHost="+callerHost +
+		"&msg="+msgbox.value.substring(0,msgBoxMaxLen);
 	xhrTimeout = 600*1000; // 10 min extended xhr timeout
 	gLog("notifyCallee api="+api+" timeout="+xhrTimeout);
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
@@ -1378,7 +1377,7 @@ function connectSignaling(message,openedFunc) {
 	gLog('connectSignaling: open ws connection '+calleeID+' '+wsAddr);
 	let tryingToOpenWebSocket = true;
     var wsUrl = wsAddr;
-	wsUrl += "&callerId="+callerId+"&name="+callerName+"&dialID="+calleeID;
+	wsUrl += "&callerId="+callerId+"&name="+callerName+"&callerHost="+callerHost+"&dialID="+calleeID;
 	if(typeof Android !== "undefined" && Android !== null) {
 		if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
 			wsUrl = wsUrl + "&ver="+Android.getVersionName();

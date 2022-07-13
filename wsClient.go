@@ -66,6 +66,7 @@ type WsClient struct {
 	connType string
 	callerID string
 	callerName string
+	callerHost string
 	clientVersion string
 	callerTextMsg string
 	pingSent uint64
@@ -148,7 +149,6 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	if ok && len(url_arg_array[0]) > 0 {
 		callerName = url_arg_array[0]
 	}
-
 	if callerName=="" && callerID!="" && wsClientData.calleeID!="" {
 		// callerName is empty, but we got callerID and calleeID
 		// try to fetch callerName by searching for callerID in the contacts of calleeID
@@ -163,6 +163,12 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			fmt.Printf("serveWs got callerName=%s for callerID=%s via calleeID=%s\n",
 				callerName, callerID, wsClientData.calleeID)
 		}
+	}
+
+	callerHost := ""
+	url_arg_array, ok = r.URL.Query()["callerHost"]
+	if ok && len(url_arg_array[0]) > 0 {
+		callerHost = strings.ToLower(url_arg_array[0])
 	}
 
 	// urlArg dialID is the unmapped id dialed by the caller
@@ -208,8 +214,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	if ok && len(url_arg_array[0]) > 0 {
 		auto = url_arg_array[0]
 	}
-	//fmt.Printf("serve callerID=%s callerName=%s auto=%s ver=%s\n",
-	//	callerID, callerName, auto, clientVersion)
+	fmt.Printf("serve callerID=%s callerName=%s callerHost=%s auto=%s ver=%s\n",
+		callerID, callerName, callerHost, auto, clientVersion)
 
 	upgrader := websocket.NewUpgrader()
 	//upgrader.EnableCompression = true // TODO
@@ -240,6 +246,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	}
 	client.callerID = callerID
 	client.callerName = callerName
+	client.callerHost = callerHost
 	if tls {
 		client.connType = "serveWss"
 	} else {
@@ -412,7 +419,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 /* tmtmtm
 		if callerID!="" {
-// TODO when callee is making a call, he will NOT be in busy state when receiving a call
+// TODO when callee is making a call, it will NOT be in busy state when receiving a call
 			// so lets set hub.ConnectedCallerIp? doesn't work
 			tmpRemoteIP := "aaa"
 			err := StoreCallerIpInHubMap(callerID, tmpRemoteIP, false)
@@ -1253,7 +1260,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 						if c.hub.CallerClient.callerID != "" {
 							// add callerID/callerName to contacts
 							setContacts(c.calleeID, c.hub.CallerClient.callerID,
-								c.hub.CallerClient.callerName, "", c.RemoteAddrNoPort) // TODO empty callerHost
+								c.hub.CallerClient.callerName, c.hub.CallerClient.callerHost, c.RemoteAddrNoPort)
 						}
 					}
 				} else {
