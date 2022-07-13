@@ -1449,7 +1449,7 @@ function showMissedCalls() {
 				// TODO here we could also verify if callerID is a valid calleeID
 				//      and we could check if callerID is currently online
 				if(typeof callerHost == "undefined" || callerHost=="") {
-					// caller is hosted on this server
+					// the original caller is hosted on THIS server
 					callerLink = window.location.href;
 					let idxCallee = callerLink.indexOf("/callee/");
 					if(idxCallee>=0) {
@@ -1461,15 +1461,19 @@ function showMissedCalls() {
 						callerLink = "<a onclick='iframeWindowOpen(\""+callerLink+"\")'>"+callerID+"</a>";
 					}
 				} else {
-					// caller is hosted on a different server
+					// the original caller is hosted on a REMOTE server
 					// callerHost is the domain given by the original caller (for callback)
 					console.log("callerHost=("+callerHost+")");
 					// (this may be confusing: when calling back, the callee on this host becomes a caller)
-// tmtmtm
+
+					let remoteCallerID = callerID+"@"+callerHost;
+					if(remoteCallerID.length > 11+1+15) {
+						remoteCallerID = remoteCallerID.substring(0,11+1+15);
+					}
 					callerLink = "https://"+callerHost+"/user/"+callerID +
 						"?callerId="+calleeID + "&callerName="+calleeName +
 						"&callerHost="+location.hostname + "&ds="+playDialSounds;
-					callerLink = "<a href='"+callerLink+"' target='_blank'>rem:"+callerID+"</a>";
+					callerLink = "<a href='"+callerLink+"' target='_blank'>"+remoteCallerID+"</a>";
 				}
 				str += "<td>" + callerNameMarkup + "</td><td>"+
 					callerLink + "</td><td style='text-align:right;'>"+
