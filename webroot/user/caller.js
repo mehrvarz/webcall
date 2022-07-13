@@ -1205,35 +1205,35 @@ function submitForm(theForm) {
 // TODO can we send our real public ip instead?
 
 
-// TODO make sure a typo in enterDomainVal does not result in ugly browser err-msg
-		let api = "https://"+enterDomainVal.value+"/rtcsig/online?id="+calleeID; //+"&ver="+Android.getVersionName()+"_"+Android.webviewVersion();
-		//console.log('xhr api '+api);
-		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-			if(xhr.responseText=="") {
-				console.log('xhr response empty');
-			} else if(xhr.responseText.startsWith("error")) {
-				console.log('xhr response '+xhr.responseText);
-			} else { // any other
-				console.log('xhr response ('+xhr.responseText+')');
-				let callUrl = "https://"+enterDomainVal.value+"/user/"+calleeID+
-					"?callerId="+callerId+"&callerName="+callerName+"&callerHost="+location.host+
-					"&ds="+playDialSounds;
-				console.log("submitForm remote callUrl="+callUrl);
-// TODO do we need to add "_blank" for the callee web-client?
+		// below code tries to catch an window.open() error ("host not found")
+		// and throw an alert() instead of relying on an ugly browser err-msg
+		let callUrl = "https://"+enterDomainVal.value+"/user/"+calleeID+
+			"?callerId="+callerId+"&callerName="+callerName+"&callerHost="+location.host+
+			"&ds="+playDialSounds;
+		var openOK = null;
+		try {
+			openOK = window.open(callUrl, "");
+			console.log("openOK="+openOK);
+		} catch(e) {
+			// if we end here, the domain cannot be reached, so we don't do window.open()
+			alert("Connection failed. Please check the server address.");
+			//de-focus submit button
+			document.activeElement.blur();
+		} finally {
+			if(!openOK) {
+				// if we end here, the domain cannot be reached, so we don't do window.open()
+				alert("Connection failed. Please check the server address.");
+				//de-focus submit button
+				document.activeElement.blur();
+			} else {
+				// everything OK
+				console.log("window.open() no err");
 				enterIdElement.style.display = "none";
 				containerElement.style.display = "block";
-				window.open(callUrl, "");
 				history.back();
 				return;
 			}
-		}, function(errString,errcode) {
-			console.log('xhr error ('+errString+') errcode='+errcode);
-		});
-
-		// if we end here, the domain cannot be reached, so we don't do window.open()
-		alert("Connection failed. Please check the server address.");
-		//de-focus submit button
-		document.activeElement.blur();
+		}
 
 	} else {
 		// the callee to call is hosted on the same server

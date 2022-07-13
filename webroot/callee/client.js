@@ -737,7 +737,7 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString, dontIframeOnload
 
 	containerElement.style.filter = "blur(0.8px) brightness(60%)";
 
-	console.log('iframeWindowOpen '+url);
+	console.log("iframeWindowOpen "+url+" horiCenterBound="+horiCenterBound+" addStyle="+addStyleString+" dontIframeOnload="+dontIframeOnload);
 	iframeWindowOpenUrl = url;
 	iframeWindowOpenFlag = true;
 
@@ -753,6 +753,9 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString, dontIframeOnload
 	if(addStyleString) {
 		styleString += addStyleString;
 	}
+
+	console.log("iframeWindowOpen styleString="+styleString);
+
 	if(url.startsWith("string:")) {
 		iframeWindowElement.style = styleString;
 		iframeWindowElement.innerHTML = url.substring(7);
