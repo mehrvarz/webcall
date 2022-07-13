@@ -544,7 +544,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			} else if dbUser.StoreMissedCalls {
 				addMissedCall(hub.CalleeClient.calleeID,
 					CallerInfo{hub.CallerClient.RemoteAddr, hub.CallerClient.callerName, time.Now().Unix(),
-					hub.CallerClient.callerID, hub.CalleeClient.callerTextMsg, ""}, // TODO: empty host
+					hub.CallerClient.callerID, hub.CalleeClient.callerTextMsg, hub.CalleeClient.callerHost},
 					"NO PEERCON")
 			}
 
@@ -813,8 +813,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 				fmt.Printf("# %s (%s) failed to get dbUser\n",c.connType,c.calleeID)
 			} else if dbUser.StoreMissedCalls {
 				addMissedCall(c.calleeID, CallerInfo{c.RemoteAddr, c.callerName,
-					time.Now().Unix(), c.callerID, c.callerTextMsg, ""}, // TODO: empty host
-					"callee busy")
+					time.Now().Unix(), c.callerID, c.callerTextMsg, c.callerHost}, "callee busy")
 			}
 			c.hub.HubMutex.RUnlock()
 			return
@@ -1445,8 +1444,7 @@ func (c *WsClient) peerConHasEnded(cause string) {
 			} else if dbUser.StoreMissedCalls {
 				//fmt.Printf("%s (%s) store missedCall msg=(%s)\n", c.connType, c.calleeID, c.callerTextMsg)
 				addMissedCall(c.calleeID, CallerInfo{callerRemoteAddr, callerName, time.Now().Unix(),
-					callerID, c.callerTextMsg, ""}, // TODO empty host
-					cause)
+					callerID, c.callerTextMsg, c.callerHost}, cause)
 			}
 		}
 
