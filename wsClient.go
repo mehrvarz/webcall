@@ -544,7 +544,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			} else if dbUser.StoreMissedCalls {
 				addMissedCall(hub.CalleeClient.calleeID,
 					CallerInfo{hub.CallerClient.RemoteAddr, hub.CallerClient.callerName, time.Now().Unix(),
-					hub.CallerClient.callerID, hub.CalleeClient.callerTextMsg, hub.CalleeClient.callerHost},
+					hub.CallerClient.callerID, hub.CallerClient.callerTextMsg, hub.CallerClient.callerHost},
 					"NO PEERCON")
 			}
 
@@ -1258,8 +1258,8 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 
 						if c.hub.CallerClient.callerID != "" {
 							// add callerID/callerName to contacts
-							setContacts(c.calleeID, c.hub.CallerClient.callerID,
-								c.hub.CallerClient.callerName, c.hub.CallerClient.callerHost, c.RemoteAddrNoPort)
+							setContacts(c.calleeID, c.hub.CallerClient.callerID, c.hub.CallerClient.callerName,
+								c.hub.CallerClient.callerHost, c.RemoteAddrNoPort)
 						}
 					}
 				} else {
@@ -1411,6 +1411,8 @@ func (c *WsClient) peerConHasEnded(cause string) {
 		callerRemoteAddr := ""
 		callerID := ""
 		callerName := ""
+		callerHost := ""
+		callerTextMsg := ""
 		c.hub.HubMutex.RLock()
 		if c.hub.CalleeClient!=nil {
 			calleeRemoteAddr = c.hub.CalleeClient.RemoteAddrNoPort
@@ -1419,6 +1421,8 @@ func (c *WsClient) peerConHasEnded(cause string) {
 			callerRemoteAddr = c.hub.CallerClient.RemoteAddrNoPort
 			callerID = c.hub.CallerClient.callerID
 			callerName = c.hub.CallerClient.callerName
+			callerHost = c.hub.CallerClient.callerHost
+			callerTextMsg = c.hub.CallerClient.callerTextMsg
 
 			// clear recentTurnCalleeIps[ipNoPort] entry (if this was a relay session)
 			recentTurnCalleeIpMutex.Lock()
@@ -1444,7 +1448,7 @@ func (c *WsClient) peerConHasEnded(cause string) {
 			} else if dbUser.StoreMissedCalls {
 				//fmt.Printf("%s (%s) store missedCall msg=(%s)\n", c.connType, c.calleeID, c.callerTextMsg)
 				addMissedCall(c.calleeID, CallerInfo{callerRemoteAddr, callerName, time.Now().Unix(),
-					callerID, c.callerTextMsg, c.callerHost}, cause)
+					callerID, callerTextMsg, callerHost}, cause)
 			}
 		}
 
