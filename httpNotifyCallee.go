@@ -290,7 +290,6 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 			// store call as missed call
 			if(dbUser.StoreMissedCalls) {
 				fmt.Printf("# /notifyCallee (%s) could not send notification: store as missed call\n", urlID)
-				// TODO where to get msgbox-text from?
 				addMissedCall(urlID,
 					CallerInfo{remoteAddr,callerName,time.Now().Unix(),callerId,callerMsg,callerHost},
 					"/notify-notavail")
@@ -487,6 +486,7 @@ func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, r
 	settime,ok := missedCallAllowedMap[remoteAddr]
 	missedCallAllowedMutex.RUnlock()
 	if ok && time.Now().Sub(settime) < 20 * time.Minute {
+		fmt.Printf("httpMissedCall (%s)\n",callerInfo)
 		//fmt.Printf("httpMissedCall ip=(%s) is permitted to create /missedcall\n",remoteAddr)
 		missedCallAllowedMutex.Lock()
 		delete(missedCallAllowedMap,remoteAddr)
@@ -495,7 +495,7 @@ func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, r
 	} else {
 		fmt.Printf("# httpMissedCall ip=(%s) is NOT permitted to create /missedcall\n",remoteAddr)
 	}
-	// httpMissedCall() never returns an error
+	// never return an error
 }
 
 func missedCall(callerInfo string, remoteAddr string, cause string) {
@@ -503,7 +503,7 @@ func missedCall(callerInfo string, remoteAddr string, cause string) {
 	// callerInfo is encoded: calleeId+"|"+callerName+"|"+callerId (plus optional: "|"+ageSecs) +(|msg)
 	//   like so: "id|92929|92929658912|50" tok[0]=calleeID, tok[1]=callerName, tok[2]=callerID, tok[3]=ageSecs
 	// TODO callerInfo cannot be trusted, make sure everything in it is validated as much as possible
-	//fmt.Printf("missedCall (%s) rip=%s\n", callerInfo, remoteAddr)
+	fmt.Printf("missedCall (%s) rip=%s\n", callerInfo, remoteAddr)
 	tok := strings.Split(callerInfo, "|")
 	if len(tok) < 3 {
 		fmt.Printf("# missedCall (%s) failed len(tok)=%d<3 rip=%s\n",callerInfo,len(tok),remoteAddr)
