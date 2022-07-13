@@ -1467,8 +1467,8 @@ function showMissedCalls() {
 					// (this may be confusing: when calling back, the callee on this host becomes a caller)
 
 					let remoteCallerID = callerID+"@"+callerHost;
-					if(remoteCallerID.length > 22) {
-						remoteCallerID = remoteCallerID.substring(0,20)+"..";
+					if(remoteCallerID.length > 21) {
+						remoteCallerID = remoteCallerID.substring(0,19)+"..";
 					}
 					callerLink = "https://"+callerHost+"/user/"+callerID +
 						"?callerId="+calleeID + "&callerName="+calleeName +
