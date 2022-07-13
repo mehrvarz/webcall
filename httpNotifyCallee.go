@@ -752,9 +752,9 @@ func addMissedCall(urlID string, caller CallerInfo, cause string) (error, []Call
 		return err,nil
 	}
 	if logWantedFor("missedcall") {
-		// don't log actual caller.Msg
-		fmt.Printf("missedCall (%s) <- (%s) name=%s ip=%s msg=(%s) cause=(%s)\n",
-			urlID, caller.CallerID, caller.CallerName, caller.AddrPort, /*caller.Msg*/ "(hidden)", cause)
+		// don't log actual caller.Msg, but "(hidden)"
+		fmt.Printf("missedCall (%s) <- (%s) name=%s host=%s ip=%s msg=(%s) cause=(%s)\n",
+			urlID, caller.CallerID, caller.CallerName, caller.Host, caller.AddrPort, "(hidden)", cause)
 	}
 	return err,missedCallsSlice
 }
