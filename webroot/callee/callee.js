@@ -1396,7 +1396,7 @@ function showMissedCalls() {
 		}
 		missedCallsElement.style.display = "block";
 		let timeNowSecs = Math.floor((Date.now()+500)/1000);
-		let str = "<table style='width:100%; max-width:400px; _background:#4007; border-collapse:separate; _border-spacing:6px 2px; line-height:1.6em;'>"
+		let str = "<table style='width:100%; max-width:520px; border-collapse:separate; line-height:1.6em;'>"
 		for(var i=0; i<missedCallsSlice.length; i++) {
 			str += "<tr>"
 			let waitingSecs = timeNowSecs - missedCallsSlice[i].CallTime;
