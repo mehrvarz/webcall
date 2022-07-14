@@ -1472,7 +1472,7 @@ function showMissedCalls() {
 					}
 					callerLink = "https://"+callerHost+"/user/"+callerID +
 						"?callerId="+calleeID + "&callerName="+calleeName +
-						"&callerHost="+location.hostname + "&ds="+playDialSounds;
+						"&callerHost="+location.host + "&ds="+playDialSounds;
 					callerLink = "<a href='"+callerLink+"' target='_blank'>"+remoteCallerID+"</a>";
 				}
 				str += "<td>" + callerNameMarkup + "</td><td>"+
