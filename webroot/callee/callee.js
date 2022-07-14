@@ -1399,13 +1399,13 @@ function showMissedCalls() {
 		// for window.innerWidth = 360, remoteCallerIdMaxChar=21 is perfect
 		let remoteCallerIdMaxChar = 21;
 		if(window.innerWidth>360) {
-			remoteCallerIdMaxChar += Math.floor((window.innerWidth-360)/30);
+			remoteCallerIdMaxChar += Math.floor((window.innerWidth-360)/26);
 		}
 		console.log("window.innerWidth="+window.innerWidth+" remoteCallerIdMaxChar="+remoteCallerIdMaxChar);
 
 		missedCallsElement.style.display = "block";
 		let timeNowSecs = Math.floor((Date.now()+500)/1000);
-		let str = "<table style='width:100%; max-width:550px; border-collapse:separate; line-height:1.6em; margin-left:-4px;'>"
+		let str = "<table style='width:100%; max-width:580px; border-collapse:separate; line-height:1.6em; margin-left:-4px;'>"
 		for(var i=0; i<missedCallsSlice.length; i++) {
 			str += "<tr>"
 			let waitingSecs = timeNowSecs - missedCallsSlice[i].CallTime;
