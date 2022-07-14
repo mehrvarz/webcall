@@ -261,9 +261,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				assignedName, dialID, mappingData.CalleeId, wsClientData.calleeID)
 		}
 	}
-
-	fmt.Printf("serve (%s) callerID=%s callerName=%s callerHost=%s auto=%s ver=%s\n",
-		wsClientData.calleeID, callerID, callerName, callerHost, auto, clientVersion)
+	//fmt.Printf("serve (%s) callerID=%s callerName=%s callerHost=%s auto=%s ver=%s\n",
+	//	wsClientData.calleeID, callerID, callerName, callerHost, auto, clientVersion)
 
 	client.clientVersion = wsClientData.clientVersion
 	if clientVersion!="" {
@@ -758,21 +757,23 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		cleanMsg := strings.Replace(payload, "\n", " ", -1)
 		cleanMsg = strings.Replace(cleanMsg, "\r", " ", -1)
 		cleanMsg = strings.TrimSpace(cleanMsg)
+//		logTxtMsg := cleanMsg
+		logTxtMsg := "(hidden)"
 		if c.hub==nil {
 			// don't log actual cleanMsg
 			fmt.Printf("# %s (%s) msg='%s' c.hub==nil callee=%v ip=%s ua=%s\n",
-				c.connType, c.calleeID, /*cleanMsg*/ "(hidden)", c.isCallee, c.RemoteAddr, c.userAgent)
+				c.connType, c.calleeID, logTxtMsg, c.isCallee, c.RemoteAddr, c.userAgent)
 			return
 		}
 		c.hub.HubMutex.Lock()
 		if c.hub.CalleeClient==nil {
 			// don't log actual cleanMsg
 			fmt.Printf("# %s (%s) msg='%s' c.hub.CalleeClient==nil callee=%v ip=%s ua=%s\n",
-				c.connType, c.calleeID, /*cleanMsg*/ "(hidden)", c.isCallee, c.RemoteAddr, c.userAgent)
+				c.connType, c.calleeID, logTxtMsg, c.isCallee, c.RemoteAddr, c.userAgent)
 		} else {
 			// don't log actual cleanMsg
 			fmt.Printf("%s (%s) msg='%s' callee=%v ip=%s ua=%s\n",
-				c.connType, c.calleeID, /*cleanMsg*/ "(hidden)", c.isCallee, c.RemoteAddr, c.userAgent)
+				c.connType, c.calleeID, logTxtMsg, c.isCallee, c.RemoteAddr, c.userAgent)
 
 			c.hub.CalleeClient.callerTextMsg = cleanMsg;
 		}
@@ -1440,7 +1441,6 @@ func (c *WsClient) peerConHasEnded(cause string) {
 		callerID := ""
 		callerName := ""
 		callerHost := ""
-		callerTextMsg := ""
 		c.hub.HubMutex.RLock()
 		if c.hub.CalleeClient!=nil {
 			calleeRemoteAddr = c.hub.CalleeClient.RemoteAddrNoPort
@@ -1450,7 +1450,6 @@ func (c *WsClient) peerConHasEnded(cause string) {
 			callerID = c.hub.CallerClient.callerID
 			callerName = c.hub.CallerClient.callerName
 			callerHost = c.hub.CallerClient.callerHost
-			callerTextMsg = c.hub.CallerClient.callerTextMsg
 
 			// clear recentTurnCalleeIps[ipNoPort] entry (if this was a relay session)
 			recentTurnCalleeIpMutex.Lock()
@@ -1476,7 +1475,7 @@ func (c *WsClient) peerConHasEnded(cause string) {
 			} else if dbUser.StoreMissedCalls {
 				//fmt.Printf("%s (%s) store missedCall msg=(%s)\n", c.connType, c.calleeID, c.callerTextMsg)
 				addMissedCall(c.calleeID, CallerInfo{callerRemoteAddr, callerName, time.Now().Unix(),
-					callerID, callerTextMsg, callerHost}, cause)
+					callerID, c.callerTextMsg, callerHost}, cause)
 			}
 		}
 
