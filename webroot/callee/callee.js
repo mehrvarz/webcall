@@ -1463,7 +1463,7 @@ function showMissedCalls() {
 				} else {
 					// the original caller is hosted on a REMOTE server
 					// callerHost is the domain given by the original caller (for callback)
-					console.log("callerHost=("+callerHost+")");
+					//console.log("callerHost=("+callerHost+")");
 					// (this may be confusing: when calling back, the callee on this host becomes a caller)
 
 					let remoteCallerID = callerID+"@"+callerHost;
