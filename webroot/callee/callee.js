@@ -1394,7 +1394,15 @@ function showMissedCalls() {
 			}
 			return;
 		}
-console.log("window.innerWidth="+window.innerWidth);
+
+		// make remoteCallerIdMaxChar depend on window.innerWidth
+		// for window.innerWidth = 360, remoteCallerIdMaxChar=21 is perfect
+		let remoteCallerIdMaxChar = 21;
+		if(window.innerWidth>360) {
+			remoteCallerIdMaxChar += Math.floor((window.innerWidth-360)/30);
+		}
+		console.log("window.innerWidth="+window.innerWidth+" remoteCallerIdMaxChar="+remoteCallerIdMaxChar);
+
 		missedCallsElement.style.display = "block";
 		let timeNowSecs = Math.floor((Date.now()+500)/1000);
 		let str = "<table style='width:100%; max-width:550px; border-collapse:separate; line-height:1.6em; margin-left:-4px;'>"
@@ -1465,12 +1473,6 @@ console.log("window.innerWidth="+window.innerWidth);
 					//console.log("callerHost=("+callerHost+")");
 					// (this may be confusing: when calling back, the callee on this host becomes a caller)
 
-// TODO the allowed max len could depend on the screen width
-// for window.innerWidth = 360, 21/19 are ideal
-					let remoteCallerIdMaxChar = 21;
-					if(window.innerWidth>360) {
-						remoteCallerIdMaxChar += (window.innerWidth-360)/10;
-					}
 					let remoteCallerID = callerID+"@"+callerHost;
 					if(remoteCallerID.length > remoteCallerIdMaxChar) {
 						remoteCallerID = remoteCallerID.substring(0,remoteCallerIdMaxChar-2)+"..";
