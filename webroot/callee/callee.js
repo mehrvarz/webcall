@@ -1446,18 +1446,16 @@ function showMissedCalls() {
 			let callerHost = missedCallsSlice[i].Host;
 
 			if(callerID.length>=5) {
-				// TODO here we could also verify if callerID is a valid calleeID
-				//      and we could check if callerID is currently online
+				// TODO here we could check if callerID is a valid calleeID
 				if(typeof callerHost == "undefined" || callerHost=="") {
 					// the original caller is hosted on THIS server
 					callerLink = window.location.href;
 					let idxCallee = callerLink.indexOf("/callee/");
 					if(idxCallee>=0) {
 						callerLink = callerLink.substring(0,idxCallee) + "/user/" + callerID;
-						// here we hand over calleeID as URL args
-						// caller.js will try to get nickname from server (using cookie)
-						callerLink = callerLink+"?ds="+playDialSounds;
-						// open caller in iframe
+						// caller.js will get nickname using the callee cookie
+						callerLink += "?ds="+playDialSounds;
+						// open caller-widget in an iframe
 						callerLink = "<a onclick='iframeWindowOpen(\""+callerLink+"\")'>"+callerID+"</a>";
 					}
 				} else {
