@@ -151,18 +151,21 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		callerName = url_arg_array[0]
 	}
 	if callerName=="" && callerID!="" && wsClientData.calleeID!="" {
-		// callerName is empty, but we got callerID and calleeID
-		// try to fetch callerName by searching for callerID in the contacts of calleeID
-		//fmt.Printf("serveWs try to get callerName for callerID=%s via calleeID=%s\n",
-		//	callerID, wsClientData.calleeID)
-		var callerInfoMap map[string]string // callerID -> name
-		err := kvContacts.Get(dbContactsBucket,wsClientData.calleeID,&callerInfoMap)
-		if err!=nil {
-			fmt.Printf("# wsClient db get calleeID=%s (ignore) err=%v\n", wsClientData.calleeID, err)
-		} else {
-			callerName = callerInfoMap[callerID]
-			fmt.Printf("serveWs got callerName=%s for callerID=%s via calleeID=%s\n",
-				callerName, callerID, wsClientData.calleeID)
+		if !strings.HasPrefix(wsClientData.calleeID,"answie") &&
+		   !strings.HasPrefix(wsClientData.calleeID,"talkback") {
+			// callerName is empty, but we got callerID and calleeID
+			// try to fetch callerName by searching for callerID in the contacts of calleeID
+			//fmt.Printf("serveWs try to get callerName for callerID=%s via calleeID=%s\n",
+			//	callerID, wsClientData.calleeID)
+			var callerInfoMap map[string]string // callerID -> name
+			err := kvContacts.Get(dbContactsBucket,wsClientData.calleeID,&callerInfoMap)
+			if err!=nil {
+				fmt.Printf("# wsClient db get calleeID=%s (ignore) err=%v\n", wsClientData.calleeID, err)
+			} else {
+				callerName = callerInfoMap[callerID]
+				fmt.Printf("serveWs got callerName=%s for callerID=%s via calleeID=%s\n",
+					callerName, callerID, wsClientData.calleeID)
+			}
 		}
 	}
 
