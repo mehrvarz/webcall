@@ -443,8 +443,10 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	hub.exitFunc = exitFunc
 	hub.calleeUserAgent = userAgent
 
+	//fmt.Printf("/login create wsClientMap[] with urlID=%s globalID=%s \n",urlID,globalID)
 	wsClientMutex.Lock()
-	wsClientMap[wsClientID] = wsClientDataType{hub, dbEntry, dbUser, urlID, globalID, clientVersion, false}
+	// dialID empty for now, will be patched in by /online
+	wsClientMap[wsClientID] = wsClientDataType{hub, dbEntry, dbUser, urlID, globalID, "", clientVersion, false}
 	wsClientMutex.Unlock()
 
 	//fmt.Printf("/login newHub store in local hubMap with globalID=%s\n", globalID)

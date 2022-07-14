@@ -148,6 +148,7 @@ type wsClientDataType struct {
 	dbUser DbUser
 	calleeID string
 	globalID string
+	dialID string
 	clientVersion string
 	removeFlag bool
 }

@@ -196,7 +196,7 @@ window.onload = function() {
 	});
 
 	if(typeof numericIdCheckbox!=="undefined" && numericIdCheckbox!=null) {
-		// numericIdCheckbox (activated for Android only) for switching input-type text/number
+		// numericIdCheckbox (activated for smartphones only) for switching input-type text/number
 		let ua = navigator.userAgent;
 		//console.log("navigator.userAgent=("+ua+")");
 		if(ua.indexOf("Android")>=0 || ua.indexOf("iPhone")>=0 || ua.indexOf("iPad")>=0) {
@@ -1377,7 +1377,7 @@ function connectSignaling(message,openedFunc) {
 	gLog('connectSignaling: open ws connection '+calleeID+' '+wsAddr);
 	let tryingToOpenWebSocket = true;
     var wsUrl = wsAddr;
-	wsUrl += "&callerId="+callerId+"&name="+callerName+"&callerHost="+callerHost+"&dialID="+calleeID;
+	wsUrl += "&callerId="+callerId+"&name="+callerName+"&callerHost="+callerHost; //+"&dialID="+calleeID;
 	if(typeof Android !== "undefined" && Android !== null) {
 		if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
 			wsUrl = wsUrl + "&ver="+Android.getVersionName();

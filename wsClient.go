@@ -123,6 +123,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			wsClientIDstr, remoteAddr, r.URL.String())
 		return
 	}
+	//fmt.Printf("serveWs wsClientIDstr=%s wsClientID64=%d\n",wsClientIDstr,wsClientID64)
 	wsClientMutex.Lock()
 	wsClientData,ok = wsClientMap[wsClientID64]
 	if ok {
@@ -171,6 +172,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		callerHost = strings.ToLower(url_arg_array[0])
 	}
 
+/*
 	// urlArg dialID is the unmapped id dialed by the caller
 	// if it is a mapped id, we use it to fetch the assigned name
 	url_arg_array, ok = r.URL.Query()["dialID"]
@@ -202,6 +204,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			}
 		}
 	}
+*/
 
 	clientVersion := ""
 	url_arg_array, ok = r.URL.Query()["ver"]
@@ -214,8 +217,6 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	if ok && len(url_arg_array[0]) > 0 {
 		auto = url_arg_array[0]
 	}
-	//fmt.Printf("serve (%s) callerID=%s callerName=%s callerHost=%s auto=%s ver=%s\n",
-	//	wsClientData.calleeID, callerID, callerName, callerHost, auto, clientVersion)
 
 	upgrader := websocket.NewUpgrader()
 	//upgrader.EnableCompression = true // TODO
@@ -237,6 +238,33 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	client := &WsClient{wsConn:wsConn}
 	client.calleeID = wsClientData.calleeID // this is the local ID
 	client.globalCalleeID = wsClientData.globalID
+
+	dialID := wsClientData.dialID
+	//fmt.Printf("serveWs calleeID=%s dialID=%s\n", client.calleeID, dialID)
+	if dialID != "" && dialID != client.calleeID {
+		// original dialID was mapped to client.calleeID
+		mappingMutex.RLock()
+		mappingData,ok := mapping[dialID]
+		mappingMutex.RUnlock()
+		if ok {
+			// dialID is mapped (caller is using a temporary (mapped) calleeID)
+			// if a name was assigned for dialID, we attach it to callerName
+			assignedName := mappingData.Assign
+			if assignedName!="" && assignedName!="none" {
+				if callerName=="" {
+					callerName = "("+assignedName+")"
+				} else {
+					callerName += " ("+assignedName+")"
+				}
+			}
+			fmt.Printf("serveWs assignedName=%s for dialID=%s isMappedTo=%s(=%s)\n",
+				assignedName, dialID, mappingData.CalleeId, wsClientData.calleeID)
+		}
+	}
+
+	fmt.Printf("serve (%s) callerID=%s callerName=%s callerHost=%s auto=%s ver=%s\n",
+		wsClientData.calleeID, callerID, callerName, callerHost, auto, clientVersion)
+
 	client.clientVersion = wsClientData.clientVersion
 	if clientVersion!="" {
 		client.clientVersion = clientVersion

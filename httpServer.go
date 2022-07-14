@@ -416,6 +416,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	urlID = strings.ToLower(urlID)
 	urlID = strings.TrimSpace(urlID)
+	dialID := urlID
 	// keep in mind: urlID may be total garbage; don't trust it
 
 	// translate urlID
@@ -541,7 +542,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if urlPath=="/online" {
-		httpOnline(w, r, urlID, remoteAddr)
+		httpOnline(w, r, urlID, dialID, remoteAddr)
 		return
 	}
 	if urlPath=="/notifyCallee" {

@@ -18,7 +18,7 @@ import (
 	"io"
 )
 
-func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr string) {
+func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, dialID string, remoteAddr string) {
 	// a caller uses this to check if a callee is online and available
 	// NOTE: here the variable naming is twisted
 	// the caller (calleeID) is trying to find out if the specified callee (urlID) is online
@@ -240,6 +240,17 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr
 			missedCallAllowedMutex.Unlock()
 			fmt.Fprintf(w, "notavail")
 			return
+		}
+
+		if dialID != urlID {
+			// dialID was mapped, original dialID is needed by caller in wsClient.go
+			wsClientMutex.Lock()
+			wsClientData,ok := wsClientMap[wsClientID]
+			if ok {
+				wsClientData.dialID = dialID
+				wsClientMap[wsClientID] = wsClientData
+			}
+			wsClientMutex.Unlock()
 		}
 
 		wsAddr := fmt.Sprintf("ws://%s:%d/ws", hostname, wsPort)
