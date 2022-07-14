@@ -1396,7 +1396,7 @@ function showMissedCalls() {
 		}
 		missedCallsElement.style.display = "block";
 		let timeNowSecs = Math.floor((Date.now()+500)/1000);
-		let str = "<table style='width:100%; max-width:500px; border-collapse:separate; line-height:1.6em;'>"
+		let str = "<table style='width:100%; max-width:550px; border-collapse:separate; line-height:1.6em; margin-left:-4px;'>"
 		for(var i=0; i<missedCallsSlice.length; i++) {
 			str += "<tr>"
 			let waitingSecs = timeNowSecs - missedCallsSlice[i].CallTime;
@@ -1465,8 +1465,8 @@ function showMissedCalls() {
 					// (this may be confusing: when calling back, the callee on this host becomes a caller)
 
 					let remoteCallerID = callerID+"@"+callerHost;
-					if(remoteCallerID.length > 23) {
-						remoteCallerID = remoteCallerID.substring(0,21)+"..";
+					if(remoteCallerID.length > 21) {
+						remoteCallerID = remoteCallerID.substring(0,19)+"..";
 					}
 					callerLink = "https://"+callerHost+"/user/"+callerID +
 						"?callerId="+calleeID + "&callerName="+calleeName +
@@ -1497,10 +1497,12 @@ function showMissedCalls() {
 		} else {
 			showCallsWhileInAbsenceCallingItself = true;
 // TODO unfortunately this timeout occurs also when the screen is off
+/*
 			setTimeout(function() {
 				showCallsWhileInAbsenceCallingItself = false;
 				showMissedCalls();
 			},10000);
+*/
 		}
 	}
 }

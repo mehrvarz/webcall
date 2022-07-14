@@ -129,8 +129,8 @@ function processContacts(xhrresponse) {
 			if(idxAt>=0) {
 				// remote user
 				let callerHost = id.substring(idxAt);
-				let idOnly = id.substring(0,idxAt);
-				// TODO may need to make id shorter
+				let idOnly = id.substring(0,idxAt); // without callerHost
+				// TODO may need to make the shown id shorter
 				dataBoxContent += "<td><a href='https://" + callerHost + "/user/" + idOnly + "?ds="+dialsounds+"' target='_blank'>"+id+"</a></td></tr>";
 			} else {
 				// local user
