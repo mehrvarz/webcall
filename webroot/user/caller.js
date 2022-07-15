@@ -250,9 +250,15 @@ window.onload = function() {
 	callerName = "";
 	callerHost = "";
 	if(cookieName!="") {
-		// use cookiename to fetch /getsettings
+		// this caller.js is running in an iframe of the callee
+		// or in a broser-tab with access to a webcallid= cookie
+		// in any case, we ignore callerId from urlArg and use the cookieName as callerId
+		// and we we ignore callerName from urlArg and try to fetch callerName from serverSettings.nickname
+		gLog("onload use cookieName ("+cookieName+") as callerId");
 		callerId = cookieName;
+		callerHost = location.host;
 
+		// use cookiename to fetch /getsettings
 		let api = apiPath+"/getsettings?id="+cookieName;
 		gLog('onload request getsettings api '+api);
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
@@ -275,33 +281,31 @@ window.onload = function() {
 					}
 				}
 
-				if(serverSettings.nickname!="") {
-					callerName = serverSettings.nickname;
-				}
+				callerName = serverSettings.nickname; // user can modify this in UI
+// TODO callerName may come too late for Dial-ID dialog (started below if(calleeID==""))
 			}
 
-			gLog("onload callerId=("+callerId+") callerName=("+callerName+") after /getsettings");
+			gLog("onload callerId=("+callerId+") callerName=("+callerName+") from /getsettings");
 
 		}, function(errString,err) {
 			console.log("# onload xhr error "+errString+" "+err);
 		});
 	} else {
-		// cookie/cookiename does not exist for this caller
-		// in this case we do accept callerId, callerName and callerHost from urlArg
-
+		// this caller.js is NOT running in an iframe of the callee
+		// remote users can (optionally) provide their callerId and callerName via urlArgs
 		let str = getUrlParams("callerId");
 		if(typeof str!=="undefined" && str!="") {
 			callerId = str;
 		}
 		str = getUrlParams("callerName");
 		if(typeof str!=="undefined" && str!="") {
-			callerName = str;
+			callerName = str; // user can modify this in UI
 		}
 		str = getUrlParams("callerHost");
 		if(typeof str!=="undefined" && str!="") {
 			callerHost = str;
 		}
-        gLog("onload nocookie callerId=("+callerId+") callerName=("+callerName+") callerHost=("+callerHost+")");
+		gLog("onload urlParam callerId=("+callerId+") callerName=("+callerName+") callerHost=("+callerHost+")");
 	}
 
 	if(calleeID=="") {
@@ -360,57 +364,60 @@ function onload2() {
 
 // TODO do /getsettings here to get callerName
 
-			// enable nickname form
-			gLog("set nickname form with callerName="+callerName);
-			nickname.value = callerName;
-
-			// enable nickname form, if not answie or talkback
+			// enable nickname form (if not calling answie or talkback)
 			if(!calleeID.startsWith("answie") && !calleeID.startsWith("talkback")) {
-				nicknameDiv.style.display = "block";
+				gLog("set nickname form with callerName="+callerName);
+				let nicknameDivElement = document.getElementById("nicknameDiv");
+				let nicknameElement = document.getElementById("nickname");
+				nicknameElement.value = callerName;
+				nicknameDivElement.style.display = "block";
 				// callername will be fetched from form in checkCalleeOnline()
 			}
 
-			let showConfirmCodeForm = function() {
-				// enable 123 codeDiv, if not answie or talkback
-				if(!calleeID.startsWith("answie") && !calleeID.startsWith("talkback")) {
-					// enable randomized '123' confirm form
-					let codeString = ""+(Math.floor(Math.random() * 900) + 100);
-					codeLabel.innerHTML = "Enter "+codeString+":";
-					code.value = "";
+			let codeDivElement = document.getElementById("codeDiv");
+			let codeLabelElement = document.getElementById("codeLabel");
+			let codeElement = document.getElementById("code");
+			// enable 123 codeDivElement, if not answie or talkback
+			if(!calleeID.startsWith("answie") && !calleeID.startsWith("talkback")) {
+				// enable randomized '123' confirm form
+				gLog("showConfirmCodeForm");
+				let codeString = ""+(Math.floor(Math.random() * 900) + 100);
+				codeLabelElement.innerHTML = "Enter "+codeString+":";
+				codeElement.value = "";
 
-					let ua = navigator.userAgent;
-					if(ua.indexOf("Android")>=0 || ua.indexOf("iPhone")>=0 || ua.indexOf("iPad")>=0) {
-						// enable type="number" for code form
-						code.type = "number";
-					}
-
-					codeDiv.style.display = "block";
-					setTimeout(function() {
-						code.focus();
-					},500);
-
-					// disable call button for as long as code.value does not have the right value
-					dialButton.disabled = true;
-
-					let keyupEventFkt = function() {
-						if(code.value==codeString) {
-							dialButton.disabled = false;
-							// disable EventListener
-							this.removeEventListener("keyup",keyupEventFkt);
-							codeDiv.style.display = "none";
-							setTimeout(function() {
-								nickname.focus();
-							},500);
-						}
-					}
-					document.addEventListener("keyup", keyupEventFkt);
-					//console.log("showConfirmCodeForm start");
-					// checkCalleeOnline() will fetch callername from form
+				let ua = navigator.userAgent;
+				if(ua.indexOf("Android")>=0 || ua.indexOf("iPhone")>=0 || ua.indexOf("iPad")>=0) {
+					// enable type="number" for code form
+					gLog("showConfirmCodeForm type=number");
+					codeElement.type = "number";
 				}
+				codeDivElement.style.display = "block";
+				setTimeout(function() {
+					gLog("showConfirmCodeForm code.focus()!");
+// tmtmtm: this does NOT show the Android keyboard
+					codeElement.focus();
+				},500);
+
+				// disable call button for as long as code.value does not have the right value
+				dialButton.disabled = true;
+
+				let keyupEventFkt = function() {
+					if(codeElement.value==codeString) {
+						dialButton.disabled = false;
+						// disable EventListener
+						this.removeEventListener("keyup",keyupEventFkt);
+						codeDivElement.style.display = "none";
+					}
+				}
+				document.addEventListener("keyup", keyupEventFkt);
+				//console.log("showConfirmCodeForm start");
+				// checkCalleeOnline() will fetch callername from form
 			}
 
 			// if cookie webcallid is available, fetch mapping and offer idSelect
 			if(cookieName!="") {
+				let idSelectElement = document.getElementById("idSelect");
+
 				// fetch mapping
 				let api = apiPath+"/getmapping?id="+cookieName;
 				gLog('onload2 request getmapping api',api);
@@ -420,7 +427,7 @@ function onload2() {
 						let idOption = document.createElement('option');
 						idOption.text = cookieName + " (main id)";
 						idOption.value = cookieName;
-						idSelect.appendChild(idOption);
+						idSelectElement.appendChild(idOption);
 						altIdCount++;
 
 						let altIDs = xhr.responseText;
@@ -439,34 +446,31 @@ function onload2() {
 								let idOption = document.createElement('option');
 								idOption.text = id + " ("+assign+")";
 								idOption.value = id;
-								idSelect.appendChild(idOption);
+								idSelectElement.appendChild(idOption);
 								altIdCount++;
 							}
 						}
 						let idOptionAnon = document.createElement('option');
 						idOptionAnon.text = "00000000000 (incognito)";
 						idOptionAnon.value = "";
-						idSelect.appendChild(idOptionAnon);
+						idSelectElement.appendChild(idOptionAnon);
 						altIdCount++;
 					}
 
 					if(altIdCount>1) {
-// TODO where do idSelect and nickname come from?
-						// enable idSelect
-						idSelect.style.display = "block";
+						// enable idSelectElement
+						idSelectElement.style.display = "block";
 					}
 
 					onload3("1");
 				}, function(errString,errcode) {
 					// /getmapping has failed
-					showConfirmCodeForm();
 					onload3("2 "+errString+" "+errcode);
 				});
 				return;
 			}
 
 			// cookie webcallid does not exist
-			showConfirmCodeForm();
 			onload3("3");
 			return;
 		}
@@ -996,7 +1000,7 @@ function loadJS(jsFile,callback) {
 		if(!loaded) {
 			loaded = true;
 			loadedJsMap.set(jsFile,true);
-			gLog('loadJS loaded %s',jsFile);
+			gLog('loadJS loaded '+jsFile);
 			callback();
 		}
 		loadJsBusy--;
@@ -1211,7 +1215,7 @@ function submitForm(theForm) {
 		// and throw an alert() instead of relying on an ugly browser err-msg
 		let randId = ""+Math.floor(Math.random()*1000000);
 		let callUrl = "https://"+enterDomainVal.value+"/user/"+calleeID+
-			"?callerId="+callerId + "&callerName="+callerName + "&callerHost="+location.host +
+			"?callerId="+callerId + "&callerName="+callerName + "&callerHost="+callerHost +
 			"&ds="+playDialSounds + "&i="+randId;
 		var openOK = null;
 		try {
@@ -1302,12 +1306,12 @@ function errorAction(errString,errcode) {
 }
 
 function gotStream2() {
-	if(dialAfterLocalStream) {
+	if(dialAfterLocalStream) { // set by dialButtonClick() -> dialAfterCalleeOnline
 		gLog("gotStream2 dialAfter connectSignaling()");
 		dialAfterLocalStream=false;
 		connectSignaling("",dial);
 	} else {
-		// in caller we land here after video was enabled
+		// in caller we land here after audio/video was initialzed
 		gLog("gotStream2 !dialAfter");
 
 		if(videoEnabled) {
@@ -1377,7 +1381,7 @@ function connectSignaling(message,openedFunc) {
 	gLog('connectSignaling: open ws connection '+calleeID+' '+wsAddr);
 	let tryingToOpenWebSocket = true;
     var wsUrl = wsAddr;
-	wsUrl += "&callerId="+callerId+"&name="+callerName+"&callerHost="+callerHost; //+"&dialID="+calleeID;
+	wsUrl += "&callerId="+callerId+"&name="+callerName+"&callerHost="+callerHost;
 	if(typeof Android !== "undefined" && Android !== null) {
 		if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
 			wsUrl = wsUrl + "&ver="+Android.getVersionName();

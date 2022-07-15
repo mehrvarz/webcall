@@ -1071,9 +1071,12 @@ function signalingCommand(message) {
 		});
 
 	} else if(cmd=="callerInfo") {
+		// NOTE: callerID must not contain colons
 		let idxColon = payload.indexOf(":");
 		if(idxColon>=0) {
 			callerID = payload.substring(0,idxColon);
+			// callerID may have host attached: callerID@host
+			// callerID apparently only used for getStatsCandidateTypes()
 			callerName = payload.substring(idxColon+1);
 			gLog('cmd callerInfo ('+callerID+') ('+callerName+')');
 			// callerID + callerName will be displayed via getStatsCandidateTypes()
@@ -1397,7 +1400,7 @@ function showMissedCalls() {
 
 		// make remoteCallerIdMaxChar depend on window.innerWidth
 		// for window.innerWidth = 360, remoteCallerIdMaxChar=21 is perfect
-		let remoteCallerIdMaxChar = 21;
+		let remoteCallerIdMaxChar = 15;
 		if(window.innerWidth>360) {
 			remoteCallerIdMaxChar += Math.floor((window.innerWidth-360)/26);
 		}
@@ -1478,8 +1481,11 @@ function showMissedCalls() {
 						remoteCallerID = remoteCallerID.substring(0,remoteCallerIdMaxChar-2)+"..";
 					}
 					callerLink = "https://"+callerHost+"/user/"+callerID +
-						"?callerId="+calleeID + "&callerName="+calleeName +
-						"&callerHost="+location.host + "&ds="+playDialSounds;
+						"?callerId="+calleeID + "&callerName="+calleeName + "&callerHost="+location.host;
+					// ds= is only needed if playDialSounds==false
+					if(playDialSounds==false) {
+						callerLink += "&ds="+playDialSounds;
+					}
 					callerLink = "<a href='"+callerLink+"' target='_blank'>"+remoteCallerID+"</a>";
 				}
 				str += "<td>" + callerNameMarkup + "</td><td>"+
@@ -1974,12 +1980,10 @@ function getStatsCandidateTypes(results,eventString1,eventString2) {
 
 	// we rather show callerID and/or callerName if they are avail, instead of listOfClientIps
 	if(callerName!="" || callerID!="") {
-		if(callerName=="") {
-			msg += " "+callerID;
-		} else if(callerName.toLowerCase()==callerID.toLowerCase()) {
-			msg += " "+callerName;
+		if(callerName=="" || callerName.toLowerCase()==callerID.toLowerCase()) {
+			msg = callerID +" "+ msg;
 		} else {
-			msg += " "+callerID+" "+callerName;
+			msg = callerName +" "+ callerID +" "+ msg;
 		}
 	} else if(listOfClientIps!="") {
 		msg += " "+listOfClientIps;
