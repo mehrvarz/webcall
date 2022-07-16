@@ -1071,7 +1071,7 @@ function signalingCommand(message) {
 
 	} else if(cmd=="callerInfo") {
 		// NOTE: callerID must not contain colons
-		let idxColon = payload.indexOf("|");
+		let idxColon = payload.indexOf("\t");
 		if(idxColon<0) {
 			idxColon = payload.indexOf(":");
 		}
@@ -1080,7 +1080,7 @@ function signalingCommand(message) {
 			// callerID may have host attached: callerID@host
 			// callerID apparently only used for getStatsCandidateTypes()
 			callerName = payload.substring(idxColon+1);
-			gLog('cmd callerInfo ('+callerID+') ('+callerName+')');
+			gLog('cmd callerInfo ('+callerID+') ('+callerName+') ('+payload+')');
 			// callerID + callerName will be displayed via getStatsCandidateTypes()
 		} else {
 			gLog('cmd callerInfo payload=(%s)',payload);
