@@ -129,7 +129,6 @@ window.onload = function() {
 	}
 
 	if(calleeID=="") {
-		// TODO: allow user to enter a username?
 		showStatus("CalleeID missing in URL",-1);
 		goOnlineButton.disabled = true;
 		goOfflineButton.disabled = true;
@@ -1456,6 +1455,10 @@ function showMissedCalls() {
 			}
 
 			let callerHost = missedCallsSlice[i].Host;
+			let dialID = missedCallsSlice[i].DialID;
+			if(dialID=="") {
+				dialID = calleeID;
+			}
 
 			if(callerID.length>=5) {
 				// TODO here we could check if callerID is a valid calleeID
@@ -1466,6 +1469,7 @@ function showMissedCalls() {
 					if(idxCallee>=0) {
 						callerLink = callerLink.substring(0,idxCallee) + "/user/" + callerID;
 						// caller.js will get nickname using the callee cookie
+						// UI allows the user can modify the nickname and select a tmpID for callerID
 						callerLink += "?ds="+playDialSounds;
 						// open caller-widget in an iframe
 						callerLink = "<a onclick='iframeWindowOpen(\""+callerLink+"\")'>"+callerID+"</a>";
@@ -1480,8 +1484,10 @@ function showMissedCalls() {
 					if(remoteCallerID.length > remoteCallerIdMaxChar) {
 						remoteCallerID = remoteCallerID.substring(0,remoteCallerIdMaxChar-2)+"..";
 					}
+
+					// we use callerId=dialID, to provide the other side with the same id they used to call us
 					callerLink = "https://"+callerHost+"/user/"+callerID +
-						"?callerId="+calleeID + "&callerName="+calleeName + "&callerHost="+location.host;
+						"?callerId="+dialID + "&callerName="+calleeName + "&callerHost="+location.host;
 					// ds= is only needed if playDialSounds==false
 					if(playDialSounds==false) {
 						callerLink += "&ds="+playDialSounds;
@@ -1512,12 +1518,10 @@ function showMissedCalls() {
 		} else {
 			showCallsWhileInAbsenceCallingItself = true;
 // TODO unfortunately this timeout occurs also when the screen is off
-/*
 			setTimeout(function() {
 				showCallsWhileInAbsenceCallingItself = false;
 				showMissedCalls();
-			},10000);
-*/
+			},15000);
 		}
 	}
 }

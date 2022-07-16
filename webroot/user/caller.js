@@ -17,7 +17,7 @@ var connectingText = "Connecting P2P...";
 var singleButtonReadyText = "Click to make your order<br>Live operator";
 var singleButtonBusyText = "All lines are busy.<br>Please try again a little later.";
 var singleButtonConnectedText = "You are connected.<br>How can we help you?";
-var ringingText = "Ringing... please be patient, answering a web call may take a bit longer than answering a regular phone call...";
+//var ringingText = "Ringing... please be patient, answering a web call may take a bit longer than answering a regular phone call...";
 var notificationSound = null;
 var dtmfDialingSound = null;
 var busySignalSound = null;
@@ -38,6 +38,7 @@ var candidateResultGenerated = true;
 var candidateResultString = "";
 var wsAddr = "";
 var wsAddrTime;
+var cookieName = "";
 var calleeID = ""; // who we are calling
 var callerId = ""; // our own id
 var callerName = ""; // our name
@@ -234,78 +235,84 @@ window.onload = function() {
 
 // TODO do checkServerMode() here
 
-	let cookieName = "";
-	if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
-		// cookie webcallid exists
-		cookieName = document.cookie.substring(10);
-		let idxAmpasent = cookieName.indexOf("&");
-		if(idxAmpasent>0) {
-			cookieName = cookieName.substring(0,idxAmpasent);
-		}
-		gLog('onload cookieName='+cookieName);
-	}
-	// if serverSettings.storeContacts=="true", turn element "dialIdAutoStore" on
-	contactAutoStore = false;
 	callerId = "";
 	callerName = "";
 	callerHost = "";
-	if(cookieName!="") {
-		// this caller.js is running in an iframe of the callee
-		// or in a broser-tab with access to a webcallid= cookie
-		// in any case, we ignore callerId from urlArg and use the cookieName as callerId
-		// and we we ignore callerName from urlArg and try to fetch callerName from serverSettings.nickname
-		gLog("onload use cookieName ("+cookieName+") as callerId");
-		callerId = cookieName;
-		callerHost = location.host;
+	let str = getUrlParams("callerId");
+	if(typeof str!=="undefined" && str!="") {
+		callerId = str;
+	}
 
-		// use cookiename to fetch /getsettings
-		let api = apiPath+"/getsettings?id="+cookieName;
-		gLog('onload request getsettings api '+api);
-		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-			var xhrresponse = xhr.responseText
-			//gLog('xhr.responseText '+xhrresponse);
-			if(xhrresponse=="") {
-				serverSettings = null;
-				return;
+	str = getUrlParams("callerName");
+	if(typeof str!=="undefined" && str!="") {
+		callerName = str; // user can modify this in UI
+	}
+
+	str = getUrlParams("callerHost");
+	if(typeof str!=="undefined" && str!="") {
+		callerHost = str;
+	}
+	if(callerHost=="") {
+		callerHost = location.host;
+	}
+	gLog("onload urlParam callerId=("+callerId+") callerName=("+callerName+") callerHost=("+callerHost+")");
+
+	contactAutoStore = false;
+	cookieName = "";
+	if(callerHost == location.host) {
+		if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
+			// cookie webcallid exists
+			cookieName = document.cookie.substring(10);
+			let idxAmpasent = cookieName.indexOf("&");
+			if(idxAmpasent>0) {
+				cookieName = cookieName.substring(0,idxAmpasent);
 			}
-			var serverSettings = JSON.parse(xhrresponse);
-			if(typeof serverSettings!=="undefined") {
-				gLog('serverSettings.storeContacts',serverSettings.storeContacts);
-				if(serverSettings.storeContacts=="true") {
-					contactAutoStore = true;
-					var dialIdAutoStoreElement = document.getElementById("dialIdAutoStore");
-					if(dialIdAutoStoreElement) {
-						gLog('dialIdAutoStore on');
-						//dialIdAutoStoreElement.style.display = "block";
-						dialIdAutoStoreElement.style.opacity = "0.8";
+			gLog('onload cookieName='+cookieName);
+		}
+		if(cookieName!="") {
+			// webcall cookie detected
+			// this caller.js is running on behalf of a callee (probably in an iframe, or a 2nd tab)
+			// here we ignore callerId and callerName from urlArg
+			// we use cookieName as callerId and serverSettings.nickname as callerName
+			gLog("onload use cookieName ("+cookieName+") as callerId");
+			callerId = cookieName;
+			callerHost = location.host;
+
+			// use cookiename to fetch /getsettings
+			let api = apiPath+"/getsettings?id="+cookieName;
+			gLog('onload request getsettings api '+api);
+			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+				var xhrresponse = xhr.responseText
+				//gLog('xhr.responseText '+xhrresponse);
+				if(xhrresponse=="") {
+					serverSettings = null;
+					return;
+				}
+				var serverSettings = JSON.parse(xhrresponse);
+				if(typeof serverSettings!=="undefined") {
+					gLog('serverSettings.storeContacts',serverSettings.storeContacts);
+					if(serverSettings.storeContacts=="true") {
+						contactAutoStore = true;
+						var dialIdAutoStoreElement = document.getElementById("dialIdAutoStore");
+						if(dialIdAutoStoreElement) {
+							gLog('dialIdAutoStore on');
+							//dialIdAutoStoreElement.style.display = "block";
+							dialIdAutoStoreElement.style.opacity = "0.8";
+						}
 					}
+
+					if(callerName=="") {
+						callerName = serverSettings.nickname; // user can modify this in UI
+					}
+// TODO callerName may come too late for Dial-ID dialog (started below if(calleeID==""))
 				}
 
-				callerName = serverSettings.nickname; // user can modify this in UI
-// TODO callerName may come too late for Dial-ID dialog (started below if(calleeID==""))
-			}
+				gLog("onload callerId=("+callerId+") callerName=("+callerName+") from /getsettings");
 
-			gLog("onload callerId=("+callerId+") callerName=("+callerName+") from /getsettings");
-
-		}, function(errString,err) {
-			console.log("# onload xhr error "+errString+" "+err);
-		});
-	} else {
-		// this caller.js is NOT running in an iframe of the callee
-		// remote users can (optionally) provide their callerId and callerName via urlArgs
-		let str = getUrlParams("callerId");
-		if(typeof str!=="undefined" && str!="") {
-			callerId = str;
+			}, function(errString,err) {
+				console.log("# onload xhr error "+errString+" "+err);
+			});
 		}
-		str = getUrlParams("callerName");
-		if(typeof str!=="undefined" && str!="") {
-			callerName = str; // user can modify this in UI
-		}
-		str = getUrlParams("callerHost");
-		if(typeof str!=="undefined" && str!="") {
-			callerHost = str;
-		}
-		gLog("onload urlParam callerId=("+callerId+") callerName=("+callerName+") callerHost=("+callerHost+")");
 	}
 
 	if(calleeID=="") {
@@ -351,6 +358,7 @@ function onload2() {
 		if(mode==0) {
 			// normal mode
 			gLog("onload2 normal mode");
+/*
 			let cookieName = "";
 			if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
 				// cookie webcallid exists
@@ -361,7 +369,7 @@ function onload2() {
 				}
 				gLog('onload2 cookieName='+cookieName);
 			}
-
+*/
 // TODO do /getsettings here to get callerName
 
 			// enable nickname form (if not calling answie or talkback)
@@ -1460,8 +1468,12 @@ function signalingCommand(message) {
 	gLog('signaling cmd',cmd);
 
 	if(cmd=="calleeAnswer") {
+		// callee.js is responding to a callerOffer
 		if(contactAutoStore) {
+			// contactAutoStore only works if we call a local user
+			// if we call a remote user, contactAutoStore will be false and calleeID will NOT be stored
 			if(callerId!=="" && callerId!=="undefined") {
+// TODO would be good if we could store the prefered callback-ID for this contact
 				let api = apiPath+"/setcontact?id="+callerId+"&contactID="+calleeID+
 					"&name="+callerName + "&callerHost="+callerHost;
 				gLog("request api="+api);

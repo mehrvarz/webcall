@@ -292,8 +292,8 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 			if(dbUser.StoreMissedCalls) {
 				fmt.Printf("# /notifyCallee (%s) could not send notification: store as missed call\n", urlID)
 				addMissedCall(urlID,
-					CallerInfo{remoteAddr,callerName,time.Now().Unix(),callerId,callerMsg,callerHost},
-					"/notify-notavail")
+					CallerInfo{remoteAddr, callerName, time.Now().Unix(),
+						callerId, callerMsg, callerHost, callerId}, "/notify-notavail")
 			} else {
 				fmt.Printf("# /notifyCallee (%s) could not send notification\n", urlID)
 			}
@@ -304,7 +304,8 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	callerGaveUp := true
 	// remoteAddr or remoteAddrWithPort for waitingCaller? waitingCaller needs the port for funtionality
 
-	waitingCaller := CallerInfo{remoteAddrWithPort, callerName, time.Now().Unix(), callerId, callerMsg, callerHost}
+	waitingCaller := CallerInfo{remoteAddrWithPort, callerName, time.Now().Unix(),
+						callerId, callerMsg, callerHost, callerId}
 
 	var calleeWsClient *WsClient = nil
 	hubMapMutex.RLock()
@@ -583,7 +584,7 @@ func missedCall(callerInfo string, remoteAddr string, cause string) {
 	// the actual call occured ageSecs64 ago (may be a big number, if caller waits long before aborting the page)
 	//ageSecs64 := time.Now().Unix() - timeOfCall
 	err,missedCallsSlice := addMissedCall(calleeId,
-		CallerInfo{remoteAddr,callerName,timeOfCall,callerID,msgtext,callerHost}, cause)
+		CallerInfo{remoteAddr, callerName, timeOfCall, callerID, msgtext, callerHost, calleeId}, cause)
 	if err==nil {
 		//fmt.Printf("missedCall (%s) caller=%s rip=%s\n", calleeId, callerID, remoteAddr)
 
@@ -726,8 +727,9 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 	if(dbUser.StoreMissedCalls) {
 		// no msgbox-text given for /canbenotified
 		addMissedCall(urlID,
-			CallerInfo{remoteAddr,callerName,time.Now().Unix(),callerID,"",callerHost}, // TODO: empty msg
-			"/canbenotified-not")
+// TODO: empty msg string
+			CallerInfo{remoteAddr, callerName, time.Now().Unix(), callerID, "", callerHost, callerID},
+				"/canbenotified-not")
 	}
 	return
 }
@@ -775,20 +777,20 @@ func addContact(calleeID string, callerID string, callerName string, cause strin
 		return nil
 	}
 
-	callerInfoMap := make(map[string]string) // callerID -> name
-	err := kvContacts.Get(dbContactsBucket,calleeID,&callerInfoMap)
+	idNameMap := make(map[string]string) // callerID -> name
+	err := kvContacts.Get(dbContactsBucket,calleeID,&idNameMap)
 	if err!=nil {
 		//fmt.Printf("# addContact get key=%s err=%v (ignored)\n", calleeID, err)
 		//can be ignored: return err // key not found (empty)
 	}
-	oldName,ok := callerInfoMap[callerID]
+	oldName,ok := idNameMap[callerID]
 	if ok && oldName!="" {
 		//fmt.Printf("# addContact store key=%s callerID=%s EXISTS(%s) newname=%s cause=%s\n",
 		//	calleeID, callerID, oldName, callerName, cause)
 		return nil
 	}
-	callerInfoMap[callerID] = callerName
-	err = kvContacts.Put(dbContactsBucket, calleeID, callerInfoMap, true)
+	idNameMap[callerID] = callerName
+	err = kvContacts.Put(dbContactsBucket, calleeID, idNameMap, true)
 	if err!=nil {
 		fmt.Printf("# addContact store key=%s err=%v\n", calleeID, err)
 		return err

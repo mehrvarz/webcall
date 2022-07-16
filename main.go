@@ -70,6 +70,7 @@ type CallerInfo struct {
 	CallerID string
 	Msg string
 	Host string
+	DialID string
 }
 
 var	kvContacts skv.KV

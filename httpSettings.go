@@ -325,19 +325,19 @@ func httpGetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 		fmt.Printf("# /getcontacts urlID=%s != calleeID=%s %s\n",urlID,calleeID, remoteAddr)
 		return
 	}
-	var callerInfoMap map[string]string // callerID -> name
-	err := kvContacts.Get(dbContactsBucket,calleeID,&callerInfoMap)
+	var idNameMap map[string]string // callerID -> name
+	err := kvContacts.Get(dbContactsBucket,calleeID,&idNameMap)
 	if err!=nil {
 		fmt.Printf("# /getcontacts db get calleeID=%s %s err=%v\n", calleeID, remoteAddr, err)
 		return
 	}
-	jsonStr, err := json.Marshal(callerInfoMap)
+	jsonStr, err := json.Marshal(idNameMap)
 	if err != nil {
 		fmt.Printf("# /getcontacts (%s) failed on json.Marshal %s err=%v\n", calleeID, remoteAddr, err)
 		return
 	}
 	if logWantedFor("contacts") {
-		fmt.Printf("/getcontacts (%s) send %d elements %s\n", calleeID, len(callerInfoMap), remoteAddr)
+		fmt.Printf("/getcontacts (%s) send %d elements %s\n", calleeID, len(idNameMap), remoteAddr)
 	}
 	fmt.Fprintf(w,string(jsonStr))
 	return
@@ -426,8 +426,8 @@ func setContacts(calleeID string, contactID string, contactName string, callerHo
 		contactID = contactID+"@"+callerHost
 	}
 
-	var callerInfoMap map[string]string // calleeID -> contactName
-	err = kvContacts.Get(dbContactsBucket,calleeID,&callerInfoMap)
+	var idNameMap map[string]string // calleeID -> contactName
+	err = kvContacts.Get(dbContactsBucket,calleeID,&idNameMap)
 	if err!=nil {
 		if(strings.Index(err.Error(),"key not found")<0) {
 			fmt.Printf("# /setcontact db get calleeID=%s %s err=%v\n", calleeID, remoteAddr, err)
@@ -437,15 +437,15 @@ func setContacts(calleeID string, contactID string, contactName string, callerHo
 		if logWantedFor("contacts") {
 			fmt.Printf("/setcontact creating new contacts map %s\n", remoteAddr)
 		}
-		callerInfoMap = make(map[string]string)
+		idNameMap = make(map[string]string)
 	}
 
 	// check for contactID
-	oldName,ok := callerInfoMap[contactID]
+	oldName,ok := idNameMap[contactID]
 	if !ok || oldName=="" {
 		// check for lowercase contactID
 		contactID = strings.ToLower(contactID)
-		oldName,ok = callerInfoMap[contactID]
+		oldName,ok = idNameMap[contactID]
 	}
 	if ok {
 		// contactID exists
@@ -465,7 +465,7 @@ func setContacts(calleeID string, contactID string, contactName string, callerHo
 		fmt.Printf("/setcontact (%s->%s) check toUpperContactID=%s\n",
 			calleeID, contactName, toUpperContactID)
 	}
-	oldName2,ok := callerInfoMap[toUpperContactID]
+	oldName2,ok := idNameMap[toUpperContactID]
 	if ok && oldName2!="" {
 		oldName = oldName2
 		// uppercase contactID exists
@@ -492,8 +492,8 @@ func setContacts(calleeID string, contactID string, contactName string, callerHo
 			fmt.Printf("/setcontact (%s) store changed name of %s from (%s) to (%s) %s\n",
 				calleeID, contactID, oldName, contactName, remoteAddr)
 		}
-		callerInfoMap[contactID] = contactName
-		err = kvContacts.Put(dbContactsBucket, calleeID, callerInfoMap, false)
+		idNameMap[contactID] = contactName
+		err = kvContacts.Put(dbContactsBucket, calleeID, idNameMap, false)
 		if err!=nil {
 			fmt.Printf("# /setcontact store calleeID=%s %s err=%v\n", calleeID, remoteAddr, err)
 			return false
@@ -528,25 +528,25 @@ func httpDeleteContact(w http.ResponseWriter, r *http.Request, urlID string, cal
 		return
 	}
 
-	var callerInfoMap map[string]string // callerID -> name
-	err := kvContacts.Get(dbContactsBucket,calleeID,&callerInfoMap)
+	var idNameMap map[string]string // callerID -> name
+	err := kvContacts.Get(dbContactsBucket,calleeID,&idNameMap)
 	if err!=nil {
 		fmt.Printf("# /deletecontact db get calleeID=%s %s err=%v\n", calleeID, remoteAddr, err)
 		return
 	}
 
-	_,ok = callerInfoMap[contactID]
+	_,ok = idNameMap[contactID]
 	if !ok {
-		_,ok = callerInfoMap[strings.ToLower(contactID)]
+		_,ok = idNameMap[strings.ToLower(contactID)]
 		if !ok {
-			fmt.Printf("# /deletecontact (%s) callerInfoMap[%s] does not exist %s\n",
+			fmt.Printf("# /deletecontact (%s) idNameMap[%s] does not exist %s\n",
 				calleeID, contactID, remoteAddr)
 			return
 		}
 		contactID = strings.ToLower(contactID)
 	}
-	delete(callerInfoMap,contactID)
-	err = kvContacts.Put(dbContactsBucket, calleeID, callerInfoMap, false)
+	delete(idNameMap,contactID)
+	err = kvContacts.Put(dbContactsBucket, calleeID, idNameMap, false)
 	if err!=nil {
 		fmt.Printf("# /deletecontact store calleeID=%s %s err=%v\n", calleeID, remoteAddr, err)
 		return

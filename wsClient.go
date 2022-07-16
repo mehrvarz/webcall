@@ -67,6 +67,7 @@ type WsClient struct {
 	callerID string
 	callerName string
 	callerHost string
+	dialID string
 	clientVersion string
 	callerTextMsg string
 	pingSent uint64
@@ -157,12 +158,12 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			// try to fetch callerName by searching for callerID in the contacts of calleeID
 			//fmt.Printf("serveWs try to get callerName for callerID=%s via calleeID=%s\n",
 			//	callerID, wsClientData.calleeID)
-			var callerInfoMap map[string]string // callerID -> name
-			err := kvContacts.Get(dbContactsBucket,wsClientData.calleeID,&callerInfoMap)
+			var idNameMap map[string]string // callerID -> name
+			err := kvContacts.Get(dbContactsBucket,wsClientData.calleeID,&idNameMap)
 			if err!=nil {
 				fmt.Printf("# wsClient db get calleeID=%s (ignore) err=%v\n", wsClientData.calleeID, err)
 			} else {
-				callerName = callerInfoMap[callerID]
+				callerName = idNameMap[callerID]
 				fmt.Printf("serveWs got callerName=%s for callerID=%s via calleeID=%s\n",
 					callerName, callerID, wsClientData.calleeID)
 			}
@@ -239,7 +240,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	wsConn.SetReadDeadline(time.Time{})
 
 	client := &WsClient{wsConn:wsConn}
-	client.calleeID = wsClientData.calleeID // this is the local ID
+	client.calleeID = wsClientData.calleeID // this is the main-calleeID
+	client.dialID = wsClientData.dialID
 	client.globalCalleeID = wsClientData.globalID
 
 	dialID := wsClientData.dialID
@@ -574,8 +576,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			} else if dbUser.StoreMissedCalls {
 				addMissedCall(hub.CalleeClient.calleeID,
 					CallerInfo{hub.CallerClient.RemoteAddr, hub.CallerClient.callerName, time.Now().Unix(),
-					hub.CallerClient.callerID, hub.CallerClient.callerTextMsg, hub.CallerClient.callerHost},
-					"NO PEERCON")
+					hub.CallerClient.callerID, hub.CallerClient.callerTextMsg, hub.CallerClient.callerHost,
+					hub.CallerClient.dialID}, "NO PEERCON")
 			}
 
 			hub.HubMutex.Lock()
@@ -701,7 +703,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 				}
 			}
 
-			// send list of waitingCaller and missedCalls to callee client
+			// send list of waitingCaller to callee client
 			var waitingCallerSlice []CallerInfo
 			// err can be ignored
 			kvCalls.Get(dbWaitingCaller,c.calleeID,&waitingCallerSlice)
@@ -730,9 +732,12 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 				}
 			}
 
+			// send list of missedCalls to callee client
 			var missedCallsSlice []CallerInfo
 			// err can be ignored
 			kvCalls.Get(dbMissedCalls,c.calleeID,&missedCallsSlice)
+// TODO must check if .DialID is still a valid ID for this callee
+// if a DialID is outdated, replace it with the calleeID - or with ""
 
 			if len(waitingCallerSlice)>0 || len(missedCallsSlice)>0 {
 				if logWantedFor("waitingCaller") {
@@ -845,7 +850,8 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 				fmt.Printf("# %s (%s) failed to get dbUser\n",c.connType,c.calleeID)
 			} else if dbUser.StoreMissedCalls {
 				addMissedCall(c.calleeID, CallerInfo{c.RemoteAddr, c.callerName,
-					time.Now().Unix(), c.callerID, c.callerTextMsg, c.callerHost}, "callee busy")
+					time.Now().Unix(), c.callerID, c.callerTextMsg, c.callerHost, c.hub.CallerClient.dialID},
+					"callee busy")
 			}
 			c.hub.HubMutex.RUnlock()
 			return
@@ -1483,7 +1489,7 @@ func (c *WsClient) peerConHasEnded(cause string) {
 			} else if dbUser.StoreMissedCalls {
 				//fmt.Printf("%s (%s) store missedCall msg=(%s)\n", c.connType, c.calleeID, c.callerTextMsg)
 				addMissedCall(c.calleeID, CallerInfo{callerRemoteAddr, callerName, time.Now().Unix(),
-					callerID, c.callerTextMsg, callerHost}, cause)
+					callerID, c.callerTextMsg, callerHost, c.hub.CallerClient.dialID}, cause)
 			}
 		}
 

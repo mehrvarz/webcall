@@ -445,14 +445,14 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 					}
 
 					// preload contacts with 2 Answie accounts
-					var callerInfoMap map[string]string // callerID -> name
-					err = kvContacts.Get(dbContactsBucket, registerID, &callerInfoMap)
+					var idNameMap map[string]string // callerID -> name
+					err = kvContacts.Get(dbContactsBucket, registerID, &idNameMap)
 					if err!=nil {
-						callerInfoMap = make(map[string]string)
+						idNameMap = make(map[string]string)
 					}
-					callerInfoMap["answie"] = "Answie Spoken"
-					callerInfoMap["answie7"] = "Answie Jazz"
-					err = kvContacts.Put(dbContactsBucket, registerID, callerInfoMap, false)
+					idNameMap["answie"] = "Answie Spoken"
+					idNameMap["answie7"] = "Answie Jazz"
+					err = kvContacts.Put(dbContactsBucket, registerID, idNameMap, false)
 					if err!=nil {
 						fmt.Printf("# /register (%s) kvContacts.Put err=%v\n", registerID, err)
 					} else {
