@@ -876,7 +876,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			// NOTE: c.callerID and c.callerHost must not contain colons
 			sendCmd := "callerInfo|"+c.callerID+":"+c.callerName
 			if c.callerHost!="" {
-				sendCmd = "callerInfo|"+c.callerID+"@"+c.callerHost+":"+c.callerName
+				sendCmd = "callerInfo|"+c.callerID+"@"+c.callerHost+"|"+c.callerName
 			}
 			if c.hub.CalleeClient.Write([]byte(sendCmd)) != nil {
 				fmt.Printf("# %s (%s) CALL CalleeClient.Write(callerInfo) fail\n", c.connType, c.calleeID)

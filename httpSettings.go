@@ -325,7 +325,7 @@ func httpGetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 		fmt.Printf("# /getcontacts urlID=%s != calleeID=%s %s\n",urlID,calleeID, remoteAddr)
 		return
 	}
-	var idNameMap map[string]string // callerID -> name
+	var idNameMap map[string]string // callerID(@host) -> name
 	err := kvContacts.Get(dbContactsBucket,calleeID,&idNameMap)
 	if err!=nil {
 		fmt.Printf("# /getcontacts db get calleeID=%s %s err=%v\n", calleeID, remoteAddr, err)

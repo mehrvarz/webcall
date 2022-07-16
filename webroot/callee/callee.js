@@ -1071,7 +1071,10 @@ function signalingCommand(message) {
 
 	} else if(cmd=="callerInfo") {
 		// NOTE: callerID must not contain colons
-		let idxColon = payload.indexOf(":");
+		let idxColon = payload.indexOf("|");
+		if(idxColon<0) {
+			idxColon = payload.indexOf(":");
+		}
 		if(idxColon>=0) {
 			callerID = payload.substring(0,idxColon);
 			// callerID may have host attached: callerID@host
@@ -1403,7 +1406,7 @@ function showMissedCalls() {
 		if(window.innerWidth>360) {
 			remoteCallerIdMaxChar += Math.floor((window.innerWidth-360)/26);
 		}
-		console.log("window.innerWidth="+window.innerWidth+" remoteCallerIdMaxChar="+remoteCallerIdMaxChar);
+		//console.log("window.innerWidth="+window.innerWidth+" remoteCallerIdMaxChar="+remoteCallerIdMaxChar);
 
 		missedCallsElement.style.display = "block";
 		let timeNowSecs = Math.floor((Date.now()+500)/1000);
