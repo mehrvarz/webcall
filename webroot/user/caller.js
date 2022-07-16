@@ -963,7 +963,7 @@ function calleeOnlineAction(comment) {
 							"and then immediately played back to you (green led).",-1);
 			} else {
 				if(!singlebutton) {
-					showStatus("Enter greeting message (optional):",-1)
+					showStatus("Greeting message (optional):",-1)
 					msgbox.style.display = "block";
 					gLog('callerName='+callerName);
 					let placeholderText = "";
