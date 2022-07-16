@@ -387,8 +387,6 @@ function onload2() {
 				let codeDivElement = document.getElementById("codeDiv");
 				let codeLabelElement = document.getElementById("codeLabel");
 				let codeElement = document.getElementById("code");
-				var rect = codeElement.getBoundingClientRect();
-				gLog("showConfirmCodeForm",rect.left, rect.top, rect.right, rect.bottom);
 				let codeString = ""+(Math.floor(Math.random() * 900) + 100);
 				codeLabelElement.innerHTML = "Enter "+codeString+":";
 				codeElement.value = "";
@@ -404,6 +402,8 @@ function onload2() {
 					gLog("showConfirmCodeForm code.focus()!");
 // tmtmtm: this does NOT show the Android keyboard
 					codeElement.focus();
+					var rect = codeElement.getBoundingClientRect();
+					gLog("showConfirmCodeForm",rect.left, rect.top, rect.right, rect.bottom);
 				},500);
 
 				// disable call button for as long as code.value does not have the right value
