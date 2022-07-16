@@ -387,7 +387,8 @@ function onload2() {
 				let codeDivElement = document.getElementById("codeDiv");
 				let codeLabelElement = document.getElementById("codeLabel");
 				let codeElement = document.getElementById("code");
-				gLog("showConfirmCodeForm");
+				var rect = codeElement.getBoundingClientRect();
+				gLog("showConfirmCodeForm",rect.left, rect.top, rect.right, rect.bottom);
 				let codeString = ""+(Math.floor(Math.random() * 900) + 100);
 				codeLabelElement.innerHTML = "Enter "+codeString+":";
 				codeElement.value = "";
