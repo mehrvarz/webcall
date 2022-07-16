@@ -400,10 +400,15 @@ function onload2() {
 				codeDivElement.style.display = "block";
 				setTimeout(function() {
 					gLog("showConfirmCodeForm code.focus()!");
-// tmtmtm: this does NOT show the Android keyboard
-					//codeElement.focus();
-					var rect = codeElement.getBoundingClientRect();
-					console.log("showConfirmCodeForm pos",rect.left, rect.top, rect.right, rect.bottom);
+					codeElement.focus();
+					// unfortunately this does NOT make the Android keyboard show up
+					// so we emulate a screen tap from Java code, based on the coordinates in this log statement
+					// NOTE: DO NOT CHANGE THE console.log() BELOW !!!
+					var rect1 = codeElement.getBoundingClientRect();
+					var rect2 = mainElement.getBoundingClientRect();
+					console.log("showConfirmCodeForm pos",
+						rect1.left, rect1.top, rect1.right, rect1.bottom,
+						rect2.left, rect2.top, rect2.right, rect2.bottom);
 				},500);
 
 				// disable call button for as long as code.value does not have the right value
