@@ -779,7 +779,8 @@ function getUrlParams(param) {
 		for (var i=0;i<parts.length;i++) {
 			var seg = parts[i].split("=");
 			if (seg[0] == param) {
-				return decodeURI(seg[1]);
+//				return decodeURI(seg[1]);
+				return decodeURIComponent(seg[1]);
 			}
 		}
 	}
