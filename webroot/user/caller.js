@@ -401,7 +401,7 @@ function onload2() {
 				setTimeout(function() {
 					gLog("showConfirmCodeForm code.focus()!");
 // tmtmtm: this does NOT show the Android keyboard
-					codeElement.focus();
+					//codeElement.focus();
 					var rect = codeElement.getBoundingClientRect();
 					console.log("showConfirmCodeForm pos",rect.left, rect.top, rect.right, rect.bottom);
 				},500);
