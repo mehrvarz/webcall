@@ -1242,7 +1242,7 @@ function signalingCommand(message) {
 		showWaitingCallers();
 
 	} else if(cmd=="missedCalls") {
-		//gLog('showmissedCalls msg',payload.length);
+		//gLog('show missedCalls msg',payload.length);
 		missedCallsSlice = null;
 		if(payload.length>0) {
 			missedCallsSlice = JSON.parse(payload);
@@ -1464,8 +1464,9 @@ function showMissedCalls() {
 			}
 
 			if(callerID.length>=5) {
-				// TODO here we could check if callerID is a valid calleeID
-				if(typeof callerHost == "undefined" || callerHost=="") {
+				// TODO here we cld check if callerID is (still) a valid calleeID (but better do this on server)
+
+				if(typeof callerHost == "undefined" || callerHost=="" || callerHost==location.host) {
 					// the original caller is hosted on THIS server
 					callerLink = window.location.href;
 					let idxCallee = callerLink.indexOf("/callee/");
