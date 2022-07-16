@@ -403,7 +403,7 @@ function onload2() {
 // tmtmtm: this does NOT show the Android keyboard
 					codeElement.focus();
 					var rect = codeElement.getBoundingClientRect();
-					gLog("showConfirmCodeForm",rect.left, rect.top, rect.right, rect.bottom);
+					console.log("showConfirmCodeForm pos",rect.left, rect.top, rect.right, rect.bottom);
 				},500);
 
 				// disable call button for as long as code.value does not have the right value
