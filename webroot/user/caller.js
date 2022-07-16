@@ -382,12 +382,11 @@ function onload2() {
 				// callername will be fetched from form in checkCalleeOnline()
 			}
 
-			let codeDivElement = document.getElementById("codeDiv");
-			let codeLabelElement = document.getElementById("codeLabel");
-			let codeElement = document.getElementById("code");
-			// enable 123 codeDivElement, if not answie or talkback
-			if(!calleeID.startsWith("answie") && !calleeID.startsWith("talkback")) {
-				// enable randomized '123' confirm form
+			// enable randomized 123 codeDivElement if no cookie available (and if not answie or talkback)
+			if(cookieName=="" && !calleeID.startsWith("answie") && !calleeID.startsWith("talkback")) {
+				let codeDivElement = document.getElementById("codeDiv");
+				let codeLabelElement = document.getElementById("codeLabel");
+				let codeElement = document.getElementById("code");
 				gLog("showConfirmCodeForm");
 				let codeString = ""+(Math.floor(Math.random() * 900) + 100);
 				codeLabelElement.innerHTML = "Enter "+codeString+":";
