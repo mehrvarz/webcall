@@ -669,6 +669,11 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 		callerHost = strings.ToLower(url_arg_array[0])
 	}
 
+	callerIdLong := callerID
+	if callerHost!="" {
+		callerIdLong += "@"+callerHost
+	}
+
 	// check if callee is hidden online
 	calleeIsHiddenOnline := false
 	ejectOn1stFound := true
@@ -716,18 +721,14 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 
 	if calleeIsHiddenOnline || calleeHasPushChannel {
 		// yes, urlID can be notified
-		fmt.Printf("/canbenotified (%s) yes tw=%s onl=%v nickname=%s rip=%s\n",
-			urlID, dbUser.Email2, calleeIsHiddenOnline, calleeName, remoteAddr)
+		fmt.Printf("/canbenotified (%s) yes tw=%s onl=%v nickname=%s <- %s (%s)\n",
+			urlID, dbUser.Email2, calleeIsHiddenOnline, calleeName, remoteAddr, callerIdLong)
 		fmt.Fprintf(w,"ok|"+calleeName)
 		return
 	}
 
 	// this user can NOT rcv push msg (cannot be notified)
-	callerIdLong := callerID
-	if callerHost!="" {
-		callerIdLong += "@"+callerHost
-	}
-	fmt.Printf("/canbenotified (%s) not online/hiddenonline, no push chl %s (%s)\n",
+	fmt.Printf("/canbenotified (%s) not online/hiddenonline, no push chl <- %s (%s)\n",
 		urlID, remoteAddr, callerIdLong)
 
 	if(dbUser.StoreMissedCalls) {
