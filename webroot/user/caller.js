@@ -323,6 +323,13 @@ window.onload = function() {
 		// set target domain name with local hostname
 		// note: .hostname does not contain the :port (use .host instead)
 		enterDomainValElement.value = callerHost;
+		// if calleeID is not pure numeric, we first need to disable numericId checkbox
+		if(isNaN(calleeID)) {
+			console.log("onload isNaN("+calleeID+")");
+			numericIdCheckbox.checked = false;
+		} else {
+			console.log("onload isNaN("+calleeID+") false");
+		}
 		enterIdValElement.value = calleeID;
 		if(callerHost!="" && callerHost!=location.host) {
 			enterDomainValElement.readOnly = true;
