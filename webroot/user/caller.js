@@ -244,6 +244,7 @@ window.onload = function() {
 	if(typeof str!=="undefined" && str!="") {
 		callerId = str;
 	}
+	let callerIdArg = callerId;
 
 	str = getUrlParams("callerName");
 	if(typeof str!=="undefined" && str!="") {
@@ -270,53 +271,51 @@ window.onload = function() {
 		}
 		gLog('onload cookieName='+cookieName);
 	}
-	if(callerHost == location.host) {
-		if(cookieName!="") {
-			// webcall cookie detected
-			// this caller.js is running on behalf of a callee (probably in an iframe, or a 2nd tab)
-			// here we ignore callerId and callerName from urlArg
-			// we use cookieName as callerId and serverSettings.nickname as callerName
-			gLog("onload use cookieName ("+cookieName+") as callerId");
-			callerId = cookieName;
-			callerHost = location.host;
+	if(callerHost == location.host && cookieName!="") {
+		// this req is running on behalf of a local callee (in an iframe, or in a 2nd tab) with a cookie
+		// we overwrite callerId, callerHost (and maybe callerName) from urlArgs with our own values
+		gLog("onload use cookieName ("+cookieName+") as callerId");
+		callerId = cookieName;
+		callerHost = location.host;
 
-			// use cookiename to fetch /getsettings
-			let api = apiPath+"/getsettings?id="+cookieName;
-			gLog('onload request getsettings api '+api);
-			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-				var xhrresponse = xhr.responseText
-				//gLog('xhr.responseText '+xhrresponse);
-				if(xhrresponse=="") {
-					serverSettings = null;
-					return;
-				}
-				var serverSettings = JSON.parse(xhrresponse);
-				if(typeof serverSettings!=="undefined") {
-					gLog('serverSettings.storeContacts',serverSettings.storeContacts);
-					if(serverSettings.storeContacts=="true") {
-						contactAutoStore = true;
-						var dialIdAutoStoreElement = document.getElementById("dialIdAutoStore");
-						if(dialIdAutoStoreElement) {
-							gLog('dialIdAutoStore on');
-							//dialIdAutoStoreElement.style.display = "block";
-							dialIdAutoStoreElement.style.opacity = "0.8";
-						}
-					}
-
-					if(callerName=="") {
-						callerName = serverSettings.nickname; // user can modify this in UI
+		// use cookiename to fetch /getsettings
+		let api = apiPath+"/getsettings?id="+cookieName;
+		gLog('onload request getsettings api '+api);
+		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+			var xhrresponse = xhr.responseText
+			//gLog('xhr.responseText '+xhrresponse);
+			if(xhrresponse=="") {
+				serverSettings = null;
+				return;
+			}
+			var serverSettings = JSON.parse(xhrresponse);
+			if(typeof serverSettings!=="undefined") {
+				gLog('serverSettings.storeContacts',serverSettings.storeContacts);
+				if(serverSettings.storeContacts=="true") {
+					contactAutoStore = true;
+					var dialIdAutoStoreElement = document.getElementById("dialIdAutoStore");
+					if(dialIdAutoStoreElement) {
+						gLog('dialIdAutoStore on');
+						//dialIdAutoStoreElement.style.display = "block";
+						dialIdAutoStoreElement.style.opacity = "0.8";
 					}
 				}
 
-				gLog("onload callerId=("+callerId+") callerName=("+callerName+") from /getsettings");
+				if(callerName=="") {
+					callerName = serverSettings.nickname; // user can modify this in UI
+				}
+			}
 
-			}, function(errString,err) {
-				console.log("# onload xhr error "+errString+" "+err);
-			});
-		}
+			gLog("onload callerId=("+callerId+") callerName=("+callerName+") from /getsettings");
+
+		}, function(errString,err) {
+			console.log("# onload xhr error "+errString+" "+err);
+		});
 	}
 
-	if(calleeID=="" || callerHost != location.host) {
+	// we show dial-id dialog if no calleeID is set (when opened via dialpad icon from mainpage)
+	// or if callerIdArg=="select" (when requested by Android client onNewIntent for idSelect)
+	if(calleeID=="" || callerIdArg=="select") {
 		gLog("onload show dial-id, hide container; calleeID="+calleeID+" callerHost="+callerHost);
 		containerElement.style.display = "none";
 		enterIdElement.style.display = "block";
@@ -325,13 +324,11 @@ window.onload = function() {
 		enterDomainValElement.value = callerHost;
 		// if calleeID is not pure numeric, we first need to disable numericId checkbox
 		if(isNaN(calleeID)) {
-// TODO use gLog
-			console.log("onload isNaN("+calleeID+") true");
+			gLog("onload isNaN("+calleeID+") true");
 			numericIdCheckbox.checked = false;
 			enterIdValElement.setAttribute('type','text');
 		} else {
-// TODO use gLog
-			console.log("onload isNaN("+calleeID+") false");
+			gLog("onload isNaN("+calleeID+") false");
 		}
 		enterIdValElement.value = calleeID;
 		console.log("onload enterIdValElement.value="+enterIdValElement.value);
@@ -348,8 +345,8 @@ window.onload = function() {
 		}
 
 		gLog("onload enterId/dial-id dialog cookieName="+cookieName);
-		if(calleeID!="" && cookieName!="") {
-// TODO if user changes enterDomainVal so it becomes != location.host, we must also enable idSelectElement
+		if(callerIdArg=="select" && cookieName!="") {
+// TODO if user edits enterDomainVal so it is no longer ==location.host, we must also enable idSelectElement
 			// when user operates idSelectElement, callerId will be set
 			idSelectElement = document.getElementById("idSelect2");
 
