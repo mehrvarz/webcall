@@ -339,13 +339,7 @@ window.onload = function() {
 			enterDomainClearElement.style.display = "none";
 			gLog("onload enterDomain readOnly");
 		}
-		if(calleeID=="") {
-			var rect1 = enterIdValElement.getBoundingClientRect();
-			var rect2 = mainElement.getBoundingClientRect();
-			console.log("showNumberForm pos",
-				rect1.left, rect1.top, rect1.right, rect1.bottom,
-				rect2.left, rect2.top, rect2.right, rect2.bottom);
-		} else {
+		if(calleeID!="") {
 			enterIdValElement.readOnly = true;
 			enterIdClearElement.style.display = "none";
 			enterIdValElement.autoFocus = false;
@@ -414,10 +408,18 @@ window.onload = function() {
 			});
 
 		} else {
-			setTimeout(function() {
-				gLog("onload enterIdValElement.focus");
-				enterIdValElement.focus();
-			},400);
+			if(calleeID=="") {
+				setTimeout(function() {
+					gLog("onload enterIdValElement.focus");
+					enterIdValElement.focus();
+
+					var rect1 = enterIdValElement.getBoundingClientRect();
+					var rect2 = mainElement.getBoundingClientRect();
+					console.log("showNumberForm pos",
+						rect1.left, rect1.top, rect1.right, rect1.bottom,
+						rect2.left, rect2.top, rect2.right, rect2.bottom);
+				},400);
+			}
 		}
 
 		// will continue in submitForm(theForm)
