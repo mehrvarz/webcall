@@ -745,7 +745,7 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString, dontIframeOnload
 	iframeWindowOpenUrl = url;
 	iframeWindowOpenFlag = true;
 
-	let styleString = "width:94%; max-width:600px; _height:94%; position:absolute; z-index:200;";
+	let styleString = "width:94%; max-width:600px; position:absolute; z-index:200;";
 	if(horiCenterBound) {
 		// center hori
 		styleString += "top:50%; left:50%; transform:translate(-50%,-50%);"

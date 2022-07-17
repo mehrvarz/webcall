@@ -401,21 +401,35 @@ input[type=submit]:focus {
 	<form action="javascript:;" style="margin-top:6px;" onsubmit="submitForm(this)" id="mnumber">
 		<label for="enterDomain">Domain:</label><br>
 		<input name="enterDomain" id="enterDomainVal" type="text" class="formtext" required>
-		<span class="lbutton" onclick="clearForm(4)">Clear</span><br>
+		<span class="lbutton" id="enterDomainClear" onclick="clearForm(4)">Clear</span><br>
 		<br>
 
-		<label for="enterId">ID:</label>
+		<label for="enterId">ID:</label><br>
+		<input name="enterId" id="enterIdVal" type="text" class="formtext" _autofocus required>
+		<span class="lbutton" id="enterIdClear" onclick="clearForm(3)">Clear</span>
 		<br>
-
-		<!-- checkbox numericId below (for smartpones only) can switch input-type from text to number -->
-		<input name="enterId" id="enterIdVal" type="text" class="formtext" autofocus required>
-		<span class="lbutton" onclick="clearForm(3)">Clear</span>
-		<br>
-
-		<label class="menulabel" id="numericIdLabel" for="enterId" style="margin-left:-4px;">
+		<!-- checkbox numericId for smartpones only! can switch input-type from text to number -->
+		<label class="menulabel" id="numericIdLabel" for="numericId" style="margin-left:-4px;">
 			<input type="checkbox" id="numericId" class="checkbox"> numeric</label>
 		</label>
 		<br>
+
+		<!-- idSelect: visible only if more than one id-mapping is specified -->
+		<label class="menulabel" id="idSelect2Label" for="idSelect2"
+			style="margin-left:0;margin-top:16px;_margin-bottom:12px;display:none;">
+			Callback ID:<br>
+			<select id="idSelect2" class="select" onchange="changeId(this)"
+				style="margin-top:0;_display:none;"></select>
+		</label>
+		<br>
+
+		<!-- nickname: always visible
+		<div id="nicknameDiv" style="margin-top:12px;margin-left:2px;font-size:1.1em;display:none;">
+			<label for="nickname" style="display:inline-block;width:95px;">Nickname:</label>
+			<input id='nickname' type='text' size='9' maxlength='9' value=''
+				style="background:#04e;border:none;outline:none;padding:0.3em;color:#ddd;font-size:1.0em;">
+		</div>
+		-->
 
 		<input type="submit" name="Submit" id="submit" value="Dial" style="width:100px; margin-top:15px;">
 

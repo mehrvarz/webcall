@@ -4,8 +4,10 @@ const dialButton = document.querySelector('button#callButton');
 const hangupButton = document.querySelector('button#hangupButton');
 const calleeOnlineElement = document.getElementById("calleeOnline");
 const enterIdElement = document.getElementById('enterId');
-const enterIdVal = document.getElementById('enterIdVal');
-const enterDomainVal = document.getElementById('enterDomainVal');
+const enterIdValElement = document.getElementById('enterIdVal');
+const enterIdClearElement = document.getElementById("enterIdClear");
+const enterDomainValElement = document.getElementById('enterDomainVal');
+const enterDomainClearElement = document.getElementById("enterDomainClear");
 const divspinnerframe = document.querySelector('div#spinnerframe');
 const numericIdLabel = document.querySelector('label#numericIdLabel');
 const numericIdCheckbox = document.querySelector('input#numericId');
@@ -81,6 +83,7 @@ var lastOnlineStatus = "";
 var contactAutoStore = false;
 var counter=0;
 var altIdCount = 0;
+var idSelectElement = null;
 
 var extMessage = function(e) {
 	// prevent an error on split() below when extensions emit unrelated, non-string 'message' events to the window
@@ -204,7 +207,6 @@ window.onload = function() {
 			// enable and activate numericIdCheckbox
 			//console.log("numericIdCheckbox enable");
 			numericIdCheckbox.checked = true;
-			let enterIdValElement = document.getElementById('enterIdVal');
 			enterIdValElement.setAttribute('type','number');
 			enterIdValElement.focus();
 
@@ -259,16 +261,16 @@ window.onload = function() {
 
 	contactAutoStore = false;
 	cookieName = "";
-	if(callerHost == location.host) {
-		if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
-			// cookie webcallid exists
-			cookieName = document.cookie.substring(10);
-			let idxAmpasent = cookieName.indexOf("&");
-			if(idxAmpasent>0) {
-				cookieName = cookieName.substring(0,idxAmpasent);
-			}
-			gLog('onload cookieName='+cookieName);
+	if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
+		// cookie webcallid exists
+		cookieName = document.cookie.substring(10);
+		let idxAmpasent = cookieName.indexOf("&");
+		if(idxAmpasent>0) {
+			cookieName = cookieName.substring(0,idxAmpasent);
 		}
+		gLog('onload cookieName='+cookieName);
+	}
+	if(callerHost == location.host) {
 		if(cookieName!="") {
 			// webcall cookie detected
 			// this caller.js is running on behalf of a callee (probably in an iframe, or a 2nd tab)
@@ -304,7 +306,6 @@ window.onload = function() {
 					if(callerName=="") {
 						callerName = serverSettings.nickname; // user can modify this in UI
 					}
-// TODO callerName may come too late for Dial-ID dialog (started below if(calleeID==""))
 				}
 
 				gLog("onload callerId=("+callerId+") callerName=("+callerName+") from /getsettings");
@@ -315,18 +316,94 @@ window.onload = function() {
 		}
 	}
 
-	if(calleeID=="") {
-		// no ID to call? show Dial-ID dialog
-		gLog("onload no calleeID; switch to enterId");
+	if(calleeID=="" || callerHost != location.host) {
+		gLog("onload show dial-id, hide container; calleeID="+calleeID+" callerHost="+callerHost);
 		containerElement.style.display = "none";
 		enterIdElement.style.display = "block";
 		// set target domain name with local hostname
 		// note: .hostname does not contain the :port (use .host instead)
-		enterDomainVal.value = location.host; 
+		enterDomainValElement.value = callerHost;
+		enterIdValElement.value = calleeID;
+		if(callerHost!="" && callerHost!=location.host) {
+			enterDomainValElement.readOnly = true;
+			enterDomainClearElement.style.display = "none";
+			gLog("onload enterDomain readOnly");
+		}
+		if(calleeID!="") {
+			enterIdValElement.readOnly = true;
+			enterIdClearElement.style.display = "none";
+			enterIdValElement.autoFocus = false;
+			gLog("onload enterId readOnly");
+		}
 
-		setTimeout(function() {
-			enterIdVal.focus();
-		},400);
+		gLog("onload enterId/dial-id dialog cookieName="+cookieName);
+		if(calleeID!="" && cookieName!="") {
+// TODO if user changes enterDomainVal so it becomes != location.host, we must also enable idSelectElement
+			// when user operates idSelectElement, callerId will be set
+			idSelectElement = document.getElementById("idSelect2");
+
+			// fetch mapping
+			let api = apiPath+"/getmapping?id="+cookieName;
+			gLog('onload request getmapping api',api);
+			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+				gLog('response getmapping api',xhr.responseText);
+				if(xhr.responseText!="") {
+					let idOption = document.createElement('option');
+					idOption.text = cookieName + " (main id)";
+					idOption.value = cookieName;
+					idSelectElement.appendChild(idOption);
+					altIdCount++;
+
+					let altIDs = xhr.responseText;
+					let tok = altIDs.split("|");
+					for(var i=0; i<tok.length; i++) {
+						//console.log("tok["+i+"]="+tok[i]);
+						if(tok[i]!="") {
+							let tok2 = tok[i].split(",");
+							let id = tok2[0].trim();
+							let active = tok2[1].trim();
+							let assign = tok2[2].trim();
+							if(assign=="") {
+								assign = "none";
+							}
+							//console.log("assign=("+assign+")");
+							let idOption = document.createElement('option');
+							idOption.text = id + " ("+assign+")";
+							idOption.value = id;
+							idSelectElement.appendChild(idOption);
+							altIdCount++;
+						}
+					}
+					let idOptionAnon = document.createElement('option');
+					idOptionAnon.text = "00000000000 (incognito)";
+					idOptionAnon.value = "";
+					idSelectElement.appendChild(idOptionAnon);
+					altIdCount++;
+				}
+
+				if(altIdCount>1) {
+					// enable idSelectElement
+					gLog("onload enable idSelect2LabelElement");
+					let idSelect2LabelElement = document.getElementById("idSelect2Label");
+					idSelect2LabelElement.style.display = "block";
+
+					setTimeout(function() {
+						gLog("onload idSelectElement.focus");
+						idSelectElement.focus();
+					},400);
+				}
+			}, function(errString,errcode) {
+				// /getmapping has failed
+				console.log("# onload ex "+errString+" "+errcode);
+			});
+
+		} else {
+			setTimeout(function() {
+				gLog("onload enterIdValElement.focus");
+				enterIdValElement.focus();
+			},400);
+		}
+
 		// will continue in submitForm(theForm)
 		return;
 	}
@@ -335,18 +412,20 @@ window.onload = function() {
 }
 
 function changeId(selectObject) {
-	gLog("changeId",selectObject);
 	if(selectObject) {
+		gLog("changeId selectObject="+selectObject);
 		// selectObject is (only) set if user operates idSelect manually
 		// parse for deviceId (selectObject.value in idSelect.options)
-		for(var i = idSelect.options.length - 1; i >= 0; i--) {
-			if(idSelect.options[i].value == selectObject.value) {
-				// found deviceId
+		for(var i = idSelectElement.options.length - 1; i >= 0; i--) {
+			if(idSelectElement.options[i].value == selectObject.value) {
+				// found selectObject
 				callerId = selectObject.value;
 				gLog('changeId callerId='+callerId);
 				break;
 			}
 		}
+	} else {
+		gLog("# changeId no selectObject");
 	}
 }
 
@@ -358,18 +437,7 @@ function onload2() {
 		if(mode==0) {
 			// normal mode
 			gLog("onload2 normal mode");
-/*
-			let cookieName = "";
-			if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
-				// cookie webcallid exists
-				cookieName = document.cookie.substring(10);
-				let idxAmpasent = cookieName.indexOf("&");
-				if(idxAmpasent>0) {
-					cookieName = cookieName.substring(0,idxAmpasent);
-				}
-				gLog('onload2 cookieName='+cookieName);
-			}
-*/
+
 // TODO do /getsettings here to get callerName
 
 			// enable nickname form (if not calling answie or talkback)
@@ -429,13 +497,14 @@ function onload2() {
 
 			// if cookie webcallid is available, fetch mapping and offer idSelect
 			if(cookieName!="") {
-				let idSelectElement = document.getElementById("idSelect");
+				idSelectElement = document.getElementById("idSelect");
 
 				// fetch mapping
 				let api = apiPath+"/getmapping?id="+cookieName;
 				gLog('onload2 request getmapping api',api);
 				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 					gLog('response getmapping api',xhr.responseText);
+					let preselectIndex = -1;
 					if(xhr.responseText!="") {
 						let idOption = document.createElement('option');
 						idOption.text = cookieName + " (main id)";
@@ -455,6 +524,10 @@ function onload2() {
 								if(assign=="") {
 									assign = "none";
 								}
+								if(id==callerId) {
+									preselectIndex = i;
+									gLog('preselectIndex='+preselectIndex);
+								}
 								//console.log("assign=("+assign+")");
 								let idOption = document.createElement('option');
 								idOption.text = id + " ("+assign+")";
@@ -473,6 +546,9 @@ function onload2() {
 					if(altIdCount>1) {
 						// enable idSelectElement
 						idSelectElement.style.display = "block";
+						if(preselectIndex>-1) {
+							idSelectElement.selectedIndex = preselectIndex+1;
+						}
 					}
 
 					onload3("1");
@@ -1208,15 +1284,15 @@ function confirmNotifyConnect() {
 
 function submitForm(theForm) {
 	// DialID: switch back to default container
-	calleeID = enterIdVal.value;
+	calleeID = enterIdValElement.value;
 	calleeID = calleeID.replace(/ /g,''); // remove all white spaces
 	if(!calleeID.startsWith("#")) {
 		if(calleeID.length>11) calleeID = calleeID.substring(0,11);
 	}
 	gLog("submitForm calleeID="+calleeID);
 // TODO ACHTUNG .host may have :443 set, while DomainVal may not
-	gLog("submitForm targetDomain="+enterDomainVal.value+" location.host="+location.host);
-	if(enterDomainVal.value != location.host) {
+	gLog("submitForm targetDomain="+enterDomainValElement.value+" location.host="+location.host);
+	if(enterDomainValElement.value != location.host) {
 		// the callee to call is hosted on a different server
 		// if we are running on Android, callUrl will be handled by onNewIntent() in the activity
 		//   which will forward callUrl via iframeWindowOpen() to the remote host
@@ -1227,7 +1303,7 @@ function submitForm(theForm) {
 		// below code tries to catch an window.open() error ("host not found")
 		// and throw an alert() instead of relying on an ugly browser err-msg
 		let randId = ""+Math.floor(Math.random()*1000000);
-		let callUrl = "https://"+enterDomainVal.value+"/user/"+calleeID+
+		let callUrl = "https://"+enterDomainValElement.value+"/user/"+calleeID+
 			"?callerId="+callerId + "&callerName="+callerName + "&callerHost="+callerHost +
 			"&ds="+playDialSounds + "&i="+randId;
 		var openOK = null;
@@ -2473,14 +2549,14 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 
 function clearForm(idx) {
 	if(idx==3) {
-		enterIdVal.value = "";
+		enterIdValElement.value = "";
 		setTimeout(function() {
-			   enterIdVal.focus();
+			   enterIdValElement.focus();
 		},400);
 	} else if(idx==4) {
-		enterDomainVal.value = "";
+		enterDomainValElement.value = "";
 		setTimeout(function() {
-			   enterDomainVal.focus();
+			   enterDomainValElement.focus();
 		},400);
 	}
 }
