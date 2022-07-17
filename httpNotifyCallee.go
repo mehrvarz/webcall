@@ -488,11 +488,12 @@ func httpMissedCall(w http.ResponseWriter, r *http.Request, callerInfo string, r
 	settime,ok := missedCallAllowedMap[remoteAddr]
 	missedCallAllowedMutex.RUnlock()
 	if ok && time.Now().Sub(settime) < 20 * time.Minute {
-		fmt.Printf("httpMissedCall (%s)\n",callerInfo)
+		//fmt.Printf("httpMissedCall (%s)\n",callerInfo)
 		//fmt.Printf("httpMissedCall ip=(%s) is permitted to create /missedcall\n",remoteAddr)
 		missedCallAllowedMutex.Lock()
 		delete(missedCallAllowedMap,remoteAddr)
 		missedCallAllowedMutex.Unlock()
+
 		missedCall(callerInfo, remoteAddr, "/missedCall")
 	} else {
 		fmt.Printf("# httpMissedCall ip=(%s) is NOT permitted to create /missedcall\n",remoteAddr)
