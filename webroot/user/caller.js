@@ -320,7 +320,8 @@ window.onload = function() {
 		gLog("onload show dial-id; calleeID="+calleeID+" callerHost="+callerHost+" callerIdArg="+callerIdArg);
 		containerElement.style.display = "none";
 		enterIdElement.style.display = "block";
-		callerId = "";
+		callerId = ""; // this is like incognito
+// TODO we really must set it to the main id
 		// set target domain name with local hostname
 		// note: .hostname does not contain the :port (use .host instead)
 		enterDomainValElement.value = callerHost;
@@ -375,6 +376,9 @@ window.onload = function() {
 							let assign = tok2[2].trim();
 							if(assign=="") {
 								assign = "none";
+							}
+							if(callerId=="" && i==0) {
+								callerId = id;
 							}
 							//console.log("assign=("+assign+")");
 							let idOption = document.createElement('option');
