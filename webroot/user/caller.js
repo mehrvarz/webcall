@@ -779,7 +779,6 @@ function getUrlParams(param) {
 		for (var i=0;i<parts.length;i++) {
 			var seg = parts[i].split("=");
 			if (seg[0] == param) {
-//				return decodeURI(seg[1]);
 				return decodeURIComponent(seg[1]);
 			}
 		}
@@ -1116,6 +1115,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 			}
 
 			// calleeID is currently offline - check if calleeID can be notified (via twitter msg)
+			// NOTE: this causes a missedCall entry, but without txtmsg (since we don't send it here)
 			let api = apiPath+"/canbenotified?id="+calleeID+"&callerId="+callerId+
 				"&name="+callerName+"&callerHost="+callerHost;
 			gLog('canbenotified api',api);
@@ -1223,7 +1223,6 @@ function submitForm(theForm) {
 
 		// if location.host is an internal ip-addr:port, which cannot be adressed over he internet
 		// then sending callerHost=location.host is futile
-		// TODO can we send our real public ip instead?
 
 		// below code tries to catch an window.open() error ("host not found")
 		// and throw an alert() instead of relying on an ugly browser err-msg

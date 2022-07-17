@@ -722,12 +722,16 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 	}
 
 	// this user can NOT rcv push msg (cannot be notified)
-	fmt.Printf("/canbenotified (%s) not online, not hidden online, no push chl %s (%s)\n",
-		urlID, remoteAddr, callerID)
+	callerIdLong := callerID
+	if callerHost!="" {
+		callerIdLong += "@"+callerHost
+	}
+	fmt.Printf("/canbenotified (%s) not online/hiddenonline, no push chl %s (%s)\n",
+		urlID, remoteAddr, callerIdLong)
+
 	if(dbUser.StoreMissedCalls) {
-		// no msgbox-text given for /canbenotified
 		addMissedCall(urlID,
-// TODO: empty msg string
+			// TODO: empty msg string (see: caller.js: 'NOTE: this causes a missedCall entry')
 			CallerInfo{remoteAddr, callerName, time.Now().Unix(), callerID, "", callerHost, callerID},
 				"/canbenotified-not")
 	}
@@ -757,6 +761,10 @@ func addMissedCall(urlID string, caller CallerInfo, cause string) (error, []Call
 	if logWantedFor("missedcall") {
 //		logTxtMsg := caller.Msg
 		logTxtMsg := "(hidden)"
+		callerID := caller.CallerID
+		if caller.Host!="" {
+			callerID += "@"+caller.Host
+		}
 		fmt.Printf("missedCall (%s) <- (%s) name=%s host=%s ip=%s msg=(%s) cause=(%s)\n",
 			urlID, caller.CallerID, caller.CallerName, caller.Host, caller.AddrPort, logTxtMsg, cause)
 	}
