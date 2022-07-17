@@ -331,6 +331,7 @@ window.onload = function() {
 			console.log("onload isNaN("+calleeID+") false");
 		}
 		enterIdValElement.value = calleeID;
+		console.log("onload enterIdValElement.value="+enterIdValElement.value);
 		if(callerHost!="" && callerHost!=location.host) {
 			enterDomainValElement.readOnly = true;
 			enterDomainClearElement.style.display = "none";
