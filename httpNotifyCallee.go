@@ -506,7 +506,7 @@ func missedCall(callerInfo string, remoteAddr string, cause string) {
 	// callerInfo is encoded: calleeId+"|"+callerName+"|"+callerId (plus optional: "|"+ageSecs) +(|msg)
 	//   like so: "id|92929|92929658912|50" tok[0]=calleeID, tok[1]=callerName, tok[2]=callerID, tok[3]=ageSecs
 	// TODO callerInfo cannot be trusted, make sure everything in it is validated as much as possible
-	fmt.Printf("missedCall (%s) rip=%s\n", callerInfo, remoteAddr)
+	//fmt.Printf("missedCall (%s) rip=%s\n", callerInfo, remoteAddr)
 	tok := strings.Split(callerInfo, "|")
 	if len(tok) < 3 {
 		fmt.Printf("# missedCall (%s) failed len(tok)=%d<3 rip=%s\n",callerInfo,len(tok),remoteAddr)
