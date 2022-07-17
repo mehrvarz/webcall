@@ -325,9 +325,12 @@ window.onload = function() {
 		enterDomainValElement.value = callerHost;
 		// if calleeID is not pure numeric, we first need to disable numericId checkbox
 		if(isNaN(calleeID)) {
-			console.log("onload isNaN("+calleeID+")");
+// TODO use gLog
+			console.log("onload isNaN("+calleeID+") true");
 			numericIdCheckbox.checked = false;
+			enterIdValElement.setAttribute('type','text');
 		} else {
+// TODO use gLog
 			console.log("onload isNaN("+calleeID+") false");
 		}
 		enterIdValElement.value = calleeID;
