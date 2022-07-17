@@ -765,8 +765,8 @@ func addMissedCall(urlID string, caller CallerInfo, cause string) (error, []Call
 		if caller.Host!="" {
 			callerID += "@"+caller.Host
 		}
-		fmt.Printf("missedCall (%s) <- (%s) name=%s host=%s ip=%s msg=(%s) cause=(%s)\n",
-			urlID, caller.CallerID, caller.CallerName, caller.Host, caller.AddrPort, logTxtMsg, cause)
+		fmt.Printf("missedCall (%s) <- (%s) name=%s ip=%s msg=(%s) cause=(%s)\n",
+			urlID, callerID, caller.CallerName, caller.AddrPort, logTxtMsg, cause)
 	}
 	return err,missedCallsSlice
 }
