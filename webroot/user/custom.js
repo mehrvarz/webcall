@@ -1,4 +1,4 @@
 const apiPath = "/rtcsig";
-const gentle = false;
+const gentle = true;
 const singlebutton = false;
 
