@@ -316,8 +316,8 @@ window.onload = function() {
 
 	// we show dial-id dialog if no calleeID is set (when opened via dialpad icon from mainpage)
 	// or if callerIdArg=="select" (when requested by Android client onNewIntent for idSelect)
+	gLog("onload show dial-id? calleeID="+calleeID+" callerHost="+callerHost+" callerIdArg="+callerIdArg);
 	if(calleeID=="" || callerIdArg=="select") {
-		gLog("onload show dial-id; calleeID="+calleeID+" callerHost="+callerHost+" callerIdArg="+callerIdArg);
 		containerElement.style.display = "none";
 		enterIdElement.style.display = "block";
 		callerId = cookieName;
