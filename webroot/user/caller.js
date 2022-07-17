@@ -228,7 +228,7 @@ window.onload = function() {
 
 	if(window.self == window.top) {
 		// not running in iframe mode
-		gLog("onload setup onkeydownFunc");
+		//gLog("onload setup onkeydownFunc");
 		document.onkeydown = (evt) => onkeydownFunc(evt);
 	} else {
 		// running in iframe mode
@@ -260,7 +260,6 @@ window.onload = function() {
 	}
 	gLog("onload urlParam callerId=("+callerId+") callerName=("+callerName+") callerHost=("+callerHost+")");
 
-	contactAutoStore = false;
 	cookieName = "";
 	if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
 		// cookie webcallid exists
@@ -271,6 +270,8 @@ window.onload = function() {
 		}
 		gLog('onload cookieName='+cookieName);
 	}
+
+	contactAutoStore = false;
 	if(callerHost == location.host && cookieName!="") {
 		// this req is running on behalf of a local callee (in an iframe, or in a 2nd tab) with a cookie
 		// we overwrite callerId, callerHost (and maybe callerName) from urlArgs with our own values
@@ -316,9 +317,10 @@ window.onload = function() {
 	// we show dial-id dialog if no calleeID is set (when opened via dialpad icon from mainpage)
 	// or if callerIdArg=="select" (when requested by Android client onNewIntent for idSelect)
 	if(calleeID=="" || callerIdArg=="select") {
-		gLog("onload show dial-id, hide container; calleeID="+calleeID+" callerHost="+callerHost);
+		gLog("onload show dial-id; calleeID="+calleeID+" callerHost="+callerHost+" callerIdArg="+callerIdArg);
 		containerElement.style.display = "none";
 		enterIdElement.style.display = "block";
+		callerId = "";
 		// set target domain name with local hostname
 		// note: .hostname does not contain the :port (use .host instead)
 		enterDomainValElement.value = callerHost;
