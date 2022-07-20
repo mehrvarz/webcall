@@ -343,6 +343,56 @@ func httpGetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 	return
 }
 
+
+func httpGetContact(w http.ResponseWriter, r *http.Request, urlID string, calleeID string, cookie *http.Cookie, remoteAddr string) {
+	if calleeID=="" {
+		fmt.Printf("# /getcontact calleeID empty urlID=%s %s\n",urlID, remoteAddr)
+		return
+	}
+	if cookie==nil {
+		fmt.Printf("# /getcontact (%s) fail no cookie %s\n", calleeID, remoteAddr)
+		return
+	}
+	// if calleeID!=urlID, that's likely someone trying to run more than one callee in the same browser
+	if urlID!="" && urlID!=calleeID {
+		fmt.Printf("# /getcontact urlID=%s != calleeID=%s %s\n",urlID,calleeID, remoteAddr)
+		return
+	}
+
+	url_arg_array, ok := r.URL.Query()["contactID"]
+	if ok && len(url_arg_array[0]) >= 1 {
+		contactID := url_arg_array[0]
+		fmt.Printf("/getcontact contactID=(%s)\n", contactID)
+		if contactID!="" {
+			// if contactID contains @host and host==hostname, we must cut off @host
+			idx := strings.Index(contactID,"@")
+			if idx>=0 {
+				host := contactID[idx+1:]
+				if host == hostname {
+					contactID = contactID[:idx]
+					fmt.Printf("/getcontact contactID with host=(%s) must cut off (%s)\n", host, contactID)
+				} else {
+					fmt.Printf("/getcontact contactID with host=(%s) leave in place (not %s)\n", host, hostname)
+				}
+			}
+
+			var idNameMap map[string]string // callerID(@host) -> name
+			err := kvContacts.Get(dbContactsBucket,calleeID,&idNameMap)
+			if err!=nil {
+				fmt.Printf("# /getcontact db get calleeID=%s %s err=%v\n", calleeID, remoteAddr, err)
+				return
+			}
+
+			name := idNameMap[contactID]
+			if logWantedFor("contacts") {
+				fmt.Printf("/getcontact (%s) contactID=%d name=%s\n", calleeID, contactID, name)
+			}
+			fmt.Fprintf(w,name)
+		}
+	}
+	return
+}
+
 func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calleeID string, cookie *http.Cookie, remoteAddr string) {
 	// store contactID with name into contacts of calleeID
 	// httpSetContacts does not report errors back to the client (only logs them)
@@ -361,31 +411,32 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 		return
 	}
 
-	contactID := ""
-	url_arg_array, ok := r.URL.Query()["contactID"]
-	if ok && len(url_arg_array[0]) >= 1 {
-		contactID = url_arg_array[0]
-	}
-	if contactID=="" {
-		if logWantedFor("contacts") {
-			fmt.Printf("/setcontact (%s) contactID from client is empty %s\n", calleeID, remoteAddr)
-		}
-		return
-	}
-
+	contactID := ""		// may or may not have @host attached
 	contactName := ""
-	url_arg_array, ok = r.URL.Query()["name"]
-	if ok && len(url_arg_array[0]) >= 1 {
-		contactName = url_arg_array[0]
+
+	if r.Method=="POST" {
+// TODO implement delivery of contactID and contactName via post body
+
+	} else {
+		url_arg_array, ok := r.URL.Query()["contactID"]
+		if ok && len(url_arg_array[0]) >= 1 {
+			contactID = url_arg_array[0]
+		}
+		if contactID=="" {
+			if logWantedFor("contacts") {
+				fmt.Printf("/setcontact (%s) contactID from client is empty %s\n", calleeID, remoteAddr)
+			}
+			return
+		}
+
+		// contactName as format: name|prefCallbackId|ourNickname
+		url_arg_array, ok = r.URL.Query()["name"]
+		if ok && len(url_arg_array[0]) >= 1 {
+			contactName = url_arg_array[0]
+		}
 	}
 
-	callerHost := ""
-	url_arg_array, ok = r.URL.Query()["callerHost"]
-	if ok && len(url_arg_array[0]) >= 1 {
-		callerHost = url_arg_array[0]
-	}
-
-	if setContacts(calleeID, contactID, contactName, callerHost, remoteAddr) {
+	if setContacts(calleeID, contactID, contactName, remoteAddr) {
 		// an error has occured
 		return
 	}
@@ -393,7 +444,7 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 	return
 }
 
-func setContacts(calleeID string, contactID string, contactName string, callerHost string, remoteAddr string) bool {
+func setContacts(calleeID string, contactID string, contactName string, remoteAddr string) bool {
 	// (calleeID = the callee making the call)
 	// (contactID = the callee to be added / changed)
 
@@ -420,10 +471,6 @@ func setContacts(calleeID string, contactID string, contactName string, callerHo
 	if contactID=="" {
 		fmt.Printf("# /setcontact (%s) abort on empty contactID %s\n", calleeID, remoteAddr)
 		return false
-	}
-
-	if callerHost!="" {
-		contactID = contactID+"@"+callerHost
 	}
 
 	var idNameMap map[string]string // calleeID -> contactName

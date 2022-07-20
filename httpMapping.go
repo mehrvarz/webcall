@@ -44,6 +44,7 @@ func httpGetMapping(w http.ResponseWriter, r *http.Request, urlID string, callee
 		return
 	}
 
+	fmt.Printf("/getmapping (%s) (%s) rip=%s\n", calleeID, dbUser.AltIDs, remoteAddr)
 	fmt.Fprintf(w,dbUser.AltIDs)
 	return
 }

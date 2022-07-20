@@ -754,7 +754,7 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString, dontIframeOnload
 		styleString += "left:3.2%; top:2%;"
 	}
 
-	if(addStyleString) {
+	if(typeof addStyleString !== "undefined" && addStyleString) {
 		styleString += addStyleString;
 	}
 

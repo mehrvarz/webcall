@@ -1301,8 +1301,9 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 
 						if c.hub.CallerClient.callerID != "" {
 							// add callerID/callerName to contacts
+// TODO attach callerHost to callerID ???
 							setContacts(c.calleeID, c.hub.CallerClient.callerID, c.hub.CallerClient.callerName,
-								c.hub.CallerClient.callerHost, c.RemoteAddrNoPort)
+								c.RemoteAddrNoPort)
 						}
 					}
 				} else {

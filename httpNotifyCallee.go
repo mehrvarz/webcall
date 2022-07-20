@@ -670,7 +670,7 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 	}
 
 	callerIdLong := callerID
-	if callerHost!="" {
+	if callerHost!="" && callerHost!=hostname {
 		callerIdLong += "@"+callerHost
 	}
 

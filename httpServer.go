@@ -291,6 +291,25 @@ func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 		header.Set("Content-Security-Policy", myCspString)
 	}
 
+// TODO if r.Method=="POST", we could read request headers and store them as response headers
+// this would allow caller.js to read those response headers
+// this should allow contacts.js, mapping.js, client.js and callee.js (showMissedCalls())
+// to load the caller-widget without attaching all the needed parameters in the URL
+/*
+//	if r.Method=="POST" {
+		// Loop over header names
+		for name, values := range r.Header {
+			// Loop over all values for the name.
+			for _, value := range values {
+				if strings.HasPrefix(name,"User") {
+					fmt.Println(">>>>>>",name, value)
+					w.Header().Set(name, value)
+				}
+			}
+		}
+//	}
+*/
+
 	if !embeddedFsShouldBeUsed {
 		http.ServeFile(w, r, fullpath)
 	} else {
@@ -576,7 +595,13 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		httpGetContacts(w, r, urlID, calleeID, cookie, remoteAddr)
 		return
 	}
+	if strings.HasPrefix(urlPath,"/getcontact") {
+		// TODO would benefit from supporting POST
+		httpGetContact(w, r, urlID, calleeID, cookie, remoteAddr)
+		return
+	}
 	if strings.HasPrefix(urlPath,"/setcontact") {
+		// TODO would benefit from supporting POST
 		httpSetContacts(w, r, urlID, calleeID, cookie, remoteAddr)
 		return
 	}

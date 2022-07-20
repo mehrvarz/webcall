@@ -19,7 +19,6 @@ var connectingText = "Connecting P2P...";
 var singleButtonReadyText = "Click to make your order<br>Live operator";
 var singleButtonBusyText = "All lines are busy.<br>Please try again a little later.";
 var singleButtonConnectedText = "You are connected.<br>How can we help you?";
-//var ringingText = "Ringing... please be patient, answering a web call may take a bit longer than answering a regular phone call...";
 var notificationSound = null;
 var dtmfDialingSound = null;
 var busySignalSound = null;
@@ -40,11 +39,15 @@ var candidateResultGenerated = true;
 var candidateResultString = "";
 var wsAddr = "";
 var wsAddrTime;
-var cookieName = "";
-var calleeID = ""; // who we are calling
-var callerId = ""; // our own id
-var callerName = ""; // our name
-var callerHost = "";
+// in caller.js 'calleeID' is the id being called
+// note that the one making the call may also be a callee (is awaiting calls in parallel and has a cookie!)
+var calleeID = "";    // id of the party being called
+var callerId = "";    // if caller is also a callee, this is it's callback ID (from urlArg, cookie, or idSelect)
+var callerIdArg = ""  // if caller is also a callee, this is it's callback ID (from urlArg only)
+var cookieName = "";  // if caller is also a callee, this is it's callback ID (from cookie)
+var callerHost = "";  // if caller is also a callee, this is it's callback host
+var callerName = "";  // this is the callers nickname
+var contactName = ""; // TODO get this from form
 var otherUA="";
 var sessionDuration = 0;
 var dataChannelSendMsg = "";
@@ -211,6 +214,9 @@ window.onload = function() {
 			enterIdValElement.focus();
 
 			numericIdCheckbox.addEventListener('change', function() {
+				if(enterIdValElement.readOnly) {
+					return;
+				}
 				if(this.checked) {
 					gLog("numericIdCheckbox checked");
 					enterIdValElement.setAttribute('type','number');
@@ -244,7 +250,8 @@ window.onload = function() {
 	if(typeof str!=="undefined" && str!="") {
 		callerId = str;
 	}
-	let callerIdArg = callerId;
+	callerIdArg = callerId;
+	// callerId may change by cookieName and idSelect
 
 	str = getUrlParams("callerName");
 	if(typeof str!=="undefined" && str!="") {
@@ -348,10 +355,9 @@ window.onload = function() {
 
 		gLog("onload enterId/dial-id dialog cookieName="+cookieName);
 		if(callerIdArg=="select" && cookieName!="") {
-// TODO if user edits enterDomainVal so it is no longer ==location.host, we must also enable idSelectElement
+// TODO if user modifies enterDomainVal so it is no longer ==location.host, we must also enable idSelectElement
 			// when user operates idSelectElement, callerId will be set
 			idSelectElement = document.getElementById("idSelect2");
-
 			// fetch mapping
 			let api = apiPath+"/getmapping?id="+cookieName;
 			gLog('onload request getmapping api',api);
@@ -367,7 +373,7 @@ window.onload = function() {
 					let altIDs = xhr.responseText;
 					let tok = altIDs.split("|");
 					for(var i=0; i<tok.length; i++) {
-						console.log("tok["+i+"]="+tok[i]);
+						console.log("/getmapping tok["+i+"]="+tok[i]);
 						if(tok[i]!="") {
 							let tok2 = tok[i].split(",");
 							let id = tok2[0].trim();
@@ -376,7 +382,7 @@ window.onload = function() {
 							if(assign=="") {
 								assign = "none";
 							}
-							//console.log("assign=("+assign+")");
+							//console.log("/getmapping assign=("+assign+")");
 							let idOption = document.createElement('option');
 							idOption.text = id + " ("+assign+")";
 							idOption.value = id;
@@ -384,6 +390,7 @@ window.onload = function() {
 							altIdCount++;
 						}
 					}
+// TODO not sure about '00000000000'
 					let idOptionAnon = document.createElement('option');
 					idOptionAnon.text = "00000000000 (incognito)";
 					idOptionAnon.value = "";
@@ -401,12 +408,80 @@ window.onload = function() {
 						gLog("onload idSelectElement.focus");
 						idSelectElement.focus();
 					},400);
+
+//					if(calleeID!="" && cookieName!="") {
+					if(enterIdValElement.value!="" && cookieName!="") {
+						// get preferred callerID and callerNickname from calleeID-contact
+						let contactID = enterIdValElement.value +"@"+ enterDomainValElement.value;
+						let api = apiPath+"/getcontact?id="+cookieName+"&contactID="+contactID;
+console.log('request /getcontact api',api);
+						ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+							var xhrresponse = xhr.responseText
+console.log("/getcontact for calleeID="+calleeID+" xhrresponse="+xhrresponse);
+							if(xhrresponse!="") {
+								// format: name|prefCallbackID|myNickname
+								let tok = xhrresponse.split("|");
+								if(tok.length>0 && tok[0]!="") {
+									contactName = tok[0];
+								}
+								if(tok.length>1 && tok[1]!="") {
+									let prefCallbackID = tok[1];
+console.log("/getcontact prefCallbackID="+prefCallbackID);
+									// we can now preselect idSelect with prefCallbackID
+									const listArray = Array.from(idSelectElement.children);
+									let i=0;
+									listArray.forEach((item) => {
+										if(item.text.startsWith(prefCallbackID)) {
+console.log("/getcontact selectedIndex="+i+" +1");
+											idSelectElement.selectedIndex = i;
+										}
+										i++
+									});
+								}
+
+								if(tok.length>2) {
+									callerName = tok[2];
+console.log("/getcontact set callerName="+callerName);
+								}
+								// we can now preset myNickname
+								// set callerName = myNickname
+							}
+						}, errorAction);
+					}
 				}
 			}, function(errString,errcode) {
 				// /getmapping has failed
 				console.log("# onload ex "+errString+" "+errcode);
 			});
 
+			// enable storeContactButton (like dialIdAutoStore)
+			var storeContactButtonElement = document.getElementById("storeContactButton");
+			if(storeContactButtonElement) {
+				gLog('storeContactButton on');
+				storeContactButtonElement.style.opacity = "0.8";
+				storeContactButtonElement.onclick = function() {
+					// enable [Save Contact] button when enterIdValElement.value!=""
+					// TODO: but only if enterDomainValElement.value != location.host ???
+					// [Save Contact] we want to save the id of the user we are about to call:
+					// local id:  enterIdValElement.value (if enterDomainValElement.value==location.host)
+					// remote id: enterIdValElement.value@enterDomainValElement.value
+					//		let calleeID = enterIdValElement.value@enterDomainValElement.value
+					// form for contactName: ____________
+					// form for ourNickname: ____________
+					let contactID = enterIdValElement.value +"@"+ enterDomainValElement.value;
+console.log("/setcontact contactID="+contactID);
+					if(contactName=="") contactName="unknown";
+					let compoundName = contactName+"|"+callerId+"|"+callerName;
+console.log("/setcontact compoundName="+compoundName);
+					let api = apiPath+"/setcontact?id="+cookieName +
+						"&contactID="+contactID + "&name="+compoundName;
+					ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+						console.log("/setcontact ("+contactID+") stored ("+xhr.responseText+")");
+					}, function(errString,errcode) {
+						console.log("# /setcontact ("+contactID+") ex "+errString+" "+errcode);
+					});
+				}
+			}
 		} else {
 			if(calleeID=="") {
 				setTimeout(function() {
@@ -422,7 +497,8 @@ window.onload = function() {
 			}
 		}
 
-		// will continue in submitForm(theForm)
+
+		// [Dial] button -> will continue in submitForm(theForm)
 		return;
 	}
 
@@ -606,6 +682,7 @@ function onload3(comment) {
 	}
 
 	if(calleeID.startsWith("#")) {
+		// special case: action
 		gLog('start action calleeID='+calleeID);
 		let api = apiPath+"/action?id="+calleeID.substring(1)+"&callerId="+callerId;
 		xhrTimeout = 5*1000;
@@ -1209,8 +1286,8 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 			}
 
 			// calleeID is currently offline - check if calleeID can be notified (via twitter msg)
-			// NOTE: this causes a missedCall entry, but without txtmsg (since we don't send it here)
-			let api = apiPath+"/canbenotified?id="+calleeID+"&callerId="+callerId+
+			// TODO: this causes a missedCall entry, but without txtmsg (since we don't send it here)
+			let api = apiPath+"/canbenotified?id="+calleeID+"&callerId="+cookieName+
 				"&name="+callerName+"&callerHost="+callerHost;
 			gLog('canbenotified api',api);
 			xhrTimeout = 30*1000;
@@ -1302,8 +1379,7 @@ function confirmNotifyConnect() {
 
 function submitForm(theForm) {
 	// DialID: switch back to default container
-	calleeID = enterIdValElement.value;
-	calleeID = calleeID.replace(/ /g,''); // remove all white spaces
+	calleeID = enterIdValElement.value.replace(/ /g,''); // remove all white spaces
 	if(!calleeID.startsWith("#")) {
 		if(calleeID.length>11) calleeID = calleeID.substring(0,11);
 	}
@@ -1572,9 +1648,17 @@ function signalingCommand(message) {
 			// contactAutoStore only works if we call a local user
 			// if we call a remote user, contactAutoStore will be false and calleeID will NOT be stored
 			if(callerId!=="" && callerId!=="undefined") {
-// TODO would be good if we could store the prefered callback-ID for this contact
-				let api = apiPath+"/setcontact?id="+callerId+"&contactID="+calleeID+
-					"&name="+callerName + "&callerHost="+callerHost;
+				// this occurs only when we call a user on the same local host
+				// callerId should be the callers main-id
+				// contactID=calleeID is the id of the contact (the user being called)
+				// the name of the contact is unknown/empty at this point
+				// however we can send this as contactName: "|ourPreferredCallbackID|ourNickname"
+				// ourPreferredCallbackID is the selected id (may be the same as callerId, or may be different)
+				// ourNickname is the name of the caller as entered in the form
+//				let contactName = ""; // stays empty for now
+				let ourNickname = ""; // TODO get from form
+				let compoundName = contactName+"|"+callerId+"|"+ourNickname;
+				let api = apiPath+"/setcontact?id="+cookieName+"&contactID="+calleeID + "&name="+compoundName;
 				gLog("request api="+api);
 				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 					gLog("xhr setcontact OK "+xhr.responseText);
@@ -1965,37 +2049,6 @@ function dial2() {
 			showStatus(connectingText+"...",-1);
 		}
 	},3000,dialDate);
-	/*
-	// we are doing 3 thing here:
-	// 1a if no peercon (rtcConnect) after 20s and not hangup by the user, hang up the call now
-	// 1b and if no onIceCandidates, show a warning (webrtc check)
-	// 2  if peercon but no mediaConnect after 20s, show ringingText stats text (asking user to be patient)
-	setTimeout(function(lastDialDate) {
-		//console.log('dial2 20s timer '+dialDate+' '+lastDialDate+' '+doneHangup+' '+rtcConnect);
-		if(dialDate==lastDialDate && !doneHangup) { // still the same call after 20s?
-			console.log('dial2 20s timer '+dialDate+' '+lastDialDate+' '+doneHangup+' '+rtcConnect);
-			if(!rtcConnect) {
-				// no rtcConnect after 20s: give up dial-waiting
-				console.log("dialing timeout, giving up on call "+candidateResultString+" "+
-					dialDate+" "+lastDialDate);
-				if(onIceCandidates==0 && !doneHangup) {
-					console.warn('no ice candidates created');
-					onIceCandidates = -1;
-					notificationSound.play().catch(function(error) { });
-					hangup(true,true,"Cannot make calls. "+
-					   "Your browser engine does not generate WebRTC/ICE candidates.");
-					return;
-				}
-				hangupWithBusySound(true,"Failed to connect "+candidateResultString);
-			} else {
-				if(!mediaConnect) {
-					// rtcConnect but no mediaConnect after 20s: tell caller to be parient
-					showStatus(ringingText,-1);
-				}
-			}
-		}
-	},20000,dialDate);
-	*/
 
 	addedAudioTrack = null;
 	addedVideoTrack = null;

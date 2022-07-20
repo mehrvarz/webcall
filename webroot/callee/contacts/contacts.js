@@ -83,6 +83,7 @@ function requestData() {
 
 var obj = null;
 function processContacts(xhrresponse) {
+	// response from /getcontacts
 	if(!gentle) console.log("xhrresponse ("+xhrresponse+")");
 	if(xhrresponse!="") {
 		let mainLink = window.location.href;
@@ -99,7 +100,7 @@ function processContacts(xhrresponse) {
 		let entries = Object.entries(obj);
 		// if there is no name, we use the id as name
 		for(let entry of entries) {
-			// [0]=id, [1]=name
+			// entry[0]=id, entry[1]=name
 			if(entry[1]=="") { entry[1]=entry[0]; }
 		}
 		// now sort
@@ -116,24 +117,33 @@ function processContacts(xhrresponse) {
 		//if(!gentle) console.log('sorted results',entries);
 
 		// create display table
-		// TODO not sure about border-spacing:6px
 		var dataBoxContent = "<table style='width:100%; border-collapse:separate; border-spacing:6px 2px; line-height:1.7em;'>"
 		dataBoxContent += "<tr style='color:#7c0;font-weight:600;user-select:none;'><td>Name (edit)</td><td>ID (call)</td></tr>";
 		for(let entry of entries) {
 			let id = entry[0]; // just a local id, or id@host
-			let name = entry[1];
-			//if(!gentle) console.log('obj[%s] (%s)',id, name);
-			dataBoxContent += "<tr><td><a onclick='edit(this,event,\""+id+"\")'>"+name+"</a></td>";
+			let entry1 = entry[1];
 
+			let tok = entry1.split("|");
+			let name = "none";
+			if(tok.length>0) name = tok[0]
+			let prefCallbackId = "";
+			if(tok.length>1) prefCallbackId = tok[1]
+			let ourNickname = "";
+			if(tok.length>2) ourNickname = tok[2]
+
+			// left column: Name (edit)
+			dataBoxContent += "<tr><td><a onclick='edit(this,event,\""+id+"\",\""+name+"\")'>"+name+"</a></td>";
+
+			// right column: ID (call)
 			let idxAt = id.indexOf("@");
 			if(idxAt>=0) {
-				// remote user
+				// right column: remote user
 				let callerHost = id.substring(idxAt);
 				let idOnly = id.substring(0,idxAt); // without callerHost
-				// TODO may need to make the shown id shorter
+// TODO may need to make displayed id shorter
 				dataBoxContent += "<td><a href='https://" + callerHost + "/user/" + idOnly + "?ds="+dialsounds+"' target='_blank'>"+id+"</a></td></tr>";
 			} else {
-				// local user
+				// right column: local user
 				dataBoxContent += "<td><a href='" + mainLink + id + "?ds="+dialsounds+"'>"+id+"</a></td></tr>";
 			}
 		}
@@ -143,8 +153,8 @@ function processContacts(xhrresponse) {
 }
 
 var myTableElement;
-function edit(tableElement,ev,key) {
-	let name = obj[key];
+function edit(tableElement,ev,key,name) {
+	// edit the contact name
 	let rect = tableElement.getBoundingClientRect();
 	console.log('edit',key,name,rect,ev.pageX,ev.pageY);
 	if(formElement!=null) {
@@ -154,6 +164,7 @@ function edit(tableElement,ev,key) {
 	}
 	myTableElement = tableElement;
 	// offer a form for the user to edit the name at pos rect.x / rect.y and rect.width
+//TODO alternatively we could open a new dialog to edit: name|prefCallbackId|ourNickname
 	formElement = document.createElement("div");
 	formElement.style = "position:absolute; left:"+rect.x+"px; top:"+(rect.y+window.scrollY)+"px; z-index:100;";
 	formElement.innerHTML = "<form action='javascript:;' onsubmit='editSubmit(this,\""+key+"\")' id='user-comment'> <input type='text' id='formtext' value='"+name+"' size='14' maxlength='14' autofocus> <input type='submit' id='submit' value='Store'> </form>";
@@ -162,10 +173,19 @@ function edit(tableElement,ev,key) {
 }
 
 function editSubmit(formElement,id) {
+	// store the edited contact name via /setcontact - or delete this contact via /deletecontact
 	//console.log('editSubmit',id);
 	let formtextElement = document.getElementById("formtext");
-	let oldName = obj[id];
 	let newName = formtextElement.value;
+
+	let entry1 = obj[id];
+	let tok = entry1.split("|");
+	let oldName = "none";
+	if(tok.length>0) oldName = tok[0]
+	let prefCallbackId = "";
+	if(tok.length>1) prefCallbackId = tok[1]
+	let ourNickname = "";
+	if(tok.length>2) ourNickname = tok[2]
 	console.log('editSubmit value',oldName,newName,id);
 
 	if(newName=="") {
@@ -195,12 +215,14 @@ function editSubmit(formElement,id) {
 	} else if(newName!=oldName) {
 		// name change
 		// deliver newName change for id back to the server (/setcontact?id=calleeID&contactID=id&name=newName)
-		let api = apiPath+"/setcontact?id="+calleeID+"&contactID="+id+"&name="+newName;
+		let entry1 = newName+"|"+prefCallbackId+"|"+ourNickname;
+		// TODO /setcontact would benefit from using POST
+		let api = apiPath+"/setcontact?id="+calleeID+"&contactID="+id+"&name="+entry1;
 		if(!gentle) console.log('request api',api);
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 			console.log('xhr setcontact resp='+xhr.responseText);
 			if(xhr.responseText=="") {
-				obj[id] = newName;
+				obj[id] = entry1;
 				myTableElement.innerHTML = newName;
 			}
 		}, errorAction);
