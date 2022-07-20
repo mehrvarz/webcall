@@ -129,7 +129,7 @@ window.onload = function() {
 
 	let id = getUrlParams("id");
 	if(typeof id!=="undefined" && id!="") {
-		calleeID = id;
+		calleeID = cleanStringParameter(id,true);
 	}
 	// if on start there is a fragment/hash ('#') in the URL, remove it
 	if(location.hash.length > 0) {
@@ -257,7 +257,7 @@ window.onload = function() {
 	if(typeof str!=="undefined" && str!="") {
 		// this urlArg has a low priority
 		// will be overwritten by the contacts-entry for enterIdValElement.value (calleeID)
-		callerName = str;
+		callerName = cleanStringParameter(str,true);
 	}
 
 	callerHost = location.host;
@@ -397,9 +397,9 @@ window.onload = function() {
 						console.log("/getmapping tok["+i+"]="+tok[i]);
 						if(tok[i]!="") {
 							let tok2 = tok[i].split(",");
-							let id = tok2[0].trim();
-							let active = tok2[1].trim();
-							let assign = tok2[2].trim();
+							let id = cleanStringParameter(tok2[0],true);
+							let active = cleanStringParameter(tok2[1],true);
+							let assign = cleanStringParameter(tok2[2],true);
 							if(assign=="") {
 								assign = "none";
 							}
@@ -432,9 +432,9 @@ window.onload = function() {
 
 					if(enterIdValElement.value!="" && cookieName!="") {
 						// get preferred callerID and callerNickname from calleeID-contact
-						let contactID = enterIdValElement.value;
-						if(enterDomainValElement.value!="") {
-							contactID += "@"+enterDomainValElement.value;
+						let contactID = cleanStringParameter(enterIdValElement.value,true);
+						if(cleanStringParameter(enterDomainValElement.value,true)!="") {
+							contactID += "@"+cleanStringParameter(enterDomainValElement.value,true);
 						}
 						let api = apiPath+"/getcontact?id="+cookieName + "&contactID="+contactID;
 console.log('request /getcontact api',api);
@@ -445,7 +445,7 @@ console.log("/getcontact for calleeID="+calleeID+" xhrresponse="+xhrresponse);
 								// format: name|prefCallbackID|myNickname
 								let tok = xhrresponse.split("|");
 								if(tok.length>0 && tok[0]!="") {
-									contactName = tok[0];
+									contactName = cleanStringParameter(tok[0],true);
 								}
 								if(tok.length>1 && tok[1]!="") {
 									let prefCallbackID = tok[1];
@@ -495,7 +495,8 @@ console.log("/getcontact selectedIndex="+i+" +1");
 					//		let calleeID = enterIdValElement.value@enterDomainValElement.value
 					// form for contactName: ____________
 					// form for callerName: ____________ (ourNickname)
-					let contactID = enterIdValElement.value +"@"+ enterDomainValElement.value;
+					let contactID = cleanStringParameter(enterIdValElement.value,true) +
+						"@" + cleanStringParameter(enterDomainValElement.value,true);
 console.log("/setcontact contactID="+contactID);
 					if(contactName=="") contactName="unknown";
 					let compoundName = contactName+"|"+callerId+"|"+callerName;
@@ -540,7 +541,7 @@ function changeId(selectObject) {
 		for(var i = idSelectElement.options.length - 1; i >= 0; i--) {
 			if(idSelectElement.options[i].value == selectObject.value) {
 				// found selectObject
-				callerId = selectObject.value;
+				callerId = cleanStringParameter(selectObject.value,true);
 				gLog('changeId callerId='+callerId);
 				break;
 			}
@@ -639,9 +640,9 @@ function onload2() {
 							//console.log("tok["+i+"]="+tok[i]);
 							if(tok[i]!="") {
 								let tok2 = tok[i].split(",");
-								let id = tok2[0].trim();
-								let active = tok2[1].trim();
-								let assign = tok2[2].trim();
+								let id = cleanStringParameter(tok2[0],true);
+								let active = cleanStringParameter(tok2[1],true);
+								let assign = cleanStringParameter(tok2[2],true);
 								if(assign=="") {
 									assign = "none";
 								}
@@ -994,7 +995,7 @@ function getUrlParams(param) {
 }
 
 function checkCalleeOnline(waitForCallee,comment) {
-	callerName = nickname.value;
+	callerName = cleanStringParameter(nickname.value,true);
 
 	// Connecting P2P...
 	//console.log("checkCalleeOnline callerId="+callerId+" callerName="+callerName);
@@ -1251,7 +1252,9 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 				gLog("notifyCallee api="+api+" timeout="+xhrTimeout);
 				// in case caller aborts:
 				goodbyMissedCall = calleeID+"|"+callerName+"|"+callerId+
-					"|"+Math.floor(Date.now()/1000)+"|"+msgbox.value.substring(0,msgBoxMaxLen)+"|"+location.host;
+					"|"+Math.floor(Date.now()/1000)+
+					"|"+cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen)+
+					"|"+location.host;
 				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 					// end spinner
 					if(divspinnerframe) {
@@ -1344,7 +1347,9 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 
 					showStatus(msg,-1);
 					goodbyMissedCall = calleeID+"|"+callerName+"|"+callerId+
-					 "|"+Math.floor(Date.now()/1000)+"|"+msgbox.value.substring(0,msgBoxMaxLen)+"|"+location.host;
+						"|"+Math.floor(Date.now()/1000)+
+						"|"+cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen)+
+						"|"+location.host;
 					// goodbyMissedCall will be cleared by a successful call
 					// if it is still set in goodby(), we will ask server to store this as a missed call
 					return;
@@ -1412,14 +1417,14 @@ function confirmNotifyConnect() {
 
 function submitForm(theForm) {
 	// DialID: switch back to default container
-	calleeID = enterIdValElement.value.replace(/ /g,''); // remove all white spaces
+	calleeID = cleanStringParameter(enterIdValElement.value,true); // remove all white spaces
 	if(!calleeID.startsWith("#")) {
 		if(calleeID.length>11) calleeID = calleeID.substring(0,11);
 	}
 	gLog("submitForm calleeID="+calleeID);
 // TODO ACHTUNG .host may have :443 set, while DomainVal may not
 	gLog("submitForm targetDomain="+enterDomainValElement.value+" location.host="+location.host);
-	if(enterDomainValElement.value != location.host) {
+	if(cleanStringParameter(enterDomainValElement.value,true) != location.host) {
 		// the callee to call is hosted on a different server
 		// if we are running on Android, callUrl will be handled by onNewIntent() in the activity
 		//   which will forward callUrl via iframeWindowOpen() to the remote host
@@ -1430,7 +1435,7 @@ function submitForm(theForm) {
 		// below code tries to catch an window.open() error ("host not found")
 		// and throw an alert() instead of relying on an ugly browser err-msg
 		let randId = ""+Math.floor(Math.random()*1000000);
-		let callUrl = "https://"+enterDomainValElement.value+"/user/"+calleeID+
+		let callUrl = "https://"+cleanStringParameter(enterDomainValElement.value,true)+"/user/"+calleeID+
 			"?callerId="+callerId + "&callerName="+callerName + "&callerHost="+callerHost + "&i="+randId;
 		if(playDialSounds==false) {
 			callUrl += "&ds=false";
@@ -1487,7 +1492,7 @@ function notifyConnect(callerName,callerId,callerHost) {
 	// notify calleeID (on behalf of callerId)
 	let api = apiPath+"/notifyCallee?id="+calleeID +
 		"&callerId="+callerId + "&name="+callerName + "&callerHost="+callerHost +
-		"&msg="+msgbox.value.substring(0,msgBoxMaxLen);
+		"&msg="+cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen);
 	xhrTimeout = 600*1000; // 10 min extended xhr timeout
 	gLog("notifyCallee api="+api+" timeout="+xhrTimeout);
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
@@ -1691,9 +1696,8 @@ function signalingCommand(message) {
 				// however we can send this as contactName: "|ourPreferredCallbackID|ourNickname"
 				// ourPreferredCallbackID is the selected id (may be the same as callerId, or may be different)
 				// ourNickname is the name of the caller as entered in the form
-//				let contactName = ""; // stays empty for now
-				let ourNickname = ""; // TODO get from form
-				let compoundName = contactName+"|"+callerId+"|"+ourNickname;
+				// TODO get callerName from form and don't forget cleanStringParameter(,true)
+				let compoundName = contactName+"|"+callerId+"|"+callerName;
 				let api = apiPath+"/setcontact?id="+cookieName+"&contactID="+calleeID + "&name="+compoundName;
 				gLog("request api="+api);
 				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
@@ -1960,7 +1964,7 @@ function signalingCommand(message) {
 				if(wsConn) {
 					if(!mediaConnect) {
 						// before wsConn.close(): send msgbox text to server
-						let msgboxText = msgbox.value.substring(0,msgBoxMaxLen);
+						let msgboxText = cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen);
 						if(msgboxText!="") {
 							wsSend("msg|"+msgboxText);
 						}
@@ -2201,10 +2205,10 @@ function dial2() {
 					// set goodbyTextMsg (including msgbox text) to be evaluated in goodby
 //					goodbyTextMsg = calleeID+"|"+callerName+"|"+callerId+
 //						"|"+Math.floor(Date.now()/1000)+"|"+msgbox.value.substring(0,300)
-					goodbyTextMsg = msgbox.value.substring(0,msgBoxMaxLen)
+					goodbyTextMsg = cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen)
 					gLog('set goodbyTextMsg='+goodbyTextMsg);
 
-					let msgboxText = msgbox.value.substring(0,msgBoxMaxLen);
+					let msgboxText = cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen);
 					if(msgboxText!="") {
 						if(dataChannel) {
 							if(dataChannel.readyState=="open") {
@@ -2466,7 +2470,7 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 	if(wsConn && wsConn.readyState==1) {
 		gLog('mustDisconnect='+mustDisconnectCallee+' readyState='+wsConn.readyState+" mediaCon="+mediaConnect);
 		if(!mediaConnect) {
-			let msgboxText = msgbox.value.substring(0,msgBoxMaxLen);
+			let msgboxText = cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen);
 			//gLog('msgboxText=('+msgboxText+')');
 			if(msgboxText!="") {
 				gLog('msg=('+msgboxText+')');
@@ -2666,5 +2670,13 @@ function clearForm(idx) {
 			   enterDomainValElement.focus();
 		},400);
 	}
+}
+
+function cleanStringParameter(str,eliminateSpaces) {
+	let ret = str.replace('|','').trim();
+	if(eliminateSpaces) {
+		ret = ret.replace(/ /g,'');
+	}
+	return ret;
 }
 
