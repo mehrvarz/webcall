@@ -975,25 +975,6 @@ function checkServerMode(callback) {
 	});
 }
 
-function getUrlParams(param) {
-	if(window.location.search!="") {
-		// skip questionmark
-		var query = window.location.search.substring(1);
-		var parts = query.split("&");
-		for (var i=0;i<parts.length;i++) {
-			var seg = parts[i].split("=");
-			if (seg[0] == param) {
-				return decodeURIComponent(seg[1]);
-			}
-		}
-	}
-	if(param=="id") {
-		let path = window.location.pathname;
-		let lastSlash = path.lastIndexOf("/");
-		return path.substring(lastSlash+1);
-	}
-}
-
 function checkCalleeOnline(waitForCallee,comment) {
 	callerName = cleanStringParameter(nickname.value,true);
 

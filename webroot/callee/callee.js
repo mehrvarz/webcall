@@ -82,7 +82,7 @@ var fileReceiveStartDate=0;
 var fileReceiveSinceStartSecs=0;
 var fileSendAbort=false;
 var fileReceiveAbort=false;
-var loginResponse=false;
+//var loginResponse=false;
 var minNewsDate=0;
 
 window.onload = function() {
@@ -111,7 +111,7 @@ window.onload = function() {
 
 	let id = getUrlParams("id");
 	if(typeof id!=="undefined" && id!="") {
-		calleeID = cleanStringParameter(id,true);
+		calleeID = cleanStringParameter(id,true,"id");
 	}
 	gLog("onload calleeID="+calleeID);
 
@@ -142,13 +142,10 @@ window.onload = function() {
 		return;
 	}
 
-	let auto = cleanStringParameter(getUrlParams("auto"),true);
+	let auto = cleanStringParameter(getUrlParams("auto"),true,"auto");
 	if(auto) {
         gLog("onload auto is set ("+auto+")");
-		loginResponse=false;
-		if(divspinnerframe) {
-			divspinnerframe.style.display = "block";
-		}
+		if(divspinnerframe) divspinnerframe.style.display = "block";
 	} else {
         gLog("onload auto is not set");
 	}
@@ -276,10 +273,8 @@ window.onload = function() {
 			}
 
 			gLog('onload pw-entry is needed '+mode);
-			// end spinner
-			if(divspinnerframe) {
-				divspinnerframe.style.display = "none";
-			}
+			if(divspinnerframe) divspinnerframe.style.display = "none";
+
 			onGotStreamGoOnline = true;
 			goOnlineButton.disabled = true;
 			goOfflineButton.disabled = true;
@@ -287,10 +282,7 @@ window.onload = function() {
 			return;
 		}
 
-		// end spinner
-		if(divspinnerframe) {
-			divspinnerframe.style.display = "none";
-		}
+		if(divspinnerframe) divspinnerframe.style.display = "none";
 
 		if(mode==2) {
 			// mode==2: server is in maintenance mode
@@ -461,6 +453,7 @@ function checkServerMode(callback) {
 	});
 }
 
+/*
 function getUrlParams(param) {
 	if(window.location.search!="") {
 		//gLog("getUrlParams search=%s",window.location.search);
@@ -487,6 +480,7 @@ function getUrlParams(param) {
 	}
 	return false;
 }
+*/
 
 function showPw() {
 	if(formPw.type=="password") {
@@ -521,7 +515,7 @@ function clearForm() {
 }
 
 function submitFormDone(theForm) {
-	var valuePw = cleanStringParameter(document.getElementById("current-password").value,true);
+	var valuePw = cleanStringParameter(document.getElementById("current-password").value,true,"pw");
 	if(valuePw.length < 6) {
 		formPw.focus();
 		showStatus("Password needs to be at least six characters long",-1);
@@ -551,10 +545,7 @@ function start() {
 		//getStream() -> getUserMedia(constraints) -> gotStream() -> goOnline() -> login()
 	} catch(ex) {
 		console.log("# ex while searching for audio devices "+ex.message);
-		// end spinner
-		if(divspinnerframe) {
-			divspinnerframe.style.display = "none";
-		}
+		if(divspinnerframe) divspinnerframe.style.display = "none";
 	}
 }
 
@@ -574,13 +565,7 @@ function login(retryFlag) {
 	ajaxFetch(new XMLHttpRequest(), "POST", api, function(xhr) {
 		// processData
 		let loginStatus = xhr.responseText;
-		//gLog('loginStatus '+loginStatus);
-
-		// end spinner
-		loginResponse=true;
-		if(divspinnerframe) {
-			divspinnerframe.style.display = "none";
-		}
+		//console.log("login xhr loginStatus "+loginStatus);
 
 		var parts = loginStatus.split("|");
 		if(parts.length>=1 && parts[0].indexOf("wsid=")>=0) {
@@ -645,6 +630,8 @@ function login(retryFlag) {
 			return;
 		}
 
+		if(divspinnerframe) divspinnerframe.style.display = "none";
+
 		let mainLink = window.location.href;
 		let idx = mainLink.indexOf("/calle");
 		if(idx>0) {
@@ -697,10 +684,7 @@ function login(retryFlag) {
 			showStatus("XHR error "+err,3000);
 		}
 
-		// end spinner
-		if(divspinnerframe) {
-			divspinnerframe.style.display = "none";
-		}
+		if(divspinnerframe) divspinnerframe.style.display = "none";
 
 		waitingCallerSlice = null;
 		missedCallsSlice = null;
@@ -905,6 +889,9 @@ function wsOnOpen() {
 	if(!mediaConnect) {
 		onlineIndicator.src="green-gradient.svg";
 	}
+
+	if(divspinnerframe) divspinnerframe.style.display = "none";
+
 	window.addEventListener("beforeunload", function () {
 		// prevent "try reconnect in..." after "wsConn close" on unload
 		// by turining our online-indication off
@@ -1283,9 +1270,7 @@ function signalingCommand(message) {
 				exclamationElement.onclick = function() {
 					if(typeof Android !== "undefined" && Android !== null) {
 						//Android.browse(newsUrl);
-						if(divspinnerframe) {
-							divspinnerframe.style.display = "block";
-						}
+						if(divspinnerframe) divspinnerframe.style.display = "block";
 						// here we set horiCenterBound=true
 						// we also set dontIframeOnload=true so that height:100% determines the iframe height
 						// also: dontIframeOnload=true may be required if newsUrl points to a different domain
@@ -1723,17 +1708,11 @@ function goOnline() {
 	gLog('goOnline '+calleeID);
 	addedAudioTrack = null;
 	addedVideoTrack = null;
-	if(divspinnerframe) {
-		if(typeof Android !== "undefined" && Android !== null && Android.isConnected()>0) {
-			// if already connected don't show spinner (we are most likely called by wakeGoOnline())
-		} else {
-			setTimeout(function() {
-				if(!loginResponse) {
-					//gLog('goOnline no loginResponse enable spinner');
-					divspinnerframe.style.display = "block";
-				}
-			},200);
-		}
+
+	if(typeof Android !== "undefined" && Android !== null && Android.isConnected()>0) {
+		// if already connected don't show spinner (we are most likely called by wakeGoOnline())
+	} else {
+		if(divspinnerframe) divspinnerframe.style.display = "block";
 	}
 	newPeerCon();
 
@@ -1758,11 +1737,8 @@ function newPeerCon() {
 		}
 		showStatus(statusMsg);
 
-		// end spinner
-		if(divspinnerframe) {
-			loginResponse=true; // prevent delayed spinner
-			divspinnerframe.style.display = "none";
-		}
+		if(divspinnerframe) divspinnerframe.style.display = "none";
+
 		offlineAction();
 
 		//wsSend("dummy|RTCPeerCon fail");
@@ -2342,6 +2318,8 @@ function goOffline() {
 		}
 		goOnlineButton.disabled = false;
 	}
+
+	if(divspinnerframe) divspinnerframe.style.display = "none";
 }
 
 function getCookieSupport() {
@@ -2350,11 +2328,11 @@ function getCookieSupport() {
     do {
         var c= 'gCStest='+Math.floor(Math.random()*100000000);
         document.cookie= persist? c+';SameSite=Strict;Secure;expires=Tue, 01-Jan-2030 00:00:00 GMT' : c;
-        if (document.cookie.indexOf(c)!==-1) {
+        if(document.cookie.indexOf(c)!==-1) {
             document.cookie= c+';SameSite=Strict;Secure;expires=Sat, 01-Jan-2000 00:00:00 GMT';
             return persist;
         }
-    } while (!(persist= !persist));
+    } while(!(persist= !persist));
     return null;
 }
 
