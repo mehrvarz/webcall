@@ -42,12 +42,12 @@ var wsAddrTime;
 // in caller.js 'calleeID' is the id being called
 // note that the one making the call may also be a callee (is awaiting calls in parallel and has a cookie!)
 var calleeID = "";    // id of the party being called
-var callerId = "";    // if caller is also a callee, this is it's callback ID (from urlArg, cookie, or idSelect)
-var callerIdArg = ""  // if caller is also a callee, this is it's callback ID (from urlArg only)
-var cookieName = "";  // if caller is also a callee, this is it's callback ID (from cookie)
-var callerHost = "";  // if caller is also a callee, this is it's callback host
+var callerId = "";    // this is the callers callback ID (from urlArg, cookie, or idSelect)
+var callerIdArg = ""  // this is the callers callback ID (from urlArg only)
+var cookieName = "";  // this is the callers nickname
+var callerHost = "";  // this is the callers home webcall server
 var callerName = "";  // this is the callers nickname
-var contactName = ""; // TODO get this from form
+var contactName = ""; // this is the callees nickname (from caller contacts or from dial-id form)
 var otherUA="";
 var sessionDuration = 0;
 var dataChannelSendMsg = "";
@@ -244,8 +244,6 @@ window.onload = function() {
 // TODO do checkServerMode() here
 
 	callerId = "";
-	callerName = "";
-	callerHost = "";
 	let str = getUrlParams("callerId");
 	if(typeof str!=="undefined" && str!="") {
 		callerId = str;
@@ -253,19 +251,26 @@ window.onload = function() {
 	callerIdArg = callerId;
 	// callerId may change by cookieName and idSelect
 
+	// showMissedCalls() hands over the default webcall nickname with this
+	callerName = "";
 	str = getUrlParams("callerName");
 	if(typeof str!=="undefined" && str!="") {
-		callerName = str; // user can modify this in UI
+		// this urlArg has a low priority
+		// will be overwritten by the contacts-entry for enterIdValElement.value (calleeID)
+		callerName = str;
 	}
 
+	callerHost = location.host;
 	str = getUrlParams("callerHost");
 	if(typeof str!=="undefined" && str!="") {
+		// if this is coming from the android client, it will be correct data
+		// if this comes directly from a 3rd party source, it may be false data
+		//    in such a case the party being called will not be able to call back this caller
+		//    however, if the callers cookie is found, we will set: callerHost = location.host;
 		callerHost = str;
 	}
-	if(callerHost=="") {
-		callerHost = location.host;
-	}
-	gLog("onload urlParam callerId=("+callerId+") callerName=("+callerName+") callerHost=("+callerHost+")");
+
+	gLog("onload urlParam callerId=("+callerId+") callerHost=("+callerHost+") callerName=("+callerName+")");
 
 	cookieName = "";
 	if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
@@ -279,12 +284,16 @@ window.onload = function() {
 	}
 
 	contactAutoStore = false;
-	if(callerHost == location.host && cookieName!="") {
+	if(cookieName!="") {
 		// this req is running on behalf of a local callee (in an iframe, or in a 2nd tab) with a cookie
-		// we overwrite callerId, callerHost (and maybe callerName) from urlArgs with our own values
+		// we overwrite callerId (and maybe callerName) from urlArgs with our own values
 		gLog("onload use cookieName ("+cookieName+") as callerId");
-		callerId = cookieName;
-		callerHost = location.host;
+// TODO not sure we should overwrite callerId this way
+// we should do this only...
+// - if callerId does not exit on this server (also have a look at callerHost)
+// - if it is not one of cookieNames tmpId's
+//		callerId = cookieName; // auto-fixing potentially wrong data from a link
+		callerHost = location.host; // auto-fixing potentially wrong data from a link
 
 		// use cookiename to fetch /getsettings
 		let api = apiPath+"/getsettings?id="+cookieName;
@@ -301,11 +310,14 @@ window.onload = function() {
 				gLog('serverSettings.storeContacts',serverSettings.storeContacts);
 				if(serverSettings.storeContacts=="true") {
 					contactAutoStore = true;
-					var dialIdAutoStoreElement = document.getElementById("dialIdAutoStore");
-					if(dialIdAutoStoreElement) {
-						gLog('dialIdAutoStore on');
-						//dialIdAutoStoreElement.style.display = "block";
-						dialIdAutoStoreElement.style.opacity = "0.8";
+					// if callerIdArg=="select", we don't need dialIdAutoStoreElement
+					// bc we offer a manual store-contact button in that case
+					if(callerIdArg!="select") {
+						var dialIdAutoStoreElement = document.getElementById("dialIdAutoStore");
+						if(dialIdAutoStoreElement) {
+							gLog('dialIdAutoStore on');
+							dialIdAutoStoreElement.style.opacity = "0.8";
+						}
 					}
 				}
 
@@ -321,16 +333,24 @@ window.onload = function() {
 		});
 	}
 
-	// we show dial-id dialog if no calleeID is set (when opened via dialpad icon from mainpage)
-	// or if callerIdArg=="select" (when requested by Android client onNewIntent for idSelect)
-	gLog("onload show dial-id? calleeID="+calleeID+" callerHost="+callerHost+" callerIdArg="+callerIdArg);
+	// show dial-id dialog
+	// - if calleeID=="": called by dialpad icon from mainpage
+	// - if callerIdArg=="select": called by android client as a 1st step before calling a remote host user
+	gLog("onload show dial-id? calleeID="+calleeID+" callerIdArg="+callerIdArg);
 	if(calleeID=="" || callerIdArg=="select") {
 		containerElement.style.display = "none";
 		enterIdElement.style.display = "block";
-		callerId = cookieName;
+
 		// set target domain name with local hostname
-		// note: .hostname does not contain the :port (use .host instead)
-		enterDomainValElement.value = callerHost;
+		// note: location.hostname does not contain the :port, so we use location.host
+		let targetHost = location.host;
+		// andr activity hands over the target domain with this when sending callerIdArg='select'
+		str = getUrlParams("targetHost");
+		if(typeof str!=="undefined" && str!="") {
+			targetHost = str;
+		}
+		enterDomainValElement.value = targetHost;
+
 		// if calleeID is not pure numeric, we first need to disable numericId checkbox
 		if(isNaN(calleeID)) {
 			gLog("onload isNaN("+calleeID+") true");
@@ -340,8 +360,9 @@ window.onload = function() {
 			gLog("onload isNaN("+calleeID+") false");
 		}
 		enterIdValElement.value = calleeID;
+
 		console.log("onload enterIdValElement.value="+enterIdValElement.value);
-		if(callerHost!="" && callerHost!=location.host) {
+		if(targetHost!=location.host) {
 			enterDomainValElement.readOnly = true;
 			enterDomainClearElement.style.display = "none";
 			gLog("onload enterDomain readOnly");
@@ -356,7 +377,7 @@ window.onload = function() {
 		gLog("onload enterId/dial-id dialog cookieName="+cookieName);
 		if(callerIdArg=="select" && cookieName!="") {
 // TODO if user modifies enterDomainVal so it is no longer ==location.host, we must also enable idSelectElement
-			// when user operates idSelectElement, callerId will be set
+			// when user operates idSelectElement, callerId may be changed
 			idSelectElement = document.getElementById("idSelect2");
 			// fetch mapping
 			let api = apiPath+"/getmapping?id="+cookieName;
@@ -409,11 +430,13 @@ window.onload = function() {
 						idSelectElement.focus();
 					},400);
 
-//					if(calleeID!="" && cookieName!="") {
 					if(enterIdValElement.value!="" && cookieName!="") {
 						// get preferred callerID and callerNickname from calleeID-contact
-						let contactID = enterIdValElement.value +"@"+ enterDomainValElement.value;
-						let api = apiPath+"/getcontact?id="+cookieName+"&contactID="+contactID;
+						let contactID = enterIdValElement.value;
+						if(enterDomainValElement.value!="") {
+							contactID += "@"+enterDomainValElement.value;
+						}
+						let api = apiPath+"/getcontact?id="+cookieName + "&contactID="+contactID;
 console.log('request /getcontact api',api);
 						ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 							var xhrresponse = xhr.responseText
@@ -434,14 +457,18 @@ console.log("/getcontact prefCallbackID="+prefCallbackID);
 										if(item.text.startsWith(prefCallbackID)) {
 console.log("/getcontact selectedIndex="+i+" +1");
 											idSelectElement.selectedIndex = i;
+											// this will set callerId based on id=cookieName in contacts
+											callerId = prefCallbackID;
 										}
 										i++
 									});
 								}
 
-								if(tok.length>2) {
-									callerName = tok[2];
-console.log("/getcontact set callerName="+callerName);
+								if(tok.length>2 && tok[2]!="") {
+									//if(callerName=="") {
+										callerName = tok[2];
+										console.log("/getcontact set callerName="+callerName);
+									//}
 								}
 								// we can now preset myNickname
 								// set callerName = myNickname
@@ -467,7 +494,7 @@ console.log("/getcontact set callerName="+callerName);
 					// remote id: enterIdValElement.value@enterDomainValElement.value
 					//		let calleeID = enterIdValElement.value@enterDomainValElement.value
 					// form for contactName: ____________
-					// form for ourNickname: ____________
+					// form for callerName: ____________ (ourNickname)
 					let contactID = enterIdValElement.value +"@"+ enterDomainValElement.value;
 console.log("/setcontact contactID="+contactID);
 					if(contactName=="") contactName="unknown";
@@ -643,6 +670,11 @@ function onload2() {
 						if(preselectIndex>-1) {
 							idSelectElement.selectedIndex = preselectIndex+1;
 						}
+					}
+
+					if(preselectIndex<0) {
+						// callerId was not fond in mapping
+						callerId = cookieName;
 					}
 
 					onload3("1");
@@ -966,9 +998,10 @@ function checkCalleeOnline(waitForCallee,comment) {
 
 	// Connecting P2P...
 	//console.log("checkCalleeOnline callerId="+callerId+" callerName="+callerName);
+	// check if calleeID is online (on behalf of callerId/callerName)
 	let api = apiPath+"/online?id="+calleeID;
 	if(callerId!=="" && callerId!=="undefined") {
-		api += "&callerId="+callerId+"&name="+callerName;
+		api += "&callerId="+callerId + "&name="+callerName;
 	}
 	if(typeof Android !== "undefined" && Android !== null) {
 		if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
@@ -1218,7 +1251,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 				gLog("notifyCallee api="+api+" timeout="+xhrTimeout);
 				// in case caller aborts:
 				goodbyMissedCall = calleeID+"|"+callerName+"|"+callerId+
-					"|"+Math.floor(Date.now()/1000)+"|"+msgbox.value.substring(0,msgBoxMaxLen)+"|"+callerHost;
+					"|"+Math.floor(Date.now()/1000)+"|"+msgbox.value.substring(0,msgBoxMaxLen)+"|"+location.host;
 				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 					// end spinner
 					if(divspinnerframe) {
@@ -1287,8 +1320,8 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 
 			// calleeID is currently offline - check if calleeID can be notified (via twitter msg)
 			// TODO: this causes a missedCall entry, but without txtmsg (since we don't send it here)
-			let api = apiPath+"/canbenotified?id="+calleeID+"&callerId="+cookieName+
-				"&name="+callerName+"&callerHost="+callerHost;
+			let api = apiPath+"/canbenotified?id="+calleeID + "&callerId="+callerId +
+				"&name="+callerName + "&callerHost="+callerHost;
 			gLog('canbenotified api',api);
 			xhrTimeout = 30*1000;
 			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
@@ -1311,7 +1344,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 
 					showStatus(msg,-1);
 					goodbyMissedCall = calleeID+"|"+callerName+"|"+callerId+
-						"|"+Math.floor(Date.now()/1000)+"|"+msgbox.value.substring(0,msgBoxMaxLen)+"|"+callerHost;
+					 "|"+Math.floor(Date.now()/1000)+"|"+msgbox.value.substring(0,msgBoxMaxLen)+"|"+location.host;
 					// goodbyMissedCall will be cleared by a successful call
 					// if it is still set in goodby(), we will ask server to store this as a missed call
 					return;
@@ -1374,7 +1407,7 @@ function goodby() {
 
 function confirmNotifyConnect() {
 	gLog("callerName="+callerName+" callerId="+callerId+" callerHost="+callerHost);
-	notifyConnect(callerName,callerId,callerHost);
+	notifyConnect(callerName,callerId,location.host);
 }
 
 function submitForm(theForm) {
@@ -1449,6 +1482,7 @@ function notifyConnect(callerName,callerId,callerHost) {
 		divspinnerframe.style.display = "block";
 	}
 	goodbyMissedCall = "";
+	// notify calleeID (on behalf of callerId)
 	let api = apiPath+"/notifyCallee?id="+calleeID +
 		"&callerId="+callerId + "&name="+callerName + "&callerHost="+callerHost +
 		"&msg="+msgbox.value.substring(0,msgBoxMaxLen);
@@ -1564,7 +1598,7 @@ function connectSignaling(message,openedFunc) {
 	gLog('connectSignaling: open ws connection '+calleeID+' '+wsAddr);
 	let tryingToOpenWebSocket = true;
     var wsUrl = wsAddr;
-	wsUrl += "&callerId="+callerId+"&name="+callerName+"&callerHost="+callerHost;
+	wsUrl += "&callerId="+callerId + "&name="+callerName + "&callerHost="+callerHost;
 	if(typeof Android !== "undefined" && Android !== null) {
 		if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
 			wsUrl = wsUrl + "&ver="+Android.getVersionName();

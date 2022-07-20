@@ -1443,7 +1443,6 @@ function showMissedCalls() {
 				callerIp = callerIp.substring(0,callerIpIdxPort);
 			}
 			let callerID = missedCallsSlice[i].CallerID;
-			let callerLink = ""; //callerID;
 
 			let callerName = missedCallsSlice[i].CallerName;
 			if(callerName=="") callerName="unknown";
@@ -1458,14 +1457,15 @@ function showMissedCalls() {
 			}
 
 			let callerHost = missedCallsSlice[i].Host;
-			let dialID = missedCallsSlice[i].DialID;
-			if(dialID=="") {
-				dialID = calleeID;
-			}
+//			let dialID = missedCallsSlice[i].DialID;
+//			if(dialID=="") {
+//				dialID = calleeID;
+//			}
 
+// TODO tmtmtm
 			if(callerID.length>=5) {
 				// TODO here we cld check if callerID is (still) a valid calleeID (but better do this on server)
-
+				let callerLink = "";
 				if(typeof callerHost == "undefined" || callerHost=="" || callerHost==location.host) {
 					// the original caller is hosted on THIS server
 					callerLink = window.location.href;
@@ -1474,7 +1474,10 @@ function showMissedCalls() {
 						callerLink = callerLink.substring(0,idxCallee) + "/user/" + callerID;
 						// caller.js will get nickname using the callee cookie
 						// UI allows the user can modify the nickname and select a tmpID for callerID
-						callerLink += "?ds="+playDialSounds;
+						callerLink += "?callerId="+calleeID + "&callerName="+calleeName;
+						if(playDialSounds==false) {
+							callerLink += "&ds="+playDialSounds;
+						}
 						// open caller-widget in an iframe
 						callerLink = "<a onclick='iframeWindowOpen(\""+callerLink+"\")'>"+callerID+"</a>";
 					}
@@ -1484,17 +1487,18 @@ function showMissedCalls() {
 					//console.log("callerHost=("+callerHost+")");
 					// (this may be confusing: when calling back, the callee on this host becomes a caller)
 
-					let remoteCallerID = callerID+"@"+callerHost;
-					if(remoteCallerID.length > remoteCallerIdMaxChar) {
-						remoteCallerID = remoteCallerID.substring(0,remoteCallerIdMaxChar-2)+"..";
-					}
 
 					// we use callerId=dialID, to provide the other side with the same id they used to call us
-					callerLink = "https://"+callerHost+"/user/"+callerID +
-						"?callerId="+dialID + "&callerName="+calleeName + "&callerHost="+location.host;
+					callerLink = "https://"+callerHost+"/user/"+callerID;
+					callerLink += "?callerId="+calleeID + "&callerName="+calleeName;
 					// ds= is only needed if playDialSounds==false
 					if(playDialSounds==false) {
 						callerLink += "&ds="+playDialSounds;
+					}
+
+					let remoteCallerID = callerID+"@"+callerHost;
+					if(remoteCallerID.length > remoteCallerIdMaxChar) {
+						remoteCallerID = remoteCallerID.substring(0,remoteCallerIdMaxChar-2)+"..";
 					}
 					callerLink = "<a href='"+callerLink+"' target='_blank'>"+remoteCallerID+"</a>";
 				}
