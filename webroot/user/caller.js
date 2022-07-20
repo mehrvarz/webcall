@@ -1431,8 +1431,10 @@ function submitForm(theForm) {
 		// and throw an alert() instead of relying on an ugly browser err-msg
 		let randId = ""+Math.floor(Math.random()*1000000);
 		let callUrl = "https://"+enterDomainValElement.value+"/user/"+calleeID+
-			"?callerId="+callerId + "&callerName="+callerName + "&callerHost="+callerHost +
-			"&ds="+playDialSounds + "&i="+randId;
+			"?callerId="+callerId + "&callerName="+callerName + "&callerHost="+callerHost + "&i="+randId;
+		if(playDialSounds==false) {
+			callUrl += "&ds=false";
+		}
 		var openOK = null;
 		try {
 			gLog("submitForm window.open "+callUrl);
