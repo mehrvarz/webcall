@@ -111,7 +111,7 @@ window.onload = function() {
 
 	let id = getUrlParams("id");
 	if(typeof id!=="undefined" && id!="") {
-		calleeID = id;
+		calleeID = cleanStringParameter(id,true);
 	}
 	gLog("onload calleeID="+calleeID);
 
@@ -142,7 +142,7 @@ window.onload = function() {
 		return;
 	}
 
-	let auto = getUrlParams("auto");
+	let auto = cleanStringParameter(getUrlParams("auto"),true);
 	if(auto) {
         gLog("onload auto is set ("+auto+")");
 		loginResponse=false;
@@ -521,7 +521,7 @@ function clearForm() {
 }
 
 function submitFormDone(theForm) {
-	var valuePw = document.getElementById("current-password").value;
+	var valuePw = cleanStringParameter(document.getElementById("current-password").value,true);
 	if(valuePw.length < 6) {
 		formPw.focus();
 		showStatus("Password needs to be at least six characters long",-1);

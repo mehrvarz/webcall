@@ -1590,3 +1590,11 @@ function gLog(...args) {
 	if(!gentle) console.log(...args);
 }
 
+function cleanStringParameter(str,eliminateSpaces) {
+	let ret = str.replace('|','').trim();
+	if(eliminateSpaces) {
+		ret = ret.replace(/ /g,'');
+	}
+	return ret;
+}
+
