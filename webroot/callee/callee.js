@@ -841,7 +841,7 @@ function showOnlineReadyMsg() {
 	}
 	var userLinkHref = userLink;
 	if(!playDialSounds) {
-		userLinkHref = userLinkHref + "?ds=false";
+		userLinkHref += "?ds=false";
 	}
 	let msg2 = "You receive calls made by this link:<br>"+
 		"<a target='_blank' href='"+userLinkHref+"'>"+userLink+"</a><br>";
@@ -2338,28 +2338,28 @@ function getCookieSupport() {
 
 var counter=0;
 function openContacts() {
-	let url = "/callee/contacts?ds="+playDialSounds; //+"&i="+counter++;
+	let url = "/callee/contacts?ds="+playDialSounds;
 	gLog('openContacts',url);
 	iframeWindowOpen(url);
 }
 
 function openDialId(userId) {
-	let url = "/user/?ds="+playDialSounds; //+"&i="+counter++;
+	let url = "/user/?ds="+playDialSounds;
 	if(userId) {
-		url = "/user/"+userId+"?ds="+playDialSounds; //+"&i="+counter++;
+		url = "/user/"+userId+"?ds="+playDialSounds;
 	}
 	gLog('openDialId',url);
 	iframeWindowOpen(url,false,"");
 }
 
 function openIdMapping() {
-	let url = "/callee/mapping/"; //+"?i="+counter++;
+	let url = "/callee/mapping/";
 	gLog('openIdMapping',url);
 	iframeWindowOpen(url);
 }
 
 function openSettings() {
-	let url = "/callee/settings?id="+calleeID; //+"&i="+counter++;
+	let url = "/callee/settings?id="+calleeID;
 	gLog('openSettings='+url);
 	iframeWindowOpen(url);
 	// when iframe closes, client.js:iframeWindowClose() will call getSettings()
