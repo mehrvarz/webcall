@@ -782,11 +782,10 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString, dontIframeOnload
 }
 
 function iframeOnload(obj) {
-	// scrollHeight without delay = min-height (set on the html element)
-	// scrollHeight with delay    = actual height of content
-	// this is why we run scrollHeight twice
+	// we run scrollHeight twice
+	// 1. scrollHeight without delay = min-height (set on the html element)
 	try {
-		let iframeHeight = obj.contentWindow.document.documentElement.scrollHeight + 10 + 'px';
+		let iframeHeight = obj.contentWindow.document.documentElement.scrollHeight +'px';
 		console.log("iframeOnload height="+iframeHeight);
 		obj.style.height = iframeHeight;
 		obj.contentWindow.focus();
@@ -794,9 +793,10 @@ function iframeOnload(obj) {
 		console.error("iframeOnload "+ex.message);
 	}
 
+	// 2. scrollHeight with delay    = actual height of content
 	setTimeout(function() {
 		try {
-			let iframeHeight = obj.contentWindow.document.documentElement.scrollHeight + 10 + 'px';
+			let iframeHeight = obj.contentWindow.document.documentElement.scrollHeight +'px';
 			//console.log("iframeOnload delayed height="+iframeHeight);
 			obj.style.height = iframeHeight;
 			obj.contentWindow.focus();

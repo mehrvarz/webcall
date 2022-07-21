@@ -119,20 +119,23 @@ function displayMapping() {
 				}
 				//console.log("assign=("+assign+")");
 
-				dataBoxContent += "<tr><td><a href='" + mainLink + id + "' onclick='clickID("+id+");return false;'>"+id+"</a></td>"+
-					"<td><a onclick='edit(this,event,\""+id+"\",\""+assign+"\")'>"+ assign +"</a></td>"+
-					"<td><a onclick='remove("+i+","+id+")' style='font-weight:600;'>X</a></td></tr>";
+				dataBoxContent += "<tr>"+
+				  "<td><a href='" +mainLink +id + "' onclick='clickID("+id+");return false;'>"+id+"</a></td>"+
+				  "<td><a onclick='edit(this,event,\""+id+"\",\""+assign+"\")'>"+ assign +"</a></td>"+
+				  "<td align='right'><a onclick='remove("+i+","+id+")' style='font-weight:600;'>X</a></td></tr>";
 			}
 		}
 		dataBoxContent += "</table>";
 	}
 
 	dataBoxContent += "<br>";
+	dataBoxContent += "<div style='width:100%;margin-top:18px;'>";
 	if(count<5) {
 		// no more than 10 tmpID's per callee
 		dataBoxContent += "<button onclick='add()'>Add New-ID</button> &nbsp; ";
 	}
-	dataBoxContent += "<button onclick='exitPage()'>Close</button>";
+	dataBoxContent += "<button style='float:right;' onclick='exitPage()'>Close</button>";
+	dataBoxContent += "</div>";
 
 	databoxElement.innerHTML = dataBoxContent;
 }
