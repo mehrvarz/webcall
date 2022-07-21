@@ -797,7 +797,7 @@ function iframeOnload(obj) {
 	setTimeout(function() {
 		try {
 			let iframeHeight = obj.contentWindow.document.documentElement.scrollHeight + 10 + 'px';
-			console.log("iframeOnload delayed height="+iframeHeight);
+			//console.log("iframeOnload delayed height="+iframeHeight);
 			obj.style.height = iframeHeight;
 			obj.contentWindow.focus();
 		} catch(ex) {

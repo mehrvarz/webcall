@@ -160,6 +160,7 @@ window.onload = function() {
 		gLog("onload url arg connectedText",singleButtonConnectedText);
 	}
 	// dialsounds
+	playDialSounds = true;
 	text = getUrlParams("ds");
 	if(typeof text!=="undefined" && text!="") {
 		if(text=="false") {
@@ -394,7 +395,7 @@ window.onload = function() {
 					let altIDs = xhr.responseText;
 					let tok = altIDs.split("|");
 					for(var i=0; i<tok.length; i++) {
-						console.log("/getmapping tok["+i+"]="+tok[i]);
+						//console.log("/getmapping tok["+i+"]="+tok[i]);
 						if(tok[i]!="") {
 							let tok2 = tok[i].split(",");
 							let id = cleanStringParameter(tok2[0],true);
@@ -437,10 +438,10 @@ window.onload = function() {
 							contactID += "@"+cleanStringParameter(enterDomainValElement.value,true);
 						}
 						let api = apiPath+"/getcontact?id="+cookieName + "&contactID="+contactID;
-console.log('request /getcontact api',api);
+//console.log('request /getcontact api',api);
 						ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 							var xhrresponse = xhr.responseText
-console.log("/getcontact for calleeID="+calleeID+" xhrresponse="+xhrresponse);
+//console.log("/getcontact for calleeID="+calleeID+" xhrresponse="+xhrresponse);
 							if(xhrresponse!="") {
 								// format: name|prefCallbackID|myNickname
 								let tok = xhrresponse.split("|");
@@ -449,13 +450,13 @@ console.log("/getcontact for calleeID="+calleeID+" xhrresponse="+xhrresponse);
 								}
 								if(tok.length>1 && tok[1]!="") {
 									let prefCallbackID = tok[1];
-console.log("/getcontact prefCallbackID="+prefCallbackID);
+//console.log("/getcontact prefCallbackID="+prefCallbackID);
 									// we can now preselect idSelect with prefCallbackID
 									const listArray = Array.from(idSelectElement.children);
 									let i=0;
 									listArray.forEach((item) => {
 										if(item.text.startsWith(prefCallbackID)) {
-console.log("/getcontact selectedIndex="+i+" +1");
+//console.log("/getcontact selectedIndex="+i+" +1");
 											idSelectElement.selectedIndex = i;
 											// this will set callerId based on id=cookieName in contacts
 											callerId = prefCallbackID;
