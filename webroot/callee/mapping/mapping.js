@@ -98,8 +98,8 @@ function displayMapping() {
 	dataBoxContent="";
 
 	if(altIDs!="") {
-		dataBoxContent += "<table style='width:100%; border-collapse:separate; _border-spacing:6px 2px; line-height:1.7em;'>"
-		dataBoxContent += "<tr style='color:#7c0;font-weight:600;user-select:none;'><td>ID</td><td>Assign</td></tr>";
+		dataBoxContent += "<table style='width:100%; border-collapse:separate; line-height:1.7em;'>"
+		dataBoxContent += "<tr style='color:#7c0;font-weight:600;user-select:none;'><td>ID</td><td>Label</td></tr>";
 
 		// main callee id
 		dataBoxContent += "<tr><td><a href='/user/"+calleeID+"' onclick='clickID("+calleeID+");return false;'>"+calleeID+"</a></td>" + "<td>(Main-ID)</td></tr>";
@@ -129,7 +129,7 @@ function displayMapping() {
 	}
 
 	dataBoxContent += "<br>";
-	dataBoxContent += "<div style='width:100%;margin-top:18px;'>";
+	dataBoxContent += "<div style='margin-top:18px;'>";
 	if(count<5) {
 		// no more than 10 tmpID's per callee
 		dataBoxContent += "<button onclick='add()'>Add New-ID</button> &nbsp; ";
