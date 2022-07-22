@@ -174,8 +174,9 @@ function remove(idx,id) {
 	gLog("remove "+idx+" "+id);
 	removeIdx = idx;
 	removeId = id;
-	// yesNoDialog will call removeDo() for 'yes'
-	menuDialogOpen(yesNoDialog,true);
+
+	let yesNoInner = "<div style='position:absolute; left:-999em; top:0px; width:160px; z-index:110; background:#45dd; color:#fff; padding:20px 30px; line-height:2.5em; border-radius:3px; cursor:pointer;'>Delete this ID ?<br>"+id+"<br><a onclick='removeDo();history.back();'>Delete!</a> &nbsp; <a onclick='history.back();'>Cancel</a></div>";
+	menuDialogOpen(dynDialog,true,yesNoInner);
 }
 
 function removeDo() {

@@ -77,13 +77,7 @@ a:hover {
 <body>
 <div id="fullScreenOverlay" style="position:absolute; left:0; top:0; margin:0; padding:0; width:100%; height:100%; z-index:105; display:none;"></div>
 
-<div id="yesNoDialog" style="position:relative; width:520px; user-select:none;">
-	<div style="position:absolute; left:-999em; top:0px; z-index:110; background:#45dd; color:#fff; padding:10px 20px; line-height:2.5em; border-radius:3px; cursor:pointer;">
-		Delete this ID?<br>
-		<a onclick="removeDo();history.back();">Delete!</a> &nbsp;
-		<a onclick="history.back();">Cancel</a>
-	</div>
-</div>
+<div id="dynDialog" style="position:relative; user-select:none; display:none;"></div>
 
 <div id="container">
 	<h1>ID Manager</h1>

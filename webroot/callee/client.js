@@ -590,7 +590,7 @@ function getStatsCandidateTypesEx(results,eventString1,eventString2) {
 }
 
 var menuDialogOpenElement = null;
-function menuDialogOpen(menuDialog,atMousePos) {
+function menuDialogOpen(menuDialog,atMousePos,inner) {
 	if(menuDialogOpenElement) {
 		gLog('# menuDialogOpen menuDialogOpenElement');
 		return;
@@ -599,8 +599,12 @@ function menuDialogOpen(menuDialog,atMousePos) {
 		gLog('# menuDialog undefined');
 		return;
 	}
+
 	//gLog('menuDialogOpen '+menuDialog);
 	menuDialogOpenElement = menuDialog;
+	if(typeof inner!="undefined" && inner!=null) {
+		menuDialogOpenElement.innerHTML = inner;
+	}
 
 	hashcounter++;
 	location.hash = hashcounter;
@@ -760,11 +764,10 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString, dontIframeOnload
 
 	console.log("iframeWindowOpen styleString="+styleString);
 
+	iframeWindowElement.style = styleString;
 	if(url.startsWith("string:")) {
-		iframeWindowElement.style = styleString;
 		iframeWindowElement.innerHTML = url.substring(7);
 	} else {
-		iframeWindowElement.style = styleString;
 		// we call iframeOnload() so that the iframe height becomes same as the content height
 		// for this to work, the document at url needs to have a fixed height or min-height
 		// if the document does not have fixed height or min-height, scrollHeight = 150px
