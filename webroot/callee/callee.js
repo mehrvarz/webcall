@@ -2355,6 +2355,7 @@ function openDialId(userId) {
 function openIdMapping() {
 	let url = "/callee/mapping/";
 	gLog('openIdMapping',url);
+	// id manager does not need 600px width
 	iframeWindowOpen(url,false,"max-width:500px");
 }
 
