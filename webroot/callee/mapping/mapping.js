@@ -132,7 +132,7 @@ function displayMapping() {
 	dataBoxContent += "<div style='margin-top:18px;'>";
 	if(count<5) {
 		// no more than 10 tmpID's per callee
-		dataBoxContent += "<button onclick='add()'>Add New-ID</button> &nbsp; ";
+		dataBoxContent += "<button onclick='add()'>Add New ID</button> &nbsp; ";
 	}
 	dataBoxContent += "<button style='float:right;' onclick='exitPage()'>Close</button>";
 	dataBoxContent += "</div>";
