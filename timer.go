@@ -338,6 +338,7 @@ func cleanupClientRequestsMap(w io.Writer, min int, title string) {
 
 // send url (pointing to update news) to all online callees
 func broadcastNewsLink(date string, url string) {
+	// let's loop through hubMap, so we see all connected callee users
 	hubMapMutex.RLock()
 	defer hubMapMutex.RUnlock()
 	countAll := 0
@@ -351,37 +352,35 @@ func broadcastNewsLink(date string, url string) {
 		}
 		countAll++
 		if hub!=nil {
-
 			hub.HubMutex.RLock()
 			// we make sure to send each news with a particular date string only once
 			if hub.CalleeClient==nil {
-				hub.HubMutex.RUnlock()
 				fmt.Printf("# newsLink hub.CalleeClient==nil to=%s data=%s\n",calleeID,data)
 			} else {
+				// the callee in this hub is online
 				// we don't need newsDateMutex bc no one else is using newsDateMap
 				//newsDateMutex.RLock()
 				lastNews := newsDateMap[calleeID]
 				//newsDateMutex.RUnlock()
 				if date <= lastNews {
 					// this news-msg was sent to calleeID already
-					hub.HubMutex.RUnlock()
 					//fmt.Printf("# newsLink date(%s) <= lastNews(%s) to=%s\n",date,lastNews,calleeID)
 				} else {
+					// send it now
 					err := hub.CalleeClient.Write([]byte(data))
-					hub.HubMutex.RUnlock()
 					countSent++
 
 					if err!=nil {
-						fmt.Printf("# newsLink done write to=%s err=%v\n",calleeID,err)
+						fmt.Printf("# newsLink write to=%s err=%v\n",calleeID,err)
 					} else {
 						//newsDateMutex.Lock()
 						newsDateMap[calleeID] = date
 						//newsDateMutex.Unlock()
-
 						countSentNoErr++
 					}
 				}
 			}
+			hub.HubMutex.RUnlock()
 		} else {
 			fmt.Printf("# newsLink hub==nil to=%s data=%s\n",calleeID,data)
 		}
@@ -510,13 +509,18 @@ func ticker3min() {
 		}
 		missedCallAllowedMutex.Unlock()
 
+
 		// load "news.ini", file should contain two lines: date= and url=
 		newsIni, err := ini.Load("news.ini")
 		if err == nil {
+			// "news.ini" exists
 			dateValue,ok := readIniEntry(newsIni,"date")
 			if(ok && dateValue!="") {
+				// date entry exists
 				urlValue,ok := readIniEntry(newsIni,"url")
 				if(ok && urlValue!="") {
+					// url entry exists
+					// lets send this url to all connected users who didn't receive it yet
 					broadcastNewsLink(dateValue,urlValue)
 				}
 			}
