@@ -754,7 +754,7 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString, dontIframeOnload
 	//window.scrollTo(0, 0);
 	window.scrollTo({ top: 0, behavior: 'smooth' });
 
-	console.log("iframeWindowOpen "+url+" horiCenterBound="+horiCenterBound+" addStyle="+addStyleString+" dontIframeOnload="+dontIframeOnload);
+	//console.log("iframeWindowOpen "+url+" horiCenterBound="+horiCenterBound+" addStyle="+addStyleString+" dontIframeOnload="+dontIframeOnload);
 	iframeWindowOpenUrl = url;
 	iframeWindowOpenFlag = true;
 
