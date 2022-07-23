@@ -444,9 +444,22 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 	return
 }
 
-func setContacts(calleeID string, contactID string, contactName string, remoteAddr string) bool {
-	// (calleeID = the callee making the call)
-	// (contactID = the callee to be added / changed)
+func setContacts(calleeID string, contactID string, compoundName string, remoteAddr string) bool {
+	// calleeID = the callee making the call
+	// contactID = the callee to be added / changed
+	// compoundName = contactName+"|"+callerId+"|"+callerName
+	// contactName must split compoundName
+	contactName := "";
+//	callerID := "";
+//	callerName := "";
+	tokenSlice := strings.Split(compoundName, "|")
+	for idx, tok := range tokenSlice {
+		switch idx {
+			case 0: contactName = tok
+//			case 1: callerID = tok
+//			case 2: callerName = tok
+		}
+	}
 
 	// if dbUser.StoreContacts==false (not checked), just return true
 	var dbEntry DbEntry
@@ -473,6 +486,7 @@ func setContacts(calleeID string, contactID string, contactName string, remoteAd
 		return false
 	}
 
+	// read the complete contacts for calleeID into idNameMap
 	var idNameMap map[string]string // calleeID -> contactName
 	err = kvContacts.Get(dbContactsBucket,calleeID,&idNameMap)
 	if err!=nil {
@@ -490,10 +504,11 @@ func setContacts(calleeID string, contactID string, contactName string, remoteAd
 	// check for contactID
 	oldName,ok := idNameMap[contactID]
 	if !ok || oldName=="" {
-		// check for lowercase contactID
+		// try lowercase contactID
 		contactID = strings.ToLower(contactID)
 		oldName,ok = idNameMap[contactID]
 	}
+
 	if ok {
 		// contactID exists
 		if contactName=="" || contactName==oldName {
