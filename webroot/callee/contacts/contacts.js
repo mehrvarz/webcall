@@ -16,7 +16,7 @@ window.onload = function() {
 		if(idxAmpasent>0) {
 			cookieName = cookieName.substring(0,idxAmpasent);
 		}
-		//console.log('onload cookieName='+cookieName);
+		//gLog('onload cookieName='+cookieName);
 		if(cookieName!="") {
 			calleeID = cookieName
 		}
@@ -34,7 +34,7 @@ window.onload = function() {
 	window.onhashchange = hashchange;
 
 	document.onkeydown = function(evt) {
-		//console.log('contacts onload onkeydown event');
+		//gLog('contacts onload onkeydown event');
 		evt = evt || window.event;
 		var isEscape = false;
 		if("key" in evt) {
@@ -44,17 +44,17 @@ window.onload = function() {
 		}
 		if(isEscape) {
 			if(formForNameOpen) {
-				//console.log('contacts.js esc key (formForNameOpen)');
+				//gLog('contacts.js esc key (formForNameOpen)');
 				let parentElement = formElement.parentNode;
 				parentElement.removeChild(formElement);
 				formElement = null;
 				formForNameOpen = false;
 			} else {
-				//console.log('contacts.js esc key -> exit');
+				//gLog('contacts.js esc key -> exit');
 				exitPage();
 			}
 		} else {
-			//console.log('contacts.js no esc key');
+			//gLog('contacts.js no esc key');
 		}
 	};
 
@@ -79,7 +79,7 @@ function getUrlParams(param) {
 
 function requestData() {
 	let api = apiPath+"/getcontacts?id="+calleeID;
-	if(!gentle) console.log('request getcontacts api',api);
+	gLog('request getcontacts api',api);
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 		processContacts(xhr.responseText);
 	}, errorAction);
@@ -88,7 +88,7 @@ function requestData() {
 var obj = null;
 function processContacts(xhrresponse) {
 	// response from /getcontacts
-	if(!gentle) console.log("xhrresponse ("+xhrresponse+")");
+	gLog("xhrresponse ("+xhrresponse+")");
 	if(xhrresponse=="") {
 		return;
 	}
@@ -100,7 +100,7 @@ function processContacts(xhrresponse) {
 
 	// parse json response of xhr /getcontacts
 	obj = JSON.parse(xhrresponse);
-	//if(!gentle) console.log('xhrresponse obj',obj);
+	//gLog('xhrresponse obj',obj);
 
 	// in order to sort the json data we convert it to an array
 	let entries = Object.entries(obj);
@@ -120,14 +120,14 @@ function processContacts(xhrresponse) {
 		}
 		return 0;
 	});
-	//if(!gentle) console.log('sorted results',entries);
+	//gLog('sorted results',entries);
 
 	// create display table
 	let remoteCallerIdMaxChar = 16;
 	if(window.innerWidth>360) {
 		remoteCallerIdMaxChar += Math.floor((window.innerWidth-360)/26);
 	}
-	//console.log("remoteCallerIdMaxChar="+remoteCallerIdMaxChar);
+	//gLog("remoteCallerIdMaxChar="+remoteCallerIdMaxChar);
 	var dataBoxContent = "<table style='width:100%; border-collapse:separate; line-height:1.7em;'>"
 	dataBoxContent += "<tr style='color:#7c0;font-weight:600;user-select:none;'><td>Name (edit)</td><td>ID (call)</td><td></td></tr>";
 	for(let entry of entries) {
@@ -154,7 +154,7 @@ function processContacts(xhrresponse) {
 			let idDisplay = id;
 			if(idDisplay.length > remoteCallerIdMaxChar+2) {
 				idDisplay = idDisplay.substring(0,remoteCallerIdMaxChar)+"..";
-				//console.log("idDisplay="+idDisplay+" "+idDisplay.length);
+				//gLog("idDisplay="+idDisplay+" "+idDisplay.length);
 			}
 			dataBoxContent += "<td><a href='https://" + callerHost + "/user/" + idOnly + "?ds="+dialsounds+"' target='_blank'>"+idDisplay+"</a></td>";
 		} else {
@@ -171,7 +171,7 @@ function processContacts(xhrresponse) {
 var myTableElement;
 var removeId = 0;
 function remove(tableElement,id) {
-	console.log("remove "+id);
+	gLog("remove "+id);
 	myTableElement = tableElement;
 	removeId = id;
 
@@ -181,9 +181,9 @@ function remove(tableElement,id) {
 
 function removeDo() {
 	let api = apiPath+"/deletecontact?id="+calleeID+"&contactID="+removeId;
-	if(!gentle) console.log('request api',api);
+	gLog('request api',api);
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-		console.log('xhr deletecontact OK',xhr.responseText);
+		gLog('xhr deletecontact OK',xhr.responseText);
 		if(xhr.responseText=="ok") {
 			// delete myTableElement <tr> 2nd parent of myTableElement
 			let trElement = myTableElement.parentNode.parentNode;
@@ -198,7 +198,7 @@ function removeDo() {
 function edit(tableElement,ev,key,name) {
 	// edit the contact name
 	let rect = tableElement.getBoundingClientRect();
-	console.log('edit',key,name,rect,ev.pageX,ev.pageY);
+	gLog('edit',key,name,rect,ev.pageX,ev.pageY);
 	if(formElement!=null) {
 		let parentElement = formElement.parentNode;
 		parentElement.removeChild(formElement);
@@ -216,7 +216,7 @@ function edit(tableElement,ev,key,name) {
 
 function editSubmit(formElement,id) {
 	// store the edited contact name via /setcontact - or delete this contact via /deletecontact
-	//console.log('editSubmit',id);
+	//gLog('editSubmit',id);
 	let formtextElement = document.getElementById("formtext");
 	let newName = formtextElement.value;
 
@@ -228,7 +228,7 @@ function editSubmit(formElement,id) {
 	if(tok.length>1) prefCallbackId = tok[1]
 	let ourNickname = "";
 	if(tok.length>2) ourNickname = tok[2]
-	console.log('editSubmit value',oldName,newName,id);
+	gLog('editSubmit value',oldName,newName,id);
 
 	if(newName=="") {
 		//prevent nameless element by aborting edit form
@@ -242,9 +242,9 @@ function editSubmit(formElement,id) {
 	if(newName.toLowerCase()=="delete" || newName=="...") {
 		// special case
 		let api = apiPath+"/deletecontact?id="+calleeID+"&contactID="+id;
-		if(!gentle) console.log('request api',api);
+		gLog('request api',api);
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-			console.log('xhr deletecontact OK',xhr.responseText);
+			gLog('xhr deletecontact OK',xhr.responseText);
 			if(xhr.responseText=="ok") {
 				// delete myTableElement <tr> 2nd parent of myTableElement
 				let trElement = myTableElement.parentNode.parentNode;
@@ -260,9 +260,9 @@ function editSubmit(formElement,id) {
 		let entry1 = newName+"|"+prefCallbackId+"|"+ourNickname;
 		// TODO /setcontact would benefit from using POST
 		let api = apiPath+"/setcontact?id="+calleeID+"&contactID="+id+"&name="+entry1;
-		if(!gentle) console.log('request api',api);
+		gLog('request api',api);
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-			console.log('xhr setcontact resp='+xhr.responseText);
+			//gLog('xhr setcontact resp='+xhr.responseText);
 			if(xhr.responseText=="") {
 				obj[id] = entry1;
 				myTableElement.innerHTML = newName;
@@ -278,7 +278,7 @@ function editSubmit(formElement,id) {
 }
 
 function errorAction(errString,err) {
-	console.log('xhr error',errString);
+	gLog('xhr error',errString);
 	// let user know via alert
 	alert("xhr error "+errString);
 }
@@ -305,11 +305,11 @@ function ajaxFetch(xhr, type, apiPath, processData, errorFkt, postData) {
 	} else {
 		apiPath += "?_="+new Date().getTime();
 	}
-	if(!gentle) console.log('xhr send',apiPath);
+	gLog('xhr send',apiPath);
 	xhr.open(type, apiPath, true);
 	xhr.setRequestHeader("Content-type", "text/plain; charset=utf-8");
 	if(postData) {
-		if(!gentle) console.log('posting',postData);
+		gLog('posting',postData);
 		xhr.send(postData);
 	} else {
 		xhr.send();
@@ -317,11 +317,11 @@ function ajaxFetch(xhr, type, apiPath, processData, errorFkt, postData) {
 }
 
 function exitPage() {
-	if(!gentle) console.log('exitPage');
+	gLog('exitPage');
 	if(parent!=null && parent.iframeWindowClose) {
-		if(!gentle) console.log('parent.iframeWindowClose()');
+		gLog('parent.iframeWindowClose()');
 		history.back();
 	}
-	if(!gentle) console.log('contacts exitPage stop onkeydown handler');
+	gLog('contacts exitPage stop onkeydown handler');
 }
 
