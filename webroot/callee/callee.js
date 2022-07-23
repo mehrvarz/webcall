@@ -1429,6 +1429,7 @@ function showMissedCalls() {
 
 			let callerName = missedCallsSlice[i].CallerName;
 			if(callerName=="") callerName="unknown";
+			// TODO if callerName=="" || callerName=="unknown" -> check contacts?
 
 			let callerNameMarkup = callerName;
 			let callerMsg = missedCallsSlice[i].Msg;
