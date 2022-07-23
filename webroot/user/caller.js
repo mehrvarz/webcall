@@ -255,7 +255,7 @@ window.onload = function() {
 	// showMissedCalls() hands over the default webcall nickname with this
 	callerName = "";
 	str = getUrlParams("callerName");
-	if(typeof str!=="undefined" && str!="") {
+	if(typeof str!=="undefined" && str!=null && str!="") {
 		// this urlArg has a low priority
 		// will be overwritten by the contacts-entry for enterIdValElement.value (calleeID)
 		callerName = cleanStringParameter(str,true);
@@ -327,6 +327,7 @@ window.onload = function() {
 				}
 			}
 
+// TODO callerName may be null
 			gLog("onload callerId=("+callerId+") callerName=("+callerName+") from /getsettings");
 
 		}, function(errString,err) {
@@ -377,7 +378,11 @@ window.onload = function() {
 
 		gLog("onload enterId/dial-id dialog cookieName="+cookieName);
 		if(callerIdArg=="select" && cookieName!="") {
-// TODO if user modifies enterDomainVal so it is no longer ==location.host, we must also enable idSelectElement
+// TODO if user modifies enterDomainVal so it is no longer ==location.host,
+// we must also (dynamically) enable idSelectElement
+
+// TODO must set idSelect in all cases, bc it is currently set to "select"
+// ideally by /getcontact
 			// when user operates idSelectElement, callerId may be changed
 			idSelectElement = document.getElementById("idSelect2");
 			// fetch mapping
@@ -1417,6 +1422,8 @@ function submitForm(theForm) {
 		// below code tries to catch an window.open() error ("host not found")
 		// and throw an alert() instead of relying on an ugly browser err-msg
 		let randId = ""+Math.floor(Math.random()*1000000);
+// TODO callerId may still be 'select'
+// TODO callerName may be null
 		let callUrl = "https://"+cleanStringParameter(enterDomainValElement.value,true)+"/user/"+calleeID+
 			"?callerId="+callerId + "&callerName="+callerName + "&callerHost="+callerHost + "&i="+randId;
 		if(playDialSounds==false) {
