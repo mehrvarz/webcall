@@ -881,7 +881,7 @@ function connectSignaling(message,comment) {
 
 function wsOnOpen() {
 	// called by service connectHost(wsUrl) -> onOpen() -> runJS("wsOnOpen()",null)
-	gLog('wsOnOpen '+calleeID);
+	gLog("wsOnOpen calleeID="+calleeID);
 	tryingToOpenWebSocket = false;
 	wsAutoReconnecting = false;
 	if(!mediaConnect) {
@@ -1721,6 +1721,7 @@ function goOnline() {
 		login(false);
 	} else {
 		gLog('goOnline have wsConn send init');
+		if(divspinnerframe) divspinnerframe.style.display = "none";
 		wsSend("init|!");
 	}
 }
@@ -1729,7 +1730,6 @@ function newPeerCon() {
 	try {
 		peerCon = new RTCPeerConnection(ICE_config);
 		gLog("new RTCPeerConnection ready");
-		if(divspinnerframe) divspinnerframe.style.display = "none";
 	} catch(ex) {
 		console.error("RTCPeerConnection "+ex.message);
 		var statusMsg = "RTCPeerConnection "+ex.message;
