@@ -367,7 +367,7 @@ window.onload = function() {
 		}
 		enterIdValElement.value = calleeID;
 
-		console.log("onload enterIdValElement.value="+enterIdValElement.value);
+		gLog("onload enterIdValElement.value="+enterIdValElement.value);
 		if(targetHost!=location.host) {
 			enterDomainValElement.readOnly = true;
 			enterDomainClearElement.style.display = "none";
