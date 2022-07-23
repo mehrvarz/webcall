@@ -149,9 +149,10 @@ function processContacts(xhrresponse) {
 		let idxAt = id.indexOf("@");
 		if(idxAt>=0) {
 			// right column: remote user
-			let callerHost = id.substring(idxAt);
+			let callerHost = id.substring(idxAt+1);
 			let idOnly = id.substring(0,idxAt); // without callerHost
 			let idDisplay = id;
+			//gLog("id="+id+" idDisplay="+idDisplay+" callerHost="+callerHost+" location.host="+location.host);
 			if(callerHost==location.host) {
 				idDisplay = idOnly;
 			}
