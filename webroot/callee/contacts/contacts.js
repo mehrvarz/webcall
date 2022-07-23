@@ -152,6 +152,9 @@ function processContacts(xhrresponse) {
 			let callerHost = id.substring(idxAt);
 			let idOnly = id.substring(0,idxAt); // without callerHost
 			let idDisplay = id;
+			if(callerHost==location.host) {
+				idDisplay = idOnly;
+			}
 			if(idDisplay.length > remoteCallerIdMaxChar+2) {
 				idDisplay = idDisplay.substring(0,remoteCallerIdMaxChar)+"..";
 				//gLog("idDisplay="+idDisplay+" "+idDisplay.length);
