@@ -326,13 +326,12 @@ window.onload = function() {
 					}
 				}
 
-				if(callerName=="" && /*serverSettings.nickname!=null &&*/ serverSettings.nickname!="") {
-console.log("callerName = serverSettings.nickname "+serverSettings.nickname);
+				if(callerName=="") {
+					//console.log("callerName = serverSettings.nickname "+serverSettings.nickname);
 					callerName = serverSettings.nickname; // user can modify this in UI
 				}
 			}
 
-// TODO callerName may be null
 			gLog("onload callerId=("+callerId+") callerName=("+callerName+") from /getsettings");
 
 		}, function(errString,err) {
@@ -386,9 +385,9 @@ console.log("callerName = serverSettings.nickname "+serverSettings.nickname);
 // TODO if user modifies enterDomainVal so it is no longer ==location.host,
 // we must also (dynamically) enable idSelectElement
 
+			callerId = "";
 // TODO must set idSelect in all cases, bc it is currently set to "select"
 // ideally by /getcontact
-			callerId = "";
 			// when user operates idSelectElement, callerId may be changed
 			idSelectElement = document.getElementById("idSelect2");
 			// fetch mapping
@@ -449,10 +448,10 @@ console.log("callerName = serverSettings.nickname "+serverSettings.nickname);
 							contactID += "@"+cleanStringParameter(enterDomainValElement.value,true);
 						}
 						let api = apiPath+"/getcontact?id="+cookieName + "&contactID="+contactID;
-//console.log('request /getcontact api',api);
+						//console.log('request /getcontact api',api);
 						ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 							var xhrresponse = xhr.responseText
-//console.log("/getcontact for calleeID="+calleeID+" xhrresponse="+xhrresponse);
+							//console.log("/getcontact for calleeID="+calleeID+" xhrresponse="+xhrresponse);
 							if(xhrresponse!="") {
 								// format: name|prefCallbackID|myNickname
 								let tok = xhrresponse.split("|");
@@ -461,13 +460,13 @@ console.log("callerName = serverSettings.nickname "+serverSettings.nickname);
 								}
 								if(tok.length>1 && tok[1]!="") {
 									let prefCallbackID = tok[1];
-//console.log("/getcontact prefCallbackID="+prefCallbackID);
+									//console.log("/getcontact prefCallbackID="+prefCallbackID);
 									// we can now preselect idSelect with prefCallbackID
 									const listArray = Array.from(idSelectElement.children);
 									let i=0;
 									listArray.forEach((item) => {
 										if(item.text.startsWith(prefCallbackID)) {
-//console.log("/getcontact selectedIndex="+i+" +1");
+											//console.log("/getcontact selectedIndex="+i+" +1");
 											idSelectElement.selectedIndex = i;
 											// this will set callerId based on id=cookieName in contacts
 											callerId = prefCallbackID;
@@ -509,10 +508,10 @@ console.log("callerName = serverSettings.nickname "+serverSettings.nickname);
 					// form for callerName: ____________ (ourNickname)
 					let contactID = cleanStringParameter(enterIdValElement.value,true) +
 						"@" + cleanStringParameter(enterDomainValElement.value,true);
-console.log("/setcontact contactID="+contactID);
+					//console.log("/setcontact contactID="+contactID);
 					if(contactName=="") contactName="unknown";
 					let compoundName = contactName+"|"+callerId+"|"+callerName;
-console.log("/setcontact compoundName="+compoundName);
+					//console.log("/setcontact compoundName="+compoundName);
 					let api = apiPath+"/setcontact?id="+cookieName +
 						"&contactID="+contactID + "&name="+compoundName;
 					ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
@@ -536,7 +535,6 @@ console.log("/setcontact compoundName="+compoundName);
 				},400);
 			}
 		}
-
 
 		// [Dial] button -> will continue in submitForm(theForm)
 		return;
