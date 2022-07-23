@@ -1447,7 +1447,7 @@ function showMissedCalls() {
 //				dialID = calleeID;
 //			}
 
-// TODO tmtmtm
+// TODO tmtmtm 5?
 			if(callerID.length>=5) {
 				// TODO here we cld check if callerID is (still) a valid calleeID (but better do this on server)
 				let callerLink = "";
@@ -2338,7 +2338,7 @@ function getCookieSupport() {
 
 var counter=0;
 function openContacts() {
-	let url = "/callee/contacts?ds="+playDialSounds;
+	let url = "/callee/contacts/?ds="+playDialSounds;
 	gLog('openContacts',url);
 	iframeWindowOpen(url);
 }
@@ -2346,21 +2346,21 @@ function openContacts() {
 function openDialId(userId) {
 	let url = "/user/?ds="+playDialSounds;
 	if(userId) {
-		url = "/user/"+userId+"?ds="+playDialSounds;
+		url = "/user/"+userId+"/?ds="+playDialSounds;
 	}
 	gLog('openDialId',url);
 	iframeWindowOpen(url,false,"");
 }
 
 function openIdMapping() {
-	let url = "/callee/mapping/";
+	let url = "/callee/mapping/?ds="+playDialSounds;
 	gLog('openIdMapping',url);
 	// id manager does not need 600px width
 	iframeWindowOpen(url,false,"max-width:500px");
 }
 
 function openSettings() {
-	let url = "/callee/settings?id="+calleeID;
+	let url = "/callee/settings/?id="+calleeID;
 	gLog('openSettings='+url);
 	iframeWindowOpen(url);
 	// when iframe closes, client.js:iframeWindowClose() will call getSettings()

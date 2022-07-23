@@ -171,7 +171,7 @@ function add() {
 var removeIdx = 0;
 var removeId = 0;
 function remove(idx,id) {
-	gLog("remove "+idx+" "+id);
+	//console.log("remove "+idx+" "+id);
 	removeIdx = idx;
 	removeId = id;
 
@@ -184,19 +184,19 @@ function removeDo() {
 	if(!gentle) console.log('request api',api);
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 		if(xhr.responseText.startsWith("error")) {
-			console.log("/deletemapping err="+err);
+			console.log("# /deletemapping err="+err);
 		} else if(xhr.responseText!="ok") {
 			console.log("/deletemapping response not 'ok' (%s)",xhr.responseText);
 		} else {
 			// xhr.responseText == "ok"
 			let oldAltIDs = altIDs;
-			console.log('remove old altIDs='+oldAltIDs);
+			//console.log("remove old altIDs="+oldAltIDs);
 			altIDs = "";
 			let tok = oldAltIDs.split("|");
 			let writeCount=0;
 			for(var i=0; i<tok.length; i++) {
 				if(i!=removeIdx) {
-					console.log("tok["+i+"]="+tok[i]);
+					//console.log("tok["+i+"]="+tok[i]);
 					if(writeCount==0) {
 						altIDs += tok[i];
 					} else {
@@ -205,7 +205,7 @@ function removeDo() {
 					writeCount++;
 				}
 			}
-			console.log('remove new altIDs='+altIDs);
+			//console.log('remove new altIDs='+altIDs);
 			storeData();
 		}
 	}, errorAction);

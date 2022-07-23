@@ -646,7 +646,8 @@ function menuDialogOpen(menuDialog,atMousePos,inner) {
 
 	menuDialogOpenElement.style.display = "block";
 
-	// move popup-menu up to prevent bottom cut-off (if there is room on top)
+	// move menuDialog up to prevent bottom cut-off (if there is room on top)
+	// move menuDialog left to prevent rightside cut-off (if there is room to the left)
 	setTimeout(function() {
 		let menuHeight = menuDialogOpenChildElement.clientHeight;
 		let pageHeight = mainElement.clientHeight;
@@ -656,6 +657,14 @@ function menuDialogOpen(menuDialog,atMousePos,inner) {
 		}
 		gLog('menuDialogOpen up2',posY, menuHeight, pageHeight);
 		menuDialogOpenChildElement.style.top = (posY+window.scrollY)+"px"; // add scrollY-offset to posY
+
+		let menuWidth = menuDialogOpenChildElement.clientWidth;
+		let pageWidth = mainElement.clientWidth;
+		while(posX>10 && posX + menuWidth > pageWidth) {
+			posX -= 10;
+		}
+		gLog('menuDialogOpen left2',posX, menuWidth, pageWidth);
+		menuDialogOpenChildElement.style.left = (posX+window.scrollX)+"px"; // add scrollX-offset to posX
 	},60);
 }
 

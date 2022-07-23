@@ -1,6 +1,7 @@
 // WebCall Copyright 2022 timur.mobi. All rights reserved.
 'use strict';
 const databoxElement = document.getElementById('databox');
+const calleeMode = false;
 
 var calleeID = "";
 var dialsounds = "";
@@ -28,6 +29,9 @@ window.onload = function() {
 
 	dialsounds = getUrlParams("ds");
 	console.log('contacts onload calleeID='+calleeID+' dialsounds='+dialsounds);
+
+	hashcounter = 1;
+	window.onhashchange = hashchange;
 
 	document.onkeydown = function(evt) {
 		//console.log('contacts onload onkeydown event');
@@ -85,74 +89,112 @@ var obj = null;
 function processContacts(xhrresponse) {
 	// response from /getcontacts
 	if(!gentle) console.log("xhrresponse ("+xhrresponse+")");
-	if(xhrresponse!="") {
-		let mainLink = window.location.href;
-		let idx = mainLink.indexOf("/callee/");
-		if(idx>0) {
-			mainLink = mainLink.substring(0,idx) + "/user/";
-		}
-
-		// parse json response of xhr /getcontacts
-		obj = JSON.parse(xhrresponse);
-		//if(!gentle) console.log('xhrresponse obj',obj);
-
-		// in order to sort the json data we convert it to an array
-		let entries = Object.entries(obj);
-		// if there is no name, we use the id as name
-		for(let entry of entries) {
-			// entry[0]=id, entry[1]=name
-			if(entry[1]=="") { entry[1]=entry[0]; }
-		}
-		// now sort
-		entries.sort(function(a,b) {
-			let aName = a[1].toLowerCase();
-			let bName = b[1].toLowerCase();
-			if(aName < bName){
-				return -1
-			} else if(aName > bName){
-				return 1;
-			} 
-			return 0;
-		});
-		//if(!gentle) console.log('sorted results',entries);
-
-		// create display table
-		var dataBoxContent = "<table style='width:100%; border-collapse:separate; border-spacing:6px 2px; line-height:1.7em;'>"
-		dataBoxContent += "<tr style='color:#7c0;font-weight:600;user-select:none;'><td>Name (edit)</td><td>ID (call)</td></tr>";
-		for(let entry of entries) {
-			let id = entry[0]; // just a local id, or id@host
-			let entry1 = entry[1];
-
-			let tok = entry1.split("|");
-			let name = "none";
-			if(tok.length>0) name = tok[0]
-			let prefCallbackId = "";
-			if(tok.length>1) prefCallbackId = tok[1]
-			let ourNickname = "";
-			if(tok.length>2) ourNickname = tok[2]
-
-			// left column: Name (edit)
-			dataBoxContent += "<tr><td><a onclick='edit(this,event,\""+id+"\",\""+name+"\")'>"+name+"</a></td>";
-
-			// right column: ID (call)
-			let idxAt = id.indexOf("@");
-			if(idxAt>=0) {
-				// right column: remote user
-				let callerHost = id.substring(idxAt);
-				let idOnly = id.substring(0,idxAt); // without callerHost
-// TODO may need to make displayed id shorter
-				dataBoxContent += "<td><a href='https://" + callerHost + "/user/" + idOnly + "?ds="+dialsounds+"' target='_blank'>"+id+"</a></td></tr>";
-			} else {
-				// right column: local user
-				dataBoxContent += "<td><a href='" + mainLink + id + "?ds="+dialsounds+"'>"+id+"</a></td></tr>";
-			}
-		}
-		dataBoxContent += "</table>";
-		databoxElement.innerHTML = dataBoxContent;
+	if(xhrresponse=="") {
+		return;
 	}
+	let mainLink = window.location.href;
+	let idx = mainLink.indexOf("/callee/");
+	if(idx>0) {
+		mainLink = mainLink.substring(0,idx) + "/user/";
+	}
+
+	// parse json response of xhr /getcontacts
+	obj = JSON.parse(xhrresponse);
+	//if(!gentle) console.log('xhrresponse obj',obj);
+
+	// in order to sort the json data we convert it to an array
+	let entries = Object.entries(obj);
+	// if there is no name, we use the id as name
+	for(let entry of entries) {
+		// entry[0]=id, entry[1]=name
+		if(entry[1]=="") { entry[1]=entry[0]; }
+	}
+	// now sort
+	entries.sort(function(a,b) {
+		let aName = a[1].toLowerCase();
+		let bName = b[1].toLowerCase();
+		if(aName < bName) {
+			return -1
+		} else if(aName > bName) {
+			return 1;
+		}
+		return 0;
+	});
+	//if(!gentle) console.log('sorted results',entries);
+
+	// create display table
+	let remoteCallerIdMaxChar = 16;
+	if(window.innerWidth>360) {
+		remoteCallerIdMaxChar += Math.floor((window.innerWidth-360)/26);
+	}
+	console.log("remoteCallerIdMaxChar="+remoteCallerIdMaxChar);
+	var dataBoxContent = "<table style='width:100%; border-collapse:separate; _border-spacing:6px 2px; line-height:1.7em;'>"
+	dataBoxContent += "<tr style='color:#7c0;font-weight:600;user-select:none;'><td>Name (edit)</td><td>ID (call)</td><td></td></tr>";
+	for(let entry of entries) {
+		let id = entry[0]; // just a local id, or id@host
+		let entry1 = entry[1];
+
+		let tok = entry1.split("|");
+		let name = "none";
+		if(tok.length>0) name = tok[0]
+		let prefCallbackId = "";
+		if(tok.length>1) prefCallbackId = tok[1]
+		let ourNickname = "";
+		if(tok.length>2) ourNickname = tok[2]
+
+		// left column: Name (edit)
+		dataBoxContent += "<tr><td><a onclick='edit(this,event,\""+id+"\",\""+name+"\")'>"+name+"</a></td>";
+
+		// right column: ID (call)
+		let idxAt = id.indexOf("@");
+		if(idxAt>=0) {
+			// right column: remote user
+			let callerHost = id.substring(idxAt);
+			let idOnly = id.substring(0,idxAt); // without callerHost
+			let idDisplay = id;
+			if(idDisplay.length > remoteCallerIdMaxChar+2) {
+				idDisplay = idDisplay.substring(0,remoteCallerIdMaxChar)+"..";
+				console.log("idDisplay="+idDisplay+" "+idDisplay.length);
+			}
+			dataBoxContent += "<td><a href='https://" + callerHost + "/user/" + idOnly + "?ds="+dialsounds+"' target='_blank'>"+idDisplay+"</a></td>";
+		} else {
+			// right column: local user
+			dataBoxContent += "<td><a href='" + mainLink + id + "?ds="+dialsounds+"'>"+id+"</a></td>";
+		}
+
+		dataBoxContent += "<td><a onclick=\"remove(this,'"+id+"')\" style='font-weight:600;'>X</a></td></tr>";
+	}
+	dataBoxContent += "</table>";
+	databoxElement.innerHTML = dataBoxContent;
 }
 
 var myTableElement;
+var removeId = 0;
+function remove(tableElement,id) {
+	console.log("remove "+id);
+	myTableElement = tableElement;
+	removeId = id;
+
+	let yesNoInner = "<div style='position:absolute; left:-999em; top:0px; width:180px; z-index:110; background:#45dd; color:#fff; padding:20px 30px; line-height:2.5em; border-radius:3px; cursor:pointer;'>Delete this contact?<br>"+id+"<br><a onclick='removeDo();history.back();'>Delete!</a> &nbsp; <a onclick='history.back();'>Cancel</a></div>";
+	menuDialogOpen(dynDialog,true,yesNoInner);
+}
+
+function removeDo() {
+	let api = apiPath+"/deletecontact?id="+calleeID+"&contactID="+removeId;
+	if(!gentle) console.log('request api',api);
+	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+		console.log('xhr deletecontact OK',xhr.responseText);
+		if(xhr.responseText=="ok") {
+			// delete myTableElement <tr> 2nd parent of myTableElement
+			let trElement = myTableElement.parentNode.parentNode;
+			// remove trElement from DOM
+			let parentElement = trElement.parentNode;
+			parentElement.removeChild(trElement);
+		}
+	}, errorAction);
+}
+
+
 function edit(tableElement,ev,key,name) {
 	// edit the contact name
 	let rect = tableElement.getBoundingClientRect();

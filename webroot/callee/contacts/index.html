@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" id="main">
 <head>
 <!-- WebCall Copyright 2022 timur.mobi. All rights reserved. -->
 <meta charset="utf-8">
@@ -24,11 +24,9 @@ body {
 }
 div#container {
 	margin: 0 auto 0 auto;
-	padding: 0.7em;
+	_padding: 0.4em;
 }
-div.outputSelector {
-	margin: -1.3em 0 2em 0;
-}
+
 h1 {
 	font-size:1.7em;
 	font-weight:600;
@@ -55,11 +53,15 @@ a:hover {
 </style>
 </head>
 <body>
+<div id="fullScreenOverlay" style="position:absolute; left:0; top:0; margin:0; padding:0; width:100%; height:100%; z-index:105; display:none;"></div>
+<div id="dynDialog" style="position:relative; user-select:none; display:none;"></div>
+
 <div id="container">
 	<h1>WebCall Contacts</h1>
 	<div id="databox" style="overflow-y:auto; padding:5px;"></div>
 </div>
 </body>
 <script src="custom.js"></script>
+<script src="../client.js"></script>
 <script src="contacts.js"></script>
 
