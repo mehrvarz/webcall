@@ -155,17 +155,28 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		if !strings.HasPrefix(wsClientData.calleeID,"answie") &&
 		   !strings.HasPrefix(wsClientData.calleeID,"talkback") {
 			// callerName is empty, but we got callerID and calleeID
-			// try to fetch callerName by searching for callerID in the contacts of calleeID
+			// try to fetch callerName by searching for callerID in contacts of calleeID
 			//fmt.Printf("serveWs try to get callerName for callerID=%s via calleeID=%s\n",
 			//	callerID, wsClientData.calleeID)
-			var idNameMap map[string]string // callerID -> name
+			var idNameMap map[string]string // callerID -> compoundName
 			err := kvContacts.Get(dbContactsBucket,wsClientData.calleeID,&idNameMap)
 			if err!=nil {
 				fmt.Printf("# wsClient db get calleeID=%s (ignore) err=%v\n", wsClientData.calleeID, err)
 			} else {
-				callerName = idNameMap[callerID]
-				fmt.Printf("serveWs got callerName=%s for callerID=%s via calleeID=%s\n",
-					callerName, callerID, wsClientData.calleeID)
+				compoundName := idNameMap[callerID]
+				contactName := "";
+				//callerID := "";
+				//callerName := "";
+				tokenSlice := strings.Split(compoundName, "|")
+				for idx, tok := range tokenSlice {
+					switch idx {
+						case 0: contactName = tok
+						//case 1: callerID = tok
+						//case 2: callerName = tok
+					}
+				}
+				fmt.Printf("serveWs got callerName=%s for callerID=%s from contacts of calleeID=%s\n",
+					contactName, callerID, wsClientData.calleeID)
 			}
 		}
 	}
