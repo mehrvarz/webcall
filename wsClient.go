@@ -1299,11 +1299,14 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 								[]byte("sessionDuration|"+strconv.FormatInt(int64(c.hub.maxTalkSecsIfNoP2p),10)))
 						}
 
+						// store the caller (c.hub.CallerClient.callerID)
+						// into contacts of user being called (c.calleeID)
+						// setContact() checks if dbUser.StoreContacts is set for c.calleeID
 						if c.hub.CallerClient.callerID != "" {
-							// add callerID/callerName to contacts
-// TODO attach callerHost to callerID ???
-							setContacts(c.calleeID, c.hub.CallerClient.callerID, c.hub.CallerClient.callerName,
-								c.RemoteAddrNoPort)
+							// we don't have callerId + callerName for this contact yet
+							compoundName := c.hub.CallerClient.callerName+"||"
+							setContact(c.calleeID, c.hub.CallerClient.callerID, compoundName,
+								c.RemoteAddrNoPort, "wsClient")
 						}
 					}
 				} else {

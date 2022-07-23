@@ -605,7 +605,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if strings.HasPrefix(urlPath,"/setcontact") {
 		// TODO would benefit from supporting POST
-		httpSetContacts(w, r, urlID, calleeID, cookie, remoteAddr)
+		httpSetContact(w, r, urlID, calleeID, cookie, remoteAddr)
 		return
 	}
 	if strings.HasPrefix(urlPath,"/deletecontact") {

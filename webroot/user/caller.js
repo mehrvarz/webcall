@@ -1678,25 +1678,18 @@ function signalingCommand(message) {
 
 	if(cmd=="calleeAnswer") {
 		// callee.js is responding to a callerOffer
-		if(contactAutoStore) {
-			// contactAutoStore only works if we call a local user
-			// if we call a remote user, contactAutoStore will be false and calleeID will NOT be stored
-			if(callerId!=="" && callerId!=="undefined") {
-				// this occurs only when we call a user on the same local host
-				// callerId should be the callers main-id
-				// contactID=calleeID is the id of the contact (the user being called)
-				// the name of the contact is unknown/empty at this point
-				// however we can send this as contactName: "|ourPreferredCallbackID|ourNickname"
-				// ourPreferredCallbackID is the selected id (may be the same as callerId, or may be different)
-				// ourNickname is the name of the caller as entered in the form
-				// TODO get callerName from form and don't forget cleanStringParameter(,true)
-				let compoundName = contactName+"|"+callerId+"|"+callerName;
-				let api = apiPath+"/setcontact?id="+cookieName+"&contactID="+calleeID + "&name="+compoundName;
-				gLog("request api="+api);
-				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-					gLog("xhr setcontact OK "+xhr.responseText);
-				}, errorAction2);
-			}
+
+		// contactAutoStore is only true if caller is logged in on the local server
+		// if the caller is a remote user (calling someone on this server), contactAutoStore will be false
+		if(cookieName!="" && contactAutoStore && callerId!=="") {
+			// store the user being called (calleeID) into the contacts of the caller (cookieName)
+// TODO get callerName from form and don't forget cleanStringParameter(,true)
+			let compoundName = contactName+"|"+callerId+"|"+callerName;
+			let api = apiPath+"/setcontact?id="+cookieName+"&contactID="+calleeID + "&name="+compoundName;
+			gLog("request api="+api);
+			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+				gLog("xhr setcontact OK "+xhr.responseText);
+			}, errorAction2);
 		}
 
 		if(!peerCon || peerCon.iceConnectionState=="closed") {

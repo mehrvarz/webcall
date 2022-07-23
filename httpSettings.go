@@ -7,7 +7,7 @@
 // httpGetSettings() is called via XHR "/rtcsig/getsettings".
 // httpSetSettings() is called via XHR "/rtcsig/setsettings".
 // httpGetContacts() is called via XHR "/rtcsig/getcontacts".
-// httpSetContacts() is called via XHR "/rtcsig/setcontact".
+// httpSetContact() is called via XHR "/rtcsig/setcontact".
 // httpDeleteContact() is called via XHR "/rtcsig/deletecontact".
 
 package main
@@ -393,9 +393,9 @@ func httpGetContact(w http.ResponseWriter, r *http.Request, urlID string, callee
 	return
 }
 
-func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calleeID string, cookie *http.Cookie, remoteAddr string) {
+func httpSetContact(w http.ResponseWriter, r *http.Request, urlID string, calleeID string, cookie *http.Cookie, remoteAddr string) {
 	// store contactID with name into contacts of calleeID
-	// httpSetContacts does not report errors back to the client (only logs them)
+	// httpSetContact does not report errors back to the client (only logs them)
 	if calleeID=="" || calleeID=="undefined" {
 		//fmt.Printf("# /setcontact urlID empty\n")
 		return
@@ -436,7 +436,8 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 		}
 	}
 
-	if setContacts(calleeID, contactID, contactName, remoteAddr) {
+fmt.Printf("/setcontact (%s) -> setcontact()\n", calleeID)
+	if !setContact(calleeID, contactID, contactName, remoteAddr, "http") {
 		// an error has occured
 		return
 	}
@@ -444,45 +445,47 @@ func httpSetContacts(w http.ResponseWriter, r *http.Request, urlID string, calle
 	return
 }
 
-func setContacts(calleeID string, contactID string, compoundName string, remoteAddr string) bool {
+func setContact(calleeID string, contactID string, compoundName string, remoteAddr string, comment string) bool {
 	// calleeID = the callee making the call
 	// contactID = the callee to be added / changed
 	// compoundName = contactName+"|"+callerId+"|"+callerName
 	// contactName must split compoundName
 	contactName := "";
-//	callerID := "";
-//	callerName := "";
+	callerID := "";
+	callerName := "";
 	tokenSlice := strings.Split(compoundName, "|")
 	for idx, tok := range tokenSlice {
 		switch idx {
 			case 0: contactName = tok
-//			case 1: callerID = tok
-//			case 2: callerName = tok
+			case 1: callerID = tok
+			case 2: callerName = tok
 		}
 	}
+fmt.Printf("setcontact (%s) compoundName=%s contactName=%s comment=%s\n",
+	calleeID, compoundName, contactName, comment)
 
 	// if dbUser.StoreContacts==false (not checked), just return true
 	var dbEntry DbEntry
 	err := kvMain.Get(dbRegisteredIDs,calleeID,&dbEntry)
 	if err!=nil {
-		fmt.Printf("# /setcontact (%s) fail on dbRegisteredIDs %s\n", calleeID, remoteAddr)
+		fmt.Printf("# setcontact (%s) fail on dbRegisteredIDs %s\n", calleeID, remoteAddr)
 		return false
 	}
 	dbUserKey := fmt.Sprintf("%s_%d",calleeID, dbEntry.StartTime)
 	var dbUser DbUser
 	err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 	if err!=nil {
-		fmt.Printf("# /setcontact (%s) fail on dbUserBucket %s\n", calleeID, remoteAddr)
+		fmt.Printf("# setcontact (%s) fail on dbUserBucket %s\n", calleeID, remoteAddr)
 		return false
 	}
 	if !dbUser.StoreContacts {
 		if logWantedFor("contacts") {
-			fmt.Printf("/setcontact (%s) !StoreContacts %s\n", calleeID, remoteAddr)
+			fmt.Printf("setcontact (%s) !StoreContacts %s\n", calleeID, remoteAddr)
 		}
 		return true
 	}
 	if contactID=="" {
-		fmt.Printf("# /setcontact (%s) abort on empty contactID %s\n", calleeID, remoteAddr)
+		fmt.Printf("# setcontact (%s) abort on empty contactID %s\n", calleeID, remoteAddr)
 		return false
 	}
 
@@ -491,75 +494,87 @@ func setContacts(calleeID string, contactID string, compoundName string, remoteA
 	err = kvContacts.Get(dbContactsBucket,calleeID,&idNameMap)
 	if err!=nil {
 		if(strings.Index(err.Error(),"key not found")<0) {
-			fmt.Printf("# /setcontact db get calleeID=%s %s err=%v\n", calleeID, remoteAddr, err)
+			fmt.Printf("# setcontact db get calleeID=%s %s err=%v\n", calleeID, remoteAddr, err)
 			return false
 		}
 		// "key not found" is just an empty contacts list
 		if logWantedFor("contacts") {
-			fmt.Printf("/setcontact creating new contacts map %s\n", remoteAddr)
+			fmt.Printf("setcontact creating new contacts map %s\n", remoteAddr)
 		}
 		idNameMap = make(map[string]string)
 	}
 
 	// check for contactID
-	oldName,ok := idNameMap[contactID]
-	if !ok || oldName=="" {
+	oldCompoundName,ok := idNameMap[contactID]
+	if !ok || oldCompoundName=="" {
 		// try lowercase contactID
 		contactID = strings.ToLower(contactID)
-		oldName,ok = idNameMap[contactID]
+		oldCompoundName,ok = idNameMap[contactID]
+	}
+	if !ok {
+		// check for uppercase contactID
+		toUpperContactID := strings.ToUpper(contactID[0:1])+contactID[1:]
+		if logWantedFor("contacts") {
+			fmt.Printf("setcontact (%s->%s) check toUpperContactID=%s\n",
+				calleeID, contactName, toUpperContactID)
+		}
+		oldCompoundName,ok = idNameMap[toUpperContactID]
+		if ok {
+			contactID = toUpperContactID
+		}
 	}
 
 	if ok {
-		// contactID exists
-		if contactName=="" || contactName==oldName {
-			// don't overwrite existing contactName with empty or same contactName
-			if logWantedFor("contacts") {
-				fmt.Printf("/setcontact (%s) contactID=%s already exists (%s) %s\n",
-					calleeID, contactID, oldName, remoteAddr)
+		oldName := ""
+		oldCallerID := "";
+		oldCallerName := "";
+		tokenSlice = strings.Split(oldCompoundName, "|")
+		for idx, tok := range tokenSlice {
+			switch idx {
+				case 0: oldName = tok
+				case 1: oldCallerID = tok
+				case 2: oldCallerName = tok
 			}
-			return true
+		}
+		//fmt.Printf("setcontact (%s) oldCompoundName=%s oldName=%s\n", calleeID, oldCompoundName, oldName)
+
+		if contactName=="" && oldName!="" {
+			contactName = oldName
+		}
+
+		if callerID=="" && oldCallerID!="" {
+			callerID = oldCallerID
+		}
+
+		if callerName=="" && oldCallerName!="" {
+			callerName = oldCallerName
 		}
 	}
 
-	// check for uppercase contactID
-	toUpperContactID := strings.ToUpper(contactID[0:1])+contactID[1:]
-	if logWantedFor("contacts") {
-		fmt.Printf("/setcontact (%s->%s) check toUpperContactID=%s\n",
-			calleeID, contactName, toUpperContactID)
-	}
-	oldName2,ok := idNameMap[toUpperContactID]
-	if ok && oldName2!="" {
-		oldName = oldName2
-		// uppercase contactID exists
-		if contactName=="" || contactName==oldName {
-			// don't overwrite existing contactName with empty or same contactName
-			if logWantedFor("contacts") {
-				fmt.Printf("/setcontact (%s) contactID=%s already exists (%s) %s\n",
-					calleeID, toUpperContactID, oldName, remoteAddr)
-			}
-			return true
-		}
-	}
-	// contactID does not yet exist
 	if contactName=="" {
-		// contactName is empty when user enters a new userID via Dial-ID form
-		if contactID!="" {
-			contactName = toUpperContactID
-		} else {
-			contactName = "unknown"
-		}
+		contactName = "unknown"
 	}
-	if contactName!=oldName {
-		if contactName!="unknown" && contactName!=contactID {
-			fmt.Printf("/setcontact (%s) store changed name of %s from (%s) to (%s) %s\n",
-				calleeID, contactID, oldName, contactName, remoteAddr)
+
+	newCompoundName := contactName+"|"+callerID+"|"+callerName
+	if newCompoundName == oldCompoundName {
+		// contactName for contactID exists and is same as oldName - don't overwrite
+		if logWantedFor("contacts") {
+			fmt.Printf("setcontact (%s) contactID=%s abort: already exists (%s) %s\n",
+				calleeID, contactID, newCompoundName, remoteAddr)
 		}
-		idNameMap[contactID] = contactName
-		err = kvContacts.Put(dbContactsBucket, calleeID, idNameMap, false)
-		if err!=nil {
-			fmt.Printf("# /setcontact store calleeID=%s %s err=%v\n", calleeID, remoteAddr, err)
-			return false
-		}
+		return true
+	}
+
+	if contactName!="unknown" && contactName!=contactID {
+		fmt.Printf("setcontact (%s) store contactID=%s from (%s) to (%s) %s\n",
+			calleeID, contactID, oldCompoundName, newCompoundName, remoteAddr)
+	}
+	idNameMap[contactID] = newCompoundName
+fmt.Printf("setcontact (%s) idNameMap=%v\n", calleeID, idNameMap[contactID])
+	err = kvContacts.Put(dbContactsBucket, calleeID, idNameMap, false)
+	if err!=nil {
+		fmt.Printf("# setcontact (%s) store contactID=%s %s err=%v\n", calleeID, contactID, remoteAddr, err)
+		return false
 	}
 	return true
 }
