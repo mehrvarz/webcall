@@ -99,16 +99,14 @@ window.onload = function() {
 	if(typeof Android !== "undefined" && Android !== null) {
 		menuExitElement.style.display = "block";
 
-		if(typeof Android !== "undefined" && Android !== null) {
-			// menuClearCacheElement only for 1.1.0+
-			if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
-				if(Android.getVersionName()>="1.1.0") {
-					menuClearCacheElement.style.display = "block"; // calls clearcache()
-				}
+		if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
+			if(Android.getVersionName()>="1.1.0") {
+				menuClearCacheElement.style.display = "block"; // calls clearcache()
 			}
 		}
 	}
 
+	//console.log("callee.js onload getUrlParams('id') search="+window.location.search);
 	let id = getUrlParams("id");
 	if(typeof id!=="undefined" && id!="") {
 		calleeID = cleanStringParameter(id,true,"id");

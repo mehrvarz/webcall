@@ -254,11 +254,15 @@ window.onload = function() {
 
 	// showMissedCalls() hands over the default webcall nickname with this
 	callerName = "";
+	//console.log("callerName1="+callerName);
 	str = getUrlParams("callerName");
-	if(typeof str!=="undefined" && str!=null && str!="") {
+	//console.log("callerName2 str="+str);
+	if(typeof str!=="undefined" && str!==null && str!=="" && str!=="null") {
 		// this urlArg has a low priority
 		// will be overwritten by the contacts-entry for enterIdValElement.value (calleeID)
-		callerName = cleanStringParameter(str,true);
+		//console.log("callerName3a="+str);
+		callerName = cleanStringParameter(str,true,"c1");
+		//console.log("callerName3b="+callerName);
 	}
 
 	callerHost = location.host;
@@ -322,7 +326,8 @@ window.onload = function() {
 					}
 				}
 
-				if(callerName=="") {
+				if(callerName=="" && /*serverSettings.nickname!=null &&*/ serverSettings.nickname!="") {
+console.log("callerName = serverSettings.nickname "+serverSettings.nickname);
 					callerName = serverSettings.nickname; // user can modify this in UI
 				}
 			}

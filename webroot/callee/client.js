@@ -1605,15 +1605,21 @@ function getUrlParams(param) {
 		var parts = query.split("&");
 		for (var i=0;i<parts.length;i++) {
 			var seg = parts[i].split("=");
-			if (seg[0] == param) {
-				return decodeURIComponent(seg[1]);
+			if(seg[0] == param) {
+				if(typeof seg[1]!=="undefined" && seg[1]!="" && seg[1]!="null") {
+					let ret = decodeURIComponent(seg[1]);
+					//console.log("getUrlParams1 seg[1]="+seg[1]+" ret="+ret);
+					return ret;
+				}
 			}
 		}
 	}
 	if(param=="id") {
 		let path = window.location.pathname;
 		let lastSlash = path.lastIndexOf("/");
-		return path.substring(lastSlash+1);
+		let value = path.substring(lastSlash+1);
+		//console.log("getUrlParams2 path="+path+" value="+value);
+		return value;
 	}
 	return "";
 }
@@ -1622,11 +1628,13 @@ function gLog(...args) {
 	if(!gentle) console.log(...args);
 }
 
-function cleanStringParameter(str,eliminateSpaces,comment) {
-	//console.log("cleanStringParameter "+comment);
+function cleanStringParameter(str, eliminateSpaces, comment) {
+	//console.log("cleanStringParameter1="+str+" "+comment);
 	let ret = str.replace('|','').trim();
+	//console.log("cleanStringParameter ret="+ret);
 	if(eliminateSpaces) {
 		ret = ret.replace(/ /g,'');
+		//console.log("cleanStringParameter ret2="+ret);
 	}
 	return ret;
 }
