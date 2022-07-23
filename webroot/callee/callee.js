@@ -1710,8 +1710,10 @@ function goOnline() {
 	if(typeof Android !== "undefined" && Android !== null && Android.isConnected()>0) {
 		// if already connected don't show spinner (we are most likely called by wakeGoOnline())
 	} else {
+		gLog('goOnline spinner on');
 		if(divspinnerframe) divspinnerframe.style.display = "block";
 	}
+
 	newPeerCon();
 
 	if(wsConn==null /*|| wsConn.readyState!=1*/) {
@@ -1735,6 +1737,7 @@ function newPeerCon() {
 		}
 		showStatus(statusMsg);
 
+		gLog('goOnline spinner off');
 		if(divspinnerframe) divspinnerframe.style.display = "none";
 
 		offlineAction();
