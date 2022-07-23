@@ -1729,6 +1729,7 @@ function newPeerCon() {
 	try {
 		peerCon = new RTCPeerConnection(ICE_config);
 		gLog("new RTCPeerConnection ready");
+		if(divspinnerframe) divspinnerframe.style.display = "none";
 	} catch(ex) {
 		console.error("RTCPeerConnection "+ex.message);
 		var statusMsg = "RTCPeerConnection "+ex.message;
