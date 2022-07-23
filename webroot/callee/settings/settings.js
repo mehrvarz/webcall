@@ -18,7 +18,7 @@ window.onload = function() {
 	if(typeof id!=="undefined" && id!="") {
 		calleeID = id;
 	}
-	console.log("calleeID="+calleeID);
+	if(!gentle) console.log("calleeID="+calleeID);
 	// XHR to get current settings; server will use the cookie to authenticate us
 	requestSettings();
 }
@@ -70,11 +70,11 @@ function prepareSettings(xhrresponse) {
 	// json parse xhrresponse
 	serverSettings = JSON.parse(xhrresponse);
 	if(typeof serverSettings.vapidPublicKey!=="undefined") {
-		//console.log('serverSettings.vapidPublicKey',serverSettings.vapidPublicKey);
+		if(!gentle) console.log('serverSettings.vapidPublicKey',serverSettings.vapidPublicKey);
 		vapidPublicKey = serverSettings.vapidPublicKey
 	}
 	if(typeof serverSettings.nickname!=="undefined") {
-		console.log('serverSettings.nickname',serverSettings.nickname);
+		if(!gentle) console.log('serverSettings.nickname',serverSettings.nickname);
 		document.getElementById("nickname").value = serverSettings.nickname;
 	}
 	if(typeof serverSettings.twname!=="undefined") {
@@ -458,7 +458,7 @@ function submitForm(autoclose) {
 			xhrTwidActive = false;
 			valueTwID = xhr.responseText;
 			document.activeElement.blur();
-			console.log('xhr response valueTwID='+valueTwID);
+			if(!gentle) console.log('xhr response valueTwID='+valueTwID);
 			if(valueTwID.startsWith("error")) {
 				// valueTwName cannot be verified/stored
 				document.getElementById("errstring").innerHTML = "Twitter handle error: "+valueTwID;
@@ -515,7 +515,7 @@ document.onkeydown = function(evt) {
 		isEscape = (evt.keyCode === 27);
 	}
 	if(isEscape) {
-		console.log('settings: esc key');
+		if(!gentle) console.log('settings: esc key');
 		exitPage();
 	}
 };
