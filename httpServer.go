@@ -222,12 +222,15 @@ func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 	if !embeddedFsShouldBeUsed {
 		curdir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 		if err!=nil {
-			fmt.Printf("# substituteUserNameHandler current dir not found err=(%v)\n", err)
+			fmt.Printf("# substitute cur dir not found err=(%v)\n", err)
 			return
 		}
 		readConfigLock.RLock()
 		fullpath = curdir + "/"+htmlPath+"/" + urlPath
-		//fmt.Printf("substitute curdir(%s) root(%s) url(%s) full(%s)\n", curdir, htmlPath, urlPath, fullpath)
+		if logWantedFor("http") {
+			fmt.Printf("substitute nofs curdir(%s) root(%s) url(%s) full(%s)\n",
+				curdir, htmlPath, urlPath, fullpath)
+		}
 		readConfigLock.RUnlock()
 		if _, err := os.Stat(fullpath); os.IsNotExist(err) {
 			idxLastSlash := strings.LastIndex(fullpath,"/")
@@ -239,7 +242,7 @@ func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		fullpath = "webroot" + urlPath
 		if logWantedFor("http") {
-			fmt.Printf("substitute (%s)(%s)\n", fullpath, r.URL.RawQuery)
+			fmt.Printf("substitute fs (%s)(%s)\n", fullpath, r.URL.RawQuery)
 		}
 		fileinfo, err := fs.Stat(embeddedFS,fullpath)
 		if os.IsNotExist(err) {
@@ -277,7 +280,7 @@ func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if logWantedFor("http") {
-		fmt.Printf("substituteUserNameHandler (%s) try (%s)\n", r.URL.Path, fullpath)
+		fmt.Printf("substitute (%s) try (%s)\n", r.URL.Path, fullpath)
 	}
 
 	readConfigLock.RLock()
@@ -315,7 +318,7 @@ func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		data,err := embeddedFS.ReadFile(fullpath)
 		if err!=nil {
-			fmt.Printf("substituteUserNameHandler (%s) err (%s)\n", fullpath,err)
+			fmt.Printf("# substitute (%s) err (%s)\n", fullpath,err)
 			return
 		}
 		// set content-type

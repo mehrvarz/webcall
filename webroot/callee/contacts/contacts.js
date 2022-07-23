@@ -16,7 +16,7 @@ window.onload = function() {
 		if(idxAmpasent>0) {
 			cookieName = cookieName.substring(0,idxAmpasent);
 		}
-		console.log('onload cookieName='+cookieName);
+		//console.log('onload cookieName='+cookieName);
 		if(cookieName!="") {
 			calleeID = cookieName
 		}
@@ -28,7 +28,7 @@ window.onload = function() {
 	}
 
 	dialsounds = getUrlParams("ds");
-	console.log('contacts onload calleeID='+calleeID+' dialsounds='+dialsounds);
+	gLog('contacts onload calleeID='+calleeID+' dialsounds='+dialsounds);
 
 	hashcounter = 1;
 	window.onhashchange = hashchange;
@@ -44,13 +44,13 @@ window.onload = function() {
 		}
 		if(isEscape) {
 			if(formForNameOpen) {
-				console.log('contacts.js esc key (formForNameOpen)');
+				//console.log('contacts.js esc key (formForNameOpen)');
 				let parentElement = formElement.parentNode;
 				parentElement.removeChild(formElement);
 				formElement = null;
 				formForNameOpen = false;
 			} else {
-				console.log('contacts.js esc key -> exit');
+				//console.log('contacts.js esc key -> exit');
 				exitPage();
 			}
 		} else {
@@ -127,8 +127,8 @@ function processContacts(xhrresponse) {
 	if(window.innerWidth>360) {
 		remoteCallerIdMaxChar += Math.floor((window.innerWidth-360)/26);
 	}
-	console.log("remoteCallerIdMaxChar="+remoteCallerIdMaxChar);
-	var dataBoxContent = "<table style='width:100%; border-collapse:separate; _border-spacing:6px 2px; line-height:1.7em;'>"
+	//console.log("remoteCallerIdMaxChar="+remoteCallerIdMaxChar);
+	var dataBoxContent = "<table style='width:100%; border-collapse:separate; line-height:1.7em;'>"
 	dataBoxContent += "<tr style='color:#7c0;font-weight:600;user-select:none;'><td>Name (edit)</td><td>ID (call)</td><td></td></tr>";
 	for(let entry of entries) {
 		let id = entry[0]; // just a local id, or id@host
@@ -154,7 +154,7 @@ function processContacts(xhrresponse) {
 			let idDisplay = id;
 			if(idDisplay.length > remoteCallerIdMaxChar+2) {
 				idDisplay = idDisplay.substring(0,remoteCallerIdMaxChar)+"..";
-				console.log("idDisplay="+idDisplay+" "+idDisplay.length);
+				//console.log("idDisplay="+idDisplay+" "+idDisplay.length);
 			}
 			dataBoxContent += "<td><a href='https://" + callerHost + "/user/" + idOnly + "?ds="+dialsounds+"' target='_blank'>"+idDisplay+"</a></td>";
 		} else {

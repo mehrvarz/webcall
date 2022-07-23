@@ -771,7 +771,7 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString, dontIframeOnload
 		styleString += addStyleString;
 	}
 
-	console.log("iframeWindowOpen styleString="+styleString);
+	//console.log("iframeWindowOpen styleString="+styleString);
 
 	iframeWindowElement.style = styleString;
 	if(url.startsWith("string:")) {
@@ -781,10 +781,10 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString, dontIframeOnload
 		// for this to work, the document at url needs to have a fixed height or min-height
 		// if the document does not have fixed height or min-height, scrollHeight = 150px
 		// in this case dontIframeOnload should be set to skip onload='iframeOnload(this)'
-		if(dontIframeOnload) {
-			iframeWindowElement.innerHTML = "<iframe id='child' src='"+url+"' scrolling='yes' frameborder='no' width='100%' height='100%' allow='microphone;camera'></iframe>";
-		} else {
+		if(typeof dontIframeOnload == "undefined" || dontIframeOnload==false) {
 			iframeWindowElement.innerHTML = "<iframe id='child' src='"+url+"' scrolling='yes' frameborder='no' width='100%' height='100%' allow='microphone;camera' onload='iframeOnload(this)'></iframe>";
+		} else {
+			iframeWindowElement.innerHTML = "<iframe id='child' src='"+url+"' scrolling='yes' frameborder='no' width='100%' height='100%' allow='microphone;camera'></iframe>";
 		}
 	}
 
@@ -798,7 +798,7 @@ function iframeOnload(obj) {
 	// 1. scrollHeight without delay = min-height (set on the html element)
 	try {
 		let iframeHeight = obj.contentWindow.document.documentElement.scrollHeight +'px';
-		console.log("iframeOnload height="+iframeHeight);
+		//console.log("iframeOnload height="+iframeHeight);
 		obj.style.height = iframeHeight;
 		obj.contentWindow.focus();
 	} catch(ex) {
