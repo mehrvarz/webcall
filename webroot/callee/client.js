@@ -754,7 +754,7 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString, dontIframeOnload
 	//window.scrollTo(0, 0);
 	window.scrollTo({ top: 0, behavior: 'smooth' });
 
-	//console.log("iframeWindowOpen "+url+" horiCenterBound="+horiCenterBound+" addStyle="+addStyleString+" dontIframeOnload="+dontIframeOnload);
+	//console.log("iframeWindowOpen "+url+" horiCenter="+horiCenterBound+" addStyle="+addStyleString+" dontIframeOnload="+dontIframeOnload);
 	iframeWindowOpenUrl = url;
 	iframeWindowOpenFlag = true;
 
@@ -795,22 +795,31 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString, dontIframeOnload
 
 function iframeOnload(obj) {
 	// we run scrollHeight twice
-	// 1. scrollHeight without delay = min-height (set on the html element)
+	// 1. scrollHeight without delay = min-height (from html element)(not larger than mainElementHeight)
+	let mainElementRect = mainElement.getBoundingClientRect();
+	let mainElementHeight = (mainElementRect.bottom - mainElementRect.top) * 0.9;
+	gLog("mainElementHeight="+mainElementHeight+" "+mainElementRect.bottom+" "+mainElementRect.top)
 	try {
-		let iframeHeight = obj.contentWindow.document.documentElement.scrollHeight +'px';
-		//console.log("iframeOnload height="+iframeHeight);
-		obj.style.height = iframeHeight;
+		let iframeHeight = obj.contentWindow.document.documentElement.scrollHeight;
+		if(iframeHeight > mainElementHeight) {
+			iframeHeight = mainElementHeight;
+		}
+		//gLog("iframeOnload height="+iframeHeight);
+		obj.style.height = iframeHeight+"px";
 		obj.contentWindow.focus();
 	} catch(ex) {
 		console.error("iframeOnload "+ex.message);
 	}
 
-	// 2. scrollHeight with delay    = actual height of content
+	// 2. scrollHeight with delay = actual height of content (not larger than mainElementHeight)
 	setTimeout(function() {
 		try {
-			let iframeHeight = obj.contentWindow.document.documentElement.scrollHeight +'px';
-			//console.log("iframeOnload delayed height="+iframeHeight);
-			obj.style.height = iframeHeight;
+			let iframeHeight = obj.contentWindow.document.documentElement.scrollHeight;
+			if(iframeHeight > mainElementHeight) {
+				iframeHeight = mainElementHeight;
+			}
+			//gLog("iframeOnload height="+iframeHeight);
+			obj.style.height = iframeHeight+"px";
 			obj.contentWindow.focus();
 		} catch(ex) {
 			console.error("iframeOnload "+ex.message);

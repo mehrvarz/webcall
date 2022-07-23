@@ -2342,7 +2342,7 @@ function getCookieSupport() {
 var counter=0;
 function openContacts() {
 	let url = "/callee/contacts/?ds="+playDialSounds;
-	gLog('openContacts',url);
+	gLog("openContacts "+url);
 	iframeWindowOpen(url);
 }
 
