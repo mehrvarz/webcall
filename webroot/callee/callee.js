@@ -521,6 +521,7 @@ function submitFormDone(theForm) {
 	}
 	wsSecret = valuePw;
 	onGotStreamGoOnline = true;
+	//console.log("callee submitFormDone: enable goonline");
 	goOnlineButton.disabled = false;
 	start();
 	// -> getStream() -> getUserMedia(constraints) -> gotStream() -> goOnline() -> login()
@@ -889,12 +890,16 @@ function wsOnOpen() {
 	}
 
 	if(divspinnerframe) divspinnerframe.style.display = "none";
-
+/*
 	window.addEventListener("beforeunload", function () {
 		// prevent "try reconnect in..." after "wsConn close" on unload
-		// by turining our online-indication off
+		// by turning our online-indication off
+console.log("callee beforeunload: enable goonline");
 		goOnlineButton.disabled = false;
+		// NOTE: this occurs when callee starts dialing a remote user from missedcalles
+		// then both buttons are enabled - not good
 	});
+*/
 	if(wsSendMessage!="") {
 		gLog('ws connection send '+wsSendMessage);
 		wsSend(wsSendMessage);
@@ -2259,6 +2264,7 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 		setTimeout(function() {
 			gLog('endWebRtcSession auto goOnline()');
 			goOnlinePending = false;
+			//console.log("callee endWebRtcSession auto goOnline(): enable goonline");
 			goOnlineButton.disabled = false;
 			// get peerCon ready for the next incoming call
 			// bc we are most likely still connected, goOnline() will just send "init"
@@ -2271,8 +2277,6 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 
 function goOffline() {
 	wsAutoReconnecting = false;
-	//goOfflineButton.disabled = true;
-	//goOnlineButton.disabled = false;
 	offlineAction();
 	gLog("goOffline "+calleeID);
 	showStatus("");
@@ -2310,6 +2314,7 @@ function goOffline() {
 		if(!mediaConnect) {
 			onlineIndicator.src="";
 		}
+		//console.log("callee goOffline: enable goonline");
 		goOnlineButton.disabled = false;
 	} else {
 		if(typeof Android !== "undefined" && Android !== null) {
@@ -2319,6 +2324,7 @@ function goOffline() {
 		if(!mediaConnect) {
 			onlineIndicator.src="";
 		}
+		//console.log("callee goOffline2: enable goonline");
 		goOnlineButton.disabled = false;
 	}
 
@@ -2434,6 +2440,7 @@ function wakeGoOnline() {
 	gLog("wakeGoOnline start");
 	connectSignaling('',''); // only get wsConn from service (from Android.wsOpen())
 	wsOnOpen(); // green led
+	//console.log("callee wakeGoOnline: enable goonline");
 	goOnlineButton.disabled = false; // prevent goOnline() abort
 	goOnline(); // wsSend("init|!")
 	showOnlineReadyMsg();
