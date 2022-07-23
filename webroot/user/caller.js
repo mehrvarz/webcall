@@ -388,6 +388,7 @@ console.log("callerName = serverSettings.nickname "+serverSettings.nickname);
 
 // TODO must set idSelect in all cases, bc it is currently set to "select"
 // ideally by /getcontact
+			callerId = "";
 			// when user operates idSelectElement, callerId may be changed
 			idSelectElement = document.getElementById("idSelect2");
 			// fetch mapping
