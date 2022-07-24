@@ -410,6 +410,9 @@ func httpSetContact(w http.ResponseWriter, r *http.Request, urlID string, callee
 		fmt.Printf("# /setcontact urlID=%s != calleeID=%s %s\n", urlID, calleeID, remoteAddr)
 		return
 	}
+	if strings.HasPrefix(calleeID,"answie") || strings.HasPrefix(calleeID,"talkback") {
+		return
+	}
 
 	contactID := ""		// may or may not have @host attached
 	contactName := ""
@@ -446,10 +449,14 @@ func httpSetContact(w http.ResponseWriter, r *http.Request, urlID string, callee
 }
 
 func setContact(calleeID string, contactID string, compoundName string, remoteAddr string, comment string) bool {
-	// calleeID = the callee making the call
+	// calleeID = the callee for which to add a contact
 	// contactID = the callee to be added / changed
 	// compoundName = contactName+"|"+callerId+"|"+callerName
 	// contactName must split compoundName
+	if strings.HasPrefix(calleeID,"answie") || strings.HasPrefix(calleeID,"talkback") {
+		return true
+	}
+
 	contactName := "";
 	callerID := "";
 	callerName := "";
