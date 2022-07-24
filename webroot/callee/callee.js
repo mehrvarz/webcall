@@ -1465,14 +1465,21 @@ function showMissedCalls() {
 			}
 
 			// TODO here we cld check if callerID is (still) a valid calleeID (but better do this on server)
-/*
+
+			let noLink = false;
 			if(callerID=="") {
 				// local user without ID (cannot be called back)
-				// TODO show ip-addr instead?
+				noLink = true;
+//				callerID = "unknown";
+				callerIdNoHost = halfShowIpAddr(callerIp);
+				callerID = callerIdNoHost;
 			} else if(callerIdNoHost=="") {
 				// remote user without ID (cannot be called back)
+				noLink = true;
+				callerIdNoHost = halfShowIpAddr(callerIp);
+				callerID = callerIdNoHost+callerID;
 			}
-*/
+
 			let callerLink = "";
 			if(!remoteCaller) {
 				// the original caller is hosted on THIS server
@@ -1480,7 +1487,7 @@ function showMissedCalls() {
 				if(!playDialSounds) callerLink += "&ds=false";
 				//console.log("local ("+callerIdNoHost+") ("+callerLink+")");
 
-				if(callerID=="" || callerIdNoHost=="") {
+				if(noLink) {
 					callerLink = callerIdNoHost;
 				} else {
 					callerLink = "<a onclick='iframeWindowOpen(\""+callerLink+"\")'>"+callerIdNoHost+"</a>";
@@ -1488,7 +1495,6 @@ function showMissedCalls() {
 
 			} else {
 				// the original caller is hosted on a REMOTE server
-
 				callerLink += mainLink + callerIdNoHost + "?callerId=select&targetHost="+remoteAddr +
 					"&callerName="+calleeName + "&callerHost="+location.host;
 				if(!playDialSounds) callerLink += "&ds=false";
@@ -1502,7 +1508,7 @@ function showMissedCalls() {
 					//gLog("callerIdDisplay="+callerIdDisplay+" "+callerIdDisplay.length);
 				}
 
-				if(callerID=="" || callerIdNoHost=="") {
+				if(noLink) {
 					callerLink = callerIdDisplay;
 				} else {
 					callerLink = "<a onclick='iframeWindowOpen(\""+callerLink+"\")'>"+callerIdDisplay+"</a>";
