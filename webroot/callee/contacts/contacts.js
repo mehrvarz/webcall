@@ -151,7 +151,7 @@ function processContacts(xhrresponse) {
 			// right column: remote user
 			// if we go straight to a new tab for the remote-host caller-widget (as we do here),
 			// the caller will have no chance to select a callerId
-// TODO so instead, we need to do open dial-ID for remote host
+			// so instead, we open dial-ID for remote host
 			let callerHost = id.substring(idxAt+1);
 			let idOnly = id.substring(0,idxAt); // without callerHost
 			let idDisplay = id;
@@ -164,9 +164,7 @@ function processContacts(xhrresponse) {
 				//gLog("idDisplay="+idDisplay+" "+idDisplay.length);
 			}
 
-			let args = "";
-//			if(prefCallbackId!="") args = "?callerId="+prefCallbackId;
-			args = "?callerId=select&targetHost="+callerHost;
+			let args = "?callerId=select&targetHost="+callerHost;
 			if(ourNickname!="") {
 				if(args=="") args = "?callerName="+ourNickname;
 				else args += "&callerName="+ourNickname;
@@ -175,11 +173,8 @@ function processContacts(xhrresponse) {
 				if(args=="") args = "?ds=false";
 				else args += "&ds=false";
 			}
-/*
-			dataBoxContent += "<td><a href='https://" + callerHost + "/user/" + idOnly + args + "'" +
-				" target='_blank'>"+idDisplay+"</a></td>";
-*/
-			dataBoxContent += "<td><a href='" + mainLink + idOnly + args + "'>"+id+"</a></td>";
+			// by straight opening a href we replace the content in the contacts iframe
+			dataBoxContent += "<td><a href='" + mainLink + idOnly + args + "'>"+idDisplay+"</a></td>";
 
 		} else {
 			// right column: local user (this will open dial-id in an iframe)
@@ -194,6 +189,7 @@ function processContacts(xhrresponse) {
 				else args += "&ds=false";
 			}
 
+			// by straight opening a href we replace the content in the contacts iframe
 			dataBoxContent += "<td><a href='" + mainLink + id + args + "'>"+id+"</a></td>";
 		}
 
