@@ -44,8 +44,11 @@ func httpGetMapping(w http.ResponseWriter, r *http.Request, urlID string, callee
 		return
 	}
 
-	fmt.Printf("/getmapping (%s) (%s) rip=%s\n", calleeID, dbUser.AltIDs, remoteAddr)
-	fmt.Fprintf(w,dbUser.AltIDs)
+	// if(xhr.responseText=="") there are no altIDs
+	fmt.Printf("/getmapping (%s) altIDs=(%s) rip=%s\n", calleeID, dbUser.AltIDs, remoteAddr)
+	if dbUser.AltIDs!="" {
+		fmt.Fprintf(w,dbUser.AltIDs)
+	}
 	return
 }
 
