@@ -1414,7 +1414,7 @@ function submitForm(theForm) {
 		if(calleeID.length>11) calleeID = calleeID.substring(0,11);
 	}
 	gLog("submitForm calleeID="+calleeID);
-// TODO ACHTUNG .host may have :443 set, while DomainVal may not
+	// TODO ACHTUNG .host may have :443 set, while DomainVal may not
 	gLog("submitForm targetDomain="+enterDomainValElement.value+" location.host="+location.host);
 	if(cleanStringParameter(enterDomainValElement.value,true) != location.host) {
 		// the callee to call is hosted on a different server
@@ -1427,40 +1427,42 @@ function submitForm(theForm) {
 		// below code tries to catch an window.open() error ("host not found")
 		// and throw an alert() instead of relying on an ugly browser err-msg
 		let randId = ""+Math.floor(Math.random()*1000000);
-// TODO callerId may still be 'select'
-// TODO callerName may be null
+		if(callerId=="") {
+			callerId = cookieName;
+		}
+		// TODO callerName may be null
 		let callUrl = "https://"+cleanStringParameter(enterDomainValElement.value,true)+"/user/"+calleeID+
 			"?callerId="+callerId + "&callerName="+callerName + "&callerHost="+callerHost + "&i="+randId;
 		if(playDialSounds==false) {
 			callUrl += "&ds=false";
 		}
-		var openOK = null;
+		var openOK = false;
 		try {
-			gLog("submitForm window.open "+callUrl);
+			//console.log("submitForm window.open "+callUrl);
 			// in WebCallAndroid: callUrl being opened will trigger onNewIntent()
 			openOK = window.open(callUrl, "");
-			console.log("submitForm openOK="+openOK);
 		} catch(e) {
 			// if we end here, the domain cannot be reached, so we don't do window.open()
+			console.log("# submitForm window.open("+callUrl+") ex="+e);
 			alert("Connection failed. Please check the server address.");
 			//de-focus submit button
 			document.activeElement.blur();
 		} finally {
 			if(!openOK) {
 				// if we end here, the domain cannot be reached, so we don't do window.open()
+				console.log("# submitForm !openOK window.open("+callUrl+")");
 				alert("Connection failed. Please check the server address.");
 				//de-focus submit button
 				document.activeElement.blur();
 			} else {
 				// everything OK
-				console.log("submitForm window.open() no err");
+				console.log("submitForm window.open("+callUrl+") no err");
 				enterIdElement.style.display = "none";
 				containerElement.style.display = "block";
 				history.back();
 				return;
 			}
 		}
-
 	} else {
 		// the callee to call is hosted on the same server
 		enterIdElement.style.display = "none";
