@@ -149,6 +149,9 @@ function processContacts(xhrresponse) {
 		let idxAt = id.indexOf("@");
 		if(idxAt>=0) {
 			// right column: remote user
+			// if we go straight to a new tab for the remote-host caller-widget (as we do here),
+			// the caller will have no chance to select a callerId
+// TODO so instead, we need to do open dial-ID for remote host
 			let callerHost = id.substring(idxAt+1);
 			let idOnly = id.substring(0,idxAt); // without callerHost
 			let idDisplay = id;
@@ -160,10 +163,34 @@ function processContacts(xhrresponse) {
 				idDisplay = idDisplay.substring(0,remoteCallerIdMaxChar)+"..";
 				//gLog("idDisplay="+idDisplay+" "+idDisplay.length);
 			}
-			dataBoxContent += "<td><a href='https://" + callerHost + "/user/" + idOnly + "?ds="+dialsounds+"' target='_blank'>"+idDisplay+"</a></td>";
+
+			let args = "";
+			if(prefCallbackId!="") args = "?callerId="+prefCallbackId;
+			if(ourNickname!="") {
+				if(args=="") args = "?callerName="+ourNickname;
+				else args += "&callerName="+ourNickname;
+			}
+			if(dialsounds=="false") {
+				if(args=="") args = "?ds=false";
+				else args += "&ds=false";
+			}
+
+			dataBoxContent += "<td><a href='https://" + callerHost + "/user/" + idOnly + args + "'" +
+				" target='_blank'>"+idDisplay+"</a></td>";
 		} else {
-			// right column: local user
-			dataBoxContent += "<td><a href='" + mainLink + id + "?ds="+dialsounds+"'>"+id+"</a></td>";
+			// right column: local user (this will open dial-id in an iframe)
+			let args = "";
+			if(prefCallbackId!="") args = "?callerId="+prefCallbackId;
+			if(ourNickname!="") {
+				if(args=="") args = "?callerName="+ourNickname;
+				else args += "&callerName="+ourNickname;
+			}
+			if(dialsounds=="false") {
+				if(args=="") args = "?ds=false";
+				else args += "&ds=false";
+			}
+
+			dataBoxContent += "<td><a href='" + mainLink + id + args + "'>"+id+"</a></td>";
 		}
 
 		dataBoxContent += "<td><a onclick=\"remove(this,'"+id+"')\" style='font-weight:600;'>X</a></td></tr>";
