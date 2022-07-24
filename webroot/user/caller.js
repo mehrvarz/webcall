@@ -1429,6 +1429,7 @@ function submitForm(theForm) {
 		let randId = ""+Math.floor(Math.random()*1000000);
 		if(callerId=="") {
 			callerId = cookieName;
+			// TODO what if user has deliberately set it to empty?
 		}
 		// TODO callerName may be null
 		let callUrl = "https://"+cleanStringParameter(enterDomainValElement.value,true)+"/user/"+calleeID+
