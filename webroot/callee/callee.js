@@ -1392,7 +1392,7 @@ function showMissedCalls() {
 		// for window.innerWidth = 360, remoteCallerIdMaxChar=21 is perfect
 		let remoteCallerIdMaxChar = 13;
 		if(window.innerWidth>360) {
-			remoteCallerIdMaxChar += Math.floor((window.innerWidth-360)/26);
+			remoteCallerIdMaxChar += Math.floor((window.innerWidth-360)/22);
 		}
 		//console.log("window.innerWidth="+window.innerWidth+" remoteCallerIdMaxChar="+remoteCallerIdMaxChar);
 
@@ -1470,14 +1470,19 @@ function showMissedCalls() {
 			if(callerID=="") {
 				// local user without ID (cannot be called back)
 				noLink = true;
-//				callerID = "unknown";
-				callerIdNoHost = halfShowIpAddr(callerIp);
+				if(callerIp=="")
+					callerIdNoHost = "unknown";
+				else
+					callerIdNoHost = halfShowIpAddr(callerIp);
 				callerID = callerIdNoHost;
 			} else if(callerIdNoHost=="") {
 				// remote user without ID (cannot be called back)
 				noLink = true;
-				callerIdNoHost = halfShowIpAddr(callerIp);
-				callerID = callerIdNoHost+callerID;
+				if(callerIp=="")
+					callerIdNoHost = "unknown";
+				else
+					callerIdNoHost = halfShowIpAddr(callerIp);
+				callerID = callerIdNoHost + callerID;
 			}
 
 			let callerLink = "";
