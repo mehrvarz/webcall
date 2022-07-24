@@ -1390,7 +1390,7 @@ function showMissedCalls() {
 
 		// make remoteCallerIdMaxChar depend on window.innerWidth
 		// for window.innerWidth = 360, remoteCallerIdMaxChar=21 is perfect
-		let remoteCallerIdMaxChar = 15;
+		let remoteCallerIdMaxChar = 13;
 		if(window.innerWidth>360) {
 			remoteCallerIdMaxChar += Math.floor((window.innerWidth-360)/26);
 		}
@@ -1403,7 +1403,7 @@ function showMissedCalls() {
 		if(idx>0) {
 			mainLink = mainLink.substring(0,idx) + "/user/";
 		}
-		let str = "<table style='width:100%; max-width:580px; border-collapse:separate; line-height:1.6em; margin-left:-4px;'>"
+		let str = "<table style='width:100%; border-collapse:separate; line-height:1.6em; margin-left:-4px;'>"
 		for(var i=0; i<missedCallsSlice.length; i++) {
 			str += "<tr>"
 			let waitingSecs = timeNowSecs - missedCallsSlice[i].CallTime;
@@ -1492,11 +1492,12 @@ function showMissedCalls() {
 					}
 					callerLink = "<a onclick='iframeWindowOpen(\""+callerLink+"\")'>"+callerIdDisplay+"</a>";
 				}
-				str += "<td>" + callerNameMarkup + "</td><td>"+
-					callerLink + "</td><td style='text-align:right;'>"+
-					waitingTimeString + "</td><td>"+
-					"<a onclick='deleteMissedCall(\""+
-						missedCallsSlice[i].AddrPort+"_"+missedCallsSlice[i].CallTime+"\")'>X</a></td>";
+				str += "<td>" + callerNameMarkup + "</td>"+
+					"<td>"+	callerLink + "</td>"+
+//					"<td style='text-align:right;'>"+ waitingTimeString + "</td>"+
+					"<td align='right'><a onclick='deleteMissedCall(\""+
+						missedCallsSlice[i].AddrPort+"_"+missedCallsSlice[i].CallTime+"\")'>"+
+						waitingTimeString + "&nbsp;X</a></td>";
 			}
 		}
 		str += "</table>"
