@@ -1409,7 +1409,7 @@ function showMissedCalls() {
 			let waitingSecs = timeNowSecs - missedCallsSlice[i].CallTime;
 
 			// split waitingTimeString by days, hours, min
-			let waitingTimeString = ""+waitingSecs+" sec";
+			let waitingTimeString = ""+waitingSecs+"s";
 			if(waitingSecs>50) {
 				let waitingMins = Math.floor((waitingSecs+10)/60);
 				if(waitingMins>=60) {
@@ -1427,7 +1427,7 @@ function showMissedCalls() {
 						waitingTimeString = ""+waitingHours+"h"; // +" "+waitingMins+"m";
 					}
 				} else {
-					waitingTimeString = ""+waitingMins+" min";
+					waitingTimeString = ""+waitingMins+"m";
 				}
 			}
 			let callerIp = missedCallsSlice[i].AddrPort;
