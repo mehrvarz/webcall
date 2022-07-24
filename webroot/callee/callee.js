@@ -1464,41 +1464,45 @@ function showMissedCalls() {
 				}
 			}
 
-			// most id's are 11 chars long, but some are as short as 5 chars
-			if(callerIdNoHost.length>=5) {
-				// TODO here we cld check if callerID is (still) a valid calleeID (but better do this on server)
-				let callerLink = "";
-				if(!remoteCaller) {
-					// the original caller is hosted on THIS server
-					callerLink += mainLink + callerIdNoHost + "?callerId="+calleeID + "&callerName="+calleeName;
-					if(!playDialSounds) callerLink += "&ds=false";
-					//console.log("local ("+callerIdNoHost+") ("+callerLink+")");
-					callerLink = "<a onclick='iframeWindowOpen(\""+callerLink+"\")'>"+callerIdNoHost+"</a>";
+			// TODO here we cld check if callerID is (still) a valid calleeID (but better do this on server)
 
-				} else {
-					// the original caller is hosted on a REMOTE server
-
-					callerLink += mainLink + callerIdNoHost + "?callerId=select&targetHost="+remoteAddr +
-						"&callerName="+calleeName + "&callerHost="+location.host;
-					if(!playDialSounds) callerLink += "&ds=false";
-					//console.log("remote ("+callerID+") ("+callerLink+")");
-
-					let callerIdDisplay = callerID;
-					//gLog("id="+id+" callerIdDisplay="+callerIdDisplay+" callerHost="+callerHost+
-					//	" location.host="+location.host);
-					if(callerIdDisplay.length > remoteCallerIdMaxChar+2) {
-						callerIdDisplay = callerIdDisplay.substring(0,remoteCallerIdMaxChar)+"..";
-						//gLog("callerIdDisplay="+callerIdDisplay+" "+callerIdDisplay.length);
-					}
-					callerLink = "<a onclick='iframeWindowOpen(\""+callerLink+"\")'>"+callerIdDisplay+"</a>";
-				}
-				str += "<td>" + callerNameMarkup + "</td>"+
-					"<td>"+	callerLink + "</td>"+
-//					"<td style='text-align:right;'>"+ waitingTimeString + "</td>"+
-					"<td align='right'><a onclick='deleteMissedCall(\""+
-						missedCallsSlice[i].AddrPort+"_"+missedCallsSlice[i].CallTime+"\")'>"+
-						waitingTimeString + "&nbsp;X</a></td>";
+			if(callerID=="") {
+				// local user without ID (cannot be called back)
+				// TODO show ip-addr instead?
+			} else if(callerIdNoHost=="") {
+				// remote user without ID (cannot be called back)
 			}
+
+			let callerLink = "";
+			if(!remoteCaller) {
+				// the original caller is hosted on THIS server
+				callerLink += mainLink + callerIdNoHost + "?callerId="+calleeID + "&callerName="+calleeName;
+				if(!playDialSounds) callerLink += "&ds=false";
+				//console.log("local ("+callerIdNoHost+") ("+callerLink+")");
+				callerLink = "<a onclick='iframeWindowOpen(\""+callerLink+"\")'>"+callerIdNoHost+"</a>";
+
+			} else {
+				// the original caller is hosted on a REMOTE server
+
+				callerLink += mainLink + callerIdNoHost + "?callerId=select&targetHost="+remoteAddr +
+					"&callerName="+calleeName + "&callerHost="+location.host;
+				if(!playDialSounds) callerLink += "&ds=false";
+				//console.log("remote ("+callerID+") ("+callerLink+")");
+
+				let callerIdDisplay = callerID;
+				//gLog("id="+id+" callerIdDisplay="+callerIdDisplay+" callerHost="+callerHost+
+				//	" location.host="+location.host);
+				if(callerIdDisplay.length > remoteCallerIdMaxChar+2) {
+					callerIdDisplay = callerIdDisplay.substring(0,remoteCallerIdMaxChar)+"..";
+					//gLog("callerIdDisplay="+callerIdDisplay+" "+callerIdDisplay.length);
+				}
+				callerLink = "<a onclick='iframeWindowOpen(\""+callerLink+"\")'>"+callerIdDisplay+"</a>";
+			}
+			str += "<td>" + callerNameMarkup + "</td>"+
+				"<td>"+	callerLink + "</td>"+
+				"<td align='right'><a onclick='deleteMissedCall(\""+
+				missedCallsSlice[i].AddrPort+"_"+missedCallsSlice[i].CallTime+"\")'>"+
+				waitingTimeString + "&nbsp;X</a></td>";
 		}
 		str += "</table>"
 		missedCallsElement.innerHTML = str;
