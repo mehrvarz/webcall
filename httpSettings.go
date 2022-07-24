@@ -436,7 +436,7 @@ func httpSetContact(w http.ResponseWriter, r *http.Request, urlID string, callee
 		}
 	}
 
-fmt.Printf("/setcontact (%s) -> setcontact()\n", calleeID)
+	//fmt.Printf("/setcontact (%s) -> setcontact()\n", calleeID)
 	if !setContact(calleeID, contactID, contactName, remoteAddr, "http") {
 		// an error has occured
 		return
@@ -461,8 +461,8 @@ func setContact(calleeID string, contactID string, compoundName string, remoteAd
 			case 2: callerName = tok
 		}
 	}
-fmt.Printf("setcontact (%s) compoundName=%s contactName=%s comment=%s\n",
-	calleeID, compoundName, contactName, comment)
+	//fmt.Printf("setcontact (%s) compoundName=%s contactName=%s comment=%s\n",
+	//	calleeID, compoundName, contactName, comment)
 
 	// if dbUser.StoreContacts==false (not checked), just return true
 	var dbEntry DbEntry
@@ -565,10 +565,10 @@ fmt.Printf("setcontact (%s) compoundName=%s contactName=%s comment=%s\n",
 		return true
 	}
 
-	fmt.Printf("setcontact (%s) store contactID=%s from (%s) to (%s) %s\n",
-		calleeID, contactID, oldCompoundName, newCompoundName, remoteAddr)
+	fmt.Printf("setcontact (%s) store ID=%s from (%s) to (%s) %s %s\n",
+		calleeID, contactID, oldCompoundName, newCompoundName, remoteAddr, comment)
 	idNameMap[contactID] = newCompoundName
-fmt.Printf("setcontact (%s) idNameMap=%v\n", calleeID, idNameMap[contactID])
+	//fmt.Printf("setcontact (%s) idNameMap=%v\n", calleeID, idNameMap[contactID])
 	err = kvContacts.Put(dbContactsBucket, calleeID, idNameMap, false)
 	if err!=nil {
 		fmt.Printf("# setcontact (%s) store contactID=%s %s err=%v\n", calleeID, contactID, remoteAddr, err)
