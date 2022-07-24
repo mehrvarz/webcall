@@ -1446,10 +1446,6 @@ function showMissedCalls() {
 			}
 
 			let callerHost = missedCallsSlice[i].Host;
-//			let dialID = missedCallsSlice[i].DialID;
-//			if(dialID=="") {
-//				dialID = calleeID;
-//			}
 
 // TODO tmtmtm 5?
 			if(callerID.length>=5) {
@@ -1477,9 +1473,9 @@ function showMissedCalls() {
 					// (this may be confusing: when calling back, the callee on this host becomes a caller)
 
 
-					// we use callerId=dialID, to provide the other side with the same id they used to call us
-					callerLink = "https://"+callerHost+"/user/"+callerID;
-					callerLink += "?callerId="+calleeID + "&callerName="+calleeName;
+					// we use callerId=calleeID, to provide the other side with the same id they used to call us
+					callerLink = "https://"+callerHost+"/user/"+callerID + "?callerId="+calleeID +
+								 "&callerName="+calleeName + "&callerHost="+location.host;
 					// ds= is only needed if playDialSounds==false
 					if(playDialSounds==false) {
 						callerLink += "&ds="+playDialSounds;
