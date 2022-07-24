@@ -69,6 +69,11 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	if ok && len(url_arg_array[0]) > 0 {
 		callerHost = strings.ToLower(url_arg_array[0])
 	}
+	// add callerHost to callerId
+	callerIdLong := callerId
+	if callerHost!="" && callerHost!=hostname {
+		callerIdLong += "@"+callerHost
+	}
 
 	var dbEntry DbEntry
 	err := kvMain.Get(dbRegisteredIDs, urlID, &dbEntry)
@@ -84,12 +89,12 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		return
 	}
 
-	logTxtMsg := callerMsg
-//	logTxtMsg := "(hidden)"
+//	logTxtMsg := callerMsg
+	logTxtMsg := "(hidden)"
 	fmt.Printf("/notifyCallee (%s) from callerId=(%s) name=(%s) msg=(%s) %s\n",
-		urlID, callerId, callerName, logTxtMsg, remoteAddr)
-	if dbUser.StoreContacts && callerId != "" && callerName != "" {
-		addContact(urlID, callerId, callerName, "/notifyCallee")
+		urlID, callerIdLong, callerName, logTxtMsg, remoteAddr)
+	if dbUser.StoreContacts && callerIdLong!="" && callerName!="" {
+		addContact(urlID, callerIdLong, callerName, "/notifyCallee")
 	}
 
 	// check if callee is hidden online
@@ -117,13 +122,13 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		// callee (urlID) is offline - send push notification(s)
 		msg := "Unknown caller"
 		if callerName!="" {
-			if callerId!="" {
-				msg = callerName + "("+callerId+")"
+			if callerIdLong!="" {
+				msg = callerName + "("+callerIdLong+")"
 			} else {
 				msg = callerName
 			}
-		} else if callerId!="" {
-			msg = callerId
+		} else if callerIdLong!="" {
+			msg = callerIdLong
 		}
 		msg += " is waiting for you to pick up the phone."
 /*
@@ -292,8 +297,8 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 			if(dbUser.StoreMissedCalls) {
 				fmt.Printf("# /notifyCallee (%s) could not send notification: store as missed call\n", urlID)
 				addMissedCall(urlID,
-					CallerInfo{remoteAddr, callerName, time.Now().Unix(),
-						callerId, callerMsg, callerHost, callerId}, "/notify-notavail")
+					CallerInfo{remoteAddr, callerName, time.Now().Unix(), callerIdLong, callerMsg},
+						"/notify-notavail")
 			} else {
 				fmt.Printf("# /notifyCallee (%s) could not send notification\n", urlID)
 			}
@@ -304,8 +309,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	callerGaveUp := true
 	// remoteAddr or remoteAddrWithPort for waitingCaller? waitingCaller needs the port for funtionality
 
-	waitingCaller := CallerInfo{remoteAddrWithPort, callerName, time.Now().Unix(),
-						callerId, callerMsg, callerHost, callerId}
+	waitingCaller := CallerInfo{remoteAddrWithPort, callerName, time.Now().Unix(), callerIdLong, callerMsg}
 
 	var calleeWsClient *WsClient = nil
 	hubMapMutex.RLock()
@@ -419,7 +423,8 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 			// in the mean time callee may have gone offline (and is now back online)
 			// so we consider calleeWsClient to be invalid and re-obtain it
 			calleeWsClient = nil
-			fmt.Printf("/notifyCallee (%s) caller disconnected callerId=(%s) %s\n", urlID, callerId, remoteAddr)
+			fmt.Printf("/notifyCallee (%s) caller disconnected callerId=(%s) %s\n",
+				urlID, callerIdLong, remoteAddr)
 			glUrlID, _, _, err := GetOnlineCallee(urlID, ejectOn1stFound, reportBusyCallee, 
 				reportHiddenCallee, remoteAddr, "/notifyCallee")
 			if err != nil {
@@ -570,12 +575,14 @@ func missedCall(callerInfo string, remoteAddr string, cause string) {
 	callerName := tok[1]
 	callerID := tok[2]
 	msgtext := ""
-	callerHost := ""
+//	callerHost := ""
 	if len(tok) >= 5 {
 		msgtext = tok[4]
 		if len(tok) >= 6 {
+/*
 // TODO callerHost after msgtext is not ideal
 			callerHost = tok[5]
+*/
 		}
 	}
 
@@ -585,7 +592,7 @@ func missedCall(callerInfo string, remoteAddr string, cause string) {
 	// the actual call occured ageSecs64 ago (may be a big number, if caller waits long before aborting the page)
 	//ageSecs64 := time.Now().Unix() - timeOfCall
 	err,missedCallsSlice := addMissedCall(calleeId,
-		CallerInfo{remoteAddr, callerName, timeOfCall, callerID, msgtext, callerHost, calleeId}, cause)
+		CallerInfo{remoteAddr, callerName, timeOfCall, callerID, msgtext, /*callerHost, calleeId*/}, cause)
 	if err==nil {
 		//fmt.Printf("missedCall (%s) caller=%s rip=%s\n", calleeId, callerID, remoteAddr)
 
@@ -734,8 +741,7 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 	if(dbUser.StoreMissedCalls) {
 		addMissedCall(urlID,
 			// TODO: empty msg string (see: caller.js: 'NOTE: this causes a missedCall entry')
-			CallerInfo{remoteAddr, callerName, time.Now().Unix(), callerID, "", callerHost, callerID},
-				"/canbenotified-not")
+			CallerInfo{remoteAddr, callerName, time.Now().Unix(), callerIdLong, "", }, "/canbenotified-not")
 	}
 	return
 }
@@ -763,10 +769,12 @@ func addMissedCall(urlID string, caller CallerInfo, cause string) (error, []Call
 	if logWantedFor("missedcall") {
 //		logTxtMsg := caller.Msg
 		logTxtMsg := "(hidden)"
-		callerID := caller.CallerID
+		callerID := caller.CallerID	// may contain @callerHost
+/*
 		if caller.Host!="" {
 			callerID += "@"+caller.Host
 		}
+*/
 		fmt.Printf("missedCall (%s) <- (%s) name=%s ip=%s msg=(%s) cause=(%s)\n",
 			urlID, callerID, caller.CallerName, caller.AddrPort, logTxtMsg, cause)
 	}

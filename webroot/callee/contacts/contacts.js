@@ -165,7 +165,8 @@ function processContacts(xhrresponse) {
 			}
 
 			let args = "";
-			if(prefCallbackId!="") args = "?callerId="+prefCallbackId;
+//			if(prefCallbackId!="") args = "?callerId="+prefCallbackId;
+			args = "?callerId=select&targetHost="+callerHost;
 			if(ourNickname!="") {
 				if(args=="") args = "?callerName="+ourNickname;
 				else args += "&callerName="+ourNickname;
@@ -174,9 +175,12 @@ function processContacts(xhrresponse) {
 				if(args=="") args = "?ds=false";
 				else args += "&ds=false";
 			}
-
+/*
 			dataBoxContent += "<td><a href='https://" + callerHost + "/user/" + idOnly + args + "'" +
 				" target='_blank'>"+idDisplay+"</a></td>";
+*/
+			dataBoxContent += "<td><a href='" + mainLink + idOnly + args + "'>"+id+"</a></td>";
+
 		} else {
 			// right column: local user (this will open dial-id in an iframe)
 			let args = "";

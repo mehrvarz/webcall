@@ -69,8 +69,6 @@ type CallerInfo struct {
 	CallTime int64
 	CallerID string
 	Msg string
-	Host string
-	DialID string
 }
 
 var	kvContacts skv.KV

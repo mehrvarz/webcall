@@ -385,9 +385,10 @@ window.onload = function() {
 // TODO if user modifies enterDomainVal so it is no longer ==location.host,
 // we must also (dynamically) enable idSelectElement
 
-			callerId = "";
-// TODO must set idSelect in all cases, bc it is currently set to "select"
-// ideally by /getcontact
+			// callerId must urgently be set, bc it is currently set to "select"
+			callerId = cookieName; // main callback id
+			// this may be modified by /getcontact and manually by idSelect
+
 			// when user operates idSelectElement, callerId may be changed
 			idSelectElement = document.getElementById("idSelect2");
 			// fetch mapping

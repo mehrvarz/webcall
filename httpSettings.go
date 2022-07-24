@@ -385,7 +385,7 @@ func httpGetContact(w http.ResponseWriter, r *http.Request, urlID string, callee
 
 			name := idNameMap[contactID]
 			if logWantedFor("contacts") {
-				fmt.Printf("/getcontact (%s) contactID=%d name=%s\n", calleeID, contactID, name)
+				fmt.Printf("/getcontact (%s) contactID=%s name=%s\n", calleeID, contactID, name)
 			}
 			fmt.Fprintf(w,name)
 		}
@@ -565,10 +565,8 @@ fmt.Printf("setcontact (%s) compoundName=%s contactName=%s comment=%s\n",
 		return true
 	}
 
-	if contactName!="unknown" && contactName!=contactID {
-		fmt.Printf("setcontact (%s) store contactID=%s from (%s) to (%s) %s\n",
-			calleeID, contactID, oldCompoundName, newCompoundName, remoteAddr)
-	}
+	fmt.Printf("setcontact (%s) store contactID=%s from (%s) to (%s) %s\n",
+		calleeID, contactID, oldCompoundName, newCompoundName, remoteAddr)
 	idNameMap[contactID] = newCompoundName
 fmt.Printf("setcontact (%s) idNameMap=%v\n", calleeID, idNameMap[contactID])
 	err = kvContacts.Put(dbContactsBucket, calleeID, idNameMap, false)

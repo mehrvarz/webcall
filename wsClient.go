@@ -146,11 +146,23 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		callerID = strings.ToLower(url_arg_array[0])
 	}
 
+	callerHost := ""
+	url_arg_array, ok = r.URL.Query()["callerHost"]
+	if ok && len(url_arg_array[0]) > 0 {
+		callerHost = strings.ToLower(url_arg_array[0])
+	}
+	// add callerHost to callerId
+	callerIdLong := callerID
+	if callerHost!="" && callerHost!=hostname {
+		callerIdLong += "@"+callerHost
+	}
+
 	callerName := ""
 	url_arg_array, ok = r.URL.Query()["name"]
 	if ok && len(url_arg_array[0]) > 0 {
 		callerName = url_arg_array[0]
 	}
+
 	if callerName=="" && callerID!="" && wsClientData.calleeID!="" {
 		if !strings.HasPrefix(wsClientData.calleeID,"answie") &&
 		   !strings.HasPrefix(wsClientData.calleeID,"talkback") {
@@ -163,7 +175,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			if err!=nil {
 				fmt.Printf("# wsClient db get calleeID=%s (ignore) err=%v\n", wsClientData.calleeID, err)
 			} else {
-				compoundName := idNameMap[callerID]
+				compoundName := idNameMap[callerIdLong]
 				contactName := "";
 				//callerID := "";
 				//callerName := "";
@@ -176,15 +188,9 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 					}
 				}
 				fmt.Printf("serveWs got callerName=%s for callerID=%s from contacts of calleeID=%s\n",
-					contactName, callerID, wsClientData.calleeID)
+					contactName, callerIdLong, wsClientData.calleeID)
 			}
 		}
-	}
-
-	callerHost := ""
-	url_arg_array, ok = r.URL.Query()["callerHost"]
-	if ok && len(url_arg_array[0]) > 0 {
-		callerHost = strings.ToLower(url_arg_array[0])
 	}
 
 /*
@@ -277,8 +283,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				assignedName, dialID, mappingData.CalleeId, wsClientData.calleeID)
 		}
 	}
-	//fmt.Printf("serve (%s) callerID=%s callerName=%s callerHost=%s auto=%s ver=%s\n",
-	//	wsClientData.calleeID, callerID, callerName, callerHost, auto, clientVersion)
+	//fmt.Printf("serve (%s) callerID=%s callerName=%s auto=%s ver=%s\n",
+	//	wsClientData.calleeID, callerIdLong, callerName, auto, clientVersion)
 
 	client.clientVersion = wsClientData.clientVersion
 	if clientVersion!="" {
@@ -287,7 +293,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	if auto=="true" {
 		client.autologin = true
 	}
-	client.callerID = callerID
+	client.callerID = callerIdLong
 	client.callerName = callerName
 	client.callerHost = callerHost
 	if tls {
@@ -448,7 +454,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		// caller client (2nd client)
 		if logWantedFor("attach") {
 			fmt.Printf("%s (%s) caller conn ws=%d (%s) %s\n", client.connType, client.calleeID,
-				wsClientID64, callerID, client.RemoteAddr)
+				wsClientID64, callerIdLong, client.RemoteAddr)
 		}
 
 		client.isCallee = false
@@ -587,8 +593,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			} else if dbUser.StoreMissedCalls {
 				addMissedCall(hub.CalleeClient.calleeID,
 					CallerInfo{hub.CallerClient.RemoteAddr, hub.CallerClient.callerName, time.Now().Unix(),
-					hub.CallerClient.callerID, hub.CallerClient.callerTextMsg, hub.CallerClient.callerHost,
-					hub.CallerClient.dialID}, "NO PEERCON")
+					hub.CallerClient.callerID, hub.CallerClient.callerTextMsg }, "NO PEERCON")
 			}
 
 			hub.HubMutex.Lock()
@@ -861,8 +866,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 				fmt.Printf("# %s (%s) failed to get dbUser\n",c.connType,c.calleeID)
 			} else if dbUser.StoreMissedCalls {
 				addMissedCall(c.calleeID, CallerInfo{c.RemoteAddr, c.callerName,
-					time.Now().Unix(), c.callerID, c.callerTextMsg, c.callerHost, c.hub.CallerClient.dialID},
-					"callee busy")
+					time.Now().Unix(), c.callerID, c.callerTextMsg }, "callee busy")
 			}
 			c.hub.HubMutex.RUnlock()
 			return
@@ -886,9 +890,11 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			// this data is used to display caller-info in the callee-client
 			// NOTE: c.callerID and c.callerHost must not contain colons
 			sendCmd := "callerInfo|"+c.callerID+":"+c.callerName
+/*
 			if c.callerHost!="" {
 				sendCmd = "callerInfo|"+c.callerID+"@"+c.callerHost+"\t"+c.callerName
 			}
+*/
 			if c.hub.CalleeClient.Write([]byte(sendCmd)) != nil {
 				fmt.Printf("# %s (%s) CALL CalleeClient.Write(callerInfo) fail\n", c.connType, c.calleeID)
 				c.hub.HubMutex.RUnlock()
@@ -1313,6 +1319,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 						// store the caller (c.hub.CallerClient.callerID)
 						// into contacts of user being called (c.calleeID)
 						// setContact() checks if dbUser.StoreContacts is set for c.calleeID
+// TODO what if only "@host"
 						if c.hub.CallerClient.callerID != "" {
 							// we don't have callerId + callerName for this contact yet
 							compoundName := c.hub.CallerClient.callerName+"||"
@@ -1469,7 +1476,7 @@ func (c *WsClient) peerConHasEnded(cause string) {
 		callerRemoteAddr := ""
 		callerID := ""
 		callerName := ""
-		callerHost := ""
+//		callerHost := ""
 		c.hub.HubMutex.RLock()
 		if c.hub.CalleeClient!=nil {
 			calleeRemoteAddr = c.hub.CalleeClient.RemoteAddrNoPort
@@ -1478,7 +1485,7 @@ func (c *WsClient) peerConHasEnded(cause string) {
 			callerRemoteAddr = c.hub.CallerClient.RemoteAddrNoPort
 			callerID = c.hub.CallerClient.callerID
 			callerName = c.hub.CallerClient.callerName
-			callerHost = c.hub.CallerClient.callerHost
+//			callerHost = c.hub.CallerClient.callerHost
 
 			// clear recentTurnCalleeIps[ipNoPort] entry (if this was a relay session)
 			recentTurnCalleeIpMutex.Lock()
@@ -1504,7 +1511,7 @@ func (c *WsClient) peerConHasEnded(cause string) {
 			} else if dbUser.StoreMissedCalls {
 				//fmt.Printf("%s (%s) store missedCall msg=(%s)\n", c.connType, c.calleeID, c.callerTextMsg)
 				addMissedCall(c.calleeID, CallerInfo{callerRemoteAddr, callerName, time.Now().Unix(),
-					callerID, c.callerTextMsg, callerHost, c.hub.CallerClient.dialID}, cause)
+					callerID, c.callerTextMsg }, cause)
 			}
 		}
 
