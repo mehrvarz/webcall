@@ -2398,7 +2398,7 @@ function openDialUrl(url) {
 	gLog('openDialUrl',url);
 	// NOTE: 4th parameter 'dontIframeOnload':
 	// iframeOnload() for dial-id takes scrollHeight from caller html min-height
-	iframeWindowOpen(url,true,"max-width:480px");
+	iframeWindowOpen(url,false);
 }
 
 function openIdMapping() {
