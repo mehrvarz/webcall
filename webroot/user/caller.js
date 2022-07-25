@@ -356,6 +356,9 @@ window.onload = function() {
 			targetHost = str;
 		}
 		enterDomainValElement.value = targetHost;
+// TODO if enterDomainValElement.value != location.host -> make extra forms visible (event based)
+// not just if(callerIdArg=="select")
+// extra forms: "idSelect2" (only if altIdCount>1), "storeContactButton" and 2 missing name forms
 
 		// if calleeID is not pure numeric, we first need to disable numericId checkbox
 		if(isNaN(calleeID)) {
@@ -382,9 +385,6 @@ window.onload = function() {
 
 		gLog("onload enterId/dial-id dialog cookieName="+cookieName);
 		if(callerIdArg=="select" && cookieName!="") {
-// TODO if user modifies enterDomainVal so it is no longer ==location.host,
-// we must also (dynamically) enable idSelectElement
-
 			// callerId must urgently be set, bc it is currently set to "select"
 			callerId = cookieName; // main callback id
 			// this may be modified by /getcontact and manually by idSelect

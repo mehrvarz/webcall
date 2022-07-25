@@ -193,7 +193,7 @@ function processContacts(xhrresponse) {
 			dataBoxContent += "<td><a href='" + mainLink + id + args + "'>"+id+"</a></td>";
 		}
 
-		dataBoxContent += "<td><a onclick=\"remove(this,'"+id+"')\" style='font-weight:600;'>X</a></td></tr>";
+		dataBoxContent += "<td><a onclick=\"remove(this,'"+id+"')\" style='font-weight:600;'>del</a></td></tr>";
 	}
 	dataBoxContent += "</table>";
 	databoxElement.innerHTML = dataBoxContent;

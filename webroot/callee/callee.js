@@ -1526,7 +1526,8 @@ function showMissedCalls() {
 				"<td>"+	callerLink + "</td>"+
 				"<td align='right'><a onclick='deleteMissedCall(\""+
 				missedCallsSlice[i].AddrPort+"_"+missedCallsSlice[i].CallTime+"\")'>"+
-				waitingTimeString + "&nbsp;X</a></td>";
+//				waitingTimeString + "&nbsp;X</a></td>";
+				waitingTimeString + "</a></td>";
 		}
 		str += "</table>"
 		missedCallsElement.innerHTML = str;
