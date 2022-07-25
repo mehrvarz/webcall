@@ -264,15 +264,16 @@ window.onload = function() {
 		//console.log("callerName3a="+str);
 		callerName = cleanStringParameter(str,true,"c1");
 		//console.log("callerName3b="+callerName);
-
+/*
 		if(callerName!="") {
 			// show caller nickname
 			var callerNameElement = document.getElementById("callerName");
 			if(callerNameElement) {
-				callerNameElement.innerHTML = "Caller nickname: "+callerName;
+				callerNameElement.innerHTML = "Caller name: "+callerName;
 				callerNameElement.style.display = "block";
 			}
 		}
+*/
 	}
 
 	callerHost = location.host;
@@ -339,15 +340,16 @@ window.onload = function() {
 				if(callerName=="") { // TODO prefer getUrlParams over settings? yes, may come from missedcalls
 					//console.log("callerName = serverSettings.nickname "+serverSettings.nickname);
 					callerName = serverSettings.nickname; // user can modify this in UI
-
+/*
 					if(callerName!="") {
 						// show caller nickname
 						var callerNameElement = document.getElementById("callerName");
 						if(callerNameElement) {
-							callerNameElement.innerHTML = "Caller nickname: "+callerName;
+							callerNameElement.innerHTML = "Caller name: "+callerName;
 							callerNameElement.style.display = "block";
 						}
 					}
+*/
 				}
 			}
 
@@ -552,7 +554,7 @@ function getContact() {
 						// show contact nickname
 						var contactNameElement = document.getElementById("contactName");
 						if(contactNameElement) {
-							contactNameElement.innerHTML = "Contact nickname: "+contactName;
+							contactNameElement.innerHTML = "Contact name: "+contactName;
 							contactNameElement.style.display = "block";
 						}
 					}
@@ -582,14 +584,16 @@ function getContact() {
 						// will be shown (and can be edited) in final call-widget
 					//}
 
+/*
 					if(callerName!="") {
 						// show caller nickname
 						var callerNameElement = document.getElementById("callerName");
 						if(callerNameElement) {
-							callerNameElement.innerHTML = "Caller nickname: "+callerName;
+							callerNameElement.innerHTML = "Caller name: "+callerName;
 							callerNameElement.style.display = "block";
 						}
 					}
+*/
 				}
 			}
 		}, errorAction);
