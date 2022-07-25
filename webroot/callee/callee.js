@@ -1498,7 +1498,7 @@ function showMissedCalls() {
 				if(noLink) {
 					callerLink = callerIdNoHost;
 				} else {
-					callerLink = "<a onclick='iframeWindowOpen(\""+callerLink+"\")'>"+callerIdNoHost+"</a>";
+					callerLink = "<a onclick='openDialUrl(\""+callerLink+"\")'>"+callerIdNoHost+"</a>";
 				}
 
 			} else {
@@ -1519,14 +1519,13 @@ function showMissedCalls() {
 				if(noLink) {
 					callerLink = callerIdDisplay;
 				} else {
-					callerLink = "<a onclick='iframeWindowOpen(\""+callerLink+"\")'>"+callerIdDisplay+"</a>";
+					callerLink = "<a onclick='openDialRemote(\""+callerLink+"\")'>"+callerIdDisplay+"</a>";
 				}
 			}
 			str += "<td>" + callerNameMarkup + "</td>"+
 				"<td>"+	callerLink + "</td>"+
 				"<td align='right'><a onclick='deleteMissedCall(\""+
 				missedCallsSlice[i].AddrPort+"_"+missedCallsSlice[i].CallTime+"\")'>"+
-//				waitingTimeString + "&nbsp;X</a></td>";
 				waitingTimeString + "</a></td>";
 		}
 		str += "</table>"
@@ -2383,7 +2382,23 @@ function openDialId(userId) {
 		url = "/user/"+userId+"/?ds="+playDialSounds;
 	}
 	gLog('openDialId',url);
-	iframeWindowOpen(url,false,"");
+	// NOTE: 4th parameter 'dontIframeOnload':
+	// iframeOnload() for dial-id takes scrollHeight from caller html min-height
+	iframeWindowOpen(url,true,"height:400px;max-width:480px",true);
+}
+
+function openDialRemote(url) {
+	gLog('openDialUrl',url);
+	// NOTE: 4th parameter 'dontIframeOnload':
+	// iframeOnload() for dial-id takes scrollHeight from caller html min-height
+	iframeWindowOpen(url,true,"height:400px;max-width:480px",true);
+}
+
+function openDialUrl(url) {
+	gLog('openDialUrl',url);
+	// NOTE: 4th parameter 'dontIframeOnload':
+	// iframeOnload() for dial-id takes scrollHeight from caller html min-height
+	iframeWindowOpen(url,true,"max-width:480px");
 }
 
 function openIdMapping() {

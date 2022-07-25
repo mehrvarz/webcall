@@ -798,13 +798,13 @@ function iframeOnload(obj) {
 	// 1. scrollHeight without delay = min-height (from html element)(not larger than mainElementHeight)
 	let mainElementRect = mainElement.getBoundingClientRect();
 	let mainElementHeight = (mainElementRect.bottom - mainElementRect.top) * 0.9;
-	gLog("mainElementHeight="+mainElementHeight+" "+mainElementRect.bottom+" "+mainElementRect.top)
+	//console.log("mainElementHeight="+mainElementHeight+" "+mainElementRect.bottom+" "+mainElementRect.top)
 	try {
 		let iframeHeight = obj.contentWindow.document.documentElement.scrollHeight;
 		if(iframeHeight > mainElementHeight) {
 			iframeHeight = mainElementHeight;
 		}
-		//gLog("iframeOnload height="+iframeHeight);
+		//console.log("iframeOnload1 height="+iframeHeight);
 		obj.style.height = iframeHeight+"px";
 		obj.contentWindow.focus();
 	} catch(ex) {
@@ -818,7 +818,7 @@ function iframeOnload(obj) {
 			if(iframeHeight > mainElementHeight) {
 				iframeHeight = mainElementHeight;
 			}
-			//gLog("iframeOnload height="+iframeHeight);
+			//console.log("iframeOnload2 height="+iframeHeight);
 			obj.style.height = iframeHeight+"px";
 			obj.contentWindow.focus();
 		} catch(ex) {

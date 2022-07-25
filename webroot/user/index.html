@@ -78,8 +78,10 @@ button[disabled] {
 	}
 }
 .menulabel {
-	margin-left:16px; 
-	margin-right:20px; 
+	margin-left:2px;
+	font-size:0.9em;
+	_margin-left:16px;
+	_margin-right:20px;
 	cursor:pointer;
 }
 
@@ -165,13 +167,12 @@ a, a:link, a:visited, a:active {
 textarea::placeholder {
   color: #fff;
 }
-.select, .select:focus {
+.select {
 	margin-top:8px;
 	margin-right:5px;
-	_margin-bottom:8px;
 	background-color:#04c;
 	color:#ccc;
-	font-size:1.0em;
+	font-size:1.2em;
 	border:none;
     padding: 0.3em 0.5em 0.2em 0.5em;
 	width:350px;
@@ -181,6 +182,8 @@ textarea::placeholder {
 }
 select:focus {
 	outline:none;
+	background-color: #0db;
+	color:#000;
 }
 .timer {
 	position:absolute;
@@ -402,28 +405,28 @@ input[type=submit]:focus {
 <!-- dial-id -->
 <div id="enterId" style="display:none">
 	<h1>WebCall Dial ID</h1>
-	<form action="javascript:;" style="margin-top:6px;" onsubmit="submitForm(this)" id="mnumber">
-		<label for="enterDomain">Domain:</label><br>
+	<form action="javascript:;" style="margin-top:6px;" onsubmit="submitForm()" id="mnumber">
+		<label class="menulabel" for="enterDomain">Domain:</label><br>
 		<input name="enterDomain" id="enterDomainVal" type="text" class="formtext" required>
 		<span class="lbutton" id="enterDomainClear" onclick="clearForm(4)">clr</span><br>
 		<br>
 
-		<label for="enterId">ID:</label><br>
+		<label class="menulabel" for="enterId">ID:</label><br>
 		<input name="enterId" id="enterIdVal" type="text" class="formtext" required>
 		<span class="lbutton" id="enterIdClear" onclick="clearForm(3)">clr</span>
 		<br>
 		<!-- checkbox numericId for smartpones only! can switch input-type from text to number -->
-		<label class="menulabel" id="numericIdLabel" for="numericId" style="margin-left:-4px;">
+		<label class="menulabel" id="numericIdLabel" for="numericId" _style="margin-left:-4px;">
 			<input type="checkbox" id="numericId" class="checkbox"> numeric</label>
 		</label>
 		<br>
 
 		<!-- idSelect: visible only if more than one id-mapping is specified -->
 		<label class="menulabel" id="idSelect2Label" for="idSelect2"
-			style="margin-left:0;margin-top:16px;_margin-bottom:12px;display:none;">
+			style="margin-left:0;margin-top:4px;display:none;">
 			Callback ID:<br>
 			<select id="idSelect2" class="select" onchange="changeId(this)"
-				style="margin-top:0;_display:none;"></select>
+				style="margin-top:0;"></select>
 		</label>
 		<br>
 
@@ -435,12 +438,13 @@ input[type=submit]:focus {
 		</div>
 		-->
 
-		<input type="submit" name="Submit" id="submit" value="Dial" style="width:100px; margin-top:15px;">
+		<input type="submit" name="Submit" id="submit" value="Continue" style="width:120px; margin-top:24px;">
 
 		<div id="dialIdAutoStore"
-			style="font-size:0.9em;opacity:0;margin-top:12px;">ID will be added to contacts</div>
+			style="font-size:0.9em;opacity:0;margin-top:12px;display:none;">ID will be added to contacts</div>
 
-		<a id="storeContactButton" style="font-size:0.9em;opacity:0;margin-top:12px;">Store contact</div>
+		<a id="storeContactButton"
+			style="font-size:0.9em;opacity:0;margin-top:12px;display:none;">Store contact</div>
 	</form>
 </div>
 <script src="custom.js"></script>

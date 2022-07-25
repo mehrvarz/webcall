@@ -213,6 +213,7 @@ window.onload = function() {
 			numericIdCheckbox.checked = true;
 			enterIdValElement.setAttribute('type','number');
 			enterIdValElement.focus();
+			numericIdLabel.style.display = "block";
 
 			numericIdCheckbox.addEventListener('change', function() {
 				if(enterIdValElement.readOnly) {
@@ -370,17 +371,22 @@ window.onload = function() {
 		}
 		enterIdValElement.value = calleeID;
 
-		gLog("onload enterIdValElement.value="+enterIdValElement.value);
+		//console.log("onload enterIdValElement.value="+enterIdValElement.value);
 		if(targetHost!=location.host) {
 			enterDomainValElement.readOnly = true;
 			enterDomainClearElement.style.display = "none";
-			gLog("onload enterDomain readOnly");
+			enterDomainValElement.style.background = "#33b";
+			enterDomainValElement.style.color = "#eee";
+			//console.log("onload enterDomain readOnly");
 		}
 		if(calleeID!="") {
 			enterIdValElement.readOnly = true;
 			enterIdClearElement.style.display = "none";
+			enterIdValElement.style.background = "#33b";
+			enterIdValElement.style.color = "#eee";
 			enterIdValElement.autoFocus = false;
-			gLog("onload enterId readOnly");
+			numericIdLabel.style.display = "none";
+			//console.log("onload enterId readOnly");
 		}
 
 		gLog("onload enterId/dial-id dialog cookieName="+cookieName);
@@ -487,6 +493,13 @@ window.onload = function() {
 							}
 						}, errorAction);
 					}
+
+				} else {
+					// no altIds found
+					if(enterIdValElement.readOnly) {
+						// we can auto-forward to submitForm()
+						//submitForm(); // we are NOT allowed to do this
+					}
 				}
 			}, function(errString,errcode) {
 				// /getmapping has failed
@@ -537,7 +550,7 @@ window.onload = function() {
 			}
 		}
 
-		// [Dial] button -> will continue in submitForm(theForm)
+		// [Dial] button -> will continue in submitForm()
 		return;
 	}
 
@@ -1431,7 +1444,7 @@ function submitForm(theForm) {
 			callerId = cookieName;
 			// TODO what if user has deliberately set it to empty?
 		}
-		// TODO callerName may be null
+// TODO callerName may be null
 		let callUrl = "https://"+cleanStringParameter(enterDomainValElement.value,true)+"/user/"+calleeID+
 			"?callerId="+callerId + "&callerName="+callerName + "&callerHost="+callerHost + "&i="+randId;
 		if(playDialSounds==false) {
