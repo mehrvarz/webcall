@@ -400,13 +400,72 @@ window.onload = function() {
 				gLog("onload enable idSelect2LabelElement");
 				let idSelect2LabelElement = document.getElementById("idSelect2Label");
 				idSelect2LabelElement.style.display = "block";
+			}
+		}, function(errString,errcode) {
+			// /getmapping has failed
+			console.log("# onload ex "+errString+" "+errcode);
+		});
 
-/* TODO may need this if enterIdVal is readonly
+
+		// set target domain name with local hostname
+		// note: location.hostname does not contain the :port, so we use location.host
+		let targetHost = location.host;
+		// andr activity hands over the target domain with this when sending callerIdArg='select'
+		str = getUrlParams("targetHost");
+		if(typeof str!=="undefined" && str!="") {
+			targetHost = str;
+		}
+		enterDomainValElement.value = targetHost;
+
+
+
+		// if calleeID is not pure numeric, we first need to disable numericId checkbox
+		if(isNaN(calleeID)) {
+			gLog("onload isNaN("+calleeID+") true");
+			numericIdCheckbox.checked = false;
+			enterIdValElement.setAttribute('type','text');
+		} else {
+			gLog("onload isNaN("+calleeID+") false");
+		}
+		enterIdValElement.value = calleeID;
+
+		//console.log("onload enterIdValElement.value="+enterIdValElement.value);
+		if(targetHost!=location.host) {
+			enterDomainValElement.readOnly = true;
+			enterDomainClearElement.style.display = "none";
+			enterDomainValElement.style.background = "#33b";
+			enterDomainValElement.style.color = "#eee";
+			//console.log("onload enterDomain readOnly");
+		}
+		if(calleeID!="") {
+			// calleeID is given: make enterIdVal readonly
+			enterIdValElement.readOnly = true;
+			enterIdClearElement.style.display = "none";
+			enterIdValElement.style.background = "#33b";
+			enterIdValElement.style.color = "#eee";
+			enterIdValElement.autoFocus = false;
+			numericIdLabel.style.display = "none";
+			if(altIdCount>1) {
 				setTimeout(function() {
 					gLog("onload idSelectElement.focus");
 					idSelectElement.focus();
 				},400);
-*/
+			}
+		} else {
+			// calleeID is empty: focus on enterIdVal
+			setTimeout(function() {
+				gLog("onload enterIdValElement.focus");
+				enterIdValElement.focus();
+				var rect1 = enterIdValElement.getBoundingClientRect();
+				var rect2 = mainElement.getBoundingClientRect();
+				console.log("showNumberForm pos",
+					rect1.left, rect1.top, rect1.right, rect1.bottom,
+					rect2.left, rect2.top, rect2.right, rect2.bottom);
+			},400);
+
+			enterIdValElement.onblur = function() {
+				// catch enterIdValElement.value change to invoke /getcontact
+				//console.log("enterIdValElement blur value = ("+enterIdValElement.value+")");
 				if(enterIdValElement.value!="" && cookieName!="") {
 					// get preferred callerID and callerNickname from calleeID-contact
 					let contactID = cleanStringParameter(enterIdValElement.value,true);
@@ -460,78 +519,11 @@ window.onload = function() {
 						}
 					}, errorAction);
 				}
-
-			} else {
-				// no altIds found
-				if(enterIdValElement.readOnly) {
-					// we can auto-forward to submitForm()
-					//submitForm(); // we are NOT allowed to do this
-				}
-			}
-		}, function(errString,errcode) {
-			// /getmapping has failed
-			console.log("# onload ex "+errString+" "+errcode);
-		});
-
-
-		// set target domain name with local hostname
-		// note: location.hostname does not contain the :port, so we use location.host
-		let targetHost = location.host;
-		// andr activity hands over the target domain with this when sending callerIdArg='select'
-		str = getUrlParams("targetHost");
-		if(typeof str!=="undefined" && str!="") {
-			targetHost = str;
-		}
-		enterDomainValElement.value = targetHost;
-
-// TODO catch enterDomainValElement input event
-// if enterDomainValElement.value != location.host -> make extra forms visible (event based)
-
-// TODO catch enterIdValElement input event
-// to invoke /getcontact
-
-		// if calleeID is not pure numeric, we first need to disable numericId checkbox
-		if(isNaN(calleeID)) {
-			gLog("onload isNaN("+calleeID+") true");
-			numericIdCheckbox.checked = false;
-			enterIdValElement.setAttribute('type','text');
-		} else {
-			gLog("onload isNaN("+calleeID+") false");
-		}
-		enterIdValElement.value = calleeID;
-
-		//console.log("onload enterIdValElement.value="+enterIdValElement.value);
-		if(targetHost!=location.host) {
-			enterDomainValElement.readOnly = true;
-			enterDomainClearElement.style.display = "none";
-			enterDomainValElement.style.background = "#33b";
-			enterDomainValElement.style.color = "#eee";
-			//console.log("onload enterDomain readOnly");
-		}
-		if(calleeID!="") {
-			// calleeID is given: make enterIdVal readonly
-			enterIdValElement.readOnly = true;
-			enterIdClearElement.style.display = "none";
-			enterIdValElement.style.background = "#33b";
-			enterIdValElement.style.color = "#eee";
-			enterIdValElement.autoFocus = false;
-			numericIdLabel.style.display = "none";
-			//console.log("onload enterId readOnly");
-		} else {
-			// calleeID is empty: focus on enterIdVal
-			setTimeout(function() {
-				gLog("onload enterIdValElement.focus");
-				enterIdValElement.focus();
-				var rect1 = enterIdValElement.getBoundingClientRect();
-				var rect2 = mainElement.getBoundingClientRect();
-				console.log("showNumberForm pos",
-					rect1.left, rect1.top, rect1.right, rect1.bottom,
-					rect2.left, rect2.top, rect2.right, rect2.bottom);
-			},400);
+			};
 		}
 
 
-/* TODO tmtmtm must enable this somehow
+/* TODO tmtmtm must enable this somehow - maybe we move store to remote call-widget?
 			// enable storeContactButton (like dialIdAutoStore)
 			var storeContactButtonElement = document.getElementById("storeContactButton");
 			if(storeContactButtonElement) {
