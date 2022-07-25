@@ -348,6 +348,132 @@ window.onload = function() {
 		containerElement.style.display = "none";
 		enterIdElement.style.display = "block";
 
+		if(callerIdArg=="select") {
+			// callerId must urgently be set, bc it is currently set to "select"
+			callerId = cookieName; // main callback id
+		}
+
+		// when user operates idSelectElement, callerId may be changed
+		idSelectElement = document.getElementById("idSelect2");
+		// fetch mapping
+		let api = apiPath+"/getmapping?id="+cookieName;
+		gLog('onload request getmapping api',api);
+		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+			gLog('response getmapping api',xhr.responseText);
+			if(xhr.responseText!="") {
+				let idOption = document.createElement('option');
+				idOption.text = cookieName + " (main id)";
+				idOption.value = cookieName;
+				idSelectElement.appendChild(idOption);
+				altIdCount++;
+
+				let altIDs = xhr.responseText;
+				let tok = altIDs.split("|");
+				for(var i=0; i<tok.length; i++) {
+					//console.log("/getmapping tok["+i+"]="+tok[i]);
+					if(tok[i]!="") {
+						let tok2 = tok[i].split(",");
+						let id = cleanStringParameter(tok2[0],true);
+						let active = cleanStringParameter(tok2[1],true);
+						let assign = cleanStringParameter(tok2[2],true);
+						if(assign=="") {
+							assign = "none";
+						}
+						//console.log("/getmapping assign=("+assign+")");
+						let idOption = document.createElement('option');
+						idOption.text = id + " ("+assign+")";
+						idOption.value = id;
+						idSelectElement.appendChild(idOption);
+						altIdCount++;
+					}
+				}
+// TODO not sure about '00000000000'
+				let idOptionAnon = document.createElement('option');
+				idOptionAnon.text = "00000000000 (incognito)";
+				idOptionAnon.value = "";
+				idSelectElement.appendChild(idOptionAnon);
+				altIdCount++;
+			}
+
+			if(altIdCount>1) {
+				// enable idSelectElement
+				gLog("onload enable idSelect2LabelElement");
+				let idSelect2LabelElement = document.getElementById("idSelect2Label");
+				idSelect2LabelElement.style.display = "block";
+
+/* TODO may need this if enterIdVal is readonly
+				setTimeout(function() {
+					gLog("onload idSelectElement.focus");
+					idSelectElement.focus();
+				},400);
+*/
+				if(enterIdValElement.value!="" && cookieName!="") {
+					// get preferred callerID and callerNickname from calleeID-contact
+					let contactID = cleanStringParameter(enterIdValElement.value,true);
+					if(cleanStringParameter(enterDomainValElement.value,true)!="") {
+						contactID += "@"+cleanStringParameter(enterDomainValElement.value,true);
+					}
+					let api = apiPath+"/getcontact?id="+cookieName + "&contactID="+contactID;
+					//console.log('request /getcontact api',api);
+					ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+						var xhrresponse = xhr.responseText
+						//console.log("/getcontact for calleeID="+calleeID+" xhrresponse="+xhrresponse);
+						if(xhrresponse!="") {
+							// format: name|prefCallbackID|myNickname
+							let tok = xhrresponse.split("|");
+							if(tok.length>0 && tok[0]!="") {
+								contactName = cleanStringParameter(tok[0],true);
+								if(contactName!="") {
+									// show contact's nickname
+									var contactNameElement = document.getElementById("contactName");
+									if(contactNameElement) {
+										contactNameElement.innerHTML = "Nickname: "+contactName;
+										contactNameElement.style.display = "block";
+									}
+								}
+							}
+							if(tok.length>1 && tok[1]!="") {
+								let prefCallbackID = tok[1];
+								//console.log("/getcontact prefCallbackID="+prefCallbackID);
+								// we can now preselect idSelect with prefCallbackID
+								const listArray = Array.from(idSelectElement.children);
+								let i=0;
+								listArray.forEach((item) => {
+									if(item.text.startsWith(prefCallbackID)) {
+										//console.log("/getcontact selectedIndex="+i+" +1");
+										idSelectElement.selectedIndex = i;
+										// this will set callerId based on id=cookieName in contacts
+										callerId = prefCallbackID;
+									}
+									i++
+								});
+							}
+
+							if(tok.length>2 && tok[2]!="") {
+								//if(callerName=="") {
+									// we prefer this over getUrlParams and settings
+									callerName = tok[2]; // nickname of caller
+									console.log("/getcontact set callerName="+callerName);
+									// will be shown (and can be edited) in final call-widget
+								//}
+							}
+						}
+					}, errorAction);
+				}
+
+			} else {
+				// no altIds found
+				if(enterIdValElement.readOnly) {
+					// we can auto-forward to submitForm()
+					//submitForm(); // we are NOT allowed to do this
+				}
+			}
+		}, function(errString,errcode) {
+			// /getmapping has failed
+			console.log("# onload ex "+errString+" "+errcode);
+		});
+
+
 		// set target domain name with local hostname
 		// note: location.hostname does not contain the :port, so we use location.host
 		let targetHost = location.host;
@@ -357,9 +483,12 @@ window.onload = function() {
 			targetHost = str;
 		}
 		enterDomainValElement.value = targetHost;
-// TODO if enterDomainValElement.value != location.host -> make extra forms visible (event based)
-// not just if(callerIdArg=="select")
-// extra forms: "idSelect2" (only if altIdCount>1), "storeContactButton" and 2 missing name forms
+
+// TODO catch enterDomainValElement input event
+// if enterDomainValElement.value != location.host -> make extra forms visible (event based)
+
+// TODO catch enterIdValElement input event
+// to invoke /getcontact
 
 		// if calleeID is not pure numeric, we first need to disable numericId checkbox
 		if(isNaN(calleeID)) {
@@ -380,6 +509,7 @@ window.onload = function() {
 			//console.log("onload enterDomain readOnly");
 		}
 		if(calleeID!="") {
+			// calleeID is given: make enterIdVal readonly
 			enterIdValElement.readOnly = true;
 			enterIdClearElement.style.display = "none";
 			enterIdValElement.style.background = "#33b";
@@ -387,133 +517,21 @@ window.onload = function() {
 			enterIdValElement.autoFocus = false;
 			numericIdLabel.style.display = "none";
 			//console.log("onload enterId readOnly");
+		} else {
+			// calleeID is empty: focus on enterIdVal
+			setTimeout(function() {
+				gLog("onload enterIdValElement.focus");
+				enterIdValElement.focus();
+				var rect1 = enterIdValElement.getBoundingClientRect();
+				var rect2 = mainElement.getBoundingClientRect();
+				console.log("showNumberForm pos",
+					rect1.left, rect1.top, rect1.right, rect1.bottom,
+					rect2.left, rect2.top, rect2.right, rect2.bottom);
+			},400);
 		}
 
-		gLog("onload enterId/dial-id dialog cookieName="+cookieName);
-		if(callerIdArg=="select" && cookieName!="") {
-			// callerId must urgently be set, bc it is currently set to "select"
-			callerId = cookieName; // main callback id
-			// this may be modified by /getcontact and manually by idSelect
 
-			// when user operates idSelectElement, callerId may be changed
-			idSelectElement = document.getElementById("idSelect2");
-			// fetch mapping
-			let api = apiPath+"/getmapping?id="+cookieName;
-			gLog('onload request getmapping api',api);
-			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-				gLog('response getmapping api',xhr.responseText);
-				if(xhr.responseText!="") {
-					let idOption = document.createElement('option');
-					idOption.text = cookieName + " (main id)";
-					idOption.value = cookieName;
-					idSelectElement.appendChild(idOption);
-					altIdCount++;
-
-					let altIDs = xhr.responseText;
-					let tok = altIDs.split("|");
-					for(var i=0; i<tok.length; i++) {
-						//console.log("/getmapping tok["+i+"]="+tok[i]);
-						if(tok[i]!="") {
-							let tok2 = tok[i].split(",");
-							let id = cleanStringParameter(tok2[0],true);
-							let active = cleanStringParameter(tok2[1],true);
-							let assign = cleanStringParameter(tok2[2],true);
-							if(assign=="") {
-								assign = "none";
-							}
-							//console.log("/getmapping assign=("+assign+")");
-							let idOption = document.createElement('option');
-							idOption.text = id + " ("+assign+")";
-							idOption.value = id;
-							idSelectElement.appendChild(idOption);
-							altIdCount++;
-						}
-					}
-// TODO not sure about '00000000000'
-					let idOptionAnon = document.createElement('option');
-					idOptionAnon.text = "00000000000 (incognito)";
-					idOptionAnon.value = "";
-					idSelectElement.appendChild(idOptionAnon);
-					altIdCount++;
-				}
-
-				if(altIdCount>1) {
-					// enable idSelectElement
-					gLog("onload enable idSelect2LabelElement");
-					let idSelect2LabelElement = document.getElementById("idSelect2Label");
-					idSelect2LabelElement.style.display = "block";
-
-					setTimeout(function() {
-						gLog("onload idSelectElement.focus");
-						idSelectElement.focus();
-					},400);
-
-					if(enterIdValElement.value!="" && cookieName!="") {
-						// get preferred callerID and callerNickname from calleeID-contact
-						let contactID = cleanStringParameter(enterIdValElement.value,true);
-						if(cleanStringParameter(enterDomainValElement.value,true)!="") {
-							contactID += "@"+cleanStringParameter(enterDomainValElement.value,true);
-						}
-						let api = apiPath+"/getcontact?id="+cookieName + "&contactID="+contactID;
-						//console.log('request /getcontact api',api);
-						ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-							var xhrresponse = xhr.responseText
-							//console.log("/getcontact for calleeID="+calleeID+" xhrresponse="+xhrresponse);
-							if(xhrresponse!="") {
-								// format: name|prefCallbackID|myNickname
-								let tok = xhrresponse.split("|");
-								if(tok.length>0 && tok[0]!="") {
-									contactName = cleanStringParameter(tok[0],true);
-									if(contactName!="") {
-										// show contact's nickname
-										var contactNameElement = document.getElementById("contactName");
-										if(contactNameElement) {
-											contactNameElement.innerHTML = "Nickname: "+contactName;
-											contactNameElement.style.display = "block";
-										}
-									}
-								}
-								if(tok.length>1 && tok[1]!="") {
-									let prefCallbackID = tok[1];
-									//console.log("/getcontact prefCallbackID="+prefCallbackID);
-									// we can now preselect idSelect with prefCallbackID
-									const listArray = Array.from(idSelectElement.children);
-									let i=0;
-									listArray.forEach((item) => {
-										if(item.text.startsWith(prefCallbackID)) {
-											//console.log("/getcontact selectedIndex="+i+" +1");
-											idSelectElement.selectedIndex = i;
-											// this will set callerId based on id=cookieName in contacts
-											callerId = prefCallbackID;
-										}
-										i++
-									});
-								}
-
-								if(tok.length>2 && tok[2]!="") {
-									//if(callerName=="") {
-										// we prefer this over getUrlParams and settings
-										callerName = tok[2]; // nickname of caller
-										console.log("/getcontact set callerName="+callerName);
-										// will be shown (and can be edited) in final call-widget
-									//}
-								}
-							}
-						}, errorAction);
-					}
-
-				} else {
-					// no altIds found
-					if(enterIdValElement.readOnly) {
-						// we can auto-forward to submitForm()
-						//submitForm(); // we are NOT allowed to do this
-					}
-				}
-			}, function(errString,errcode) {
-				// /getmapping has failed
-				console.log("# onload ex "+errString+" "+errcode);
-			});
-
+/* TODO tmtmtm must enable this somehow
 			// enable storeContactButton (like dialIdAutoStore)
 			var storeContactButtonElement = document.getElementById("storeContactButton");
 			if(storeContactButtonElement) {
@@ -543,20 +561,7 @@ window.onload = function() {
 					});
 				}
 			}
-		} else {
-			if(calleeID=="") {
-				setTimeout(function() {
-					gLog("onload enterIdValElement.focus");
-					enterIdValElement.focus();
-
-					var rect1 = enterIdValElement.getBoundingClientRect();
-					var rect2 = mainElement.getBoundingClientRect();
-					console.log("showNumberForm pos",
-						rect1.left, rect1.top, rect1.right, rect1.bottom,
-						rect2.left, rect2.top, rect2.right, rect2.bottom);
-				},400);
-			}
-		}
+*/
 
 		// [Dial] button -> will continue in submitForm()
 		return;
