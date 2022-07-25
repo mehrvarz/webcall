@@ -327,7 +327,7 @@ window.onload = function() {
 					}
 				}
 
-				if(callerName=="") {
+				if(callerName=="") { // TODO prefer getUrlParams over settings? yes, may come from missedcalls
 					//console.log("callerName = serverSettings.nickname "+serverSettings.nickname);
 					callerName = serverSettings.nickname; // user can modify this in UI
 				}
@@ -464,6 +464,14 @@ window.onload = function() {
 								let tok = xhrresponse.split("|");
 								if(tok.length>0 && tok[0]!="") {
 									contactName = cleanStringParameter(tok[0],true);
+									if(contactName!="") {
+										// show contact's nickname
+										var contactNameElement = document.getElementById("contactName");
+										if(contactNameElement) {
+											contactNameElement.innerHTML = "Nickname: "+contactName;
+											contactNameElement.style.display = "block";
+										}
+									}
 								}
 								if(tok.length>1 && tok[1]!="") {
 									let prefCallbackID = tok[1];
@@ -484,12 +492,12 @@ window.onload = function() {
 
 								if(tok.length>2 && tok[2]!="") {
 									//if(callerName=="") {
-										callerName = tok[2];
+										// we prefer this over getUrlParams and settings
+										callerName = tok[2]; // nickname of caller
 										console.log("/getcontact set callerName="+callerName);
+										// will be shown (and can be edited) in final call-widget
 									//}
 								}
-								// we can now preset myNickname
-								// set callerName = myNickname
 							}
 						}, errorAction);
 					}
