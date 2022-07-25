@@ -86,6 +86,7 @@ var fileReceiveAbort=false;
 var minNewsDate=0;
 
 window.onload = function() {
+	console.log("callee.js onload...");
 	if(!navigator.mediaDevices) {
 		console.warn("navigator.mediaDevices not available");
 		goOnlineButton.disabled = true;
@@ -753,15 +754,17 @@ function gotStream2() {
 	} else {
 		if(localStream && !videoEnabled && !rtcConnect) {
 			// mute (disable) mic until a call
-			gLog('gotStream2 disable localStream');
+			gLog('gotStream2 mute (disable) mic (localStream) standby');
 			localStream.getTracks().forEach(track => { track.stop(); });
 			const audioTracks = localStream.getAudioTracks();
 			localStream.removeTrack(audioTracks[0]);
 			localStream = null;
 		}
 		if(onGotStreamGoOnline && !rtcConnect) {
-			gLog('gotStream2 onGotStreamGoOnline goOnline');
+			console.log('gotStream2 onGotStreamGoOnline goOnline');
 			goOnline();
+		} else {
+			console.log('gotStream2 standby');
 		}
 	}
 }

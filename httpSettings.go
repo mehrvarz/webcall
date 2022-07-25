@@ -362,7 +362,9 @@ func httpGetContact(w http.ResponseWriter, r *http.Request, urlID string, callee
 	url_arg_array, ok := r.URL.Query()["contactID"]
 	if ok && len(url_arg_array[0]) >= 1 {
 		contactID := url_arg_array[0]
-		fmt.Printf("/getcontact (%s) contactID=(%s)\n", calleeID, contactID)
+		if logWantedFor("contacts") {
+			fmt.Printf("/getcontact (%s) id=(%s)\n", calleeID, contactID)
+		}
 		if contactID!="" {
 			// if contactID contains @host and host==hostname, we must cut off @host
 			idx := strings.Index(contactID,"@")
@@ -370,9 +372,13 @@ func httpGetContact(w http.ResponseWriter, r *http.Request, urlID string, callee
 				host := contactID[idx+1:]
 				if host == hostname {
 					contactID = contactID[:idx]
-					fmt.Printf("/getcontact (%s) contactID host=(%s) cut off (%s)\n", calleeID, host, contactID)
+					if logWantedFor("contacts") {
+						fmt.Printf("/getcontact (%s) id=(%s) local user host cutoff\n", calleeID, contactID)
+					}
 				} else {
-					fmt.Printf("/getcontact (%s) contactID host=(%s) no chg (not %s)\n", calleeID, host, hostname)
+					if logWantedFor("contacts") {
+						fmt.Printf("/getcontact (%s) id=(%s) no local user\n", calleeID, contactID)
+					}
 				}
 			}
 
@@ -383,11 +389,13 @@ func httpGetContact(w http.ResponseWriter, r *http.Request, urlID string, callee
 				return
 			}
 
-			name := idNameMap[contactID]
-			if logWantedFor("contacts") {
-				fmt.Printf("/getcontact (%s) contactID=%s name=%s\n", calleeID, contactID, name)
+			compoundName := idNameMap[contactID]
+			if compoundName!="" {
+				fmt.Printf("/getcontact (%s) id=%s found=%s\n", calleeID, contactID, compoundName)
+				fmt.Fprintf(w,compoundName)
+			} else {
+				fmt.Printf("/getcontact (%s) id=%s not found\n", calleeID, contactID)
 			}
-			fmt.Fprintf(w,name)
 		}
 	}
 	return
