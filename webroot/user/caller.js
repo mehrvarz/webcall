@@ -264,6 +264,15 @@ window.onload = function() {
 		//console.log("callerName3a="+str);
 		callerName = cleanStringParameter(str,true,"c1");
 		//console.log("callerName3b="+callerName);
+
+		if(callerName!="") {
+			// show caller nickname
+			var callerNameElement = document.getElementById("callerName");
+			if(callerNameElement) {
+				callerNameElement.innerHTML = "Caller nickname: "+callerName;
+				callerNameElement.style.display = "block";
+			}
+		}
 	}
 
 	callerHost = location.host;
@@ -330,6 +339,15 @@ window.onload = function() {
 				if(callerName=="") { // TODO prefer getUrlParams over settings? yes, may come from missedcalls
 					//console.log("callerName = serverSettings.nickname "+serverSettings.nickname);
 					callerName = serverSettings.nickname; // user can modify this in UI
+
+					if(callerName!="") {
+						// show caller nickname
+						var callerNameElement = document.getElementById("callerName");
+						if(callerNameElement) {
+							callerNameElement.innerHTML = "Caller nickname: "+callerName;
+							callerNameElement.style.display = "block";
+						}
+					}
 				}
 			}
 
@@ -531,10 +549,10 @@ function getContact() {
 				if(tok.length>0 && tok[0]!="") {
 					contactName = cleanStringParameter(tok[0],true);
 					if(contactName!="") {
-						// show contact's nickname
+						// show contact nickname
 						var contactNameElement = document.getElementById("contactName");
 						if(contactNameElement) {
-							contactNameElement.innerHTML = "Nickname: "+contactName;
+							contactNameElement.innerHTML = "Contact nickname: "+contactName;
 							contactNameElement.style.display = "block";
 						}
 					}
@@ -563,6 +581,15 @@ function getContact() {
 						console.log("/getcontact set callerName="+callerName);
 						// will be shown (and can be edited) in final call-widget
 					//}
+
+					if(callerName!="") {
+						// show caller nickname
+						var callerNameElement = document.getElementById("callerName");
+						if(callerNameElement) {
+							callerNameElement.innerHTML = "Caller nickname: "+callerName;
+							callerNameElement.style.display = "block";
+						}
+					}
 				}
 			}
 		}, errorAction);
@@ -1180,7 +1207,7 @@ function calleeOnlineAction(comment) {
 				if(!singlebutton) {
 					msgbox.style.display = "none";
 				}
-				showStatus("You are about to call a digital answering machine.",-1);
+				showStatus("You are about to call a digital answering machine",-1);
 			} else if(calleeID.startsWith("talkback")) {
 				if(!singlebutton) {
 					msgbox.style.display = "none";
