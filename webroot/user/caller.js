@@ -2005,6 +2005,9 @@ function signalingCommand(message) {
 		// offer store contact link
 		let storeContactElement = document.getElementById("storeContact");
 		if(storeContactElement) {
+			// storeContactElement: not callerName, but id='nickname'
+			let nicknameElement = document.getElementById("nickname");
+			callerName = nicknameElement.value;
 			let storeContactLink = "https://"+callerHost+"/callee/contacts/store?id="+callerId+"&contactId="+calleeID+"&contactName="+contactName+"&callerName="+callerName;
 			storeContactElement.innerHTML = "<a href='"+storeContactLink+"'>Store contact</a>";
 		}
