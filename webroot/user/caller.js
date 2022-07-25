@@ -416,8 +416,19 @@ window.onload = function() {
 			targetHost = str;
 		}
 		enterDomainValElement.value = targetHost;
-
-
+		enterDomainValElement.onblur = function() {
+			// catch enterDomainValElement.value change to invoke /getcontact
+			//console.log("enterDomainValElement blur value = ("+enterDomainValElement.value+")");
+			getContact();
+		};
+		//console.log("onload enterIdValElement.value="+enterIdValElement.value);
+		if(targetHost!=location.host) {
+			enterDomainValElement.readOnly = true;
+			enterDomainClearElement.style.display = "none";
+			enterDomainValElement.style.background = "#33b";
+			enterDomainValElement.style.color = "#eee";
+			//console.log("onload enterDomain readOnly");
+		}
 
 		// if calleeID is not pure numeric, we first need to disable numericId checkbox
 		if(isNaN(calleeID)) {
@@ -427,18 +438,9 @@ window.onload = function() {
 		} else {
 			gLog("onload isNaN("+calleeID+") false");
 		}
-		enterIdValElement.value = calleeID;
-
-		//console.log("onload enterIdValElement.value="+enterIdValElement.value);
-		if(targetHost!=location.host) {
-			enterDomainValElement.readOnly = true;
-			enterDomainClearElement.style.display = "none";
-			enterDomainValElement.style.background = "#33b";
-			enterDomainValElement.style.color = "#eee";
-			//console.log("onload enterDomain readOnly");
-		}
 		if(calleeID!="") {
 			// calleeID is given: make enterIdVal readonly
+			enterIdValElement.value = calleeID;
 			enterIdValElement.readOnly = true;
 			enterIdClearElement.style.display = "none";
 			enterIdValElement.style.background = "#33b";
@@ -451,6 +453,7 @@ window.onload = function() {
 					idSelectElement.focus();
 				},400);
 			}
+			getContact();
 		} else {
 			// calleeID is empty: focus on enterIdVal
 			setTimeout(function() {
@@ -466,59 +469,7 @@ window.onload = function() {
 			enterIdValElement.onblur = function() {
 				// catch enterIdValElement.value change to invoke /getcontact
 				//console.log("enterIdValElement blur value = ("+enterIdValElement.value+")");
-				if(enterIdValElement.value!="" && cookieName!="") {
-					// get preferred callerID and callerNickname from calleeID-contact
-					let contactID = cleanStringParameter(enterIdValElement.value,true);
-					if(cleanStringParameter(enterDomainValElement.value,true)!="") {
-						contactID += "@"+cleanStringParameter(enterDomainValElement.value,true);
-					}
-					let api = apiPath+"/getcontact?id="+cookieName + "&contactID="+contactID;
-					//console.log('request /getcontact api',api);
-					ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-						var xhrresponse = xhr.responseText
-						//console.log("/getcontact for calleeID="+calleeID+" xhrresponse="+xhrresponse);
-						if(xhrresponse!="") {
-							// format: name|prefCallbackID|myNickname
-							let tok = xhrresponse.split("|");
-							if(tok.length>0 && tok[0]!="") {
-								contactName = cleanStringParameter(tok[0],true);
-								if(contactName!="") {
-									// show contact's nickname
-									var contactNameElement = document.getElementById("contactName");
-									if(contactNameElement) {
-										contactNameElement.innerHTML = "Nickname: "+contactName;
-										contactNameElement.style.display = "block";
-									}
-								}
-							}
-							if(tok.length>1 && tok[1]!="") {
-								let prefCallbackID = tok[1];
-								//console.log("/getcontact prefCallbackID="+prefCallbackID);
-								// we can now preselect idSelect with prefCallbackID
-								const listArray = Array.from(idSelectElement.children);
-								let i=0;
-								listArray.forEach((item) => {
-									if(item.text.startsWith(prefCallbackID)) {
-										//console.log("/getcontact selectedIndex="+i+" +1");
-										idSelectElement.selectedIndex = i;
-										// this will set callerId based on id=cookieName in contacts
-										callerId = prefCallbackID;
-									}
-									i++
-								});
-							}
-
-							if(tok.length>2 && tok[2]!="") {
-								//if(callerName=="") {
-									// we prefer this over getUrlParams and settings
-									callerName = tok[2]; // nickname of caller
-									console.log("/getcontact set callerName="+callerName);
-									// will be shown (and can be edited) in final call-widget
-								//}
-							}
-						}
-					}, errorAction);
-				}
+				getContact();
 			};
 		}
 
@@ -560,6 +511,62 @@ window.onload = function() {
 	}
 
 	onload2();
+}
+
+function getContact() {
+	if(enterIdValElement.value!="" && cookieName!="") {
+		// get preferred callerID and callerNickname from calleeID-contact
+		let contactID = cleanStringParameter(enterIdValElement.value,true);
+		if(cleanStringParameter(enterDomainValElement.value,true)!="") {
+			contactID += "@"+cleanStringParameter(enterDomainValElement.value,true);
+		}
+		let api = apiPath+"/getcontact?id="+cookieName + "&contactID="+contactID;
+		//console.log('request /getcontact api',api);
+		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+			var xhrresponse = xhr.responseText
+			//console.log("/getcontact for calleeID="+calleeID+" xhrresponse="+xhrresponse);
+			if(xhrresponse!="") {
+				// format: name|prefCallbackID|myNickname
+				let tok = xhrresponse.split("|");
+				if(tok.length>0 && tok[0]!="") {
+					contactName = cleanStringParameter(tok[0],true);
+					if(contactName!="") {
+						// show contact's nickname
+						var contactNameElement = document.getElementById("contactName");
+						if(contactNameElement) {
+							contactNameElement.innerHTML = "Nickname: "+contactName;
+							contactNameElement.style.display = "block";
+						}
+					}
+				}
+				if(tok.length>1 && tok[1]!="") {
+					let prefCallbackID = tok[1];
+					//console.log("/getcontact prefCallbackID="+prefCallbackID);
+					// we can now preselect idSelect with prefCallbackID
+					const listArray = Array.from(idSelectElement.children);
+					let i=0;
+					listArray.forEach((item) => {
+						if(item.text.startsWith(prefCallbackID)) {
+							//console.log("/getcontact selectedIndex="+i+" +1");
+							idSelectElement.selectedIndex = i;
+							// this will set callerId based on id=cookieName in contacts
+							callerId = prefCallbackID;
+						}
+						i++
+					});
+				}
+
+				if(tok.length>2 && tok[2]!="") {
+					//if(callerName=="") {
+						// we prefer this over getUrlParams and settings
+						callerName = tok[2]; // nickname of caller
+						console.log("/getcontact set callerName="+callerName);
+						// will be shown (and can be edited) in final call-widget
+					//}
+				}
+			}
+		}, errorAction);
+	}
 }
 
 function changeId(selectObject) {
