@@ -495,35 +495,35 @@ window.onload = function() {
 
 
 /* TODO tmtmtm must enable this somehow - maybe we move store to remote call-widget?
-			// enable storeContactButton (like dialIdAutoStore)
-			var storeContactButtonElement = document.getElementById("storeContactButton");
-			if(storeContactButtonElement) {
-				gLog('storeContactButton on');
-				storeContactButtonElement.style.opacity = "0.8";
-				storeContactButtonElement.onclick = function() {
-					// enable [Save Contact] button when enterIdValElement.value!=""
-					// TODO: but only if enterDomainValElement.value != location.host ???
-					// [Save Contact] we want to save the id of the user we are about to call:
-					// local id:  enterIdValElement.value (if enterDomainValElement.value==location.host)
-					// remote id: enterIdValElement.value@enterDomainValElement.value
-					//		let calleeID = enterIdValElement.value@enterDomainValElement.value
-					// form for contactName: ____________
-					// form for callerName: ____________ (ourNickname)
-					let contactID = cleanStringParameter(enterIdValElement.value,true) +
-						"@" + cleanStringParameter(enterDomainValElement.value,true);
-					//console.log("/setcontact contactID="+contactID);
-					if(contactName=="") contactName="unknown";
-					let compoundName = contactName+"|"+callerId+"|"+callerName;
-					//console.log("/setcontact compoundName="+compoundName);
-					let api = apiPath+"/setcontact?id="+cookieName +
-						"&contactID="+contactID + "&name="+compoundName;
-					ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-						console.log("/setcontact ("+contactID+") stored ("+xhr.responseText+")");
-					}, function(errString,errcode) {
-						console.log("# /setcontact ("+contactID+") ex "+errString+" "+errcode);
-					});
-				}
+		// enable storeContactButton (like dialIdAutoStore)
+		var storeContactButtonElement = document.getElementById("storeContactButton");
+		if(storeContactButtonElement) {
+			gLog('storeContactButton on');
+			storeContactButtonElement.style.opacity = "0.8";
+			storeContactButtonElement.onclick = function() {
+				// enable [Save Contact] button when enterIdValElement.value!=""
+				// TODO: but only if enterDomainValElement.value != location.host ???
+				// [Save Contact] we want to save the id of the user we are about to call:
+				// local id:  enterIdValElement.value (if enterDomainValElement.value==location.host)
+				// remote id: enterIdValElement.value@enterDomainValElement.value
+				//		let calleeID = enterIdValElement.value@enterDomainValElement.value
+				// form for contactName: ____________
+				// form for callerName: ____________ (ourNickname)
+				let contactID = cleanStringParameter(enterIdValElement.value,true) +
+					"@" + cleanStringParameter(enterDomainValElement.value,true);
+				//console.log("/setcontact contactID="+contactID);
+				if(contactName=="") contactName="unknown";
+				let compoundName = contactName+"|"+callerId+"|"+callerName;
+				//console.log("/setcontact compoundName="+compoundName);
+				let api = apiPath+"/setcontact?id="+cookieName +
+					"&contactID="+contactID + "&name="+compoundName;
+				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+					console.log("/setcontact ("+contactID+") stored ("+xhr.responseText+")");
+				}, function(errString,errcode) {
+					console.log("# /setcontact ("+contactID+") ex "+errString+" "+errcode);
+				});
 			}
+		}
 */
 
 		// [Dial] button -> will continue in submitForm()
@@ -2001,6 +2001,13 @@ function signalingCommand(message) {
 			enableRemoteStream();
 		}
 		waitForRemoteStreamFunc();
+
+		// offer store contact link
+		let storeContactElement = document.getElementById("storeContact");
+		if(storeContactElement) {
+			let storeContactLink = "https://"+callerHost+"/callee/contacts/store?id="+callerID+"&contactId="+calleeID+"&contactName="+contactName+"&callerName="+callerName;
+			storeContactElement.innerHTML = "<a href='"+storeContactLink+"'>Store contact</a>";
+		}
 
 	} else if(cmd=="cancel") {
 		if(payload!="c") {

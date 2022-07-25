@@ -388,6 +388,8 @@ input[type=submit]:focus {
 
 	<textarea id="msgbox" class="msgbox" placeholder="(your message)" maxlength="137" style="display:none"></textarea>
 
+	<div id="storeContact"></div>
+
 	<div id="progressSend" style="width:100%;max-width:360px;display:none;">
 		<div id="progressSendLabel">sending:</div>
 		<progress id="fileProgressSend" max="0" value="0" style="width:100%" onclick="stopProgressSend()"></progress>
@@ -406,12 +408,12 @@ input[type=submit]:focus {
 <div id="enterId" style="display:none">
 	<h1>WebCall Dial ID</h1>
 	<form action="javascript:;" style="margin-top:6px;" onsubmit="submitForm()" id="mnumber">
-		<label class="menulabel" for="enterDomain">Domain:</label><br>
+		<label class="menulabel" for="enterDomain">Server address:</label><br>
 		<input name="enterDomain" id="enterDomainVal" type="text" class="formtext" required>
 		<span class="lbutton" id="enterDomainClear" onclick="clearForm(4)">clr</span><br>
 		<br>
 
-		<label class="menulabel" for="enterId">ID:</label><br>
+		<label class="menulabel" for="enterId">User ID:</label><br>
 		<input name="enterId" id="enterIdVal" type="text" class="formtext" required>
 		<span class="lbutton" id="enterIdClear" onclick="clearForm(3)">clr</span>
 		<br>
@@ -433,21 +435,14 @@ input[type=submit]:focus {
 		</label>
 		<br>
 
-		<!-- nickname: always visible
-		<div id="nicknameDiv" style="margin-top:12px;margin-left:2px;font-size:1.1em;display:none;">
-			<label for="nickname" style="display:inline-block;width:95px;">Nickname:</label>
-			<input id='nickname' type='text' size='9' maxlength='9' value=''
-				style="background:#04e;border:none;outline:none;padding:0.3em;color:#ddd;font-size:1.0em;">
+		<div style="margin-top:18px;">
+			<input type="submit" name="Submit" id="submit" value="Continue" style="width:120px; _float:left;">
+			<!--a id="storeContactButton"
+			style="font-size:1.0em;opacity:0;margin-left:30px;margin-top:34px;_display:none;">Store contact</div-->
 		</div>
-		-->
-
-		<input type="submit" name="Submit" id="submit" value="Continue" style="width:120px; margin-top:18px;">
 
 		<div id="dialIdAutoStore"
 			style="font-size:0.9em;opacity:0;margin-top:12px;display:none;">ID will be added to contacts</div>
-
-		<a id="storeContactButton"
-			style="font-size:0.9em;opacity:0;margin-top:12px;display:none;">Store contact</div>
 	</form>
 </div>
 <script src="custom.js"></script>
