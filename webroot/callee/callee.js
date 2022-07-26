@@ -1469,7 +1469,7 @@ function showMissedCalls() {
 				}
 			}
 
-			// TODO here we cld check if callerID is (still) a valid calleeID (but better do this on server)
+			// TODO here we could check if callerID is (still) a valid calleeID (but better do this on server)
 
 			let noLink = false;
 			if(callerID=="") {
@@ -1524,10 +1524,14 @@ function showMissedCalls() {
 					callerLink = "<a onclick='openDialRemote(\""+callerLink+"\")'>"+callerIdDisplay+"</a>";
 				}
 			}
+
 			str += "<td>" + callerNameMarkup + "</td>"+
 				"<td>"+	callerLink + "</td>"+
-				"<td align='right'><a onclick='deleteMissedCall(\""+
-				missedCallsSlice[i].AddrPort+"_"+missedCallsSlice[i].CallTime+"\")'>"+
+				"<td align='right'>"+
+				"<a onclick='deleteMissedCall(\""+
+					missedCallsSlice[i].AddrPort+"_"+missedCallsSlice[i].CallTime+"\","+
+					"\""+callerName+"\","+
+					"\""+callerID+"\")'>"+
 				waitingTimeString + "</a></td>";
 		}
 		str += "</table>"
@@ -1540,7 +1544,6 @@ function showMissedCalls() {
 			// already updating itself
 		} else {
 			showCallsWhileInAbsenceCallingItself = true;
-// TODO unfortunately this timeout occurs also when the screen is off
 			setTimeout(function() {
 				showCallsWhileInAbsenceCallingItself = false;
 				showMissedCalls();
@@ -1565,9 +1568,21 @@ function halfShowIpAddr(ipAddr) {
 	return ipAddr
 }
 
-function deleteMissedCall(callerAddrPortPlusCallTime) {
-	gLog('deleteMissedCall',callerAddrPortPlusCallTime);
-	wsSend("deleteMissedCall|"+callerAddrPortPlusCallTime);
+var myCallerAddrPortPlusCallTime = 0;
+function deleteMissedCall(callerAddrPortPlusCallTime,name,id) {
+	gLog("deleteMissedCall "+callerAddrPortPlusCallTime+" "+name+" "+id);
+	myCallerAddrPortPlusCallTime = callerAddrPortPlusCallTime;
+
+	let yesNoInner = "<div style='position:absolute; z-index:110; background:#45dd; color:#fff; padding:20px 20px; line-height:1.6em; border-radius:3px; cursor:pointer;'><div style='font-weight:600'>Delete missed call?</div><br>"+
+	"Name:&nbsp;"+name+"<br>ID:&nbsp;"+id+"<br><br>"+
+	"<a onclick='deleteMissedCallDo();history.back();'>Delete!</a> &nbsp; &nbsp; <a onclick='history.back();'>Cancel</a></div>";
+	menuDialogOpen(dynDialog,true,yesNoInner);
+}
+
+function deleteMissedCallDo() {
+	// will be called by deleteMissedCall()
+	gLog('deleteMissedCallDo '+myCallerAddrPortPlusCallTime);
+	wsSend("deleteMissedCall|"+myCallerAddrPortPlusCallTime);
 }
 
 function wsSend(message) {
