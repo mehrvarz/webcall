@@ -2002,14 +2002,16 @@ function signalingCommand(message) {
 		}
 		waitForRemoteStreamFunc();
 
-		// offer store contact link
-		let storeContactElement = document.getElementById("storeContact");
-		if(storeContactElement) {
-			// storeContactElement: not callerName, but id='nickname'
-			let nicknameElement = document.getElementById("nickname");
-			callerName = nicknameElement.value;
-			let storeContactLink = "https://"+callerHost+"/callee/contacts/store?id="+callerId+"&contactId="+calleeID+"&contactName="+contactName+"&callerName="+callerName;
-			storeContactElement.innerHTML = "<a href='"+storeContactLink+"'>Store contact</a>";
+		// offer store contact link (only if caller is on a remote server (has no active cookie on this server))
+		if(cookieName=="" && callerId!="" && calleeID!="") {
+			let storeContactElement = document.getElementById("storeContact");
+			if(storeContactElement) {
+				// storeContactElement: not callerName, but id='nickname'
+				let nicknameElement = document.getElementById("nickname");
+				callerName = nicknameElement.value;
+				let storeContactLink = "https://"+callerHost+"/callee/contacts/store?id="+callerId+"&contactId="+calleeID+"&contactName="+contactName+"&callerName="+callerName;
+				storeContactElement.innerHTML = "<a href='"+storeContactLink+"'>Store contact</a>";
+			}
 		}
 
 	} else if(cmd=="cancel") {
