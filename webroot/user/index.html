@@ -78,10 +78,14 @@ button[disabled] {
 	}
 }
 .menulabel {
+	margin-left:20px;
+	margin-right:20px;
+	cursor:pointer;
+}
+
+.formlabel {
 	margin-left:2px;
 	font-size:0.9em;
-	_margin-left:16px;
-	_margin-right:20px;
 	cursor:pointer;
 }
 
@@ -388,17 +392,17 @@ input[type=submit]:focus {
 
 	<textarea id="msgbox" class="msgbox" placeholder="(your message)" maxlength="137" style="display:none"></textarea>
 
-	<div id="storeContact" style="margin-top:16px;"></div>
-
 	<div id="progressSend" style="width:100%;max-width:360px;display:none;">
 		<div id="progressSendLabel">sending:</div>
 		<progress id="fileProgressSend" max="0" value="0" style="width:100%" onclick="stopProgressSend()"></progress>
 	</div>
-	<div id="download" style="margin-bottom:10px;"></div>
+	<div id="download" style="margin-top:10px;margin-bottom:10px;"></div>
 	<div id="progressRcv" style="width:100%;max-width:360px;display:none;">
 		<div id="progressRcvLabel">receiving:</div>
 		<progress id="fileProgressRcv" max="0" value="0" style="width:100%" onclick="stopProgressRcv()"></progress>
 	</div>
+
+	<div id="storeContact" style="margin-top:16px;"></div>
 
 	<div id="timer" class="timer">0:00</div>
 	<div style="opacity:0.7;margin-top:30px;user-select:none;">WebCall by <a href="https://timur.mobi/webcall">timur.mobi</a></div>
@@ -408,17 +412,17 @@ input[type=submit]:focus {
 <div id="enterId" style="display:none">
 	<h1>WebCall Dial ID</h1>
 	<form action="javascript:;" style="margin-top:6px;" onsubmit="submitForm()" id="mnumber">
-		<label class="menulabel" for="enterDomain">Server address:</label><br>
+		<label class="formlabel" for="enterDomain">Server address:</label><br>
 		<input name="enterDomain" id="enterDomainVal" type="text" class="formtext" required>
 		<span class="lbutton" id="enterDomainClear" onclick="clearForm(4)">clr</span><br>
 		<br>
 
-		<label class="menulabel" for="enterId">User ID:</label><br>
+		<label class="formlabel" for="enterId">User ID:</label><br>
 		<input name="enterId" id="enterIdVal" type="text" class="formtext" required>
 		<span class="lbutton" id="enterIdClear" onclick="clearForm(3)">clr</span>
 		<br>
 		<!-- checkbox numericId for smartpones only! can switch input-type from text to number -->
-		<label class="menulabel" id="numericIdLabel" for="numericId" _style="margin-left:-4px;">
+		<label class="formlabel" id="numericIdLabel" for="numericId" _style="margin-left:-4px;">
 			<input type="checkbox" id="numericId" class="checkbox"> numeric</label>
 		</label>
 		<br>
@@ -427,7 +431,7 @@ input[type=submit]:focus {
 		<!--div id="callerName" style="font-size:0.9em; margin-bottom:6px; display:none;"></div-->
 
 		<!-- idSelect: visible only if more than one id-mapping is specified -->
-		<label class="menulabel" id="idSelect2Label" for="idSelect2"
+		<label class="formlabel" id="idSelect2Label" for="idSelect2"
 			style="margin-left:0;margin-top:16px;display:none;">
 			Callback ID:<br>
 			<select id="idSelect2" class="select" onchange="changeId(this)"
