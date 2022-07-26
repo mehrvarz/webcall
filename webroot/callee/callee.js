@@ -2379,9 +2379,12 @@ function openContacts() {
 }
 
 function openDialId(userId) {
-	let url = "/user/?ds="+playDialSounds;
+	let url = "/user/";
 	if(userId) {
-		url = "/user/"+userId+"/?ds="+playDialSounds;
+		url = "/user/"+userId+"/";
+	}
+	if(playDialSounds) {
+		url += "?ds="+playDialSounds;
 	}
 	gLog('openDialId',url);
 	// NOTE: 4th parameter 'dontIframeOnload':
