@@ -1985,7 +1985,6 @@ function signalingCommand(message) {
 			let storeContactElement = document.getElementById("storeContact");
 			if(storeContactElement) {
 				let fullContactId = calleeID+"@"+location.host;
-// TODO contactName wrongly empty?
 				console.log("contactName (for storeContactLink)=("+contactName+")");
 				let storeContactLink = "https://"+callerHost+"/callee/contacts/store/?id="+callerId+
 					"&contactId="+fullContactId+"&contactName="+contactName+"&callerName="+callerName;
