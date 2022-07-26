@@ -324,7 +324,7 @@ window.onload = function() {
 				}
 
 				if(callerName=="") { // TODO prefer getUrlParams over settings? yes, may come from missedcalls
-					//console.log("callerName = serverSettings.nickname "+serverSettings.nickname);
+					console.log("callerName = serverSettings.nickname "+serverSettings.nickname);
 					callerName = serverSettings.nickname; // user can modify this in UI
 				}
 			}
@@ -526,6 +526,7 @@ function getContact() {
 				let tok = xhrresponse.split("|");
 				if(tok.length>0 && tok[0]!="") {
 					contactName = cleanStringParameter(tok[0],true);
+					console.log("contactName (from /getcontact)=("+contactName+")");
 					if(contactName!="") {
 						// show contact nickname
 						var contactNameElement = document.getElementById("contactName");
@@ -1453,7 +1454,8 @@ function submitForm(theForm) {
 			// TODO what if user has deliberately set it to empty?
 		}
 		let callUrl = "https://"+cleanStringParameter(enterDomainValElement.value,true)+"/user/"+calleeID+
-			"?callerId="+callerId + "&callerName="+callerName + "&callerHost="+callerHost + "&i="+randId;
+			"?callerId="+callerId + "&callerName="+callerName + "&callerHost="+callerHost +
+			"&contactName="+contactName+"&i="+randId;
 		if(playDialSounds==false) {
 			callUrl += "&ds=false";
 		}
@@ -1975,6 +1977,7 @@ function signalingCommand(message) {
 			if(storeContactElement) {
 				let fullContactId = calleeID+"@"+location.host;
 // TODO contactName wrongly empty?
+				console.log("contactName (for storeContactLink)=("+contactName+")");
 				let storeContactLink = "https://"+callerHost+"/callee/contacts/store/?id="+callerId+
 					"&contactId="+fullContactId+"&contactName="+contactName+"&callerName="+callerName;
 				storeContactElement.innerHTML = "<a href='"+storeContactLink+"'>Store contact</a>";
