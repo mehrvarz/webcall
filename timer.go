@@ -41,7 +41,7 @@ func ticker3hours() {
 		timeNowUnix := time.Now().Unix()
 
 		// loop all dbRegisteredIDs to delete outdated dbUserBucket entries (not online for 180+ days)
-		fmt.Printf("ticker3hours start looking for outdated users...\n")
+		fmt.Printf("ticker3hours start looking for outdated IDs...\n")
 		var maxDaysOffline int64 = 180
 		var deleteKeyArray []string  // for deleting
 		skv.DbMutex.Lock()

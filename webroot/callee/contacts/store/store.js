@@ -102,48 +102,51 @@ window.onload = function() {
 */
 
 	let api = apiPath+"/getcontact?id="+calleeID + "&contactID="+contactId;
-	console.log('request /getcontact api',api);
+	gLog('request /getcontact api',api);
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 		var xhrresponse = xhr.responseText;
-		console.log("/getcontact for calleeID="+calleeID+" xhrresponse="+xhrresponse);
+		gLog("/getcontact for calleeID="+calleeID+" xhrresponse="+xhrresponse);
 		if(xhrresponse!="") {
 			// format: name|prefCallbackID|myNickname
 			let tok = xhrresponse.split("|");
 
 			if(tok.length>0 && tok[0]!="" && contactName=="") {
 				contactName = cleanStringParameter(tok[0],true);
-				console.log("contactName (from /getcontact)=("+contactName+")");
+				gLog("contactName (from /getcontact)=("+contactName+")");
 			}
 
 			if(tok.length>1 && tok[1]!="" && calleeID=="") {
 				calleeID = tok[1];
-				console.log("callerID (from /getcontact)=("+calleeID+")");
+				gLog("callerID (from /getcontact)=("+calleeID+")");
 			}
 
 			if(tok.length>2 && tok[2]!="" && callerName=="") {
 				// we prefer this over getUrlParams and settings
 				callerName = tok[2]; // nickname of caller
-				console.log("callerName (from /getcontact)=("+callerName+")");
+				gLog("callerName (from /getcontact)=("+callerName+")");
 			}
 
 			let compoundName = contactName+"|"+calleeID+"|"+callerName;
-			console.log("compoundName="+compoundName);
+			gLog("compoundName="+compoundName);
 
-			let displayString =
-				"ID: "+contactId+"<br>"+
-				"Nickname: "+contactName+"<br><br>"+
-				"Your nickname: "+callerName+"<br>"+
-				"Your callback ID: "+calleeID;
+			let displayString =	"<table>"+
+				"<tr><td>Contact ID:</td><td>"+contactId+"</td></tr>"+
+				"<tr><td>Contact name:&nbsp;</td><td>"+contactName+"</td></tr>"+
+				"<tr><td>Your ID:</td><td>"+calleeID+"</td></tr>"+
+				"<tr><td>Your name:</td><td>"+callerName+"</td></tr>"+
+				"</table><br>";
 
 			let api = apiPath+"/setcontact?id="+calleeID+"&contactID="+contactId + "&name="+compoundName;
-			console.log("request /setcontact api="+api);
+			gLog("request /setcontact api="+api);
 			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-				console.log("xhr /setcontact OK "+xhr.responseText);
-				displayString += "<br><br>Contact has been stored";
+				gLog("xhr /setcontact OK "+xhr.responseText);
+				displayString += "Contact stored"+
+					"<br><br><a href='..'>Open Contacts</a>";
 				databoxElement.innerHTML = displayString;
 			}, function(errString,err) {
 				errorAction(errString,err);
-				displayString += "<br><br>Failed to store contact";
+				displayString += "Failed to store contact: "+errString+
+					"<br><br><a href='..'>Open Contacts</a>";
 				databoxElement.innerHTML = displayString;
 			});
 
@@ -168,7 +171,7 @@ function getUrlParams(param) {
 }
 
 function errorAction(errString,err) {
-	gLog('xhr error',errString);
+	console.log('xhr error',errString);
 	// let user know via alert
 	alert("xhr error "+errString);
 }
