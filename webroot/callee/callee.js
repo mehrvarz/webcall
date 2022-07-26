@@ -2405,14 +2405,14 @@ function openDialId(userId) {
 	gLog('openDialId',url);
 	// NOTE: 4th parameter 'dontIframeOnload':
 	// iframeOnload() for dial-id takes scrollHeight from caller html min-height
-	iframeWindowOpen(url,false,"height:420px;max-width:480px",true);
+	iframeWindowOpen(url,false,"height:460px;max-width:480px",true);
 }
 
 function openDialRemote(url) {
 	gLog('openDialUrl',url);
 	// NOTE: 4th parameter 'dontIframeOnload':
 	// iframeOnload() for dial-id takes scrollHeight from caller html min-height
-	iframeWindowOpen(url,false,"height:420px;max-width:480px",true);
+	iframeWindowOpen(url,false,"height:460px;max-width:480px",true);
 }
 
 function openDialUrl(url) {
