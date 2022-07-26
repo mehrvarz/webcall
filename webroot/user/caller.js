@@ -272,7 +272,16 @@ window.onload = function() {
 		callerHost = str;
 	}
 
-	gLog("onload urlParam callerId=("+callerId+") callerHost=("+callerHost+") callerName=("+callerName+")");
+	contactName = "";
+	str = getUrlParams("contactName");
+	if(typeof str!=="undefined" && str!==null && str!=="" && str!=="null") {
+		// this urlArg has a low priority
+		// will be overwritten by the contacts-entry for enterIdValElement.value (calleeID)
+		contactName = cleanStringParameter(str,true,"c1");
+	}
+
+	gLog("onload urlParam callerId=("+callerId+") callerHost=("+callerHost+")"+
+		 " callerName=("+callerName+") contactName=("+contactName+")");
 
 	cookieName = "";
 	if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
