@@ -193,7 +193,8 @@ function processContacts(xhrresponse) {
 			dataBoxContent += "<td><a href='" + mainLink + id + args + "'>"+id+"</a></td>";
 		}
 
-		dataBoxContent += "<td><a onclick=\"remove(this,'"+id+"')\" style='font-weight:600;'>del</a></td></tr>";
+		dataBoxContent += "<td><a onclick=\"remove(this,'"+id+"','"+name+"')\""+
+			" style='font-weight:600;'>del</a></td></tr>";
 	}
 	dataBoxContent += "</table>";
 	databoxElement.innerHTML = dataBoxContent;
@@ -201,12 +202,14 @@ function processContacts(xhrresponse) {
 
 var myTableElement;
 var removeId = 0;
-function remove(tableElement,id) {
+function remove(tableElement,id,name) {
 	gLog("remove "+id);
 	myTableElement = tableElement;
 	removeId = id;
 
-	let yesNoInner = "<div style='position:absolute; left:-999em; top:0px; width:180px; z-index:110; background:#45dd; color:#fff; padding:20px 30px; line-height:2.5em; border-radius:3px; cursor:pointer;'>Delete this contact?<br>"+id+"<br><a onclick='removeDo();history.back();'>Delete!</a> &nbsp; <a onclick='history.back();'>Cancel</a></div>";
+	let yesNoInner = "<div style='position:absolute; z-index:110; background:#45dd; color:#fff; padding:20px 20px; line-height:1.6em; border-radius:3px; cursor:pointer;'>Delete contact?<br>"+
+	"Name:&nbsp;"+name+"<br>ID:&nbsp;"+id+"<br><br>"+
+	"<a onclick='removeDo();history.back();'>Delete!</a> &nbsp; &nbsp; <a onclick='history.back();'>Cancel</a></div>";
 	menuDialogOpen(dynDialog,true,yesNoInner);
 }
 
