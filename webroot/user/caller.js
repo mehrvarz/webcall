@@ -1344,7 +1344,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 				if(xhr.responseText.startsWith("ok")) {
 					// calleeID can be notified (or is hidden)
 					// if caller is willing to wait, caller can invoke confirmNotifyConnect() to enter own name
-//					let calleeName = xhr.responseText.substring(3);
+// TODO				let calleeName = xhr.responseText.substring(3);
 //					if(calleeName=="" || calleeName.length<3) {
 //						calleeName = calleeID;
 //					}
@@ -1452,7 +1452,6 @@ function submitForm(theForm) {
 			callerId = cookieName;
 			// TODO what if user has deliberately set it to empty?
 		}
-// TODO callerName may be null
 		let callUrl = "https://"+cleanStringParameter(enterDomainValElement.value,true)+"/user/"+calleeID+
 			"?callerId="+callerId + "&callerName="+callerName + "&callerHost="+callerHost + "&i="+randId;
 		if(playDialSounds==false) {
