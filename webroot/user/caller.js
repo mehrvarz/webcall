@@ -255,25 +255,11 @@ window.onload = function() {
 
 	// showMissedCalls() hands over the default webcall nickname with this
 	callerName = "";
-	//console.log("callerName1="+callerName);
 	str = getUrlParams("callerName");
-	//console.log("callerName2 str="+str);
 	if(typeof str!=="undefined" && str!==null && str!=="" && str!=="null") {
 		// this urlArg has a low priority
 		// will be overwritten by the contacts-entry for enterIdValElement.value (calleeID)
-		//console.log("callerName3a="+str);
 		callerName = cleanStringParameter(str,true,"c1");
-		//console.log("callerName3b="+callerName);
-/*
-		if(callerName!="") {
-			// show caller nickname
-			var callerNameElement = document.getElementById("callerName");
-			if(callerNameElement) {
-				callerNameElement.innerHTML = "Caller name: "+callerName;
-				callerNameElement.style.display = "block";
-			}
-		}
-*/
 	}
 
 	callerHost = location.host;
@@ -340,16 +326,6 @@ window.onload = function() {
 				if(callerName=="") { // TODO prefer getUrlParams over settings? yes, may come from missedcalls
 					//console.log("callerName = serverSettings.nickname "+serverSettings.nickname);
 					callerName = serverSettings.nickname; // user can modify this in UI
-/*
-					if(callerName!="") {
-						// show caller nickname
-						var callerNameElement = document.getElementById("callerName");
-						if(callerNameElement) {
-							callerNameElement.innerHTML = "Caller name: "+callerName;
-							callerNameElement.style.display = "block";
-						}
-					}
-*/
 				}
 			}
 
@@ -583,17 +559,6 @@ function getContact() {
 						console.log("/getcontact set callerName="+callerName);
 						// will be shown (and can be edited) in final call-widget
 					//}
-
-/*
-					if(callerName!="") {
-						// show caller nickname
-						var callerNameElement = document.getElementById("callerName");
-						if(callerNameElement) {
-							callerNameElement.innerHTML = "Caller name: "+callerName;
-							callerNameElement.style.display = "block";
-						}
-					}
-*/
 				}
 			}
 		}, errorAction);
@@ -1737,13 +1702,16 @@ function signalingCommand(message) {
 	gLog('signaling cmd',cmd);
 
 	if(cmd=="calleeAnswer") {
-		// callee.js is responding to a callerOffer
-
+		// callee.js has responded to our callerOffer
+		// get callerName from form and don't forget cleanStringParameter(,true)
+		let nicknameElement = document.getElementById("nickname");
+		if(nicknameElement) {
+			callerName = cleanStringParameter(nicknameElement.value,true);
+		}
 		// contactAutoStore is only true if caller is logged in on the local server
 		// if the caller is a remote user (calling someone on this server), contactAutoStore will be false
 		if(cookieName!="" && contactAutoStore && callerId!=="") {
 			// store the user being called (calleeID) into the contacts of the caller (cookieName)
-// TODO get callerName from form and don't forget cleanStringParameter(,true)
 			let compoundName = contactName+"|"+callerId+"|"+callerName;
 			let api = apiPath+"/setcontact?id="+cookieName+"&contactID="+calleeID + "&name="+compoundName;
 			gLog("request api="+api);
@@ -2003,10 +1971,6 @@ function signalingCommand(message) {
 		waitForRemoteStreamFunc();
 
 		// offer store contact link (only if callerId and calleeID exist)
-		let nicknameElement = document.getElementById("nickname");
-		if(nicknameElement) {
-			callerName = nicknameElement.value;
-		}
 		if(callerId!="" && calleeID!="" && callerHost!="") {
 			let storeContactElement = document.getElementById("storeContact");
 			if(storeContactElement) {
