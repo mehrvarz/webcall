@@ -2010,7 +2010,7 @@ function signalingCommand(message) {
 		if(callerId!="" && calleeID!="") {
 			let storeContactElement = document.getElementById("storeContact");
 			if(storeContactElement) {
-				let storeContactLink = "https://"+callerHost+"/callee/contacts/store?id="+callerId+
+				let storeContactLink = "https://"+callerHost+"/callee/contacts/store/?id="+callerId+
 					"&contactId="+calleeID+"&contactName="+contactName+"&callerName="+callerName;
 				storeContactElement.innerHTML = "<a href='"+storeContactLink+"'>Store contact</a>";
 			}
