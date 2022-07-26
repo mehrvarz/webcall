@@ -33,13 +33,15 @@ window.onload = function() {
 	if(typeof id!=="undefined" && id!="") {
 		calleeID = cleanStringParameter(id,true);
 	}
+/*
 	// calleeID may be a tmpID (not the main-id) of the callee
 	// but this doesn't matter bc webcall server always provides us with the data of the main-id via xhr below
-	if(calleeID==cookieName) {
+	if(calleeID!=cookieName) {
 		// no access with the wrong cookie
 		databoxElement.innerHTML = "wrong cookie";
 		return;
 	}
+*/
 
 	contactId = ""; // may contain @host
 	let str = getUrlParams("contactId");
