@@ -2007,7 +2007,7 @@ function signalingCommand(message) {
 		if(nicknameElement) {
 			callerName = nicknameElement.value;
 		}
-		if(callerId!="" && calleeID!="") {
+		if(callerId!="" && calleeID!="" && callerHost!="") {
 			let storeContactElement = document.getElementById("storeContact");
 			if(storeContactElement) {
 				let storeContactLink = "https://"+callerHost+"/callee/contacts/store/?id="+callerId+
