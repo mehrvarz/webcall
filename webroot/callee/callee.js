@@ -1393,151 +1393,152 @@ function showMissedCalls() {
 			return;
 		}
 
-		// make remoteCallerIdMaxChar depend on window.innerWidth
-		// for window.innerWidth = 360, remoteCallerIdMaxChar=21 is perfect
-		let remoteCallerIdMaxChar = 13;
-		if(window.innerWidth>360) {
-			remoteCallerIdMaxChar += Math.floor((window.innerWidth-360)/22);
-		}
-		//console.log("window.innerWidth="+window.innerWidth+" remoteCallerIdMaxChar="+remoteCallerIdMaxChar);
+		if(iframeWindowOpenFlag) {
+			// no need to render missedcalls if an iframe is open
+			//gLog("skip rendering missedcalls");
+		} else {
+			// make remoteCallerIdMaxChar depend on window.innerWidth
+			// for window.innerWidth = 360, remoteCallerIdMaxChar=21 is perfect
+			let remoteCallerIdMaxChar = 13;
+			if(window.innerWidth>360) {
+				remoteCallerIdMaxChar += Math.floor((window.innerWidth-360)/22);
+			}
+			//console.log("window.innerWidth="+window.innerWidth+" remoteCallerIdMaxChar="+remoteCallerIdMaxChar);
 
-		missedCallsElement.style.display = "block";
-		let timeNowSecs = Math.floor((Date.now()+500)/1000);
-		let mainLink = window.location.href;
-		let idx = mainLink.indexOf("/callee/");
-		if(idx>0) {
-			mainLink = mainLink.substring(0,idx) + "/user/";
-		}
-		let str = "<table style='width:100%; border-collapse:separate; line-height:1.6em; margin-left:-4px;'>"
-		for(var i=0; i<missedCallsSlice.length; i++) {
-			str += "<tr>"
-			let waitingSecs = timeNowSecs - missedCallsSlice[i].CallTime;
+			missedCallsElement.style.display = "block";
+			let timeNowSecs = Math.floor((Date.now()+500)/1000);
+			let mainLink = window.location.href;
+			let idx = mainLink.indexOf("/callee/");
+			if(idx>0) {
+				mainLink = mainLink.substring(0,idx) + "/user/";
+			}
+			let str = "<table style='width:100%; border-collapse:separate; line-height:1.6em; margin-left:-4px;'>"
+			for(var i=0; i<missedCallsSlice.length; i++) {
+				str += "<tr>"
+				let waitingSecs = timeNowSecs - missedCallsSlice[i].CallTime;
 
-			// split waitingTimeString by days, hours, min
-			let waitingTimeString = ""+waitingSecs+"s";
-			if(waitingSecs>50) {
-				let waitingMins = Math.floor((waitingSecs+10)/60);
-				if(waitingMins>=60) {
-					let waitingHours = Math.floor(waitingMins/60);
-					waitingMins -= waitingHours*60;
-					if(waitingHours>=24) {
-						let waitingDays = Math.floor(waitingHours/24);
-						waitingHours -= waitingDays*24;
-//						if(waitingDays>=3) {
+				// split waitingTimeString by days, hours, min
+				let waitingTimeString = ""+waitingSecs+"s";
+				if(waitingSecs>50) {
+					let waitingMins = Math.floor((waitingSecs+10)/60);
+					if(waitingMins>=60) {
+						let waitingHours = Math.floor(waitingMins/60);
+						waitingMins -= waitingHours*60;
+						if(waitingHours>=24) {
+							let waitingDays = Math.floor(waitingHours/24);
+							waitingHours -= waitingDays*24;
 							waitingTimeString = ""+waitingDays+"d";
-//						} else {
-//							waitingTimeString = ""+waitingDays+"d "+waitingHours+"h";
-//						}
+						} else {
+							waitingTimeString = ""+waitingHours+"h";
+						}
 					} else {
-						waitingTimeString = ""+waitingHours+"h"; // +" "+waitingMins+"m";
+						waitingTimeString = ""+waitingMins+"m";
 					}
-				} else {
-					waitingTimeString = ""+waitingMins+"m";
 				}
-			}
-			let callerIp = missedCallsSlice[i].AddrPort;
-			let callerIpIdxPort = callerIp.indexOf(":");
-			if(callerIpIdxPort>0) {
-				callerIp = callerIp.substring(0,callerIpIdxPort);
-			}
-			let callerID = missedCallsSlice[i].CallerID;
+				let callerIp = missedCallsSlice[i].AddrPort;
+				let callerIpIdxPort = callerIp.indexOf(":");
+				if(callerIpIdxPort>0) {
+					callerIp = callerIp.substring(0,callerIpIdxPort);
+				}
+				let callerID = missedCallsSlice[i].CallerID;
 
-			let callerName = missedCallsSlice[i].CallerName;
-			if(callerName=="") callerName="unknown";
-			// TODO if callerName=="" || callerName=="unknown" -> check contacts?
+				let callerName = missedCallsSlice[i].CallerName;
+				if(callerName=="") callerName="unknown";
+				// TODO if callerName=="" || callerName=="unknown" -> check contacts?
 
-			let callerNameMarkup = callerName;
-			let callerMsg = missedCallsSlice[i].Msg;
-			if(callerMsg!="") {
-				//gLog('### callerMsg='+callerMsg+' '+waitingTimeString+' '+
-				//	timeNowSecs+' '+missedCallsSlice[i].CallTime);
-				callerNameMarkup = "<a onclick='showMsg(\""+callerMsg+"\");return false;'>"+callerName+"</a>";
-				//console.log("callerNameMarkup("+callerNameMarkup+")");
-			}
+				let callerNameMarkup = callerName;
+				let callerMsg = missedCallsSlice[i].Msg;
+				if(callerMsg!="") {
+					//gLog('### callerMsg='+callerMsg+' '+waitingTimeString+' '+
+					//	timeNowSecs+' '+missedCallsSlice[i].CallTime);
+					callerNameMarkup = "<a onclick='showMsg(\""+callerMsg+"\");return false;'>"+callerName+"</a>";
+					//console.log("callerNameMarkup("+callerNameMarkup+")");
+				}
 
-			let remoteCaller = false;
-			let remoteAddr = "";
-			let callerIdNoHost = callerID;
-			let idxAt = callerID.indexOf("@");
-			if(idxAt>=0) {
-				remoteCaller = true;
-				callerIdNoHost = callerID.substring(0,idxAt);
-				remoteAddr = callerID.substring(idxAt+1)
-				if(remoteAddr==location.host) {
-					remoteCaller = false;
+				let remoteCaller = false;
+				let remoteAddr = "";
+				let callerIdNoHost = callerID;
+				let idxAt = callerID.indexOf("@");
+				if(idxAt>=0) {
+					remoteCaller = true;
+					callerIdNoHost = callerID.substring(0,idxAt);
+					remoteAddr = callerID.substring(idxAt+1)
+					if(remoteAddr==location.host) {
+						remoteCaller = false;
+						callerID = callerIdNoHost;
+					}
+				}
+
+				// TODO here we could check if callerID is (still) a valid calleeID (but better do this on server)
+
+				let noLink = false;
+				if(callerID=="") {
+					// local user without ID (cannot be called back)
+					noLink = true;
+					if(callerIp=="")
+						callerIdNoHost = "unknown";
+					else
+						callerIdNoHost = halfShowIpAddr(callerIp);
 					callerID = callerIdNoHost;
+				} else if(callerIdNoHost=="") {
+					// remote user without ID (cannot be called back)
+					noLink = true;
+					if(callerIp=="")
+						callerIdNoHost = "unknown";
+					else
+						callerIdNoHost = halfShowIpAddr(callerIp);
+					callerID = callerIdNoHost + callerID;
 				}
-			}
 
-			// TODO here we could check if callerID is (still) a valid calleeID (but better do this on server)
+				let callerLink = "";
+				if(!remoteCaller) {
+					// the original caller is hosted on THIS server
+					callerLink += mainLink + callerIdNoHost + "?callerId="+calleeID + "&callerName="+calleeName;
+					if(!playDialSounds) callerLink += "&ds=false";
+					//console.log("local ("+callerIdNoHost+") ("+callerLink+")");
 
-			let noLink = false;
-			if(callerID=="") {
-				// local user without ID (cannot be called back)
-				noLink = true;
-				if(callerIp=="")
-					callerIdNoHost = "unknown";
-				else
-					callerIdNoHost = halfShowIpAddr(callerIp);
-				callerID = callerIdNoHost;
-			} else if(callerIdNoHost=="") {
-				// remote user without ID (cannot be called back)
-				noLink = true;
-				if(callerIp=="")
-					callerIdNoHost = "unknown";
-				else
-					callerIdNoHost = halfShowIpAddr(callerIp);
-				callerID = callerIdNoHost + callerID;
-			}
+					if(noLink) {
+						callerLink = callerIdNoHost;
+					} else {
+						callerLink = "<a onclick='openDialUrl(\""+callerLink+"\")'>"+callerIdNoHost+"</a>";
+					}
 
-			let callerLink = "";
-			if(!remoteCaller) {
-				// the original caller is hosted on THIS server
-				callerLink += mainLink + callerIdNoHost + "?callerId="+calleeID + "&callerName="+calleeName;
-				if(!playDialSounds) callerLink += "&ds=false";
-				//console.log("local ("+callerIdNoHost+") ("+callerLink+")");
-
-				if(noLink) {
-					callerLink = callerIdNoHost;
 				} else {
-					callerLink = "<a onclick='openDialUrl(\""+callerLink+"\")'>"+callerIdNoHost+"</a>";
+					// the original caller is hosted on a REMOTE server
+					callerLink += mainLink + callerIdNoHost + "?callerId=select&targetHost="+remoteAddr +
+						"&callerName="+calleeName + "&callerHost="+location.host;
+					if(!playDialSounds) callerLink += "&ds=false";
+					//console.log("remote ("+callerID+") ("+callerLink+")");
+
+					let callerIdDisplay = callerID;
+					//gLog("id="+id+" callerIdDisplay="+callerIdDisplay+" callerHost="+callerHost+
+					//	" location.host="+location.host);
+					if(callerIdDisplay.length > remoteCallerIdMaxChar+2) {
+						callerIdDisplay = callerIdDisplay.substring(0,remoteCallerIdMaxChar)+"..";
+						//gLog("callerIdDisplay="+callerIdDisplay+" "+callerIdDisplay.length);
+					}
+
+					if(noLink) {
+						callerLink = callerIdDisplay;
+					} else {
+						callerLink = "<a onclick='openDialRemote(\""+callerLink+"\")'>"+callerIdDisplay+"</a>";
+					}
 				}
 
-			} else {
-				// the original caller is hosted on a REMOTE server
-				callerLink += mainLink + callerIdNoHost + "?callerId=select&targetHost="+remoteAddr +
-					"&callerName="+calleeName + "&callerHost="+location.host;
-				if(!playDialSounds) callerLink += "&ds=false";
-				//console.log("remote ("+callerID+") ("+callerLink+")");
-
-				let callerIdDisplay = callerID;
-				//gLog("id="+id+" callerIdDisplay="+callerIdDisplay+" callerHost="+callerHost+
-				//	" location.host="+location.host);
-				if(callerIdDisplay.length > remoteCallerIdMaxChar+2) {
-					callerIdDisplay = callerIdDisplay.substring(0,remoteCallerIdMaxChar)+"..";
-					//gLog("callerIdDisplay="+callerIdDisplay+" "+callerIdDisplay.length);
-				}
-
-				if(noLink) {
-					callerLink = callerIdDisplay;
-				} else {
-					callerLink = "<a onclick='openDialRemote(\""+callerLink+"\")'>"+callerIdDisplay+"</a>";
-				}
+				str += "<td>" + callerNameMarkup + "</td>"+
+					"<td>"+	callerLink + "</td>"+
+					"<td align='right'>"+
+					"<a onclick='deleteMissedCall(\""+
+						missedCallsSlice[i].AddrPort+"_"+missedCallsSlice[i].CallTime+"\","+
+						"\""+callerName+"\","+
+						"\""+callerID+"\")'>"+
+					waitingTimeString + "</a></td>";
 			}
-
-			str += "<td>" + callerNameMarkup + "</td>"+
-				"<td>"+	callerLink + "</td>"+
-				"<td align='right'>"+
-				"<a onclick='deleteMissedCall(\""+
-					missedCallsSlice[i].AddrPort+"_"+missedCallsSlice[i].CallTime+"\","+
-					"\""+callerName+"\","+
-					"\""+callerID+"\")'>"+
-				waitingTimeString + "</a></td>";
-		}
-		str += "</table>"
-		missedCallsElement.innerHTML = str;
-		if(missedCallsTitleElement) {
-			missedCallsTitleElement.style.display = "block";
+			str += "</table>"
+			missedCallsElement.innerHTML = str;
+			if(missedCallsTitleElement) {
+				missedCallsTitleElement.style.display = "block";
+			}
 		}
 
 		if(showCallsWhileInAbsenceCallingItself) {
