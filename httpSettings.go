@@ -390,12 +390,13 @@ func httpGetContact(w http.ResponseWriter, r *http.Request, urlID string, callee
 			}
 
 			compoundName := idNameMap[contactID]
-			if compoundName!="" {
-				fmt.Printf("/getcontact (%s) id=%s found=%s\n", calleeID, contactID, compoundName)
-				fmt.Fprintf(w,compoundName)
-			} else {
-				fmt.Printf("/getcontact (%s) id=%s not found\n", calleeID, contactID)
+			if compoundName=="" {
+				fmt.Printf("/getcontact (%s) id=%s not found rip=%s\n", calleeID, contactID, remoteAddr)
+				return
 			}
+
+			fmt.Printf("/getcontact (%s) id=%s found=%s rip=%s\n", calleeID, contactID, compoundName, remoteAddr)
+			fmt.Fprintf(w,compoundName)
 		}
 	}
 	return
