@@ -1973,8 +1973,10 @@ function signalingCommand(message) {
 		if(callerId!="" && calleeID!="" && callerHost!="") {
 			let storeContactElement = document.getElementById("storeContact");
 			if(storeContactElement) {
+				let fullContactId = calleeID+"@"+location.host;
+// TODO contactName wrongly empty?
 				let storeContactLink = "https://"+callerHost+"/callee/contacts/store/?id="+callerId+
-					"&contactId="+calleeID+"&contactName="+contactName+"&callerName="+callerName;
+					"&contactId="+fullContactId+"&contactName="+contactName+"&callerName="+callerName;
 				storeContactElement.innerHTML = "<a href='"+storeContactLink+"'>Store contact</a>";
 			}
 		}
