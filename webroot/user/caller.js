@@ -1042,8 +1042,8 @@ function checkCalleeOnline(waitForCallee,comment) {
 	//console.log("checkCalleeOnline callerId="+callerId+" callerName="+callerName);
 	// check if calleeID is online (on behalf of callerId/callerName)
 	let api = apiPath+"/online?id="+calleeID;
-	if(callerId!=="" && callerId!=="undefined") {
-		api += "&callerId="+callerId + "&name="+callerName;
+	if(callerId!=="") {
+		api += "&callerId="+callerId; // + "&name="+callerName;
 	}
 	if(typeof Android !== "undefined" && Android !== null) {
 		if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
@@ -1466,7 +1466,7 @@ function submitForm(theForm) {
 	// TODO ACHTUNG .host may have :443 set, while DomainVal may not
 	gLog("submitForm targetDomain="+enterDomainValElement.value+" location.host="+location.host);
 	if(cleanStringParameter(enterDomainValElement.value,true) != location.host) {
-		// the callee to call is hosted on a different server
+		// calling a remote server callee
 		// if we are running on Android, callUrl will be handled by onNewIntent() in the activity
 		//   which will forward callUrl via iframeWindowOpen() to the remote host
 
@@ -1738,7 +1738,7 @@ function signalingCommand(message) {
 		}
 		// contactAutoStore is only true if caller is logged in on the local server
 		// if the caller is a remote user (calling someone on this server), contactAutoStore will be false
-		if(cookieName!="" && contactAutoStore && callerId!=="") {
+		if(contactAutoStore && cookieName!="" && calleeID!="") {
 			// store the user being called (calleeID) into the contacts of the caller (cookieName)
 			let compoundName = contactName+"|"+callerId+"|"+callerName;
 			let api = apiPath+"/setcontact?id="+cookieName+"&contactID="+calleeID + "&name="+compoundName;
