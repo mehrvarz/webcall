@@ -465,12 +465,19 @@ window.onload = function() {
 				gLog("onload enterIdValElement.focus");
 				enterIdValElement.focus();
 				var rect1 = enterIdValElement.getBoundingClientRect();
-// TODO mainElement refers to the iframe window, not the main document
-				var rect2 = mainElement.getBoundingClientRect();
+
+				let iframeX=0;
+				let iframeY=0;
+				if(window.self !== window.top) {
+					iframeX = window.parent.document.getElementById('iframeWindow').offsetLeft;
+					iframeY = window.parent.document.getElementById('iframeWindow').offsetTop;
+					//console.log("we are an iframe at x/y-pos",iframeX,iframeY)
+				} else {
+					//console.log("we are no iframe")
+				}
 				console.log("showNumberForm pos",
-					rect1.left, rect1.top, rect1.right, rect1.bottom,
-//					rect2.left, rect2.top, rect2.right, rect2.bottom);
-					rect2.left, rect2.top, screen.width, screen.height);
+					rect1.left, rect1.top, rect1.right, rect1.bottom,	// x/y x2/y2 of input form (rel to ifra)
+					iframeX, iframeY, screen.width, screen.height);		// x/y of iframe + web width/height pix
 			},400);
 
 			enterIdValElement.onblur = function() {
@@ -639,12 +646,19 @@ function onload2() {
 					// so we emulate a screen tap from Java code, based on the coordinates in this log statement
 					// NOTE: DO NOT CHANGE THE console.log() BELOW !!!
 					var rect1 = codeElement.getBoundingClientRect();
-// TODO mainElement refers to the iframe window, not the main document
-					var rect2 = mainElement.getBoundingClientRect();
+
+					let iframeX=0;
+					let iframeY=0;
+					if(window.self !== window.top) {
+						iframeX = window.parent.document.getElementById('iframeWindow').offsetLeft;
+						iframeY = window.parent.document.getElementById('iframeWindow').offsetTop;
+						//console.log("we are an iframe at x/y-pos",iframeX,iframeY)
+					} else {
+						//console.log("we are no iframe")
+					}
 					console.log("showNumberForm pos",
-						rect1.left, rect1.top, rect1.right, rect1.bottom,
-//						rect2.left, rect2.top, rect2.right, rect2.bottom);
-						rect2.left, rect2.top, screen.width, screen.height);
+						rect1.left, rect1.top, rect1.right, rect1.bottom,	// x/y x2/y2 of form (rel to ifra)
+						iframeX, iframeY, screen.width, screen.height);		// x/y of iframe + web width/height px
 				},500);
 
 				// disable call button for as long as code.value does not have the right value
