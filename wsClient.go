@@ -158,9 +158,15 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	}
 
 	callerName := ""
-	url_arg_array, ok = r.URL.Query()["name"]
-	if ok && len(url_arg_array[0]) > 0 {
+	url_arg_array, ok = r.URL.Query()["callerName"]
+	if ok && len(url_arg_array[0]) >= 1 {
 		callerName = url_arg_array[0]
+	}
+	if callerName=="" {
+		url_arg_array, ok = r.URL.Query()["name"]
+		if ok && len(url_arg_array[0]) >= 1 {
+			callerName = url_arg_array[0]
+		}
 	}
 
 	if callerName=="" && callerID!="" && wsClientData.calleeID!="" {

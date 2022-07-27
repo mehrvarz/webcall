@@ -54,11 +54,19 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	if ok && len(url_arg_array[0]) >= 1 {
 		callerId = url_arg_array[0]
 	}
+
 	callerName := ""
-	url_arg_array, ok = r.URL.Query()["name"]
+	url_arg_array, ok = r.URL.Query()["callerName"]
 	if ok && len(url_arg_array[0]) >= 1 {
 		callerName = url_arg_array[0]
 	}
+	if callerName=="" {
+		url_arg_array, ok = r.URL.Query()["name"]
+		if ok && len(url_arg_array[0]) >= 1 {
+			callerName = url_arg_array[0]
+		}
+	}
+
 	callerMsg := ""
 	url_arg_array, ok = r.URL.Query()["msg"]
 	if ok && len(url_arg_array[0]) >= 1 {
@@ -665,9 +673,15 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 	}
 
 	callerName := ""
-	url_arg_array, ok = r.URL.Query()["name"]
-	if ok && len(url_arg_array[0]) > 0 {
-		callerName = strings.ToLower(url_arg_array[0])
+	url_arg_array, ok = r.URL.Query()["callerName"]
+	if ok && len(url_arg_array[0]) >= 1 {
+		callerName = url_arg_array[0]
+	}
+	if callerName=="" {
+		url_arg_array, ok = r.URL.Query()["name"]
+		if ok && len(url_arg_array[0]) >= 1 {
+			callerName = url_arg_array[0]
+		}
 	}
 
 	callerHost := ""
