@@ -465,10 +465,12 @@ window.onload = function() {
 				gLog("onload enterIdValElement.focus");
 				enterIdValElement.focus();
 				var rect1 = enterIdValElement.getBoundingClientRect();
+// TODO mainElement refers to the iframe window, not the main document
 				var rect2 = mainElement.getBoundingClientRect();
 				console.log("showNumberForm pos",
 					rect1.left, rect1.top, rect1.right, rect1.bottom,
-					rect2.left, rect2.top, rect2.right, rect2.bottom);
+//					rect2.left, rect2.top, rect2.right, rect2.bottom);
+					rect2.left, rect2.top, screen.width, screen.height);
 			},400);
 
 			enterIdValElement.onblur = function() {
@@ -633,14 +635,16 @@ function onload2() {
 				setTimeout(function() {
 					gLog("showConfirmCodeForm code.focus()!");
 					codeElement.focus();
-					// unfortunately .focus() does NOT make the Android keyboard pop up
+					// unfortunately .focus() does NOT make the Android keyboard pop up (only a user tap does)
 					// so we emulate a screen tap from Java code, based on the coordinates in this log statement
 					// NOTE: DO NOT CHANGE THE console.log() BELOW !!!
 					var rect1 = codeElement.getBoundingClientRect();
+// TODO mainElement refers to the iframe window, not the main document
 					var rect2 = mainElement.getBoundingClientRect();
 					console.log("showNumberForm pos",
 						rect1.left, rect1.top, rect1.right, rect1.bottom,
-						rect2.left, rect2.top, rect2.right, rect2.bottom);
+//						rect2.left, rect2.top, rect2.right, rect2.bottom);
+						rect2.left, rect2.top, screen.width, screen.height);
 				},500);
 
 				// disable call button for as long as code.value does not have the right value
