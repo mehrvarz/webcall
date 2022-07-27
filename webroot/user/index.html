@@ -86,7 +86,7 @@ button[disabled] {
 .formlabel {
 	margin-left:2px;
 	font-size:0.9em;
-	cursor:pointer;
+	_cursor:pointer;
 }
 
 div#container {
@@ -421,8 +421,9 @@ input[type=submit]:focus {
 		<input name="enterId" id="enterIdVal" type="text" class="formtext" required>
 		<span class="lbutton" id="enterIdClear" onclick="clearForm(3)">clr</span>
 		<br>
-		<!-- checkbox numericId for smartpones only! can switch input-type from text to number -->
-		<label class="formlabel" id="numericIdLabel" for="numericId" _style="margin-left:-4px;">
+		<!-- checkbox numericId for smartpones only! can switch input-type from text to number
+		     using width:100px to prevent the checkbox being accessible over the whole width of screen -->
+		<label class="formlabel" id="numericIdLabel" for="numericId" style="width:100px;">
 			<input type="checkbox" id="numericId" class="checkbox"> numeric</label>
 		</label>
 		<br>
