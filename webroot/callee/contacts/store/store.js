@@ -24,54 +24,44 @@ window.onload = function() {
 	}
 	if(cookieName=="") {
 		// no access without cookie
-		databoxElement.innerHTML = "no cookie";
+		databoxElement.innerHTML = "no WebCall cookie";
 		return;
 	}
 
+	// NOTE: calleeID is here the callbackID of the caller (it may be blank in incognito mode)
+	//       this is why, below, we use cookieName as ID for /getcontact
 	calleeID = "";
-	let id = getUrlParams("id");
-	if(typeof id!=="undefined" && id!="") {
-		calleeID = cleanStringParameter(id,true);
+	let str = getUrlParams("id");
+	if(typeof str!=="undefined" && str!="") {
+		calleeID = cleanStringParameter(str,true);
 	}
-/*
-	// calleeID may be a tmpID (not the main-id) of the callee
-	// but this doesn't matter bc webcall server always provides us with the data of the main-id via xhr below
-	if(calleeID!=cookieName) {
-		// no access with the wrong cookie
-		databoxElement.innerHTML = "wrong cookie";
-		return;
-	}
-*/
 
-	contactId = ""; // may contain @host
-	let str = getUrlParams("contactId");
+	contactId = ""; // id of contact to be stored, may contain @host
+	str = getUrlParams("contactId");
 	if(typeof str!=="undefined" && str!="") {
 		contactId = str;
 	}
 
-	contactName = "";
+	contactName = ""; // nickname of contact to be stored
 	str = getUrlParams("contactName");
 	if(typeof str!=="undefined" && str!==null && str!=="" && str!=="null") {
 		contactName = cleanStringParameter(str,true,"c1");
 	}
 
-	callerName = "";
+	callerName = ""; // nickname of the caller
 	str = getUrlParams("callerName");
 	if(typeof str!=="undefined" && str!==null && str!=="" && str!=="null") {
 		callerName = cleanStringParameter(str,true,"c1");
 	}
 
-	// NOTE: calleeID is the callbackID of the caller (but may be blank in incognito mode)
-	//       this is why we are using cookieName as ID for /getcontact
+	gLog("onload calleeID="+calleeID + " cookieName="+cookieName + " callerID="+callerID +
+		" contactId="+contactId + " contactName="+contactName + " callerName="+callerName);
 
 	// visible page layout:
 	// contactId (may contain @host)		readonly
 	// contactName							editable
 	// callerName							don't show
 	// callerID								don't show
-
-	gLog("onload calleeID="+calleeID + " cookieName="+cookieName + " callerID="+callerID +
-		" contactId="+contactId + " contactName="+contactName + " callerName="+callerName);
 
 	hashcounter = 1;
 	window.onhashchange = hashchange;
@@ -91,12 +81,11 @@ window.onload = function() {
 				gLog("contactName (from /getcontact)=("+contactName+")");
 			}
 
-			/* we ignore the old tok[1] and store calleeID as the new callbackID
-			if(tok.length>1 && tok[1]!="" && calleeID=="") {
-				calleeID = tok[1];
-				gLog("callerID (from /getcontact)=("+calleeID+")");
-			}
-			*/
+			// we ignore the old tok[1] and always store calleeID as callbackID
+			//if(tok.length>1 && tok[1]!="" && calleeID=="") {
+			//	calleeID = tok[1];
+			//	gLog("callerID (from /getcontact)=("+calleeID+")");
+			//}
 
 			// only if callerName is empty -> set it to tok[2] 
 			if(tok.length>2 && tok[2]!="" && callerName=="") {
