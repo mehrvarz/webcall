@@ -360,57 +360,8 @@ window.onload = function() {
 
 		// when user operates idSelectElement, callerId may be changed
 		idSelectElement = document.getElementById("idSelect2");
-		// fetch mapping
-		let api = apiPath+"/getmapping?id="+cookieName;
-		gLog('onload request getmapping api',api);
-		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-			gLog('response getmapping api',xhr.responseText);
-			if(xhr.responseText!="") {
-				let idOption = document.createElement('option');
-				idOption.text = cookieName + " (main id)";
-				idOption.value = cookieName;
-				idSelectElement.appendChild(idOption);
-				altIdCount++;
-
-				let altIDs = xhr.responseText;
-				let tok = altIDs.split("|");
-				for(var i=0; i<tok.length; i++) {
-					//console.log("/getmapping tok["+i+"]="+tok[i]);
-					if(tok[i]!="") {
-						let tok2 = tok[i].split(",");
-						let id = cleanStringParameter(tok2[0],true);
-						let active = cleanStringParameter(tok2[1],true);
-						let assign = cleanStringParameter(tok2[2],true);
-						if(assign=="") {
-							assign = "none";
-						}
-						//console.log("/getmapping assign=("+assign+")");
-						let idOption = document.createElement('option');
-						idOption.text = id + " ("+assign+")";
-						idOption.value = id;
-						idSelectElement.appendChild(idOption);
-						altIdCount++;
-					}
-				}
-// TODO not sure about '00000000000'
-				let idOptionAnon = document.createElement('option');
-				idOptionAnon.text = "00000000000 (incognito)";
-				idOptionAnon.value = "";
-				idSelectElement.appendChild(idOptionAnon);
-				altIdCount++;
-			}
-
-			if(altIdCount>1) {
-				// enable idSelectElement
-				gLog("onload enable idSelect2LabelElement");
-				let idSelect2LabelElement = document.getElementById("idSelect2Label");
-				idSelect2LabelElement.style.display = "block";
-			}
-		}, function(errString,errcode) {
-			// /getmapping has failed
-			console.log("# onload ex "+errString+" "+errcode);
-		});
-
+		let idSelect2LabelElement = document.getElementById("idSelect2Label");
+		fetchMapping(null,idSelectElement,idSelect2LabelElement);
 
 		// set target domain name with local hostname
 		// note: location.hostname does not contain the :port, so we use location.host
@@ -424,7 +375,7 @@ window.onload = function() {
 		enterDomainValElement.onblur = function() {
 			// catch enterDomainValElement.value change to invoke /getcontact
 			//console.log("enterDomainValElement blur value = ("+enterDomainValElement.value+")");
-			getContact();
+			getContactFromForm();
 		};
 		//console.log("onload enterIdValElement.value="+enterIdValElement.value);
 		if(targetHost!=location.host) {
@@ -437,7 +388,7 @@ window.onload = function() {
 
 		// if calleeID is not pure numeric, we first need to disable numericId checkbox
 		if(isNaN(calleeID)) {
-			gLog("onload isNaN("+calleeID+") true");
+			gLog("onload isNaN(calleeID="+calleeID+") true");
 			numericIdCheckbox.checked = false;
 			enterIdValElement.setAttribute('type','text');
 		} else {
@@ -458,7 +409,7 @@ window.onload = function() {
 					idSelectElement.focus();
 				},400);
 			}
-			getContact();
+			getContactFromForm();
 		} else {
 			// calleeID is empty: focus on enterIdVal
 			setTimeout(function() {
@@ -483,12 +434,12 @@ window.onload = function() {
 			enterIdValElement.onblur = function() {
 				// catch enterIdValElement.value change to invoke /getcontact
 				//console.log("enterIdValElement blur value = ("+enterIdValElement.value+")");
-				getContact();
+				getContactFromForm();
 			};
 		}
 
 
-/* TODO tmtmtm must enable this somehow - maybe we move store to remote call-widget?
+/* store contact button moved to call-widget
 		// enable storeContactButton (like dialIdAutoStore)
 		var storeContactButtonElement = document.getElementById("storeContactButton");
 		if(storeContactButtonElement) {
@@ -527,15 +478,23 @@ window.onload = function() {
 	onload2();
 }
 
-function getContact() {
-	if(enterIdValElement.value!="" && cookieName!="") {
+
+function getContactFromForm() {
+	let contactID = cleanStringParameter(enterIdValElement.value,true);
+	if(cleanStringParameter(enterDomainValElement.value,true)!="") {
+		contactID += "@"+cleanStringParameter(enterDomainValElement.value,true);
+	}
+	if(contactID!="") {
+		getContact(contactID);
+	}
+}
+
+function getContact(contactID) {
+	gLog("getcontact() "+cookieName+" "+contactID);
+	if(contactID!="" && cookieName!="") {
 		// get preferred callerID and callerNickname from calleeID-contact
-		let contactID = cleanStringParameter(enterIdValElement.value,true);
-		if(cleanStringParameter(enterDomainValElement.value,true)!="") {
-			contactID += "@"+cleanStringParameter(enterDomainValElement.value,true);
-		}
 		let api = apiPath+"/getcontact?id="+cookieName + "&contactID="+contactID;
-		//console.log('request /getcontact api',api);
+		gLog('request /getcontact api',api);
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 			var xhrresponse = xhr.responseText
 			//console.log("/getcontact for calleeID="+calleeID+" xhrresponse="+xhrresponse);
@@ -544,9 +503,9 @@ function getContact() {
 				let tok = xhrresponse.split("|");
 				if(tok.length>0 && tok[0]!="") {
 					contactName = cleanStringParameter(tok[0],true);
-					console.log("contactName (from /getcontact)=("+contactName+")");
+					console.log("/getcontact contactName=("+contactName+")");
 					if(contactName!="") {
-						// show contact nickname
+						// show contact nickname (for dial-id dialog)
 						var contactNameElement = document.getElementById("contactName");
 						if(contactNameElement) {
 							contactNameElement.innerHTML = "Contact name: "+contactName;
@@ -562,7 +521,7 @@ function getContact() {
 					let i=0;
 					listArray.forEach((item) => {
 						if(item.text.startsWith(prefCallbackID)) {
-							//console.log("/getcontact selectedIndex="+i+" +1");
+							console.log("/getcontact selectedIndex="+i+" +1");
 							idSelectElement.selectedIndex = i;
 							// this will set callerId based on id=cookieName in contacts
 							callerId = prefCallbackID;
@@ -575,7 +534,7 @@ function getContact() {
 					//if(callerName=="") {
 						// we prefer this over getUrlParams and settings
 						callerName = tok[2]; // nickname of caller
-						console.log("/getcontact set callerName="+callerName);
+						console.log("/getcontact callerName="+callerName);
 						// will be shown (and can be edited) in final call-widget
 					//}
 				}
@@ -680,73 +639,11 @@ function onload2() {
 			// if cookie webcallid is available, fetch mapping and offer idSelect
 			if(cookieName!="") {
 				idSelectElement = document.getElementById("idSelect");
-
-				// fetch mapping
-				let api = apiPath+"/getmapping?id="+cookieName;
-				gLog('onload2 request getmapping api',api);
-				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-					gLog('response getmapping api',xhr.responseText);
-					let preselectIndex = -1;
-					if(xhr.responseText!="") {
-						let idOption = document.createElement('option');
-						idOption.text = cookieName + " (main id)";
-						idOption.value = cookieName;
-						idSelectElement.appendChild(idOption);
-						altIdCount++;
-
-						let altIDs = xhr.responseText;
-						let tok = altIDs.split("|");
-						for(var i=0; i<tok.length; i++) {
-							//console.log("tok["+i+"]="+tok[i]);
-							if(tok[i]!="") {
-								let tok2 = tok[i].split(",");
-								let id = cleanStringParameter(tok2[0],true);
-								let active = cleanStringParameter(tok2[1],true);
-								let assign = cleanStringParameter(tok2[2],true);
-								if(assign=="") {
-									assign = "none";
-								}
-								if(id==callerId) {
-									preselectIndex = i;
-									gLog('preselectIndex='+preselectIndex);
-								}
-								//console.log("assign=("+assign+")");
-								let idOption = document.createElement('option');
-								idOption.text = id + " ("+assign+")";
-								idOption.value = id;
-								idSelectElement.appendChild(idOption);
-								altIdCount++;
-							}
-						}
-						let idOptionAnon = document.createElement('option');
-						idOptionAnon.text = "00000000000 (incognito)";
-						idOptionAnon.value = "";
-						idSelectElement.appendChild(idOptionAnon);
-						altIdCount++;
-					}
-
-					if(altIdCount>1) {
-						// enable idSelectElement
-						idSelectElement.style.display = "block";
-						if(preselectIndex>-1) {
-							idSelectElement.selectedIndex = preselectIndex+1;
-						}
-					}
-
-					if(preselectIndex<0) {
-						// callerId was not fond in mapping
-						callerId = cookieName;
-					}
-
-					onload3("1");
-				}, function(errString,errcode) {
-					// /getmapping has failed
-					onload3("2 "+errString+" "+errcode);
-				});
+				let idSelectLabelElement = document.getElementById("idSelectLabel")
+				fetchMapping(onload3,idSelectElement,idSelectLabelElement);
 				return;
 			}
 
-			// cookie webcallid does not exist
 			onload3("3");
 			return;
 		}
@@ -762,6 +659,73 @@ function onload2() {
 			mainParent.appendChild(msgElement);
 			return;
 		}
+	});
+}
+
+function fetchMapping(contFunc,idSelectElement,idSelectLabelElement) {
+	let api = apiPath+"/getmapping?id="+cookieName;
+	gLog('fetchMapping request api',api);
+	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+		gLog('fetchMapping response',xhr.responseText);
+		let preselectIndex = -1;
+		if(xhr.responseText!="") {
+			let idOption = document.createElement('option');
+			idOption.text = cookieName + " (main id)";
+			idOption.value = cookieName;
+			idSelectElement.appendChild(idOption);
+			altIdCount++;
+
+			let altIDs = xhr.responseText;
+			let tok = altIDs.split("|");
+			for(var i=0; i<tok.length; i++) {
+				//console.log("tok["+i+"]="+tok[i]);
+				if(tok[i]!="") {
+					let tok2 = tok[i].split(",");
+					let id = cleanStringParameter(tok2[0],true);
+					let active = cleanStringParameter(tok2[1],true);
+					let assign = cleanStringParameter(tok2[2],true);
+					if(assign=="") {
+						assign = "none";
+					}
+					if(id==callerId) {
+						preselectIndex = i;
+						gLog('preselectIndex='+preselectIndex);
+					}
+					//console.log("assign=("+assign+")");
+					let idOption = document.createElement('option');
+					idOption.text = id + " ("+assign+")";
+					idOption.value = id;
+					idSelectElement.appendChild(idOption);
+					altIdCount++;
+				}
+			}
+			let idOptionAnon = document.createElement('option');
+			idOptionAnon.text = "(incognito)";
+			idOptionAnon.value = "";
+			idSelectElement.appendChild(idOptionAnon);
+			altIdCount++;
+		}
+
+		if(altIdCount>1) {
+			// enable idSelectElement
+			idSelectLabelElement.style.display = "block";
+			if(preselectIndex>=0) {
+				idSelectElement.selectedIndex = preselectIndex+1;
+			}
+		}
+
+		if(preselectIndex<0) {
+			// callerId was not found in mapping
+			callerId = cookieName;
+		}
+
+		if(contFunc!=null)
+			contFunc("1");
+
+	}, function(errString,errcode) {
+		// /getmapping has failed
+		if(contFunc!=null)
+			contFunc("2 "+errString+" "+errcode);
 	});
 }
 
@@ -836,6 +800,13 @@ function onload3(comment) {
 	}
 
 	calleeID = calleeID.toLowerCase();
+
+	if(cookieName!="" && calleeID!="") {
+		// since mapping was requested before
+		// we can now use prefCallbackID to set callerId and idSelectElement.selectedIndex
+		// and also set contactName and callerName
+		getContact(calleeID);
+	}
 }
 
 function dialButtonClick() {
@@ -1043,7 +1014,7 @@ function checkCalleeOnline(waitForCallee,comment) {
 	// check if calleeID is online (on behalf of callerId/callerName)
 	let api = apiPath+"/online?id="+calleeID;
 	if(callerId!=="") {
-		api += "&callerId="+callerId; // + "&name="+callerName;
+		api += "&callerId="+callerId;
 	}
 	if(typeof Android !== "undefined" && Android !== null) {
 		if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
@@ -1284,8 +1255,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 				if(divspinnerframe) {
 					divspinnerframe.style.display = "block";
 				}
-				let api = apiPath+"/online?id="+calleeID+"&wait=true&callerId="+callerId+
-					"&name="+callerName+"&callerHost="+callerHost;
+				let api = apiPath+"/online?id="+calleeID+"&wait=true&callerId="+callerId;
 				xhrTimeout = 15*60*1000; // 15min
 				if(offlineFor>0) {
 					xhrTimeout = xhrTimeout - offlineFor*1000;
@@ -1365,7 +1335,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 			// calleeID is currently offline - check if calleeID can be notified (via twitter msg)
 			// TODO: this causes a missedCall entry, but without txtmsg (since we don't send it here)
 			let api = apiPath+"/canbenotified?id="+calleeID + "&callerId="+callerId +
-				"&name="+callerName + "&callerHost="+callerHost;
+				"&callerName="+callerName + "&callerHost="+callerHost;
 			gLog('canbenotified api',api);
 			xhrTimeout = 30*1000;
 			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
@@ -1537,7 +1507,7 @@ function notifyConnect(callerName,callerId,callerHost) {
 	goodbyMissedCall = "";
 	// notify calleeID (on behalf of callerId)
 	let api = apiPath+"/notifyCallee?id="+calleeID +
-		"&callerId="+callerId + "&name="+callerName + "&callerHost="+callerHost +
+		"&callerId="+callerId + "&callerName="+callerName + "&callerHost="+callerHost +
 		"&msg="+cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen);
 	xhrTimeout = 600*1000; // 10 min extended xhr timeout
 	gLog("notifyCallee api="+api+" timeout="+xhrTimeout);
@@ -1651,7 +1621,7 @@ function connectSignaling(message,openedFunc) {
 	gLog('connectSignaling: open ws connection '+calleeID+' '+wsAddr);
 	let tryingToOpenWebSocket = true;
     var wsUrl = wsAddr;
-	wsUrl += "&callerId="+callerId + "&name="+callerName + "&callerHost="+callerHost;
+	wsUrl += "&callerId="+callerId + "&callerName="+callerName + "&callerHost="+callerHost;
 	if(typeof Android !== "undefined" && Android !== null) {
 		if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
 			wsUrl = wsUrl + "&ver="+Android.getVersionName();
@@ -1999,7 +1969,7 @@ function signalingCommand(message) {
 		waitForRemoteStreamFunc();
 
 		// offer store contact link (only if callerId and calleeID exist)
-		if(callerId!="" && calleeID!="" && callerHost!="") {
+		if(callerId!="" && calleeID!="" && callerHost!="" && callerHost!=location.host) {
 			let storeContactElement = document.getElementById("storeContact");
 			if(storeContactElement) {
 				let fullContactId = calleeID+"@"+location.host;
@@ -2347,7 +2317,7 @@ function dataChannelOnmessage(event) {
 				hangupWithBusySound(false,"");
 			} else if(event.data.startsWith("cmd|")) {
 				let subCmd = event.data.substring(4);
-				gLog("subCmd="+subCmd);
+				//gLog("subCmd="+subCmd);
 				if(subCmd.startsWith("ledred")) {
 					if(onlineIndicator) {
 						onlineIndicator.src="red-gradient.svg";

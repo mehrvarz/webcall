@@ -362,6 +362,11 @@ func httpGetContact(w http.ResponseWriter, r *http.Request, urlID string, callee
 	url_arg_array, ok := r.URL.Query()["contactID"]
 	if ok && len(url_arg_array[0]) >= 1 {
 		contactID := url_arg_array[0]
+		idxAt := strings.Index(contactID,"@"+hostname)
+		if idxAt >=0 {
+			contactID = contactID[:idxAt]
+		}
+
 		if logWantedFor("contacts") {
 			fmt.Printf("/getcontact (%s) id=(%s)\n", calleeID, contactID)
 		}

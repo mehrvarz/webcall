@@ -375,8 +375,9 @@ input[type=submit]:focus {
 		<select id="avSelect" class="select" onchange="getStream(this)"></select>
 
 		<!-- idSelect: visible only if more than one id-mapping is specified -->
-		<select id="idSelect" class="select" onchange="changeId(this)"
-			style="margin-top:12px;display:none;"></select>
+		<label class="formlabel" id="idSelectLabel" for="idSelect" style="margin-left:0;display:none;">
+			<select id="idSelect" class="select" onchange="changeId(this)" style="margin-top:12px;"></select>
+		</label>
 
 		<!-- nickname: always visible -->
 		<div id="nicknameDiv" style="margin-top:12px;margin-left:2px;font-size:1.1em;display:none;">
