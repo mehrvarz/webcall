@@ -519,22 +519,19 @@ function getContact(contactID) {
 					//console.log("/getcontact prefCallbackID="+prefCallbackID);
 					// we can now preselect idSelect with prefCallbackID
 					const listArray = Array.from(idSelectElement.children);
-					if(prefCallbackID=="none") {
-						gLog("/getcontact prefCallbackID = none");
-						callerId = "";
-						idSelectElement.selectedIndex = listArray.length -1;
-					} else {
-						let i=0;
-						listArray.forEach((item) => {
-							if(item.text.startsWith(prefCallbackID)) {
-								gLog("/getcontact selectedIndex="+i+" +1");
-								idSelectElement.selectedIndex = i;
-								// this will set callerId based on id=cookieName in contacts
-								callerId = prefCallbackID;
-							}
-							i++
-						});
-					}
+
+					callerId = "";
+					idSelectElement.selectedIndex = listArray.length -1; // incognito
+					let i=0;
+					listArray.forEach((item) => {
+						if(item.text.startsWith(prefCallbackID)) {
+							gLog("/getcontact selectedIndex="+i+" +1");
+							idSelectElement.selectedIndex = i;
+							// this will set callerId based on id=cookieName in contacts
+							callerId = prefCallbackID;
+						}
+						i++
+					});
 				}
 
 				if(tok.length>2 && tok[2]!="") {
