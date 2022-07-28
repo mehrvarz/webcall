@@ -519,16 +519,22 @@ function getContact(contactID) {
 					//console.log("/getcontact prefCallbackID="+prefCallbackID);
 					// we can now preselect idSelect with prefCallbackID
 					const listArray = Array.from(idSelectElement.children);
-					let i=0;
-					listArray.forEach((item) => {
-						if(item.text.startsWith(prefCallbackID)) {
-							gLog("/getcontact selectedIndex="+i+" +1");
-							idSelectElement.selectedIndex = i;
-							// this will set callerId based on id=cookieName in contacts
-							callerId = prefCallbackID;
-						}
-						i++
-					});
+					if(prefCallbackID=="none") {
+						gLog("/getcontact prefCallbackID = none");
+						callerId = "";
+						idSelectElement.selectedIndex = listArray.length -1;
+					} else {
+						let i=0;
+						listArray.forEach((item) => {
+							if(item.text.startsWith(prefCallbackID)) {
+								gLog("/getcontact selectedIndex="+i+" +1");
+								idSelectElement.selectedIndex = i;
+								// this will set callerId based on id=cookieName in contacts
+								callerId = prefCallbackID;
+							}
+							i++
+						});
+					}
 				}
 
 				if(tok.length>2 && tok[2]!="") {
@@ -702,7 +708,7 @@ function fetchMapping(contFunc,idSelectElement,idSelectLabelElement) {
 			}
 			let idOptionAnon = document.createElement('option');
 			idOptionAnon.text = "(incognito)";
-			idOptionAnon.value = "";
+			idOptionAnon.value = "none";
 			idSelectElement.appendChild(idOptionAnon);
 			altIdCount++;
 		}
