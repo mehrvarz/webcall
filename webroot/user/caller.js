@@ -481,29 +481,30 @@ window.onload = function() {
 
 function getContactFromForm() {
 	let contactID = cleanStringParameter(enterIdValElement.value,true);
-	if(cleanStringParameter(enterDomainValElement.value,true)!="") {
-		contactID += "@"+cleanStringParameter(enterDomainValElement.value,true);
-	}
 	if(contactID!="") {
+		let contactHost = cleanStringParameter(enterDomainValElement.value,true);
+		if(contactHost!="" && contactHost!=location.host) {
+			contactID += "@"+contactHost;
+		}
 		getContact(contactID);
 	}
 }
 
 function getContact(contactID) {
-	gLog("getcontact() "+cookieName+" "+contactID);
+	console.log("getcontact() "+cookieName+" "+contactID);
 	if(contactID!="" && cookieName!="") {
 		// get preferred callerID and callerNickname from calleeID-contact
 		let api = apiPath+"/getcontact?id="+cookieName + "&contactID="+contactID;
 		gLog('request /getcontact api',api);
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 			var xhrresponse = xhr.responseText
-			//console.log("/getcontact for calleeID="+calleeID+" xhrresponse="+xhrresponse);
+			console.log("/getcontact for callee="+cookieName+" contactID="+contactID+" xhrresponse="+xhrresponse);
 			if(xhrresponse!="") {
 				// format: name|prefCallbackID|myNickname
 				let tok = xhrresponse.split("|");
 				if(tok.length>0 && tok[0]!="") {
 					contactName = cleanStringParameter(tok[0],true);
-					console.log("/getcontact contactName=("+contactName+")");
+					gLog("/getcontact contactName=("+contactName+")");
 					if(contactName!="") {
 						// show contact nickname (for dial-id dialog)
 						var contactNameElement = document.getElementById("contactName");
@@ -521,7 +522,7 @@ function getContact(contactID) {
 					let i=0;
 					listArray.forEach((item) => {
 						if(item.text.startsWith(prefCallbackID)) {
-							console.log("/getcontact selectedIndex="+i+" +1");
+							gLog("/getcontact selectedIndex="+i+" +1");
 							idSelectElement.selectedIndex = i;
 							// this will set callerId based on id=cookieName in contacts
 							callerId = prefCallbackID;
@@ -534,7 +535,7 @@ function getContact(contactID) {
 					//if(callerName=="") {
 						// we prefer this over getUrlParams and settings
 						callerName = tok[2]; // nickname of caller
-						console.log("/getcontact callerName="+callerName);
+						gLog("/getcontact callerName="+callerName);
 						// will be shown (and can be edited) in final call-widget
 					//}
 				}
