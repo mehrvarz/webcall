@@ -110,6 +110,16 @@ func ticker3hours() {
 		}
 		for _,key := range deleteKeyArray {
 			fmt.Printf("ticker3hours delete outdated user-id=%s\n", key)
+
+			// delete/outdate mapped tmpIDs of outdated user 'key'
+			errcode,altIDs := getMapping(key,"")
+			if errcode==0 && altIDs!="" {
+				tokenSlice := strings.Split(altIDs, "|")
+				for _, tok := range tokenSlice {
+					deleteMapping(key,tok,"")
+				}
+			}
+
 			err = kv.Delete(dbUserBucket, key)
 			if err!=nil {
 				// this is bad

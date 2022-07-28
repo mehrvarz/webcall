@@ -212,6 +212,7 @@ function removeDo() {
 }
 
 function storeData() {
+	// store string 'altIDs' into db
 	let api = apiPath+"/setmapping?id="+calleeID;
 	if(!gentle) console.log('/setmapping api',api);
 	ajaxFetch(new XMLHttpRequest(), "POST", api, function(xhr) {

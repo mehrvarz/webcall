@@ -27,29 +27,33 @@ func httpGetMapping(w http.ResponseWriter, r *http.Request, urlID string, callee
 		return
 	}
 
+	errcode,altIDs := getMapping(calleeID,remoteAddr)
+	if errcode==0 && altIDs!="" {
+		fmt.Fprintf(w,altIDs)
+	}
+	// if(xhr.responseText=="") there are no altIDs
+}
+
+func getMapping(calleeID string, remoteAddr string) (int,string) {
 	// use calleeID to get AltIDs from DbUser
 	// format: id,true,usage|id,true,usage|...
 	var dbEntry DbEntry
 	err := kvMain.Get(dbRegisteredIDs, calleeID, &dbEntry)
 	if err != nil {
-		fmt.Printf("# /getmapping (%s) get dbRegisteredIDs rip=%s err=%v\n", calleeID, remoteAddr, err)
-		return
+		fmt.Printf("# getmapping (%s) get dbRegisteredIDs rip=%s err=%v\n", calleeID, remoteAddr, err)
+		return 1,""
 	}
 
 	dbUserKey := fmt.Sprintf("%s_%d", calleeID, dbEntry.StartTime)
 	var dbUser DbUser
 	err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 	if err != nil {
-		fmt.Printf("# /getmapping (%s) get dbUser (%s) rip=%s err=%v\n", calleeID, dbUserKey, remoteAddr, err)
-		return
+		fmt.Printf("# getmapping (%s) get dbUser (%s) rip=%s err=%v\n", calleeID, dbUserKey, remoteAddr, err)
+		return 2,""
 	}
 
-	// if(xhr.responseText=="") there are no altIDs
-	fmt.Printf("/getmapping (%s) altIDs=(%s) rip=%s\n", calleeID, dbUser.AltIDs, remoteAddr)
-	if dbUser.AltIDs!="" {
-		fmt.Fprintf(w,dbUser.AltIDs)
-	}
-	return
+	fmt.Printf("getmapping (%s) altIDs=(%s) rip=%s\n", calleeID, dbUser.AltIDs, remoteAddr)
+	return 0,dbUser.AltIDs
 }
 
 func httpSetMapping(w http.ResponseWriter, r *http.Request, urlID string, calleeID string, cookie *http.Cookie, remoteAddr string) {
@@ -92,6 +96,7 @@ func httpSetMapping(w http.ResponseWriter, r *http.Request, urlID string, callee
 		return
 	}
 
+	// NOTE: one mistake and the current .AltIDs are gone
 	dbUser.AltIDs = data
 	err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, true)
 	if err != nil {
@@ -231,33 +236,45 @@ func httpDeleteMapping(w http.ResponseWriter, r *http.Request, urlID string, cal
 	if ok {
 		delID = url_arg_array[0]
 		if delID!="" {
-			// unregister delID from dbRegisteredIDs
-			err := kvMain.Delete(dbRegisteredIDs, delID)
-			if err!=nil {
-				fmt.Printf("# /deletemapping fail to delete delid=%s\n", delID)
-				fmt.Fprintf(w,"errorDeleteRegistered")
-				return
-			}
-
-			fmt.Printf("/deletemapping (%s) delid=%s %s\n", calleeID, delID, remoteAddr)
-
-			// remove delID from mapping.map
-			mappingMutex.Lock()
-			delete(mapping,delID)
-			mappingMutex.Unlock()
-
-			// create a dbBlockedIDs entry (will be deleted after 60 days by timer)
-			unixTime := time.Now().Unix()
-			dbUserKey := fmt.Sprintf("%s_%d",delID, unixTime)
-			dbUser := DbUser{/*Ip1:remoteAddr*/}
-			err = kvMain.Put(dbBlockedIDs, dbUserKey, dbUser, false)
-			if err!=nil {
-				fmt.Printf("# /deletemapping error db=%s bucket=%s put key=%s err=%v\n",
-					dbMainName,dbBlockedIDs,delID,err)
+			errcode := deleteMapping(calleeID,delID,remoteAddr)
+			switch(errcode) {
+				case 1:
+					fmt.Fprintf(w,"errorDeleteRegistered")
+					return
+				case 2:
+					// ignore error creating dbBlockedID ???
 			}
 
 			fmt.Fprintf(w,"ok")
 		}
 	}
+}
+
+func deleteMapping(calleeID string, delID string, remoteAddr string) int {
+	// unregister delID from dbRegisteredIDs
+	err := kvMain.Delete(dbRegisteredIDs, delID)
+	if err!=nil {
+		fmt.Printf("# deletemapping fail to delete delid=%s\n", delID)
+		return 1
+	}
+
+	fmt.Printf("deletemapping (%s) delid=%s %s\n", calleeID, delID, remoteAddr)
+
+	// remove delID from mapping.map
+	mappingMutex.Lock()
+	delete(mapping,delID)
+	mappingMutex.Unlock()
+
+	// create a dbBlockedIDs entry (will be deleted after 60 days by timer)
+	unixTime := time.Now().Unix()
+	dbUserKey := fmt.Sprintf("%s_%d",delID, unixTime)
+	dbUser := DbUser{/*Ip1:remoteAddr*/}
+	err = kvMain.Put(dbBlockedIDs, dbUserKey, dbUser, false)
+	if err!=nil {
+		fmt.Printf("# deletemapping error db=%s bucket=%s put key=%s err=%v\n",
+			dbMainName,dbBlockedIDs,delID,err)
+		return 2
+	}
+	return 0
 }
 
