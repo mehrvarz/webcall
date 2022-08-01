@@ -2401,7 +2401,7 @@ function openDialId(userId) {
 	if(userId) {
 		url = "/user/"+userId+"/";
 	}
-	if(playDialSounds) {
+	if(!playDialSounds) {
 		url += "?ds="+playDialSounds;
 	}
 	gLog('openDialId',url);
