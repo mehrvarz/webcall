@@ -122,12 +122,13 @@ window.onload = function() {
 			if(idxAmpasent>0) {
 				cookieName = cookieName.substring(0,idxAmpasent);
 			}
-			window.location.replace("/callee/"+cookieName);
-			return;
+			cookieName = cleanStringParameter(cookieName,true);
+			if(cookieName!="") {
+				window.location.replace("/callee/"+cookieName);
+				return;
+			}
 		}
-	}
 
-	if(calleeID=="") {
 		showStatus("CalleeID missing in URL",-1);
 		goOnlineButton.disabled = true;
 		goOfflineButton.disabled = true;
@@ -744,6 +745,7 @@ function offlineAction() {
 	goOnlineButton.disabled = false;
 	goOfflineButton.disabled = true;
 	onlineIndicator.src="";
+	if(divspinnerframe) divspinnerframe.style.display = "none";
 }
 
 function gotStream2() {
