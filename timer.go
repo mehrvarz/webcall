@@ -281,31 +281,33 @@ func cleanupCalleeLoginMap(w io.Writer, min int, title string) {
 	for _,ID := range deleteID {
 		delete(calleeLoginMap,ID)
 	}
-	fmt.Fprintf(w,"%s calleeLoginMap len=%d\n", title, len(calleeLoginMap))
-	for calleeID,calleeLoginSlice := range calleeLoginMap {
-		if len(calleeLoginSlice)>=min {
-			// get calleeIP for calleeID
-			calleeIP := ""
-			ejectOn1stFound := true
-			reportHiddenCallee := true
-			reportBusyCallee := true
-			_, hub, _, err := GetOnlineCallee(calleeID, ejectOn1stFound, reportBusyCallee,
-				reportHiddenCallee, "", title)
-			if err != nil {
-				// not online anymore
-				calleeIP = "err="+err.Error()
-			} else if hub == nil {
-				// not online anymore
-				calleeIP = "gone"
-			} else if hub.CalleeClient == nil {
-				// not online anymore
-				calleeIP = "gone"
-			} else {
-				calleeIP = hub.CalleeClient.RemoteAddrNoPort
-			}
+	if len(calleeLoginMap)>0 {
+		fmt.Fprintf(w,"%s calleeLoginMap len=%d\n", title, len(calleeLoginMap))
+		for calleeID,calleeLoginSlice := range calleeLoginMap {
+			if len(calleeLoginSlice)>=min {
+				// get calleeIP for calleeID
+				calleeIP := ""
+				ejectOn1stFound := true
+				reportHiddenCallee := true
+				reportBusyCallee := true
+				_, hub, _, err := GetOnlineCallee(calleeID, ejectOn1stFound, reportBusyCallee,
+					reportHiddenCallee, "", title)
+				if err != nil {
+					// not online anymore
+					calleeIP = "err="+err.Error()
+				} else if hub == nil {
+					// not online anymore
+					calleeIP = "gone"
+				} else if hub.CalleeClient == nil {
+					// not online anymore
+					calleeIP = "gone"
+				} else {
+					calleeIP = hub.CalleeClient.RemoteAddrNoPort
+				}
 
-			fmt.Fprintf(w,"%s calleeLoginMap (%-11s) %d/%d %s\n",
-				title, calleeID, len(calleeLoginSlice), maxLoginPer30min, calleeIP)
+				fmt.Fprintf(w,"%s calleeLoginMap (%-11s) %d/%d %s\n",
+					title, calleeID, len(calleeLoginSlice), maxLoginPer30min, calleeIP)
+			}
 		}
 	}
 	calleeLoginMutex.Unlock()
@@ -336,11 +338,13 @@ func cleanupClientRequestsMap(w io.Writer, min int, title string) {
 	for _,ID := range deleteID {
 		delete(clientRequestsMap,ID)
 	}
-	fmt.Fprintf(w,"%s clientRequestsMap len=%d\n", title, len(clientRequestsMap))
-	for calleeID,clientRequestsSlice := range clientRequestsMap {
-		if len(clientRequestsSlice)>=min {
-			fmt.Fprintf(w,"%s clientRequestsMap (%s) %d/%d\n",
-				title, calleeID, len(clientRequestsSlice), maxClientRequestsPer30min)
+	if len(clientRequestsMap)>0 {
+		fmt.Fprintf(w,"%s clientRequestsMap len=%d\n", title, len(clientRequestsMap))
+		for calleeID,clientRequestsSlice := range clientRequestsMap {
+			if len(clientRequestsSlice)>=min {
+				fmt.Fprintf(w,"%s clientRequestsMap (%s) %d/%d\n",
+					title, calleeID, len(clientRequestsSlice), maxClientRequestsPer30min)
+			}
 		}
 	}
 	clientRequestsMutex.Unlock()
