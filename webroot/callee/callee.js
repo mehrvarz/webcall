@@ -1894,6 +1894,8 @@ function peerConnected2() {
 	rtcConnectStartDate = Date.now();
 	mediaConnectStartDate = 0;
 	gLog("peerConnected2 rtcConnect");
+	// scroll to top
+	window.scrollTo({ top: 0, behavior: 'smooth' });
 
 	if(typeof Android !== "undefined" && Android !== null) {
 		Android.rtcConnect();

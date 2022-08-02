@@ -751,7 +751,6 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString, dontIframeOnload
 	containerElement.style.filter = "blur(0.8px) brightness(60%)";
 
 	// scroll to top
-	//window.scrollTo(0, 0);
 	window.scrollTo({ top: 0, behavior: 'smooth' });
 
 	//console.log("iframeWindowOpen "+url+" horiCenter="+horiCenterBound+" addStyle="+addStyleString+" dontIframeOnload="+dontIframeOnload);
