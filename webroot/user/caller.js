@@ -284,14 +284,21 @@ window.onload = function() {
 		 " callerName=("+callerName+") contactName=("+contactName+")");
 
 	cookieName = "";
-	if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
-		// cookie webcallid exists
-		cookieName = document.cookie.substring(10);
-		let idxAmpasent = cookieName.indexOf("&");
-		if(idxAmpasent>0) {
-			cookieName = cookieName.substring(0,idxAmpasent);
+	if(document.cookie!="") {
+		let webcallididx = document.cookie.indexOf("webcallid=");
+		if(webcallididx>=0) {
+			// cookie webcallid exists
+			cookieName = document.cookie.substring(webcallididx+10);
+			let separatorIdx = cookieName.indexOf(";");
+			if(separatorIdx>=0) {
+				cookieName = cookieName.substring(0,separatorIdx);
+			}
+			let idxAmpasent = cookieName.indexOf("&");
+			if(idxAmpasent>0) {
+				cookieName = cookieName.substring(0,idxAmpasent);
+			}
+			gLog('onload cookieName='+cookieName);
 		}
-		gLog('onload cookieName='+cookieName);
 	}
 
 	contactAutoStore = false;
@@ -587,57 +594,93 @@ function onload2() {
 			}
 
 			// enable randomized 123 codeDivElement if no cookie available (and if not answie or talkback)
-			if(cookieName=="" && !calleeID.startsWith("answie") && !calleeID.startsWith("talkback")) {
-				let codeDivElement = document.getElementById("codeDiv");
-				let codeLabelElement = document.getElementById("codeLabel");
-				let codeElement = document.getElementById("code");
-				let codeString = ""+(Math.floor(Math.random() * 900) + 100);
-				codeLabelElement.innerHTML = "Enter "+codeString+":";
-				codeElement.value = "";
-
-				let ua = navigator.userAgent;
-				if(ua.indexOf("Android")>=0 || ua.indexOf("iPhone")>=0 || ua.indexOf("iPad")>=0) {
-					// enable type="number" for code form
-					gLog("showConfirmCodeForm type=number");
-					codeElement.type = "number";
-				}
-				codeDivElement.style.display = "block";
-				setTimeout(function() {
-					gLog("showConfirmCodeForm code.focus()!");
-					codeElement.focus();
-					// unfortunately .focus() does NOT make the Android keyboard pop up (only a user tap does)
-					// so we emulate a screen tap from Java code, based on the coordinates in this log statement
-					// NOTE: DO NOT CHANGE THE console.log() BELOW !!!
-					var rect1 = codeElement.getBoundingClientRect();
-
-					let iframeX=0;
-					let iframeY=0;
-					if(window.self !== window.top) {
-						iframeX = window.parent.document.getElementById('iframeWindow').offsetLeft;
-						iframeY = window.parent.document.getElementById('iframeWindow').offsetTop;
-						//console.log("we are an iframe at x/y-pos",iframeX,iframeY)
-					} else {
-						//console.log("we are no iframe")
-					}
-					console.log("showNumberForm pos",
-						rect1.left, rect1.top, rect1.right, rect1.bottom,	// x/y x2/y2 of form (rel to ifra)
-						iframeX, iframeY, screen.width, screen.height);		// x/y of iframe + web width/height px
-				},500);
-
-				// disable call button for as long as code.value does not have the right value
-				dialButton.disabled = true;
-
-				let keyupEventFkt = function() {
-					if(codeElement.value==codeString) {
-						dialButton.disabled = false;
-						// disable EventListener
-						this.removeEventListener("keyup",keyupEventFkt);
-						codeDivElement.style.display = "none";
+			if(calleeID.startsWith("answie") || calleeID.startsWith("talkback")) {
+				//console.log("no 123 entry for user "+calleeID);
+			} else if(cookieName!="") {
+				//console.log("no 123 entry for user "+cookieName);
+			} else {
+				// if cookie webcalluser=human is already set, we do NOT show 123 entry form
+				let iswebcalluser = false;
+				if(document.cookie!="") {
+					let webcalluseridx = document.cookie.indexOf("webcalluser=");
+					//console.log("webcalluseridx="+webcalluseridx);
+					if(webcalluseridx>=0) {
+						// cookie webcalluser exists
+						let webcalluserValue = document.cookie.substring(webcalluseridx+12);
+						//console.log("webcalluserValue1="+webcalluserValue);
+						let separatorIdx = webcalluserValue.indexOf(";");
+						if(separatorIdx>=0) {
+							webcalluserValue = webcalluserValue.substring(0,separatorIdx);
+							//console.log("webcalluserValue2="+webcalluserValue);
+						}
+						if(webcalluserValue=="human") {
+							iswebcalluser = true;
+							//console.log("no 123 entry for iswebcalluser");
+						}
 					}
 				}
-				document.addEventListener("keyup", keyupEventFkt);
-				//console.log("showConfirmCodeForm start");
-				// checkCalleeOnline() will fetch callername from form
+				//console.log("iswebcalluser="+iswebcalluser);
+
+				if(!iswebcalluser) {
+					let codeDivElement = document.getElementById("codeDiv");
+					let codeLabelElement = document.getElementById("codeLabel");
+					let codeElement = document.getElementById("code");
+					let codeString = ""+(Math.floor(Math.random() * 900) + 100);
+					codeLabelElement.innerHTML = "Enter "+codeString+":";
+					codeElement.value = "";
+
+					let ua = navigator.userAgent;
+					if(ua.indexOf("Android")>=0 || ua.indexOf("iPhone")>=0 || ua.indexOf("iPad")>=0) {
+						// enable type="number" for code form
+						gLog("showConfirmCodeForm type=number");
+						codeElement.type = "number";
+					}
+					codeDivElement.style.display = "block";
+					setTimeout(function() {
+						gLog("showConfirmCodeForm code.focus()!");
+						codeElement.focus();
+						// unfortunately .focus() does NOT make the Android keyboard pop up (only a user tap does)
+						// so we emulate a screen tap from Java code, based on the coordinates of this log
+						// NOTE: DO NOT CHANGE THE console.log() BELOW !!!
+						var rect1 = codeElement.getBoundingClientRect();
+						let iframeX=0;
+						let iframeY=0;
+						if(window.self !== window.top) {
+							iframeX = window.parent.document.getElementById('iframeWindow').offsetLeft;
+							iframeY = window.parent.document.getElementById('iframeWindow').offsetTop;
+							//console.log("we are an iframe at x/y-pos",iframeX,iframeY)
+						} else {
+							//console.log("we are no iframe")
+						}
+						console.log("showNumberForm pos",
+							rect1.left, rect1.top, rect1.right, rect1.bottom, // x/y x2/y2 of form (rel to ifra)
+							iframeX, iframeY, screen.width, screen.height);   // x/y of iframe + web width/height
+					},500);
+
+					// disable call button for as long as code.value does not have the right value
+					dialButton.disabled = true;
+
+					let keyupEventFkt = function() {
+						if(codeElement.value==codeString) {
+							// user is human, has entered 123 code
+							dialButton.disabled = false;
+							// disable EventListener
+							this.removeEventListener("keyup",keyupEventFkt);
+							codeDivElement.style.display = "none";
+
+							// create webcalluser=human cookie (with no unique ID)
+							// so this user does not need to enter 123 code again (for a month)
+							const d = new Date();
+							d.setTime(d.getTime() + (31*24*60*60*1000));
+							let expires = "expires="+ d.toUTCString();
+							//console.log("create webcalluser=human cookie");
+							document.cookie = "webcalluser=human; SameSite; expires="+d.toUTCString();
+						}
+					}
+					document.addEventListener("keyup", keyupEventFkt);
+					//console.log("showConfirmCodeForm start");
+					// checkCalleeOnline() will fetch callername from form
+				}
 			}
 
 			// if cookie webcallid is available, fetch mapping and offer idSelect
