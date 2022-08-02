@@ -2402,7 +2402,7 @@ function openDialId(userId) {
 		url = "/user/"+userId+"/";
 	}
 	if(!playDialSounds) {
-		url += "?ds="+playDialSounds;
+		url += "?ds=false";
 	}
 	gLog('openDialId',url);
 	// NOTE: 4th parameter 'dontIframeOnload':

@@ -362,6 +362,8 @@ func httpGetContact(w http.ResponseWriter, r *http.Request, urlID string, callee
 	url_arg_array, ok := r.URL.Query()["contactID"]
 	if ok && len(url_arg_array[0]) >= 1 {
 		contactID := url_arg_array[0]
+
+		// if contactID contains @hostname of local server, cut it off
 		idxAt := strings.Index(contactID,"@"+hostname)
 		if idxAt >=0 {
 			contactID = contactID[:idxAt]
@@ -370,23 +372,8 @@ func httpGetContact(w http.ResponseWriter, r *http.Request, urlID string, callee
 		if logWantedFor("contacts") {
 			fmt.Printf("/getcontact (%s) id=(%s)\n", calleeID, contactID)
 		}
-		if contactID!="" {
-			// if contactID contains @host and host==hostname, we must cut off @host
-			idx := strings.Index(contactID,"@")
-			if idx>=0 {
-				host := contactID[idx+1:]
-				if host == hostname {
-					contactID = contactID[:idx]
-					if logWantedFor("contacts") {
-						fmt.Printf("/getcontact (%s) id=(%s) local user host cutoff\n", calleeID, contactID)
-					}
-				} else {
-					if logWantedFor("contacts") {
-						fmt.Printf("/getcontact (%s) id=(%s) no local user\n", calleeID, contactID)
-					}
-				}
-			}
 
+		if contactID!="" {
 			var idNameMap map[string]string // callerID(@host) -> name
 			err := kvContacts.Get(dbContactsBucket,calleeID,&idNameMap)
 			if err!=nil {

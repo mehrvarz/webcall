@@ -5,7 +5,6 @@ const calleeMode = false;
 
 var cookieName = "";
 var calleeID = "";
-var callerID = "";
 var contactId = "";
 var contactName = "";
 var callerName = "";
@@ -54,14 +53,13 @@ window.onload = function() {
 		callerName = cleanStringParameter(str,true,"c1");
 	}
 
-	gLog("onload calleeID="+calleeID + " cookieName="+cookieName + " callerID="+callerID +
-		" contactId="+contactId + " contactName="+contactName + " callerName="+callerName);
+	gLog("store onload calleeID="+calleeID + " cookieName="+cookieName + " contactId="+contactId +
+		" contactName="+contactName + " callerName="+callerName);
 
 	// visible page layout:
 	// contactId (may contain @host)		readonly
 	// contactName							editable
 	// callerName							don't show
-	// callerID								don't show
 
 	hashcounter = 1;
 	window.onhashchange = hashchange;
@@ -72,6 +70,7 @@ window.onload = function() {
 		var xhrresponse = xhr.responseText;
 		gLog("/getcontact for cookieName="+cookieName+" xhrresponse="+xhrresponse);
 		if(xhrresponse!="") {
+			// this entry already exists: update
 			// format: name|prefCallbackID|myNickname
 			let tok = xhrresponse.split("|");
 
@@ -81,10 +80,10 @@ window.onload = function() {
 				gLog("contactName (from /getcontact)=("+contactName+")");
 			}
 
-			// we ignore the old tok[1] and always store calleeID as callbackID
+			// we ignore the old callbackID in tok[1] and always store calleeID as callbackID
 			//if(tok.length>1 && tok[1]!="" && calleeID=="") {
+			//	gLog("callbackID from /getcontact=("+tok[1]+")");
 			//	calleeID = tok[1];
-			//	gLog("callerID (from /getcontact)=("+calleeID+")");
 			//}
 
 			// only if callerName is empty -> set it to tok[2] 
@@ -92,32 +91,33 @@ window.onload = function() {
 				callerName = tok[2]; // nickname of caller
 				gLog("callerName (from /getcontact)=("+callerName+")");
 			}
-
-			let compoundName = contactName+"|"+calleeID+"|"+callerName;
-			gLog("compoundName="+compoundName);
-
-			let displayString =	"<table>"+
-				"<tr><td>Contact ID:</td><td>"+contactId+"</td></tr>"+
-				"<tr><td>Contact name:&nbsp;</td><td>"+contactName+"</td></tr>"+
-				"<tr><td>Your ID*:</td><td>"+calleeID+"</td></tr>"+
-				"<tr><td>Your name*:</td><td>"+callerName+"</td></tr>"+
-				"</table>(*for this contact)<br><br>";
-
-			let api = apiPath+"/setcontact?id="+cookieName+"&contactID="+contactId + "&name="+compoundName;
-			gLog("request /setcontact api="+api);
-			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-				gLog("xhr /setcontact OK "+xhr.responseText);
-				displayString += "Contact stored"+
-					"<br><br><a href='..'>Open Contacts</a>";
-				databoxElement.innerHTML = displayString;
-			}, function(errString,err) {
-				errorAction(errString,err);
-				displayString += "Failed to store contact: "+errString+
-					"<br><br><a href='..'>Open Contacts</a>";
-				databoxElement.innerHTML = displayString;
-			});
-
+		} else {
+			// this entry does NOT yet exists: create
 		}
+
+		let compoundName = contactName+"|"+calleeID+"|"+callerName;
+		gLog("compoundName="+compoundName);
+
+		let displayString =	"<table>"+
+			"<tr><td>Contact ID:</td><td>"+contactId+"</td></tr>"+
+			"<tr><td>Contact name:&nbsp;</td><td>"+contactName+"</td></tr>"+
+			"<tr><td>Your ID*:</td><td>"+calleeID+"</td></tr>"+
+			"<tr><td>Your name*:</td><td>"+callerName+"</td></tr>"+
+			"</table>(*for this contact)<br><br>";
+
+		let api = apiPath+"/setcontact?id="+cookieName+"&contactID="+contactId + "&name="+compoundName;
+		gLog("request /setcontact api="+api);
+		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+			gLog("xhr /setcontact OK "+xhr.responseText);
+			displayString += "Contact stored"+
+				"<br><br><a href='..'>Open Contacts</a>";
+			databoxElement.innerHTML = displayString;
+		}, function(errString,err) {
+			errorAction(errString,err);
+			displayString += "Failed to store contact: "+errString+
+				"<br><br><a href='..'>Open Contacts</a>";
+			databoxElement.innerHTML = displayString;
+		});
 	}, errorAction);
 
 }
