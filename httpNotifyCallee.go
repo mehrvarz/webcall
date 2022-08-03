@@ -97,8 +97,11 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		return
 	}
 
-//	logTxtMsg := callerMsg
-	logTxtMsg := "(hidden)"
+	logTxtMsg := callerMsg
+	if logTxtMsg!="" {
+		// do not log actual msg
+		logTxtMsg = "hidden"
+	}
 	fmt.Printf("/notifyCallee (%s) from callerId=(%s) name=(%s) msg=(%s) %s\n",
 		urlID, callerIdLong, callerName, logTxtMsg, remoteAddr)
 	if dbUser.StoreContacts && callerIdLong!="" && callerName!="" {
@@ -781,16 +784,14 @@ func addMissedCall(urlID string, caller CallerInfo, cause string) (error, []Call
 		return err,nil
 	}
 	if logWantedFor("missedcall") {
-//		logTxtMsg := caller.Msg
-		logTxtMsg := "(hidden)"
-		callerID := caller.CallerID	// may contain @callerHost
-/*
-		if caller.Host!="" {
-			callerID += "@"+caller.Host
+		logTxtMsg := caller.Msg
+		if logTxtMsg!="" {
+			// do not log actual msg
+			logTxtMsg = "hidden"
 		}
-*/
+		// caller.CallerID may contain @callerHost
 		fmt.Printf("missedCall (%s) <- (%s) name=%s ip=%s msg=(%s) cause=(%s)\n",
-			urlID, callerID, caller.CallerName, caller.AddrPort, logTxtMsg, cause)
+			urlID, caller.CallerID, caller.CallerName, caller.AddrPort, logTxtMsg, cause)
 	}
 	return err,missedCallsSlice
 }
