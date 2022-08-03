@@ -369,11 +369,11 @@ func httpGetContact(w http.ResponseWriter, r *http.Request, urlID string, callee
 			contactID = contactID[:idxAt]
 		}
 
-		if logWantedFor("contacts") {
-			fmt.Printf("/getcontact (%s) id=(%s)\n", calleeID, contactID)
-		}
-
-		if contactID!="" {
+		if contactID=="" {
+			if logWantedFor("contacts") {
+				fmt.Printf("/getcontact (%s) empty id=(%s)\n", calleeID, contactID)
+			}
+		} else {
 			var idNameMap map[string]string // callerID(@host) -> name
 			err := kvContacts.Get(dbContactsBucket,calleeID,&idNameMap)
 			if err!=nil {
