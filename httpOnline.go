@@ -217,7 +217,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, dialID str
 		}
 
 		if locHub.IsCalleeHidden && locHub.IsUnHiddenForCallerAddr != remoteAddr {
-			fmt.Printf("/online (%s) notavail (hidden) %s v=%s ua=%s\n",
+			fmt.Printf("/online (%s) notavail (hidden onl) %s v=%s ua=%s\n",
 				urlID, remoteAddr, clientVersion, r.UserAgent())
 			locHub.HubMutex.RUnlock()
 			// remoteAddr is now eligible to send xhr /missedCall
