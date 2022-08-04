@@ -846,9 +846,11 @@ function showOnlineReadyMsg() {
 		userLink = userLink.substring(0,idxParameter);
 	}
 	var userLinkHref = userLink;
+/*
 	if(!playDialSounds) {
 		userLinkHref += "?ds=false";
 	}
+*/
 	let msg2 = "You receive calls made by this link:<br>"+
 		"<a target='_blank' href='"+userLinkHref+"'>"+userLink+"</a><br>";
 	ownlinkElement.innerHTML = msg2;
@@ -1500,7 +1502,7 @@ function showMissedCalls() {
 					// do NOT send callerId + callerName to callee on local server
 					//callerLink += "?callerId="+calleeID + "&callerName="+calleeName;
 					//if(!playDialSounds) callerLink += "&ds=false";
-					if(!playDialSounds) callerLink += "?ds=false";
+					//if(!playDialSounds) callerLink += "?ds=false";
 					//console.log("local ("+callerIdNoHost+") ("+callerLink+")");
 
 					if(noLink) {
@@ -2407,9 +2409,11 @@ function openDialId(userId) {
 	if(userId) {
 		url = "/user/"+userId+"/";
 	}
+/*
 	if(!playDialSounds) {
 		url += "?ds=false";
 	}
+*/
 	gLog('openDialId',url);
 	// NOTE: 4th parameter 'dontIframeOnload':
 	// iframeOnload() for dial-id takes scrollHeight from caller html min-height
@@ -2431,7 +2435,7 @@ function openDialUrl(url) {
 }
 
 function openIdMapping() {
-	let url = "/callee/mapping/?ds="+playDialSounds;
+	let url = "/callee/mapping/"; //?ds="+playDialSounds;
 	gLog('openIdMapping',url);
 	// id manager does not need 600px width
 	iframeWindowOpen(url,false,"max-width:500px");

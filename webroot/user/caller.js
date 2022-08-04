@@ -339,6 +339,16 @@ window.onload = function() {
 					}
 				}
 
+				if(serverSettings.dialSounds=="true") {
+					playDialSounds = true;
+					console.log("playDialSounds from settings ="+playDialSounds);
+				} else if(serverSettings.dialSounds=="false") {
+					playDialSounds = false;
+					console.log("playDialSounds from settings ="+playDialSounds);
+				} else {
+					console.log("playDialSounds from settings NOT SET");
+				}
+
 				if(callerName=="") { // TODO prefer getUrlParams over settings? yes, may come from missedcalls
 					console.log("callerName = serverSettings.nickname "+serverSettings.nickname);
 					callerName = serverSettings.nickname; // user can modify this in UI

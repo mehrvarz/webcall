@@ -186,11 +186,11 @@ function processContacts(xhrresponse) {
 				if(args=="") args = "?callerName="+ourNickname;
 				else args += "&callerName="+ourNickname;
 			}
-			*/
 			if(dialsounds=="false") {
 				if(args=="") args = "?ds=false";
 				else args += "&ds=false";
 			}
+			*/
 
 			// by straight opening a href we replace the content in the contacts iframe
 			dataBoxContent += "<td><a href='" + mainLink + id + args + "'>"+id+"</a></td>";
