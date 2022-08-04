@@ -333,14 +333,14 @@ func main() {
 			d := gob.NewDecoder(bytes.NewReader(v))
 			d.Decode(&dbUser)
 			if dbUser.AltIDs!="" {
-				fmt.Printf("initloop %s (%s)->%s\n",k,calleeID,dbUser.AltIDs)
+				//fmt.Printf("initloop %s (%s)->%s\n",k,calleeID,dbUser.AltIDs)
 				toks := strings.Split(dbUser.AltIDs, "|")
 				for tok := range toks {
 					toks2 := strings.Split(toks[tok], ",")
 					if toks2[0] != "" { // tmpID
 						if toks2[1] == "true" {
 							mapping[toks2[0]] = MappingDataType{calleeID,toks2[2]}
-							fmt.Printf("initloop set %s -> %s (%s)\n",toks2[0],calleeID,toks2[2])
+							//fmt.Printf("initloop set %s -> %s (%s)\n",toks2[0],calleeID,toks2[2])
 						}
 					}
 				}
