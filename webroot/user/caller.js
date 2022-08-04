@@ -341,20 +341,20 @@ window.onload = function() {
 
 				if(serverSettings.dialSounds=="true") {
 					playDialSounds = true;
-					console.log("playDialSounds from settings ="+playDialSounds);
+					//console.log("playDialSounds from settings ="+playDialSounds);
 				} else if(serverSettings.dialSounds=="false") {
 					playDialSounds = false;
-					console.log("playDialSounds from settings ="+playDialSounds);
+					//console.log("playDialSounds from settings ="+playDialSounds);
 				} else {
-					console.log("playDialSounds from settings NOT SET");
+					//console.log("playDialSounds from settings NOT SET");
 				}
 
 				if(callerName=="") { // TODO prefer getUrlParams over settings? yes, may come from missedcalls
-					console.log("callerName = serverSettings.nickname "+serverSettings.nickname);
+					//console.log("callerName = serverSettings.nickname "+serverSettings.nickname);
 					callerName = serverSettings.nickname; // user can modify this in UI
 
 					if(!calleeID.startsWith("answie") && !calleeID.startsWith("talkback")) {
-						console.log("set nickname form with callerName="+callerName);
+						//console.log("set nickname form with callerName="+callerName);
 						let nicknameDivElement = document.getElementById("nicknameDiv");
 						let nicknameElement = document.getElementById("nickname");
 						nicknameElement.value = callerName;
@@ -517,14 +517,14 @@ function getContactFromForm() {
 }
 
 function getContact(contactID) {
-	console.log("getcontact() "+cookieName+" "+contactID);
+	//console.log("getcontact() "+cookieName+" "+contactID);
 	if(contactID!="" && cookieName!="") {
 		// get preferred callerID and callerNickname from calleeID-contact
 		let api = apiPath+"/getcontact?id="+cookieName + "&contactID="+contactID;
 		gLog('request /getcontact api',api);
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 			var xhrresponse = xhr.responseText
-			console.log("/getcontact for callee="+cookieName+" contactID="+contactID+" xhrresponse="+xhrresponse);
+			//console.log("/getcontact callee="+cookieName+" contactID="+contactID+" xhrresponse="+xhrresponse);
 			if(xhrresponse!="") {
 				// format: name|prefCallbackID|myNickname
 				let tok = xhrresponse.split("|");
@@ -564,7 +564,7 @@ function getContact(contactID) {
 					//if(callerName=="") {
 						// we prefer this over getUrlParams and settings
 						callerName = tok[2]; // nickname of caller
-						console.log("/getcontact callerName="+callerName);
+						//console.log("/getcontact callerName="+callerName);
 						// will be shown (and can be edited) in final call-widget
 
 						if(!calleeID.startsWith("answie") && !calleeID.startsWith("talkback")) {
@@ -612,9 +612,8 @@ function onload2() {
 // TODO do /getsettings here to get callerName
 
 			// enable nickname form (if not calling answie or talkback)
-// TODO this is much too early
 			if(!calleeID.startsWith("answie") && !calleeID.startsWith("talkback")) {
-				console.log("set nickname form with callerName="+callerName);
+				//console.log("set nickname form with callerName="+callerName);
 				let nicknameDivElement = document.getElementById("nicknameDiv");
 				let nicknameElement = document.getElementById("nickname");
 				nicknameElement.value = callerName;
@@ -1552,7 +1551,7 @@ function submitForm(theForm) {
 				document.activeElement.blur();
 			} else {
 				// everything OK
-				console.log("submitForm window.open("+callUrl+") no err");
+				//console.log("submitForm window.open("+callUrl+") no err");
 				enterIdElement.style.display = "none";
 				containerElement.style.display = "block";
 				history.back();
@@ -2049,7 +2048,7 @@ function signalingCommand(message) {
 			let storeContactElement = document.getElementById("storeContact");
 			if(storeContactElement) {
 				let fullContactId = calleeID+"@"+location.host;
-				console.log("contactName (for storeContactLink)=("+contactName+")");
+				//console.log("contactName (for storeContactLink)=("+contactName+")");
 				let storeContactLink = "https://"+callerHost+"/callee/contacts/store/?id="+callerId+
 					"&contactId="+fullContactId+"&contactName="+contactName+"&callerName="+callerName;
 				storeContactElement.innerHTML = "<a href='"+storeContactLink+"'>Store contact</a>";
@@ -2093,13 +2092,13 @@ function signalingCommand(message) {
 		let idxTab = payload.indexOf("\t");
 		if(idxTab>=0) {
 			let calleeName = payload.substring(idxTab+1);
-			console.log('cmd calleeInfo ('+calleeID+') ('+calleeName+')');
+			//console.log('cmd calleeInfo ('+calleeID+') ('+calleeName+')');
 			if(calleeName!="" && calleeName!="unknown") {
 				// if we receive a calleeName via calleeInfo, we use it over existing contactName
 				contactName = calleeName;
 			}
 		} else {
-			console.log('cmd calleeInfo payload=('+payload+')');
+			//console.log('cmd calleeInfo payload=('+payload+')');
 		}
 
 	} else if(cmd=="ua") {
