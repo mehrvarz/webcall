@@ -1496,8 +1496,11 @@ function showMissedCalls() {
 				let callerLink = "";
 				if(!remoteCaller) {
 					// the original caller is hosted on THIS server
-					callerLink += mainLink + callerIdNoHost + "?callerId="+calleeID + "&callerName="+calleeName;
-					if(!playDialSounds) callerLink += "&ds=false";
+					callerLink += mainLink + callerIdNoHost;
+					// do NOT send callerId + callerName to callee on local server
+					//callerLink += "?callerId="+calleeID + "&callerName="+calleeName;
+					//if(!playDialSounds) callerLink += "&ds=false";
+					if(!playDialSounds) callerLink += "?ds=false";
 					//console.log("local ("+callerIdNoHost+") ("+callerLink+")");
 
 					if(noLink) {

@@ -179,11 +179,14 @@ function processContacts(xhrresponse) {
 		} else {
 			// right column: local user (this will open dial-id in an iframe)
 			let args = "";
+			/*
+			// do NOT send callerId + callerName to callee on local server
 			if(prefCallbackId!="") args = "?callerId="+prefCallbackId;
 			if(ourNickname!="") {
 				if(args=="") args = "?callerName="+ourNickname;
 				else args += "&callerName="+ourNickname;
 			}
+			*/
 			if(dialsounds=="false") {
 				if(args=="") args = "?ds=false";
 				else args += "&ds=false";
