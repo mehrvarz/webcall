@@ -336,14 +336,16 @@ func httpNewId(w http.ResponseWriter, r *http.Request, urlID string, calleeID st
 		return
 	}
 
-	// TODO begrenzen, wie oft eine ip /newid aufrufen kann
-
 	tmpCalleeID,err := GetRandomCalleeID()
 	if err!=nil {
 		fmt.Printf("# /newid GetRandomCalleeID err=%v\n",err)
 		return
 	}
 	// NOTE tmpCalleeID is currently free, but it is NOT reserved
+
+
+	// make it more expensive for an ip-addr to call /newid
+	clientRequestAdd(remoteAddr,3)
 
 	clientVersion := ""
 	url_arg_array, ok := r.URL.Query()["ver"]

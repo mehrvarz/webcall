@@ -604,7 +604,7 @@ function onload2() {
 	gLog("onload2");
 	haveBeenWaitingForCalleeOnline=false;
 	altIdCount = 0;
-	checkServerMode(function(mode) {
+	checkServerMode(function(mode,msgString) {
 		if(mode==0) {
 			// normal mode
 			gLog("onload2 normal mode");
@@ -734,10 +734,19 @@ function onload2() {
 			mainParent.appendChild(msgElement);
 			return;
 		}
+
+		let mainParent = containerElement.parentNode;
+		mainParent.removeChild(containerElement);
+		var msgElement = document.createElement("div");
+		msgElement.style = "margin-top:15%; display:flex; flex-direction:column; align-items:center; "+
+						   "justify-content:center; text-align:center; font-size:1.2em; line-height:1.5em;";
+		msgElement.innerHTML = "<div>"+msgString+"</div>";
+		mainParent.appendChild(msgElement);
 	});
 }
 
 function fetchMapping(contFunc,idSelectElement,idSelectLabelElement) {
+	altIdCount = 0
 	let api = apiPath+"/getmapping?id="+cookieName;
 	gLog('fetchMapping request api',api);
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
@@ -876,7 +885,8 @@ function onload3(comment) {
 
 	calleeID = calleeID.toLowerCase();
 
-	if(cookieName!="" && calleeID!="") {
+	// TODO we might want to skip getContact() if altIdCount==0
+	if(cookieName!="" && calleeID!="" /*&& altIdCount>0*/) {
 		// since mapping was requested before
 		// we can now use prefCallbackID to set callerId and idSelectElement.selectedIndex
 		// and also set contactName and callerName
@@ -1069,15 +1079,19 @@ function checkServerMode(callback) {
 	let api = apiPath+"/mode";
 	xhrTimeout = 30*1000;
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+		if(xhr.responseText.startsWith("normal")) {
+			callback(0);
+			return;
+		}
 		if(xhr.responseText.startsWith("maintenance")) {
 			callback(1);
 			return;
 		}
-		// normal mode
-		callback(0);
+		// error
+		callback(2,xhr.responseText);
 	}, function(errString,err) {
 		console.log("# xhr error "+errString+" "+err);
-		callback(2);
+		callback(2,errString);
 	});
 }
 
@@ -1522,8 +1536,8 @@ function submitForm(theForm) {
 		// and throw an alert() instead of relying on an ugly browser err-msg
 		let randId = ""+Math.floor(Math.random()*1000000);
 		if(callerId=="") {
+			// if user has deliberately selected incognito, this is set to 'none'
 			callerId = cookieName;
-			// TODO what if user has deliberately set it to empty?
 		}
 		let callUrl = "https://"+cleanStringParameter(enterDomainValElement.value,true)+"/user/"+calleeID+
 			"?callerId="+callerId + "&callerName="+callerName + "&callerHost="+callerHost +

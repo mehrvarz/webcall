@@ -369,7 +369,8 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// deny a remoteAddr to do more than X requests per 30min
-	if maxClientRequestsPer30min>0 && remoteAddr!=outboundIP && remoteAddr!="127.0.0.1" {
+	if maxClientRequestsPer30min>0 /*&& remoteAddr!=outboundIP*/ && remoteAddr!="127.0.0.1" {
+/*
 		clientRequestsMutex.RLock()
 		clientRequestsSlice,ok := clientRequestsMap[remoteAddr]
 		clientRequestsMutex.RUnlock()
@@ -400,6 +401,15 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		clientRequestsMutex.Lock()
 		clientRequestsMap[remoteAddr] = clientRequestsSlice
 		clientRequestsMutex.Unlock()
+*/
+		if clientRequestAdd(remoteAddr,1) {
+			if logWantedFor("overload") {
+				fmt.Printf("httpApi rip=%s >=%d requests/30m (%s)\n",
+					remoteAddr, maxClientRequestsPer30min, urlPath)
+			}
+			fmt.Fprintf(w,"Too many requests in short order. Please take a pause.")
+			return
+		}
 	}
 
 
@@ -826,6 +836,36 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Printf("# [%s] (%s) unknown request rip=%s\n",urlPath,urlID,remoteAddr)
 	return
+}
+
+
+func clientRequestAdd(remoteAddr string, count int) bool {
+	ret := false
+	clientRequestsMutex.Lock()
+	clientRequestsSlice,ok := clientRequestsMap[remoteAddr]
+	if ok {
+		for len(clientRequestsSlice)>0 {
+			if time.Now().Sub(clientRequestsSlice[0]) < 30 * time.Minute {
+				break
+			}
+			if len(clientRequestsSlice)>1 {
+				clientRequestsSlice = clientRequestsSlice[1:]
+			} else {
+				clientRequestsSlice = clientRequestsSlice[:0]
+			}
+		}
+	}
+	for i:=0; i<count; i++ {
+		clientRequestsSlice = append(clientRequestsSlice,time.Now())
+	}
+	clientRequestsMap[remoteAddr] = clientRequestsSlice
+
+	if len(clientRequestsSlice) >= maxClientRequestsPer30min {
+		ret = true
+	}
+
+	clientRequestsMutex.Unlock()
+	return ret
 }
 
 func isBot(userAgent string) bool {

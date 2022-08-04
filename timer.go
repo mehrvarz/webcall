@@ -315,6 +315,7 @@ func cleanupCalleeLoginMap(w io.Writer, min int, title string) {
 
 func cleanupClientRequestsMap(w io.Writer, min int, title string) {
 	// cleanup clientRequestsMap so we don't hold on to memory after we don't have to
+	//fmt.Fprintf(w,"%s clientRequestsMap len=%d\n", title, len(clientRequestsMap))
 	var deleteID []string
 	clientRequestsMutex.Lock()
 	for calleeID,clientRequestsSlice := range clientRequestsMap {
