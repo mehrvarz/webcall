@@ -363,7 +363,7 @@ func httpGetContact(w http.ResponseWriter, r *http.Request, urlID string, callee
 	if ok && len(url_arg_array[0]) >= 1 {
 		contactID := url_arg_array[0]
 
-		// if contactID contains @hostname of local server, cut it off
+		// cut off @host from contactID if host starts with hostname of local server
 		idxAt := strings.Index(contactID,"@"+hostname)
 		if idxAt >=0 {
 			contactID = contactID[:idxAt]
@@ -491,6 +491,12 @@ func setContact(calleeID string, contactID string, compoundName string, remoteAd
 			fmt.Printf("setcontact (%s) !StoreContacts %s\n", calleeID, remoteAddr)
 		}
 		return true
+	}
+
+	// cut off @host from contactID if host starts with hostname of local server
+	idxAt := strings.Index(contactID,"@"+hostname)
+	if idxAt >=0 {
+		contactID = contactID[:idxAt]
 	}
 	if contactID=="" {
 		fmt.Printf("# setcontact (%s) abort on empty contactID %s\n", calleeID, remoteAddr)
