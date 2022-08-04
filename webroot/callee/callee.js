@@ -1070,6 +1070,7 @@ function signalingCommand(message) {
 		// NOTE: callerID must not contain colons
 		let idxColon = payload.indexOf("\t");
 		if(idxColon<0) {
+			// for backward compatibility only
 			idxColon = payload.indexOf(":");
 		}
 		if(idxColon>=0) {

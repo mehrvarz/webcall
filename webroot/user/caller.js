@@ -342,6 +342,15 @@ window.onload = function() {
 				if(callerName=="") { // TODO prefer getUrlParams over settings? yes, may come from missedcalls
 					console.log("callerName = serverSettings.nickname "+serverSettings.nickname);
 					callerName = serverSettings.nickname; // user can modify this in UI
+
+					if(!calleeID.startsWith("answie") && !calleeID.startsWith("talkback")) {
+						console.log("set nickname form with callerName="+callerName);
+						let nicknameDivElement = document.getElementById("nicknameDiv");
+						let nicknameElement = document.getElementById("nickname");
+						nicknameElement.value = callerName;
+						nicknameDivElement.style.display = "block";
+						// callername will be fetched from form in checkCalleeOnline()
+					}
 				}
 			}
 
@@ -545,8 +554,17 @@ function getContact(contactID) {
 					//if(callerName=="") {
 						// we prefer this over getUrlParams and settings
 						callerName = tok[2]; // nickname of caller
-						gLog("/getcontact callerName="+callerName);
+						console.log("/getcontact callerName="+callerName);
 						// will be shown (and can be edited) in final call-widget
+
+						if(!calleeID.startsWith("answie") && !calleeID.startsWith("talkback")) {
+							gLog("set nickname form with callerName="+callerName);
+							let nicknameDivElement = document.getElementById("nicknameDiv");
+							let nicknameElement = document.getElementById("nickname");
+							nicknameElement.value = callerName;
+							nicknameDivElement.style.display = "block";
+							// callername will be fetched from form in checkCalleeOnline()
+						}
 					//}
 				}
 			}
@@ -584,8 +602,9 @@ function onload2() {
 // TODO do /getsettings here to get callerName
 
 			// enable nickname form (if not calling answie or talkback)
+// TODO this is much too early
 			if(!calleeID.startsWith("answie") && !calleeID.startsWith("talkback")) {
-				gLog("set nickname form with callerName="+callerName);
+				console.log("set nickname form with callerName="+callerName);
 				let nicknameDivElement = document.getElementById("nicknameDiv");
 				let nicknameElement = document.getElementById("nickname");
 				nicknameElement.value = callerName;
@@ -2059,6 +2078,20 @@ function signalingCommand(message) {
 		if(sessionDuration>0 && mediaConnect && !isP2pCon() && !timerStartDate) {
 			startTimer(sessionDuration);
 		}
+
+	} else if(cmd=="calleeInfo") {
+		let idxTab = payload.indexOf("\t");
+		if(idxTab>=0) {
+			let calleeName = payload.substring(idxTab+1);
+			console.log('cmd calleeInfo ('+calleeID+') ('+calleeName+')');
+			if(calleeName!="" && calleeName!="unknown") {
+				// if we receive a calleeName via calleeInfo, we use it over existing contactName
+				contactName = calleeName;
+			}
+		} else {
+			console.log('cmd calleeInfo payload=('+payload+')');
+		}
+
 	} else if(cmd=="ua") {
 		otherUA = payload;
 		gLog("otherUA "+otherUA);

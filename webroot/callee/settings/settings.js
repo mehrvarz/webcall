@@ -42,7 +42,7 @@ function requestSettings() {
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 		//if(!gentle) console.log('xhr.responseText',xhr.responseText);
 		if(xhr.responseText=="") {
-			console.log('/getsettings failed');
+			console.log('/getsettings failed for '+calleeID);
 			// create user visible error message
 			let container = document.getElementById("container");
 			if(container) {

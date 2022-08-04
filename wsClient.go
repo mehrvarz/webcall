@@ -892,7 +892,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		c.hub.CalleeClient.calleeInitReceived.Set(false)
 
 		if c.callerID!="" || c.callerName!="" {
-			// send this directly to the callee: see callee.js if(cmd=="callerInfo")
+			// send callerInfo directly to the callee: see callee.js if(cmd=="callerInfo")
 			// this data is used to display caller-info in the callee-client
 			// NOTE: c.callerID and c.callerHost must not contain colons
 			sendCmd := "callerInfo|"+c.callerID+"\t"+c.callerName
@@ -901,9 +901,24 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 				c.hub.HubMutex.RUnlock()
 				return
 			}
+
+			// send calleeInfo (with dbUser.Name) directly to the caller
+			// read dbUser for dbUser.Name
+			userKey := c.hub.CalleeClient.calleeID +"_"+strconv.FormatInt(int64(c.hub.registrationStartTime),10)
+			var dbUser DbUser
+			err := kvMain.Get(dbUserBucket, userKey, &dbUser)
+			if err!=nil {
+				fmt.Printf("# %s (%s) fail get dbUser.Name\n", c.connType, c.hub.CalleeClient.calleeID)
+			} else {
+				sendCmd = "calleeInfo|"+c.hub.CalleeClient.calleeID+"\t"+dbUser.Name
+				if c.Write([]byte(sendCmd)) != nil {
+					fmt.Printf("# %s (%s) fail send calleeInfo\n", c.connType, c.hub.CalleeClient.calleeID)
+				}
+			}
 		}
 
 		// exchange useragent's
+		// send callee useragent to caller
 		if c.Write([]byte("ua|"+c.hub.CalleeClient.userAgent)) != nil {
 			// caller hang up already?
 			fmt.Printf("# %s (%s) CALL CallerClient.Write(ua) fail (early caller ws-disconnect?)\n",
@@ -913,6 +928,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			//			return
 		}
 
+		// send caller useragent to callee
 		if c.hub.CalleeClient.Write([]byte("ua|"+c.userAgent)) != nil {
 			fmt.Printf("# %s (%s) CALL CalleeClient.Write(ua) fail (early callee ws-disconnect?)\n",
 				c.connType, c.calleeID)
