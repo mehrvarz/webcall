@@ -901,16 +901,19 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 				c.hub.HubMutex.RUnlock()
 				return
 			}
+		}
 
-			// send calleeInfo (with dbUser.Name) directly to the caller
-			// read dbUser for dbUser.Name
-			userKey := c.hub.CalleeClient.calleeID +"_"+strconv.FormatInt(int64(c.hub.registrationStartTime),10)
-			var dbUser DbUser
-			err := kvMain.Get(dbUserBucket, userKey, &dbUser)
-			if err!=nil {
-				fmt.Printf("# %s (%s) fail get dbUser.Name\n", c.connType, c.hub.CalleeClient.calleeID)
-			} else {
-				sendCmd = "calleeInfo|"+c.hub.CalleeClient.calleeID+"\t"+dbUser.Name
+		// send calleeInfo (with dbUser.Name) directly to the caller
+		// read dbUser for dbUser.Name
+// TODO only send calleeInfo with dbUser.Name if caller has callled the callee main-ID
+		userKey := c.hub.CalleeClient.calleeID +"_"+strconv.FormatInt(int64(c.hub.registrationStartTime),10)
+		var dbUser DbUser
+		err := kvMain.Get(dbUserBucket, userKey, &dbUser)
+		if err!=nil {
+			fmt.Printf("# %s (%s) fail get dbUser.Name\n", c.connType, c.hub.CalleeClient.calleeID)
+		} else {
+			if dbUser.Name!="" {
+				sendCmd := "calleeInfo|"+c.hub.CalleeClient.calleeID+"\t"+dbUser.Name
 				if c.Write([]byte(sendCmd)) != nil {
 					fmt.Printf("# %s (%s) fail send calleeInfo\n", c.connType, c.hub.CalleeClient.calleeID)
 				}
@@ -942,7 +945,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			c.hub.setDeadline(c.hub.maxRingSecs,"serveWs ringsecs")
 		}
 		// this is (also) needed for turn AuthHandler: store caller RemoteAddr
-		err := StoreCallerIpInHubMap(c.globalCalleeID, c.RemoteAddr, false)
+		err = StoreCallerIpInHubMap(c.globalCalleeID, c.RemoteAddr, false)
 		if err!=nil {
 			fmt.Printf("# %s (%s) callerOffer StoreCallerIp %s err=%v\n",
 				c.connType, c.globalCalleeID, c.RemoteAddr, err)

@@ -226,7 +226,11 @@ func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		readConfigLock.RLock()
-		fullpath = curdir + "/"+htmlPath+"/" + urlPath
+		if strings.HasPrefix(urlPath,"/") {
+			fullpath = curdir + "/"+htmlPath + urlPath
+		} else {
+			fullpath = curdir + "/"+htmlPath + "/"+urlPath
+		}
 		if logWantedFor("http") {
 			fmt.Printf("substitute nofs curdir(%s) root(%s) url(%s) full(%s)\n",
 				curdir, htmlPath, urlPath, fullpath)
