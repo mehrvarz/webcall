@@ -891,8 +891,8 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		c.callerOfferForwarded.Set(true)
 		c.hub.CalleeClient.calleeInitReceived.Set(false)
 
+		// send callerInfo to callee (see callee.js if(cmd=="callerInfo"))
 		if c.callerID!="" || c.callerName!="" {
-			// send callerInfo directly to the callee: see callee.js if(cmd=="callerInfo")
 			// this data is used to display caller-info in the callee-client
 			// NOTE: c.callerID and c.callerHost must not contain colons
 			sendCmd := "callerInfo|"+c.callerID+"\t"+c.callerName
@@ -903,32 +903,31 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			}
 		}
 
-		// send calleeInfo (with dbUser.Name) directly to the caller
-		// read dbUser for dbUser.Name
-// TODO only send calleeInfo with dbUser.Name if caller has callled the callee main-ID
-		userKey := c.hub.CalleeClient.calleeID +"_"+strconv.FormatInt(int64(c.hub.registrationStartTime),10)
-		var dbUser DbUser
-		err := kvMain.Get(dbUserBucket, userKey, &dbUser)
-		if err!=nil {
-			fmt.Printf("# %s (%s) fail get dbUser.Name\n", c.connType, c.hub.CalleeClient.calleeID)
-		} else {
-			if dbUser.Name!="" {
-				sendCmd := "calleeInfo|"+c.hub.CalleeClient.calleeID+"\t"+dbUser.Name
-				if c.Write([]byte(sendCmd)) != nil {
-					fmt.Printf("# %s (%s) fail send calleeInfo\n", c.connType, c.hub.CalleeClient.calleeID)
+		// send calleeInfo (with dbUser.Name) to caller (see caller.js if(cmd=="calleeInfo"))
+		if c.dialID == "" {
+			// c.calleeID was not mapped from dialID (caller has called callee's main-ID)
+			// send calleeInfo (with dbUser.Name) back to caller
+			//fmt.Printf("%s (%s) CALL dialID not set (caller called callee's main ID)\n", c.connType, c.calleeID)
+
+			// read dbUser for dbUser.Name
+			userKey := c.hub.CalleeClient.calleeID +"_"+strconv.FormatInt(int64(c.hub.registrationStartTime),10)
+			var dbUser DbUser
+			err := kvMain.Get(dbUserBucket, userKey, &dbUser)
+			if err!=nil {
+				fmt.Printf("# %s (%s) fail get dbUser.Name\n", c.connType, c.hub.CalleeClient.calleeID)
+			} else {
+				if dbUser.Name!="" {
+					sendCmd := "calleeInfo|"+c.hub.CalleeClient.calleeID+"\t"+dbUser.Name
+					if c.Write([]byte(sendCmd)) != nil {
+						fmt.Printf("# %s (%s) fail send calleeInfo\n", c.connType, c.hub.CalleeClient.calleeID)
+					}
 				}
 			}
-		}
-
-		// exchange useragent's
-		// send callee useragent to caller
-		if c.Write([]byte("ua|"+c.hub.CalleeClient.userAgent)) != nil {
-			// caller hang up already?
-			fmt.Printf("# %s (%s) CALL CallerClient.Write(ua) fail (early caller ws-disconnect?)\n",
-				c.connType, c.calleeID)
-			// ignore this, don't abort
-			//			c.hub.HubMutex.RUnlock()
-			//			return
+		} else {
+			// c.calleeID was mapped from dialID (caller has NOT called callee's main-ID)
+			// do NOT send calleeInfo (with dbUser.Name) back to caller
+			//fmt.Printf("%s (%s) CALL dialID=%s (caller did NOT call callee's main ID)\n",
+			//	c.connType, c.calleeID, c.dialID)
 		}
 
 		// send caller useragent to callee
@@ -938,6 +937,13 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			c.hub.HubMutex.RUnlock()
 			return
 		}
+
+		// send callee useragent to caller
+		if c.Write([]byte("ua|"+c.hub.CalleeClient.userAgent)) != nil {
+			// caller hang up already?
+			fmt.Printf("# %s (%s) CALL CallerClient.Write(ua) fail (early caller ws-disconnect?)\n",
+				c.connType, c.calleeID)
+		}
 		c.hub.HubMutex.RUnlock()
 
 		if c.hub.maxRingSecs>0 {
@@ -945,7 +951,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			c.hub.setDeadline(c.hub.maxRingSecs,"serveWs ringsecs")
 		}
 		// this is (also) needed for turn AuthHandler: store caller RemoteAddr
-		err = StoreCallerIpInHubMap(c.globalCalleeID, c.RemoteAddr, false)
+		err := StoreCallerIpInHubMap(c.globalCalleeID, c.RemoteAddr, false)
 		if err!=nil {
 			fmt.Printf("# %s (%s) callerOffer StoreCallerIp %s err=%v\n",
 				c.connType, c.globalCalleeID, c.RemoteAddr, err)
