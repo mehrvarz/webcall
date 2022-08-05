@@ -101,9 +101,9 @@ window.onload = function() {
 		let displayString =	"<table>"+
 			"<tr><td>Contact ID:</td><td>"+contactId+"</td></tr>"+
 			"<tr><td>Contact name:&nbsp;</td><td>"+contactName+"</td></tr>"+
-			"<tr><td>Your ID*:</td><td>"+calleeID+"</td></tr>"+
-			"<tr><td>Your name*:</td><td>"+callerName+"</td></tr>"+
-			"</table>(*for this contact)<br><br>";
+			"<tr><td>Your ID:</td><td>"+calleeID+"</td></tr>"+
+			"<tr><td>Your name:</td><td>"+callerName+"</td></tr>"+
+			"</table><br><br>";
 
 		let api = apiPath+"/setcontact?id="+cookieName+"&contactID="+contactId + "&name="+compoundName;
 		gLog("request /setcontact api="+api);
