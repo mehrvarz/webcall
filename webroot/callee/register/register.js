@@ -28,16 +28,18 @@ function makeNewId() {
 	if(!gentle) console.log('request newid api',api);
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 		if(!gentle) console.log('xhr.responseText',xhr.responseText);
-		myCalleeID = xhr.responseText;
-		isAvailAction();
+		if(xhr.responseText=="") {
+			showStatus("Registration of new callee ID's is not possible at this time. Please try again later. Thank you.<br><br><a href='..'>Back</a>",-1);
+		} else if(xhr.responseText.length!=11) {
+			showStatus("Error: "+xhr.responseText+"<br><br><a href='..'>Back</a>",-1);
+		} else {
+			myCalleeID = xhr.responseText;
+			isAvailAction();
+		}
 	}, errorAction);
 }
 
 function isAvailAction() {
-	if(myCalleeID=="") {
-		showStatus("Registration of new callee ID's is not possible at this time. Please try again later. Thank you.<br><br><a href='..'>Back</a>",-1);
-		return;
-	}
 	showStatus("Anybody with a web browser will be able to call you. Here is your phone number for the web:<br><br><b>"+myCalleeID+"</b><br><br>Enter a password so only you can receive these calls.",-1);
 	// show form and clear pw input field
 	document.getElementById("pw").value = "";

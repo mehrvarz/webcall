@@ -5,7 +5,6 @@ const calleeMode = false;
 
 var calleeID = "";
 var callerName = "";
-//var dialsounds = "";
 var formForNameOpen = false;
 var formElement = null;
 

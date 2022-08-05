@@ -345,7 +345,7 @@ func httpNewId(w http.ResponseWriter, r *http.Request, urlID string, calleeID st
 
 
 	// make it more expensive for an ip-addr to call /newid
-	clientRequestAdd(remoteAddr,3)
+	clientRequestAdd(remoteAddr,3) // one call to /newid increments requestCount by 1+3 = 4
 
 	clientVersion := ""
 	url_arg_array, ok := r.URL.Query()["ver"]
