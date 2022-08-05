@@ -823,7 +823,7 @@ function iframeOnload(obj) {
 		} catch(ex) {
 			console.error("iframeOnload "+ex.message);
 		}
-	},150);
+	},200);
 }
 
 function iframeWindowClose() {
