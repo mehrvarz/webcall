@@ -2790,6 +2790,8 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 			checkCalleeOnline(false,"hangup");
 			dialButton.disabled = false;
 		},3000);
+	} else {
+		showStatus("");
 	}
 }
 
