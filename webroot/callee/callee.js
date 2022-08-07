@@ -2407,7 +2407,7 @@ function openContacts() {
 function openDialId(userId) {
 	let url = "/user/";
 	if(userId) {
-		url = "/user/"+userId+"/";
+		url = "/user/"+userId;
 	}
 /*
 	if(!playDialSounds) {
