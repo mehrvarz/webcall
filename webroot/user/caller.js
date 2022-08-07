@@ -2329,37 +2329,41 @@ function dial2() {
 			//}
 		} else if(peerCon.connectionState=="connected") {
 			// if we see this despite being mediaConnect already, it is caused by createDataChannel
-			console.log('peerCon rtcCon');
-			if(!rtcConnect && !mediaConnect) {
-				// the caller got peer-connected to the callee; callee now starts ringing
-				rtcConnect = true;
-				rtcConnectStartDate = Date.now();
-				mediaConnectStartDate = 0;
+			if(doneHangup) {
+				console.log('peerCon rtcCon after doneHangup - ignore');
+			} else {
+				console.log('peerCon rtcCon');
+				if(!rtcConnect && !mediaConnect) {
+					// the caller got peer-connected to the callee; callee now starts ringing
+					rtcConnect = true;
+					rtcConnectStartDate = Date.now();
+					mediaConnectStartDate = 0;
 
-				if(!singlebutton) {
-					// set goodbyTextMsg (including msgbox text) to be evaluated in goodby
-//					goodbyTextMsg = calleeID+"|"+callerName+"|"+callerId+
-//						"|"+Math.floor(Date.now()/1000)+"|"+msgbox.value.substring(0,300)
-					goodbyTextMsg = cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen)
-					gLog('set goodbyTextMsg='+goodbyTextMsg);
+					if(!singlebutton) {
+						// set goodbyTextMsg (including msgbox text) to be evaluated in goodby
+//						goodbyTextMsg = calleeID+"|"+callerName+"|"+callerId+
+//							"|"+Math.floor(Date.now()/1000)+"|"+msgbox.value.substring(0,300)
+						goodbyTextMsg = cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen)
+						gLog('set goodbyTextMsg='+goodbyTextMsg);
 
-					let msgboxText = cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen);
-					if(msgboxText!="") {
-						if(dataChannel) {
-							if(dataChannel.readyState=="open") {
-								gLog('send msgbox',msgboxText);
-								dataChannel.send("msg|"+msgboxText);
+						let msgboxText = cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen);
+						if(msgboxText!="") {
+							if(dataChannel) {
+								if(dataChannel.readyState=="open") {
+									gLog('send msgbox',msgboxText);
+									dataChannel.send("msg|"+msgboxText);
+								} else {
+									dataChannelSendMsg = msgboxText;
+								}
 							} else {
-								dataChannelSendMsg = msgboxText;
+								console.warn('no dataChannel, cannot send msgbox (%s)'+msgboxText);
 							}
-						} else {
-							console.warn('no dataChannel, cannot send msgbox (%s)'+msgboxText);
 						}
 					}
+					showStatus("Ringing...",-1);
 				}
-				showStatus("Ringing...",-1);
+				dialing = false;
 			}
-			dialing = false;
 		}
 	}
 	if(!localStream) {
