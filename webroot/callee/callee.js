@@ -1069,17 +1069,16 @@ function signalingCommand(message) {
 		});
 
 	} else if(cmd=="callerInfo") {
-		// NOTE: callerID must not contain colons
-		let idxColon = payload.indexOf("\t");
-		if(idxColon<0) {
+		let idxSeparator = payload.indexOf("\t");
+		if(idxSeparator<0) {
 			// for backward compatibility only
-			idxColon = payload.indexOf(":");
+			idxSeparator = payload.indexOf(":");
 		}
-		if(idxColon>=0) {
-			callerID = payload.substring(0,idxColon);
+		if(idxSeparator>=0) {
+			callerID = payload.substring(0,idxSeparator);
 			// callerID may have host attached: callerID@host
 			// callerID apparently only used for getStatsCandidateTypes()
-			callerName = payload.substring(idxColon+1);
+			callerName = payload.substring(idxSeparator+1);
 			gLog('cmd callerInfo ('+callerID+') ('+callerName+') ('+payload+')');
 			// callerID + callerName will be displayed via getStatsCandidateTypes()
 		} else {

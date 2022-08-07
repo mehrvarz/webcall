@@ -310,7 +310,7 @@ window.onload = function() {
 // we should do this only...
 // - if callerId does not exit on this server (also have a look at callerHost)
 // - if it is not one of cookieNames tmpId's
-//		callerId = cookieName; // auto-fixing potentially wrong data from a link
+		callerId = cookieName; // auto-fixing potentially wrong data from a link
 		callerHost = location.host; // auto-fixing potentially wrong data from a link
 
 		// use cookiename to fetch /getsettings
