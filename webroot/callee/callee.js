@@ -846,11 +846,7 @@ function showOnlineReadyMsg() {
 		userLink = userLink.substring(0,idxParameter);
 	}
 	var userLinkHref = userLink;
-/*
-	if(!playDialSounds) {
-		userLinkHref += "?ds=false";
-	}
-*/
+
 	let msg2 = "You receive calls made by this link:<br>"+
 		"<a target='_blank' href='"+userLinkHref+"'>"+userLink+"</a><br>";
 	ownlinkElement.innerHTML = msg2;
@@ -1764,6 +1760,7 @@ function goOnline() {
 
 	if(typeof Android !== "undefined" && Android !== null && Android.isConnected()>0) {
 		// if already connected don't show spinner (we are most likely called by wakeGoOnline())
+// fixed? TODO need: updateNotification("","Online. Waiting for calls.",false,false);
 	} else {
 		gLog('goOnline spinner on');
 		if(divspinnerframe) divspinnerframe.style.display = "block";
@@ -1785,6 +1782,7 @@ function newPeerCon() {
 	try {
 		peerCon = new RTCPeerConnection(ICE_config);
 		gLog("new RTCPeerConnection ready");
+// fixed? TODO need: updateNotification("","Online. Waiting for calls.",false,false);
 	} catch(ex) {
 		console.error("RTCPeerConnection "+ex.message);
 		var statusMsg = "RTCPeerConnection "+ex.message;
@@ -2400,7 +2398,7 @@ var counter=0;
 function openContacts() {
 	let url = "/callee/contacts/?ds="+playDialSounds;
 	gLog("openContacts "+url);
-	iframeWindowOpen(url);
+	iframeWindowOpen(url,false,"height:95vh;",true);
 }
 
 function openDialId(userId) {
@@ -2408,22 +2406,17 @@ function openDialId(userId) {
 	if(userId) {
 		url = "/user/"+userId;
 	}
-/*
-	if(!playDialSounds) {
-		url += "?ds=false";
-	}
-*/
 	gLog('openDialId url='+url);
 	// NOTE: 4th parameter 'dontIframeOnload':
 	// iframeOnload() for dial-id takes scrollHeight from caller html min-height
-	iframeWindowOpen(url,false,"height:460px;max-width:480px",true);
+	iframeWindowOpen(url,false,"height:460px;max-width:480px;",true);
 }
 
 function openDialRemote(url) {
 	gLog('openDialUrl',url);
 	// NOTE: 4th parameter 'dontIframeOnload':
 	// iframeOnload() for dial-id takes scrollHeight from caller html min-height
-	iframeWindowOpen(url,false,"height:460px;max-width:480px",true);
+	iframeWindowOpen(url,false,"height:460px;max-width:480px;",true);
 }
 
 function openDialUrl(url) {

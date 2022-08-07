@@ -452,7 +452,7 @@ func httpSetContact(w http.ResponseWriter, r *http.Request, urlID string, callee
 
 func setContact(calleeID string, contactID string, compoundName string, remoteAddr string, comment string) bool {
 	// calleeID = the callee for which to add a contact
-	// contactID = the callee to be added / changed
+	// contactID = the userid to be added / changed
 	// compoundName = contactName+"|"+callerId+"|"+callerName
 	// contactName must split compoundName
 	if strings.HasPrefix(calleeID,"answie") || strings.HasPrefix(calleeID,"talkback") {

@@ -803,7 +803,7 @@ function iframeOnload(obj) {
 		if(iframeHeight > mainElementHeight) {
 			iframeHeight = mainElementHeight;
 		}
-console.log("iframeOnload1 height="+iframeHeight);
+		//console.log("iframeOnload1 height="+iframeHeight);
 		obj.style.height = iframeHeight+"px";
 		obj.contentWindow.focus();
 	} catch(ex) {
@@ -817,7 +817,7 @@ console.log("iframeOnload1 height="+iframeHeight);
 			if(iframeHeight > mainElementHeight) {
 				iframeHeight = mainElementHeight;
 			}
-console.log("iframeOnload2 height="+iframeHeight);
+			//console.log("iframeOnload2 height="+iframeHeight);
 			obj.style.height = iframeHeight+"px";
 			obj.contentWindow.focus();
 
@@ -828,7 +828,7 @@ console.log("iframeOnload2 height="+iframeHeight);
 					if(iframeHeight > mainElementHeight) {
 						iframeHeight = mainElementHeight;
 					}
-console.log("iframeOnload3 height="+iframeHeight);
+					//console.log("iframeOnload3 height="+iframeHeight);
 					obj.style.height = iframeHeight+"px";
 					obj.contentWindow.focus();
 				} catch(ex) {

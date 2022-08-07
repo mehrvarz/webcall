@@ -231,7 +231,6 @@ function removeDo() {
 	}, errorAction);
 }
 
-
 function edit(tableElement,ev,key,name) {
 	// edit the contact name
 	let rect = tableElement.getBoundingClientRect();
@@ -254,8 +253,7 @@ function edit(tableElement,ev,key,name) {
 function editSubmit(formElement,id) {
 	// store the edited contact name via /setcontact - or delete this contact via /deletecontact
 	//gLog('editSubmit',id);
-	let formtextElement = document.getElementById("formtext");
-	let newName = formtextElement.value;
+	if(id=="") return;
 
 	let entry1 = obj[id];
 	let tok = entry1.split("|");
@@ -265,6 +263,9 @@ function editSubmit(formElement,id) {
 	if(tok.length>1) prefCallbackId = tok[1]
 	let ourNickname = "";
 	if(tok.length>2) ourNickname = tok[2]
+
+	let formtextElement = document.getElementById("formtext");
+	let newName = formtextElement.value;
 	gLog('editSubmit value',oldName,newName,id);
 
 	if(newName=="") {
