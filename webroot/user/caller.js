@@ -2315,6 +2315,9 @@ function dial2() {
 		}
 		if(peerCon.connectionState=="failed") {
 // TODO in some situation this strikes multiple times; but there is no point playing busySound multpl times
+			if(typeof Android !== "undefined" && Android !== null) {
+				Android.peerDisConnect();
+			}
 			hangupWithBusySound(true,"Peer connection failed "+candidateResultString);
 			return;
 		}
@@ -2326,7 +2329,7 @@ function dial2() {
 			//}
 		} else if(peerCon.connectionState=="connected") {
 			// if we see this despite being mediaConnect already, it is caused by createDataChannel
-			gLog('peerCon connected');
+			console.log('peerCon rtcCon');
 			if(!rtcConnect && !mediaConnect) {
 				// the caller got peer-connected to the callee; callee now starts ringing
 				rtcConnect = true;
@@ -2354,9 +2357,9 @@ function dial2() {
 						}
 					}
 				}
+				showStatus("Ringing...",-1);
 			}
 			dialing = false;
-			showStatus("Ringing...",-1);
 		}
 	}
 	if(!localStream) {
@@ -2557,7 +2560,7 @@ function stopAllAudioEffects() {
 }
 
 function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
-	gLog('hangup');
+	console.log('hangup');
 	dialing = false;
 	connectLocalVideo(true); // forceOff
 	if(fileselectLabel) {
@@ -2688,7 +2691,7 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 		vsendButton.classList.remove('blink_me')
 
 	if(peerCon && peerCon.iceConnectionState!="closed") {
-		gLog('hangup peerCon');
+		console.log('hangup peerCon');
 		let peerConCloseFunc = function() {
 			gLog('hangup peerConCloseFunc');
 			if(mustDisconnectCallee) {
@@ -2724,7 +2727,7 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 							}
 						}
 
-						gLog('hangup peerCon.close');
+						console.log('hangup peerCon.close');
 						peerCon.close();
 					}
 				}
@@ -2735,7 +2738,7 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 					// give dataChannel disconnect some time to deliver
 					setTimeout(function() {
 						if(isDataChlOpen()) {
-							gLog('hangup dataChannel.close');
+							console.log('hangup dataChannel.close');
 							dataChannel.close();
 							dataChannel = null;
 						}
