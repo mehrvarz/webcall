@@ -544,22 +544,28 @@ function getContact(contactID) {
 				}
 				if(tok.length>1 && tok[1]!="") {
 					let prefCallbackID = tok[1];
-					//console.log("/getcontact prefCallbackID="+prefCallbackID);
-					// we can now preselect idSelect with prefCallbackID
-					const listArray = Array.from(idSelectElement.children);
+					if(prefCallbackID!="") {
+						//console.log("/getcontact prefCallbackID="+prefCallbackID);
+						// we can now preselect idSelect with prefCallbackID
+						// we accept prefCallbackID only if it is (still) in the idSelect list !!!
+						const listArray = Array.from(idSelectElement.children);
+						if(listArray.length>0) {
+							// preselect: incognito
+							callerId = "";
+							idSelectElement.selectedIndex = listArray.length -1;
 
-					callerId = "";
-					idSelectElement.selectedIndex = listArray.length -1; // incognito
-					let i=0;
-					listArray.forEach((item) => {
-						if(item.text.startsWith(prefCallbackID)) {
-							gLog("/getcontact selectedIndex="+i+" +1");
-							idSelectElement.selectedIndex = i;
-							// this will set callerId based on id=cookieName in contacts
-							callerId = prefCallbackID;
+							let i=0;
+							listArray.forEach((item) => {
+								if(item.text.startsWith(prefCallbackID)) {
+									gLog("/getcontact selectedIndex="+i+" +1");
+									idSelectElement.selectedIndex = i;
+									// this will set callerId based on id=cookieName in contacts
+									callerId = prefCallbackID;
+								}
+								i++
+							});
 						}
-						i++
-					});
+					}
 				}
 
 				if(tok.length>2 && tok[2]!="") {
