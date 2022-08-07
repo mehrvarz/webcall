@@ -2301,7 +2301,7 @@ function dial2() {
 			if(typeof Android !== "undefined" && Android !== null) {
 				Android.peerDisConnect();
 			}
-			hangupWithBusySound(true,"Peer disconnected");
+			hangupWithBusySound(true,"Peer connection closed");
 			return;
 		}
 		gLog("peerCon onconnectionstatechange "+peerCon.connectionState);
@@ -2560,7 +2560,7 @@ function stopAllAudioEffects() {
 }
 
 function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
-	console.log('hangup');
+	console.log('hangup '+message);
 	dialing = false;
 	connectLocalVideo(true); // forceOff
 	if(fileselectLabel) {

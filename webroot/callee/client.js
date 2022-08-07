@@ -1503,7 +1503,7 @@ function hashchange() {
 }
 
 function showStatus(msg,timeoutMs) {
-	if(/*!gentle &&*/ msg && msg!="") {
+	if(/*!gentle &&*/ msg /*&& msg!=""*/) {
 		// msg may contain html, which we don't want to console.log
 		let idx = msg.indexOf("<");
 		if(idx>=0) {
