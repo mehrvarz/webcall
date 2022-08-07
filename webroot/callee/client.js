@@ -803,7 +803,7 @@ function iframeOnload(obj) {
 		if(iframeHeight > mainElementHeight) {
 			iframeHeight = mainElementHeight;
 		}
-		//console.log("iframeOnload1 height="+iframeHeight);
+console.log("iframeOnload1 height="+iframeHeight);
 		obj.style.height = iframeHeight+"px";
 		obj.contentWindow.focus();
 	} catch(ex) {
@@ -817,13 +817,28 @@ function iframeOnload(obj) {
 			if(iframeHeight > mainElementHeight) {
 				iframeHeight = mainElementHeight;
 			}
-			//console.log("iframeOnload2 height="+iframeHeight);
+console.log("iframeOnload2 height="+iframeHeight);
 			obj.style.height = iframeHeight+"px";
 			obj.contentWindow.focus();
+
+			// 3. scrollHeight with delay = actual height of content (not larger than mainElementHeight)
+			setTimeout(function() {
+				try {
+					let iframeHeight = obj.contentWindow.document.documentElement.scrollHeight;
+					if(iframeHeight > mainElementHeight) {
+						iframeHeight = mainElementHeight;
+					}
+console.log("iframeOnload3 height="+iframeHeight);
+					obj.style.height = iframeHeight+"px";
+					obj.contentWindow.focus();
+				} catch(ex) {
+					console.error("iframeOnload "+ex.message);
+				}
+			},150);
 		} catch(ex) {
 			console.error("iframeOnload "+ex.message);
 		}
-	},200);
+	},150);
 }
 
 function iframeWindowClose() {
