@@ -384,10 +384,12 @@ window.onload = function() {
 			callerId = cookieName; // main callback id
 		}
 
-		// when user operates idSelectElement, callerId may be changed
-		idSelectElement = document.getElementById("idSelect2");
-		let idSelect2LabelElement = document.getElementById("idSelect2Label");
-		fetchMapping(null,idSelectElement,idSelect2LabelElement);
+		if(cookieName!="") {
+			// when user operates idSelectElement, callerId may be changed
+			idSelectElement = document.getElementById("idSelect2");
+			let idSelect2LabelElement = document.getElementById("idSelect2Label");
+			fetchMapping(null,idSelectElement,idSelect2LabelElement);
+		}
 
 		// set target domain name with local hostname
 		// note: location.hostname does not contain the :port, so we use location.host
