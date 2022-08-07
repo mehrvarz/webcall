@@ -2298,6 +2298,9 @@ function dial2() {
 		connectionstatechangeCounter++;
 		if(!peerCon || peerCon.iceConnectionState=="closed") {
 			gLog("peerCon onconnectionstatechange !peerCon "+peerCon.connectionState);
+			if(typeof Android !== "undefined" && Android !== null) {
+				Android.peerDisConnect();
+			}
 			hangupWithBusySound(true,"Peer disconnected");
 			return;
 		}
