@@ -2414,7 +2414,7 @@ function openDialId(userId) {
 		url += "?ds=false";
 	}
 */
-	gLog('openDialId',url);
+	gLog('openDialId url='+url);
 	// NOTE: 4th parameter 'dontIframeOnload':
 	// iframeOnload() for dial-id takes scrollHeight from caller html min-height
 	iframeWindowOpen(url,false,"height:460px;max-width:480px",true);

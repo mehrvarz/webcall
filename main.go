@@ -110,7 +110,7 @@ var calleeLoginMap map[string][]time.Time
 var calleeLoginMutex sync.RWMutex
 var maxLoginPer30min = 0 // ideal value 9 - 12
 
-var clientRequestsMap map[string][]time.Time
+var clientRequestsMap map[string][]time.Time // ip -> []time.Time
 var clientRequestsMutex sync.RWMutex
 var maxClientRequestsPer30min = 0 // ideal value 60
 

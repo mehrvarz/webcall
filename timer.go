@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"unicode"
 	"encoding/gob"
+	"sort"
 	"io"
 	"os"
 	"os/exec"
@@ -317,10 +318,10 @@ func cleanupClientRequestsMap(w io.Writer, min int, title string) {
 	// cleanup clientRequestsMap (remove outdated
 	// so we don't hold on to memory after we don't have to
 	//fmt.Fprintf(w,"%s clientRequestsMap len=%d\n", title, len(clientRequestsMap))
-	var deleteID []string
+	var deleteIps []string
 	clientRequestsMutex.Lock()
-	for calleeID,clientRequestsSlice := range clientRequestsMap {
-		//fmt.Fprintf(w,"%s clientRequestsMap (%s) A len=%d\n", title, calleeID, len(clientRequestsSlice))
+	for ip,clientRequestsSlice := range clientRequestsMap {
+		//fmt.Fprintf(w,"%s clientRequestsMap (%s) A len=%d\n", title, ip, len(clientRequestsSlice))
 		for len(clientRequestsSlice)>0 {
 			if time.Now().Sub(clientRequestsSlice[0]) < 30 * time.Minute {
 				break
@@ -332,21 +333,58 @@ func cleanupClientRequestsMap(w io.Writer, min int, title string) {
 			clientRequestsSlice = clientRequestsSlice[1:]
 		}
 		if clientRequestsSlice==nil || len(clientRequestsSlice)<=0 {
-			deleteID = append(deleteID,calleeID)
+			deleteIps = append(deleteIps,ip)
 		} else {
-			clientRequestsMap[calleeID] = clientRequestsSlice
+			clientRequestsMap[ip] = clientRequestsSlice
 		}
 	}
-	for _,ID := range deleteID {
-		delete(clientRequestsMap,ID)
+	for _,ip := range deleteIps {
+		delete(clientRequestsMap,ip)
 	}
 	if len(clientRequestsMap)>0 {
 		fmt.Fprintf(w,"%s clientRequestsMap len=%d\n", title, len(clientRequestsMap))
-		for calleeID,clientRequestsSlice := range clientRequestsMap {
+/*
+		for ip,clientRequestsSlice := range clientRequestsMap {
 			if len(clientRequestsSlice)>=min {
 				fmt.Fprintf(w,"%s clientRequestsMap (%s) %d/%d\n",
-					title, calleeID, len(clientRequestsSlice), maxClientRequestsPer30min)
+					title, ip, len(clientRequestsSlice), maxClientRequestsPer30min)
 			}
+		}
+*/
+		var tmpSlice []string
+		for ip,clientRequestsSlice := range clientRequestsMap {
+			if len(clientRequestsSlice)>=min {
+				tmpSlice = append(tmpSlice,ip)
+			}
+		}
+		sortableIpAddrFunc := func(remoteAddr string) string {
+			// takes "192.168.3.29" and returns "192168003029"
+			toks := strings.Split(remoteAddr, ".")
+			sortableIpAddr := ""
+			if toks[0]=="127" {
+				// sort localhost on top
+				toks[0]="000"
+			}
+			for _,tok := range(toks) {
+				if len(tok) == 1 {
+					sortableIpAddr += "00"+tok
+				} else if len(tok) == 2 {
+					sortableIpAddr += "0"+tok
+				} else { // len(tok) == 3
+					sortableIpAddr += tok
+				}
+			}
+
+			return sortableIpAddr
+		}
+		sort.Slice(tmpSlice, func(i, j int) bool {
+			return sortableIpAddrFunc(tmpSlice[i]) < sortableIpAddrFunc(tmpSlice[j])
+		})
+		for idx := range tmpSlice {
+			ip := tmpSlice[idx]
+			clientRequestsSlice := clientRequestsMap[ip]
+			fmt.Fprintf(w,"%s clientRequestsMap (%s) %d/%d\n",
+				title, ip, len(clientRequestsSlice), maxClientRequestsPer30min)
 		}
 	}
 	clientRequestsMutex.Unlock()

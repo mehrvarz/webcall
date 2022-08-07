@@ -719,7 +719,7 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString, dontIframeOnload
 	// for webcall widgets we use dontIframeOnload=false, because they use height to set the iframe height
 	// ext html pages may not set a fixed height, in this case we use dontIframeOnload=true
 
-	//console.log('iframeWindowOpen='+url);
+	gLog('iframeWindowOpen='+url);
 	if(iframeWindowOpenFlag) {
 		//tmtmtm
 		//console.log("# iframeWindowOpen fail iframeWindowOpenFlag");
