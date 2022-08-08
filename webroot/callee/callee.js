@@ -934,7 +934,7 @@ function wsOnError(evt) {
 }
 
 function wsOnError2(str) {
-	//console.log("# wsOnError2 "+str);
+	console.log("# wsOnError2 "+str);
 	if(str!="") {
 		showStatus(str,-1);
 	}
@@ -2244,7 +2244,7 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 					gLog('endWebRtcSession dataChannel.send(disconnect)');
 					dataChannel.send("disconnect");
 				} else {
-					gLog('endWebRtcSession cannot send disconnect to peer');
+					gLog('endWebRtcSession cannot send disconnect via dataChannel');
 				}
 			}
 			if(dataChannel) {
@@ -2286,10 +2286,11 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 		Android.peerDisConnect();
 	}
 
-	if(wsConn)
+	if(wsConn) {
 		onlineIndicator.src="green-gradient.svg";
-	else
+	} else {
 		onlineIndicator.src="";
+	}
 
 	answerButton.style.display = "none";
 	rejectButton.style.display = "none";
@@ -2299,6 +2300,7 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 	if(vsendButton) {
 		vsendButton.style.display = "none";
 	}
+
 	goOfflineButton.disabled = false;
 	goOnlineButton.style.display = "inline-block";
 	goOfflineButton.style.display = "inline-block";
@@ -2306,13 +2308,16 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 	progressSendElement.style.display = "none";
 	progressRcvElement.style.display = "none";
 
-	// goOnlinePending flag prevents secondary calls to goOnline
 	if(goOnlineAfter && !goOnlinePending) {
-		// we call goOnline bc we always need a fresh new peerCon
-		// however, bc we keep our wsConn as is, no new login will be executed
-		// so no new ws-hib will be created on the server side
+		// "goOnline()" is not the best fkt-name in this context
+		// main thing here is that we call goOnline() to create a fresh newPeerCon() -> new RTCPeerConnection()
+		// for the next incoming call
+		// but bc we keep our wsConn alive, no new login is needed
+		// (no new ws-hub will be created on the server side)
+		// goOnlinePending flag prevents secondary calls to goOnline
 		goOnlinePending = true;
 		gLog('endWebRtcSession delayed auto goOnline()...');
+// TODO why exactly is this delay needed?
 		setTimeout(function() {
 			gLog('endWebRtcSession auto goOnline()');
 			goOnlinePending = false;
