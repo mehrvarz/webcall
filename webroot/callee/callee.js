@@ -2433,7 +2433,7 @@ function openIdMapping() {
 	let url = "/callee/mapping/"; //?ds="+playDialSounds;
 	gLog('openIdMapping',url);
 	// id manager does not need 600px width
-	iframeWindowOpen(url,false,"height:440px;max-width:500px;",true);
+	iframeWindowOpen(url,false,"height:460px;max-width:500px;",true);
 }
 
 function openSettings() {
