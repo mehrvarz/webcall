@@ -144,10 +144,11 @@ window.onload = function() {
 
 	let auto = cleanStringParameter(getUrlParams("auto"),true,"auto");
 	if(auto) {
-        gLog("onload auto is set ("+auto+")");
+console.log("onload auto is set ("+auto+")");
 		if(divspinnerframe) divspinnerframe.style.display = "block";
+		// auto will cause onGotStreamGoOnline to be set below
 	} else {
-        gLog("onload auto is not set");
+console.log("onload auto is not set");
 	}
 
 	if(typeof Android !== "undefined" && Android !== null) {
@@ -160,7 +161,7 @@ window.onload = function() {
 		// change timur.mobi/webcall/ link to timur.mobi/webcall/update/
 		element = document.getElementById("webcallhome");
 		if(element) element.href = "https://timur.mobi/webcall/update/";
-		// TODO ideally open Update Page in an iframe
+		// TODO ideally open 'webcallhome' url in an iframe
 	}
 
 	try {
@@ -776,6 +777,7 @@ function gotStream2() {
 let wsAutoReconnecting = false;
 function delayedWsAutoReconnect(reconPauseSecs) {
 	// delayedWsAutoReconnect can only succeed if a previous login attemt was successful
+	console.log("delayedWsAutoReconnect "+reconPauseSecs);
 	if((remainingTalkSecs<0 || remainingServiceSecs<0) && !calleeID.startsWith("answie")) {
 		offlineAction();
 		wsAutoReconnecting = false;
@@ -791,6 +793,7 @@ function delayedWsAutoReconnect(reconPauseSecs) {
 	wsAutoReconnecting = true;
 	let startPauseDate = Date.now();
 	setTimeout(function() {
+		console.log("delayedWsAutoReconnect action");
 		showStatus("");
 		// don't proceed if the user has clicked on anything; in particular goOnline
 		if(startPauseDate < lastUserActionDate) {
@@ -2430,7 +2433,7 @@ function openIdMapping() {
 	let url = "/callee/mapping/"; //?ds="+playDialSounds;
 	gLog('openIdMapping',url);
 	// id manager does not need 600px width
-	iframeWindowOpen(url,false,"max-width:500px");
+	iframeWindowOpen(url,false,"height:440px;max-width:500px;",true);
 }
 
 function openSettings() {
@@ -2482,11 +2485,13 @@ function clearcache() {
 	// will only be enabled if Android.getVersionName() >= "1.0.8"
 	if(typeof Android !== "undefined" && Android !== null) {
 		if(typeof Android.reload !== "undefined" && Android.reload !== null) {
+			let wasConnected = wsConn!=null;
+
+			console.log("----- wsClose() -----");
 			Android.wsClose();
-			Android.wsClearCache();
-			setTimeout(function() {
-				Android.reload();
-			},200);
+
+			console.log("----- wsClearCache(true,"+wasConnected+") -----");
+			Android.wsClearCache(true, wasConnected); // autoreload, autoreconnect
 		}
 	}
 	history.back();
