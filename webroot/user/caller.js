@@ -2031,7 +2031,12 @@ function signalingCommand(message) {
 			if(fileselectLabel && isDataChlOpen()) {
 				if(isP2pCon()) {
 					fileselectLabel.style.display = "block";
+					fileSelectInit();
+				} else {
+					gLog("fileselectLabel not enabled (not p2p)");
 				}
+			} else {
+				gLog("fileselectLabel not enabled (no dataChl)");
 			}
 
 			// getting stats (p2p or relayed connection)

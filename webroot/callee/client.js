@@ -171,45 +171,56 @@ function showVideoResolutionRemote() {
 	}
 }
 
-if(fileSelectElement) {
-	//gLog("fileSelectElement.addEventListener");
-	fileSelectElement.addEventListener('change', (event) => {
-		gLog("fileSelect event");
-		history.back();
-		const files = fileSelectElement.files;
-		const file = files.item(0);
-		if(file==null) {
-			showStatus("error: file==null",-1);
-			return;
-		}
-		if(!isDataChlOpen()) {
-			showStatus("error: no dataChannel",-1);
-			return;
-		}
-		if(file.name=="") {
-			showStatus("error: empty file.name",-1);
-			return;
-		}
-		if(file.size<=0) {
-			showStatus("error: file.size <= 0",-1);
-			return;
-		}
-		if(file.size>=500*1024*1024) {
-			console.log("fileSelect warn file.size %d > 500MB",file.size);
-			if(confirm("The selected file may be too big for the receiving device. "+
-					   "Are you sure you want to send it?")) {
-				sendFile(file);
-			} else {
-				console.log("fileSelect transfer aborted by user");
-			}
+var fileSelectInitialized = false;
+function fileSelectInit() {
+	if(fileSelectElement) {
+		if(!fileSelectInitialized) {
+			fileSelectInitialized = true;
+			gLog("fileSelectInit addEventListener");
+			fileSelectElement.addEventListener('change', (event) => {
+				// user has selected a file to send
+				gLog("fileSelect event");
+				history.back();
+				const files = fileSelectElement.files;
+				const file = files.item(0);
+				if(file==null) {
+					showStatus("error: file==null",-1);
+					return;
+				}
+				if(!isDataChlOpen()) {
+					showStatus("error: no dataChannel",-1);
+					return;
+				}
+				if(file.name=="") {
+					showStatus("error: empty file.name",-1);
+					return;
+				}
+				if(file.size<=0) {
+					showStatus("error: file.size <= 0",-1);
+					return;
+				}
+				if(file.size>=500*1024*1024) {
+					console.log("fileSelect warn file.size %d > 500MB",file.size);
+					if(confirm("The selected file may be too big for the receiving device. "+
+							   "Are you sure you want to send it?")) {
+						sendFile(file);
+					} else {
+						console.log("fileSelect transfer aborted by user");
+					}
+				} else {
+					sendFile(file);
+				}
+			});
 		} else {
-			sendFile(file);
+			gLog("fileSelectInit already initialzed");
 		}
-	});
+	} else {
+		gLog("# no fileSelectElement");
+	}
 }
 
 function sendFile(file) {
-	gLog("fileSelect: "+file.name, file.size, file.type, file.lastModified);
+	console.log("fileSelect: "+file.name, file.size, file.type, file.lastModified);
 	dataChannel.send("file|"+file.name+","+file.size+","+file.type+","+file.lastModified);
 	fileselectLabel.style.display = "none";
 	showStatus("",-1);
@@ -657,7 +668,7 @@ function menuDialogOpen(menuDialog,atMousePos,inner) {
 		}
 		gLog('menuDialogOpen up2',posY, menuHeight, pageHeight);
 		menuDialogOpenChildElement.style.top = (posY+window.scrollY)+"px"; // add scrollY-offset to posY
-
+/*
 		let menuWidth = menuDialogOpenChildElement.clientWidth;
 		let pageWidth = mainElement.clientWidth;
 		while(posX>10 && posX + menuWidth > pageWidth) {
@@ -665,6 +676,7 @@ function menuDialogOpen(menuDialog,atMousePos,inner) {
 		}
 		gLog('menuDialogOpen left2',posX, menuWidth, pageWidth);
 		menuDialogOpenChildElement.style.left = (posX+window.scrollX)+"px"; // add scrollX-offset to posX
+*/
 	},60);
 }
 

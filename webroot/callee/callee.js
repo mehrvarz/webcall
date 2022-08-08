@@ -95,6 +95,7 @@ window.onload = function() {
 		return;
 	}
 
+	fileSelectInit();
 	window.onhashchange = hashchange;
 
 	if(typeof Android !== "undefined" && Android !== null) {
@@ -673,6 +674,7 @@ function login(retryFlag) {
 			form.style.display = "none";
 		} else {
 			goOffline();
+			// loginStatus may be: "java.net.ConnectException: failed to connect to timur.mobi/66.228.46.43 (port 8443) from /:: (port 0): connect failed: ENETUNREACH (Network is unreachable)"
 			showStatus("Status: "+loginStatus,-1);
 			form.style.display = "none";
 		}
