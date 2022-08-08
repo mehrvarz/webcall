@@ -137,7 +137,12 @@ function submitForm(theForm) {
 			if(xhr.responseText=="OK") {
 				// ID is registered; offer the link
 				calleeLink = window.location.href;
+				// calleeLink may have ?i=906735 attached: cut it off
+				let idxArg = calleeLink.indexOf("?");
+				if(idxArg>=0) calleeLink = calleeLink.substring(0,idxArg);
+				//if(!gentle) console.log('calleeLink1='+calleeLink);
 				calleeLink = calleeLink.replace("register/","");
+				//if(!gentle) console.log('calleeLink2='+calleeLink+" myCalleeID="+myCalleeID);
 				calleeLink += myCalleeID;
 				if(!gentle) console.log('calleeLink='+calleeLink);
 				showStatus( "Please store your ID and password in a safe place. "+

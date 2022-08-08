@@ -2317,7 +2317,7 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter) {
 		// goOnlinePending flag prevents secondary calls to goOnline
 		goOnlinePending = true;
 		gLog('endWebRtcSession delayed auto goOnline()...');
-// TODO why exactly is this delay needed?
+// TODO why exactly is this delay needed in goOnlineAfter?
 		setTimeout(function() {
 			gLog('endWebRtcSession auto goOnline()');
 			goOnlinePending = false;
