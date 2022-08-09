@@ -1586,7 +1586,7 @@ function dataChannelOnclose(event) {
 }
 
 function dataChannelOnerror(event) {
-	console.log("# dataChannel.onerror",event);
+	console.log("# dataChannel.onerror",event.error);
 	if(rtcConnect) {
 		showStatus("# dataChannel error "+event.error,-1);
 		hangup(true,true,"dataChannelOnerror");

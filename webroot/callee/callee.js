@@ -1641,6 +1641,7 @@ function wsSend(message) {
 
 function pickup() {
 	gLog('pickup -> open mic');
+	buttonBlinking = false;
 	pickupAfterLocalStream = true;
 	getStream(); // -> pickup2()
 
@@ -1716,6 +1717,7 @@ function hangup(dummy,dummy2,message) {
 	showStatus("Hang up",4000);
 	answerButton.style.display = "none";
 	rejectButton.style.display = "none";
+	buttonBlinking = false;
 
 	remoteVideoFrame.srcObject = null;
 	remoteVideoHide();
@@ -1970,7 +1972,6 @@ function peerConnected2() {
 	setTimeout(function() {
 		if(!peerCon || peerCon.iceConnectionState=="closed") {
 			// caller early abort
-			buttonBlinking = false;
 			gLog('caller early abort');
 			//hangup(true,true,"caller early abort");
 			stopAllAudioEffects();
@@ -2005,7 +2006,6 @@ function peerConnected2() {
 					return;
 				}
 				console.log("auto-answer call");
-				buttonBlinking = false;
 				pickup();
 			}
 			setTimeout(pickupFunc,1000);
@@ -2013,12 +2013,10 @@ function peerConnected2() {
 
 		answerButton.onclick = function() {
 			gLog("answer button");
-			buttonBlinking = false;
 			pickup();
 		}
 		rejectButton.onclick = function() {
 			gLog("hangup button");
-			buttonBlinking = false;
 			hangup(true,true,"rejectButton");
 		}
 	},400);
