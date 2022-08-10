@@ -984,7 +984,7 @@ function wsOnMessage(evt) {
 }
 
 function wsOnMessage2(str) {
-	// WebCall service uses this to push in msgs from WebCall server
+	// WebCall service uses this to push msgs from WebCall server
 	signalingCommand(str);
 }
 
@@ -1015,19 +1015,19 @@ function signalingCommand(message) {
 			callerName = "";
 		}
 		if(cmd=="callerOffer") {
-			gLog('callerOffer (incoming call)');
+			console.log('callerOffer (incoming call)');
 			connectionstatechangeCounter=0;
 		} else {
-			gLog('callerOfferUpd (in-call)');
+			console.log('callerOfferUpd (in-call)');
 		}
 
 		callerDescription = JSON.parse(payload);
-		gLog('callerOffer setRemoteDescription '+callerDescription);
+		console.log('callerOffer setRemoteDescription '+callerDescription);
 		peerCon.setRemoteDescription(callerDescription).then(() => {
 			gLog('callerOffer createAnswer');
 			peerCon.createAnswer().then((desc) => {
 				localDescription = desc;
-				gLog('callerOffer in, calleeAnswer out');
+				console.log('callerOffer in, calleeAnswer out');
 				localDescription.sdp =
 					maybePreferCodec(localDescription.sdp, 'audio', 'send', "opus");
 				localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
@@ -1039,9 +1039,9 @@ function signalingCommand(message) {
 					} else {
 						wsSend("calleeAnswer|"+JSON.stringify(localDescription));
 					}
-				}, err => console.error(`Failed to set local descr: ${err.toString()}`));
+				}, err => console.error(`# Failed to set local descr: ${err.toString()}`));
 			}, err => {
-				console.warn("failed to createAnswer "+err.message)
+				console.warn("# failed to createAnswer "+err.message)
 				showStatus("Failed to createAnswer",8000);
 			});
 		}, err => {
@@ -1201,7 +1201,7 @@ function signalingCommand(message) {
 
 	} else if(cmd=="sessionId") {
 		// callee has checked in
-		//clientVersion = payload;
+		// payload is server version
 		showOnlineReadyMsg();
 
 	} else if(cmd=="sessionDuration") { // in call
@@ -1814,7 +1814,7 @@ function newPeerCon() {
 		if(e.errorCode==701) {
 			gLog("# peerCon onicecandidateerror", e.errorCode, e.errorText, e.url);
 		} else {
-			if(!gentle) console.warn("onicecandidateerror", e.errorCode, e.errorText, e.url);
+			//if(!gentle) console.warn("onicecandidateerror", e.errorCode, e.errorText, e.url);
 			showStatus("peerCon iceCandidate error "+e.errorCode+" "+e.errorText,-1);
 		}
 	}
@@ -2207,7 +2207,7 @@ function stopAllAudioEffects(comment) {
 
 var goOnlinePending = false;
 function endWebRtcSession(disconnectCaller,goOnlineAfter) {
-	gLog('endWebRtcSession start '+disconnectCaller+" "+goOnlineAfter);
+	console.log('endWebRtcSession start '+disconnectCaller+" "+goOnlineAfter);
 	pickupAfterLocalStream = false;
 	if(remoteVideoFrame) {
 		remoteVideoFrame.pause();

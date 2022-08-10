@@ -665,9 +665,9 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		if c.calleeInitReceived.Get() {
 			// only the 1st callee "init|" is accepted
 			// don't need to log this
-			if logWantedFor("attachex") {
-				fmt.Printf("# %s (%s) deny 2nd callee init %s\n", c.connType, c.calleeID, c.RemoteAddr)
-			}
+//			if logWantedFor("attachex") {
+				fmt.Printf("# %s (%s) ignore 2nd callee init %s\n", c.connType, c.calleeID, c.RemoteAddr)
+//			}
 			return
 		}
 
@@ -686,6 +686,11 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		// doUnregister() will call setDeadline(0) and processTimeValues() if this is false; then set it true
 		c.clearOnCloseDone = false // TODO make it atomic?
 		c.callerTextMsg = ""
+
+// TODO clear blockMap[c.calleeID] ?
+//blockMapMutex.Lock()
+//delete(blockMap,c.calleeID)
+//blockMapMutex.Unlock()
 
 		if logWantedFor("attach") {
 			loginCount := -1
@@ -708,6 +713,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		}
 
 		if !strings.HasPrefix(c.calleeID,"answie") && !strings.HasPrefix(c.calleeID,"talkback") {
+			// send "newer client available"
 			if clientUpdateBelowVersion!="" && !c.autologin {
 				if c.clientVersion < clientUpdateBelowVersion || 
 						strings.HasPrefix(c.clientVersion,"1.0F") ||
@@ -891,7 +897,9 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			return
 		}
 		c.callerOfferForwarded.Set(true)
-		c.hub.CalleeClient.calleeInitReceived.Set(false)
+
+// das stört, das dürfte erst passieren, wenn der call beendet wurde oder sich der caller disconnected
+//		c.hub.CalleeClient.calleeInitReceived.Set(false)
 
 		// send callerInfo to callee (see callee.js if(cmd=="callerInfo"))
 		if c.callerID!="" || c.callerName!="" {
@@ -1507,6 +1515,7 @@ func (c *WsClient) peerConHasEnded(cause string) {
 //		callerHost := ""
 		c.hub.HubMutex.RLock()
 		if c.hub.CalleeClient!=nil {
+			c.hub.CalleeClient.calleeInitReceived.Set(false) // accepting new init from callee now
 			calleeRemoteAddr = c.hub.CalleeClient.RemoteAddrNoPort
 		}
 		if c.hub.CallerClient!=nil  {

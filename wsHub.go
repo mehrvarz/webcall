@@ -179,7 +179,7 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 		client.pickupSent.Set(false)
 
 		// remove callee from hubMap; delete wsClientID from wsClientMap
-		h.exitFunc(client,comment)
+		h.exitFunc(client,comment) // comment may be 'timeout22'
 
 		h.HubMutex.Lock()
 		if h.CallerClient!=nil {

@@ -61,7 +61,9 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	blockedTime,ok := blockMap[urlID]
 	blockMapMutex.RUnlock()
 	if ok {
+		// urlID was blocked
 		if time.Now().Sub(blockedTime) <= 10 * 60 * time.Minute {
+			// urlID was blocked in the last 10h
 			if logWantedFor("overload") {
 				fmt.Printf("/login (%s) block recon (%v) rip=%s v=%s ua=%s\n",
 					urlID, time.Now().Sub(blockedTime), remoteAddr, clientVersion, userAgent)
@@ -195,8 +197,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 								// CalleeClient is not online anymore (we can accept the new login)
 								offlineReason = 4
 								if logWantedFor("login") {
-									fmt.Printf("/login (%s) logged out after wait %dms/%v %s v=%s\n",
-									  key, i*100, time.Since(startRequestTime), remoteAddr, clientVersion)
+								  fmt.Printf("/login (%s) logged out after wait %dms/%v ws=%d v=%s\n", key,
+									i*100, time.Since(startRequestTime), remoteAddr, hub.WsClientID, clientVersion)
 								}
 								break
 							}
@@ -505,7 +507,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					break
 				}
 				if hub.CalleeLogin.Get() {
-					// this is set when callee sends 'init'
+					// this is set when callee has send 'init'
 					myHubMutex.RUnlock()
 					break
 				}
@@ -547,15 +549,14 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					myHubMutex.RUnlock()
 
 					if unregisterNeeded {
-						//fmt.Printf("/login (%s) unregisterNeeded\n", urlID)
 						// the next login attempt of urlID/globalID will be denied to break it's reconnecter loop
-						// but we should NOT do this right after server start
+						//fmt.Printf("/login (%s) unregisterNeeded\n", urlID)
 						blockMapMutex.Lock()
 						blockMap[urlID] = time.Now()
 						blockMapMutex.Unlock()
 
 						msg := fmt.Sprintf("timeout%ds",waitedFor)
-						hub.doUnregister(hub.CalleeClient, msg)
+						hub.doUnregister(hub.CalleeClient, msg) // -> exitFunc()
 					} else {
 						// callee has exited early
 						if logWantedFor("login") {

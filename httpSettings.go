@@ -574,7 +574,7 @@ func setContact(calleeID string, contactID string, compoundName string, remoteAd
 	if newCompoundName == oldCompoundName {
 		// contactName for contactID exists and is same as oldName - don't overwrite
 		if logWantedFor("contacts") {
-			fmt.Printf("setcontact (%s) contactID=%s abort: already exists (%s) %s\n",
+			fmt.Printf("setcontact (%s) contactID=%s already exists, skip (%s) %s\n",
 				calleeID, contactID, newCompoundName, remoteAddr)
 		}
 		return true
