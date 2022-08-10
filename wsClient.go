@@ -898,9 +898,6 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		}
 		c.callerOfferForwarded.Set(true)
 
-// das stört, das dürfte erst passieren, wenn der call beendet wurde oder sich der caller disconnected
-//		c.hub.CalleeClient.calleeInitReceived.Set(false)
-
 		// send callerInfo to callee (see callee.js if(cmd=="callerInfo"))
 		if c.callerID!="" || c.callerName!="" {
 			// this data is used to display caller-info in the callee-client

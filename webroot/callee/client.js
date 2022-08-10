@@ -775,7 +775,8 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString, dontIframeOnload
 		styleString += "top:50%; left:50%; transform:translate(-50%,-50%);"
 	} else {
 		// left-bound
-		styleString += "left:3.2%; top:2%;"
+//		styleString += "left:3.2%; top:2%;"
+		styleString += "left:3.2%; top:10px;"
 	}
 
 	if(typeof addStyleString !== "undefined" && addStyleString) {
