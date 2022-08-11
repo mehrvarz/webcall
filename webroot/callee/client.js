@@ -1534,15 +1534,13 @@ function showStatus(msg,timeoutMs) {
 	if(typeof timeoutMs!=="undefined") {
 		sleepMs = timeoutMs;
 	}
-//	if(/*!gentle &&*/ msg /*&& msg!=""*/) {
-		// msg may contain html, which we don't want to console.log
-		let idx = msg.indexOf("<");
-		if(idx>=0) {
-			console.log("status: "+msg.substring(0,idx)+"... "+sleepMs);
-		} else {
-			console.log("status: "+msg+" "+sleepMs);
-		}
-//	}
+	// msg may contain html, which we don't want to log
+	let idx = msg.indexOf("<");
+	if(idx>=0) {
+		console.log("status: "+msg.substring(0,idx)+"... "+sleepMs);
+	} else {
+		console.log("status: "+msg+" "+sleepMs);
+	}
 	if(msg!="" && !singlebutton) {
 		statusLine.style.display = "none";
 		statusLine.style.opacity = 0;
