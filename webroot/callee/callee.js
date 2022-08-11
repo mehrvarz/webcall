@@ -1181,8 +1181,8 @@ function signalingCommand(message) {
 				// caller canceled call before connect
 				//showStatus("Canceled");
 			}
-			stopAllAudioEffects("incoming cancel2");
-			endWebRtcSession(false,true,"incoming cancel2"); // -> peerConCloseFunc
+			//stopAllAudioEffects("incoming cancel2");
+			endWebRtcSession(false,true,"incoming cancel"); // -> peerConCloseFunc
 		} else {
 			stopAllAudioEffects("ignore cancel");
 			// TODO no endWebRtcSession ? android service will not know that ringing has ended
@@ -1737,7 +1737,7 @@ function hangup(dummy,dummy2,message) {
 	}
 
 	connectLocalVideo(true); // force disconnect
-	endWebRtcSession(true,true,"force disconnect");
+	endWebRtcSession(true,true,"hangup "+message);
 	vsendButton.classList.remove('blink_me')
 
 	if(localStream && !videoEnabled) {
@@ -2203,7 +2203,7 @@ function stopAllAudioEffects(comment) {
 
 var goOnlinePending = false;
 function endWebRtcSession(disconnectCaller,goOnlineAfter,comment) {
-	console.log('endWebRtcSession start '+disconnectCaller+" "+goOnlineAfter+" "+comment);
+	console.log('endWebRtcSession discCaller='+disconnectCaller+" onlAfter="+goOnlineAfter+" ("+comment+")");
 	pickupAfterLocalStream = false;
 	if(remoteVideoFrame) {
 		remoteVideoFrame.pause();
