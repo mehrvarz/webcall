@@ -1102,7 +1102,7 @@ function signalingCommand(message) {
 			if(!peerCon || peerCon.iceConnectionState=="closed") {
 				console.log("# cmd callerCandidate abort no peerCon");
 				stopAllAudioEffects();
-				endWebRtcSession(true,true); // -> peerConCloseFunc
+				endWebRtcSession(true,true,"callerCandidate no peercon / ice closed"); // -> peerConCloseFunc
 				return;
 			}
 			if(!peerCon.remoteDescription) {
@@ -1182,7 +1182,7 @@ function signalingCommand(message) {
 				//showStatus("Canceled");
 			}
 			stopAllAudioEffects("incoming cancel2");
-			endWebRtcSession(false,true); // -> peerConCloseFunc
+			endWebRtcSession(false,true,"incoming cancel2"); // -> peerConCloseFunc
 		} else {
 			stopAllAudioEffects("ignore cancel");
 			// TODO no endWebRtcSession ? android service will not know that ringing has ended
@@ -1737,7 +1737,7 @@ function hangup(dummy,dummy2,message) {
 	}
 
 	connectLocalVideo(true); // force disconnect
-	endWebRtcSession(true,true);
+	endWebRtcSession(true,true,"force disconnect");
 	vsendButton.classList.remove('blink_me')
 
 	if(localStream && !videoEnabled) {
@@ -1863,7 +1863,7 @@ function newPeerCon() {
 		if(peerCon.connectionState=="disconnected") {
 			console.log("# peerCon disconnected "+rtcConnect+" "+mediaConnect);
 			stopAllAudioEffects();
-			endWebRtcSession(true,true); // -> peerConCloseFunc
+			endWebRtcSession(true,true,"peerCon disconnected"); // -> peerConCloseFunc
 		} else if(peerCon.connectionState=="failed") {
 			// "failed" could be an early caller hangup
 			// this may come with a red "WebRTC: ICE failed, see about:webrtc for more details"
@@ -1871,7 +1871,7 @@ function newPeerCon() {
 			// or until offline/online
 			console.log("# peerCon failed "+rtcConnect+" "+mediaConnect);
 			stopAllAudioEffects();
-			endWebRtcSession(true,true); // -> peerConCloseFunc
+			endWebRtcSession(true,true,"peerCon failed"); // -> peerConCloseFunc
 			//goOffline();
 			//setTimeout(goOnline(),300);
 			newPeerCon();
@@ -1971,7 +1971,7 @@ function peerConnected2() {
 			gLog('caller early abort');
 			//hangup(true,true,"caller early abort");
 			stopAllAudioEffects();
-			endWebRtcSession(true,true); // -> peerConCloseFunc
+			endWebRtcSession(true,true,"caller early abort"); // -> peerConCloseFunc
 			return;
 		}
 		// instead of listOfClientIps
@@ -2202,8 +2202,8 @@ function stopAllAudioEffects(comment) {
 }
 
 var goOnlinePending = false;
-function endWebRtcSession(disconnectCaller,goOnlineAfter) {
-	console.log('endWebRtcSession start '+disconnectCaller+" "+goOnlineAfter);
+function endWebRtcSession(disconnectCaller,goOnlineAfter,comment) {
+	console.log('endWebRtcSession start '+disconnectCaller+" "+goOnlineAfter+" "+comment);
 	pickupAfterLocalStream = false;
 	if(remoteVideoFrame) {
 		remoteVideoFrame.pause();
