@@ -980,7 +980,7 @@ function getStream(selectObject) {
 					localVideoMsgElement.style.opacity = 0.9;
 				}
 			}
-//			showStatus(""); // undo "Connecting..."
+			showStatus(""); // undo "Connecting..."
 			if(typeof dialButton!=="undefined" && dialButton) {
 				dialButton.disabled = false;
 				hangupButton.disabled = true;
@@ -1548,6 +1548,9 @@ function showStatus(msg,timeoutMs) {
 		statusLine.style.opacity = 1;
 		statusLine.style.display = "block";
 		if(msg!="" && sleepMs>=0) {
+			// msg bleibt für sleepMs stehen
+			// und dann transitioned to opacity für 600ms zu 0
+// TODO would be cool to transition also the height
 			setTimeout(function(oldMsg) {
 				if(statusLine.innerHTML==oldMsg) {
 					let opacityTransitioned = function() {
