@@ -1714,7 +1714,7 @@ function pickup2() {
 }
 
 function hangup(dummy,dummy2,message) {
-	showStatus("Hang up",4000);
+	showStatus("Hang up "+message,4000);
 	answerButton.style.display = "none";
 	rejectButton.style.display = "none";
 	buttonBlinking = false;
@@ -2061,7 +2061,7 @@ function dataChannelOnmessage(event) {
 		gLog("dataChannel.onmessage");
 		if(event.data) {
 			if(event.data.startsWith("disconnect")) {
-				gLog("dataChannel.onmessage on '"+event.data+"'");
+				gLog("dataChannel.onmessage '"+event.data+"'");
 				dataChannel.close();
 				dataChannel = null;
 				hangupWithBusySound(false,"dataChannel.onmessage disconnect");

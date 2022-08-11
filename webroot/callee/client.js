@@ -1537,9 +1537,9 @@ function showStatus(msg,timeoutMs) {
 	// msg may contain html, which we don't want to log
 	let idx = msg.indexOf("<");
 	if(idx>=0) {
-		console.log("status: "+msg.substring(0,idx)+"... "+sleepMs);
+		console.log("status: "+msg.substring(0,idx)+"...");
 	} else {
-		console.log("status: "+msg+" "+sleepMs);
+		console.log("status: "+msg);
 	}
 	if(msg!="" && !singlebutton) {
 		statusLine.style.display = "none";
