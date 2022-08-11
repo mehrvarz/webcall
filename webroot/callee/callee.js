@@ -1789,7 +1789,6 @@ function newPeerCon() {
 	try {
 		peerCon = new RTCPeerConnection(ICE_config);
 		gLog("new RTCPeerConnection ready");
-// fixed? TODO need: updateNotification("","Online. Waiting for calls.",false,false);
 	} catch(ex) {
 		console.error("RTCPeerConnection "+ex.message);
 		var statusMsg = "RTCPeerConnection "+ex.message;
@@ -1802,8 +1801,6 @@ function newPeerCon() {
 		if(divspinnerframe) divspinnerframe.style.display = "none";
 
 		offlineAction();
-
-		//wsSend("dummy|RTCPeerCon fail");
 		return;
 	};
 
@@ -1812,10 +1809,9 @@ function newPeerCon() {
 		// don't warn on 701 (chrome "701 STUN allocate request timed out")
 		// 400 = bad request
 		if(e.errorCode==701) {
-			gLog("# peerCon onicecandidateerror", e.errorCode, e.errorText, e.url);
+			gLog("# peerCon onicecandidateerror " + e.errorCode+" "+e.errorText+" "+e.url,-1);
 		} else {
-			//if(!gentle) console.warn("onicecandidateerror", e.errorCode, e.errorText, e.url);
-			showStatus("peerCon iceCandidate error "+e.errorCode+" "+e.errorText,-1);
+			glog("# peerCon onicecandidateerror " + e.errorCode+" "+e.errorText,-1);
 		}
 	}
 	peerCon.ontrack = ({track, streams}) => peerConOntrack(track, streams);

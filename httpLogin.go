@@ -479,7 +479,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	//}
 
 	if logWantedFor("login") {
-		fmt.Printf("/login (%s) success %d %v ws=%v %s v=%s ua=%s\n",
+		fmt.Printf("/login (%s) success %d %v ws=%d %s v=%s ua=%s\n",
 			urlID, len(calleeLoginSlice), time.Since(startRequestTime), wsClientID,
 			remoteAddrWithPort, clientVersion, userAgent)
 	}

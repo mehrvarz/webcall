@@ -775,7 +775,6 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString, dontIframeOnload
 		styleString += "top:50%; left:50%; transform:translate(-50%,-50%);"
 	} else {
 		// left-bound
-//		styleString += "left:3.2%; top:2%;"
 		styleString += "left:3.2%; top:10px;"
 	}
 
@@ -981,7 +980,7 @@ function getStream(selectObject) {
 					localVideoMsgElement.style.opacity = 0.9;
 				}
 			}
-			showStatus(""); // undo "Connecting..."
+//			showStatus(""); // undo "Connecting..."
 			if(typeof dialButton!=="undefined" && dialButton) {
 				dialButton.disabled = false;
 				hangupButton.disabled = true;
@@ -1531,20 +1530,20 @@ function hashchange() {
 }
 
 function showStatus(msg,timeoutMs) {
-	if(/*!gentle &&*/ msg /*&& msg!=""*/) {
+	let sleepMs = 5000;
+	if(typeof timeoutMs!=="undefined") {
+		sleepMs = timeoutMs;
+	}
+//	if(/*!gentle &&*/ msg /*&& msg!=""*/) {
 		// msg may contain html, which we don't want to console.log
 		let idx = msg.indexOf("<");
 		if(idx>=0) {
-			console.log('status: '+msg.substring(0,idx)+"...");
+			console.log("status: "+msg.substring(0,idx)+"... "+sleepMs);
 		} else {
-			console.log('status: '+msg);
+			console.log("status: "+msg+" "+sleepMs);
 		}
-	}
-	if(!singlebutton) {
-		let sleepMs = 5000;
-		if(typeof timeoutMs!=="undefined") {
-			sleepMs = timeoutMs;
-		}
+//	}
+	if(msg!="" && !singlebutton) {
 		statusLine.style.display = "none";
 		statusLine.style.opacity = 0;
 		statusLine.innerHTML = msg;
@@ -1553,6 +1552,12 @@ function showStatus(msg,timeoutMs) {
 		if(msg!="" && sleepMs>=0) {
 			setTimeout(function(oldMsg) {
 				if(statusLine.innerHTML==oldMsg) {
+					let opacityTransitioned = function() {
+						statusLine.innerHTML = "";
+						statusLine.removeEventListener('transitionend',opacityTransitioned);
+					}
+					statusLine.addEventListener('transitionend', opacityTransitioned);
+
 					statusLine.style.opacity = 0;
 				}
 			},sleepMs,msg);
