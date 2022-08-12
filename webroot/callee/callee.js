@@ -1102,6 +1102,7 @@ function signalingCommand(message) {
 			if(!peerCon || peerCon.iceConnectionState=="closed") {
 				console.log("# cmd callerCandidate abort no peerCon");
 				stopAllAudioEffects();
+// tmtmtm do we really need to call this
 				endWebRtcSession(true,true,"callerCandidate no peercon / ice closed"); // -> peerConCloseFunc
 				return;
 			}
@@ -2264,7 +2265,7 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter,comment) {
 			}
 		};
 
-		if(rtcConnect && peerCon) {
+		if(rtcConnect && peerCon && peerCon.iceConnectionState!="closed") {
 			gLog('endWebRtcSession getStatsPostCall');
 			peerCon.getStats(null).then((results) => {
 				getStatsPostCall(results);
@@ -2273,7 +2274,7 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter,comment) {
 				console.log(err.message);
 				peerConCloseFunc();
 			});
-		} else {
+		} else if(peerCon && peerCon.iceConnectionState!="closed") {
 			peerConCloseFunc();
 		}
 	}
