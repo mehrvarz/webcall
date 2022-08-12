@@ -310,6 +310,12 @@ window.onload = function() {
 // we should do this only...
 // - if callerId does not exit on this server (also have a look at callerHost)
 // - if it is not one of cookieNames tmpId's
+
+		if(callerId!="" && callerId!=cookieName) {
+			// if we override the callerId with a different cookieName
+			// we also clear the callerName (alligned with the old callerId)
+			callerName = "";
+		}
 		callerId = cookieName; // auto-fixing potentially wrong data from a link
 		callerHost = location.host; // auto-fixing potentially wrong data from a link
 
