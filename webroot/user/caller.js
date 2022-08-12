@@ -903,8 +903,7 @@ function onload3(comment) {
 }
 
 function dialButtonClick() {
-	gLog("dialButtonClick");
-	//gLog("dialButtonClick callerId="+callerId+" callerName="+callerName);
+	console.log("dialButtonClick calleeID="+calleeID+" callerId="+callerId+" callerName="+callerName);
 	showStatus(connectingText,-1);
 
 	doneHangup = false;
@@ -2575,7 +2574,7 @@ function stopAllAudioEffects() {
 }
 
 function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
-	console.log('hangup '+message);
+	console.log('hangup: '+message);
 	dialing = false;
 	connectLocalVideo(true); // forceOff
 	if(fileselectLabel) {
