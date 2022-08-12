@@ -387,6 +387,12 @@ window.onload = function() {
 
 		if(callerIdArg=="select") {
 			// callerId must urgently be set, bc it is currently set to "select"
+
+			if(callerId!="" && callerId!=cookieName) {
+				// if we override the callerId with a different cookieName
+				// we also clear the callerName (alligned with the old callerId)
+				callerName = "";
+			}
 			callerId = cookieName; // main callback id
 		}
 
