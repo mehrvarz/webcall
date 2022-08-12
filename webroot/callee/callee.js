@@ -629,7 +629,7 @@ function login(retryFlag) {
 				}
 			}
 			gLog('dialsoundsCheckbox.checked '+dialsoundsCheckbox.checked);
-			wsSend("init|!"); // -> connectSignaling()
+			sendInit();
 			return;
 		}
 
@@ -717,6 +717,13 @@ function login(retryFlag) {
 			offlineAction();
 		}
 	}, "pw="+wsSecret);
+}
+
+function sendInit() {
+	wsSend("init|!"); // -> connectSignaling()
+	// server will respond with "sessionId|(serverCodetag)"
+	// when we receive "sessionId|", we call showOnlineReadyMsg()
+	// in showOnlineReadyMsg() we call Android.calleeConnected()
 }
 
 function getSettings() {
@@ -831,6 +838,17 @@ function showOnlineReadyMsg() {
 	if(!wsConn) {
 		console.log("# showOnlineReadyMsg not online");
 		return;
+	}
+
+	if(typeof Android !== "undefined" && Android !== null) {
+		if(typeof Android.calleeConnected !== "undefined" && Android.calleeConnected !== null) {
+			Android.calleeConnected();
+			// service should now do 2 things:
+			// 1. updateNotification("",awaitingCalls,false);
+			// 2. Intent brintent = new Intent("webcall");
+			//    brintent.putExtra("state", "connected");
+			//    sendBroadcast(brintent);
+		}
 	}
 
 	msgbox.style.display = "none";
@@ -1782,7 +1800,7 @@ function goOnline() {
 	} else {
 		gLog('goOnline have wsConn send init');
 		if(divspinnerframe) divspinnerframe.style.display = "none";
-		wsSend("init|!");
+		sendInit();
 	}
 }
 
@@ -1881,7 +1899,7 @@ function newPeerCon() {
 				login(false);
 			} else {
 				gLog('have wsConn send init');
-				wsSend("init|!");
+				sendInit();
 			}
 		} else if(peerCon.connectionState=="connected") {
 			peerConnected2();
@@ -2515,7 +2533,7 @@ function wakeGoOnline() {
 	//console.log("callee wakeGoOnline: enable goonline");
 	goOnlineButton.disabled = false; // prevent goOnline() abort
 	goOnline(); // wsSend("init|!")
-	showOnlineReadyMsg();
+//	showOnlineReadyMsg();	// not needed? should be called when server processes "init|" and returns "sessionId"
 	gLog("wakeGoOnline done");
 }
 
