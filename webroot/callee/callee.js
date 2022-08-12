@@ -1812,7 +1812,7 @@ function newPeerCon() {
 		if(e.errorCode==701) {
 			gLog("# peerCon onicecandidateerror " + e.errorCode+" "+e.errorText+" "+e.url,-1);
 		} else {
-			glog("# peerCon onicecandidateerror " + e.errorCode+" "+e.errorText,-1);
+			gLog("# peerCon onicecandidateerror " + e.errorCode+" "+e.errorText,-1);
 		}
 	}
 	peerCon.ontrack = ({track, streams}) => peerConOntrack(track, streams);
