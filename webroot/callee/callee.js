@@ -2238,7 +2238,7 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter,comment) {
 					wsSend("cancel|disconnect"); // important
 				}
 				if(isDataChlOpen()) {
-					gLog('endWebRtcSession dataChannel.send(disconnect)');
+					console.log('endWebRtcSession dataChannel.send(disconnect)');
 					dataChannel.send("disconnect");
 				} else {
 					gLog('endWebRtcSession cannot send disconnect via dataChannel');

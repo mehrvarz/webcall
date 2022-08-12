@@ -2759,7 +2759,7 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 				}
 
 				if(isDataChlOpen()) {
-					gLog('hangup dataChannel send disconnect');
+					console.log('hangup send disconnect via dataChannel');
 					dataChannel.send("disconnect");
 					// give dataChannel disconnect some time to deliver
 					setTimeout(function() {
