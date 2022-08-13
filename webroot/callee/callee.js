@@ -537,7 +537,7 @@ function start() {
 
 	goOnlineButton.onclick = function() {
 		lastUserActionDate = Date.now();
-		goOnline();
+		goOnline("user button");
 	}
 	goOfflineButton.onclick = function() {
 		lastUserActionDate = Date.now();
@@ -670,7 +670,7 @@ function login(retryFlag) {
 			// loginStatus "fatal" = "already logged in" or "db.GetX err"
 			// no use offering pw entry again at this point
 			goOffline();
-			showStatus(	"Login failed. Already logged in from another device?",-1);
+			showStatus("Login failed. Already logged in from another device?",-1);
 			form.style.display = "none";
 		} else {
 			goOffline();
@@ -776,7 +776,7 @@ function gotStream2() {
 		}
 		if(onGotStreamGoOnline && !rtcConnect) {
 			console.log('gotStream2 onGotStreamGoOnline goOnline');
-			goOnline();
+			goOnline("gotStream2");
 		} else {
 			console.log('gotStream2 standby');
 		}
@@ -1771,7 +1771,7 @@ function hangup(dummy,dummy2,message) {
 	}
 }
 
-function goOnline() {
+function goOnline(comment) {
 	showStatus("");
 	if(goOnlineButton.disabled) {
 		gLog('goOnline() goOnlineButton.disabled');
@@ -1802,7 +1802,7 @@ function goOnline() {
 	} else {
 		gLog('goOnline have wsConn send init');
 		if(divspinnerframe) divspinnerframe.style.display = "none";
-		sendInit("goOnline");
+		sendInit("goOnline "+comment);
 	}
 }
 
@@ -1893,8 +1893,6 @@ function newPeerCon() {
 			console.log("# peerCon failed "+rtcConnect+" "+mediaConnect);
 			stopAllAudioEffects();
 			endWebRtcSession(true,true,"peerCon failed"); // -> peerConCloseFunc
-			//goOffline();
-			//setTimeout(goOnline(),300);
 			newPeerCon();
 			if(wsConn==null) {
 				gLog('have no wsConn');
@@ -2342,7 +2340,7 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter,comment) {
 			goOnlineButton.disabled = false;
 			// get peerCon ready for the next incoming call
 			// bc we are most likely still connected, goOnline() will just send "init"
-			goOnline();
+			goOnline("endWebRtcSession");
 		},500);
 	} else {
 		offlineAction();
@@ -2534,7 +2532,7 @@ function wakeGoOnline() {
 	wsOnOpen(); // green led
 	//console.log("callee wakeGoOnline: enable goonline");
 	goOnlineButton.disabled = false; // prevent goOnline() abort
-	goOnline(); // wsSend("init|!")
+	goOnline("wakeGoOnline"); // wsSend("init|!")
 //	showOnlineReadyMsg();	// not needed? should be called when server processes "init|" and returns "sessionId"
 	gLog("wakeGoOnline done");
 }

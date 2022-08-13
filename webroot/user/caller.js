@@ -1137,7 +1137,7 @@ function checkCalleeOnline(waitForCallee,comment) {
 	gLog("checkCalleeOnline api="+api+" ("+comment+")");
 	xhrTimeout = 30*1000;
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-		calleeOnlineStatus(xhr.responseText,waitForCallee);
+		calleeOnlineStatus(xhr.responseText, waitForCallee);
 	}, errorAction);
 }
 

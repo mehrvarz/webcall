@@ -314,10 +314,10 @@ function ajaxFetch(xhr, type, api, processData, errorFkt, postData, sync) {
 	if(!sync) {
 		xhr.timeout = xhrTimeout;
 		xhr.ontimeout = function() {
-			errorFkt("timeout",0);
+			errorFkt("timeout",xhrTimeout);
 		}
 	}
-	xhr.onerror= function(e) {
+	xhr.onerror = function(e) {
 		errorFkt("fetching",xhr.status);
 	};
 	// cross-browser compatible approach to bypassing the cache

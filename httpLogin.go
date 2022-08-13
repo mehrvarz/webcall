@@ -61,7 +61,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	blockedTime,ok := blockMap[urlID]
 	blockMapMutex.RUnlock()
 	if ok {
-		// urlID was blocked
+		// callee with urlID was blocked due to an earlier ws-reconnect issue (likely due to battery optimization)
 		if time.Now().Sub(blockedTime) <= 10 * 60 * time.Minute {
 			// urlID was blocked in the last 10h
 			if logWantedFor("overload") {
