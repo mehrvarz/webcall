@@ -629,7 +629,7 @@ function login(retryFlag) {
 				}
 			}
 			gLog('dialsoundsCheckbox.checked '+dialsoundsCheckbox.checked);
-			sendInit();
+			sendInit("xhr login");
 			return;
 		}
 
@@ -719,11 +719,11 @@ function login(retryFlag) {
 	}, "pw="+wsSecret);
 }
 
-function sendInit() {
+function sendInit(comment) {
+	console.log("sendInit() from: "+comment);
 	wsSend("init|!"); // -> connectSignaling()
-	// server will respond with "sessionId|(serverCodetag)"
-	// when we receive "sessionId|", we call showOnlineReadyMsg()
-	// in showOnlineReadyMsg() we call Android.calleeConnected()
+	// server will respond to this with "sessionId|(serverCodetag)"
+	// when we receive "sessionId|", we call showOnlineReadyMsg() -> Android.calleeConnected()
 }
 
 function getSettings() {
@@ -1801,7 +1801,7 @@ function goOnline() {
 	} else {
 		gLog('goOnline have wsConn send init');
 		if(divspinnerframe) divspinnerframe.style.display = "none";
-		sendInit();
+		sendInit("goOnline");
 	}
 }
 
@@ -1895,12 +1895,12 @@ function newPeerCon() {
 			//goOffline();
 			//setTimeout(goOnline(),300);
 			newPeerCon();
-			if(!wsConn) {
+			if(wsConn==null) {
 				gLog('have no wsConn');
 				login(false);
 			} else {
 				gLog('have wsConn send init');
-				sendInit();
+				sendInit("peerCon failed");
 			}
 		} else if(peerCon.connectionState=="connected") {
 			peerConnected2();
