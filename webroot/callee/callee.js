@@ -1221,6 +1221,7 @@ function signalingCommand(message) {
 	} else if(cmd=="sessionId") {
 		// callee has checked in
 		// payload is server version
+		gLog("cmd=='sessionId' -> showOnlineReadyMsg()");
 		showOnlineReadyMsg();
 
 	} else if(cmd=="sessionDuration") { // in call

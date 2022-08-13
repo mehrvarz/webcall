@@ -2115,7 +2115,7 @@ function signalingCommand(message) {
 				hangupWithBusySound(false,"Peer hang up");
 			},250);
 		} else {
-			gLog("ignore cancel "+payload);
+			console.log("ignore cancel "+payload);
 		}
 
 	} else if(cmd=="sessionDuration") {

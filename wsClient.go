@@ -57,6 +57,7 @@ type WsClient struct {
 	pickupSent atombool.AtomBool
 	calleeInitReceived atombool.AtomBool
 	callerOfferForwarded atombool.AtomBool
+	calleeAnswerReceived chan struct{}
 	reached14s atombool.AtomBool
 	RemoteAddr string // with port
 	RemoteAddrNoPort string // no port
@@ -493,7 +494,37 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		}
 */
 
+		// connection watchdog now has two timeouts
+		// 1. from when caller connects (now) to when callee sends calleeAnswer (max 60s)
+		// 2. from when callee sends calleeAnswer to when p2p-connect should occur (max 14s)
 		go func() {
+			// NOTE: we can use client for hub.CallerClient
+			client.calleeAnswerReceived = make(chan struct{})
+			secs := 60
+			timer := time.NewTimer(time.Duration(secs) * time.Second)
+			fmt.Printf("%s (%s) %ds timer start...\n", client.connType, client.calleeID,secs)
+			select {
+			case <-timer.C:
+				fmt.Printf("%s (%s) %ds timer: time's up\n", client.connType, client.calleeID,secs)
+				if hub.CallerClient!=nil {
+					// disconnect caller's ws-connection
+					client.Write([]byte("cancel|disconnect"))
+					client.Close("disconCallerAfter60s")
+				}
+				if hub.CalleeClient!=nil {
+					// disconnect caller's ws-connection
+					hub.CalleeClient.Write([]byte("cancel|c"))
+					hub.CalleeClient.peerConHasEnded("disconCallerAfter60s")
+				}
+				return
+			case <-client.calleeAnswerReceived:
+				// event coming from cmd=="calleeAnswer"
+				// this is also used to signal "caller gone", but with CallerClient.isOnline=false
+				fmt.Printf("%s (%s) %ds timer: calleeAnswerReceived\n", client.connType, client.calleeID,secs)
+				timer.Stop()
+				// fall through, start 14s timer
+			}
+
 			delaySecs := 14
 			// incoming caller will get removed if there is no peerConnect after 14s
 			// (it can take up to 14 seconds in some cases for a devices to get fully out of deep sleep)
@@ -971,6 +1002,13 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		return
 	}
 
+	if cmd=="calleeAnswer" {
+		if c.hub!=nil && c.hub.CallerClient!=nil {
+			c.hub.CallerClient.calleeAnswerReceived <- struct{}{}
+		}
+		// must still forward calleeAnswer to caller (see below: cmd/payload to other client)
+	}
+
 	if cmd=="rtcConnect" {
 		return
 	}
@@ -992,6 +1030,8 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 
 		if c.hub.CalleeClient.isConnectedToPeer.Get() {
 			// unlock - don't call peerConHasEnded with lock
+			//fmt.Printf("%s (%s) cmd=cancel CalleeClient.isConnectedToPeer c.isCallee=%v\n",
+			//	c.connType,c.calleeID,c.isCallee)
 			c.hub.HubMutex.RUnlock()
 			if c.isCallee {
 				fmt.Printf("%s (%s) REQ DISCON from callee %s '%s'\n",
@@ -1006,16 +1046,39 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			}
 		} else {
 			// we should still forward "cancel" to the other side
+			//fmt.Printf("%s (%s) cmd=cancel !CalleeClient.isConnectedToPeer c.isCallee=%v\n",
+			//	c.connType,c.calleeID,c.isCallee)
 			if c.isCallee {
 				//fmt.Printf("%s (%s) FW DISCON from callee %s '%s'\n",
 				//	c.connType, c.calleeID, c.RemoteAddr, payload)
+				if c.hub.CallerClient!=nil {
+					fmt.Printf("%s (%s) FW DISCON from callee %s '%s'\n",
+						c.connType, c.calleeID, c.RemoteAddr, payload)
+					c.hub.CallerClient.Write([]byte(message))
+					// callee wants the caller gone
+					c.hub.CallerClient.Close("callee cancel")
+
+					if c.hub.CalleeClient!=nil {
+						c.hub.CalleeClient.peerConHasEnded("callee cancel")
+					}
+
+					//timer.Stop()
+					c.hub.CallerClient.isOnline.Set(false)
+					c.hub.CallerClient.calleeAnswerReceived <- struct{}{}
+				}
 			} else {
 				// fw disconnect to callee
-				// but only if caller-client still connected
-				if c.hub.CallerClient!=nil {
+				if c.hub.CalleeClient!=nil {
 					fmt.Printf("%s (%s) FW DISCON from caller %s '%s'\n",
 						c.connType, c.calleeID, c.RemoteAddr, payload)
 					c.hub.CalleeClient.Write([]byte(message))
+					// let callee re-init
+					c.hub.CalleeClient.peerConHasEnded("caller cancel")
+					if c.hub.CallerClient!=nil {
+						// timer.Stop()
+						c.hub.CallerClient.isOnline.Set(false)
+						c.hub.CallerClient.calleeAnswerReceived <- struct{}{}
+					}
 				}
 			}
 			c.hub.HubMutex.RUnlock()

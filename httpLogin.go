@@ -197,7 +197,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 								// CalleeClient is not online anymore (we can accept the new login)
 								offlineReason = 4
 								if logWantedFor("login") {
-								  fmt.Printf("/login (%s) logged out after wait %dms/%v ws=%d v=%s\n", key,
+								  fmt.Printf("/login (%s) logged out after wait %dms/%v %s ws=%d v=%s\n", key,
 									i*100, time.Since(startRequestTime), remoteAddr, hub.WsClientID, clientVersion)
 								}
 								break
