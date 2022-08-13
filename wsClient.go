@@ -516,6 +516,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 					hub.CalleeClient.Write([]byte("cancel|c"))
 					hub.CalleeClient.peerConHasEnded("disconCallerAfter60s")
 				}
+				StoreCallerIpInHubMap(client.globalCalleeID, "", false)
 				return
 			case <-client.calleeAnswerReceived:
 				// event coming from cmd=="calleeAnswer"
@@ -707,6 +708,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			return
 		}
 
+		fmt.Printf("%s (%s) callee init %s\n", c.connType, c.calleeID, c.RemoteAddr)
 		c.hub.HubMutex.Lock()
 		c.hub.CallerClient = nil
 		c.hub.HubMutex.Unlock()
