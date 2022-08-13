@@ -629,7 +629,9 @@ function login(retryFlag) {
 				}
 			}
 			gLog('dialsoundsCheckbox.checked '+dialsoundsCheckbox.checked);
-			sendInit("xhr login");
+
+			// login success -> send "init|"
+			sendInit("xhr login success");
 			return;
 		}
 
@@ -1787,20 +1789,20 @@ function goOnline(comment) {
 	addedVideoTrack = null;
 
 	if(typeof Android !== "undefined" && Android !== null && Android.isConnected()>0) {
-		// if already connected don't show spinner (we are most likely called by wakeGoOnline())
-// fixed? TODO need: updateNotification("","Online. Waiting for calls.",false,false);
+		// if already connected do NOT show spinner (we are most likely called by wakeGoOnline())
 	} else {
 		gLog('goOnline spinner on');
 		if(divspinnerframe) divspinnerframe.style.display = "block";
 	}
 
+	// going online also means we need to be ready to receive peer connections
 	newPeerCon();
 
 	if(wsConn==null /*|| wsConn.readyState!=1*/) {
-		gLog('goOnline have no wsConn');
+		gLog('goOnline no wsConn -> login()');
 		login(false);
 	} else {
-		gLog('goOnline have wsConn send init');
+		gLog('goOnline have wsConn -> send init');
 		if(divspinnerframe) divspinnerframe.style.display = "none";
 		sendInit("goOnline "+comment);
 	}
@@ -1893,13 +1895,15 @@ function newPeerCon() {
 			console.log("# peerCon failed "+rtcConnect+" "+mediaConnect);
 			stopAllAudioEffects();
 			endWebRtcSession(true,true,"peerCon failed"); // -> peerConCloseFunc
+
+			// TODO could we just call goOnline() instead?
 			newPeerCon();
 			if(wsConn==null) {
-				gLog('have no wsConn');
+				gLog('peerCon failed and have no wsConn -> login()');
 				login(false);
 			} else {
-				gLog('have wsConn send init');
-				sendInit("peerCon failed");
+				gLog('peerCon failed but have wsConn -> send init');
+				sendInit("after peerCon failed");
 			}
 		} else if(peerCon.connectionState=="connected") {
 			peerConnected2();
