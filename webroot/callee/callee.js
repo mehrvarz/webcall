@@ -1734,7 +1734,8 @@ function pickup2() {
 }
 
 function hangup(dummy,dummy2,message) {
-	showStatus("Hang up "+message,4000);
+// TODO not sure we want to attache message to showStatus()
+	showStatus("Hang up ("+message+")",4000);
 	answerButton.style.display = "none";
 	rejectButton.style.display = "none";
 	buttonBlinking = false;
@@ -2084,7 +2085,7 @@ function dataChannelOnmessage(event) {
 				gLog("dataChannel.onmessage '"+event.data+"'");
 				dataChannel.close();
 				dataChannel = null;
-				hangupWithBusySound(false,"dataChannel.onmessage disconnect");
+				hangupWithBusySound(false,"disconnect via dataChannel");
 			} else if(event.data.startsWith("msg|")) {
 				// sanitize incoming data
 				let cleanString = event.data.substring(4).replace(/<(?:.|\n)*?>/gm, "...");

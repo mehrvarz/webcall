@@ -1538,12 +1538,14 @@ function showStatus(msg,timeoutMs) {
 	if(typeof timeoutMs!=="undefined") {
 		sleepMs = timeoutMs;
 	}
-	// msg may contain html, which we don't want to log
-	let idx = msg.indexOf("<");
-	if(idx>=0) {
-		console.log("status: "+msg.substring(0,idx)+"...");
-	} else {
-		console.log("status: "+msg);
+	if(msg!="") {
+		// msg may contain html, which we don't want to log
+		let idx = msg.indexOf("<");
+		if(idx>=0) {
+			console.log("status: "+msg.substring(0,idx)+"...");
+		} else {
+			console.log("status: "+msg);
+		}
 	}
 	if(msg!="" && !singlebutton) {
 		statusLine.style.display = "none";
@@ -1554,7 +1556,7 @@ function showStatus(msg,timeoutMs) {
 		if(msg!="" && sleepMs>=0) {
 			// msg bleibt für sleepMs stehen
 			// und dann transitioned to opacity für 600ms zu 0
-// TODO would be cool to transition also the height
+			// TODO would be nice to transition also the height
 			setTimeout(function(oldMsg) {
 				if(statusLine.innerHTML==oldMsg) {
 					let opacityTransitioned = function() {
