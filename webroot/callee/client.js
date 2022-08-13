@@ -1530,6 +1530,10 @@ function hashchange() {
 }
 
 function showStatus(msg,timeoutMs) {
+	if(typeof msg=="undefined" || msg==null) {
+		console.log("status: msg undefined");
+		return;
+	}
 	let sleepMs = 5000;
 	if(typeof timeoutMs!=="undefined") {
 		sleepMs = timeoutMs;
