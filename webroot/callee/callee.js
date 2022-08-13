@@ -537,7 +537,7 @@ function start() {
 
 	goOnlineButton.onclick = function() {
 		lastUserActionDate = Date.now();
-		goOnline("user button");
+		goOnline(true,"user button");
 	}
 	goOfflineButton.onclick = function() {
 		lastUserActionDate = Date.now();
@@ -778,7 +778,7 @@ function gotStream2() {
 		}
 		if(onGotStreamGoOnline && !rtcConnect) {
 			console.log('gotStream2 onGotStreamGoOnline goOnline');
-			goOnline("gotStream2");
+			goOnline(true,"gotStream2");
 		} else {
 			console.log('gotStream2 standby');
 		}
@@ -1773,7 +1773,7 @@ function hangup(dummy,dummy2,message) {
 	}
 }
 
-function goOnline(comment) {
+function goOnline(sendInitFlag,comment) {
 	showStatus("");
 	if(goOnlineButton.disabled) {
 		gLog('goOnline() goOnlineButton.disabled');
@@ -1802,9 +1802,12 @@ function goOnline(comment) {
 		gLog('goOnline no wsConn -> login()');
 		login(false);
 	} else {
-		gLog('goOnline have wsConn -> send init');
+		gLog('goOnline have wsConn');
 		if(divspinnerframe) divspinnerframe.style.display = "none";
-		sendInit("goOnline "+comment);
+		if(sendInitFlag) {
+			gLog('goOnline have wsConn -> send init');
+			sendInit("goOnline "+comment);
+		}
 	}
 }
 
@@ -1896,14 +1899,14 @@ function newPeerCon() {
 			stopAllAudioEffects();
 			endWebRtcSession(true,true,"peerCon failed"); // -> peerConCloseFunc
 
-			// TODO could we just call goOnline() instead?
 			newPeerCon();
 			if(wsConn==null) {
 				gLog('peerCon failed and have no wsConn -> login()');
 				login(false);
 			} else {
-				gLog('peerCon failed but have wsConn -> send init');
-				sendInit("after peerCon failed");
+				// init already sent by endWebRtcSession() above
+				//gLog('peerCon failed but have wsConn -> send init');
+				//sendInit("after peerCon failed");
 			}
 		} else if(peerCon.connectionState=="connected") {
 			peerConnected2();
@@ -2344,7 +2347,7 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter,comment) {
 			goOnlineButton.disabled = false;
 			// get peerCon ready for the next incoming call
 			// bc we are most likely still connected, goOnline() will just send "init"
-			goOnline("endWebRtcSession");
+			goOnline(true,"endWebRtcSession");
 		},500);
 	} else {
 		offlineAction();
@@ -2534,10 +2537,17 @@ function wakeGoOnline() {
 	gLog("wakeGoOnline start");
 	connectSignaling('',''); // only get wsConn from service (from Android.wsOpen())
 	wsOnOpen(); // green led
-	//console.log("callee wakeGoOnline: enable goonline");
 	goOnlineButton.disabled = false; // prevent goOnline() abort
-	goOnline("wakeGoOnline"); // wsSend("init|!")
-//	showOnlineReadyMsg();	// not needed? should be called when server processes "init|" and returns "sessionId"
+	goOnline(true,"wakeGoOnline");   // newPeerCon() + wsSend("init|!")
+	gLog("wakeGoOnline done");
+}
+
+function wakeGoOnlineNoInit() {
+	gLog("wakeGoOnlineNoInit start");
+	connectSignaling('',''); // only get wsConn from service (from Android.wsOpen())
+	wsOnOpen(); // green led
+	goOnlineButton.disabled = false; // prevent goOnline() abort
+	goOnline(false,"wakeGoOnline");  // newPeerCon() but do NOT wsSend("init|!")
 	gLog("wakeGoOnline done");
 }
 
