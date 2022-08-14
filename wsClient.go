@@ -1662,7 +1662,7 @@ func (c *WsClient) SendPing(maxWaitMS int) {
 	}
 
 	if logWantedFor("sendping") {
-		fmt.Printf("sendPing %s %s %d\n",c.wsConn.RemoteAddr().String(), c.calleeID, maxWaitMS)
+		fmt.Printf("sendPing (%s) %s maxWaitMS=%d\n",c.calleeID, c.wsConn.RemoteAddr().String(), maxWaitMS)
 	}
 
 	// set the time for sending the next ping in pingPeriod secs from now
@@ -1674,7 +1674,7 @@ func (c *WsClient) SendPing(maxWaitMS int) {
 
 	err := c.wsConn.WriteMessage(websocket.PingMessage, nil)
 	if err != nil {
-		fmt.Printf("sendPing err=%v %s %s\n",err,c.wsConn.RemoteAddr().String(), c.calleeID)
+		fmt.Printf("# sendPing (%s) %s err=%v\n",c.calleeID, c.wsConn.RemoteAddr().String(), err)
 	}
 
 	c.pingSent++

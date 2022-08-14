@@ -1547,7 +1547,7 @@ function showStatus(msg,timeoutMs) {
 			console.log("status: "+msg);
 		}
 	}
-	if(msg!="" && !singlebutton) {
+	if(/*msg!="" &&*/ !singlebutton) {
 		statusLine.style.display = "none";
 		statusLine.style.opacity = 0;
 		statusLine.innerHTML = msg;
