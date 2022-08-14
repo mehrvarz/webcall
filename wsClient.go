@@ -1780,7 +1780,8 @@ func (c *WsClient) Close(reason string) {
 			fmt.Printf("wsclient (%s) Close isCallee=%v isOnline=%v unregister callee\n",
 				c.calleeID, c.isCallee, c.isOnline.Get())
 		}
-		c.hub.doUnregister(c, "wsConn.Close() "+reason)
+//		c.hub.doUnregister(c, "wsConn.Close() "+reason)
+		c.hub.exitFunc(c, "wsConn.Close() "+reason)
 	} else {
 		// caller migh still be ringing
 		// stop watchdog timer
