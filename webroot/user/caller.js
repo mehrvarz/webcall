@@ -766,6 +766,7 @@ function onload2() {
 }
 
 function fetchMapping(contFunc,idSelectElement,idSelectLabelElement) {
+	if(idSelectElement==null) return;
 	altIdCount = 0
 	let api = apiPath+"/getmapping?id="+cookieName;
 	gLog('fetchMapping request api',api);
