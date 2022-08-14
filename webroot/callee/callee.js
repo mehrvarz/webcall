@@ -991,12 +991,12 @@ function wsOnClose2() {
 	// called by wsOnClose() or from android service
 	gLog("wsOnClose2 "+calleeID);
 	wsConn=null;
-	buttonBlinking=false;
+	buttonBlinking=false; // will abort blinkButtonFunc()
 	stopAllAudioEffects("wsOnClose");
 	showStatus("disconnected from signaling server");
-	if(!mediaConnect) {
+//	if(!mediaConnect) { // ???
 		onlineIndicator.src="";
-	}
+//	}
 }
 
 function wsOnMessage(evt) {

@@ -351,7 +351,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	upgrader.SetPongHandler(func(wsConn *websocket.Conn, s string) {
 		// we received a pong from the client
 		if logWantedFor("gotpong") {
-			fmt.Printf("gotPong (%s)\n",client.calleeID)
+			fmt.Printf("gotPong (%s) %s\n",client.calleeID, wsConn.RemoteAddr().String())
 		}
 		// clear read deadline for now; we set it again when we send the next ping
 		wsConn.SetReadDeadline(time.Time{})
@@ -407,8 +407,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 						fmt.Printf("%s (%s) caller close !reached14s -> cancel callee📴 + peerConHasEnded\n",
 							client.connType, client.calleeID)
 					}
-					client.hub.CalleeClient.Write([]byte("cancel|c"))
 					client.hub.CalleeClient.peerConHasEnded("callerOnClose")
+					client.hub.CalleeClient.Write([]byte("cancel|c"))
 				}
 			} else {
 				//fmt.Printf("%s (%s) caller closeafter reached14s -> do nothing\n",
@@ -506,17 +506,17 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			select {
 			case <-timer.C:
 				fmt.Printf("%s (%s) %ds timer: time's up\n", client.connType, client.calleeID,secs)
+				StoreCallerIpInHubMap(client.globalCalleeID, "", false)
+				if hub.CalleeClient!=nil {
+					// disconnect caller's ws-connection
+					hub.CalleeClient.peerConHasEnded("disconCallerAfter60s")
+					hub.CalleeClient.Write([]byte("cancel|c"))
+				}
 				if hub.CallerClient!=nil {
 					// disconnect caller's ws-connection
 					client.Write([]byte("cancel|disconnect"))
 					client.Close("disconCallerAfter60s")
 				}
-				if hub.CalleeClient!=nil {
-					// disconnect caller's ws-connection
-					hub.CalleeClient.Write([]byte("cancel|c"))
-					hub.CalleeClient.peerConHasEnded("disconCallerAfter60s")
-				}
-				StoreCallerIpInHubMap(client.globalCalleeID, "", false)
 				return
 			case <-client.calleeAnswerReceived:
 				// event coming from cmd=="calleeAnswer"
@@ -690,7 +690,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		if !c.isCallee {
 			// only the callee can send "init|"
 			fmt.Printf("# %s (%s) deny init is not Callee %s\n", c.connType, c.calleeID, c.RemoteAddr)
-			c.Write([]byte("cancel|busy"))
+//			c.Write([]byte("cancel|busy"))
 			return
 		}
 
@@ -708,7 +708,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			return
 		}
 
-		fmt.Printf("%s (%s) callee init %s\n", c.connType, c.calleeID, c.RemoteAddr)
+		//fmt.Printf("%s (%s) callee init %s\n", c.connType, c.calleeID, c.RemoteAddr)
 		c.hub.HubMutex.Lock()
 		c.hub.CallerClient = nil
 		c.hub.HubMutex.Unlock()
@@ -820,6 +820,9 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 	if cmd=="dummy" {
 		fmt.Printf("%s (%s) dummy %s ip=%s ua=%s\n",
 			c.connType, c.calleeID, payload, c.RemoteAddr, c.userAgent)
+		if c.Write([]byte(payload)) != nil {
+			fmt.Printf("%s (%s) dummy reply error\n", c.connType, c.calleeID)
+		}
 		return
 	}
 
@@ -1056,13 +1059,12 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 				if c.hub.CallerClient!=nil {
 					fmt.Printf("%s (%s) FW DISCON from callee %s '%s'\n",
 						c.connType, c.calleeID, c.RemoteAddr, payload)
-					c.hub.CallerClient.Write([]byte(message))
-					// callee wants the caller gone
-					c.hub.CallerClient.Close("callee cancel")
-
 					if c.hub.CalleeClient!=nil {
 						c.hub.CalleeClient.peerConHasEnded("callee cancel")
 					}
+					c.hub.CallerClient.Write([]byte(message))
+					// callee wants the caller gone
+					c.hub.CallerClient.Close("callee cancel")
 
 					//timer.Stop()
 					c.hub.CallerClient.isOnline.Set(false)
@@ -1073,9 +1075,9 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 				if c.hub.CalleeClient!=nil {
 					fmt.Printf("%s (%s) FW DISCON from caller %s '%s'\n",
 						c.connType, c.calleeID, c.RemoteAddr, payload)
-					c.hub.CalleeClient.Write([]byte(message))
 					// let callee re-init
 					c.hub.CalleeClient.peerConHasEnded("caller cancel")
+					c.hub.CalleeClient.Write([]byte(message))
 					if c.hub.CallerClient!=nil {
 						// timer.Stop()
 						c.hub.CallerClient.isOnline.Set(false)
@@ -1528,6 +1530,10 @@ func (c *WsClient) peerConHasEnded(cause string) {
 		return
 	}
 
+	fmt.Printf("%s (%s) peerConHasEnded callee=%v con=%v media=%v (%s)\n",
+		c.connType, c.calleeID, c.isCallee,
+		c.isConnectedToPeer.Get(), c.isMediaConnectedToPeer.Get(), cause)
+
 	if c.hub.lastCallStartTime>0 {
 		c.hub.processTimeValues("peerConHasEnded") // will set c.hub.CallDurationSecs
 		c.hub.lastCallStartTime = 0
@@ -1650,24 +1656,39 @@ func (c *WsClient) Close(reason string) {
 }
 
 func (c *WsClient) SendPing(maxWaitMS int) {
-	if logWantedFor("sendping") {
-		fmt.Printf("sendPing %s %s\n",c.wsConn.RemoteAddr().String(), c.calleeID)
-	}
-
-	// set the time for sending the next ping in pingPeriod secs from now
-	keepAliveMgr.SetPingDeadline(c.wsConn, pingPeriod, c)
-
 	// we expect a pong (or anything) from the client within max 20 secs from now
 	if maxWaitMS<0 {
 		maxWaitMS = 20000
 	}
 
+	if logWantedFor("sendping") {
+		fmt.Printf("sendPing %s %s %d\n",c.wsConn.RemoteAddr().String(), c.calleeID, maxWaitMS)
+	}
+
+	// set the time for sending the next ping in pingPeriod secs from now
+	keepAliveMgr.SetPingDeadline(c.wsConn, pingPeriod, c)
+
 	if maxWaitMS>0 {
 		c.wsConn.SetReadDeadline(time.Now().Add(time.Duration(maxWaitMS)*time.Millisecond))
 	}
 
-	c.wsConn.WriteMessage(websocket.PingMessage, nil)
+	err := c.wsConn.WriteMessage(websocket.PingMessage, nil)
+	if err != nil {
+		fmt.Printf("sendPing err=%v %s %s\n",err,c.wsConn.RemoteAddr().String(), c.calleeID)
+	}
+
 	c.pingSent++
+
+/*
+	receiveType, response, err := c.wsConn.ReadMessage()
+	var buf = make([]byte, 1024*4)
+	_, msg, err := c.wsConn.read(buf)
+	if err != nil {
+		fmt.Printf("sendPing err=%v %s %s\n",err,c.wsConn.RemoteAddr().String(), c.calleeID)
+	} else if msg != nil {
+		fmt.Printf("sendPing msg=%v %s %s\n",msg,c.wsConn.RemoteAddr().String(), c.calleeID)
+	}
+*/
 }
 
 
