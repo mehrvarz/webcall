@@ -1667,9 +1667,11 @@ function pickup() {
 	pickupAfterLocalStream = true;
 	getStream(); // -> pickup2()
 
+/* moved to pickup2()
 	if(typeof Android !== "undefined" && Android !== null) {
 		Android.callPickedUp();
 	}
+*/
 }
 
 function pickup2() {
@@ -1683,6 +1685,10 @@ function pickup2() {
 	}
 
 	answerButton.disabled = true;
+
+	if(typeof Android !== "undefined" && Android !== null) {
+		Android.callPickedUp();
+	}
 
 	if(remoteStream) {
 		gLog('pickup2 peerCon start remoteVideoFrame');

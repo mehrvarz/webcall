@@ -387,6 +387,10 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 					fmt.Printf("%s (%s) callee close noerr\n", client.connType, client.calleeID)
 				}
 			}
+			// stop watchdog timer
+			if client.hub!=nil && client.hub.CallerClient!=nil {
+				client.hub.CallerClient.calleeAnswerReceived <- struct{}{}
+			}
 		} else {
 			if logWantedFor("wsclose") {
 				if err!=nil {
@@ -414,6 +418,9 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				//fmt.Printf("%s (%s) caller closeafter reached14s -> do nothing\n",
 				//	client.connType, client.calleeID)
 			}
+
+			// stop watchdog timer
+			client.calleeAnswerReceived <- struct{}{}
 		}
 
 		onCloseMsg := "close"
@@ -502,10 +509,11 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			client.calleeAnswerReceived = make(chan struct{})
 			secs := 60
 			timer := time.NewTimer(time.Duration(secs) * time.Second)
-			fmt.Printf("%s (%s) %ds timer start...\n", client.connType, client.calleeID,secs)
+			fmt.Printf("%s (%s) %ds timer start ws=%d\n", client.connType, client.calleeID, secs, wsClientID64)
 			select {
 			case <-timer.C:
-				fmt.Printf("%s (%s) %ds timer: time's up\n", client.connType, client.calleeID,secs)
+				fmt.Printf("%s (%s) %ds timer: time's up ws=%d\n",
+					client.connType, client.calleeID, secs, wsClientID64)
 				StoreCallerIpInHubMap(client.globalCalleeID, "", false)
 				if hub.CalleeClient!=nil {
 					// disconnect caller's ws-connection
@@ -521,7 +529,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			case <-client.calleeAnswerReceived:
 				// event coming from cmd=="calleeAnswer"
 				// this is also used to signal "caller gone", but with CallerClient.isOnline=false
-				fmt.Printf("%s (%s) %ds timer: calleeAnswerReceived\n", client.connType, client.calleeID,secs)
+				fmt.Printf("%s (%s) %ds timer: calleeAnswerReceived ws=%d\n",
+					client.connType, client.calleeID, secs, wsClientID64)
 				timer.Stop()
 				// fall through, start 14s timer
 			}
