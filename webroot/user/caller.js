@@ -399,8 +399,10 @@ window.onload = function() {
 		if(cookieName!="") {
 			// when user operates idSelectElement, callerId may be changed
 			idSelectElement = document.getElementById("idSelect2");
-			let idSelect2LabelElement = document.getElementById("idSelect2Label");
-			fetchMapping(null,idSelectElement,idSelect2LabelElement);
+			if(idSelectElement!=null) {
+				let idSelect2LabelElement = document.getElementById("idSelect2Label");
+				fetchMapping(null,idSelectElement,idSelect2LabelElement);
+			}
 		}
 
 		// set target domain name with local hostname
@@ -734,8 +736,10 @@ function onload2() {
 			// if cookie webcallid is available, fetch mapping and offer idSelect
 			if(cookieName!="") {
 				idSelectElement = document.getElementById("idSelect");
-				let idSelectLabelElement = document.getElementById("idSelectLabel")
-				fetchMapping(onload3,idSelectElement,idSelectLabelElement);
+				if(idSelectElement!=null) {
+					let idSelectLabelElement = document.getElementById("idSelectLabel")
+					fetchMapping(onload3,idSelectElement,idSelectLabelElement);
+				}
 				return;
 			}
 
