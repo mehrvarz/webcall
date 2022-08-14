@@ -1072,7 +1072,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 
 	if cmd=="calleeAnswer" {
 		if c.hub!=nil && c.hub.CallerClient!=nil {
-			fmt.Printf("%s (%s) calleeAnswer %s\n", c.connType, c.calleeID, c.RemoteAddr)
+			fmt.Printf("%s (%s) calleeAnswer forwarded to caller %s\n", c.connType, c.calleeID, c.RemoteAddr)
 			c.hub.CallerClient.calleeAnswerReceived <- struct{}{}
 		} else {
 			fmt.Printf("%s (%s) calleeAnswer no c.hub.CallerClient %s\n", c.connType, c.calleeID, c.RemoteAddr)
@@ -1745,7 +1745,7 @@ func (c *WsClient) peerConHasEnded(cause string) {
 		c.hub.HubMutex.Unlock()
 	}
 
-	c.hub.setDeadline(0,cause)	// may call peerConHasEnded()
+	c.hub.setDeadline(0,cause)	// may call peerConHasEnded() again (we made sure this is no problem)
 
 	//if logWantedFor("attach") {
 	//	fmt.Printf("%s (%s) peerConHasEnded %s done (%s)\n", c.connType, c.calleeID, peerType, comment)
@@ -1757,15 +1757,16 @@ func (c *WsClient) Close(reason string) {
 		if logWantedFor("wsclose") {
 			fmt.Printf("wsclient Close %s callee=%v %s\n", c.calleeID, c.isCallee, reason)
 		}
-		c.wsConn.WriteMessage(websocket.CloseMessage, nil)
 
-// TODO if this is the caller, and the caller is in a call, the call does not get ended
-		if !c.isCallee && c.hub!=nil && c.hub.CalleeClient!=nil {
+		// if c is a caller and the callee is in a call -> end the call
+		if !c.isCallee && c.hub!=nil && c.hub.CalleeClient!=nil && c.hub.CalleeClient.isConnectedToPeer.Get() {
 			c.hub.CalleeClient.peerConHasEnded("caller gone "+reason)
 		}
 
+		c.wsConn.WriteMessage(websocket.CloseMessage, nil)
 		c.wsConn.Close()
 	}
+	keepAliveMgr.Delete(c.wsConn)
 }
 
 func (c *WsClient) SendPing(maxWaitMS int) {
@@ -1788,7 +1789,7 @@ func (c *WsClient) SendPing(maxWaitMS int) {
 	err := c.wsConn.WriteMessage(websocket.PingMessage, nil)
 	if err != nil {
 		fmt.Printf("# sendPing (%s) %s err=%v\n",c.calleeID, c.wsConn.RemoteAddr().String(), err)
-		c.wsConn.Close()
+		c.Close("sendPing error "+err.Error())
 	} else {
 		c.pingSent++
 	}
