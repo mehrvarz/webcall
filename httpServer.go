@@ -328,6 +328,7 @@ func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 		// set content-type
 		mimetype := mime.TypeByExtension(filepath.Ext(fullpath))
 		w.Header().Set("Content-Type", mimetype)
+// TODO err?
 		w.Write(data)
 	}
 }
@@ -933,7 +934,14 @@ func waitingCallerToCallee(calleeID string, waitingCallerSlice []CallerInfo, mis
 		} else {
 			//fmt.Printf("waitingCallerToCallee send waitingCallers (%s) (%s) (%s)\n",
 			//	calleeID, hubclient.hub.IsUnHiddenForCallerAddr, string(jsonStr))
-			hubclient.Write([]byte("waitingCallers|"+string(jsonStr)))
+			err := hubclient.Write([]byte("waitingCallers|"+string(jsonStr)))
+			if err != nil {
+				fmt.Printf("# %s (%s) send waitingCallers %s  <- to callee err=%v\n",
+					hubclient.connType, hubclient.calleeID, hubclient.RemoteAddr, err)
+// TODO this is NOT a reason to abort?
+				//hubclient.wsConn.Close()
+				//return
+			}
 		}
 	}
 
@@ -948,6 +956,13 @@ func waitingCallerToCallee(calleeID string, waitingCallerSlice []CallerInfo, mis
 			//fmt.Printf("waitingCallerToCallee send missedCalls (callee=%s) (unHidden=%s)\n",
 			//	calleeID, hubclient.hub.IsUnHiddenForCallerAddr)
 			hubclient.Write([]byte("missedCalls|"+string(jsonStr)))
+			if err != nil {
+				fmt.Printf("# %s (%s) send waitingCallers %s  <- to callee err=%v\n",
+					hubclient.connType, hubclient.calleeID, hubclient.RemoteAddr, err)
+// TODO this is NOT a reason to abort?
+				//hubclient.wsConn.Close()
+				//return
+			}
 		}
 	}
 }
