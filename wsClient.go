@@ -433,10 +433,10 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		}
 
 		onCloseMsg := "close"
-		if client.isConnectedToPeer.Get() ||
-				(client.hub.CalleeClient!=nil && client.hub.CalleeClient.callerOfferForwarded.Get()) {
-			onCloseMsg = "close📴"
-		}
+//		if client.isConnectedToPeer.Get() ||
+//				(client.hub.CalleeClient!=nil && client.hub.CalleeClient.callerOfferForwarded.Get()) {
+//			onCloseMsg = "close📴"
+//		}
 		if client.isCallee && client.isConnectedToPeer.Get() {
 			client.peerConHasEnded(onCloseMsg)
 		}
