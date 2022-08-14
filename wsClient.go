@@ -1758,33 +1758,31 @@ func (c *WsClient) Close(reason string) {
 			c.calleeID, c.isCallee, c.isOnline.Get(), reason)
 	}
 
-	if c.isOnline.Get() {
-		// this client is ws-connected to server
-		if c.hub!=nil && c.hub.CalleeClient!=nil && c.hub.CalleeClient.isConnectedToPeer.Get() {
-			// this client is in a peerCon (call) -> end the call
-			if logWantedFor("wsclose") {
-				fmt.Printf("wsclient (%s) Close isCallee=%v isOnline=%v inPeerCon\n",
-					c.calleeID, c.isCallee, c.isOnline.Get())
-			}
-			StoreCallerIpInHubMap(c.calleeID, "", false)
-			c.hub.CalleeClient.peerConHasEnded("wsConn.Close() "+reason)
-		}
+	keepAliveMgr.Delete(c.wsConn)
 
-		c.wsConn.WriteMessage(websocket.CloseMessage, nil)
+	if c.isOnline.Get() {
+		// this client was until now ws-connected to server
+		c.wsConn.WriteMessage(websocket.CloseMessage, nil) // ignore any error
 		c.wsConn.Close()
 	}
 
 	if c.isCallee {
-		// doUnregister() -> exitFunc -> DeleteFromHubMap
-		if logWantedFor("wsclose") {
-			fmt.Printf("wsclient (%s) Close isCallee=%v isOnline=%v unregister callee\n",
-				c.calleeID, c.isCallee, c.isOnline.Get())
+		// is this callee in a call?
+		if c.isConnectedToPeer.Get() {
+			// end the call
+			if logWantedFor("wsclose") {
+				fmt.Printf("wsclient (%s) Close callee end peercon\n", c.calleeID)
+			}
+			c.hub.CalleeClient.peerConHasEnded("wsConn.Close() "+reason)
+			StoreCallerIpInHubMap(c.calleeID, "", false)
 		}
-//		c.hub.doUnregister(c, "wsConn.Close() "+reason)
-		c.hub.exitFunc(c, "wsConn.Close() "+reason)
+		// exitFunc -> DeleteFromHubMap
+		if logWantedFor("wsclose") {
+			fmt.Printf("wsclient (%s) Close callee exitFunc\n", c.calleeID)
+		}
+		c.hub.exitFunc(c, "wsConn.Close(): "+reason)
 	} else {
-		// caller migh still be ringing
-		// stop watchdog timer
+		// caller might still be ringing: stop the watchdog timer
 		if c.hub!=nil && c.hub.CallerClient!=nil {
 			if logWantedFor("wsclose") {
 				fmt.Printf("wsclient (%s) Close caller: stop watchdog timer (just in case)\n", c.calleeID)
@@ -1792,8 +1790,6 @@ func (c *WsClient) Close(reason string) {
 			c.hub.CallerClient.calleeAnswerReceived <- struct{}{}
 		}
 	}
-
-	keepAliveMgr.Delete(c.wsConn)
 }
 
 func (c *WsClient) SendPing(maxWaitMS int) {
