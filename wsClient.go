@@ -1072,7 +1072,10 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 
 	if cmd=="calleeAnswer" {
 		if c.hub!=nil && c.hub.CallerClient!=nil {
+			fmt.Printf("%s (%s) calleeAnswer %s\n", c.connType, c.calleeID, c.RemoteAddr)
 			c.hub.CallerClient.calleeAnswerReceived <- struct{}{}
+		} else {
+			fmt.Printf("%s (%s) calleeAnswer no c.hub.CallerClient %s\n", c.connType, c.calleeID, c.RemoteAddr)
 		}
 		// must still forward calleeAnswer to caller (see below: cmd/payload to other client)
 	}
@@ -1755,6 +1758,12 @@ func (c *WsClient) Close(reason string) {
 			fmt.Printf("wsclient Close %s callee=%v %s\n", c.calleeID, c.isCallee, reason)
 		}
 		c.wsConn.WriteMessage(websocket.CloseMessage, nil)
+
+// TODO if this is the caller, and the caller is in a call, the call does not get ended
+		if !c.isCallee && c.hub!=nil && c.hub.CalleeClient!=nil {
+			c.hub.CalleeClient.peerConHasEnded("caller gone "+reason)
+		}
+
 		c.wsConn.Close()
 	}
 }
