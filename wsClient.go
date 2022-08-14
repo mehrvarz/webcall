@@ -1753,19 +1753,45 @@ func (c *WsClient) peerConHasEnded(cause string) {
 }
 
 func (c *WsClient) Close(reason string) {
-	if c.isOnline.Get() {
-		if logWantedFor("wsclose") {
-			fmt.Printf("wsclient Close %s callee=%v %s\n", c.calleeID, c.isCallee, reason)
-		}
+	if logWantedFor("wsclose") {
+		fmt.Printf("wsclient (%s) Close isCallee=%v isOnline=%v reason=%s\n",
+			c.calleeID, c.isCallee, c.isOnline.Get(), reason)
+	}
 
-		// if c is a caller and the callee is in a call -> end the call
-		if !c.isCallee && c.hub!=nil && c.hub.CalleeClient!=nil && c.hub.CalleeClient.isConnectedToPeer.Get() {
-			c.hub.CalleeClient.peerConHasEnded("caller gone "+reason)
+	if c.isOnline.Get() {
+		// this client is ws-connected to server
+		if c.hub!=nil && c.hub.CalleeClient!=nil && c.hub.CalleeClient.isConnectedToPeer.Get() {
+			// this client is in a peerCon (call) -> end the call
+			if logWantedFor("wsclose") {
+				fmt.Printf("wsclient (%s) Close isCallee=%v isOnline=%v inPeerCon\n",
+					c.calleeID, c.isCallee, c.isOnline.Get())
+			}
+			StoreCallerIpInHubMap(c.calleeID, "", false)
+			c.hub.CalleeClient.peerConHasEnded("wsConn.Close() "+reason)
 		}
 
 		c.wsConn.WriteMessage(websocket.CloseMessage, nil)
 		c.wsConn.Close()
 	}
+
+	if c.isCallee {
+		// doUnregister() -> exitFunc -> DeleteFromHubMap
+		if logWantedFor("wsclose") {
+			fmt.Printf("wsclient (%s) Close isCallee=%v isOnline=%v unregister callee\n",
+				c.calleeID, c.isCallee, c.isOnline.Get())
+		}
+		c.hub.doUnregister(c, "wsConn.Close() "+reason)
+	} else {
+		// caller migh still be ringing
+		// stop watchdog timer
+		if c.hub!=nil && c.hub.CallerClient!=nil {
+			if logWantedFor("wsclose") {
+				fmt.Printf("wsclient (%s) Close caller: stop watchdog timer (just in case)\n", c.calleeID)
+			}
+			c.hub.CallerClient.calleeAnswerReceived <- struct{}{}
+		}
+	}
+
 	keepAliveMgr.Delete(c.wsConn)
 }
 
