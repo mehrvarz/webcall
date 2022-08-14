@@ -371,7 +371,11 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		// set the time for sending the next ping: now + pingPeriod secs
 		keepAliveMgr.SetPingDeadline(wsConn, pingPeriod, client) // now + pingPeriod secs
 		// send the pong
-		wsConn.WriteMessage(websocket.PongMessage, nil)
+		err := wsConn.WriteMessage(websocket.PongMessage, nil)
+		if err != nil {
+			fmt.Printf("# sendPong (%s) %s err=%v\n",client.calleeID, client.wsConn.RemoteAddr().String(), err)
+			client.wsConn.Close()
+		}
 		atomic.AddInt64(&pongSentCounter, 1)
 		client.pongSent++
 	})
@@ -412,7 +416,12 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 							client.connType, client.calleeID)
 					}
 					client.hub.CalleeClient.peerConHasEnded("callerOnClose")
-					client.hub.CalleeClient.Write([]byte("cancel|c"))
+					err = client.hub.CalleeClient.Write([]byte("cancel|c"))
+					if err != nil {
+						fmt.Printf("# %s (%s) send cancel msg to callee fail %v\n",
+							client.connType, client.calleeID, err)
+// TODO this one is NOT a reason to abort?
+					}
 				}
 			} else {
 				//fmt.Printf("%s (%s) caller closeafter reached14s -> do nothing\n",
@@ -518,11 +527,16 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				if hub.CalleeClient!=nil {
 					// disconnect caller's ws-connection
 					hub.CalleeClient.peerConHasEnded("disconCallerAfter60s")
-					hub.CalleeClient.Write([]byte("cancel|c"))
+					err = hub.CalleeClient.Write([]byte("cancel|c"))
+					if err != nil {
+						fmt.Printf("# %s (%s) send cancel msg to callee fail %v\n",
+							hub.CalleeClient.connType, hub.CalleeClient.calleeID, err)
+// TODO this one is NOT a reason to abort?
+					}
 				}
 				if hub.CallerClient!=nil {
 					// disconnect caller's ws-connection
-					client.Write([]byte("cancel|disconnect"))
+					client.Write([]byte("cancel|disconnect")) // ignore any err
 					client.Close("disconCallerAfter60s")
 				}
 				return
@@ -623,20 +637,29 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			  "It could also be a firewall issue. "+
 			  "On Android, run <a href=\"/webcall/android/#webview\">WebRTC-Check</a> "+
 			  "to test your System WebView."
-			hub.CallerClient.Write([]byte("status|"+msg))
+			err := hub.CallerClient.Write([]byte("status|"+msg))
+			if err != nil {
+				fmt.Printf("# send status (%s) -> to caller %s err=%v\n",client.calleeID, remoteAddr, err)
+				hub.CallerClient.wsConn.Close()
+			}
+
 			if strings.HasPrefix(hub.CalleeClient.calleeID,"answie") ||
 				strings.HasPrefix(hub.CalleeClient.calleeID,"talkback") {
 				// the problem can't be the callee side, if callee is answie or talkback
 				// so in this case don't send msg to callee
 			} else {
-				hub.CalleeClient.Write([]byte("status|"+msg))
+				err = hub.CalleeClient.Write([]byte("status|"+msg))
+				if err != nil {
+					fmt.Printf("# send status (%s) <- to callee %s err=%v\n",client.calleeID, remoteAddr, err)
+					hub.CalleeClient.wsConn.Close()
+				}
 			}
 			hub.HubMutex.RUnlock()
 
 			// add missed call if dbUser.StoreMissedCalls is set
 			userKey := client.calleeID + "_" + strconv.FormatInt(int64(client.hub.registrationStartTime),10)
 			var dbUser DbUser
-			err := kvMain.Get(dbUserBucket, userKey, &dbUser)
+			err = kvMain.Get(dbUserBucket, userKey, &dbUser)
 			if err!=nil {
 				fmt.Printf("# %s (%s) failed to get dbUser\n",client.connType,client.calleeID)
 			} else if dbUser.StoreMissedCalls {
@@ -749,9 +772,12 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		// TODO should we clear callerIpInHubMap via StoreCallerIpInHubMap(,"") just to be sure?
 		//StoreCallerIpInHubMap(c.globalCalleeID, "", false)
 
-		// deliver the webcall codetag version string
-		if c.Write([]byte("sessionId|"+codetag)) != nil {
-			return
+		// deliver the webcall codetag version string to callee client
+		err := c.Write([]byte("sessionId|"+codetag))
+		if err != nil {
+			fmt.Printf("# send session (%s) <- to callee %s err=%v\n",c.calleeID, c.RemoteAddr, err)
+			//c.wsConn.Close()
+			//return
 		}
 
 		if !strings.HasPrefix(c.calleeID,"answie") && !strings.HasPrefix(c.calleeID,"talkback") {
@@ -767,7 +793,12 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 					if logWantedFor("login") {
 						fmt.Printf("%s (%s) send status|%s\n",c.connType,c.calleeID,msg)
 					}
-					c.Write([]byte("status|"+msg))
+					err = c.Write([]byte("status|"+msg))
+					if err != nil {
+						fmt.Printf("# send status (%s) <- to callee %s err=%v\n",c.calleeID, c.RemoteAddr, err)
+						//c.wsConn.Close()
+						//return
+					}
 				} else {
 					//if logWantedFor("login") {
 					//	fmt.Printf("%s (%s) not send status msg (%s)\n",c.connType,c.calleeID,c.clientVersion)
@@ -938,6 +969,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		// forward the callerOffer message to the callee client
 		if c.hub.CalleeClient.Write(message) != nil {
 			fmt.Printf("# %s (%s) CALL CalleeClient.Write(calleroffer) fail\n", c.connType, c.calleeID)
+// TODO not sure if every err is reason to abort
 			c.hub.HubMutex.RUnlock()
 			return
 		}
@@ -950,6 +982,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			sendCmd := "callerInfo|"+c.callerID+"\t"+c.callerName
 			if c.hub.CalleeClient.Write([]byte(sendCmd)) != nil {
 				fmt.Printf("# %s (%s) CALL CalleeClient.Write(callerInfo) fail\n", c.connType, c.calleeID)
+// TODO not sure if every err is reason to abort
 				c.hub.HubMutex.RUnlock()
 				return
 			}
@@ -970,8 +1003,11 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			} else {
 				if dbUser.Name!="" {
 					sendCmd := "calleeInfo|"+c.hub.CalleeClient.calleeID+"\t"+dbUser.Name
-					if c.Write([]byte(sendCmd)) != nil {
-						fmt.Printf("# %s (%s) fail send calleeInfo\n", c.connType, c.hub.CalleeClient.calleeID)
+					err = c.Write([]byte(sendCmd))
+					if err != nil {
+						fmt.Printf("# %s (%s) fail send calleeInfo %v\n",
+							c.connType, c.hub.CalleeClient.calleeID, err)
+// TODO this one is NOT a reason to abort?
 					}
 				}
 			}
@@ -983,18 +1019,22 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		}
 
 		// send caller useragent to callee
-		if c.hub.CalleeClient.Write([]byte("ua|"+c.userAgent)) != nil {
-			fmt.Printf("# %s (%s) CALL CalleeClient.Write(ua) fail (early callee ws-disconnect?)\n",
-				c.connType, c.calleeID)
+		err := c.hub.CalleeClient.Write([]byte("ua|"+c.userAgent))
+		if err != nil {
+			fmt.Printf("# %s (%s) CALL CalleeClient.Write(ua) fail (early callee ws-disconnect?) %v\n",
+				c.connType, c.calleeID, err)
+// TODO not sure if every err is reason to abort
 			c.hub.HubMutex.RUnlock()
 			return
 		}
 
 		// send callee useragent to caller
-		if c.Write([]byte("ua|"+c.hub.CalleeClient.userAgent)) != nil {
+		err = c.Write([]byte("ua|"+c.hub.CalleeClient.userAgent))
+		if err != nil {
 			// caller hang up already?
-			fmt.Printf("# %s (%s) CALL CallerClient.Write(ua) fail (early caller ws-disconnect?)\n",
-				c.connType, c.calleeID)
+			fmt.Printf("# %s (%s) CALL CallerClient.Write(ua) fail (early caller ws-disconnect?) %v\n",
+				c.connType, c.calleeID, err)
+// TODO this one is NOT a reason to abort?
 		}
 		c.hub.HubMutex.RUnlock()
 
@@ -1003,7 +1043,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			c.hub.setDeadline(c.hub.maxRingSecs,"serveWs ringsecs")
 		}
 		// this is (also) needed for turn AuthHandler: store caller RemoteAddr
-		err := StoreCallerIpInHubMap(c.globalCalleeID, c.RemoteAddr, false)
+		err = StoreCallerIpInHubMap(c.globalCalleeID, c.RemoteAddr, false)
 		if err!=nil {
 			fmt.Printf("# %s (%s) callerOffer StoreCallerIp %s err=%v\n",
 				c.connType, c.globalCalleeID, c.RemoteAddr, err)
@@ -1071,8 +1111,8 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 					if c.hub.CalleeClient!=nil {
 						c.hub.CalleeClient.peerConHasEnded("callee cancel")
 					}
-					c.hub.CallerClient.Write([]byte(message))
 					// callee wants the caller gone
+					c.hub.CallerClient.Write([]byte(message))
 					c.hub.CallerClient.Close("callee cancel")
 
 					//timer.Stop()
@@ -1086,7 +1126,12 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 						c.connType, c.calleeID, c.RemoteAddr, payload)
 					// let callee re-init
 					c.hub.CalleeClient.peerConHasEnded("caller cancel")
-					c.hub.CalleeClient.Write([]byte(message))
+					err := c.hub.CalleeClient.Write([]byte(message))
+					if err != nil {
+						fmt.Printf("# %s (%s) send caller cancel to callee fail %v\n",
+							c.connType, c.calleeID, err)
+// TODO this one is NOT a reason to abort?
+					}
 					if c.hub.CallerClient!=nil {
 						// timer.Stop()
 						c.hub.CallerClient.isOnline.Set(false)
@@ -1247,7 +1292,12 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 						//fmt.Printf("deleteMissedCall send missedCallsSlice %s\n", c.calleeID)
 						c.hub.HubMutex.RLock()
 						if c.hub.CalleeClient!=nil {
-							c.hub.CalleeClient.Write([]byte("missedCalls|"+string(json)))
+							err = c.hub.CalleeClient.Write([]byte("missedCalls|"+string(json)))
+							if err != nil {
+								fmt.Printf("# %s (%s) send missedCalls fail %v\n",
+									c.connType, c.calleeID, err)
+// TODO this one is NOT a reason to abort?
+							}
 						}
 						c.hub.HubMutex.RUnlock()
 					}
@@ -1287,7 +1337,12 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			if logWantedFor("wscall") {
 				fmt.Printf("%s (%s) forward pickup to caller (%s)\n", c.connType, c.calleeID, message)
 			}
-			c.hub.CallerClient.Write(message)
+			err := c.hub.CallerClient.Write(message)
+			if err != nil {
+				fmt.Printf("# %s (%s) send cancel msg to caller fail %v\n",
+					c.connType, c.calleeID, err)
+// TODO this one is NOT a reason to abort?
+			}
 			c.pickupSent.Set(true)
 		}
 		c.hub.HubMutex.RUnlock()
@@ -1303,7 +1358,12 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 	if cmd=="check" {
 		// clients may send this to check communication with the server
 		// server sends payload back to client
-		c.Write([]byte("confirm|"+payload))
+		err := c.Write([]byte("confirm|"+payload))
+		if err != nil {
+			fmt.Printf("# %s (%s) send check confirm (callee=%v) fail %v\n",
+				c.connType, c.calleeID, c.isCallee, err)
+// TODO this one is NOT a reason to abort?
+		}
 		return
 	}
 
@@ -1332,8 +1392,13 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			// or when caller is late and callee has already peer-disconnected
 			fmt.Printf("# %s (%s/%s) peer %s isCallee=%v c.hub.CallerClient==nil📴 v=%s\n",
 				c.connType, c.calleeID, c.globalCalleeID, payload, c.isCallee, c.clientVersion)
-			c.hub.CalleeClient.Write([]byte("cancel|c"))
 			c.hub.CalleeClient.peerConHasEnded("callerOnClose")
+			err := c.hub.CalleeClient.Write([]byte("cancel|c"))
+			if err != nil {
+				fmt.Printf("# %s (%s) send cancel msg to callee fail %v\n",
+					c.connType, c.calleeID, err)
+// TODO this one is NOT a reason to abort?
+			}
 			StoreCallerIpInHubMap(c.globalCalleeID, "", false)
 			return
 		}
@@ -1440,7 +1505,13 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 					// caller reports: peer connected
 					if constate=="ConForce" {
 						// test-caller sends this msg to callee, test-clients do not really connect p2p
-						c.hub.CalleeClient.Write([]byte("callerConnect|"))
+						err := c.hub.CalleeClient.Write([]byte("callerConnect|"))
+						if err != nil {
+							fmt.Printf("# %s (%s) send callerConnect to callee fail %v\n",
+								c.connType, c.calleeID, err)
+// TODO this one is NOT a reason to abort?
+						}
+
 					} else if constate=="Connected" {
 						// caller is reporting peerCon: both peers are now directly connected
 						// now force ws-disconnect caller
@@ -1496,11 +1567,21 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			c.hub.HubMutex.RLock()
 			if c.isCallee {
 				if c.hub.CallerClient!=nil {
-					c.hub.CallerClient.Write(message)
+					err := c.hub.CallerClient.Write(message)
+					if err != nil {
+						fmt.Printf("# %s (%s) fw msg to caller fail %v\n",
+							c.connType, c.calleeID, err)
+// TODO this one is NOT a reason to abort?
+					}
 				}
 			} else {
 				if c.hub.CalleeClient!=nil {
-					c.hub.CalleeClient.Write(message)
+					err := c.hub.CalleeClient.Write(message)
+					if err != nil {
+						fmt.Printf("# %s (%s) fw msg to callee fail %v\n",
+							c.connType, c.calleeID, err)
+// TODO this one is NOT a reason to abort?
+					}
 				}
 			}
 			c.hub.HubMutex.RUnlock()
@@ -1684,9 +1765,10 @@ func (c *WsClient) SendPing(maxWaitMS int) {
 	err := c.wsConn.WriteMessage(websocket.PingMessage, nil)
 	if err != nil {
 		fmt.Printf("# sendPing (%s) %s err=%v\n",c.calleeID, c.wsConn.RemoteAddr().String(), err)
+		c.wsConn.Close()
+	} else {
+		c.pingSent++
 	}
-
-	c.pingSent++
 
 /*
 	receiveType, response, err := c.wsConn.ReadMessage()
