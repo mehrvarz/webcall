@@ -515,7 +515,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		// 2. from when callee sends calleeAnswer to when p2p-connect should occur (max 14s)
 		go func() {
 			// NOTE: we can use client for hub.CallerClient
-			client.calleeAnswerReceived = make(chan struct{})
+			client.calleeAnswerReceived = make(chan struct{}, 5)
 			secs := 60
 			timer := time.NewTimer(time.Duration(secs) * time.Second)
 			fmt.Printf("%s (%s) %ds timer start ws=%d\n", client.connType, client.calleeID, secs, wsClientID64)
