@@ -206,7 +206,7 @@ func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 	remoteAddr := remoteAddrWithPort
 
 	// deny bot's
-	if isBot(r.UserAgent()) {
+	if isBot(r.UserAgent(),r.Referer()) {
 		fmt.Printf("# substitute bot denied path=(%s) userAgent=(%s) %s\n",
 			r.URL.Path, r.UserAgent(), remoteAddr)
 		return
@@ -363,7 +363,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// deny bot's
-	if isBot(r.UserAgent()) {
+	if isBot(r.UserAgent(),r.Referer()) {
 		fmt.Printf("# httpApi bot denied path=(%s) userAgent=(%s) rip=%s\n",
 			r.URL.Path, r.UserAgent(), remoteAddr)
 		return
@@ -869,7 +869,7 @@ func clientRequestAdd(remoteAddr string, count int) bool {
 	return ret
 }
 
-func isBot(userAgent string) bool {
+func isBot(userAgent string, referer string) bool {
 	// detect bot's
 	if  strings.Index(userAgent, "bot") >= 0 ||
 		strings.Index(userAgent, "spider") >= 0 ||
@@ -880,6 +880,9 @@ func isBot(userAgent string) bool {
 		strings.Index(userAgent, "Telegram") >= 0 ||
 		strings.Index(userAgent, "node-fetch") >= 0 ||
 		strings.Index(userAgent, "Twitter") >= 0 {
+		return true
+	}
+	if  strings.Index(referer, "1gb.at") >= 0 {
 		return true
 	}
 	return false
