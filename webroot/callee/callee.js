@@ -143,13 +143,14 @@ window.onload = function() {
 		return;
 	}
 
+	// if set will auto-login as callee
 	let auto = cleanStringParameter(getUrlParams("auto"),true,"auto");
 	if(auto) {
-console.log("onload auto is set ("+auto+")");
+		gLog("onload auto is set ("+auto+")");
 		if(divspinnerframe) divspinnerframe.style.display = "block";
 		// auto will cause onGotStreamGoOnline to be set below
 	} else {
-console.log("onload auto is not set");
+		gLog("onload auto is not set");
 	}
 
 	if(typeof Android !== "undefined" && Android !== null) {

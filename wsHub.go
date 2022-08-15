@@ -173,7 +173,7 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 			client.clearOnCloseDone = true
 		}
 
-		client.Close("unregister "+comment)
+		client.Close("unregister <- "+comment)
 		client.isConnectedToPeer.Set(false)
 		client.isMediaConnectedToPeer.Set(false)
 		client.pickupSent.Set(false)
@@ -183,7 +183,7 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 
 		h.HubMutex.Lock()
 		if h.CallerClient!=nil {
-			h.CallerClient.Close("unregister "+comment)
+			h.CallerClient.Close("unregister <- "+comment)
 			h.CallerClient.isConnectedToPeer.Set(false)
 			h.CallerClient.isMediaConnectedToPeer.Set(false)
 			h.CallerClient = nil

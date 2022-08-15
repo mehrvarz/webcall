@@ -386,21 +386,22 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		if client.isCallee {
 			if logWantedFor("wsclose") {
 				if err!=nil {
-					fmt.Printf("%s (%s) callee close err=%v\n", client.connType, client.calleeID, err)
+					fmt.Printf("%s (%s) OnClose callee err=%v\n", client.connType, client.calleeID, err)
 				} else {
-					fmt.Printf("%s (%s) callee close noerr\n", client.connType, client.calleeID)
+					fmt.Printf("%s (%s) OnClose callee noerr\n", client.connType, client.calleeID)
 				}
 			}
 			// stop watchdog timer
 			if client.hub!=nil && client.hub.CallerClient!=nil {
+// TODO calleeAnswerReceived may be nil ?
 				client.hub.CallerClient.calleeAnswerReceived <- struct{}{}
 			}
 		} else {
 			if logWantedFor("wsclose") {
 				if err!=nil {
-					fmt.Printf("%s (%s) caller close err=%v\n", client.connType, client.calleeID, err)
+					fmt.Printf("%s (%s) OnClose caller err=%v\n", client.connType, client.calleeID, err)
 				} else {
-					fmt.Printf("%s (%s) caller close noerr\n", client.connType, client.calleeID)
+					fmt.Printf("%s (%s) OnClose caller noerr\n", client.connType, client.calleeID)
 				}
 			}
 
@@ -412,13 +413,13 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 				if client.hub.CalleeClient!=nil && client.hub.CalleeClient.isConnectedToPeer.Get() {
 					if logWantedFor("attachex") {
-						fmt.Printf("%s (%s) caller close !reached14s -> cancel callee📴 + peerConHasEnded\n",
+						fmt.Printf("%s (%s) OnClose caller !reached14s -> cancel callee📴 + peerConHasEnded\n",
 							client.connType, client.calleeID)
 					}
-					client.hub.CalleeClient.peerConHasEnded("callerOnClose")
+					client.hub.CalleeClient.peerConHasEnded("OnCloseCaller")
 					err = client.hub.CalleeClient.Write([]byte("cancel|c"))
 					if err != nil {
-						fmt.Printf("# %s (%s) send cancel msg to callee fail %v\n",
+						fmt.Printf("# %s (%s) OnClose caller send cancel msg to callee fail %v\n",
 							client.connType, client.calleeID, err)
 // TODO this one is NOT a reason to abort?
 					}
@@ -432,14 +433,12 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			client.calleeAnswerReceived <- struct{}{}
 		}
 
-		onCloseMsg := "close"
-//		if client.isConnectedToPeer.Get() ||
-//				(client.hub.CalleeClient!=nil && client.hub.CalleeClient.callerOfferForwarded.Get()) {
-//			onCloseMsg = "close📴"
-//		}
+		onCloseMsg := "OnClose"
 		if client.isCallee && client.isConnectedToPeer.Get() {
 			client.peerConHasEnded(onCloseMsg)
 		}
+
+		// doUnregister() -> Close()
 		if err!=nil {
 			client.hub.doUnregister(client, onCloseMsg +": "+ err.Error())
 		} else {
@@ -1773,14 +1772,14 @@ func (c *WsClient) Close(reason string) {
 			if logWantedFor("wsclose") {
 				fmt.Printf("wsclient (%s) Close callee end peercon\n", c.calleeID)
 			}
-			c.hub.CalleeClient.peerConHasEnded("wsConn.Close() "+reason)
+			c.hub.CalleeClient.peerConHasEnded("wsClient.Close() "+reason)
 			StoreCallerIpInHubMap(c.calleeID, "", false)
 		}
 		// exitFunc -> DeleteFromHubMap
 		if logWantedFor("wsclose") {
 			fmt.Printf("wsclient (%s) Close callee exitFunc\n", c.calleeID)
 		}
-		c.hub.exitFunc(c, "wsConn.Close(): "+reason)
+		c.hub.exitFunc(c, "wsClient.Close() <- "+reason)
 	} else {
 		// caller might still be ringing: stop the watchdog timer
 		if c.hub!=nil && c.hub.CallerClient!=nil {
