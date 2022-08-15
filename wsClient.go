@@ -172,7 +172,9 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		}
 	}
 
-	if callerName=="" && callerID!="" && wsClientData.calleeID!="" {
+	// if callerName is empty, but callerIdLong and wsClientData.calleeID are set
+	// we try to get callerName from the callee's contacts (but only if callerName is not 'unknown')
+	if callerName=="" && callerIdLong!="" && wsClientData.calleeID!="" {
 		if !strings.HasPrefix(wsClientData.calleeID,"answie") &&
 		   !strings.HasPrefix(wsClientData.calleeID,"talkback") {
 			// callerName is empty, but we got callerID and calleeID
@@ -185,19 +187,18 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				fmt.Printf("# wsClient db get calleeID=%s (ignore) err=%v\n", wsClientData.calleeID, err)
 			} else {
 				compoundName := idNameMap[callerIdLong]
-				contactName := "";
-				//callerID := "";
-				//callerName := "";
 				tokenSlice := strings.Split(compoundName, "|")
 				for idx, tok := range tokenSlice {
 					switch idx {
-						case 0: contactName = tok
-						//case 1: callerID = tok
-						//case 2: callerName = tok
+						case 0: if tok!="unknown" { callerName = tok }
+						//case 1:  = tok
+						//case 2:  = tok
 					}
 				}
-				fmt.Printf("serveWs got callerName=%s for callerID=%s from contacts of calleeID=%s\n",
-					contactName, callerIdLong, wsClientData.calleeID)
+				if callerName!="" {
+					fmt.Printf("serveWs got callerName=%s for callerID=%s from contacts of calleeID=%s\n",
+						callerName, callerIdLong, wsClientData.calleeID)
+				}
 			}
 		}
 	}
@@ -374,7 +375,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		err := wsConn.WriteMessage(websocket.PongMessage, nil)
 		if err != nil {
 			fmt.Printf("# sendPong (%s) %s err=%v\n",client.calleeID, client.wsConn.RemoteAddr().String(), err)
-			client.wsConn.Close()
+			client.wsConn.Close() // TODO or better client.Close() ?
 		}
 		atomic.AddInt64(&pongSentCounter, 1)
 		client.pongSent++
@@ -383,6 +384,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	wsConn.OnClose(func(c *websocket.Conn, err error) {
 		keepAliveMgr.Delete(c)
 		client.isOnline.Set(false) // prevent close() from closing this already closed connection
+		onCloseMsg := "OnClose"
 		if client.isCallee {
 			if logWantedFor("wsclose") {
 				if err!=nil {
@@ -396,7 +398,12 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 // TODO calleeAnswerReceived may be nil ?
 				client.hub.CallerClient.calleeAnswerReceived <- struct{}{}
 			}
+
+			if client.isConnectedToPeer.Get() {
+				client.peerConHasEnded(onCloseMsg)
+			}
 		} else {
+			// is caller
 			if logWantedFor("wsclose") {
 				if err!=nil {
 					fmt.Printf("%s (%s) OnClose caller err=%v\n", client.connType, client.calleeID, err)
@@ -409,8 +416,6 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				// shut down the callee on early caller hangup
 				//fmt.Printf("%s (%s) caller close !reached14s -> clear CallerIp\n",
 				//	client.connType, client.calleeID)
-				StoreCallerIpInHubMap(client.globalCalleeID, "", false)
-
 				if client.hub.CalleeClient!=nil && client.hub.CalleeClient.isConnectedToPeer.Get() {
 					if logWantedFor("attachex") {
 						fmt.Printf("%s (%s) OnClose caller !reached14s -> cancel callee📴 + peerConHasEnded\n",
@@ -424,21 +429,23 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 // TODO this one is NOT a reason to abort?
 					}
 				}
+
+				// stop watchdog timer
+				client.calleeAnswerReceived <- struct{}{}
+
+				StoreCallerIpInHubMap(client.globalCalleeID, "", false)
 			} else {
 				//fmt.Printf("%s (%s) caller closeafter reached14s -> do nothing\n",
 				//	client.connType, client.calleeID)
 			}
-
-			// stop watchdog timer
-			client.calleeAnswerReceived <- struct{}{}
 		}
-
+/*
 		onCloseMsg := "OnClose"
 		if client.isCallee && client.isConnectedToPeer.Get() {
 			client.peerConHasEnded(onCloseMsg)
 		}
-
-		// doUnregister() -> Close()
+*/
+		// doUnregister() -> Close() -> exitFunc
 		if err!=nil {
 			client.hub.doUnregister(client, onCloseMsg +": "+ err.Error())
 		} else {
@@ -522,7 +529,6 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			case <-timer.C:
 				fmt.Printf("%s (%s) %ds timer: time's up ws=%d\n",
 					client.connType, client.calleeID, secs, wsClientID64)
-				StoreCallerIpInHubMap(client.globalCalleeID, "", false)
 				if hub.CalleeClient!=nil {
 					// disconnect caller's ws-connection
 					hub.CalleeClient.peerConHasEnded("disconCallAfter60s")
@@ -538,6 +544,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 					client.Write([]byte("cancel|disconnect")) // ignore any errors
 					client.Close("disconCallerAfter60s")
 				}
+				StoreCallerIpInHubMap(client.globalCalleeID, "", false)
 				return
 			case <-client.calleeAnswerReceived:
 				// event coming from cmd=="calleeAnswer"
@@ -770,9 +777,6 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			fmt.Printf("%s (%s) callee init %d ws=%d %s v=%s\n",
 				c.connType, c.calleeID, loginCount, c.hub.WsClientID, c.RemoteAddr, c.clientVersion)
 		}
-
-		// TODO should we clear callerIpInHubMap via StoreCallerIpInHubMap(,"") just to be sure?
-		//StoreCallerIpInHubMap(c.globalCalleeID, "", false)
 
 		// deliver the webcall codetag version string to callee client
 		err := c.Write([]byte("sessionId|"+codetag))
@@ -1055,7 +1059,8 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			// if callee does NOT pickup the call after c.hub.maxRingSecs, callee will be disconnected
 			c.hub.setDeadline(c.hub.maxRingSecs,"serveWs ringsecs")
 		}
-		// this is (also) needed for turn AuthHandler: store caller RemoteAddr
+		// this will block other callers
+		// this is also needed for turn AuthHandler: store caller RemoteAddr
 		err = StoreCallerIpInHubMap(c.globalCalleeID, c.RemoteAddr, false)
 		if err!=nil {
 			fmt.Printf("# %s (%s) callerOffer StoreCallerIp %s err=%v\n",
@@ -1406,14 +1411,16 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			// # serveWss (id) peer 'callee Connected unknw/unknw'
 			// this happens when caller disconnects immediately
 			// or when caller is late and callee has already peer-disconnected
-			fmt.Printf("# %s (%s/%s) peer %s isCallee=%v c.hub.CallerClient==nil📴 v=%s\n",
-				c.connType, c.calleeID, c.globalCalleeID, payload, c.isCallee, c.clientVersion)
-			c.hub.CalleeClient.peerConHasEnded("callerOnClose")
-			err := c.hub.CalleeClient.Write([]byte("cancel|c"))
-			if err != nil {
-				fmt.Printf("# %s (%s) send cancel msg to callee fail %v\n",
-					c.connType, c.calleeID, err)
+			if c.hub.CalleeClient!=nil {
+				fmt.Printf("# %s (%s/%s) peer %s isCallee=%v c.hub.CallerClient==nil📴 v=%s\n",
+					c.connType, c.calleeID, c.globalCalleeID, payload, c.isCallee, c.clientVersion)
+				c.hub.CalleeClient.peerConHasEnded("callerOnClose")
+				err := c.hub.CalleeClient.Write([]byte("cancel|c"))
+				if err != nil {
+					fmt.Printf("# %s (%s) send cancel msg to callee fail %v\n",
+						c.connType, c.calleeID, err)
 // TODO this one is NOT a reason to abort?
+				}
 			}
 			StoreCallerIpInHubMap(c.globalCalleeID, "", false)
 			return
