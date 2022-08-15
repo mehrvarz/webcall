@@ -950,7 +950,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		*/
 
 		if c.hub.CalleeClient==nil {
-			fmt.Printf("# %s (%s) CALL☎️  from (%s) %s but hub.CalleeClient==nil\n",
+			fmt.Printf("# %s (%s) CALL🔔 from (%s) %s but hub.CalleeClient==nil\n",
 				c.connType, c.calleeID, c.callerID, c.RemoteAddr)
 			c.hub.HubMutex.RUnlock()
 			return
@@ -958,7 +958,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		// prevent this callee from receiving a call, when already in a call
 		if c.hub.ConnectedCallerIp!="" {
 			// ConnectedCallerIp is set below by StoreCallerIpInHubMap()
-			fmt.Printf("# %s (%s) CALL☎️  but hub.ConnectedCallerIp not empty (%s) <- (%s) %s\n",
+			fmt.Printf("# %s (%s) CALL🔔 but hub.ConnectedCallerIp not empty (%s) <- (%s) %s\n",
 				c.connType, c.calleeID, c.hub.ConnectedCallerIp, c.callerID, c.RemoteAddr)
 
 			// add missed call if dbUser.StoreMissedCalls is set
@@ -975,7 +975,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			return
 		}
 
-		fmt.Printf("%s (%s) CALL☎️  %s <- %s (%s) v=%s ua=%s\n",
+		fmt.Printf("%s (%s) CALL🔔 %s <- %s (%s) v=%s ua=%s\n",
 			c.connType, c.calleeID, c.hub.CalleeClient.RemoteAddr,
 				c.RemoteAddr, c.callerID, c.clientVersion, c.userAgent)
 
@@ -1076,7 +1076,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 
 	if cmd=="calleeAnswer" {
 		if c.hub!=nil && c.hub.CallerClient!=nil {
-			fmt.Printf("%s (%s) calleeAnswer forwarded to caller %s\n", c.connType, c.calleeID, c.RemoteAddr)
+			fmt.Printf("%s (%s) calleeAnswer forward to caller %s\n", c.connType, c.calleeID, c.RemoteAddr)
 			c.hub.CallerClient.calleeAnswerReceived <- struct{}{}
 		} else {
 			fmt.Printf("%s (%s) calleeAnswer no c.hub.CallerClient %s\n", c.connType, c.calleeID, c.RemoteAddr)
@@ -1441,9 +1441,15 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 			if constate=="ConForce"  { constateShort = "CONF" }
 		}
 		if tok[0]=="callee" {
-			fmt.Printf("%s (%s) PEER %s %s %s %s <- %s (%s)\n",
-				c.connType, c.calleeID, tok[0], constateShort, tok[2], c.hub.CalleeClient.RemoteAddrNoPort,
-				c.hub.CallerClient.RemoteAddrNoPort, c.hub.CallerClient.callerID)
+			if strings.HasPrefix(constate,"Con") {
+				fmt.Printf("%s (%s) PEER %s %s☎️ %s %s <- %s (%s)\n",
+					c.connType, c.calleeID, tok[0], constateShort, tok[2], c.hub.CalleeClient.RemoteAddrNoPort,
+					c.hub.CallerClient.RemoteAddrNoPort, c.hub.CallerClient.callerID)
+			} else {
+				fmt.Printf("%s (%s) PEER %s %s %s %s <- %s (%s)\n",
+					c.connType, c.calleeID, tok[0], constateShort, tok[2], c.hub.CalleeClient.RemoteAddrNoPort,
+					c.hub.CallerClient.RemoteAddrNoPort, c.hub.CallerClient.callerID)
+			}
 		} else {
 			fmt.Printf("%s (%s) PEER %s %s %s %s <- %s (%s)\n",
 				c.connType, c.calleeID, tok[0], constateShort, tok[2], c.hub.CalleeClient.RemoteAddrNoPort,
