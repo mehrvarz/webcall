@@ -1784,23 +1784,20 @@ func (c *WsClient) Close(reason string) {
 	}
 
 	if c.isCallee {
-		// is this callee in a call?
 		if c.isConnectedToPeer.Get() {
-			// end the call
+			// this callee is in a call, end it
 			if logWantedFor("wsclose") {
-				fmt.Printf("wsclient (%s) Close callee end peercon\n", c.calleeID)
+				fmt.Printf("wsclient (%s) Close callee: end peercon, CallerIpInHubMap\n", c.calleeID)
 			}
 			c.hub.CalleeClient.peerConHasEnded("wsClient.Close() "+reason)
 			StoreCallerIpInHubMap(c.calleeID, "", false)
 		}
+
 		// exitFunc -> DeleteFromHubMap
-		if logWantedFor("wsclose") {
-			fmt.Printf("wsclient (%s) Close callee exitFunc\n", c.calleeID)
-		}
 		c.hub.exitFunc(c, "wsClient.Close() <- "+reason)
 	} else {
-		// caller might still be ringing: stop the watchdog timer
 		if c.hub!=nil && c.hub.CallerClient!=nil {
+			// this caller might still be ringing: stop the watchdog timer
 			if logWantedFor("wsclose") {
 				fmt.Printf("wsclient (%s) Close caller: stop watchdog timer (just in case)\n", c.calleeID)
 			}
