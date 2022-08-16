@@ -550,7 +550,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 					if unregisterNeeded {
 						// the next login attempt of urlID/globalID will be denied to break it's reconnecter loop
-						//fmt.Printf("/login (%s) unregisterNeeded\n", urlID)
+						fmt.Printf("/login (%s) timeout22s unregisterNeeded\n", urlID)
 						blockMapMutex.Lock()
 						blockMap[urlID] = time.Now()
 						blockMapMutex.Unlock()

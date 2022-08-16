@@ -1038,7 +1038,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		// send caller useragent to callee
 		err = c.hub.CalleeClient.Write([]byte("ua|"+c.userAgent))
 		if err != nil {
-			fmt.Printf("# %s (%s) CALL CalleeClient.Write(ua) fail (early callee ws-disconnect?) %v\n",
+			fmt.Printf("# %s (%s) send callee ua-of-caller fail (early callee ws-disconnect?) %v\n",
 				c.connType, c.calleeID, err)
 			c.hub.CalleeClient.Close("send caller useragent to callee "+err.Error())
 			c.hub.HubMutex.RUnlock()
@@ -1049,7 +1049,7 @@ func (c *WsClient) receiveProcess(message []byte, cliWsConn *websocket.Conn) {
 		err = c.Write([]byte("ua|"+c.hub.CalleeClient.userAgent))
 		if err != nil {
 			// caller hang up already?
-			fmt.Printf("# %s (%s) CALL CallerClient.Write(ua) fail (early caller ws-disconnect?) %v\n",
+			fmt.Printf("# %s (%s) send caller ua-of-callee fail (early caller ws-disconnect?) %v\n",
 				c.connType, c.calleeID, err)
 			c.Close("send callee useragent to caller "+err.Error())
 		}
@@ -1727,7 +1727,7 @@ func (c *WsClient) peerConHasEnded(cause string) {
 			c.hub.CallDurationSecs, localPeerCon, remotePeerCon,
 			calleeRemoteAddr, callerRemoteAddr, callerID, cause)
 
-		// add an entry to missed calls, but only if hub.CallDurationSecs==0
+		// add an entry to missed calls, but only if hub.CallDurationSecs<=0
 		// if caller cancels via hangup button, then this is the only addMissedCall() and contains msgtext
 		// this is NOT a missed call if callee denies the call
 		if c.hub.CallDurationSecs<=0 && !strings.HasPrefix(cause,"callee") {
