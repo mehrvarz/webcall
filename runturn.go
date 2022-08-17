@@ -40,9 +40,9 @@ func runTurnServer() {
 
 	readConfigLock.RLock()
 	ourRealm := turnRealm
-	readConfigLock.RUnlock()
 	loggerFactory := logging.NewDefaultLoggerFactory()
 	loggerFactory.DefaultLogLevel = logging.LogLevel(turnDebugLevel) // 3=info 4=LogLevelDebug
+	readConfigLock.RUnlock()
 
 	_, err = turn.NewServer(turn.ServerConfig{
 		Realm: ourRealm,
@@ -78,7 +78,12 @@ func runTurnServer() {
 			recentTurnCalleeIpMutex.RUnlock()
 			if ok {
 				timeSinceFirstFound := timeNow.Sub(turnCallee.TimeStored)
-				if timeSinceFirstFound.Seconds() <= float64(maxTalkSecsIfNoP2p) {
+
+				readConfigLock.RLock()
+				maxTalkSecsIfNoP2pTmp := maxTalkSecsIfNoP2p
+				readConfigLock.RUnlock()
+
+				if timeSinceFirstFound.Seconds() <= float64(maxTalkSecsIfNoP2pTmp) {
 					foundIp = true
 					foundCalleeId = turnCallee.CalleeID
 					foundByMap = true
@@ -93,7 +98,7 @@ func runTurnServer() {
 						// turnCallee.CalleeID is online but not connected: don't log
 					} else {
 						fmt.Printf("turnauth (%s) session outdated %s %v %d\n",
-							turnCallee.CalleeID, ipAddr, timeSinceFirstFound.Seconds(), maxTalkSecsIfNoP2p)
+							turnCallee.CalleeID, ipAddr, timeSinceFirstFound.Seconds(), maxTalkSecsIfNoP2pTmp)
 					}
 				}
 			} else {

@@ -89,6 +89,7 @@ func (h *Hub) setDeadline(secs int, comment string) {
 
 					// we wait for msg|... (to set callerTextMsg)
 					time.Sleep(1 * time.Second)
+					h.HubMutex.RLock()
 					if h.CalleeClient!=nil && h.CalleeClient.isConnectedToPeer.Get() {
 						var message = []byte("cancel|c")
 						// only cancel callee if canceling caller wasn't possible
@@ -99,6 +100,7 @@ func (h *Hub) setDeadline(secs int, comment string) {
 						// NOTE: peerConHasEnded() may call us back / this is why we set h.timer = nil first
 						h.CalleeClient.peerConHasEnded(fmt.Sprintf("deadline%d",secs))
 					}
+					h.HubMutex.RUnlock()
 				}
 			case <-h.timerCanceled:
 				if logWantedFor("deadline") {
@@ -161,6 +163,8 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 		// NOTE: delete(hubMap,id) might have been executed, caused by timeout22s
 
 		if !client.clearOnCloseDone {
+			client.peerConHasEnded("doUnregister")
+
 			h.setDeadline(0,"doUnregister "+comment)
 			h.HubMutex.Lock()
 			if h.lastCallStartTime>0 {
@@ -190,20 +194,20 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 		}
 		h.CalleeClient = nil
 		h.HubMutex.Unlock()
+
 /*
-		if h.timer!=nil {
-			if logWantedFor("deadline") {
-				fmt.Printf("doUnregister clear old timer\n")
+		// this is done in peerConHasEnded()
+		err := StoreCallerIpInHubMap(client.globalCalleeID, "", false)
+		if err!=nil {
+			// err "key not found": callee has already signed off - can be ignored
+			if strings.Index(err.Error(),"key not found")<0 {
+				fmt.Printf("# %s (%s) unregister clear callerIpInHub err=%v\n",
+					client.connType, client.calleeID, err)
 			}
-			h.timerCanceled <- struct{}{}
-			if !h.timer.Stop() {
-				time.Sleep(10 * time.Millisecond)
-			}
-			h.timer=nil
 		}
 */
-//		setDeadline(0,"doUnregister")
 	} else {
+		// for caller, Close() can be called directly, instead of doUnregister()
 		if logWantedFor("hub") {
 			fmt.Printf("hub (%s) unregister caller peercon=%v (%s)\n",
 				client.calleeID, client.isConnectedToPeer.Get(), comment)
@@ -211,12 +215,8 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 
 		client.Close("unregister "+comment)
 
-		//client.isConnectedToPeer.Set(false)	// caller may still be peer-connected to callee
-
-//TODO if there is no peer-con then this may be required (at least clearing CallerIp)
-//		if(client.isConnectedToPeer.Get()) {
-//			client.peerConHasEnded("unregister "+comment)
-//		}
+		// NOTE: caller may still be peer-connected to callee
+		//client.isConnectedToPeer.Set(false)
 	}
 }
 

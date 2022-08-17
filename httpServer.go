@@ -370,7 +370,10 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// deny a remoteAddr to do more than X requests per 30min
-	if maxClientRequestsPer30min>0 && remoteAddr!=outboundIP && remoteAddr!="127.0.0.1" {
+	readConfigLock.RLock()
+	maxClientRequestsPer30minTmp := maxClientRequestsPer30min
+	readConfigLock.RUnlock()
+	if maxClientRequestsPer30minTmp>0 && remoteAddr!=outboundIP && remoteAddr!="127.0.0.1" {
 /*
 		clientRequestsMutex.RLock()
 		clientRequestsSlice,ok := clientRequestsMap[remoteAddr]
@@ -386,10 +389,10 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 					clientRequestsSlice = clientRequestsSlice[:0]
 				}
 			}
-			if len(clientRequestsSlice) >= maxClientRequestsPer30min {
+			if len(clientRequestsSlice) >= maxClientRequestsPer30minTmp {
 				if logWantedFor("overload") {
 					fmt.Printf("httpApi rip=%s %d >= %d requests/30m (%s)\n",
-						remoteAddr, len(clientRequestsSlice), maxClientRequestsPer30min, urlPath)
+						remoteAddr, len(clientRequestsSlice), maxClientRequestsPer30minTmp, urlPath)
 				}
 				fmt.Fprintf(w,"Too many requests in short order. Please take a pause.")
 				clientRequestsMutex.Lock()
@@ -406,7 +409,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		if clientRequestAdd(remoteAddr,1) {
 			if logWantedFor("overload") {
 				fmt.Printf("httpApi rip=%s >=%d requests/30m (%s)\n",
-					remoteAddr, maxClientRequestsPer30min, urlPath)
+					remoteAddr, maxClientRequestsPer30minTmp, urlPath)
 			}
 			fmt.Fprintf(w,"Too many requests in short order. Please take a pause.")
 			return
@@ -941,9 +944,8 @@ func waitingCallerToCallee(calleeID string, waitingCallerSlice []CallerInfo, mis
 			if err != nil {
 				fmt.Printf("# %s (%s) send waitingCallers %s  <- to callee err=%v\n",
 					hubclient.connType, hubclient.calleeID, hubclient.RemoteAddr, err)
-// TODO this is NOT a reason to abort?
-				//hubclient.wsConn.Close()
-				//return
+				hubclient.hub.doUnregister(hubclient, "send dummy: "+err.Error())
+				return
 			}
 		}
 	}

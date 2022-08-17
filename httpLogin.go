@@ -44,9 +44,11 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 	// checking clientBlockBelowVersion (but not for answie and talkback)
 	if !strings.HasPrefix(urlID,"answie") && !strings.HasPrefix(urlID,"talkback") {
+		readConfigLock.RLock()
 		if clientBlockBelowVersion!="" && (clientVersion=="" || clientVersion < clientBlockBelowVersion) {
 			fmt.Printf("/login (%s) deny clientVersion (%s) < clientBlockBelowVersion (%s) %s\n",
 				urlID, clientVersion, clientBlockBelowVersion, remoteAddr)
+			readConfigLock.RUnlock()
 
 			// NOTE: msg MUST NOT contain apostroph (') characters
 			msg := "The version of WebCall you are using has a technical problem and is no longer supported."+
@@ -54,6 +56,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			fmt.Fprintf(w,msg)
 			return
 		}
+		readConfigLock.RUnlock()
 	}
 
 	// was this callee blocked (due to ws-connect timeout22)?
@@ -89,7 +92,10 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	calleeLoginMutex.RLock()
 	calleeLoginSlice,ok := calleeLoginMap[urlID]
 	calleeLoginMutex.RUnlock()
-	if maxLoginPer30min>0 && remoteAddr!=outboundIP && remoteAddr!="127.0.0.1" {
+	readConfigLock.RLock()
+	maxLoginPer30minTmp := maxLoginPer30min
+	readConfigLock.RUnlock()
+	if maxLoginPer30minTmp>0 && remoteAddr!=outboundIP && remoteAddr!="127.0.0.1" {
 		if ok {
 			for len(calleeLoginSlice)>0 {
 				if time.Now().Sub(calleeLoginSlice[0]) < 30 * time.Minute {
@@ -101,10 +107,10 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					calleeLoginSlice = calleeLoginSlice[:0]
 				}
 			}
-			if len(calleeLoginSlice) >= maxLoginPer30min {
+			if len(calleeLoginSlice) >= maxLoginPer30minTmp {
 				if logWantedFor("overload") {
 					fmt.Printf("/login (%s) %d >= %d logins/30m rip=%s v=%s\n",
-						urlID, len(calleeLoginSlice), maxLoginPer30min, remoteAddr, clientVersion)
+						urlID, len(calleeLoginSlice), maxLoginPer30minTmp, remoteAddr, clientVersion)
 				}
 				fmt.Fprintf(w,"Too many reconnects / login attempts in short order. "+
 							  "Is your network connection stable? "+
