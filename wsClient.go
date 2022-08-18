@@ -388,7 +388,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		onCloseMsg := "OnClose"
 		if client.isCallee {
 			// callee has closed
-			if err!=nil {
+			if err!=nil && strings.Index(err.Error(),"read timeout")<0 {
+// TODO maybe err=read timeout shd be treated like noerr (testing)
 				fmt.Printf("%s (%s) OnClose callee err=%v v=%s\n",
 					client.connType, client.calleeID, err, client.clientVersion)
 			} else {
@@ -399,17 +400,11 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			}
 			// stop watchdog timer
 			if client.hub!=nil && client.hub.CallerClient!=nil {
-// TODO calleeAnswerReceived may be nil ?
+// TODO calleeAnswerReceived could be nil ?
 				client.hub.CallerClient.calleeAnswerReceived <- struct{}{}
 			}
 
-// TODO not sending cancel to caller? maybe done by doUnregister below?
-
-/* unregister takes care of this
-			if client.isConnectedToPeer.Get() {
-				client.peerConHasEnded(onCloseMsg)
-			}
-*/
+// TODO not sending cancel to caller? is this done by doUnregister?
 			// doUnregister() -> Close() -> exitFunc
 			if err!=nil {
 				client.hub.doUnregister(client, onCloseMsg +": "+ err.Error())
@@ -419,7 +414,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 		} else {
 			// caller has closed
-			if err!=nil {
+			if err!=nil && strings.Index(err.Error(),"read timeout")<0 {
+// TODO maybe err=read timeout shd be treated like noerr (testing)
 				fmt.Printf("%s (%s) OnClose caller err=%v v=%s\n",
 					client.connType, client.calleeID, err, client.clientVersion)
 			} else {
@@ -1706,9 +1702,11 @@ func (c *WsClient) peerConHasEnded(cause string) {
 		return
 	}
 
-	fmt.Printf("%s (%s) peerConHasEnded callee=%v con=%v media=%v (%s)\n",
-		c.connType, c.calleeID, c.isCallee,
-		c.isConnectedToPeer.Get(), c.isMediaConnectedToPeer.Get(), cause)
+	if c.isConnectedToPeer.Get() {
+		fmt.Printf("%s (%s) peerConHasEnded callee=%v con=%v media=%v (%s)\n",
+			c.connType, c.calleeID, c.isCallee,
+			c.isConnectedToPeer.Get(), c.isMediaConnectedToPeer.Get(), cause)
+	}
 
 	if c.hub.lastCallStartTime>0 {
 		c.hub.processTimeValues("peerConHasEnded") // will set c.hub.CallDurationSecs
