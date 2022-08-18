@@ -1742,8 +1742,8 @@ function pickup2() {
 	},400);
 }
 
-function hangup(dummy,dummy2,message) {
-// TODO not sure we want to attache message to showStatus()
+function hangup(mustDisconnect,dummy2,message) {
+// TODO not sure we want to attach the message to showStatus()
 	showStatus("Hang up ("+message+")",4000);
 	answerButton.style.display = "none";
 	rejectButton.style.display = "none";
@@ -1767,7 +1767,7 @@ function hangup(dummy,dummy2,message) {
 	}
 
 	connectLocalVideo(true); // force disconnect
-	endWebRtcSession(true,true,"hangup "+message);
+	endWebRtcSession(mustDisconnect,true,"hangup "+message);
 	vsendButton.classList.remove('blink_me')
 
 	if(localStream && !videoEnabled) {
@@ -1813,7 +1813,7 @@ function goOnline(sendInitFlag,comment) {
 		if(divspinnerframe) divspinnerframe.style.display = "none";
 		if(sendInitFlag) {
 			gLog('goOnline have wsConn -> send init');
-			sendInit("goOnline "+comment);
+			sendInit("goOnline <- "+comment);
 		}
 	}
 }

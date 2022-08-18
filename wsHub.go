@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"time"
 	"sync"
+	"strings"
+	"strconv"
 	"github.com/mehrvarz/webcall/atombool"
 )
 
@@ -96,11 +98,11 @@ func (h *Hub) setDeadline(secs int, comment string) {
 						fmt.Printf("setDeadline (%s) send to callee (%s) %s\n",
 							calleeID, message, h.CalleeClient.RemoteAddr)
 						h.CalleeClient.Write(message)
-
-						// NOTE: peerConHasEnded() may call us back / this is why we set h.timer = nil first
-						h.CalleeClient.peerConHasEnded(fmt.Sprintf("deadline%d",secs))
 					}
 					h.HubMutex.RUnlock()
+
+					// NOTE: peerConHasEnded may call us back / this is why we set h.timer = nil first
+					h.peerConHasEnded(fmt.Sprintf("deadline%d",secs))
 				}
 			case <-h.timerCanceled:
 				if logWantedFor("deadline") {
@@ -117,19 +119,20 @@ func (h *Hub) setDeadline(secs int, comment string) {
 }
 
 func (h *Hub) doBroadcast(message []byte) {
-	// likes to be called with h.HubMutex (r)locked
+	// bad fktname! here we only send a message to BOTH clients
+	// this fkt likes to be called with h.HubMutex (r)locked
 	calleeID := ""
 	if h.CalleeClient!=nil {
 		calleeID = h.CalleeClient.calleeID
 	}
 	if h.CallerClient!=nil {
-		if logWantedFor("deadline") {
+		if logWantedFor("______") { // was "deadline" had to be removed
 			fmt.Printf("hub (%s) doBroadcast caller (%s) %s\n", calleeID, message, h.CallerClient.RemoteAddr)
 		}
 		h.CallerClient.Write(message)
 	}
 	if h.CalleeClient!=nil {
-		if logWantedFor("deadline") {
+		if logWantedFor("______") { // was "deadline" had to be removed
 			fmt.Printf("hub (%s) doBroadcast callee (%s) %s\n", calleeID, message, h.CalleeClient.RemoteAddr)
 		}
 		h.CalleeClient.Write(message)
@@ -163,9 +166,6 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 		// NOTE: delete(hubMap,id) might have been executed, caused by timeout22s
 
 		if !client.clearOnCloseDone {
-			client.peerConHasEnded("doUnregister")
-
-			h.setDeadline(0,"doUnregister "+comment)
 			h.HubMutex.Lock()
 			if h.lastCallStartTime>0 {
 				h.processTimeValues("doUnregister")
@@ -173,7 +173,16 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 				h.LocalP2p = false
 				h.RemoteP2p = false
 			}
+			if h.CallerClient!=nil {
+				h.CallerClient.Close("unregister <- "+comment)
+				h.CallerClient.isConnectedToPeer.Set(false)
+				h.CallerClient.isMediaConnectedToPeer.Set(false)
+				h.CallerClient = nil
+			}
 			h.HubMutex.Unlock()
+
+			h.peerConHasEnded("doUnregister") // will set h.CallerClient=nil
+			h.setDeadline(0,"doUnregister "+comment)
 			client.clearOnCloseDone = true
 		}
 
@@ -186,26 +195,8 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 		h.exitFunc(client,"doUnregister <- "+comment) // comment may be 'timeout22'
 
 		h.HubMutex.Lock()
-		if h.CallerClient!=nil {
-			h.CallerClient.Close("unregister <- "+comment)
-			h.CallerClient.isConnectedToPeer.Set(false)
-			h.CallerClient.isMediaConnectedToPeer.Set(false)
-			h.CallerClient = nil
-		}
 		h.CalleeClient = nil
 		h.HubMutex.Unlock()
-
-/*
-		// this is done in peerConHasEnded()
-		err := StoreCallerIpInHubMap(client.globalCalleeID, "", false)
-		if err!=nil {
-			// err "key not found": callee has already signed off - can be ignored
-			if strings.Index(err.Error(),"key not found")<0 {
-				fmt.Printf("# %s (%s) unregister clear callerIpInHub err=%v\n",
-					client.connType, client.calleeID, err)
-			}
-		}
-*/
 	} else {
 		// for caller, Close() can be called directly, instead of doUnregister()
 		if logWantedFor("hub") {
@@ -215,8 +206,114 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 
 		client.Close("unregister "+comment)
 
-		// NOTE: caller may still be peer-connected to callee
+		// NO! caller may still be peer-connected to callee
 		//client.isConnectedToPeer.Set(false)
 	}
+}
+
+func (h *Hub) peerConHasEnded(cause string) {
+	// the peerConnection has ended, either bc one side has sent cmd "cancel"
+	// or bc callee has unregistered or got ws-disconnected
+
+	h.HubMutex.RLock()
+	if h.CalleeClient==nil {
+		fmt.Printf("# peerConHasEnded but h.CalleeClient==nil\n")
+		h.HubMutex.RUnlock()
+		return
+	}
+
+//	if h.CalleeClient.isConnectedToPeer.Get() {
+		fmt.Printf("%s (%s) peerConHasEnded peercon=%v media=%v (%s)\n",
+			h.CalleeClient.connType, h.CalleeClient.calleeID,
+			h.CalleeClient.isConnectedToPeer.Get(), h.CalleeClient.isMediaConnectedToPeer.Get(), cause)
+//	}
+
+	if h.lastCallStartTime>0 {
+		h.processTimeValues("peerConHasEnded") // will set c.hub.CallDurationSecs
+		h.lastCallStartTime = 0
+	}
+
+	// prepare for next session
+	h.CalleeClient.calleeInitReceived.Set(false)
+
+	if h.CalleeClient.isConnectedToPeer.Get() {
+		// we are disconnecting a peer connect
+		localPeerCon := "?"
+		remotePeerCon := "?"
+		localPeerCon = "p2p"
+		if !h.LocalP2p { localPeerCon = "relay" }
+		remotePeerCon = "p2p"
+		if !h.RemoteP2p { remotePeerCon = "relay" }
+
+		h.CalleeClient.isConnectedToPeer.Set(false)
+		h.CalleeClient.isMediaConnectedToPeer.Set(false)
+		// now clear these two flags also on the other side
+		if h.CallerClient!=nil {
+			h.CallerClient.isConnectedToPeer.Set(false)
+			h.CallerClient.isMediaConnectedToPeer.Set(false)
+		}
+
+		calleeRemoteAddr := ""
+		callerRemoteAddr := ""
+		callerID := ""
+		callerName := ""
+		//callerHost := ""
+		h.CalleeClient.calleeInitReceived.Set(false) // accepting new init from callee now
+		calleeRemoteAddr = h.CalleeClient.RemoteAddrNoPort
+		if h.CallerClient!=nil  {
+			callerRemoteAddr = h.CallerClient.RemoteAddrNoPort
+			callerID = h.CallerClient.callerID
+			callerName = h.CallerClient.callerName
+			//callerHost = c.hub.CallerClient.callerHost
+
+			// clear recentTurnCalleeIps[ipNoPort] entry (if this was a relay session)
+			recentTurnCalleeIpMutex.Lock()
+			delete(recentTurnCalleeIps,h.CallerClient.RemoteAddrNoPort)
+			recentTurnCalleeIpMutex.Unlock()
+		}
+
+		fmt.Printf("%s (%s) PEER DISCON📴 %ds %s/%s %s <- %s (%s) %s\n",
+			h.CalleeClient.connType, h.CalleeClient.calleeID, //peerType,
+			h.CallDurationSecs, localPeerCon, remotePeerCon,
+			calleeRemoteAddr, callerRemoteAddr, callerID, cause)
+
+		// add an entry to missed calls, but only if hub.CallDurationSecs<=0
+		// if caller cancels via hangup button, then this is the only addMissedCall() and contains msgtext
+		// this is NOT a missed call if callee denies the call
+		if h.CallDurationSecs<=0 && !strings.HasPrefix(cause,"callee") {
+			// add missed call if dbUser.StoreMissedCalls is set
+			userKey := h.CalleeClient.calleeID + "_" + strconv.FormatInt(int64(h.registrationStartTime),10)
+			var dbUser DbUser
+			err := kvMain.Get(dbUserBucket, userKey, &dbUser)
+			if err!=nil {
+				fmt.Printf("# %s (%s) failed to get dbUser err=%v\n",
+					h.CalleeClient.connType, h.CalleeClient.calleeID,err)
+			} else if dbUser.StoreMissedCalls {
+				//fmt.Printf("%s (%s) store missedCall msg=(%s)\n", c.connType, c.calleeID, c.callerTextMsg)
+				addMissedCall(h.CalleeClient.calleeID, CallerInfo{callerRemoteAddr, callerName, time.Now().Unix(),
+					callerID, h.CalleeClient.callerTextMsg }, cause)
+			}
+		}
+
+		err := StoreCallerIpInHubMap(h.CalleeClient.globalCalleeID, "", false)
+		if err!=nil {
+			// err "key not found": callee has already signed off - can be ignored
+			//if strings.Index(err.Error(),"key not found")<0 {
+				fmt.Printf("# %s (%s) peerConHasEnded clr callerIp %s err=%v\n",
+					h.CalleeClient.connType, h.CalleeClient.calleeID, h.CalleeClient.globalCalleeID, err)
+			//}
+		}
+
+		h.HubMutex.RUnlock()
+
+		// this will prevent NO PEERCON after hangup or after calls shorter than 10s
+		h.HubMutex.Lock()
+		h.CallerClient = nil
+		h.HubMutex.Unlock()
+	} else {
+		h.HubMutex.RUnlock()
+	}
+
+	h.setDeadline(0,cause)	// may call peerConHasEnded again (we made sure this is no problem)
 }
 

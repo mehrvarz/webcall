@@ -969,9 +969,10 @@ function getStream(selectObject) {
 		})
 		.catch(function(err) {
 			if(!videoEnabled) {
-				console.log('# audio input error', err.message); // "Peer connection is closed"
+				console.log("# audio input error " + err.message);
 				if(!doneHangup) {
-					alert("audio input error " + err.message);
+					alert("audio input error: " + err.message +
+						  "\nLooks like an issue with your browser");
 				}
 			} else {
 				console.log('# audio/video error', err.message);
