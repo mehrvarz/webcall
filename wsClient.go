@@ -390,9 +390,11 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			// callee has closed
 			if logWantedFor("wsclose") {
 				if err!=nil {
-					fmt.Printf("%s (%s) OnClose callee err=%v\n", client.connType, client.calleeID, err)
+					fmt.Printf("%s (%s) OnClose callee err=%v v=%s\n",
+						client.connType, client.calleeID, err, client.clientVersion)
 				} else {
-					fmt.Printf("%s (%s) OnClose callee noerr\n", client.connType, client.calleeID)
+					fmt.Printf("%s (%s) OnClose callee noerr v=%s\n",
+						client.connType, client.calleeID, client.clientVersion)
 				}
 			}
 			// stop watchdog timer
@@ -419,9 +421,11 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			// caller has closed
 			if logWantedFor("wsclose") {
 				if err!=nil {
-					fmt.Printf("%s (%s) OnClose caller err=%v\n", client.connType, client.calleeID, err)
+					fmt.Printf("%s (%s) OnClose caller err=%v v=%s\n",
+						client.connType, client.calleeID, err, client.clientVersion)
 				} else {
-					fmt.Printf("%s (%s) OnClose caller noerr\n", client.connType, client.calleeID)
+					fmt.Printf("%s (%s) OnClose caller noerr v=%s\n",
+						client.connType, client.calleeID, client.clientVersion)
 				}
 			}
 

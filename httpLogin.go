@@ -400,8 +400,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		}
 
 		if logWantedFor("attach") {
-			fmt.Printf("exitfunc (%s) '%s' ws=%d %s v=%s\n",
-				globalID, comment, wsClientID, remoteAddr, clientVersion)
+			fmt.Printf("exitfunc (%s) '%s' ws=%d %s\n",
+				globalID, comment, wsClientID, remoteAddr)
 		}
 
 		if dbUserKey!="" {
