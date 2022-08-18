@@ -391,6 +391,7 @@ func cleanupClientRequestsMap(w io.Writer, min int, title string) {
 }
 
 // send url (pointing to update news) to all online callees
+var newsLinkDeliveredCounter int = 0
 func broadcastNewsLink(date string, url string) {
 	// let's loop through hubMap, so we see all connected callee users
 	hubMapMutex.RLock()
@@ -440,8 +441,9 @@ func broadcastNewsLink(date string, url string) {
 		}
 	}
 	if countSent>0 {
-		fmt.Printf("newsLink sent=%d noerr=%d devices=%d data=%s\n",
-			countSent, countSentNoErr, countAll, data)
+		newsLinkDeliveredCounter += countSentNoErr
+		fmt.Printf("newsLink sent=%d/%d total=%d data=%s\n",
+			countSentNoErr, countSent, newsLinkDeliveredCounter, data)
 	}
 	return
 }

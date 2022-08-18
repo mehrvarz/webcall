@@ -764,7 +764,8 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			// only the 1st callee "init|" is accepted
 			// don't need to log this
 //			if logWantedFor("attachex") {
-				fmt.Printf("# %s (%s) ignore 2nd callee init %s\n", c.connType, c.calleeID, c.RemoteAddr)
+				fmt.Printf("# %s (%s) ignore 2nd callee init %s v=%s\n",
+					c.connType, c.calleeID, c.RemoteAddr, c.clientVersion)
 //			}
 			return
 		}
@@ -1478,7 +1479,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			if constate=="ConForce"  { constateShort = "CONF" }
 		}
 		if tok[0]=="callee" {
-			if strings.HasPrefix(constate,"Con") {
+			if strings.HasPrefix(constate,"Con") && !c.isConnectedToPeer.Get() {
 				fmt.Printf("%s (%s) PEER %s %s☎️ %s %s <- %s (%s)\n",
 					c.connType, c.calleeID, tok[0], constateShort, tok[2], c.hub.CalleeClient.RemoteAddrNoPort,
 					c.hub.CallerClient.RemoteAddrNoPort, c.hub.CallerClient.callerID)
