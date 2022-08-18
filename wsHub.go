@@ -222,11 +222,11 @@ func (h *Hub) peerConHasEnded(cause string) {
 		return
 	}
 
-//	if h.CalleeClient.isConnectedToPeer.Get() {
+	if h.CalleeClient.isConnectedToPeer.Get() {
 		fmt.Printf("%s (%s) peerConHasEnded peercon=%v media=%v (%s)\n",
 			h.CalleeClient.connType, h.CalleeClient.calleeID,
 			h.CalleeClient.isConnectedToPeer.Get(), h.CalleeClient.isMediaConnectedToPeer.Get(), cause)
-//	}
+	}
 
 	if h.lastCallStartTime>0 {
 		h.processTimeValues("peerConHasEnded") // will set c.hub.CallDurationSecs
