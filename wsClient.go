@@ -784,13 +784,10 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			return
 		}
 
-		fmt.Printf("%s (%s) callee init %s\n", c.connType, c.calleeID, c.RemoteAddr)
+		//fmt.Printf("%s (%s) callee init %s\n", c.connType, c.calleeID, c.RemoteAddr)
 		c.hub.HubMutex.Lock()
-//		fmt.Printf("%s (%s) callee init2 %s\n", c.connType, c.calleeID, c.RemoteAddr)
 		c.hub.CallerClient = nil
-//		fmt.Printf("%s (%s) callee init3 %s\n", c.connType, c.calleeID, c.RemoteAddr)
 		c.hub.HubMutex.Unlock()
-//		fmt.Printf("%s (%s) callee init4 %s\n", c.connType, c.calleeID, c.RemoteAddr)
 
 		c.calleeInitReceived.Set(true)
 		c.hub.CalleeLogin.Set(true)
@@ -895,7 +892,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			}
 		}
 		if logWantedFor("attach") {
-			fmt.Printf("%s (%s) callee init done\n", c.connType, c.calleeID)
+			//fmt.Printf("%s (%s) callee init done\n", c.connType, c.calleeID)
 		}
 		return
 	}

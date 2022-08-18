@@ -101,8 +101,8 @@ func (h *Hub) setDeadline(secs int, comment string) {
 					}
 					h.HubMutex.RUnlock()
 
-					// NOTE: peerConHasEnded may call us back / this is why we set h.timer = nil first
-					h.peerConHasEnded(fmt.Sprintf("deadline%d",secs))
+					// NOTE: peerConHasEnded may call us back / this is why we have set h.timer = nil first
+					h.peerConHasEnded(fmt.Sprintf("deadline%d",secs)) // will set h.CallerClient=nil
 				}
 			case <-h.timerCanceled:
 				if logWantedFor("deadline") {
@@ -175,8 +175,8 @@ func (h *Hub) doUnregister(client *WsClient, comment string) {
 			}
 			if h.CallerClient!=nil {
 				h.CallerClient.Close("unregister <- "+comment)
-				h.CallerClient.isConnectedToPeer.Set(false)
-				h.CallerClient.isMediaConnectedToPeer.Set(false)
+				//h.CallerClient.isConnectedToPeer.Set(false)
+				//h.CallerClient.isMediaConnectedToPeer.Set(false)
 				h.CallerClient = nil
 			}
 			h.HubMutex.Unlock()
