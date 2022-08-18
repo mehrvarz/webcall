@@ -384,7 +384,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 	wsConn.OnClose(func(c *websocket.Conn, err error) {
 		keepAliveMgr.Delete(c)
-		client.isOnline.Set(false) // prevent close() from closing this already closed connection
+		client.isOnline.Set(false) // prevent Close() from trying to close this already closed connection
 		onCloseMsg := "OnClose"
 		if client.isCallee {
 			// callee has closed
@@ -1881,8 +1881,9 @@ func (c *WsClient) SendPing(maxWaitMS int) {
 	err := c.wsConn.WriteMessage(websocket.PingMessage, nil)
 	if err != nil {
 		fmt.Printf("# sendPing (%s) %s err=%v\n",c.calleeID, c.wsConn.RemoteAddr().String(), err)
-// TODO better call c.hub.doUnregister(c) ?
-		c.Close("sendPing error "+err.Error())
+		c.isOnline.Set(false) // prevent Close() from trying to close this already closed connection
+		//c.Close("sendPing error "+err.Error())
+		c.hub.doUnregister(c, "sendPing error: "+err.Error())
 	} else {
 		c.pingSent++
 	}
