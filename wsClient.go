@@ -1881,9 +1881,11 @@ func (c *WsClient) SendPing(maxWaitMS int) {
 	err := c.wsConn.WriteMessage(websocket.PingMessage, nil)
 	if err != nil {
 		fmt.Printf("# sendPing (%s) %s err=%v\n",c.calleeID, c.wsConn.RemoteAddr().String(), err)
+/*
 		c.isOnline.Set(false) // prevent Close() from trying to close this already closed connection
 		//c.Close("sendPing error "+err.Error())
 		c.hub.doUnregister(c, "sendPing error: "+err.Error())
+*/
 	} else {
 		c.pingSent++
 	}
