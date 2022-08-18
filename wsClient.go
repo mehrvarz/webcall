@@ -1483,6 +1483,16 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			if constate=="ConForce"  { constateShort = "CONF" }
 		}
 		if tok[0]=="callee" {
+//			if strings.HasPrefix(constate,"Con") && !c.isConnectedToPeer.Get() {
+//				fmt.Printf("%s (%s) PEER %s %s☎️ %s %s <- %s (%s)\n",
+//					c.connType, c.calleeID, tok[0], constateShort, tok[2], c.hub.CalleeClient.RemoteAddrNoPort,
+//					c.hub.CallerClient.RemoteAddrNoPort, c.hub.CallerClient.callerID)
+//			} else {
+				fmt.Printf("%s (%s) PEER %s %s %s %s <- %s (%s)\n",
+					c.connType, c.calleeID, tok[0], constateShort, tok[2], c.hub.CalleeClient.RemoteAddrNoPort,
+					c.hub.CallerClient.RemoteAddrNoPort, c.hub.CallerClient.callerID)
+//			}
+		} else {
 			if strings.HasPrefix(constate,"Con") && !c.isConnectedToPeer.Get() {
 				fmt.Printf("%s (%s) PEER %s %s☎️ %s %s <- %s (%s)\n",
 					c.connType, c.calleeID, tok[0], constateShort, tok[2], c.hub.CalleeClient.RemoteAddrNoPort,
@@ -1492,10 +1502,6 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 					c.connType, c.calleeID, tok[0], constateShort, tok[2], c.hub.CalleeClient.RemoteAddrNoPort,
 					c.hub.CallerClient.RemoteAddrNoPort, c.hub.CallerClient.callerID)
 			}
-		} else {
-			fmt.Printf("%s (%s) PEER %s %s %s %s <- %s (%s)\n",
-				c.connType, c.calleeID, tok[0], constateShort, tok[2], c.hub.CalleeClient.RemoteAddrNoPort,
-				c.hub.CallerClient.RemoteAddrNoPort, c.hub.CallerClient.callerID)
 		}
 
 		if len(tok)>=2 && (constate=="Incoming" || constate=="Connected" || constate=="ConForce") {
@@ -1831,9 +1837,9 @@ func (c *WsClient) Close(reason string) {
 
 	if c.isCallee {
 		if c.isConnectedToPeer.Get() {
-			// this callee is in a call, end it
+			// end the call this callee is in
 			if logWantedFor("wsclose") {
-				fmt.Printf("wsclient (%s) Close callee: end peercon, CallerIpInHubMap\n", c.calleeID)
+				fmt.Printf("wsclient (%s) Close callee: end peercon\n", c.calleeID)
 			}
 
 			c.hub.HubMutex.RLock()
