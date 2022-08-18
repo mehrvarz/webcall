@@ -388,11 +388,11 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		onCloseMsg := "OnClose"
 		if client.isCallee {
 			// callee has closed
-			if logWantedFor("wsclose") {
-				if err!=nil {
-					fmt.Printf("%s (%s) OnClose callee err=%v v=%s\n",
-						client.connType, client.calleeID, err, client.clientVersion)
-				} else {
+			if err!=nil {
+				fmt.Printf("%s (%s) OnClose callee err=%v v=%s\n",
+					client.connType, client.calleeID, err, client.clientVersion)
+			} else {
+				if logWantedFor("wsclose") {
 					fmt.Printf("%s (%s) OnClose callee noerr v=%s\n",
 						client.connType, client.calleeID, client.clientVersion)
 				}
@@ -419,11 +419,11 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 		} else {
 			// caller has closed
-			if logWantedFor("wsclose") {
-				if err!=nil {
-					fmt.Printf("%s (%s) OnClose caller err=%v v=%s\n",
-						client.connType, client.calleeID, err, client.clientVersion)
-				} else {
+			if err!=nil {
+				fmt.Printf("%s (%s) OnClose caller err=%v v=%s\n",
+					client.connType, client.calleeID, err, client.clientVersion)
+			} else {
+				if logWantedFor("wsclose") {
 					fmt.Printf("%s (%s) OnClose caller noerr v=%s\n",
 						client.connType, client.calleeID, client.clientVersion)
 				}
