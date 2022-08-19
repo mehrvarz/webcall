@@ -2099,7 +2099,7 @@ function dataChannelOnmessage(event) {
 				gLog("dataChannel.onmessage '"+event.data+"'");
 				dataChannel.close();
 				dataChannel = null;
-				hangupWithBusySound(false,"disconnect via dataChannel");
+				hangupWithBusySound(true,"disconnect via dataChannel");
 			} else if(event.data.startsWith("msg|")) {
 				// sanitize incoming data
 				let cleanString = event.data.substring(4).replace(/<(?:.|\n)*?>/gm, "...");

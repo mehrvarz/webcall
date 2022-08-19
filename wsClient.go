@@ -1135,7 +1135,10 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 	}
 
 	if cmd=="cancel" {
-		//fmt.Printf("%s (%s) cmd=cancel payload=%s %s\n",c.connType,c.calleeID,payload,c.RemoteAddr)
+		if logWantedFor("wsclose") {
+			fmt.Printf("%s (%s) cmd=cancel callee=%v payload=%s %s\n",
+				c.connType, c.calleeID, c.isCallee, payload, c.RemoteAddr)
+		}
 		if c.hub==nil {
 			fmt.Printf("# %s cmd=cancel but c.hub==nil %s (%s)\n",c.connType,c.RemoteAddr,payload)
 			return
