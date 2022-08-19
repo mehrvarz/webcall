@@ -180,8 +180,23 @@ func (h *Hub) peerConHasEnded(cause string) {
 		h.lastCallStartTime = 0
 	}
 
-	// prepare for next session
-	h.CalleeClient.calleeInitReceived.Set(false)
+	calleeRemoteAddr := ""
+	callerRemoteAddr := ""
+	callerID := ""
+	callerName := ""
+	//callerHost := ""
+	calleeRemoteAddr = h.CalleeClient.RemoteAddrNoPort
+	if h.CallerClient!=nil  {
+		callerRemoteAddr = h.CallerClient.RemoteAddrNoPort
+		callerID = h.CallerClient.callerID
+		callerName = h.CallerClient.callerName
+		//callerHost = c.hub.CallerClient.callerHost
+
+		// clear recentTurnCalleeIps[ipNoPort] entry (if this was a relay session)
+		recentTurnCalleeIpMutex.Lock()
+		delete(recentTurnCalleeIps,h.CallerClient.RemoteAddrNoPort)
+		recentTurnCalleeIpMutex.Unlock()
+	}
 
 	if h.CalleeClient.isConnectedToPeer.Get() {
 		// we are disconnecting a peer connect
@@ -200,45 +215,27 @@ func (h *Hub) peerConHasEnded(cause string) {
 			h.CallerClient.isMediaConnectedToPeer.Set(false)
 		}
 
-		calleeRemoteAddr := ""
-		callerRemoteAddr := ""
-		callerID := ""
-		callerName := ""
-		//callerHost := ""
-		calleeRemoteAddr = h.CalleeClient.RemoteAddrNoPort
-		if h.CallerClient!=nil  {
-			callerRemoteAddr = h.CallerClient.RemoteAddrNoPort
-			callerID = h.CallerClient.callerID
-			callerName = h.CallerClient.callerName
-			//callerHost = c.hub.CallerClient.callerHost
-
-			// clear recentTurnCalleeIps[ipNoPort] entry (if this was a relay session)
-			recentTurnCalleeIpMutex.Lock()
-			delete(recentTurnCalleeIps,h.CallerClient.RemoteAddrNoPort)
-			recentTurnCalleeIpMutex.Unlock()
-		}
-
 		fmt.Printf("%s (%s) PEER DISCON📴 %ds %s/%s %s <- %s (%s) %s\n",
 			h.CalleeClient.connType, h.CalleeClient.calleeID, //peerType,
 			h.CallDurationSecs, localPeerCon, remotePeerCon,
 			calleeRemoteAddr, callerRemoteAddr, callerID, cause)
+	}
 
-		// add an entry to missed calls, but only if hub.CallDurationSecs<=0
-		// if caller cancels via hangup button, then this is the only addMissedCall() and contains msgtext
-		// this is NOT a missed call if callee denies the call
-		if h.CallDurationSecs<=0 /*&& !strings.HasPrefix(cause,"callee")*/ {
-			// add missed call if dbUser.StoreMissedCalls is set
-			userKey := h.CalleeClient.calleeID + "_" + strconv.FormatInt(int64(h.registrationStartTime),10)
-			var dbUser DbUser
-			err := kvMain.Get(dbUserBucket, userKey, &dbUser)
-			if err!=nil {
-				fmt.Printf("# %s (%s) failed to get dbUser err=%v\n",
-					h.CalleeClient.connType, h.CalleeClient.calleeID,err)
-			} else if dbUser.StoreMissedCalls {
-				//fmt.Printf("%s (%s) store missedCall msg=(%s)\n", c.connType, c.calleeID, c.callerTextMsg)
-				addMissedCall(h.CalleeClient.calleeID, CallerInfo{callerRemoteAddr, callerName, time.Now().Unix(),
-					callerID, h.CalleeClient.callerTextMsg }, cause)
-			}
+	// add an entry to missed calls, but only if hub.CallDurationSecs<=0
+	// if caller cancels via hangup button, then this is the only addMissedCall() and contains msgtext
+	// this is NOT a missed call if callee denies the call
+	if h.CallDurationSecs<=0 /*&& !strings.HasPrefix(cause,"callee")*/ {
+		// add missed call if dbUser.StoreMissedCalls is set
+		userKey := h.CalleeClient.calleeID + "_" + strconv.FormatInt(int64(h.registrationStartTime),10)
+		var dbUser DbUser
+		err := kvMain.Get(dbUserBucket, userKey, &dbUser)
+		if err!=nil {
+			fmt.Printf("# %s (%s) failed to get dbUser err=%v\n",
+				h.CalleeClient.connType, h.CalleeClient.calleeID,err)
+		} else if dbUser.StoreMissedCalls {
+			//fmt.Printf("%s (%s) store missedCall msg=(%s)\n", c.connType, c.calleeID, c.callerTextMsg)
+			addMissedCall(h.CalleeClient.calleeID, CallerInfo{callerRemoteAddr, callerName, time.Now().Unix(),
+				callerID, h.CalleeClient.callerTextMsg }, cause)
 		}
 	}
 
