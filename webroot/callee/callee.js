@@ -1770,14 +1770,16 @@ function hangup(mustDisconnect,dummy2,message) {
 	endWebRtcSession(mustDisconnect,true,"hangup "+message);
 	vsendButton.classList.remove('blink_me')
 
+/* moved to endWebRtcSession
 	if(localStream && !videoEnabled) {
-		gLog('videoOff clear localStream');
+		gLog('hangup clear localStream');
 		const audioTracks = localStream.getAudioTracks();
 		audioTracks[0].enabled = false; // mute mic
 		localStream.getTracks().forEach(track => { track.stop(); });
 		localStream.removeTrack(audioTracks[0]);
 		localStream = null;
 	}
+*/
 }
 
 function goOnline(sendInitFlag,comment) {
@@ -2266,7 +2268,7 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter,comment) {
 			if(disconnectCaller) {
 				gLog('endWebRtcSession disconnectCaller');
 				if(wsConn) {
-					gLog('endWebRtcSession wsSend(cancel)');
+					console.log('endWebRtcSession wsSend(cancel)');
 					wsSend("cancel|disconnect"); // important
 				}
 				if(isDataChlOpen()) {
@@ -2309,6 +2311,15 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter,comment) {
 		} else if(peerCon && peerCon.iceConnectionState!="closed") {
 			peerConCloseFunc();
 		}
+	}
+
+	if(localStream && !videoEnabled) {
+		gLog('endWebRtcSession clear localStream');
+		const audioTracks = localStream.getAudioTracks();
+		audioTracks[0].enabled = false; // mute mic
+		localStream.getTracks().forEach(track => { track.stop(); });
+		localStream.removeTrack(audioTracks[0]);
+		localStream = null;
 	}
 
 	if(typeof Android !== "undefined" && Android !== null) {

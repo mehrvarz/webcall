@@ -373,22 +373,17 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	//fmt.Printf("/login newHub urlID=%s duration %d/%d rt=%v\n",
 	//	urlID, maxRingSecs, maxTalkSecsIfNoP2p, time.Since(startRequestTime))
 
-	exitFunc := func(calleeClient *WsClient, comment string) {
+	exitFunc := func(reqWsClientID uint64, comment string) {
 		// exitFunc: callee is logging out: release hub and port of this session
 
 		if hub == nil {
 			// connection was cut off by the device / or timeout22s
-			//fmt.Printf("# exitfunc (%s) hub==nil ws=%d %s rip=%s v=%s\n",
-			//	globalID, wsClientID, comment, remoteAddrWithPort, clientVersion)
+			fmt.Printf("# exitfunc (%s) hub==nil ws=%d %s rip=%s v=%s\n",
+				globalID, wsClientID, comment, remoteAddrWithPort, clientVersion)
 			return;
 		}
 
-		// verify if the old calleeClient.hub.WsClientID is really same as the new wsClientID
-		var reqWsClientID uint64 = 0
-		if(calleeClient!=nil && calleeClient.hub!=nil) {
-			reqWsClientID = calleeClient.hub.WsClientID
-			calleeClient.hub.WsClientID = 0
-		}
+		// make sure the old calleeClient.hub.WsClientID is really same as the new wsClientID
 		if reqWsClientID != wsClientID {
 			// not the same (already exited, possibly by timeout22s): abort exit / deny deletion
 			// exitfunc (id) abort ws=54553222902/0 'OnClose'
@@ -562,7 +557,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 						blockMapMutex.Unlock()
 
 						msg := fmt.Sprintf("timeout%ds",waitedFor)
-						hub.doUnregister(hub.CalleeClient, msg) // -> exitFunc()
+						hub.closeCallee(msg) // -> exitFunc()
 					} else {
 						// callee has exited early
 						if logWantedFor("login") {

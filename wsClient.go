@@ -369,7 +369,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	})
 
 	upgrader.SetPingHandler(func(wsConn *websocket.Conn, s string) {
-		// we received a ping from the client
+		// received a ping from the client (this only happens in rare cases; usually we send pings to client)
 		if logWantedFor("gotping") {
 			fmt.Printf("gotPing (%s)\n",client.calleeID)
 		}
@@ -380,7 +380,13 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		err := wsConn.WriteMessage(websocket.PongMessage, nil)
 		if err != nil {
 			fmt.Printf("# sendPong (%s) %s err=%v\n",client.calleeID, client.wsConn.RemoteAddr().String(), err)
-			client.hub.doUnregister(client, "sendPong: "+err.Error())
+			if(client.isCallee) {
+				// callee is gone
+				client.hub.closeCallee("sendPong: "+err.Error())
+				return
+			}
+			// caller is gone
+			client.hub.closeCaller("sendPong: "+err.Error())
 			return
 		}
 		if(client.isCallee) {
@@ -393,7 +399,6 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 	wsConn.OnClose(func(c *websocket.Conn, err error) {
 		client.isOnline.Set(false) // prevent Close() from trying to close this already closed connection
-		onCloseMsg := "OnClose"
 		if client.isCallee {
 			// callee has closed
 			keepAliveMgr.Delete(c)
@@ -402,38 +407,41 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 			if err!=nil && strings.Index(err.Error(),"read timeout")<0 {
 // TODO maybe err=read timeout shd be treated like noerr (testing)
-				fmt.Printf("%s (%s) OnClose callee err=%v v=%s\n",
-					client.connType, client.calleeID, err, client.clientVersion)
+				fmt.Printf("%s (%s) OnClose callee err=%v %s v=%s\n",
+					client.connType, client.calleeID, err, client.RemoteAddr, client.clientVersion)
 			} else {
-//				if logWantedFor("wsclose") {
-					fmt.Printf("%s (%s) OnClose callee noerr v=%s\n",
-						client.connType, client.calleeID, client.clientVersion)
-//				}
+				if logWantedFor("wsclose") {
+					fmt.Printf("%s (%s) OnClose callee noerr %s v=%s\n",
+						client.connType, client.calleeID, client.RemoteAddr, client.clientVersion)
+				}
 			}
 			// stop watchdog timer
-			if client.hub!=nil && client.hub.CallerClient!=nil {
+			if client.hub!=nil {
+				client.hub.HubMutex.RLock()
+				if client.hub.CallerClient!=nil {
 // TODO calleeAnswerReceived could be nil ?
-				client.hub.CallerClient.calleeAnswerReceived <- struct{}{}
-			}
+					client.hub.CallerClient.calleeAnswerReceived <- struct{}{}
+				}
+				client.hub.HubMutex.RUnlock()
 
-// TODO not sending cancel to caller? is this done by doUnregister?
-			// doUnregister() -> Close() -> exitFunc
-			if err!=nil {
-				client.hub.doUnregister(client, onCloseMsg +": "+ err.Error())
-			} else {
-				client.hub.doUnregister(client, onCloseMsg)
+// TODO not sending cancel to caller? is this done by closeCallee?
+				if err!=nil {
+					client.hub.closeCallee("OnClose callee: "+ err.Error())
+				} else {
+					client.hub.closeCallee("OnClose callee: noerr")
+				}
 			}
 
 		} else {
 			// caller has closed
 			if err!=nil && strings.Index(err.Error(),"read timeout")<0 {
 // TODO maybe err=read timeout shd be treated like noerr (testing)
-				fmt.Printf("%s (%s) OnClose caller err=%v v=%s\n",
-					client.connType, client.calleeID, err, client.clientVersion)
+				fmt.Printf("%s (%s) OnClose caller err=%v %s v=%s\n",
+					client.connType, client.calleeID, err, client.RemoteAddr, client.clientVersion)
 			} else {
 				if logWantedFor("wsclose") {
-					fmt.Printf("%s (%s) OnClose caller noerr v=%s\n",
-						client.connType, client.calleeID, client.clientVersion)
+					fmt.Printf("%s (%s) OnClose caller noerr %s v=%s\n",
+						client.connType, client.calleeID, client.RemoteAddr, client.clientVersion)
 				}
 			}
 
@@ -458,7 +466,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				}
 				client.hub.HubMutex.RUnlock()
 
-				client.hub.peerConHasEnded("OnCloseCaller")
+				client.hub.closePeerCon("OnCloseCaller")
 
 				// stop watchdog timer
 				client.calleeAnswerReceived <- struct{}{}
@@ -483,7 +491,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		hub.IsCalleeHidden = wsClientData.dbUser.Int2&1!=0
 		hub.IsUnHiddenForCallerAddr = ""
 		hub.WsClientID = wsClientID64
-		hub.CalleeClient = client // only hub.doUnregister() sets CalleeClient = nil
+		hub.CalleeClient = client // only hub.closeCallee() sets CalleeClient = nil
 		hub.CallerClient = nil
 		hub.ServiceStartTime = time.Now().Unix()
 		hub.ConnectedToPeerSecs = 0
@@ -550,16 +558,16 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			fmt.Printf("%s (%s) %ds timer start ws=%d\n", client.connType, client.calleeID, secs, wsClientID64)
 			select {
 			case <-timer.C:
-				// no calleeAnswer within 60s
+				// no calleeAnswer in response to callerOffer within 60s
+				// we want to send cancel to both clients,
+				// then disconnect the caller, reset the callee, and do peerConHasEnded
 				fmt.Printf("%s (%s) %ds timer: time's up ws=%d\n",
 					client.connType, client.calleeID, secs, wsClientID64)
-				if hub.CallerClient!=nil {
-					// disconnect caller's ws-connection
-					client.Write([]byte("cancel|disconnect")) // ignore any errors
-					client.Close("disconCallerAfter60s")
-				}
-
 				hub.HubMutex.RLock()
+				if hub.CallerClient!=nil {
+					// disconnect caller's ws-connection (client is caller)
+					client.Write([]byte("cancel|disconnect")) // ignore any errors
+				}
 				if hub.CalleeClient!=nil {
 					// callee is here, disconnect caller's ws-connection
 					err = hub.CalleeClient.Write([]byte("cancel|c"))
@@ -568,12 +576,14 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 						fmt.Printf("# %s (%s) send cancel msg to callee fail %v\n",
 							hub.CalleeClient.connType, hub.CalleeClient.calleeID, err)
 						hub.HubMutex.RUnlock()
-						hub.doUnregister(hub.CalleeClient, "disconCallerAfter60s: cancel to callee: "+err.Error())
+						hub.closeCallee("disconCallerAfter60s: cancel to callee: "+err.Error())
 						return
 					}
 				}
 				hub.HubMutex.RUnlock()
-				hub.peerConHasEnded("disconCallAfter60s")
+
+				// closePeerCon() will close the caller
+				hub.closePeerCon("disconCallAfter60s")
 				return
 			case <-client.calleeAnswerReceived:
 				// event coming from cmd=="calleeAnswer"
@@ -625,29 +635,30 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			}
 			if hub.CalleeClient.isConnectedToPeer.Get() {
 				// peercon steht; no peercon meldung nicht nötig; force caller ws-disconnect
-				hub.HubMutex.RUnlock()
 				//fmt.Printf("%s (%s) no peercon check: CalleeClient.isConnectedToPeer\n",
 				//	client.connType, client.calleeID)
 
 				client.reached14s.Set(true) // caller onClose will not anymore disconnect session/peercon
 
-				if hub.CalleeClient.isMediaConnectedToPeer.Get() {
-					// now force-disconnect caller
-					// but only if already media connected
-					readConfigLock.RLock()
-					myDisconCallerOnPeerConnected := disconCallerOnPeerConnected
-					readConfigLock.RUnlock()
-					if myDisconCallerOnPeerConnected {
-						if hub.CallerClient != nil {
-							if logWantedFor("attachex") {
-								fmt.Printf("%s (%s) 14s reached -> force caller ws-disconnect\n",
-									client.connType, client.calleeID)
-							}
-							// not calling doUnregister() bc we know this is the caller
-							client.Close("disconCallerAfter14s")
+				// we know this is the caller
+				// shall the caller be ws-disconnected?
+				readConfigLock.RLock()
+				myDisconCallerOnPeerConnected := disconCallerOnPeerConnected
+				readConfigLock.RUnlock()
+				if myDisconCallerOnPeerConnected {
+					// yes, but only force-disconnect the caller if already media connected
+					if hub.CalleeClient.isMediaConnectedToPeer.Get() {
+						// yes, force-disconnect the caller
+						hub.HubMutex.RUnlock()
+						if logWantedFor("attachex") {
+							fmt.Printf("%s (%s) 14s reached -> force caller ws-disconnect\n",
+								client.connType, client.calleeID)
 						}
+						hub.closeCaller("disconCallerAfter14s")
+						return
 					}
 				}
+				hub.HubMutex.RUnlock()
 				return
 			}
 
@@ -705,27 +716,14 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 					fmt.Printf("# %s (%s) send status <- to callee %s err=%v\n",
 						client.connType, client.calleeID, remoteAddr, err)
 					hub.HubMutex.RUnlock()
-					hub.doUnregister(hub.CalleeClient, "NO PEERCON: send status to callee: "+err.Error())
+					hub.closeCallee("NO PEERCON: send status to callee: "+err.Error())
 					return
 				}
 			}
 			hub.HubMutex.RUnlock()
 
-			// we discon the caller and let callee alive
-			hub.CallerClient.Close("NO PEERCON")
-			hub.HubMutex.Lock()
-			hub.CallerClient = nil
-			hub.HubMutex.Unlock()
-
-			// clear CallerIpInHubMap
-			err = StoreCallerIpInHubMap(client.globalCalleeID, "", false)
-			if err!=nil {
-				// err "key not found": callee has already signed off - can be ignored
-				if strings.Index(err.Error(),"key not found")<0 {
-					fmt.Printf("# %s (%s) NO PEERCON clear callerIpInHub err=%v\n",
-						client.connType, client.calleeID, err)
-				}
-			}
+			// let callee alive but close caller + clear CallerIpInHubMap
+			hub.closePeerCon("NO PEERCON")
 		}()
 		return
 	}
@@ -792,7 +790,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 		c.calleeInitReceived.Set(true)
 		c.hub.CalleeLogin.Set(true)
 		c.pickupSent.Set(false)
-		// doUnregister() will call setDeadline(0) and processTimeValues() if this is false; then set it true
+		// closeCallee() will call setDeadline(0) and processTimeValues() if this is false; then set it true
 		c.clearOnCloseDone = false // TODO make it atomic?
 		c.callerTextMsg = ""
 
@@ -802,7 +800,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 //blockMapMutex.Unlock()
 
 		if logWantedFor("attach") {
-			loginCount := -1
+			loginCount := 0
 			calleeLoginMutex.RLock()
 			calleeLoginSlice,ok := calleeLoginMap[c.calleeID]
 			calleeLoginMutex.RUnlock()
@@ -818,7 +816,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 		if err != nil {
 			fmt.Printf("# %s (%s) send sessionId %s  <- to callee err=%v\n",
 				c.connType, c.calleeID, c.RemoteAddr, err)
-			c.hub.doUnregister(c, "init, send sessionId to callee: "+err.Error())
+			c.hub.closeCallee("init, send sessionId to callee: "+err.Error())
 			return
 		}
 
@@ -904,7 +902,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 		if err != nil {
 			fmt.Printf("# %s (%s) send dummy reply (isCallee=%v) error\n",
 				c.connType, c.isCallee, c.calleeID)
-			c.hub.doUnregister(c, "send dummy: "+err.Error())
+			c.hub.closeCallee("send dummy: "+err.Error())
 		}
 		return
 	}
@@ -1016,7 +1014,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			fmt.Printf("# %s (%s) CALL CalleeClient.Write(calleroffer) fail %v\n",
 				c.connType, c.calleeID, err)
 			c.hub.HubMutex.RUnlock()
-			c.hub.doUnregister(c, "send callerOffer to callee: "+err.Error())
+			c.hub.closeCallee("send callerOffer to callee: "+err.Error())
 			return
 		}
 		c.callerOfferForwarded.Set(true)
@@ -1032,7 +1030,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 				fmt.Printf("# %s (%s) CALL CalleeClient.Write(callerInfo) fail %v\n",
 					c.connType, c.calleeID, err)
 				c.hub.HubMutex.RUnlock()
-				c.hub.doUnregister(c, "send callerInfo to callee: "+err.Error())
+				c.hub.closeCallee("send callerInfo to callee: "+err.Error())
 				return
 			}
 		}
@@ -1055,9 +1053,11 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 					err = c.Write([]byte(sendCmd))
 					if err != nil {
 						// caller is gone
-						fmt.Printf("# %s (%s) fail send calleeInfo to caller %v\n",
+						fmt.Printf("# %s (%s) fail sending calleeInfo to caller %v\n",
 							c.connType, c.hub.CalleeClient.calleeID, err)
-						c.Close("send calleeInfo to caller "+err.Error())
+						c.hub.HubMutex.RUnlock()
+						c.hub.closePeerCon("send calleeInfo to caller: "+err.Error())
+						return
 					}
 				}
 			}
@@ -1071,10 +1071,11 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 		// send caller useragent to callee
 		err = c.hub.CalleeClient.Write([]byte("ua|"+c.userAgent))
 		if err != nil {
+			// callee is gone
 			fmt.Printf("# %s (%s) send caller ua to callee fail (early callee ws-disconnect?) %v\n",
 				c.connType, c.calleeID, err)
 			c.hub.HubMutex.RUnlock()
-			c.hub.doUnregister(c, "send caller ua to callee: "+err.Error())
+			c.hub.closeCallee("send caller ua to callee: "+err.Error())
 			return
 		}
 
@@ -1085,7 +1086,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			// caller hang up already?
 			fmt.Printf("# %s (%s) send callee-ua to caller fail (early caller ws-disconnect?) %v\n",
 				c.connType, c.calleeID, err)
-			c.Close("send callee ua to caller "+err.Error())
+			c.hub.closePeerCon("send callee ua to caller "+err.Error())
 			return
 		}
 
@@ -1133,7 +1134,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			c.hub.HubMutex.RUnlock()
 			// we receive a "cmd=cancel|" (from the caller?) but the callee is logged out
 			fmt.Printf("# %s cmd=cancel but c.hub.CalleeClient==nil %s (%s)\n",c.connType,c.RemoteAddr,payload)
-			c.Close("callee already gone")
+			c.hub.closeCallee("callee already gone")
 			return
 		}
 
@@ -1146,34 +1147,33 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 					c.connType, c.calleeID, c.RemoteAddr, payload)
 				// do not add missed call, see: HasPrefix(cause,"callee")
 				c.hub.HubMutex.RUnlock()
-				c.hub.peerConHasEnded("callee cancel")
+				c.hub.closePeerCon("callee cancel")
 				return
 			} else {
 				fmt.Printf("%s (%s) REQ PEER DISCON from caller %s cancel='%s'\n",
 					c.connType, c.calleeID, c.RemoteAddr, payload)
 				// tell callee to disconnect
 				c.hub.HubMutex.RUnlock()
-				c.hub.peerConHasEnded("caller cancel")
+				c.hub.closePeerCon("caller cancel")
 				return
 			}
 		} else {
-			// we should still forward "cancel" to the other side
+			// no peercon: we should still forward "cancel" to the other side
 			//fmt.Printf("%s (%s) cmd=cancel !CalleeClient.isConnectedToPeer c.isCallee=%v\n",
 			//	c.connType,c.calleeID,c.isCallee)
 			if c.isCallee {
+				// callee fw disconnect to caller
 				if c.hub.CallerClient!=nil {
 					fmt.Printf("%s (%s) FW PEER DISCON from callee %s cancel='%s'\n",
 						c.connType, c.calleeID, c.RemoteAddr, payload)
 					// callee wants the caller gone
 					c.hub.CallerClient.Write([]byte(message)) // ignore any error
-					c.hub.CallerClient.Close("callee cancel")
 
 					//timer.Stop()
-					c.hub.CallerClient.isOnline.Set(false)
+					c.hub.CallerClient.isOnline.Set(false)	// ???
 					c.hub.CallerClient.calleeAnswerReceived <- struct{}{}
 					c.hub.HubMutex.RUnlock()
-
-					c.hub.peerConHasEnded("callee cancel")
+					c.hub.closePeerCon("caller cancel")
 					return
 				}
 			} else {
@@ -1183,21 +1183,20 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 						c.connType, c.calleeID, c.RemoteAddr, payload)
 					if c.hub.CallerClient!=nil {
 						// timer.Stop()
-						c.isOnline.Set(false)
+						c.isOnline.Set(false)	// ???
 						c.calleeAnswerReceived <- struct{}{}
 					}
 					err := c.hub.CalleeClient.Write([]byte(message))
+					c.hub.HubMutex.RUnlock()
 					if err != nil {
 						fmt.Printf("# %s (%s) fw caller-cancel to callee fail %v\n",
 							c.connType, c.calleeID, err)
-						c.hub.HubMutex.RUnlock()
-						c.hub.doUnregister(c, "fw caller-cancel to callee: "+err.Error())
+						c.hub.closeCallee("fw caller-cancel to callee: "+err.Error())
 						return
 					}
-					c.hub.HubMutex.RUnlock()
 
 					// let callee re-init
-					c.hub.peerConHasEnded("caller cancel")
+					c.hub.closePeerCon("caller sent cancel")
 					return
 				}
 			}
@@ -1359,7 +1358,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 								fmt.Printf("# %s (%s) send missedCalls fail %v\n",
 									c.connType, c.calleeID, err)
 								c.hub.HubMutex.RUnlock()
-								c.hub.doUnregister(c, "send missedCalls to callee: "+err.Error())
+								c.hub.closeCallee("send missedCalls to callee: "+err.Error())
 								return
 							}
 						}
@@ -1405,10 +1404,11 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			if err != nil {
 				fmt.Printf("# %s (%s) send cancel msg to caller fail %v\n",
 					c.connType, c.calleeID, err)
-				c.hub.CallerClient.Close("forward pickup to caller "+err.Error())
-			} else {
-				c.pickupSent.Set(true)
+				c.hub.HubMutex.RUnlock()
+				c.hub.closePeerCon("forward pickup to caller "+err.Error())
+				return
 			}
+			c.pickupSent.Set(true)
 		}
 		c.hub.HubMutex.RUnlock()
 		c.hub.setDeadline(0,"pickup")
@@ -1425,9 +1425,14 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 		// server sends payload back to client
 		err := c.Write([]byte("confirm|"+payload))
 		if err != nil {
+			// client is gone
 			fmt.Printf("# %s (%s) send confirm for check (callee=%v) fail %v\n",
 				c.connType, c.calleeID, c.isCallee, err)
-			c.hub.doUnregister(c, "send confirm for check: "+err.Error())
+			if c.isCallee {
+				c.hub.closeCallee("send confirm for check: "+err.Error())
+				return
+			}
+			c.hub.closePeerCon("send confirm for check: "+err.Error())
 		}
 		return
 	}
@@ -1464,12 +1469,12 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 					fmt.Printf("# %s (%s) send cancel msg to callee fail %v\n",
 						c.connType, c.calleeID, err)
 					c.hub.HubMutex.RUnlock()
-					c.hub.doUnregister(c, "send cancel to callee: "+err.Error())
+					c.hub.closeCallee("send cancel to callee: "+err.Error())
 					return
 				}
 				c.hub.HubMutex.RUnlock()
 
-				c.hub.peerConHasEnded("caller gone")
+				c.hub.closePeerCon("caller gone")
 				return
 			}
 			// both clients gone
@@ -1597,12 +1602,12 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 							fmt.Printf("# %s (%s) send callerConnect to callee fail %v\n",
 								c.connType, c.calleeID, err)
 							c.hub.HubMutex.RUnlock()
-							c.hub.doUnregister(c, "send callerConnect to callee: "+err.Error())
+							c.hub.closeCallee("send callerConnect to callee: "+err.Error())
 							return
 						}
 
 					} else if constate=="Connected" {
-						// caller is reporting peerCon: both peers are now directly connected
+						// caller is reporting peerCon
 						// now force ws-disconnect caller
 						// but only if 14s has passed
 						if !c.hub.CallerClient.reached14s.Get() {
@@ -1611,27 +1616,19 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 							//	c.connType, c.calleeID)
 							}
 						} else {
+							// shall caller be ws-disconnected after peer-con?
 							readConfigLock.RLock()
-							myDisconCalleeOnPeerConnected := disconCalleeOnPeerConnected
 							myDisconCallerOnPeerConnected := disconCallerOnPeerConnected
 							readConfigLock.RUnlock()
-							if myDisconCalleeOnPeerConnected || myDisconCallerOnPeerConnected {
-								time.Sleep(20 * time.Millisecond)
-							}
-							if myDisconCalleeOnPeerConnected {
-								// this is currently never done
-								fmt.Printf("%s peercon -> force callee ws-disconnect %s %s\n",
-									c.connType, c.calleeID, c.RemoteAddr)
-								c.hub.CalleeClient.Close("disconCalleeOnPeerConnected")
-							}
 							if myDisconCallerOnPeerConnected {
-								// this is currently always done
 								if c.hub.CallerClient != nil {
 									if logWantedFor("attach") {
 										fmt.Printf("%s (%s) peercon -> force caller ws-disconnect %s\n",
 											c.connType, c.calleeID, c.RemoteAddr)
 									}
-									c.hub.CallerClient.Close("disconCallerOnPeerConnected")
+									c.hub.HubMutex.RUnlock()
+									c.hub.closeCaller("disconCallerOnPeerConnected")
+									return
 								}
 							}
 						}
@@ -1662,7 +1659,9 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 						fmt.Printf("# %s (%s) fw msg to caller fail %v\n",
 							c.connType, c.calleeID, err)
 						// saw err = 'not connected'
-						c.hub.CallerClient.Close("fw msg to caller "+err.Error())
+						c.hub.HubMutex.RUnlock()
+						c.hub.closePeerCon("fw msg to caller "+err.Error())
+						return
 					}
 				}
 			} else {
@@ -1674,7 +1673,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 						fmt.Printf("# %s (%s) fw msg to callee fail %v\n",
 							c.connType, c.calleeID, err)
 						c.hub.HubMutex.RUnlock()
-						c.hub.doUnregister(c, "fw msg to callee: "+err.Error())
+						c.hub.closeCallee("fw msg to callee: "+err.Error())
 						return
 					}
 				}
@@ -1702,6 +1701,7 @@ func (c *WsClient) Write(b []byte) error {
 }
 
 func (c *WsClient) Close(reason string) {
+	// Close() is only called by hub.closeCaller() and hub.closeCallee()
 	if logWantedFor("wsclose") {
 		fmt.Printf("wsclient (%s) Close isCallee=%v isOnline=%v reason=%s\n",
 			c.calleeID, c.isCallee, c.isOnline.Get(), reason)
@@ -1714,21 +1714,7 @@ func (c *WsClient) Close(reason string) {
 	}
 
 	if c.isCallee {
-		keepAliveMgr.Delete(c.wsConn)
-		// clear read deadline; don't expect data from this cli
-		c.wsConn.SetReadDeadline(time.Time{})
-
-		if c.isConnectedToPeer.Get() {
-			// end the call this callee is in
-			if logWantedFor("wsclose") {
-				fmt.Printf("wsclient (%s) Close callee: end peercon\n", c.calleeID)
-			}
-			c.hub.peerConHasEnded("Close() "+reason)
-		}
-
-		// exitFunc -> DeleteFromHubMap
-		// exitFunc is not needed if Close() for callee is only called via doUnregister
-		//c.hub.exitFunc(c, "Close() <- "+reason)
+		// do nothing
 	} else {
 		if c.hub!=nil && c.hub.CallerClient!=nil {
 			// this caller might still be ringing: stop the watchdog timer
@@ -1736,12 +1722,14 @@ func (c *WsClient) Close(reason string) {
 			//	fmt.Printf("wsclient (%s) Close caller: stop watchdog timer (just in case)\n", c.calleeID)
 			//}
 			c.hub.CallerClient.calleeAnswerReceived <- struct{}{}
+			// hub.closeCaller() takes care of hub.CallerClient = nil
 		}
 	}
 }
 
 func (c *WsClient) SendPing(maxWaitMS int) {
 	// we expect a pong (or anything) from the client within max 20 secs from now
+	// currently we are sending pings only to callees
 	if maxWaitMS<0 {
 		maxWaitMS = 20000
 	}
@@ -1752,25 +1740,19 @@ func (c *WsClient) SendPing(maxWaitMS int) {
 
 	err := c.wsConn.WriteMessage(websocket.PingMessage, nil)
 	if err != nil {
-		fmt.Printf("# sendPing (%s) %s err=%v\n",c.calleeID, c.wsConn.RemoteAddr().String(), err)
-		c.isOnline.Set(false) // prevent Close() from trying to close this already closed connection
-//Close takes care of this
-//		// we don't need to send more pings
-//		keepAliveMgr.Delete(c.wsConn)
-//Close takes care of this
-//		// clear read deadline; we don't expect any more data from this cli
-//		c.wsConn.SetReadDeadline(time.Time{})
-		//c.Close("sendPing error "+err.Error())
-		c.hub.doUnregister(c, "sendPing error: "+err.Error())
-	} else {
-		c.pingSent++
-		if maxWaitMS>0 {
-			// set the time by when a (pong) response from this client would be too late
-			c.wsConn.SetReadDeadline(time.Now().Add(time.Duration(maxWaitMS)*time.Millisecond))
-		}
-		// set the time for sending the next ping in pingPeriod secs from now
-		keepAliveMgr.SetPingDeadline(c.wsConn, pingPeriod, c)
+		fmt.Printf("# sendPing (%s) %s err=%v\n", c.calleeID, c.wsConn.RemoteAddr().String(), err)
+		c.isOnline.Set(false) // ??? prevent Close() from trying to close this already closed connection
+		c.hub.closeCallee("sendPing error: "+err.Error())
+		return
 	}
+
+	c.pingSent++
+	if maxWaitMS>0 {
+		// set the time by when a (pong) response from this client would be too late
+		c.wsConn.SetReadDeadline(time.Now().Add(time.Duration(maxWaitMS)*time.Millisecond))
+	}
+	// set the time for sending the next ping in pingPeriod secs from now
+	keepAliveMgr.SetPingDeadline(c.wsConn, pingPeriod, c)
 }
 
 

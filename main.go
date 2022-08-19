@@ -188,7 +188,7 @@ var multiCallees = ""
 var logevents = ""
 var logeventMap map[string]bool
 var logeventMutex sync.RWMutex
-var disconCalleeOnPeerConnected = false
+//var disconCalleeOnPeerConnected = false
 var disconCallerOnPeerConnected = true
 var maxRingSecs = 0
 var maxTalkSecsIfNoP2p = 0
@@ -594,8 +594,8 @@ func readConfig(init bool) {
 	}
 	logeventMutex.Unlock()
 
-	disconCalleeOnPeerConnected = readIniBoolean(configIni,
-		"disconCalleeOnPeerConnected", disconCalleeOnPeerConnected, false)
+//	disconCalleeOnPeerConnected = readIniBoolean(configIni,
+//		"disconCalleeOnPeerConnected", disconCalleeOnPeerConnected, false)
 	disconCallerOnPeerConnected = readIniBoolean(configIni,
 		"disconCallerOnPeerConnected", disconCallerOnPeerConnected, true)
 
