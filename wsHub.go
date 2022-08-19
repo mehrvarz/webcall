@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 	"sync"
-	"strings"
+	//"strings"
 	"strconv"
 	"github.com/mehrvarz/webcall/atombool"
 )
@@ -170,7 +170,6 @@ func (h *Hub) peerConHasEnded(cause string) {
 		return
 	}
 
-//	if h.CalleeClient.isConnectedToPeer.Get() {
 	if logWantedFor("wsclose") {
 		fmt.Printf("%s (%s) peerConHasEnded peercon=%v media=%v (%s)\n",
 			h.CalleeClient.connType, h.CalleeClient.calleeID,
@@ -229,7 +228,7 @@ func (h *Hub) peerConHasEnded(cause string) {
 		// add an entry to missed calls, but only if hub.CallDurationSecs<=0
 		// if caller cancels via hangup button, then this is the only addMissedCall() and contains msgtext
 		// this is NOT a missed call if callee denies the call
-		if h.CallDurationSecs<=0 && !strings.HasPrefix(cause,"callee") {
+		if h.CallDurationSecs<=0 /*&& !strings.HasPrefix(cause,"callee")*/ {
 			// add missed call if dbUser.StoreMissedCalls is set
 			userKey := h.CalleeClient.calleeID + "_" + strconv.FormatInt(int64(h.registrationStartTime),10)
 			var dbUser DbUser
@@ -286,7 +285,8 @@ func (h *Hub) closeCallee(cause string) {
 
 		// NOTE: delete(hubMap,id) might have been executed, caused by timeout22s
 
-		if !h.CalleeClient.clearOnCloseDone {
+// TODO this is not needed anymore?
+//		if !h.CalleeClient.clearOnCloseDone {
 			if h.lastCallStartTime>0 {
 				h.processTimeValues(comment)
 				h.lastCallStartTime = 0
@@ -298,8 +298,8 @@ func (h *Hub) closeCallee(cause string) {
 				h.peerConHasEnded(comment) // will set h.CallerClient=nil
 			}
 			h.setDeadline(0,comment)
-			h.CalleeClient.clearOnCloseDone = true
-		}
+//			h.CalleeClient.clearOnCloseDone = true
+//		}
 
 		h.CalleeClient.Close(comment)
 

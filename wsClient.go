@@ -405,8 +405,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			// clear read deadline; we don't expect data from this cli
 			c.SetReadDeadline(time.Time{})
 
+			// NOTE we treat err=read timeout like noerr (testing)
 			if err!=nil && strings.Index(err.Error(),"read timeout")<0 {
-// TODO maybe err=read timeout shd be treated like noerr (testing)
 				fmt.Printf("%s (%s) OnClose callee err=%v %s v=%s\n",
 					client.connType, client.calleeID, err, client.RemoteAddr, client.clientVersion)
 			} else {
@@ -424,7 +424,6 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				}
 				client.hub.HubMutex.RUnlock()
 
-// TODO not sending cancel to caller? is this done by closeCallee?
 				if err!=nil {
 					client.hub.closeCallee("OnClose callee: "+ err.Error())
 				} else {
@@ -434,6 +433,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 		} else {
 			// caller has closed ws-con to server
+			// NOTE we treat err=read timeout like noerr (testing)
 			if err!=nil && strings.Index(err.Error(),"read timeout")<0 {
 				fmt.Printf("%s (%s) OnClose caller err=%v %s v=%s\n",
 					client.connType, client.calleeID, err, client.RemoteAddr, client.clientVersion)
@@ -444,7 +444,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				}
 			}
 
-/*
+/* remove this
 			if !client.reached14s.Get() {
 				// shut down the callee on early caller hangup
 				fmt.Printf("%s (%s) OnClose caller close !reached14s -> clear CallerIp (DO NOTHING)\n",
@@ -482,6 +482,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				}
 				client.hub.HubMutex.RUnlock()
 
+				// NOTE we treat err=read timeout like noerr (testing)
 				if err!=nil && strings.Index(err.Error(),"read timeout")<0 {
 					client.hub.closeCaller("OnCloseCaller "+err.Error())
 				} else {
@@ -541,8 +542,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		hub.HubMutex.Unlock()
 
 /* tmtmtm
-		if callerID!="" {
 // TODO when callee is making a call, it will NOT be in busy state for another caller
+		if callerID!="" {
 			// so lets set hub.ConnectedCallerIp? doesn't work
 			tmpRemoteIP := "aaa"
 			err := StoreCallerIpInHubMap(calleeID, tmpRemoteIP, false)
@@ -554,7 +555,6 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 					fmt.Printf("%s (%s) callerOffer StoreCallerIp %s\n",
 						client.connType, callerID, tmpRemoteIP)
 				}
-// TODO this has worked, but now we must also clear this CallerIpInHubMap after the call
 			}
 		}
 */
@@ -803,8 +803,9 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 		c.calleeInitReceived.Set(true)
 		c.hub.CalleeLogin.Set(true)
 		c.pickupSent.Set(false)
+
 		// closeCallee() will call setDeadline(0) and processTimeValues() if this is false; then set it true
-		c.clearOnCloseDone = false // TODO make it atomic?
+		c.clearOnCloseDone = false // TODO not needed anymore; only used in hub.closeCallee()
 		c.callerTextMsg = ""
 
 // TODO clear blockMap[c.calleeID] ?
@@ -1163,7 +1164,6 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 				fmt.Printf("%s (%s) REQ PEER DISCON from callee %s cancel='%s'\n",
 					c.connType, c.calleeID, c.RemoteAddr, payload)
 				// end the peer-connection
-				// TODO do not add missed call, see: HasPrefix(cause,"callee")
 				c.hub.HubMutex.RUnlock()
 				c.hub.closePeerCon("callee cancel")
 				return
