@@ -170,7 +170,8 @@ func (h *Hub) peerConHasEnded(cause string) {
 		return
 	}
 
-	if h.CalleeClient.isConnectedToPeer.Get() {
+//	if h.CalleeClient.isConnectedToPeer.Get() {
+	if logWantedFor("wsclose") {
 		fmt.Printf("%s (%s) peerConHasEnded peercon=%v media=%v (%s)\n",
 			h.CalleeClient.connType, h.CalleeClient.calleeID,
 			h.CalleeClient.isConnectedToPeer.Get(), h.CalleeClient.isMediaConnectedToPeer.Get(), cause)

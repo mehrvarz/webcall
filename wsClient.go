@@ -647,8 +647,10 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			}
 			if hub.CalleeClient.isConnectedToPeer.Get() {
 				// peercon steht; no peercon meldung nicht nötig; force caller ws-disconnect
-				fmt.Printf("%s (%s) reached14s CalleeClient.isConnectedToPeer\n",
-					client.connType, client.calleeID)
+				if logWantedFor("wsclose") {
+					fmt.Printf("%s (%s) reached14s CalleeClient.isConnectedToPeer\n",
+						client.connType, client.calleeID)
+				}
 				client.reached14s.Set(true) // caller onClose will not anymore disconnect session/peercon
 
 				// we know this is the caller
@@ -1581,21 +1583,6 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 						}
 						// TODO also reset calleeLoginMap?
 
-						if c.hub.maxTalkSecsIfNoP2p>0 && (!c.hub.LocalP2p || !c.hub.RemoteP2p) {
-							// relayed con: set deadline maxTalkSecsIfNoP2p
-							//if logWantedFor("deadline") {
-							//	fmt.Printf("%s (%s) setDeadline maxTalkSecsIfNoP2p %d %v %v\n", c.connType,
-							//		c.calleeID, c.hub.maxTalkSecsIfNoP2p, c.hub.LocalP2p, c.hub.RemoteP2p)
-							//}
-//							c.hub.HubMutex.RUnlock()
-							c.hub.setDeadline(c.hub.maxTalkSecsIfNoP2p,"peer con")
-//							c.hub.HubMutex.RLock()
-
-							// deliver max talktime to both clients
-							c.hub.doBroadcast(
-								[]byte("sessionDuration|"+strconv.FormatInt(int64(c.hub.maxTalkSecsIfNoP2p),10)))
-						}
-
 						// store the caller (c.hub.CallerClient.callerID)
 						// into contacts of user being called (c.calleeID)
 						// setContact() checks if dbUser.StoreContacts is set for c.calleeID
@@ -1605,6 +1592,21 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 							compoundName := c.hub.CallerClient.callerName+"||"
 							setContact(c.calleeID, c.hub.CallerClient.callerID, compoundName,
 								c.RemoteAddrNoPort, "wsClient")
+						}
+
+						if c.hub.maxTalkSecsIfNoP2p>0 && (!c.hub.LocalP2p || !c.hub.RemoteP2p) {
+							// relayed con: set deadline maxTalkSecsIfNoP2p
+							//if logWantedFor("deadline") {
+							//	fmt.Printf("%s (%s) setDeadline maxTalkSecsIfNoP2p %d %v %v\n", c.connType,
+							//		c.calleeID, c.hub.maxTalkSecsIfNoP2p, c.hub.LocalP2p, c.hub.RemoteP2p)
+							//}
+							// deliver max talktime to both clients
+							c.hub.doBroadcast(
+								[]byte("sessionDuration|"+strconv.FormatInt(int64(c.hub.maxTalkSecsIfNoP2p),10)))
+							c.hub.HubMutex.RUnlock()
+
+							c.hub.setDeadline(c.hub.maxTalkSecsIfNoP2p,"peer con")
+							return
 						}
 					}
 				} else {
