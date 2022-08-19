@@ -447,16 +447,14 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 			if !client.reached14s.Get() {
 				// shut down the callee on early caller hangup
-				//fmt.Printf("%s (%s) caller close !reached14s -> clear CallerIp\n",
-				//	client.connType, client.calleeID)
+				fmt.Printf("%s (%s) OnClose caller close !reached14s -> clear CallerIp (DO NOTHING)\n",
+					client.connType, client.calleeID)
+/*
 				client.hub.HubMutex.RLock()
 				if client.hub!=nil && client.hub.CalleeClient!=nil &&
 						client.hub.CalleeClient.isConnectedToPeer.Get() {
-					if logWantedFor("attachex") {
-						fmt.Printf("%s (%s) OnClose caller !reached14s -> cancel callee📴 + peerConHasEnded\n",
-							client.connType, client.calleeID)
-					}
-
+					fmt.Printf("%s (%s) OnClose caller !reached14s -> cancel callee📴 + peerConHasEnded\n",
+						client.connType, client.calleeID)
 					err = client.hub.CalleeClient.Write([]byte("cancel|c"))
 					if err != nil {
 						fmt.Printf("# %s (%s) OnClose caller: send cancel msg to callee fail %v\n",
@@ -471,7 +469,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				// stop watchdog timer
 				client.calleeAnswerReceived <- struct{}{}
 
-				StoreCallerIpInHubMap(client.globalCalleeID, "", false)
+				//StoreCallerIpInHubMap(client.globalCalleeID, "", false)
+*/
 			} else {
 				//fmt.Printf("%s (%s) caller closeafter reached14s -> do nothing\n",
 				//	client.connType, client.calleeID)
@@ -635,9 +634,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			}
 			if hub.CalleeClient.isConnectedToPeer.Get() {
 				// peercon steht; no peercon meldung nicht nötig; force caller ws-disconnect
-				//fmt.Printf("%s (%s) no peercon check: CalleeClient.isConnectedToPeer\n",
-				//	client.connType, client.calleeID)
-
+				fmt.Printf("%s (%s) reached14s CalleeClient.isConnectedToPeer\n",
+					client.connType, client.calleeID)
 				client.reached14s.Set(true) // caller onClose will not anymore disconnect session/peercon
 
 				// we know this is the caller
@@ -1612,8 +1610,8 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 						// but only if 14s has passed
 						if !c.hub.CallerClient.reached14s.Get() {
 							if logWantedFor("attachex") {
-							//fmt.Printf("%s (%s) peercon but 14s not reached, no force caller ws-disconnect\n",
-							//	c.connType, c.calleeID)
+							fmt.Printf("%s (%s) peercon but 14s not reached, no force caller ws-disconnect\n",
+								c.connType, c.calleeID)
 							}
 						} else {
 							// shall caller be ws-disconnected after peer-con?

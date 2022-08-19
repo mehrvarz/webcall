@@ -205,7 +205,7 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, dialID str
 
 		if locHub.ConnectedCallerIp != "" {
 			// this callee (urlID/glUrlID) is online but currently busy
-			fmt.Printf("/online (%s) busy callerIp=%s %s v=%s\n",
+			fmt.Printf("/online (%s) busy callerIp=%s <- %s v=%s\n",
 				urlID, locHub.ConnectedCallerIp, remoteAddr, clientVersion)
 			locHub.HubMutex.RUnlock()
 			// remoteAddr is now eligible to send xhr /missedCall
