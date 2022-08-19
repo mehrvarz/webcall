@@ -1473,28 +1473,25 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			return
 		}
 		if c.hub.CallerClient==nil {
-			// # serveWss (id) peer 'callee Connected unknw/unknw'
-			// this happens when caller disconnects immediately
-			// or when caller is late and callee has already peer-disconnected
+			// caller gone
+			if logWantedFor("wsclose") {
+				fmt.Printf("%s (%s/%s) caller gone📴\n", c.connType, c.calleeID, c.globalCalleeID)
+			}
 			if c.hub.CalleeClient!=nil {
 				// callee still here
-				fmt.Printf("# %s (%s/%s) peer %s isCallee=%v c.hub.CallerClient==nil📴 v=%s\n",
-					c.connType, c.calleeID, c.globalCalleeID, payload, c.isCallee, c.clientVersion)
 				err := c.hub.CalleeClient.Write([]byte("cancel|c"))
+				c.hub.HubMutex.RUnlock()
 				if err != nil {
 					// callee gone too
-					fmt.Printf("# %s (%s) send cancel msg to callee fail %v\n",
-						c.connType, c.calleeID, err)
-					c.hub.HubMutex.RUnlock()
+					if logWantedFor("wsclose") {
+						fmt.Printf("%s (%s/%s) callee gone %v\n", c.connType, c.calleeID, c.globalCalleeID, err)
+					}
 					c.hub.closeCallee("send cancel to callee: "+err.Error())
 					return
 				}
-				c.hub.HubMutex.RUnlock()
-
 				c.hub.closePeerCon("caller gone")
 				return
 			}
-			// both clients gone
 			c.hub.HubMutex.RUnlock()
 			return
 		}
