@@ -1153,24 +1153,25 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 		}
 
 		if c.hub.CalleeClient.isConnectedToPeer.Get() {
-			// unlock - don't call peerConHasEnded with lock
 			//fmt.Printf("%s (%s) cmd=cancel CalleeClient.isConnectedToPeer c.isCallee=%v\n",
 			//	c.connType,c.calleeID,c.isCallee)
-			if c.isCallee {
+			if c.isCallee && payload!="disconnectByCaller" {
+				// NOTE: the actual discon request may also come from the caller
+				// but the caller is likely ws-disconnected, so it comes via the callee client
 				fmt.Printf("%s (%s) REQ PEER DISCON from callee %s cancel='%s'\n",
 					c.connType, c.calleeID, c.RemoteAddr, payload)
-				// do not add missed call, see: HasPrefix(cause,"callee")
+				// end the peer-connection
+				// TODO do not add missed call, see: HasPrefix(cause,"callee")
 				c.hub.HubMutex.RUnlock()
 				c.hub.closePeerCon("callee cancel")
 				return
-			} else {
-				fmt.Printf("%s (%s) REQ PEER DISCON from caller %s cancel='%s'\n",
-					c.connType, c.calleeID, c.RemoteAddr, payload)
-				// tell callee to disconnect
-				c.hub.HubMutex.RUnlock()
-				c.hub.closePeerCon("caller cancel")
-				return
 			}
+			fmt.Printf("%s (%s) REQ PEER DISCON from caller %s cancel='%s'\n",
+				c.connType, c.calleeID, c.RemoteAddr, payload)
+			// end the peer-connection
+			c.hub.HubMutex.RUnlock()
+			c.hub.closePeerCon("caller cancel")
+			return
 		} else {
 			// no peercon: we should still forward "cancel" to the other side
 			//fmt.Printf("%s (%s) cmd=cancel !CalleeClient.isConnectedToPeer c.isCallee=%v\n",

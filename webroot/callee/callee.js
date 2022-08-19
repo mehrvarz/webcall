@@ -2267,15 +2267,22 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter,comment) {
 			// rtcConnect && peerCon may be cleared by now
 			if(disconnectCaller) {
 				gLog('endWebRtcSession disconnectCaller');
-				if(wsConn) {
-					console.log('endWebRtcSession wsSend(cancel)');
-					wsSend("cancel|disconnect"); // important
-				}
 				if(isDataChlOpen()) {
+					// caller is still peerConnected: let the caller know we will now disconnect
 					console.log('endWebRtcSession dataChannel.send(disconnect)');
 					dataChannel.send("disconnect");
+					if(wsConn) {
+						// also tell the server about it
+						console.log('endWebRtcSession wsSend(cancel)');
+						wsSend("cancel|disconnect"); // very important (if caller is not ws-disconnected)
+					}
 				} else {
-					gLog('endWebRtcSession cannot send disconnect via dataChannel');
+					// caller is NOT peerConnected anymore: tell server the peer-session is over
+					console.log('endWebRtcSession dataChannel already closed');
+					if(wsConn) {
+						console.log('endWebRtcSession wsSend(cancel)');
+						wsSend("cancel|disconnectByCaller"); // very important (if caller is not ws-disconnected)
+					}
 				}
 			}
 			if(dataChannel) {
