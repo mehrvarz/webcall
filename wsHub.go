@@ -241,15 +241,15 @@ func (h *Hub) peerConHasEnded(cause string) {
 					callerID, h.CalleeClient.callerTextMsg }, cause)
 			}
 		}
+	}
 
-		err := StoreCallerIpInHubMap(h.CalleeClient.globalCalleeID, "", false)
-		if err!=nil {
-			// err "key not found": callee has already signed off - can be ignored
-			//if strings.Index(err.Error(),"key not found")<0 {
-				fmt.Printf("# %s (%s) peerConHasEnded clr callerIp %s err=%v\n",
-					h.CalleeClient.connType, h.CalleeClient.calleeID, h.CalleeClient.globalCalleeID, err)
-			//}
-		}
+	err := StoreCallerIpInHubMap(h.CalleeClient.globalCalleeID, "", false)
+	if err!=nil {
+		// err "key not found": callee has already signed off - can be ignored
+		//if strings.Index(err.Error(),"key not found")<0 {
+			fmt.Printf("# %s (%s) peerConHasEnded clr callerIp %s err=%v\n",
+				h.CalleeClient.connType, h.CalleeClient.calleeID, h.CalleeClient.globalCalleeID, err)
+		//}
 	}
 
 	h.setDeadline(0,cause)	// may call peerConHasEnded again (we made sure this is no problem)
