@@ -205,7 +205,6 @@ func (h *Hub) peerConHasEnded(cause string) {
 		callerID := ""
 		callerName := ""
 		//callerHost := ""
-		h.CalleeClient.calleeInitReceived.Set(false) // accepting new init from callee now
 		calleeRemoteAddr = h.CalleeClient.RemoteAddrNoPort
 		if h.CallerClient!=nil  {
 			callerRemoteAddr = h.CallerClient.RemoteAddrNoPort
@@ -242,6 +241,8 @@ func (h *Hub) peerConHasEnded(cause string) {
 			}
 		}
 	}
+
+	h.CalleeClient.calleeInitReceived.Set(false) // accepting new init from callee now
 
 	err := StoreCallerIpInHubMap(h.CalleeClient.globalCalleeID, "", false)
 	if err!=nil {
