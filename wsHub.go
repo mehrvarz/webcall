@@ -52,7 +52,7 @@ func newHub(maxRingSecs int, maxTalkSecsIfNoP2p int, startTime int64) *Hub {
 
 func (h *Hub) setDeadline(secs int, comment string) {
 	// will disconnect peercon after some time
-	// by sending cancel to both clients and then by calling peerConHasEnded()
+	// by sending cancel to both clients and then by calling peerConHasEnded
 	if h.timer!=nil {
 		if logWantedFor("deadline") {
 			fmt.Printf("setDeadline (%s) cancel running timer; new secs=%d (%s)\n",
@@ -162,7 +162,7 @@ func (h *Hub) processTimeValues(comment string) {
 func (h *Hub) peerConHasEnded(cause string) {
 	// the peerConnection has ended, either bc one side has sent "cancel"
 	// or bc callee has unregistered or got ws-disconnected
-	// peerConHasEnded() MUST be called with locking in place
+	// peerConHasEnded MUST be called with locking in place
 
 	if h.CalleeClient==nil {
 		//fmt.Printf("# peerConHasEnded but h.CalleeClient==nil\n")
@@ -224,7 +224,8 @@ func (h *Hub) peerConHasEnded(cause string) {
 	// add an entry to missed calls, but only if hub.CallDurationSecs<=0
 	// if caller cancels via hangup button, then this is the only addMissedCall() and contains msgtext
 	// this is NOT a missed call if callee denies the call
-	if h.CallDurationSecs<=0 /*&& !strings.HasPrefix(cause,"callee")*/ {
+//	if h.CallDurationSecs<=0 /*&& !strings.HasPrefix(cause,"callee")*/ {
+	if h.CallerClient!=nil && h.CallDurationSecs<=0 {
 		// add missed call if dbUser.StoreMissedCalls is set
 		userKey := h.CalleeClient.calleeID + "_" + strconv.FormatInt(int64(h.registrationStartTime),10)
 		var dbUser DbUser
