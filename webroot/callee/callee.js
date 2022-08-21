@@ -2445,7 +2445,7 @@ function getCookieSupport() {
 
 function openNews(newsUrl) {
 	// also called directly from WebCall for Android service
-	if(divspinnerframe) divspinnerframe.style.display = "block";
+//	if(divspinnerframe) divspinnerframe.style.display = "block";
 	// here we set horiCenterBound=true
 	// we also set dontIframeOnload=true so that height:100% determines the iframe height
 	// also: dontIframeOnload=true may be required if newsUrl points to a different domain

@@ -723,6 +723,18 @@ function onIceCandidate(event,myCandidateName) {
 	}
 }
 
+function checkNetwork() {
+	if(typeof Android !== "undefined" && Android !== null) {
+		if(typeof Android.isNetwork !== "undefined" && Android.isNetwork !== null) {
+			if(Android.isNetwork()<1) {
+				Android.toast("No network");
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
 var iframeWindowOpenFlag = false;
 var iframeWindowOpenUrl = null;
 function iframeWindowOpen(url, horiCenterBound, addStyleString, dontIframeOnload) {
@@ -733,7 +745,6 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString, dontIframeOnload
 
 	gLog('iframeWindowOpen='+url);
 	if(iframeWindowOpenFlag) {
-		//tmtmtm
 		//console.log("# iframeWindowOpen fail iframeWindowOpenFlag");
 		//return;
 		iframeWindowClose();
@@ -788,6 +799,14 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString, dontIframeOnload
 	if(url.startsWith("string:")) {
 		iframeWindowElement.innerHTML = url.substring(7);
 	} else {
+		if(!checkNetwork()) {
+			iframeWindowClose();
+			return;
+		}
+
+		if(divspinnerframe) {
+			if(divspinnerframe) divspinnerframe.style.display = "block";
+		}
 		// we call iframeOnload() so that the iframe height becomes same as the content height
 		// for this to work, the document at url needs to have a fixed height or min-height
 		// if the document does not have fixed height or min-height, scrollHeight = 150px
