@@ -251,6 +251,7 @@ func (h *Hub) peerConHasEnded(cause string) {
 		//}
 	}
 
+	// clear disconnect-timeout
 	h.setDeadline(0,cause)	// may call peerConHasEnded again (we made sure this is no problem)
 }
 

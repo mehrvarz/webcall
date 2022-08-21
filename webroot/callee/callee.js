@@ -1305,13 +1305,7 @@ function signalingCommand(message) {
 
 				exclamationElement.onclick = function() {
 					if(typeof Android !== "undefined" && Android !== null) {
-						//Android.browse(newsUrl);
-						if(divspinnerframe) divspinnerframe.style.display = "block";
-						// here we set horiCenterBound=true
-						// we also set dontIframeOnload=true so that height:100% determines the iframe height
-						// also: dontIframeOnload=true may be required if newsUrl points to a different domain
-						// to avoid DOMException in iframeOnload()
-						iframeWindowOpen(newsUrl,true,"max-width:800px;height:100%;",true);
+						openNews(newsUrl);
 					} else {
 						window.open(newsUrl, "_blank");
 					}
@@ -2447,6 +2441,22 @@ function getCookieSupport() {
         }
     } while(!(persist= !persist));
     return null;
+}
+
+function openNews(newsUrl) {
+	// also called directly from WebCall for Android service
+	if(divspinnerframe) divspinnerframe.style.display = "block";
+	// here we set horiCenterBound=true
+	// we also set dontIframeOnload=true so that height:100% determines the iframe height
+	// also: dontIframeOnload=true may be required if newsUrl points to a different domain
+	// to avoid DOMException in iframeOnload()
+	let randId = ""+Math.random()*100000000;
+	if(newsUrl.indexOf("?")>=0)
+		newsUrl += "&i="+randId;
+	else
+		newsUrl += "?i="+randId;
+	console.log("openNews "+newsUrl);
+	iframeWindowOpen(newsUrl,true,"max-width:800px;height:100%;",true);
 }
 
 var counter=0;

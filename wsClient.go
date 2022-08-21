@@ -1190,6 +1190,8 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 					c.hub.CallerClient.isOnline.Set(false)	// ???
 					c.hub.CallerClient.calleeAnswerReceived <- struct{}{}
 					c.hub.HubMutex.RUnlock()
+
+// TODO in some cases (when we just did a closePeerCon()) we don't want to do this (again)
 					c.hub.closePeerCon("caller cancel")
 					return
 				}
@@ -1212,6 +1214,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 						return
 					}
 
+// TODO in some cases (when we just did a closePeerCon()) we don't want to do this (again)
 					// let callee re-init
 					c.hub.closePeerCon("caller sent cancel")
 					return
