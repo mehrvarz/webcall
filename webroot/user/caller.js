@@ -1589,6 +1589,7 @@ function submitForm(theForm) {
 				document.activeElement.blur();
 			} else {
 				// everything OK
+				// on android the window.open() may be handled by dialId() or by an ext browser
 				//console.log("submitForm window.open("+callUrl+") no err");
 				enterIdElement.style.display = "none";
 				containerElement.style.display = "block";
