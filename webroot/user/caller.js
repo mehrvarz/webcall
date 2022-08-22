@@ -947,6 +947,12 @@ function dialButtonClick() {
 		dialButton.disabled = true;
 		//hangupButton.disabled = false;
 		msgbox.style.display = "none";
+
+		// hide 'store contact' button
+		let storeContactElement = document.getElementById("storeContact");
+		if(storeContactElement) {
+			storeContactElement.innerHTML = "";
+		}
 	}
 
 	// focus back to background, so that esc-key via onkeydown works
@@ -2087,8 +2093,10 @@ function signalingCommand(message) {
 		}
 		waitForRemoteStreamFunc();
 
+/*
 		// offer store contact link (only if callerId and calleeID exist)
 // TODO: if "store contact" is clicked while in call, the call gets disconnected
+// enable button at the end of hangup()
 		if(callerId!="" && calleeID!="" && callerHost!="" && callerHost!=location.host) {
 			let storeContactElement = document.getElementById("storeContact");
 			if(storeContactElement) {
@@ -2099,7 +2107,7 @@ function signalingCommand(message) {
 				storeContactElement.innerHTML = "<a href='"+storeContactLink+"'>Store contact</a>";
 			}
 		}
-
+*/
 	} else if(cmd=="cancel") {
 		if(payload!="c") {
 			console.log("peer disconnect");
@@ -2613,11 +2621,6 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 		showStatus(message);
 	}
 
-	if(singlebutton) {
-		dialButton.style.boxShadow = "";
-	} else {
-		onlineIndicator.src="";
-	}
 	stopTimer();
 
 	localDescription = null;
@@ -2625,6 +2628,7 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 		hangupButton.style.display = "none";
 		hangupButton.innerHTML = "Hang up";
 		hangupButton.style.boxShadow = "";
+		dialButton.style.boxShadow = "";
 		setTimeout(function() {
 			dialButton.innerHTML = "<b>W E B C A L L</b><br>"+singleButtonReadyText;
 			dialButton.style.display = "inline-block";
@@ -2633,6 +2637,19 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 		hangupButton.disabled = true;
 		//dialButton.disabled = false;
 		onlineIndicator.src="";
+
+		// offer store contact link (only if callerId and calleeID exist)
+		if(callerId!="" && calleeID!="" && callerHost!="" && callerHost!=location.host) {
+			let storeContactElement = document.getElementById("storeContact");
+			if(storeContactElement) {
+				let fullContactId = calleeID+"@"+location.host;
+				//console.log("contactName (for storeContactLink)=("+contactName+")");
+				let storeContactLink = "https://"+callerHost+"/callee/contacts/store/?id="+callerId+
+					"&contactId="+fullContactId+"&contactName="+contactName+"&callerName="+callerName;
+				storeContactElement.innerHTML = "<a href='"+storeContactLink+"'>Store contact</a>";
+				// button will be removed in dialButtonClick()
+			}
+		}
 	}
 
 	if(wsConn && wsConn.readyState==1) {
@@ -2813,6 +2830,8 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 			});
 		}
 	}
+
+	// TODO this is a good place to enable "store contact" button
 
 	if(mustcheckCalleeOnline && !singlebutton) {
 		// it can take up to 3s for our call to get fully ended and cleared on server and callee side
