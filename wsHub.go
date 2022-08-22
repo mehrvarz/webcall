@@ -222,6 +222,7 @@ func (h *Hub) peerConHasEnded(cause string) {
 			h.CallerClient.isMediaConnectedToPeer.Set(false)
 		}
 
+		// localPeerCon, remotePeerCon turn relay/relay
 		fmt.Printf("%s (%s) PEER DISCON📴 %ds %s/%s %s <- %s (%s) %s\n",
 			h.CalleeClient.connType, h.CalleeClient.calleeID, //peerType,
 			h.CallDurationSecs, localPeerCon, remotePeerCon,
@@ -296,13 +297,13 @@ func (h *Hub) closeCallee(cause string) {
 			if h.lastCallStartTime>0 {
 				h.processTimeValues(comment)
 				h.lastCallStartTime = 0
-				h.LocalP2p = false
-				h.RemoteP2p = false
 			}
 
 			if h.CalleeClient.isConnectedToPeer.Get() {
 				h.peerConHasEnded(comment) // will set h.CallerClient=nil
 			}
+			h.LocalP2p = false
+			h.RemoteP2p = false
 			h.setDeadline(0,comment)
 //			h.CalleeClient.clearOnCloseDone = true
 //		}

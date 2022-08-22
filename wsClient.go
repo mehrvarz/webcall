@@ -1623,7 +1623,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 
 						if !c.hub.CallerClient.reached14s.Get() {
 							if logWantedFor("wsclose") {
-								fmt.Printf("%s (%s) peercon but not reached14s, no force caller ws-disconnect\n",
+								fmt.Printf("%s (%s) peercon before reached14s, no force caller ws-disconnect\n",
 									c.connType, c.calleeID)
 							}
 						} else {
