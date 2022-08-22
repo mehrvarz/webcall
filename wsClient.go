@@ -1463,23 +1463,30 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 		}
 		if c.hub.CallerClient==nil {
 			// caller gone
-			if logWantedFor("wsclose") {
-				fmt.Printf("%s (%s/%s) caller gone📴\n", c.connType, c.calleeID, c.globalCalleeID)
-			}
 			if c.hub.CalleeClient!=nil {
 				// callee still here
+				if logWantedFor("wsclose") {
+					fmt.Printf("%s (%s) peer %s caller gone📴 send cancel to callee\n",
+						c.connType, c.calleeID, payload)
+				}
 				err := c.hub.CalleeClient.Write([]byte("cancel|c"))
 				c.hub.HubMutex.RUnlock()
 				if err != nil {
 					// callee gone too
 					if logWantedFor("wsclose") {
-						fmt.Printf("%s (%s/%s) callee gone %v\n", c.connType, c.calleeID, c.globalCalleeID, err)
+						fmt.Printf("%s (%s) peer %s callee gone on cancel %v\n",
+							c.connType, c.calleeID, payload, err)
 					}
 					c.hub.closeCallee("send cancel to callee: "+err.Error())
 					return
 				}
 				c.hub.closePeerCon("caller gone")
 				return
+			} else {
+				if logWantedFor("wsclose") {
+					fmt.Printf("%s (%s) peer %s both gone !?\n",
+						c.connType, c.calleeID, payload)
+				}
 			}
 			c.hub.HubMutex.RUnlock()
 			return
