@@ -2088,6 +2088,7 @@ function signalingCommand(message) {
 		waitForRemoteStreamFunc();
 
 		// offer store contact link (only if callerId and calleeID exist)
+// TODO: if "store contact" is clicked while in call, the call gets disconnected
 		if(callerId!="" && calleeID!="" && callerHost!="" && callerHost!=location.host) {
 			let storeContactElement = document.getElementById("storeContact");
 			if(storeContactElement) {
