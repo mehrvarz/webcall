@@ -17,7 +17,6 @@ type Hub struct {
 	CallerClient *WsClient
 	timer *time.Timer // expires when durationSecs ends; terminates session
 	timerCanceled chan struct{}
-//	exitFunc func(*WsClient, string)
 	exitFunc func(uint64, string)
 	IsUnHiddenForCallerAddr string
 	ConnectedCallerIp string // will be set on callerOffer
@@ -186,7 +185,8 @@ func (h *Hub) peerConHasEnded(cause string) {
 	callerName := ""
 	//callerHost := ""
 	calleeRemoteAddr = h.CalleeClient.RemoteAddrNoPort
-	if h.CallerClient!=nil  {
+	// in case of caller disconnect, h.CallerClient may already be nil
+	if h.CallerClient!=nil  {	
 		callerRemoteAddr = h.CallerClient.RemoteAddrNoPort
 		callerID = h.CallerClient.callerID
 		callerName = h.CallerClient.callerName
@@ -196,6 +196,13 @@ func (h *Hub) peerConHasEnded(cause string) {
 		recentTurnCalleeIpMutex.Lock()
 		delete(recentTurnCalleeIps,h.CallerClient.RemoteAddrNoPort)
 		recentTurnCalleeIpMutex.Unlock()
+	} else {
+		// there may have been a caller "OnClose" setting h.CallerClient=nil
+		// right before "REQ PEER DISCON from caller" calling peerConHasEnded()
+		// but h.ConnectedCallerIp (set by StoreCallerIpInHubMap()) may still exist
+		if h.ConnectedCallerIp!="" {
+			callerRemoteAddr = h.ConnectedCallerIp+"!"
+		}
 	}
 
 	if h.CalleeClient.isConnectedToPeer.Get() {

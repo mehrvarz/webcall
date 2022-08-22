@@ -1161,18 +1161,19 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			if c.isCallee && payload!="disconnectByCaller" {
 				// NOTE: the actual discon request may also come from the caller
 				// but the caller is likely ws-disconnected, so it comes via the callee client
-				fmt.Printf("%s (%s) REQ PEER DISCON from callee %s cancel='%s'\n",
+				fmt.Printf("%s (%s) REQ PEER DISCON %s by callee cancel='%s'\n",
 					c.connType, c.calleeID, c.RemoteAddr, payload)
 				// end the peer-connection
 				c.hub.HubMutex.RUnlock()
-				c.hub.closePeerCon("callee cancel")
+				c.hub.closePeerCon("callee "+payload)
 				return
 			}
-			fmt.Printf("%s (%s) REQ PEER DISCON from caller %s cancel='%s'\n",
+			// c.RemoteAddr is callee-ip (c.hub.CallerClient may be nil already)
+			fmt.Printf("%s (%s) REQ PEER DISCON %s <- by caller cancel='%s'\n",
 				c.connType, c.calleeID, c.RemoteAddr, payload)
 			// end the peer-connection
 			c.hub.HubMutex.RUnlock()
-			c.hub.closePeerCon("caller cancel")
+			c.hub.closePeerCon("caller "+payload)
 			return
 		} else {
 			// no peercon: we should still forward "cancel" to the other side
@@ -1191,7 +1192,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 					c.hub.CallerClient.calleeAnswerReceived <- struct{}{}
 					c.hub.HubMutex.RUnlock()
 
-// TODO in some cases (when we just did a closePeerCon()) we don't want to do this (again)
+// TODO in some cases, when we just did a closePeerCon(), we don't want to call it again
 					c.hub.closePeerCon("caller cancel")
 					return
 				}
@@ -1214,7 +1215,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 						return
 					}
 
-// TODO in some cases (when we just did a closePeerCon()) we don't want to do this (again)
+// TODO in some cases, when we just did a closePeerCon(), we don't want to call it again
 					// let callee re-init
 					c.hub.closePeerCon("caller sent cancel")
 					return
