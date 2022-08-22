@@ -385,7 +385,9 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				client.hub.closeCallee("sendPong: "+err.Error())
 				return
 			}
-			// caller is gone
+			// caller is gone (this can only happen for as long as the server has not disconnected the caller,
+			// so it is likely a manual (early/pre-14s) disconnect by the caller)
+// TODO so we might want to call closePeerCon() instead
 			client.hub.closeCaller("sendPong: "+err.Error())
 			return
 		}
@@ -419,7 +421,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			if client.hub!=nil {
 				client.hub.HubMutex.RLock()
 				if client.hub.CallerClient!=nil {
-// TODO calleeAnswerReceived could be nil ?
+// TODO could calleeAnswerReceived be nil ?
 					client.hub.CallerClient.calleeAnswerReceived <- struct{}{}
 				}
 				client.hub.HubMutex.RUnlock()
@@ -444,37 +446,6 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				}
 			}
 
-/* remove this
-			if !client.reached14s.Get() {
-				// shut down the callee on early caller hangup
-				fmt.Printf("%s (%s) OnClose caller close !reached14s -> clear CallerIp (DO NOTHING)\n",
-					client.connType, client.calleeID)
-				client.hub.HubMutex.RLock()
-				if client.hub!=nil && client.hub.CalleeClient!=nil &&
-						client.hub.CalleeClient.isConnectedToPeer.Get() {
-					fmt.Printf("%s (%s) OnClose caller !reached14s -> cancel callee📴 + peerConHasEnded\n",
-						client.connType, client.calleeID)
-					err = client.hub.CalleeClient.Write([]byte("cancel|c"))
-					if err != nil {
-						fmt.Printf("# %s (%s) OnClose caller: send cancel msg to callee fail %v\n",
-							client.connType, client.calleeID, err)
-						// TODO we ignore this err here for now
-					}
-				}
-				client.hub.HubMutex.RUnlock()
-
-				client.hub.closePeerCon("OnCloseCaller")
-
-				// stop watchdog timer
-				client.calleeAnswerReceived <- struct{}{}
-
-				//StoreCallerIpInHubMap(client.globalCalleeID, "", false)
-			} else {
-				//fmt.Printf("%s (%s) caller closeafter reached14s -> do nothing\n",
-				//	client.connType, client.calleeID)
-			}
-*/
-
 			if client.hub!=nil {
 				client.hub.HubMutex.RLock()
 				if client.hub.CallerClient!=nil {
@@ -482,11 +453,25 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				}
 				client.hub.HubMutex.RUnlock()
 
-				// NOTE we treat err=read timeout like noerr (testing)
-				if err!=nil && strings.Index(err.Error(),"read timeout")<0 {
-					client.hub.closeCaller("OnCloseCaller "+err.Error())
+				if !client.reached14s.Get() {
+					// a caller disconnect before reached14s is definitely a manual discon by the caller
+					// -> force closePeerCon
+					// NOTE we treat err=read timeout like noerr (testing)
+					if err!=nil && strings.Index(err.Error(),"read timeout")<0 {
+						client.hub.closePeerCon("OnCloseCaller "+err.Error())
+					} else {
+						client.hub.closePeerCon("OnCloseCaller noerr")
+					}
 				} else {
-					client.hub.closeCaller("OnCloseCaller noerr")
+					// a caller disconnect after reached14s is a regular discon of the caller by the server
+					// (see: disconCallerOnPeerConnected)
+					// -> let peerCon alive, just close the caller
+					// NOTE we treat err=read timeout like noerr (testing)
+					if err!=nil && strings.Index(err.Error(),"read timeout")<0 {
+						client.hub.closeCaller("OnCloseCaller "+err.Error())
+					} else {
+						client.hub.closeCaller("OnCloseCaller noerr")
+					}
 				}
 			}
 		}
@@ -645,62 +630,62 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				//	client.connType, client.calleeID)
 				return
 			}
+
+			client.reached14s.Set(true)
+			// if isConnectedToPeer and disconCallerOnPeerConnected -> force discon caller (but not peercon) now!
+			// caller onClose will from now on not anymore disconnect peercon on caller gone
+
 			if hub.CalleeClient.isConnectedToPeer.Get() {
 				// peercon steht; no peercon meldung nicht nötig; force caller ws-disconnect
-				if logWantedFor("wsclose") {
-					fmt.Printf("%s (%s) reached14s CalleeClient.isConnectedToPeer\n",
-						client.connType, client.calleeID)
-				}
-				client.reached14s.Set(true) // caller onClose will not anymore disconnect session/peercon
-
-				// we know this is the caller
-				// shall the caller be ws-disconnected?
+				// we know this is the caller, shall it be ws-disconnected?
 				readConfigLock.RLock()
 				myDisconCallerOnPeerConnected := disconCallerOnPeerConnected
 				readConfigLock.RUnlock()
 				if myDisconCallerOnPeerConnected {
-//					// yes, but only force-disconnect the caller if already media connected
-//					if hub.CalleeClient.isMediaConnectedToPeer.Get() {
-						// yes, force-disconnect the caller
-						hub.HubMutex.RUnlock()
-						if logWantedFor("attachex") {
-							fmt.Printf("%s (%s) 14s reached -> force caller ws-disconnect\n",
-								client.connType, client.calleeID)
-						}
-						hub.closeCaller("disconCallerAfter14s") // will clear .CallerClient
-						return
-//					}
+					// force-disconnect the caller WITHOUT disconnecting peerCon
+					hub.HubMutex.RUnlock()
+					if logWantedFor("attachex") {
+						fmt.Printf("%s (%s) 14s reached -> force caller ws-disconnect\n",
+							client.connType, client.calleeID)
+					}
+					fmt.Printf("%s (%s) reached14s -> force disconnect caller\n",
+						client.connType, client.calleeID)
+					hub.closeCaller("disconCallerAfter14s") // this will clear .CallerClient
+					return
 				}
+				fmt.Printf("%s (%s) reached14s -> do not force disconnect caller\n",
+					client.connType, client.calleeID)
 				hub.HubMutex.RUnlock()
 				return
 			}
 
 			if hub!=nil && myCallerContactTime != hub.lastCallerContactTime {
 				// this callee is engaged with a new caller session already (myCallerContactTime is outdated)
+// TODO must investigate this
 				hub.HubMutex.RUnlock()
-				fmt.Printf("%s (%s) no peercon check: outdated %d not %d\n",
+				fmt.Printf("%s (%s) reached14s and no peerCon, but outdated %d != %d\n",
 					client.connType, client.calleeID, myCallerContactTime, hub.lastCallerContactTime)
 				return
 			}
 
 			// NO PEERCON: calleroffer received, but after 14s still no peer-connect: this is a webrtc issue
+			// let's assume both sides are still ws-connected. let's send a status msg to both
+			fmt.Printf("%s (%s) reached14s NO PEERCON📵 %ds %s <- %s (%s) %v ua=%s\n",
+				client.connType, client.calleeID, delaySecs, hub.CalleeClient.RemoteAddr,
+				client.RemoteAddr, client.callerID, client.isOnline.Get(), client.userAgent)
 
 			// add missed call if dbUser.StoreMissedCalls is set
 			userKey := client.calleeID + "_" + strconv.FormatInt(int64(client.hub.registrationStartTime),10)
 			var dbUser DbUser
 			err = kvMain.Get(dbUserBucket, userKey, &dbUser)
 			if err!=nil {
-				fmt.Printf("# %s (%s) failed to get dbUser\n",client.connType,client.calleeID)
+				fmt.Printf("# %s (%s) reached14s, failed to get dbUser for addMissedCall\n",
+					client.connType, client.calleeID)
 			} else if dbUser.StoreMissedCalls {
 				addMissedCall(hub.CalleeClient.calleeID,
 					CallerInfo{client.RemoteAddr, client.callerName, time.Now().Unix(),
 					client.callerID, client.callerTextMsg }, "NO PEERCON")
 			}
-
-			// let's assume both sides are still ws-connected. let's send a status msg to both
-			fmt.Printf("%s (%s) NO PEERCON📵 %ds %s <- %s (%s) %v ua=%s\n",
-				client.connType, client.calleeID, delaySecs, hub.CalleeClient.RemoteAddr, 
-				client.RemoteAddr, client.callerID, client.isOnline.Get(), client.userAgent)
 
 			// NOTE: msg MUST NOT contain apostroph (') characters
 			msg := "Unable to establish a direct P2P connection. "+
@@ -1646,6 +1631,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 											c.connType, c.calleeID, c.RemoteAddr)
 									}
 									c.hub.HubMutex.RUnlock()
+									// here we disconnect the caller WITHOUT disconnecting peerCon
 									c.hub.closeCaller("disconCallerOnPeerConnected") // will clear .CallerClient
 									return
 								}
