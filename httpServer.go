@@ -724,6 +724,11 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if urlPath=="/adminlog" {
+		adminlog(w, r)
+		return
+	}
+
 	if remoteAddr=="127.0.0.1" || (outboundIP!="" && remoteAddr==outboundIP) {
 		printFunc := func(w http.ResponseWriter, format string, a ...interface{}) {
 			// printFunc writes to the console AND to the localhost http client

@@ -8,9 +8,11 @@ import (
 	"strconv"
 	"errors"
 	"bytes"
+	"strings"
 	"encoding/gob"
 	"github.com/mehrvarz/webcall/skv"
 	bolt "go.etcd.io/bbolt"
+	"github.com/nxadm/tail"
 )
 
 func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath string, urlID string, remoteAddr string) bool {
@@ -349,5 +351,39 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 	}
 
 	return false
+}
+
+func adminlog(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("/adminlog start...\n")
+	fmt.Fprintf(w,"/adminlog start...\n")
+	t, err := tail.TailFile("/var/log/syslog", tail.Config{Follow: true, ReOpen: true})
+	if err!=nil {
+		fmt.Printf("/adminlog err=%v\n",err)
+		return
+	}
+	fmt.Fprintf(w,"/adminlog t.Lines=%d\n",t.Lines)
+	if f, ok := w.(http.Flusher); ok {
+		f.Flush()
+	}
+	for line := range t.Lines {
+		if strings.Index(line.Text," webcall")>=0 {
+			if strings.Index(line.Text,"TLS handshake error")>=0 {
+				// skip
+			} else {
+				// filter out columns 3+4
+				toks := strings.Split(line.Text, " ")
+				if len(toks)>5 {
+					idx := strings.Index(line.Text,toks[5])
+					logline := toks[0]+" "+toks[1]+" "+toks[2]+" "+line.Text[idx:]
+					fmt.Fprintf(w,"%s\n",logline)
+				} else {
+					fmt.Fprintf(w,"%s\n",line.Text)
+				}
+				if f, ok := w.(http.Flusher); ok {
+					f.Flush()
+				}
+			}
+		}
+	}
 }
 
