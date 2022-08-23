@@ -376,11 +376,13 @@ func adminlog(w http.ResponseWriter, r *http.Request) {
 				if len(toks)>5 {
 					// we are only using toks[2] = hh:mm:ss and everything starting with toks[5]
 					idx := strings.Index(line.Text,toks[5])
-					logline := toks[2]+" "+line.Text[idx:]
-					fmt.Fprintf(w,"%s\n",logline)
-					lines++
-					if lines%20==0 {
-						fmt.Fprintf(w,"lines=%d/%d\n",lines,linesTotal)
+					if idx>0 {
+						logline := toks[2]+" "+line.Text[idx:]
+						fmt.Fprintf(w,"%s\n",logline)
+						lines++
+						if lines%20==0 {
+							fmt.Fprintf(w,"lines=%d/%d\n",lines,linesTotal)
+						}
 					}
 				} else {
 					//fmt.Fprintf(w,"%s\n",line.Text)
