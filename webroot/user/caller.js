@@ -953,6 +953,12 @@ function dialButtonClick() {
 		if(storeContactElement) {
 			storeContactElement.innerHTML = "";
 		}
+
+		// disable nicknameElement input form
+		let nicknameElement = document.getElementById("nickname");
+		if(nicknameElement) {
+			nicknameElement.disabled = true;
+		}
 	}
 
 	// focus back to background, so that esc-key via onkeydown works
@@ -2649,6 +2655,12 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 				storeContactElement.innerHTML = "<a href='"+storeContactLink+"'>Store contact</a>";
 				// button will be removed in dialButtonClick()
 			}
+		}
+
+		// enable nicknameElement input form
+		let nicknameElement = document.getElementById("nickname");
+		if(nicknameElement) {
+			nicknameElement.disabled = false;
 		}
 	}
 
