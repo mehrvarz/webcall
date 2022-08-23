@@ -294,7 +294,7 @@ func (h *Hub) closeCallee(cause string) {
 		if logWantedFor("wsclose") {
 			fmt.Printf("%s (%s) closeCallee peercon=%v clr=%v (%s)\n",
 				h.CalleeClient.connType, h.CalleeClient.calleeID,
-				h.CalleeClient.isConnectedToPeer.Get(), h.CalleeClient.clearOnCloseDone, comment)
+				h.CalleeClient.isConnectedToPeer.Get(), h.CalleeClient.clearOnCloseDone, cause)
 		}
 
 		// NOTE: delete(hubMap,id) might have been executed, caused by timeout22s
