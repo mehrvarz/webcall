@@ -12,7 +12,7 @@ import (
 	"encoding/gob"
 	"github.com/mehrvarz/webcall/skv"
 	bolt "go.etcd.io/bbolt"
-	"github.com/nxadm/tail"
+	"github.com/nxadm/tail" // https://pkg.go.dev/github.com/nxadm/tail#section-readme
 )
 
 func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath string, urlID string, remoteAddr string) bool {

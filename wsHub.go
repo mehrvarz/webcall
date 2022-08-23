@@ -20,6 +20,8 @@ type Hub struct {
 	exitFunc func(uint64, string)
 	IsUnHiddenForCallerAddr string
 	ConnectedCallerIp string // will be set on callerOffer
+	CallerIpNoPort string
+	CallerID string
 	WsUrl string
 	WssUrl string
 	calleeUserAgent string // http UA
@@ -182,31 +184,18 @@ func (h *Hub) peerConHasEnded(cause string) {
 		h.lastCallStartTime = 0
 	}
 
-	calleeRemoteAddr := ""
-	callerRemoteAddr := ""
-	callerID := ""
+	callerID := h.CallerID
 	callerName := ""
 	//callerHost := ""
-	calleeRemoteAddr = h.CalleeClient.RemoteAddrNoPort
-	// in case of caller disconnect, h.CallerClient may already be nil
 	if h.CallerClient!=nil  {	
-		callerRemoteAddr = h.CallerClient.RemoteAddrNoPort
-		callerID = h.CallerClient.callerID
 		callerName = h.CallerClient.callerName
 		//callerHost = c.hub.CallerClient.callerHost
-
-		// clear recentTurnCalleeIps[ipNoPort] entry (if this was a relay session)
-		recentTurnCalleeIpMutex.Lock()
-		delete(recentTurnCalleeIps,h.CallerClient.RemoteAddrNoPort)
-		recentTurnCalleeIpMutex.Unlock()
-	} else {
-		// there may have been a caller "OnClose" setting h.CallerClient=nil
-		// right before "REQ PEER DISCON from caller" calling peerConHasEnded()
-		// but h.ConnectedCallerIp (set by StoreCallerIpInHubMap()) may still exist
-		if h.ConnectedCallerIp!="" {
-			callerRemoteAddr = h.ConnectedCallerIp+"!"
-		}
 	}
+
+	// clear recentTurnCalleeIps[ipNoPort] entry (if this was a relay session)
+	recentTurnCalleeIpMutex.Lock()
+	delete(recentTurnCalleeIps,h.CallerIpNoPort)
+	recentTurnCalleeIpMutex.Unlock()
 
 	if h.CalleeClient.isConnectedToPeer.Get() {
 		// we are disconnecting a peer connect
@@ -232,7 +221,7 @@ func (h *Hub) peerConHasEnded(cause string) {
 		fmt.Printf("%s (%s) %s %ds %s/%s %s <- %s (%s) %s\n",
 			h.CalleeClient.connType, h.CalleeClient.calleeID, title,
 			h.CallDurationSecs, localPeerCon, remotePeerCon,
-			calleeRemoteAddr, callerRemoteAddr, callerID, cause)
+			h.CalleeClient.RemoteAddrNoPort, h.CallerIpNoPort, callerID, cause)
 	}
 
 	// add an entry to missed calls, but only if hub.CallDurationSecs<=0
@@ -249,7 +238,7 @@ func (h *Hub) peerConHasEnded(cause string) {
 				h.CalleeClient.connType, h.CalleeClient.calleeID,err)
 		} else if dbUser.StoreMissedCalls {
 			//fmt.Printf("%s (%s) store missedCall msg=(%s)\n", c.connType, c.calleeID, c.callerTextMsg)
-			addMissedCall(h.CalleeClient.calleeID, CallerInfo{callerRemoteAddr, callerName, time.Now().Unix(),
+			addMissedCall(h.CalleeClient.calleeID, CallerInfo{h.CallerIpNoPort, callerName, time.Now().Unix(),
 				callerID, h.CalleeClient.callerTextMsg }, cause)
 		}
 	}
@@ -299,21 +288,17 @@ func (h *Hub) closeCallee(cause string) {
 
 		// NOTE: delete(hubMap,id) might have been executed, caused by timeout22s
 
-// TODO this is not needed anymore?
-//		if !h.CalleeClient.clearOnCloseDone {
-			if h.lastCallStartTime>0 {
-				h.processTimeValues(comment)
-				h.lastCallStartTime = 0
-			}
+		if h.lastCallStartTime>0 {
+			h.processTimeValues(comment)
+			h.lastCallStartTime = 0
+		}
 
-			if h.CalleeClient.isConnectedToPeer.Get() {
-				h.peerConHasEnded(comment) // will set h.CallerClient=nil
-			}
-			h.LocalP2p = false
-			h.RemoteP2p = false
-			h.setDeadline(0,comment)
-//			h.CalleeClient.clearOnCloseDone = true
-//		}
+		if h.CalleeClient.isConnectedToPeer.Get() {
+			h.peerConHasEnded(comment) // will set h.CallerClient=nil
+		}
+		h.LocalP2p = false
+		h.RemoteP2p = false
+		h.setDeadline(0,comment)
 
 		h.CalleeClient.Close(comment)
 
