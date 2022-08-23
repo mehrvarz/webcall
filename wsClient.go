@@ -77,7 +77,7 @@ type WsClient struct {
 	pingReceived uint64
 	authenticationShown bool // whether to show "pion auth for client (%v) SUCCESS"
 	isCallee bool
-	clearOnCloseDone bool
+//	clearOnCloseDone bool
 	autologin bool
 }
 
@@ -790,7 +790,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 		c.pickupSent.Set(false)
 
 		// closeCallee() will call setDeadline(0) and processTimeValues() if this is false; then set it true
-		c.clearOnCloseDone = false // TODO not needed anymore; only used in hub.closeCallee()
+//		c.clearOnCloseDone = false // TODO not needed anymore; only used in hub.closeCallee()
 		c.callerTextMsg = ""
 
 // TODO clear blockMap[c.calleeID] ?
