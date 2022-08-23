@@ -91,7 +91,7 @@ func serveWss(w http.ResponseWriter, r *http.Request) {
 
 func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	if logWantedFor("wsverbose") {
-		fmt.Printf("serve url=%s tls=%v\n", r.URL.String(), tls)
+		fmt.Printf("wsClient url=%s tls=%v\n", r.URL.String(), tls)
 	}
 
 	if keepAliveMgr==nil {
@@ -121,11 +121,11 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	wsClientID64, _ = strconv.ParseUint(wsClientIDstr, 10, 64)
 	if wsClientID64<=0 {
 		// not valid
-		fmt.Printf("# serveWs invalid wsClientIDstr=%s %s url=%s\n",
+		fmt.Printf("# wsClient invalid wsClientIDstr=%s %s url=%s\n",
 			wsClientIDstr, remoteAddr, r.URL.String())
 		return
 	}
-	//fmt.Printf("serveWs wsClientIDstr=%s wsClientID64=%d\n",wsClientIDstr,wsClientID64)
+	//fmt.Printf("wsClient wsClientIDstr=%s wsClientID64=%d\n",wsClientIDstr,wsClientID64)
 	wsClientMutex.Lock()
 	wsClientData,ok = wsClientMap[wsClientID64]
 	if ok {
@@ -136,7 +136,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	wsClientMutex.Unlock()
 	if !ok {
 		// this callee has just exited, no need to log
-		//fmt.Printf("serveWs ws=%d does not exist %s url=%s\n",
+		//fmt.Printf("wsClient ws=%d does not exist %s url=%s\n",
 		//	wsClientID64, remoteAddr, r.URL.String())
 		return
 	}
@@ -179,7 +179,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		   !strings.HasPrefix(wsClientData.calleeID,"talkback") {
 			// callerName is empty, but we got callerID and calleeID
 			// try to fetch callerName by searching for callerID in contacts of calleeID
-			//fmt.Printf("serveWs try to get callerName for callerID=%s via calleeID=%s\n",
+			//fmt.Printf("wsClient try to get callerName for callerID=%s via calleeID=%s\n",
 			//	callerID, wsClientData.calleeID)
 			var idNameMap map[string]string // callerID -> compoundName
 			err := kvContacts.Get(dbContactsBucket,wsClientData.calleeID,&idNameMap)
@@ -196,7 +196,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 					}
 				}
 				if callerName!="" {
-					fmt.Printf("serveWs got callerName=%s for callerID=%s from contacts of calleeID=%s\n",
+					fmt.Printf("wsClient got callerName=%s for callerID=%s from contacts of calleeID=%s\n",
 						callerName, callerIdLong, wsClientData.calleeID)
 				}
 			}
@@ -226,11 +226,11 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 						callerName += " ("+assignedName+")"
 					}
 				}
-				fmt.Printf("serveWs assignedName=%s for dialID=%s isMappedTo=%s (shouldBeSame=%s)\n",
+				fmt.Printf("wsClient assignedName=%s for dialID=%s isMappedTo=%s (shouldBeSame=%s)\n",
 					assignedName, dialID, mappingData.CalleeId, wsClientData.calleeID)
 			} else {
 				// dialID is not mapped
-				//fmt.Printf("serveWs dialID=%s notMapped (shouldBeSame=%s)\n",
+				//fmt.Printf("wsClient dialID=%s notMapped (shouldBeSame=%s)\n",
 				//	dialID, wsClientData.calleeID)
 			}
 		}
@@ -272,7 +272,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	client.globalCalleeID = wsClientData.globalID
 
 	dialID := wsClientData.dialID
-	//fmt.Printf("serveWs calleeID=%s dialID=%s\n", client.calleeID, dialID)
+	//fmt.Printf("wsClient calleeID=%s dialID=%s\n", client.calleeID, dialID)
 	if dialID != "" && dialID != client.calleeID {
 		// original dialID was mapped to client.calleeID
 		mappingMutex.RLock()
@@ -289,7 +289,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 					callerName += " ("+assignedName+")"
 				}
 			}
-			fmt.Printf("serveWs assignedName=%s for dialID=%s isMappedTo=%s(=%s)\n",
+			fmt.Printf("wsClient assignedName=%s for dialID=%s isMappedTo=%s(=%s)\n",
 				assignedName, dialID, mappingData.CalleeId, wsClientData.calleeID)
 		}
 	}
@@ -1723,8 +1723,8 @@ func (c *WsClient) Write(b []byte) error {
 func (c *WsClient) Close(reason string) {
 	// Close() is only called by hub.closeCaller() and hub.closeCallee()
 	if logWantedFor("wsclose") {
-		fmt.Printf("wsclient (%s) Close isCallee=%v isOnline=%v reason=%s\n",
-			c.calleeID, c.isCallee, c.isOnline.Get(), reason)
+		fmt.Printf("%s (%s) Close callee=%v online=%v '%s'\n",
+			c.connType, c.calleeID, c.isCallee, c.isOnline.Get(), reason)
 	}
 
 	if c.isOnline.Get() {
@@ -1739,7 +1739,7 @@ func (c *WsClient) Close(reason string) {
 		if c.hub!=nil && c.hub.CallerClient!=nil {
 			// this caller might still be ringing: stop the watchdog timer
 			//if logWantedFor("wsclose") {
-			//	fmt.Printf("wsclient (%s) Close caller: stop watchdog timer (just in case)\n", c.calleeID)
+			//	fmt.Printf("%s (%s) Close caller: stop watchdog timer (just in case)\n", c.connType, c.calleeID)
 			//}
 			c.hub.CallerClient.calleeAnswerReceived <- struct{}{}
 			// hub.closeCaller() takes care of hub.CallerClient = nil
