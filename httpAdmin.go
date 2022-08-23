@@ -361,7 +361,10 @@ func adminlog(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Printf("/adminlog start...\n")
 	fmt.Fprintf(w,"/adminlog start...\n")
+	lines:=0
+	linesTotal:=0
 	for line := range t.Lines {
+		linesTotal++
 		// line must include " webcall"
 		if strings.Index(line.Text," webcall")>=0 {
 			if strings.Index(line.Text,"TLS handshake error")>=0 {
@@ -375,6 +378,10 @@ func adminlog(w http.ResponseWriter, r *http.Request) {
 					idx := strings.Index(line.Text,toks[5])
 					logline := toks[2]+" "+line.Text[idx:]
 					fmt.Fprintf(w,"%s\n",logline)
+					lines++
+					if lines%20==0 {
+						fmt.Fprintf(w,"lines=%d/%d\n",lines,linesTotal)
+					}
 				} else {
 					//fmt.Fprintf(w,"%s\n",line.Text)
 				}
