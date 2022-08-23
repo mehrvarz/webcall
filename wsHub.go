@@ -130,13 +130,15 @@ func (h *Hub) doBroadcast(message []byte) {
 	}
 	if h.CallerClient!=nil {
 		if logWantedFor("______") { // was "deadline" had to be removed
-			fmt.Printf("wshub (%s) doBroadcast caller (%s) %s\n", calleeID, message, h.CallerClient.RemoteAddr)
+			fmt.Printf("%s (%s) doBroadcast caller (%s) %s\n",
+				h.CalleeClient.connType, calleeID, message, h.CallerClient.RemoteAddr)
 		}
 		h.CallerClient.Write(message)
 	}
 	if h.CalleeClient!=nil {
 		if logWantedFor("______") { // was "deadline" had to be removed
-			fmt.Printf("wshub (%s) doBroadcast callee (%s) %s\n", calleeID, message, h.CalleeClient.RemoteAddr)
+			fmt.Printf("%s (%s) doBroadcast callee (%s) %s\n",
+				h.CalleeClient.connType, calleeID, message, h.CalleeClient.RemoteAddr)
 		}
 		h.CalleeClient.Write(message)
 	}
@@ -146,7 +148,8 @@ func (h *Hub) processTimeValues(comment string) {
 	if h.lastCallStartTime>0 {
 		h.CallDurationSecs = time.Now().Unix() - h.lastCallStartTime
 		if logWantedFor("hub") {
-			fmt.Printf("wshub (%s) timeValues %s sec=%d %d %d\n", h.CalleeClient.calleeID, comment,
+			fmt.Printf("%s (%s) timeValues %s sec=%d %d %d\n",
+				h.CalleeClient.connType, h.CalleeClient.calleeID, comment,
 				h.CallDurationSecs, time.Now().Unix(), h.lastCallStartTime)
 		}
 		if h.CallDurationSecs>0 {
@@ -222,17 +225,20 @@ func (h *Hub) peerConHasEnded(cause string) {
 			h.CallerClient.isMediaConnectedToPeer.Set(false)
 		}
 
-		// localPeerCon, remotePeerCon turn relay/relay
-		fmt.Printf("%s (%s) PEER DISCON📴 %ds %s/%s %s <- %s (%s) %s\n",
-			h.CalleeClient.connType, h.CalleeClient.calleeID, //peerType,
+		title := "PEER DISCON";
+		if h.CallDurationSecs > 0 {
+			title = "PEER DISCON📴"
+		}
+		fmt.Printf("%s (%s) %s %ds %s/%s %s <- %s (%s) %s\n",
+			h.CalleeClient.connType, h.CalleeClient.calleeID, title,
 			h.CallDurationSecs, localPeerCon, remotePeerCon,
 			calleeRemoteAddr, callerRemoteAddr, callerID, cause)
 	}
 
 	// add an entry to missed calls, but only if hub.CallDurationSecs<=0
 	// if caller cancels via hangup button, then this is the only addMissedCall() and contains msgtext
-	// this is NOT a missed call if callee denies the call
-//	if h.CallDurationSecs<=0 /*&& !strings.HasPrefix(cause,"callee")*/ {
+	// undone: this is NOT a missed call if callee denies the call: !strings.HasPrefix(cause,"callee")
+	//if h.CallDurationSecs<=0 /*&& !strings.HasPrefix(cause,"callee")*/ {
 	if h.CallerClient!=nil && h.CallDurationSecs<=0 {
 		// add missed call if dbUser.StoreMissedCalls is set
 		userKey := h.CalleeClient.calleeID + "_" + strconv.FormatInt(int64(h.registrationStartTime),10)
@@ -286,7 +292,8 @@ func (h *Hub) closeCallee(cause string) {
 	h.HubMutex.Lock()
 	if h.CalleeClient!=nil {
 		if logWantedFor("wsclose") {
-			fmt.Printf("wshub (%s) closeCallee peercon=%v clr=%v (%s)\n", h.CalleeClient.calleeID, 
+			fmt.Printf("%s (%s) closeCallee peercon=%v clr=%v (%s)\n",
+				h.CalleeClient.connType, h.CalleeClient.calleeID,
 				h.CalleeClient.isConnectedToPeer.Get(), h.CalleeClient.clearOnCloseDone, comment)
 		}
 
