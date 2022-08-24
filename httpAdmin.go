@@ -363,7 +363,7 @@ func adminlog(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("/adminlog err=%v\n",err)
 		return
 	}
-	fmt.Printf("/adminlog start...\n")
+	fmt.Printf("/adminlog start...\n")	// maybe show src-ip and ua
 	fmt.Fprintf(w,"/adminlog start...\n")
 
 	if f, ok := w.(http.Flusher); ok {
@@ -375,6 +375,7 @@ func adminlog(w http.ResponseWriter, r *http.Request) {
 
 //	fmt.Fprintf(os.Stderr, "/adminlog start... (to Stderr) %d\n",t.Lines)
 
+	filter := false
 	lines:=0
 	linesTotal:=0
 
@@ -387,11 +388,13 @@ func adminlog(w http.ResponseWriter, r *http.Request) {
 				linesTotal++
 //				fmt.Fprintf(os.Stderr, "/adminlog linesTotal=%d (%s)\n",linesTotal,line.Text)
 
-				if strings.Index(line.Text," webcall")<0 {
-					continue
-				}
-				if strings.Index(line.Text,"TLS handshake error")>=0 {
-					continue
+				if filter {
+					if strings.Index(line.Text," webcall")<0 {
+						continue
+					}
+					if strings.Index(line.Text,"TLS handshake error")>=0 {
+						continue
+					}
 				}
 
 				//fmt.Fprintf(w,"%s\n",line.Text)
@@ -405,13 +408,16 @@ func adminlog(w http.ResponseWriter, r *http.Request) {
 					if idx>0 {
 						logline := toks[2]+" "+line.Text[idx:]
 						fmt.Fprintf(w,"%s\n",logline)
-						lines++
-
 						if f, ok := w.(http.Flusher); ok {
 							f.Flush()
 //							fmt.Fprintf(os.Stderr, "/adminlog flush\n")
 						} else {
 //							fmt.Fprintf(os.Stderr, "/adminlog noflush\n")
+						}
+
+						lines++
+						if lines>100 {
+							filter = true
 						}
 					}
 				}
