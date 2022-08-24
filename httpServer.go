@@ -482,6 +482,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 			// don't log 5-token (like this: "54281001702||65511272157|1653030153|msgtext")
 		} else {
 			fmt.Printf("# httpApi (%s) long urlID=(%s) %s (%s)\n", calleeID, urlID, remoteAddr, urlPath)
+			clientRequestAdd(remoteAddr,3)
 		}
 	} else if logWantedFor("http") {
 		fmt.Printf("httpApi (%s) urlID=(%s) %s (%s)\n", calleeID, urlID, remoteAddr, urlPath)
