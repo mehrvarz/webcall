@@ -356,7 +356,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 
 func adminlog(w http.ResponseWriter, r *http.Request) {
 	logfile := "/var/log/syslog"
-	seekInfo := tail.SeekInfo{-4*1024,io.SeekEnd}
+	seekInfo := tail.SeekInfo{-16*1024,io.SeekEnd}
 	t, err := tail.TailFile(logfile, tail.Config{Follow: true, ReOpen: true, Location: &seekInfo })
 	if err!=nil {
 		fmt.Printf("/adminlog err=%v\n",err)
