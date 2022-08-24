@@ -10,7 +10,6 @@ import (
 	"bytes"
 	"strings"
 	"io"
-//	"os"
 	"encoding/gob"
 	"github.com/mehrvarz/webcall/skv"
 	bolt "go.etcd.io/bbolt"
@@ -357,7 +356,6 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 
 func adminlog(w http.ResponseWriter, r *http.Request) {
 	logfile := "/var/log/syslog"
-//	logfile := "log.txt"
 	seekInfo := tail.SeekInfo{-4*1024,io.SeekEnd}
 	t, err := tail.TailFile(logfile, tail.Config{Follow: true, ReOpen: true, Location: &seekInfo })
 	if err!=nil {
@@ -366,28 +364,19 @@ func adminlog(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Printf("/adminlog start...\n")	// maybe show src-ip and ua
 	fmt.Fprintf(w,"/adminlog start...\n")
-
 	if f, ok := w.(http.Flusher); ok {
 		f.Flush()
-//		fmt.Fprintf(os.Stderr, "/adminlog flush\n")
-	} else {
-//		fmt.Fprintf(os.Stderr, "/adminlog noflush\n")
 	}
-
-//	fmt.Fprintf(os.Stderr, "/adminlog start... (to Stderr) %d\n",t.Lines)
 
 	filter := true
 	lines:=0
 	linesTotal:=0
-
 	for {
 		select {
 		case notifChan := <-t.Lines:
-			// print
 			line := *notifChan
 			if line.Text!="" {
 				linesTotal++
-//				fmt.Fprintf(os.Stderr, "/adminlog linesTotal=%d (%s)\n",linesTotal,line.Text)
 
 				if filter {
 					if strings.Index(line.Text," webcall")<0 {
@@ -402,40 +391,24 @@ func adminlog(w http.ResponseWriter, r *http.Request) {
 
 				// filter out columns
 				toks := strings.Split(line.Text, " ")
-//				fmt.Fprintf(os.Stderr, "/adminlog len(toks)=%d\n",len(toks))
 				if len(toks)>5 {
-					// we are only using toks[2] = hh:mm:ss and everything starting with toks[5]
+					// we only use toks[2] = hh:mm:ss and everything starting with toks[5]
+					// we do not use:
+					//   toks[0] = month, toks[1] = dayOfMonth, toks[3] = servername, toks[4] = process name
 					idx := strings.Index(line.Text,toks[5])
 					if idx>0 {
 						logline := toks[2]+" "+line.Text[idx:]
 						fmt.Fprintf(w,"%s\n",logline)
 						if f, ok := w.(http.Flusher); ok {
 							f.Flush()
-//							fmt.Fprintf(os.Stderr, "/adminlog flush\n")
-						} else {
-//							fmt.Fprintf(os.Stderr, "/adminlog noflush\n")
 						}
-
 						lines++
-/*
-						if lines>200 {
-							filter = true
-							fmt.Printf("/adminlog filter on\n")
-							//fmt.Fprintf(w,"/adminlog filter on\n")
-						} else if lines%20==0 {
-							fmt.Printf("/adminlog lines=%d\n",lines)
-						}
-*/
 					}
 				}
 			}
 		case <-r.Context().Done():
-//			fmt.Fprintf(os.Stderr, "/adminlog <-r.Context().Done() %d\n",linesTotal)
-//			fmt.Fprintf(os.Stderr, "/adminlog Stop (to Stderr) %d\n",linesTotal)
 			t.Stop()
-//			fmt.Fprintf(os.Stderr, "/adminlog Cleanup (to Stderr) %d\n",linesTotal)
 			t.Cleanup()
-//			fmt.Fprintf(os.Stderr, "/adminlog exit (to Stderr) %d\n",linesTotal)
 			fmt.Printf("/adminlog end %d/%d\n",lines,linesTotal)
 			return
 		}
