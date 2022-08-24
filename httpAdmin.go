@@ -371,6 +371,7 @@ func adminlog(w http.ResponseWriter, r *http.Request) {
 	filter := true
 	lines:=0
 	linesTotal:=0
+	noflush:=0
 	for {
 		select {
 		case notifChan := <-t.Lines:
@@ -401,6 +402,8 @@ func adminlog(w http.ResponseWriter, r *http.Request) {
 						fmt.Fprintf(w,"%s\n",logline)
 						if f, ok := w.(http.Flusher); ok {
 							f.Flush()
+						} else {
+							noflush++
 						}
 						lines++
 					}
@@ -409,7 +412,7 @@ func adminlog(w http.ResponseWriter, r *http.Request) {
 		case <-r.Context().Done():
 			t.Stop()
 			t.Cleanup()
-			fmt.Printf("/adminlog end %d/%d\n",lines,linesTotal)
+			fmt.Printf("/adminlog end %d/%d/%d\n",lines,linesTotal,noflush)
 			return
 		}
 	}
