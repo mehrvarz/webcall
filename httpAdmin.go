@@ -416,7 +416,7 @@ func adminlog(w http.ResponseWriter, r *http.Request) {
 						}
 
 						lines++
-						if lines>100 {
+						if lines>200 {
 							filter = true
 						}
 					}
