@@ -418,6 +418,7 @@ func adminlog(w http.ResponseWriter, r *http.Request) {
 						lines++
 						if lines>200 {
 							filter = true
+							fmt.Fprintf(w,"/adminlog filter on\n")
 						}
 					}
 				}
