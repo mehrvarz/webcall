@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"strings"
 	"io"
+	"os"
 	"encoding/gob"
 	"github.com/mehrvarz/webcall/skv"
 	bolt "go.etcd.io/bbolt"
@@ -368,9 +369,9 @@ func adminlog(w http.ResponseWriter, r *http.Request) {
 
 	if f, ok := w.(http.Flusher); ok {
 		f.Flush()
-//		fmt.Fprintf(os.Stderr, "/adminlog flush\n")
+		fmt.Fprintf(os.Stderr, "/adminlog flush\n")
 	} else {
-//		fmt.Fprintf(os.Stderr, "/adminlog noflush\n")
+		fmt.Fprintf(os.Stderr, "/adminlog noflush\n")
 	}
 
 //	fmt.Fprintf(os.Stderr, "/adminlog start... (to Stderr) %d\n",t.Lines)
@@ -418,8 +419,10 @@ func adminlog(w http.ResponseWriter, r *http.Request) {
 						lines++
 						if lines>200 {
 							filter = true
-							fmt.Printf("/adminlog filter on\n")	// maybe show src-ip and ua
+							fmt.Printf("/adminlog filter on\n")
 							//fmt.Fprintf(w,"/adminlog filter on\n")
+						} else if lines%20==0 {
+							fmt.Printf("/adminlog lines=%d\n",lines)
 						}
 					}
 				}
