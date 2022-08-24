@@ -418,7 +418,8 @@ func adminlog(w http.ResponseWriter, r *http.Request) {
 						lines++
 						if lines>200 {
 							filter = true
-							fmt.Fprintf(w,"/adminlog filter on\n")
+							fmt.Printf("/adminlog filter on\n")	// maybe show src-ip and ua
+							//fmt.Fprintf(w,"/adminlog filter on\n")
 						}
 					}
 				}
