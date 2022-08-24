@@ -11,9 +11,10 @@ import (
 	"strings"
 	"io"
 	"encoding/gob"
-	"github.com/mehrvarz/webcall/skv"
 	bolt "go.etcd.io/bbolt"
 	"github.com/nxadm/tail" // https://pkg.go.dev/github.com/nxadm/tail
+	"github.com/mehrvarz/webcall/skv"
+	"github.com/mehrvarz/webcall/atombool"
 )
 
 func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath string, urlID string, remoteAddr string) bool {
@@ -354,42 +355,49 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 	return false
 }
 
+var	adminlogBusy atombool.AtomBool
+var t *tail.Tail
+
 func adminlog(w http.ResponseWriter, r *http.Request) {
+	if adminlogBusy.Get() {
+		t.Stop()
+		t.Cleanup()
+		fmt.Printf("/adminlog force end\n")
+		adminlogBusy.Set(false)
+	}
+
+	fmt.Printf("/adminlog start...\n")	// maybe show src-ip and ua
 	logfile := "/var/log/syslog"
-	seekInfo := tail.SeekInfo{-16*1024,io.SeekEnd}
-	t, err := tail.TailFile(logfile, tail.Config{Follow: true, ReOpen: true, Location: &seekInfo })
+	seekInfo := tail.SeekInfo{-64*1024,io.SeekEnd}
+	var err error
+	t, err = tail.TailFile(logfile, tail.Config{Follow: true, ReOpen: true, Location: &seekInfo })
 	if err!=nil {
 		fmt.Printf("/adminlog err=%v\n",err)
 		return
 	}
-	fmt.Printf("/adminlog start...\n")	// maybe show src-ip and ua
-	fmt.Fprintf(w,"/adminlog start...\n")
-	if f, ok := w.(http.Flusher); ok {
-		f.Flush()
-	}
-
-	filter := true
-	lines:=0
-	linesTotal:=0
-	noflush:=0
+	adminlogBusy.Set(true)
+	linesTotal := 0
+	lines := 0
+	flush := 0
+	noflush := 0
+	inARowLines := 0
+	ticker100ms := time.NewTicker(100*time.Millisecond)
+	defer ticker100ms.Stop()
 	for {
 		select {
 		case notifChan := <-t.Lines:
+			if notifChan==nil {
+				// this happens if we force-stop it with a reload/newstart
+				//adminlogBusy.Set(false)
+				return
+			}
 			line := *notifChan
-			if line.Text!="" {
-				linesTotal++
-
-				if filter {
-					if strings.Index(line.Text," webcall")<0 {
-						continue
-					}
-					if strings.Index(line.Text,"TLS handshake error")>=0 {
-						continue
-					}
-				}
-
+			linesTotal++
+			if line.Text=="" ||
+			   strings.Index(line.Text," webcall")<0 ||
+			   strings.Index(line.Text,"TLS handshake error")>=0 {
+			} else {
 				//fmt.Fprintf(w,"%s\n",line.Text)
-
 				// filter out columns
 				toks := strings.Split(line.Text, " ")
 				if len(toks)>5 {
@@ -400,19 +408,30 @@ func adminlog(w http.ResponseWriter, r *http.Request) {
 					if idx>0 {
 						logline := toks[2]+" "+line.Text[idx:]
 						fmt.Fprintf(w,"%s\n",logline)
-						if f, ok := w.(http.Flusher); ok {
-							f.Flush()
-						} else {
-							noflush++
-						}
 						lines++
+						inARowLines++
 					}
 				}
 			}
+
+		case <-ticker100ms.C:
+			if inARowLines>=1 {
+				if f, ok := w.(http.Flusher); ok {
+					f.Flush()
+				} else {
+					//noflush++
+				}
+				flush++
+				inARowLines = 0
+			} else {
+				noflush++
+			}
+
 		case <-r.Context().Done():
 			t.Stop()
 			t.Cleanup()
-			fmt.Printf("/adminlog end %d/%d/%d\n",lines,linesTotal,noflush)
+			fmt.Printf("/adminlog end %d/%d %d/%d\n",lines,linesTotal,flush,noflush)
+			adminlogBusy.Set(false)
 			return
 		}
 	}
