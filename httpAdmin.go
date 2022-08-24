@@ -9,10 +9,11 @@ import (
 	"errors"
 	"bytes"
 	"strings"
+	"io"
 	"encoding/gob"
 	"github.com/mehrvarz/webcall/skv"
 	bolt "go.etcd.io/bbolt"
-	"github.com/nxadm/tail" // https://pkg.go.dev/github.com/nxadm/tail#section-readme
+	"github.com/nxadm/tail" // https://pkg.go.dev/github.com/nxadm/tail
 )
 
 func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath string, urlID string, remoteAddr string) bool {
@@ -354,25 +355,50 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 }
 
 func adminlog(w http.ResponseWriter, r *http.Request) {
-	t, err := tail.TailFile("/var/log/syslog", tail.Config{Follow: true, ReOpen: true})
+	logfile := "/var/log/syslog"
+//	logfile := "log.txt"
+	seekInfo := tail.SeekInfo{-4*1024,io.SeekEnd}
+	t, err := tail.TailFile(logfile, tail.Config{Follow: true, ReOpen: true, Location: &seekInfo })
 	if err!=nil {
 		fmt.Printf("/adminlog err=%v\n",err)
 		return
 	}
 	fmt.Printf("/adminlog start...\n")
 	fmt.Fprintf(w,"/adminlog start...\n")
+
+	if f, ok := w.(http.Flusher); ok {
+		f.Flush()
+//		fmt.Fprintf(os.Stderr, "/adminlog flush\n")
+	} else {
+//		fmt.Fprintf(os.Stderr, "/adminlog noflush\n")
+	}
+
+//	fmt.Fprintf(os.Stderr, "/adminlog start... (to Stderr) %d\n",t.Lines)
+
 	lines:=0
 	linesTotal:=0
-	for line := range t.Lines {
-		linesTotal++
-		// line must include " webcall"
-		if strings.Index(line.Text," webcall")>=0 {
-			if strings.Index(line.Text,"TLS handshake error")>=0 {
-				// skip these lines
-			} else {
-				// we going to show this line
+
+	for {
+		select {
+		case notifChan := <-t.Lines:
+			// print
+			line := *notifChan
+			if line.Text!="" {
+				linesTotal++
+//				fmt.Fprintf(os.Stderr, "/adminlog linesTotal=%d (%s)\n",linesTotal,line.Text)
+
+				if strings.Index(line.Text," webcall")<0 {
+					continue
+				}
+				if strings.Index(line.Text,"TLS handshake error")>=0 {
+					continue
+				}
+
+				//fmt.Fprintf(w,"%s\n",line.Text)
+
 				// filter out columns
 				toks := strings.Split(line.Text, " ")
+//				fmt.Fprintf(os.Stderr, "/adminlog len(toks)=%d\n",len(toks))
 				if len(toks)>5 {
 					// we are only using toks[2] = hh:mm:ss and everything starting with toks[5]
 					idx := strings.Index(line.Text,toks[5])
@@ -380,17 +406,25 @@ func adminlog(w http.ResponseWriter, r *http.Request) {
 						logline := toks[2]+" "+line.Text[idx:]
 						fmt.Fprintf(w,"%s\n",logline)
 						lines++
-						if lines%20==0 {
-							fmt.Fprintf(w,"lines=%d/%d\n",lines,linesTotal)
+
+						if f, ok := w.(http.Flusher); ok {
+							f.Flush()
+//							fmt.Fprintf(os.Stderr, "/adminlog flush\n")
+						} else {
+//							fmt.Fprintf(os.Stderr, "/adminlog noflush\n")
 						}
 					}
-				} else {
-					//fmt.Fprintf(w,"%s\n",line.Text)
-				}
-				if f, ok := w.(http.Flusher); ok {
-					f.Flush()
 				}
 			}
+		case <-r.Context().Done():
+//			fmt.Fprintf(os.Stderr, "/adminlog <-r.Context().Done() %d\n",linesTotal)
+//			fmt.Fprintf(os.Stderr, "/adminlog Stop (to Stderr) %d\n",linesTotal)
+			t.Stop()
+//			fmt.Fprintf(os.Stderr, "/adminlog Cleanup (to Stderr) %d\n",linesTotal)
+			t.Cleanup()
+//			fmt.Fprintf(os.Stderr, "/adminlog exit (to Stderr) %d\n",linesTotal)
+			fmt.Printf("/adminlog end %d/%d\n",lines,linesTotal)
+			return
 		}
 	}
 }
