@@ -406,12 +406,11 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			// clear read deadline; we don't expect data from this cli
 			c.SetReadDeadline(time.Time{})
 
-			// NOTE we treat err=read timeout like noerr (testing)
-			if err!=nil && strings.Index(err.Error(),"read timeout")<0 {
-				fmt.Printf("%s (%s) OnClose callee err=%v %s v=%s\n",
-					client.connType, client.calleeID, err, client.RemoteAddr, client.clientVersion)
-			} else {
-				if logWantedFor("wsclose") {
+			if logWantedFor("wsclose") {
+				if err!=nil {
+					fmt.Printf("%s (%s) OnClose callee err=%v %s v=%s\n",
+						client.connType, client.calleeID, err, client.RemoteAddr, client.clientVersion)
+				} else {
 					fmt.Printf("%s (%s) OnClose callee noerr %s v=%s\n",
 						client.connType, client.calleeID, client.RemoteAddr, client.clientVersion)
 				}
@@ -433,12 +432,11 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 		} else {
 			// caller has closed ws-con to server
-			// NOTE we treat err=read timeout like noerr (testing)
-			if err!=nil && strings.Index(err.Error(),"read timeout")<0 {
-				fmt.Printf("%s (%s) OnClose caller err=%v %s v=%s\n",
-					client.connType, client.calleeID, err, client.RemoteAddr, client.clientVersion)
-			} else {
-				if logWantedFor("wsclose") {
+			if logWantedFor("wsclose") {
+				if err!=nil {
+					fmt.Printf("%s (%s) OnClose caller err=%v %s v=%s\n",
+						client.connType, client.calleeID, err, client.RemoteAddr, client.clientVersion)
+				} else {
 					fmt.Printf("%s (%s) OnClose caller noerr %s v=%s\n",
 						client.connType, client.calleeID, client.RemoteAddr, client.clientVersion)
 				}
@@ -454,8 +452,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				if !client.reached14s.Get() {
 					// a caller disconnect before reached14s is definitely a manual discon by the caller
 					// -> force closePeerCon
-					// NOTE we treat err=read timeout like noerr (testing)
-					if err!=nil && strings.Index(err.Error(),"read timeout")<0 {
+					if err!=nil {
 						client.hub.closePeerCon("OnCloseCaller "+err.Error())
 					} else {
 						client.hub.closePeerCon("OnCloseCaller noerr")
