@@ -552,14 +552,17 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			client.calleeAnswerReceived = make(chan struct{}, 8)
 			secs := 60
 			timer := time.NewTimer(time.Duration(secs) * time.Second)
-			fmt.Printf("%s (%s) %ds timer start ws=%d\n", client.connType, client.calleeID, secs, wsClientID64)
+			if logWantedFor("wsclose") {
+				fmt.Printf("%s (%s) %ds timer start ws=%d\n",
+					client.connType, client.calleeID, secs, wsClientID64)
+			}
 			select {
 			case <-timer.C:
 				// no calleeAnswer in response to callerOffer within 60s
 				// we want to send cancel to both clients,
 				// then disconnect the caller, reset the callee, and do peerConHasEnded
 				if logWantedFor("wsclose") {
-					fmt.Printf("%s (%s) %ds timer: time's up ws=%d\n",
+					fmt.Printf("%s (%s) %ds timer: time is up ws=%d\n",
 						client.connType, client.calleeID, secs, wsClientID64)
 				}
 				hub.HubMutex.RLock()
@@ -572,8 +575,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 					err = hub.CalleeClient.Write([]byte("cancel|c"))
 					if err != nil {
 						// callee is gone
-						fmt.Printf("# %s (%s) send cancel msg to callee fail %v\n",
-							hub.CalleeClient.connType, hub.CalleeClient.calleeID, err)
+						fmt.Printf("# %s (%s) %ds timer: time is up, cancel msg to callee failed %v\n",
+							hub.CalleeClient.connType, hub.CalleeClient.calleeID, secs, err)
 						hub.HubMutex.RUnlock()
 						hub.closeCallee("disconCallerAfter60s: cancel to callee: "+err.Error())
 						return
@@ -653,8 +656,10 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 					hub.closeCaller("disconCallerAfter14s") // this will clear .CallerClient
 					return
 				}
-				fmt.Printf("%s (%s) reached14s -> do not force disconnect caller\n",
-					client.connType, client.calleeID)
+				if logWantedFor("wsclose") {
+					fmt.Printf("%s (%s) reached14s -> do not force disconnect caller\n",
+						client.connType, client.calleeID)
+				}
 				hub.HubMutex.RUnlock()
 				return
 			}
@@ -697,24 +702,24 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			err := client.Write([]byte("status|"+msg))
 			if err != nil {
 				// caller is gone
-				fmt.Printf("# %s (%s) send status -> to caller %s err=%v\n",
+				fmt.Printf("%s (%s) failed to send NO PEERCON msg to caller %s err=%v\n",
 					client.connType, client.calleeID, remoteAddr, err)
-				// ignore err bc we disconnect caller below anyway
+				// ignore err bc below we disconnect the caller anyway
 			}
 
 			if strings.HasPrefix(hub.CalleeClient.calleeID,"answie") ||
 				strings.HasPrefix(hub.CalleeClient.calleeID,"talkback") {
-				// if callee is answie or talkback, the problem can't be the callee side
+				// if callee is answie or talkback, the problem must be with the caller side
 				// don't send msg to callee
 			} else {
-				// a real callee-user
+				// this is a real callee-user
 				err = hub.CalleeClient.Write([]byte("status|"+msg))
 				if err != nil {
 					// callee is gone
-					fmt.Printf("# %s (%s) send status <- to callee %s err=%v\n",
-						client.connType, client.calleeID, remoteAddr, err)
+					fmt.Printf("%s (%s) failed to send NO PEERCON msg to callee %s err=%v\n",
+						client.connType, client.calleeID, hub.CalleeClient.RemoteAddr, err)
 					hub.HubMutex.RUnlock()
-					hub.closeCallee("NO PEERCON: send status to callee: "+err.Error())
+					hub.closeCallee("failed to send NO PEERCON msg to callee: "+err.Error())
 					return
 				}
 			}
