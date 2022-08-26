@@ -202,6 +202,7 @@ var thirtySecStats = false
 var clientUpdateBelowVersion = ""
 var clientBlockBelowVersion = ""
 var serverStartTime time.Time
+var adminLoginFlag = false
 
 
 func main() {
@@ -501,7 +502,6 @@ func getStats() string {
 	hubMapMutex.RUnlock()
 
 	numberOfCallsTodayMutex.RLock()
-//	retStr := fmt.Sprintf("stats callees:%d callers:%d/%d calls:%d callSecs:%d ping:%d pong:%d gor:%d",
 	retStr := fmt.Sprintf("stats %d/%d/%d calls:%d/%d %d/%d go:%d",
 		numberOfOnlineCallees, numberOfOnlineCallers, numberOfActivePureP2pCalls,
 		numberOfCallsToday, numberOfCallSecondsToday, // fed by hub.processTimeValues()
@@ -621,6 +621,8 @@ func readConfig(init bool) {
 
 	maxLoginPer30min = readIniInt(configIni, "maxLoginPer30min", maxLoginPer30min, 0, 1)
 	maxClientRequestsPer30min = readIniInt(configIni, "maxRequestsPer30min", maxClientRequestsPer30min, 0, 1)
+
+	adminLoginFlag = readIniBoolean(configIni, "adminLogin", adminLoginFlag, false)
 
 	readConfigLock.Unlock()
 }

@@ -726,7 +726,12 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if urlPath=="/adminlog" {
-		adminlog(w, r)
+		readConfigLock.RLock()
+		flag := adminLoginFlag
+		readConfigLock.RUnlock()
+		if flag {
+			adminlog(w, r)
+		}
 		return
 	}
 
