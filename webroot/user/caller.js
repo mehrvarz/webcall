@@ -2116,7 +2116,7 @@ function signalingCommand(message) {
 */
 	} else if(cmd=="cancel") {
 		if(payload!="c") {
-			console.log("peer disconnect");
+			//console.log("peer disconnect");
 			//showStatus("peer disconnect",8000);
 			setTimeout(function() {
 				if(wsConn) {
