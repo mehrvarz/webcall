@@ -395,7 +395,8 @@ func adminlog(w http.ResponseWriter, r *http.Request) {
 			linesTotal++
 			if line.Text=="" ||
 			   strings.Index(line.Text," webcall")<0 ||
-			   strings.Index(line.Text,"TLS handshake error")>=0 {
+			   strings.Index(line.Text,"TLS handshake error")>=0 ||
+			   strings.Index(line.Text,"csp-report")>=0 {
 			} else {
 				//fmt.Fprintf(w,"%s\n",line.Text)
 				// filter out columns
