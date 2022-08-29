@@ -202,7 +202,7 @@ var thirtySecStats = false
 var clientUpdateBelowVersion = ""
 var clientBlockBelowVersion = ""
 var serverStartTime time.Time
-var adminLoginFlag = false
+var adminLogPath = ""
 
 
 func main() {
@@ -215,7 +215,7 @@ func main() {
 		return
 	}
 
-	fmt.Printf("--------------- webcall %s %s startup ---------------\n", codetag, builddate)
+	fmt.Printf("----- webcall %s %s startup -----\n", codetag, builddate)
 	serverStartTime = time.Now()
 	hubMap = make(map[string]*Hub) // calleeID -> *Hub
 	blockMap = make(map[string]time.Time)
@@ -606,6 +606,7 @@ func readConfig(init bool) {
 
 	adminID = readIniString(configIni, "adminID", adminID, "")
 	adminEmail = readIniString(configIni, "adminEmail", adminEmail, "")
+	adminLogPath = readIniString(configIni, "adminLog", adminLogPath, "")
 
 	backupScript = readIniString(configIni, "backupScript", backupScript, "")
 	backupPauseMinutes = readIniInt(configIni, "backupPauseMinutes", backupPauseMinutes, 720, 1)
@@ -621,8 +622,6 @@ func readConfig(init bool) {
 
 	maxLoginPer30min = readIniInt(configIni, "maxLoginPer30min", maxLoginPer30min, 0, 1)
 	maxClientRequestsPer30min = readIniInt(configIni, "maxRequestsPer30min", maxClientRequestsPer30min, 0, 1)
-
-	adminLoginFlag = readIniBoolean(configIni, "adminLogin", adminLoginFlag, false)
 
 	readConfigLock.Unlock()
 }

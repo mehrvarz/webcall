@@ -725,14 +725,11 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if urlPath=="/adminlog" {
-		readConfigLock.RLock()
-		flag := adminLoginFlag
-		readConfigLock.RUnlock()
-		if flag {
-			adminlog(w, r)
-		}
-		return
+	readConfigLock.RLock()
+	logPath := adminLogPath
+	readConfigLock.RUnlock()
+	if logPath!="" && urlPath=="/"+logPath {
+		adminlog(w, r)
 	}
 
 	if remoteAddr=="127.0.0.1" || (outboundIP!="" && remoteAddr==outboundIP) {
