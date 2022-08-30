@@ -779,6 +779,7 @@ function gotStream2() {
 		}
 		if(onGotStreamGoOnline && !rtcConnect) {
 			console.log('gotStream2 onGotStreamGoOnline goOnline');
+			onGotStreamGoOnline = false;
 			goOnline(true,"gotStream2");
 		} else {
 			console.log('gotStream2 standby');
