@@ -724,7 +724,8 @@ function login(retryFlag) {
 
 function sendInit(comment) {
 	console.log("sendInit() from: "+comment);
-	wsSend("init|!"); // -> connectSignaling()
+//	wsSend("init|!"); // -> connectSignaling()
+	wsSend("init|"+comment); // -> connectSignaling()
 	// server will respond to this with "sessionId|(serverCodetag)"
 	// when we receive "sessionId|", we call showOnlineReadyMsg() -> Android.calleeConnected()
 }
