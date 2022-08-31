@@ -536,11 +536,13 @@ function start() {
 	// setup buttons, get audio input stream, then login
 	gLog('start callee with ID='+calleeID);
 
-	goOnlineButton.onclick = function() {
+	goOnlineButton.onclick = function(ev) {
+		ev.stopPropagation();
 		lastUserActionDate = Date.now();
 		goOnline(true,"user button");
 	}
-	goOfflineButton.onclick = function() {
+	goOfflineButton.onclick = function(ev) {
+		ev.stopPropagation();
 		lastUserActionDate = Date.now();
 		goOffline();
 	};
@@ -1305,7 +1307,8 @@ function signalingCommand(message) {
 				exclamationElement.style.display = "block";
 				exclamationElement.style.opacity = 1;
 
-				exclamationElement.onclick = function() {
+				exclamationElement.onclick = function(ev) {
+					ev.stopPropagation();
 					if(typeof Android !== "undefined" && Android !== null) {
 						openNews(newsUrl);
 					} else {
@@ -2038,11 +2041,13 @@ function peerConnected2() {
 			setTimeout(pickupFunc,1000);
 		}
 
-		answerButton.onclick = function() {
+		answerButton.onclick = function(ev) {
+			ev.stopPropagation();
 			gLog("answer button");
 			pickup();
 		}
-		rejectButton.onclick = function() {
+		rejectButton.onclick = function(ev) {
+			ev.stopPropagation();
 			gLog("hangup button");
 			hangup(true,true,"rejectButton");
 		}
@@ -2199,7 +2204,10 @@ function dataChannelOnmessage(event) {
 
 			var aDeleteElement = document.createElement("a");
 			aDeleteElement.style = "margin-left:10px;";
-			aDeleteElement.onclick = function(){ downloadList.removeChild(aDivElement); }
+			aDeleteElement.onclick = function(ev){
+				ev.stopPropagation();
+				downloadList.removeChild(aDivElement);
+			}
 			aDeleteElement.textContent = `[x]`;
 			aDivElement.appendChild(aDeleteElement);
 		}
