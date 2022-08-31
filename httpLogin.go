@@ -516,6 +516,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 				time.Sleep(1 * time.Second)
 				waitedFor++
+
 				myHubMutex.Lock()
 				hubMapMutex.RLock()
 				hub = hubMap[globalID]
@@ -541,6 +542,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					// this is perfect: ws-connect / init did occur
 					myHubMutex.RUnlock()
 				} else {
+					// hub!=nil but CalleeLogin==false (callee still there but did NOT send 'init' within 22s)
 					hub.HubMutex.RLock()
 					unregisterNeeded := false
 					if hub.CalleeClient != nil {
@@ -550,6 +552,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					myHubMutex.RUnlock()
 
 					if unregisterNeeded {
+						// this looks like a ws-(re)connect problem
 						// the next login attempt of urlID/globalID will be denied to break it's reconnecter loop
 						fmt.Printf("/login (%s) timeout22s unregisterNeeded\n", urlID)
 						blockMapMutex.Lock()
