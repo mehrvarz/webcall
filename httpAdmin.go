@@ -406,7 +406,7 @@ func adminlog(w http.ResponseWriter, r *http.Request, logfile string, filter str
 				// not found filter? skip line
 				//fmt.Fprintf(os.Stderr,"!skip2:%s\n",text)
 			} else {
-				fmt.Fprintf(os.Stderr,"!use:%s\n",text)
+				//fmt.Fprintf(os.Stderr,"!use:%s\n",text)
 				// filter out columns
 				toks := strings.Split(text, " ")
 				if len(toks)>5 {
