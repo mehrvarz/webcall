@@ -736,6 +736,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 			if urlPath=="/"+cmd {
 				path := logPath[idx+1:] 
 				adminlog(w, r, path)
+				return
 			}
 		}
 	}
