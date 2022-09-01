@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"strings"
 	"io"
+	"os"
 	"encoding/gob"
 	bolt "go.etcd.io/bbolt"
 	"github.com/nxadm/tail" // https://pkg.go.dev/github.com/nxadm/tail
@@ -358,7 +359,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 var	adminlogBusy atombool.AtomBool
 var t *tail.Tail
 
-func adminlog(w http.ResponseWriter, r *http.Request, logfile string) {
+func adminlog(w http.ResponseWriter, r *http.Request, logfile string, filter string) {
 	// logfile like: "/var/log/syslog"
 	if adminlogBusy.Get() {
 		t.Stop()
@@ -367,8 +368,8 @@ func adminlog(w http.ResponseWriter, r *http.Request, logfile string) {
 		adminlogBusy.Set(false)
 	}
 
-	fmt.Printf("/adminlog start...\n")	// maybe show src-ip and ua
-	seekInfo := tail.SeekInfo{-64*1024,io.SeekEnd}
+	fmt.Printf("/adminlog start (%s) (%s)\n",logfile,filter)	// maybe log client ip and ua?
+	seekInfo := tail.SeekInfo{-24*1024,io.SeekEnd}
 	var err error
 	t, err = tail.TailFile(logfile, tail.Config{Follow: true, ReOpen: true, Location: &seekInfo })
 	if err!=nil {
@@ -383,23 +384,29 @@ func adminlog(w http.ResponseWriter, r *http.Request, logfile string) {
 	inARowLines := 0
 	ticker100ms := time.NewTicker(100*time.Millisecond)
 	defer ticker100ms.Stop()
+	//fmt.Fprintf(os.Stderr,"/adminlog start loop...\n")
 	for {
 		select {
 		case notifChan := <-t.Lines:
 			if notifChan==nil {
-				// this happens if we force-stop it with a reload/newstart
+				// this happens when we force-stop via reload/newstart
 				//adminlogBusy.Set(false)
 				return
 			}
 			linesTotal++
 			line := *notifChan
 			text := strings.Replace(line.Text, "  ", " ", -1)
+			//fmt.Fprintf(os.Stderr,"/adminlog (%s)\n",line)
 			if text=="" ||
-			   strings.Index(text," webcall")<0 ||
 			   strings.Index(text,"TLS handshake error")>=0 ||
 			   strings.Index(text,"csp-report")>=0 {
+				// found one of these? skip line
+				//fmt.Fprintf(os.Stderr,"!skip1:%s\n",text)
+			} else if strings.Index(text,filter)<0 {
+				// not found filter? skip line
+				//fmt.Fprintf(os.Stderr,"!skip2:%s\n",text)
 			} else {
-				//fmt.Fprintf(w,"%s\n",text)
+				fmt.Fprintf(os.Stderr,"!use:%s\n",text)
 				// filter out columns
 				toks := strings.Split(text, " ")
 				if len(toks)>5 {

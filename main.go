@@ -203,6 +203,7 @@ var clientUpdateBelowVersion = ""
 var clientBlockBelowVersion = ""
 var serverStartTime time.Time
 var adminLogPath = ""
+var adminLogPath2 = ""
 
 
 func main() {
@@ -607,6 +608,7 @@ func readConfig(init bool) {
 	adminID = readIniString(configIni, "adminID", adminID, "")
 	adminEmail = readIniString(configIni, "adminEmail", adminEmail, "")
 	adminLogPath = readIniString(configIni, "adminLog", adminLogPath, "")
+	adminLogPath2 = readIniString(configIni, "adminLog2", adminLogPath2, "")
 
 	backupScript = readIniString(configIni, "backupScript", backupScript, "")
 	backupPauseMinutes = readIniInt(configIni, "backupPauseMinutes", backupPauseMinutes, 720, 1)
