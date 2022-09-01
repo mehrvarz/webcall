@@ -728,8 +728,16 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	readConfigLock.RLock()
 	logPath := adminLogPath
 	readConfigLock.RUnlock()
-	if logPath!="" && urlPath=="/"+logPath {
-		adminlog(w, r)
+	if logPath!="" {
+		// logPath has format: "adminlog|/var/log/syslog"
+		idx := strings.Index(logPath,"|")
+		if idx>=0 {
+			cmd := logPath[:idx]
+			if urlPath=="/"+cmd {
+				path := logPath[idx+1:] 
+				adminlog(w, r, path)
+			}
+		}
 	}
 
 	if remoteAddr=="127.0.0.1" || (outboundIP!="" && remoteAddr==outboundIP) {

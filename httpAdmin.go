@@ -358,7 +358,8 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 var	adminlogBusy atombool.AtomBool
 var t *tail.Tail
 
-func adminlog(w http.ResponseWriter, r *http.Request) {
+func adminlog(w http.ResponseWriter, r *http.Request, logfile string) {
+	// logfile like: "/var/log/syslog"
 	if adminlogBusy.Get() {
 		t.Stop()
 		t.Cleanup()
@@ -367,7 +368,6 @@ func adminlog(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Printf("/adminlog start...\n")	// maybe show src-ip and ua
-	logfile := "/var/log/syslog"
 	seekInfo := tail.SeekInfo{-64*1024,io.SeekEnd}
 	var err error
 	t, err = tail.TailFile(logfile, tail.Config{Follow: true, ReOpen: true, Location: &seekInfo })
@@ -391,23 +391,24 @@ func adminlog(w http.ResponseWriter, r *http.Request) {
 				//adminlogBusy.Set(false)
 				return
 			}
-			line := *notifChan
 			linesTotal++
-			if line.Text=="" ||
-			   strings.Index(line.Text," webcall")<0 ||
-			   strings.Index(line.Text,"TLS handshake error")>=0 ||
-			   strings.Index(line.Text,"csp-report")>=0 {
+			line := *notifChan
+			text := strings.Replace(line.Text, "  ", " ", -1)
+			if text=="" ||
+			   strings.Index(text," webcall")<0 ||
+			   strings.Index(text,"TLS handshake error")>=0 ||
+			   strings.Index(text,"csp-report")>=0 {
 			} else {
-				//fmt.Fprintf(w,"%s\n",line.Text)
+				//fmt.Fprintf(w,"%s\n",text)
 				// filter out columns
-				toks := strings.Split(line.Text, " ")
+				toks := strings.Split(text, " ")
 				if len(toks)>5 {
 					// we only use toks[2] = hh:mm:ss and everything starting with toks[5]
 					// we do not use:
 					//   toks[0] = month, toks[1] = dayOfMonth, toks[3] = servername, toks[4] = process name
-					idx := strings.Index(line.Text,toks[5])
+					idx := strings.Index(text,toks[5])
 					if idx>0 {
-						logline := toks[2]+" "+line.Text[idx:]
+						logline := toks[2]+" "+text[idx:]
 						fmt.Fprintf(w,"%s\n",logline)
 						lines++
 						inARowLines++
