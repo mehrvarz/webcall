@@ -726,12 +726,12 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	readConfigLock.RLock()
-	logPath := adminLogPath
+	logPath1 := adminLogPath1
 	logPath2 := adminLogPath2
 	readConfigLock.RUnlock()
-	if logPath!="" {
-		// logPath has format: "adminlog|/var/log/syslog| webcall"
-		tok := strings.Split(logPath, "|")
+	if logPath1!="" {
+		// logPath1 has format: "adminlog|/var/log/syslog| webcall"
+		tok := strings.Split(logPath1, "|")
 		if len(tok)==3 {
 			if urlPath == "/"+tok[0] {
 				adminlog(w, r, tok[1], tok[2])
