@@ -52,7 +52,9 @@ func getMapping(calleeID string, remoteAddr string) (int,string) {
 		return 2,""
 	}
 
-	fmt.Printf("getmapping (%s) altIDs=(%s) rip=%s\n", calleeID, dbUser.AltIDs, remoteAddr)
+	if dbUser.AltIDs!="" {
+		fmt.Printf("getmapping (%s) altIDs=(%s) rip=%s\n", calleeID, dbUser.AltIDs, remoteAddr)
+	}
 	return 0,dbUser.AltIDs
 }
 

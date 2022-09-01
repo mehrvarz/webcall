@@ -384,7 +384,7 @@ func httpGetContact(w http.ResponseWriter, r *http.Request, urlID string, callee
 
 			compoundName := idNameMap[contactID]
 			if compoundName=="" {
-				fmt.Printf("/getcontact (%s) id=%s not found rip=%s\n", calleeID, contactID, remoteAddr)
+				//fmt.Printf("/getcontact (%s) id=%s not found rip=%s\n", calleeID, contactID, remoteAddr)
 				return
 			}
 
