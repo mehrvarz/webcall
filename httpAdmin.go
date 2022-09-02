@@ -368,29 +368,32 @@ func adminlog(w http.ResponseWriter, r *http.Request, logfile string, filter str
 		adminlogBusy.Set(false)
 	}
 
-	fmt.Printf("/adminlog start (%s) (%s)\n",logfile,filter)	// maybe log client ip and ua?
-
 	file, err := os.Open(logfile)
 	if err != nil {
-		fmt.Printf("# /adminlog file open err=%v\n",err)
+		fmt.Printf("# /adminlog file %s open err=%v\n",logfile,err)
 		return
 	}
-	fi, err := file.Stat()
+	fstat, err := file.Stat()
 	if err != nil {
-		fmt.Printf("# /adminlog file stat err=%v\n",err)
+		fmt.Printf("# /adminlog file %s stat err=%v\n",logfile,err)
 		return
 	}
-	fmt.Println( fi.Size() )
+
 	var seekBack int64 = 64*1024
 	var seekInfo tail.SeekInfo
-	if seekBack > fi.Size() {
+	if seekBack > fstat.Size() {
+		// maybe log client ip and ua?
+		fmt.Printf("/adminlog start (%s) (%s) seek=0/%d\n",logfile,filter,fstat.Size())
 		seekInfo = tail.SeekInfo{0,io.SeekStart}
 	} else {
+		// maybe log client ip and ua?
+		fmt.Printf("/adminlog start (%s) (%s) seek=%d\n",logfile,filter,-seekBack)
 		seekInfo = tail.SeekInfo{-seekBack,io.SeekEnd}
 	}
+	file.Close()
 	t, err = tail.TailFile(logfile, tail.Config{Follow: true, ReOpen: true, Location: &seekInfo })
 	if err!=nil {
-		fmt.Printf("/adminlog err=%v\n",err)
+		fmt.Printf("# /adminlog tail err=%v\n",err)
 		return
 	}
 	adminlogBusy.Set(true)
@@ -444,10 +447,10 @@ func adminlog(w http.ResponseWriter, r *http.Request, logfile string, filter str
 			if inARowLines>=1 {
 				if f, ok := w.(http.Flusher); ok {
 					f.Flush()
+					flush++
 				} else {
 					//noflush++
 				}
-				flush++
 				inARowLines = 0
 			} else {
 				noflush++
