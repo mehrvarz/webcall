@@ -775,10 +775,10 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 		}
 
 		if c.calleeInitReceived.Get() {
-			// only the 1st callee "init|" is accepted
+			// only the 1st callee 'init|' is accepted
 			// don't need to log this
-			fmt.Printf("# %s (%s) ignore 2nd callee init %s/%s v=%s\n",
-				c.connType, c.calleeID, payload, c.RemoteAddr, c.clientVersion)
+			//fmt.Printf("# %s (%s) ignore 2nd callee init %s/%s v=%s\n",
+			//	c.connType, c.calleeID, payload, c.RemoteAddr, c.clientVersion)
 			return
 		}
 
