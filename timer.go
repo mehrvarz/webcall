@@ -175,9 +175,9 @@ func ticker3hours() {
 		skv.DbMutex.Unlock()
 		if err!=nil {
 			// this is bad
-			fmt.Printf("# ticker3hours delete=%d blocked for %d days err=%v\n",blockedForDays,counterDeleted2,err)
+			fmt.Printf("# ticker3hours delete=%d blocked for %d days err=%v\n",counterDeleted2,blockedForDays,err)
 		} else if counterDeleted2>0 {
-			fmt.Printf("ticker3hours delete=%d id's blocked for %d days (no err)\n",blockedForDays,counterDeleted2)
+			fmt.Printf("ticker3hours delete=%d id's blocked for %d days (no err)\n",counterDeleted2,blockedForDays)
 		}
 		for _,key := range deleteKeyArray {
 			fmt.Printf("ticker3hours delete blocked user-id=%s\n", key)
