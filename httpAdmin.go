@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"strings"
 	"io"
+	"os"
 	"encoding/gob"
 	bolt "go.etcd.io/bbolt"
 	"github.com/nxadm/tail" // https://pkg.go.dev/github.com/nxadm/tail
@@ -368,8 +369,25 @@ func adminlog(w http.ResponseWriter, r *http.Request, logfile string, filter str
 	}
 
 	fmt.Printf("/adminlog start (%s) (%s)\n",logfile,filter)	// maybe log client ip and ua?
-	seekInfo := tail.SeekInfo{-24*1024,io.SeekEnd}
-	var err error
+
+	file, err := os.Open(logfile)
+	if err != nil {
+		fmt.Printf("# /adminlog file open err=%v\n",err)
+		return
+	}
+	fi, err := file.Stat()
+	if err != nil {
+		fmt.Printf("# /adminlog file stat err=%v\n",err)
+		return
+	}
+	fmt.Println( fi.Size() )
+	var seekBack int64 = 64*1024
+	var seekInfo tail.SeekInfo
+	if seekBack > fi.Size() {
+		seekInfo = tail.SeekInfo{0,io.SeekStart}
+	} else {
+		seekInfo = tail.SeekInfo{-seekBack,io.SeekEnd}
+	}
 	t, err = tail.TailFile(logfile, tail.Config{Follow: true, ReOpen: true, Location: &seekInfo })
 	if err!=nil {
 		fmt.Printf("/adminlog err=%v\n",err)
