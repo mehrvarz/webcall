@@ -379,7 +379,7 @@ func adminlog(w http.ResponseWriter, r *http.Request, logfile string, filter str
 		return
 	}
 
-	var seekBack int64 = 64*1024
+	var seekBack int64 = 128*1024
 	var seekInfo tail.SeekInfo
 	if seekBack > fstat.Size() {
 		// maybe log client ip and ua?
@@ -387,7 +387,7 @@ func adminlog(w http.ResponseWriter, r *http.Request, logfile string, filter str
 		seekInfo = tail.SeekInfo{0,io.SeekStart}
 	} else {
 		// maybe log client ip and ua?
-		fmt.Printf("/adminlog start (%s) (%s) seek=%d\n",logfile,filter,-seekBack)
+		fmt.Printf("/adminlog start (%s) (%s) seek=%d/%d\n",logfile,filter,-seekBack,fstat.Size())
 		seekInfo = tail.SeekInfo{-seekBack,io.SeekEnd}
 	}
 	file.Close()
