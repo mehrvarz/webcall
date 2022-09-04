@@ -583,8 +583,10 @@ func setContact(calleeID string, contactID string, compoundName string, remoteAd
 		return true
 	}
 
-	fmt.Printf("setcontact (%s) store ID=%s from (%s) to (%s) %s %s\n",
-		calleeID, contactID, oldCompoundName, newCompoundName, remoteAddr, comment)
+	if logWantedFor("contacts") {
+		fmt.Printf("setcontact (%s) store ID=%s from (%s) to (%s) %s %s\n",
+			calleeID, contactID, oldCompoundName, newCompoundName, remoteAddr, comment)
+	}
 	idNameMap[contactID] = newCompoundName
 	//fmt.Printf("setcontact (%s) idNameMap=%v\n", calleeID, idNameMap[contactID])
 	err = kvContacts.Put(dbContactsBucket, calleeID, idNameMap, false)
