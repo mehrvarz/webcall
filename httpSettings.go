@@ -374,23 +374,26 @@ func httpGetContact(w http.ResponseWriter, r *http.Request, urlID string, callee
 			if logWantedFor("contacts") {
 				fmt.Printf("/getcontact (%s) empty id=(%s)\n", calleeID, contactID)
 			}
-		} else {
-			var idNameMap map[string]string // callerID(@host) -> name
-			err := kvContacts.Get(dbContactsBucket,calleeID,&idNameMap)
-			if err!=nil {
-				fmt.Printf("# /getcontact (%s) db get %s err=%v\n", calleeID, remoteAddr, err)
-				return
-			}
-
-			compoundName := idNameMap[contactID]
-			if compoundName=="" {
-				//fmt.Printf("/getcontact (%s) id=%s not found rip=%s\n", calleeID, contactID, remoteAddr)
-				return
-			}
-
-			fmt.Printf("/getcontact (%s) id=%s found=%s rip=%s\n", calleeID, contactID, compoundName, remoteAddr)
-			fmt.Fprintf(w,compoundName)
+			return
 		}
+
+		var idNameMap map[string]string // callerID(@host) -> name
+		err := kvContacts.Get(dbContactsBucket,calleeID,&idNameMap)
+		if err!=nil {
+			fmt.Printf("# /getcontact (%s) db get %s err=%v\n", calleeID, remoteAddr, err)
+			return
+		}
+
+		compoundName := idNameMap[contactID]
+		if compoundName=="" {
+			//fmt.Printf("/getcontact (%s) id=%s not found rip=%s\n", calleeID, contactID, remoteAddr)
+			return
+		}
+
+		if logWantedFor("contacts") {
+			fmt.Printf("/getcontact (%s) id=%s found=%s rip=%s\n", calleeID, contactID, compoundName, remoteAddr)
+		}
+		fmt.Fprintf(w,compoundName)
 	}
 	return
 }

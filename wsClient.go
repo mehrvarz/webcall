@@ -194,10 +194,12 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 						//case 2:  = tok
 					}
 				}
-				//if callerName!="" {
-				//	fmt.Printf("wsClient got callerName=%s for callerID=%s from contacts of calleeID=%s\n",
-				//		callerName, callerIdLong, wsClientData.calleeID)
-				//}
+				if callerName!="" {
+					if logWantedFor("contacts") {
+						fmt.Printf("wsClient got callerName=%s for callerID=%s from contacts of calleeID=%s\n",
+							callerName, callerIdLong, wsClientData.calleeID)
+					}
+				}
 			}
 		}
 	}
