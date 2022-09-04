@@ -2190,7 +2190,7 @@ function dataChannelOnmessage(event) {
 			fileReceiveBuffer = [];
 			progressRcvElement.style.display = "none";
 
-			let randId = ""+Math.random()*100000000;
+			let randId = ""+Math.floor(Math.random()*100000000);
 			var aDivElement = document.createElement("div");
 			aDivElement.id = randId;
 			downloadList.appendChild(aDivElement);
@@ -2460,7 +2460,7 @@ function openNews(newsUrl) {
 	// we also set dontIframeOnload=true so that height:100% determines the iframe height
 	// also: dontIframeOnload=true may be required if newsUrl points to a different domain
 	// to avoid DOMException in iframeOnload()
-	let randId = ""+Math.random()*100000000;
+	let randId = ""+Math.floor(Math.random()*100000000);
 	if(newsUrl.indexOf("?")>=0)
 		newsUrl += "&i="+randId;
 	else
