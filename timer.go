@@ -140,7 +140,7 @@ func ticker3hours() {
 			}
 		}
 
-
+		var deleteKeyArray2 []string  // for deleting
 		// loop all dbBlockedIDs to delete blocked entries
 		fmt.Printf("ticker3hours start looking for outdated blocked entries...\n")
 		var blockedForDays int64 = 60
@@ -166,7 +166,7 @@ func ticker3hours() {
 
 				sinceDeletedInSecs := timeNowUnix - dbEntry.StartTime
 				if sinceDeletedInSecs > blockedForDays * 24*60*60 {
-					deleteKeyArray = append(deleteKeyArray,userID)
+					deleteKeyArray2 = append(deleteKeyArray2,userID)
 					counterDeleted2++
 				}
 			}
@@ -179,7 +179,7 @@ func ticker3hours() {
 		} else if counterDeleted2>0 {
 			fmt.Printf("ticker3hours delete=%d id's blocked for %d days (no err)\n",counterDeleted2,blockedForDays)
 		}
-		for _,key := range deleteKeyArray {
+		for _,key := range deleteKeyArray2 {
 			fmt.Printf("ticker3hours delete blocked user-id=%s\n", key)
 			err = kv.Delete(dbBlockedIDs, key)
 			if err!=nil {
