@@ -895,7 +895,11 @@ function connectSignaling(message,comment) {
 		// wsUrl will only be used if service:wsClient==null
 		// but on server triggered reconnect, service:wsClient will be set (and wsUrl will not be used)
 		wsConn = Android.wsOpen(wsUrl);
-		// service -> wsCli=connectHost(wsUrl) -> onOpen() -> runJS("wsOnOpen()",null) -> wsSendMessage ("init|!")
+		// if service is NOT yet connected:
+		//  service -> wsCli=connectHost(wsUrl) -> onOpen() -> runJS("wsOnOpen()",null) -> wsSendMessage("init|!")
+		// if service IS already connected:
+		//  service -> if activityWasDiscarded -> wakeGoOnlineNoInit()
+
 		//gLog("connectSig "+wsUrl);
 	} else {
 		if(!window["WebSocket"]) {
