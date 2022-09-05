@@ -1062,10 +1062,11 @@ function signalingCommand(message) {
 				localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
 					'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
 				peerCon.setLocalDescription(localDescription).then(() => {
-					gLog('calleeAnswer localDescription set -> signal');
 					if(isDataChlOpen()) {
+						console.log('calleeAnswer localDescription set -> signal via dataChl');
 						dataChannel.send("cmd|calleeAnswer|"+JSON.stringify(localDescription));
 					} else {
+						console.log('calleeAnswer localDescription set -> signal via wsSend');
 						wsSend("calleeAnswer|"+JSON.stringify(localDescription));
 					}
 				}, err => console.error(`# Failed to set local descr: ${err.toString()}`));
@@ -1131,7 +1132,7 @@ function signalingCommand(message) {
 			if(!peerCon || peerCon.iceConnectionState=="closed") {
 				console.log("# cmd callerCandidate abort no peerCon");
 				stopAllAudioEffects();
-// tmtmtm do we really need to call this
+// tmtmtm do we really need to call this?
 				endWebRtcSession(true,true,"callerCandidate no peercon / ice closed"); // -> peerConCloseFunc
 				return;
 			}
@@ -1788,7 +1789,7 @@ function hangup(mustDisconnect,dummy2,message) {
 function goOnline(sendInitFlag,comment) {
 	showStatus("");
 	if(goOnlineButton.disabled) {
-		gLog('goOnline() goOnlineButton.disabled');
+		console.log('goOnline() goOnlineButton.disabled');
 		return;
 	}
 
@@ -1796,7 +1797,7 @@ function goOnline(sendInitFlag,comment) {
 	goOfflineButton.disabled = false;
 	rtcConnectStartDate = 0;
 	mediaConnectStartDate = 0;
-	gLog('goOnline '+calleeID);
+	console.log('goOnline '+calleeID);
 	addedAudioTrack = null;
 	addedVideoTrack = null;
 
@@ -1811,10 +1812,10 @@ function goOnline(sendInitFlag,comment) {
 	newPeerCon();
 
 	if(wsConn==null /*|| wsConn.readyState!=1*/) {
-		gLog('goOnline no wsConn -> login()');
+		console.log('goOnline no wsConn -> login()');
 		login(false);
 	} else {
-		gLog('goOnline have wsConn');
+		console.log('goOnline have wsConn');
 		if(divspinnerframe) divspinnerframe.style.display = "none";
 		if(sendInitFlag) {
 			gLog('goOnline have wsConn -> send init');
@@ -1826,7 +1827,7 @@ function goOnline(sendInitFlag,comment) {
 function newPeerCon() {
 	try {
 		peerCon = new RTCPeerConnection(ICE_config);
-		gLog("new RTCPeerConnection ready");
+		console.log("new RTCPeerConnection ready");
 	} catch(ex) {
 		console.error("RTCPeerConnection "+ex.message);
 		var statusMsg = "RTCPeerConnection "+ex.message;
@@ -1849,7 +1850,7 @@ function newPeerCon() {
 		if(e.errorCode==701) {
 			gLog("# peerCon onicecandidateerror " + e.errorCode+" "+e.errorText+" "+e.url,-1);
 		} else {
-			gLog("# peerCon onicecandidateerror " + e.errorCode+" "+e.errorText,-1);
+			console.log("# peerCon onicecandidateerror " + e.errorCode+" "+e.errorText,-1);
 		}
 	}
 	peerCon.ontrack = ({track, streams}) => peerConOntrack(track, streams);
@@ -1859,7 +1860,7 @@ function newPeerCon() {
 	}
 	peerCon.onnegotiationneeded = async () => {
 		if(!peerCon || peerCon.iceConnectionState=="closed") {
-			gLog('peerCon onnegotiationneeded deny: no peerCon');
+			console.log('# peerCon onnegotiationneeded deny: no peerCon');
 			return;
 		}
 		if(!rtcConnect) {
@@ -1886,14 +1887,14 @@ function newPeerCon() {
 		}
 	};
 	peerCon.onsignalingstatechange = event => {
-		gLog("peerCon signalingstatechange "+peerCon.signalingState);
+		console.log("peerCon signalingstatechange "+peerCon.signalingState);
 	}
 	peerCon.oniceconnectionstatechange = event => {
-		gLog("peerCon oniceconnectionstatechange", peerCon.iceConnectionState);
+		console.log("peerCon oniceconnectionstatechange", peerCon.iceConnectionState);
 	}
 	peerCon.onconnectionstatechange = event => {
 		connectionstatechangeCounter++;
-		gLog("peerCon connectionstatechange "+peerCon.connectionState);
+		console.log("peerCon connectionstatechange "+peerCon.connectionState);
 		if(!peerCon || peerCon.iceConnectionState=="closed") {
 			hangup(true,true,"onconnectionstatechange no peercon");
 			return;
@@ -2598,5 +2599,13 @@ function wakeGoOnlineNoInit() {
 	goOnlineButton.disabled = false; // prevent goOnline() abort
 	goOnline(false,"wakeGoOnline");  // newPeerCon() but do NOT wsSend("init|!")
 	gLog("wakeGoOnline done");
+}
+
+function wakeShowOnline() {
+	console.log("wakeShowOnline start");
+	wsOnOpen(); // green led
+	goOnlineButton.disabled = false; // prevent goOnline() abort
+	goOnline(false,"wakeShowOnline");  // newPeerCon() but do NOT wsSend("init|!")
+	console.log("wakeShowOnline done");
 }
 
