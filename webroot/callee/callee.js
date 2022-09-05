@@ -2613,7 +2613,7 @@ function wakeGoOnlineNoInit() {
 	goOnline(false,"wakeGoOnline");  // newPeerCon() but do NOT wsSend("init|!")
 	gLog("wakeGoOnline done");
 }
-
+/*
 function wakeShowOnline() {
 	console.log("wakeShowOnline start");
 	wsOnOpen(); // green led
@@ -2621,4 +2621,5 @@ function wakeShowOnline() {
 	goOnline(false,"wakeShowOnline");  // newPeerCon() but do NOT wsSend("init|!")
 	console.log("wakeShowOnline done");
 }
+*/
 
