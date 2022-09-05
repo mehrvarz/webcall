@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"time"
+	"strings"
 )
 
 
@@ -40,7 +41,9 @@ func getMapping(calleeID string, remoteAddr string) (int,string) {
 	var dbEntry DbEntry
 	err := kvMain.Get(dbRegisteredIDs, calleeID, &dbEntry)
 	if err != nil {
-		fmt.Printf("# getmapping (%s) get dbRegisteredIDs rip=%s err=%v\n", calleeID, remoteAddr, err)
+		if strings.Index(err.Error(),"key not found")<0 {
+			fmt.Printf("# getmapping (%s) get dbRegisteredIDs rip=%s err=%v\n", calleeID, remoteAddr, err)
+		}
 		return 1,""
 	}
 
@@ -48,7 +51,9 @@ func getMapping(calleeID string, remoteAddr string) (int,string) {
 	var dbUser DbUser
 	err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 	if err != nil {
-		fmt.Printf("# getmapping (%s) get dbUser (%s) rip=%s err=%v\n", calleeID, dbUserKey, remoteAddr, err)
+		if strings.Index(err.Error(),"key not found")<0 {
+			fmt.Printf("# getmapping (%s) get dbUser (%s) rip=%s err=%v\n", calleeID, dbUserKey, remoteAddr, err)
+		}
 		return 2,""
 	}
 
