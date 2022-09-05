@@ -765,8 +765,20 @@ function offlineAction() {
 }
 
 function gotStream2() {
-	offlineAction(); // to enable goOnlineButton
+	if(typeof Android !== "undefined" && Android !== null) {
+		if(typeof Android.calleeReady !== "undefined" && Android.calleeReady !== null) {
+			// service v1.1.5
+			// when service starts activity + callee.js to answer a ringing call, then...
+			// 1. we don't need offlineAction() below
+			// 2. we need to trigger service processWebRtcMessages()
+			if(Android.calleeReady()) {
+				// processWebRtcMessages() is being called
+				return;
+			}
+		}
+	}
 
+	offlineAction(); // enable goOnlineButton, disable goOfflineButton
 	if(pickupAfterLocalStream) {
 		pickupAfterLocalStream = false;
 		gLog('gotStream2 -> auto pickup2()');
@@ -885,7 +897,7 @@ function showOnlineReadyMsg() {
 let tryingToOpenWebSocket = false;
 let wsSendMessage = "";
 function connectSignaling(message,comment) {
-	gLog("connect to signaling server "+comment);
+	console.log("connect to signaling server "+comment);
     var wsUrl = wsAddr;
 
 	tryingToOpenWebSocket = true;
@@ -1625,6 +1637,7 @@ function wsSend(message) {
 	if(typeof Android !== "undefined" && Android !== null) {
 		if(wsConn==null) {
 			// currently not connected to webcall server
+			console.log('wsSend with wsConn==null -> connectSignaling');
 			connectSignaling(message,"andr wsConn==null");
 			// service -> connectHost(wsUrl) -> onOpen() -> runJS("wsOnOpen()",null) -> wsSendMessage(message)
 		} else {
