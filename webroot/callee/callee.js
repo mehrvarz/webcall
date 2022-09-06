@@ -769,17 +769,14 @@ function gotStream2() {
 		if(typeof Android.calleeReady !== "undefined" && Android.calleeReady !== null) {
 			// service v1.1.5
 			// when service starts activity/callee.js for answering a waiting call, then...
-			// 1. we don't need offlineAction()
+			// 1. we don't do offlineAction()
 			// 2. we need to trigger service processWebRtcMessages()
 			if(Android.calleeReady()) {
-				// processWebRtcMessages() is being called
+				// processWebRtcMessages() now active (don't mute mic; don't change online/offline buttons)
 				return;
 			}
 		}
 	}
-
-// offlineAction() stört hier beim start der activity bei connected service
-//	offlineAction(); // enable goOnlineButton, disable goOfflineButton
 
 	if(pickupAfterLocalStream) {
 		pickupAfterLocalStream = false;
@@ -798,7 +795,7 @@ function gotStream2() {
 			console.log('gotStream2 onGotStreamGoOnline goOnline');
 			onGotStreamGoOnline = false;
 
-			// goOnline() will not start with goOnlineButton.disabled==true
+			// goOnline() will not start if goOnlineButton is disabled
 			offlineAction(); // enable goOnlineButton, disable goOfflineButton
 			goOnline(true,"gotStream2");
 		} else {
