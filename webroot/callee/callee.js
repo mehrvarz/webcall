@@ -768,8 +768,8 @@ function gotStream2() {
 	if(typeof Android !== "undefined" && Android !== null) {
 		if(typeof Android.calleeReady !== "undefined" && Android.calleeReady !== null) {
 			// service v1.1.5
-			// when service starts activity + callee.js to answer a ringing call, then...
-			// 1. we don't need offlineAction() below
+			// when service starts activity/callee.js for answering a waiting call, then...
+			// 1. we don't need offlineAction()
 			// 2. we need to trigger service processWebRtcMessages()
 			if(Android.calleeReady()) {
 				// processWebRtcMessages() is being called
@@ -778,15 +778,17 @@ function gotStream2() {
 		}
 	}
 
-	offlineAction(); // enable goOnlineButton, disable goOfflineButton
+// offlineAction() stört hier beim start der activity bei connected service
+//	offlineAction(); // enable goOnlineButton, disable goOfflineButton
+
 	if(pickupAfterLocalStream) {
 		pickupAfterLocalStream = false;
-		gLog('gotStream2 -> auto pickup2()');
+		console.log('gotStream2 -> auto pickup2()');
 		pickup2();
 	} else {
 		if(localStream && !videoEnabled && !rtcConnect) {
 			// mute (disable) mic until a call
-			gLog('gotStream2 mute (disable) mic (localStream) standby');
+			console.log('gotStream2 mute (disable) mic (localStream) standby');
 			localStream.getTracks().forEach(track => { track.stop(); });
 			const audioTracks = localStream.getAudioTracks();
 			localStream.removeTrack(audioTracks[0]);
@@ -795,6 +797,9 @@ function gotStream2() {
 		if(onGotStreamGoOnline && !rtcConnect) {
 			console.log('gotStream2 onGotStreamGoOnline goOnline');
 			onGotStreamGoOnline = false;
+
+			// goOnline() will not start with goOnlineButton.disabled==true
+			offlineAction(); // enable goOnlineButton, disable goOfflineButton
 			goOnline(true,"gotStream2");
 		} else {
 			console.log('gotStream2 standby');
@@ -2598,7 +2603,7 @@ function exit() {
 
 function wakeGoOnline() {
 	gLog("wakeGoOnline start");
-	connectSignaling('',''); // only get wsConn from service (from Android.wsOpen())
+	connectSignaling('','wakeGoOnline'); // only get wsConn from service (from Android.wsOpen())
 	wsOnOpen(); // green led
 	goOnlineButton.disabled = false; // prevent goOnline() abort
 	goOnline(true,"wakeGoOnline");   // newPeerCon() + wsSend("init|!")
@@ -2607,7 +2612,7 @@ function wakeGoOnline() {
 
 function wakeGoOnlineNoInit() {
 	gLog("wakeGoOnlineNoInit start");
-	connectSignaling('',''); // only get wsConn from service (from Android.wsOpen())
+	connectSignaling('','wakeGoOnlineNoInit'); // only get wsConn from service (from Android.wsOpen())
 	wsOnOpen(); // green led
 	goOnlineButton.disabled = false; // prevent goOnline() abort
 	goOnline(false,"wakeGoOnline");  // newPeerCon() but do NOT wsSend("init|!")
