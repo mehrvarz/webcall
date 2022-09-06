@@ -809,6 +809,9 @@ function gotStream2() {
 				// we are online
 				goOnlineButton.disabled = true;
 				goOfflineButton.disabled = false;
+
+				// send init to request list of missedCalls
+				sendInit("gotStream2 standby");
 			}
 		}
 	}
