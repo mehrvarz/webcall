@@ -799,7 +799,17 @@ function gotStream2() {
 			offlineAction(); // enable goOnlineButton, disable goOfflineButton
 			goOnline(true,"gotStream2");
 		} else {
-			console.log('gotStream2 standby');
+			console.log("gotStream2 standby");
+
+			if(wsConn==null) {
+				// we are offline
+				goOnlineButton.disabled = false;
+				goOfflineButton.disabled = true;
+			} else {
+				// we are online
+				goOnlineButton.disabled = true;
+				goOfflineButton.disabled = false;
+			}
 		}
 	}
 }
