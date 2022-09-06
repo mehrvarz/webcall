@@ -776,31 +776,25 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			return
 		}
 
-		if c.calleeInitReceived.Get() {
-			// only the 1st callee 'init|' is accepted
-			// don't need to log this
-			//fmt.Printf("# %s (%s) ignore 2nd callee init %s/%s v=%s\n",
-			//	c.connType, c.calleeID, payload, c.RemoteAddr, c.clientVersion)
-			return
-		}
+		if !c.calleeInitReceived.Get() {
+			// on first init only
+			//fmt.Printf("%s (%s) callee init %s\n", c.connType, c.calleeID, c.RemoteAddr)
+			c.hub.HubMutex.Lock()
+			c.hub.CallerClient = nil
+			c.hub.HubMutex.Unlock()
 
-		//fmt.Printf("%s (%s) callee init %s\n", c.connType, c.calleeID, c.RemoteAddr)
-		c.hub.HubMutex.Lock()
-		c.hub.CallerClient = nil
-		c.hub.HubMutex.Unlock()
+			c.calleeInitReceived.Set(true)
+			c.hub.CalleeLogin.Set(true)
+			c.pickupSent.Set(false)
 
-		c.calleeInitReceived.Set(true)
-		c.hub.CalleeLogin.Set(true)
-		c.pickupSent.Set(false)
-
-		// closeCallee() will call setDeadline(0) and processTimeValues() if this is false; then set it true
-//		c.clearOnCloseDone = false // TODO not needed anymore; only used in hub.closeCallee()
-		c.callerTextMsg = ""
+			// closeCallee() will call setDeadline(0) and processTimeValues() if this is false; then set it true
+			c.callerTextMsg = ""
 
 // TODO clear blockMap[c.calleeID] ?
 //blockMapMutex.Lock()
 //delete(blockMap,c.calleeID)
 //blockMapMutex.Unlock()
+		}
 
 		if logWantedFor("attach") {
 			loginCount := 0
@@ -824,7 +818,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 		}
 
 		if !strings.HasPrefix(c.calleeID,"answie") && !strings.HasPrefix(c.calleeID,"talkback") {
-/*
+/* TODO
 			// send "newer client available"
 			if clientUpdateBelowVersion!="" && !c.autologin {
 				if c.clientVersion < clientUpdateBelowVersion || 
