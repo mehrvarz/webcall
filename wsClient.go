@@ -678,6 +678,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				client.connType, client.calleeID, delaySecs, hub.CalleeClient.RemoteAddr,
 				client.RemoteAddr, client.callerID, client.isOnline.Get(), client.userAgent)
 
+/* this is done by closePeerCon() below
 			// add missed call if dbUser.StoreMissedCalls is set
 			userKey := client.calleeID + "_" + strconv.FormatInt(int64(client.hub.registrationStartTime),10)
 			var dbUser DbUser
@@ -690,7 +691,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 					CallerInfo{client.RemoteAddr, client.callerName, time.Now().Unix(),
 					client.callerID, client.callerTextMsg }, "NO PEERCON")
 			}
-
+*/
 			// NOTE: msg MUST NOT contain apostroph (') characters
 			msg := "Unable to establish a direct P2P connection. "+
 			  "This might be a WebRTC related issue with your browser/WebView. "+
@@ -790,22 +791,22 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			// closeCallee() will call setDeadline(0) and processTimeValues() if this is false; then set it true
 			c.callerTextMsg = ""
 
+			if logWantedFor("attach") {
+				loginCount := 0
+				calleeLoginMutex.RLock()
+				calleeLoginSlice,ok := calleeLoginMap[c.calleeID]
+				calleeLoginMutex.RUnlock()
+				if ok {
+					loginCount = len(calleeLoginSlice)
+				}
+				fmt.Printf("%s (%s) callee init %d ws=%d %s v=%s\n",
+					c.connType, c.calleeID, loginCount, c.hub.WsClientID, c.RemoteAddr, c.clientVersion)
+			}
+
 // TODO clear blockMap[c.calleeID] ?
 //blockMapMutex.Lock()
 //delete(blockMap,c.calleeID)
 //blockMapMutex.Unlock()
-		}
-
-		if logWantedFor("attach") {
-			loginCount := 0
-			calleeLoginMutex.RLock()
-			calleeLoginSlice,ok := calleeLoginMap[c.calleeID]
-			calleeLoginMutex.RUnlock()
-			if ok {
-				loginCount = len(calleeLoginSlice)
-			}
-			fmt.Printf("%s (%s) callee init %d ws=%d %s v=%s\n",
-				c.connType, c.calleeID, loginCount, c.hub.WsClientID, c.RemoteAddr, c.clientVersion)
 		}
 
 		// deliver the webcall codetag version string to callee
@@ -885,9 +886,6 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 				// -> httpServer c.Write()
 				waitingCallerToCallee(c.calleeID, waitingCallerSlice, missedCallsSlice, c)
 			}
-		}
-		if logWantedFor("attach") {
-			//fmt.Printf("%s (%s) callee init done\n", c.connType, c.calleeID)
 		}
 		return
 	}
