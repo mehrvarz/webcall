@@ -111,14 +111,29 @@ func ticker3hours() {
 			fmt.Printf("ticker3hours delete=%d offline for %d days (no err)\n", counterDeleted, maxDaysOffline)
 		}
 		for _,key := range deleteKeyArray {
-			fmt.Printf("ticker3hours delete outdated user-id=%s\n", key)
+			idxUnderline := strings.LastIndex(key,"_")
+			if idxUnderline<0 {
+				fmt.Printf("# ticker3hours error key=%s no underline\n", key)
+				continue
+			}
+			userID := key[:idxUnderline]
+			fmt.Printf("ticker3hours delete outdated key=%s userID=%s\n", key, userID)
+/*
+				starttimeStr := key[idxUnderline+1:]
+				starttime64, err := strconv.ParseInt(starttimeStr, 10, 64)
+				if err!=nil {
+					fmt.Printf("# ticker3hours error bucket=%s key=%s conv timestr err=%v\n",
+						dbBlockedIDs, key, err)
+				} else {
+					sinceDeletedInSecs := timeNowUnix - starttime64
+*/
 
-			// delete/outdate mapped tmpIDs of outdated user 'key'
-			errcode,altIDs := getMapping(key,"")
+			// delete/outdate mapped tmpIDs of outdated userID
+			errcode,altIDs := getMapping(userID,"")
 			if errcode==0 && altIDs!="" {
 				tokenSlice := strings.Split(altIDs, "|")
 				for _, tok := range tokenSlice {
-					deleteMapping(key,tok,"")
+					deleteMapping(userID,tok,"")
 				}
 			}
 
@@ -127,15 +142,14 @@ func ticker3hours() {
 				// this is bad
 				fmt.Printf("# ticker3hours delete user-id=%s err=%v\n", key, err)
 			} else {
-				// all is well
+				// all is well: create a dbBlockedIDs entry (will be deleted after 60 days)
 				//fmt.Printf("ticker3hours key=%s user deleted\n", key)
-				// create a dbBlockedIDs entry (will be deleted after 60 days)
-				dbUserKey := fmt.Sprintf("%s_%d",key, timeNowUnix)
+				dbUserKey := fmt.Sprintf("%s_%d",userID, timeNowUnix)
 				err = kvMain.Put(dbBlockedIDs, dbUserKey, DbUser{}, false)
 				if err!=nil {
 					// this is bad
-					fmt.Printf("# /deletemapping error db=%s bucket=%s put key=%s err=%v\n",
-						dbMainName,dbBlockedIDs,key,err)
+					fmt.Printf("# ticker3hours error db=%s bucket=%s put key=%s err=%v\n",
+						dbMainName,dbBlockedIDs,dbUserKey,err)
 				}
 			}
 		}
@@ -175,7 +189,7 @@ func ticker3hours() {
 				counter++
 				idxUnderline := strings.LastIndex(dbUserKey,"_")
 				if idxUnderline<0 {
-					fmt.Printf("# /deletemapping error bucket=%s key=%s no underline\n", dbBlockedIDs, dbUserKey)
+					fmt.Printf("# ticker3hours error bucket=%s key=%s no underline\n", dbBlockedIDs, dbUserKey)
 				} else {
 					userID := dbUserKey[:idxUnderline]
 					if strings.HasPrefix(userID,"answie") || strings.HasPrefix(userID,"talkback") {
@@ -188,13 +202,15 @@ func ticker3hours() {
 					starttimeStr := dbUserKey[idxUnderline+1:]
 					starttime64, err := strconv.ParseInt(starttimeStr, 10, 64)
 					if err!=nil {
-						fmt.Printf("# /deletemapping error bucket=%s key=%s conv timestr err=%v\n",
+						fmt.Printf("# ticker3hours error bucket=%s key=%s conv timestr err=%v\n",
 							dbBlockedIDs, dbUserKey, err)
 					} else {
 						sinceDeletedInSecs := timeNowUnix - starttime64
 						if sinceDeletedInSecs > blockedForDays * 24*60*60 {
 							deleteKeyArray2 = append(deleteKeyArray2,dbUserKey)
 							counterDeleted2++
+						} else {
+							fmt.Printf("ticker3hours blocked but not outdated key=%s\n", dbUserKey)
 						}
 					}
 				}
