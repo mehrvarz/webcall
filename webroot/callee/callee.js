@@ -977,13 +977,13 @@ console.log("callee beforeunload: enable goonline");
 	menuSettingsElement.style.display = "block";
 	iconContactsElement.style.display = "block";
 
-	if(typeof Android !== "undefined" && Android !== null) {
-		if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
-			if(Android.getVersionName()>="1.1.0") {
+//	if(typeof Android !== "undefined" && Android !== null) {
+//		if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
+//			if(Android.getVersionName()>="1.1.0") {
 				idMappingElement.style.display = "block";
-			}
-		}
-	}
+//			}
+//		}
+//	}
 	goOfflineButton.disabled = false;
 }
 
