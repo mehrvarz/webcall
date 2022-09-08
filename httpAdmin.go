@@ -95,19 +95,23 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 
 	if urlPath=="/dumpblocked" {
 		// show the list of callee-IDs that are blocked (for various reasons)
-		bucketName := dbBlockedIDs
-		printFunc(w,"/dumpblocked dbName=%s bucketName=%s\n", dbMainName, bucketName)
+		printFunc(w,"/dumpblocked dbName=%s bucketName=%s\n", dbMainName, dbBlockedIDs)
 		db := kv.Db
 		err := db.Update(func(tx *bolt.Tx) error {
-			b := tx.Bucket([]byte(bucketName))
+			b := tx.Bucket([]byte(dbBlockedIDs))
 			c := b.Cursor()
-			for id, v := c.First(); id != nil; id, v = c.Next() {
+			for k, _ := c.First(); k != nil; k, _ = c.Next() {
+				dbUserKey := string(k)
+				// dbUserKey format: 'calleeID_unixtime'
+/*
 				var dbEntry DbEntry
 				d := gob.NewDecoder(bytes.NewReader(v))
 				d.Decode(&dbEntry)
 				starttime := time.Unix(dbEntry.StartTime,0)
 				fmt.Fprintf(w,"blocked id=%s start=%d=%s rip=%s\n",
-					id, dbEntry.StartTime, starttime.Format("2006-01-02 15:04:05"), dbEntry.Ip)
+					dbUserKey, dbEntry.StartTime, starttime.Format("2006-01-02 15:04:05"), dbEntry.Ip)
+*/
+				fmt.Fprintf(w,"blocked key=%s\n",dbUserKey)
 			}
 			return nil
 		})
@@ -178,9 +182,9 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 	}
 
 	if urlPath=="/delblockedid" {
-		bucketName := dbBlockedIDs
+/*
 		var dbEntry DbEntry
-		err := kv.Get(bucketName,urlID,&dbEntry)
+		err := kv.Get(dbBlockedIDs,urlID,&dbEntry)
 		if err!=nil {
 			printFunc(w,"# /delblockedid urlID not found\n")
 			return true
@@ -200,9 +204,19 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 			return true
 		}
 
-		fmt.Printf("/delblockedid dbName=%s bucketName=%s\n", dbMainName, bucketName)
+		fmt.Printf("/delblockedid dbName=%s bucketName=%s\n", dbMainName, dbBlockedIDs)
+		err = kv.Delete(dbBlockedIDs, urlID)
+*/
+		// get time from url-arg
+		url_arg_array, ok := r.URL.Query()["time"]
+		if !ok || len(url_arg_array[0]) < 1 {
+			printFunc(w,"# /delblockedid url arg 'time' not given\n")
+			return true
+		}
+		urlTime := url_arg_array[0]
 
-		err = kv.Delete(bucketName, urlID)
+		dbUserKey := fmt.Sprintf("%s_%d",urlID,urlTime)
+		err := kv.Delete(dbBlockedIDs, dbUserKey)
 		if err!=nil {
 			printFunc(w,"# /delblockedid fail to delete id=%s\n", urlID)
 		} else {

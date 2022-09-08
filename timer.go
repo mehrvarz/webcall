@@ -5,6 +5,7 @@ import (
 	"time"
 	"fmt"
 	"strings"
+	"strconv"
 	"bytes"
 	"unicode"
 	"encoding/gob"
@@ -130,8 +131,7 @@ func ticker3hours() {
 				//fmt.Printf("ticker3hours key=%s user deleted\n", key)
 				// create a dbBlockedIDs entry (will be deleted after 60 days)
 				dbUserKey := fmt.Sprintf("%s_%d",key, timeNowUnix)
-				dbUser := DbUser{/*Ip1:remoteAddr*/}
-				err = kvMain.Put(dbBlockedIDs, dbUserKey, dbUser, false)
+				err = kvMain.Put(dbBlockedIDs, dbUserKey, DbUser{}, false)
 				if err!=nil {
 					// this is bad
 					fmt.Printf("# /deletemapping error db=%s bucket=%s put key=%s err=%v\n",
@@ -150,8 +150,9 @@ func ticker3hours() {
 			b := tx.Bucket([]byte(dbBlockedIDs))
 			c := b.Cursor()
 			counter := 0
-			for k, v := c.First(); k != nil; k, v = c.Next() {
-				userID := string(k)
+			for k, _ := c.First(); k != nil; k, _ = c.Next() {
+/*
+				userID := string(k) // key_timeNowUnix
 				if strings.HasPrefix(userID,"answie") || strings.HasPrefix(userID,"talkback") {
 					continue
 				}
@@ -159,7 +160,6 @@ func ticker3hours() {
 					continue
 				}
 
-				counter++
 				var dbEntry DbEntry // DbEntry{unixTime, remoteAddr, urlPw}
 				d := gob.NewDecoder(bytes.NewReader(v))
 				d.Decode(&dbEntry)
@@ -168,6 +168,35 @@ func ticker3hours() {
 				if sinceDeletedInSecs > blockedForDays * 24*60*60 {
 					deleteKeyArray2 = append(deleteKeyArray2,userID)
 					counterDeleted2++
+				}
+*/
+				dbUserKey := string(k)
+				// dbUserKey format: 'calleeID_unixtime'
+				counter++
+				idxUnderline := strings.LastIndex(dbUserKey,"_")
+				if idxUnderline<0 {
+					fmt.Printf("# /deletemapping error bucket=%s key=%s no underline\n", dbBlockedIDs, dbUserKey)
+				} else {
+					userID := dbUserKey[:idxUnderline]
+					if strings.HasPrefix(userID,"answie") || strings.HasPrefix(userID,"talkback") {
+						continue
+					}
+					if !isOnlyNumericString(userID) {
+						continue
+					}
+
+					starttimeStr := dbUserKey[idxUnderline+1:]
+					starttime64, err := strconv.ParseInt(starttimeStr, 10, 64)
+					if err!=nil {
+						fmt.Printf("# /deletemapping error bucket=%s key=%s conv timestr err=%v\n",
+							dbBlockedIDs, dbUserKey, err)
+					} else {
+						sinceDeletedInSecs := timeNowUnix - starttime64
+						if sinceDeletedInSecs > blockedForDays * 24*60*60 {
+							deleteKeyArray2 = append(deleteKeyArray2,dbUserKey)
+							counterDeleted2++
+						}
+					}
 				}
 			}
 			return nil

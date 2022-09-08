@@ -275,8 +275,7 @@ func deleteMapping(calleeID string, delID string, remoteAddr string) int {
 	// create a dbBlockedIDs entry (will be deleted after 60 days by timer)
 	unixTime := time.Now().Unix()
 	dbUserKey := fmt.Sprintf("%s_%d",delID, unixTime)
-	dbUser := DbUser{/*Ip1:remoteAddr*/}
-	err = kvMain.Put(dbBlockedIDs, dbUserKey, dbUser, false)
+	err = kvMain.Put(dbBlockedIDs, dbUserKey, DbUser{}, false)
 	if err!=nil {
 		fmt.Printf("# deletemapping error db=%s bucket=%s put key=%s err=%v\n",
 			dbMainName,dbBlockedIDs,delID,err)
