@@ -103,14 +103,6 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 			for k, _ := c.First(); k != nil; k, _ = c.Next() {
 				dbUserKey := string(k)
 				// dbUserKey format: 'calleeID_unixtime'
-/*
-				var dbEntry DbEntry
-				d := gob.NewDecoder(bytes.NewReader(v))
-				d.Decode(&dbEntry)
-				starttime := time.Unix(dbEntry.StartTime,0)
-				fmt.Fprintf(w,"blocked id=%s start=%d=%s rip=%s\n",
-					dbUserKey, dbEntry.StartTime, starttime.Format("2006-01-02 15:04:05"), dbEntry.Ip)
-*/
 				fmt.Fprintf(w,"blocked key=%s\n",dbUserKey)
 			}
 			return nil
@@ -118,7 +110,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		if err!=nil {
 			printFunc(w,"/dumpblocked err=%v\n", err)
 		} else {
-			fmt.Fprintf(w,"/dumpblocked no err\n")
+			//fmt.Fprintf(w,"/dumpblocked no err\n")
 		}
 		return true
 	}
@@ -215,12 +207,12 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		}
 		urlTime := url_arg_array[0]
 
-		dbUserKey := fmt.Sprintf("%s_%d",urlID,urlTime)
+		dbUserKey := fmt.Sprintf("%s_%s",urlID,urlTime)
 		err := kv.Delete(dbBlockedIDs, dbUserKey)
 		if err!=nil {
-			printFunc(w,"# /delblockedid fail to delete id=%s\n", urlID)
+			printFunc(w,"# /delblockedid fail to delete key=%s\n", dbUserKey)
 		} else {
-			printFunc(w,"/delblockedid deleted id=%s\n", urlID)
+			printFunc(w,"/delblockedid deleted key=%s\n", dbUserKey)
 		}
 		return true
 	}

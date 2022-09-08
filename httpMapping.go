@@ -261,11 +261,11 @@ func deleteMapping(calleeID string, delID string, remoteAddr string) int {
 	// unregister delID from dbRegisteredIDs
 	err := kvMain.Delete(dbRegisteredIDs, delID)
 	if err!=nil {
-		fmt.Printf("# deletemapping fail to delete delid=%s\n", delID)
+		fmt.Printf("# deletemapping fail to delete id=%s\n", delID)
 		return 1
 	}
 
-	fmt.Printf("deletemapping (%s) delid=%s %s\n", calleeID, delID, remoteAddr)
+	fmt.Printf("deletemapping (%s) id=%s %s\n", calleeID, delID, remoteAddr)
 
 	// remove delID from mapping.map
 	mappingMutex.Lock()
@@ -275,6 +275,7 @@ func deleteMapping(calleeID string, delID string, remoteAddr string) int {
 	// create a dbBlockedIDs entry (will be deleted after 60 days by timer)
 	unixTime := time.Now().Unix()
 	dbUserKey := fmt.Sprintf("%s_%d",delID, unixTime)
+	fmt.Printf("deletemapping (%s) created blockedID key=%s %s\n", calleeID, dbUserKey, remoteAddr)
 	err = kvMain.Put(dbBlockedIDs, dbUserKey, DbUser{}, false)
 	if err!=nil {
 		fmt.Printf("# deletemapping error db=%s bucket=%s put key=%s err=%v\n",

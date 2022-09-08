@@ -30,16 +30,11 @@ func ticker3hours() {
 	db := kv.Db
 
 	// put ticker3hours out of step with other tickers
-	time.Sleep(7 * time.Second)
+	time.Sleep(37 * time.Second)
 
 	threeHoursTicker := time.NewTicker(3*60*60*time.Second)
 	defer threeHoursTicker.Stop()
 	for {
-		<-threeHoursTicker.C
-		if shutdownStarted.Get() {
-			break
-		}
-
 		timeNowUnix := time.Now().Unix()
 
 		// loop all dbRegisteredIDs to delete outdated dbUserBucket entries (not online for 180+ days)
@@ -210,7 +205,9 @@ func ticker3hours() {
 							deleteKeyArray2 = append(deleteKeyArray2,dbUserKey)
 							counterDeleted2++
 						} else {
-							fmt.Printf("ticker3hours blocked but not outdated key=%s\n", dbUserKey)
+							// TODO we need to be able to switch this log off
+							fmt.Printf("ticker3hours blocked but not outdated key=%s (wait %ds)\n",
+								dbUserKey, blockedForDays * 24*60*60 - sinceDeletedInSecs)
 						}
 					}
 				}
@@ -238,6 +235,11 @@ func ticker3hours() {
 
 		if counterDeleted>0 || counterDeleted2>0 {
 			fmt.Printf("ticker3hours done\n")
+		}
+
+		<-threeHoursTicker.C
+		if shutdownStarted.Get() {
+			break
 		}
 	}
 }
