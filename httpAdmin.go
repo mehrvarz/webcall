@@ -174,31 +174,6 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 	}
 
 	if urlPath=="/delblockedid" {
-/*
-		var dbEntry DbEntry
-		err := kv.Get(dbBlockedIDs,urlID,&dbEntry)
-		if err!=nil {
-			printFunc(w,"# /delblockedid urlID not found\n")
-			return true
-		}
-
-		// get time from url-arg
-		url_arg_array, ok := r.URL.Query()["time"]
-		if !ok || len(url_arg_array[0]) < 1 {
-			printFunc(w,"# /delblockedid url arg 'time' not given\n")
-			return true
-		}
-		urlTime := url_arg_array[0]
-
-		dbTimeStr := fmt.Sprintf("%d",dbEntry.StartTime)
-		if dbTimeStr!=urlTime {
-			printFunc(w,"# /delblockedid time=%s != from db.StartTime=%s\n", urlTime, dbTimeStr)
-			return true
-		}
-
-		fmt.Printf("/delblockedid dbName=%s bucketName=%s\n", dbMainName, dbBlockedIDs)
-		err = kv.Delete(dbBlockedIDs, urlID)
-*/
 		// get time from url-arg
 		url_arg_array, ok := r.URL.Query()["time"]
 		if !ok || len(url_arg_array[0]) < 1 {
