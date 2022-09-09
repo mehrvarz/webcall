@@ -928,7 +928,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			c.hub.CalleeClient.callerTextMsg = cleanMsg;
 		}
 		c.hub.HubMutex.Unlock()
-		return
+		//return	// let msg fall thru so it will be fw to other side
 	}
 
 	if cmd=="missedcall" {
