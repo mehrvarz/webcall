@@ -1695,16 +1695,10 @@ function wsSend(message) {
 }
 
 function pickup() {
-	gLog('pickup -> open mic');
+	console.log('pickup -> open mic');
 	buttonBlinking = false;
 	pickupAfterLocalStream = true;
 	getStream(); // -> pickup2()
-
-/* moved to pickup2()
-	if(typeof Android !== "undefined" && Android !== null) {
-		Android.callPickedUp();
-	}
-*/
 }
 
 function pickup2() {
@@ -1971,10 +1965,6 @@ function peerConnected2() {
 	// scroll to top
 	window.scrollTo({ top: 0, behavior: 'smooth' });
 
-	if(typeof Android !== "undefined" && Android !== null) {
-		Android.rtcConnect();
-	}
-
 	wsSend("rtcConnect|")
 
 	if(!dataChannel) {
@@ -1982,56 +1972,64 @@ function peerConnected2() {
 		createDataChannel();
 	}
 
-	if(ringtoneSound) {
-		allAudioEffectsStopped = false;
-		var playRingtoneSound = function() {
-			if(allAudioEffectsStopped) {
-				if(!ringtoneSound.paused && ringtoneIsPlaying) {
-					gLog('playRingtoneSound ringtoneSound.pause');
-					ringtoneSound.pause();
-					ringtoneSound.currentTime = 0;
-				} else {
-					gLog('playRingtoneSound NO ringtoneSound.pause',
-						ringtoneSound.paused, ringtoneIsPlaying);
+	let skipRinging = false;
+	if(typeof Android !== "undefined" && Android !== null) {
+		skipRinging = Android.rtcConnect(); // may auto-call pickup()
+	}
+
+	if(!skipRinging) {
+		if(ringtoneSound) {
+			console.log('peerConnected2 playRingtoneSound');
+			allAudioEffectsStopped = false;
+			var playRingtoneSound = function() {
+				if(allAudioEffectsStopped) {
+					if(!ringtoneSound.paused && ringtoneIsPlaying) {
+						gLog('playRingtoneSound ringtoneSound.pause');
+						ringtoneSound.pause();
+						ringtoneSound.currentTime = 0;
+					} else {
+						gLog('playRingtoneSound NO ringtoneSound.pause',
+							ringtoneSound.paused, ringtoneIsPlaying);
+					}
+					return;
 				}
-				return;
-			}
-			ringtoneSound.onended = playRingtoneSound;
+				ringtoneSound.onended = playRingtoneSound;
 
-			if(ringtoneSound.paused && !ringtoneIsPlaying) {
-				gLog('ringtone play...');
-				ringtoneSound.play().catch(error => {
-					gLog('ringtone play',error.message);
-				});
+				if(ringtoneSound.paused && !ringtoneIsPlaying) {
+					gLog('ringtone play...');
+					ringtoneSound.play().catch(error => {
+						gLog('ringtone play',error.message);
+					});
+				} else {
+					gLog('ringtone play NOT started',
+						ringtoneSound.paused,ringtoneIsPlaying);
+				}
+			}
+			playRingtoneSound();
+		}
+
+		// blinking answer button
+		buttonBlinking = true;
+		let buttonBgHighlighted = false;
+		let blinkButtonFunc = function() {
+			if(!buttonBgHighlighted) {
+				answerButton.style.background = "#b82a68";
+				buttonBgHighlighted = true;
+				setTimeout(blinkButtonFunc, 500);
 			} else {
-				gLog('ringtone play NOT started',
-					ringtoneSound.paused,ringtoneIsPlaying);
-			}
-		}
-		playRingtoneSound();
-	}
-
-	// blinking answer button
-	buttonBlinking = true;
-	let buttonBgHighlighted = false;
-	let blinkButtonFunc = function() {
-		if(!buttonBgHighlighted) {
-			answerButton.style.background = "#b82a68";
-			buttonBgHighlighted = true;
-			setTimeout(blinkButtonFunc, 500);
-		} else {
-			answerButton.style.background = "#04c";
-			buttonBgHighlighted = false;
-			if(!buttonBlinking || wsConn==null) {
-				//gLog("buttonBlinking stop");
 				answerButton.style.background = "#04c";
-				return;
+				buttonBgHighlighted = false;
+				if(!buttonBlinking || wsConn==null) {
+					//gLog("buttonBlinking stop");
+					answerButton.style.background = "#04c";
+					return;
+				}
+				gLog("buttonBlinking...");
+				setTimeout(blinkButtonFunc, 500);
 			}
-			gLog("buttonBlinking...");
-			setTimeout(blinkButtonFunc, 500);
 		}
+		blinkButtonFunc();
 	}
-	blinkButtonFunc();
 
 	setTimeout(function() {
 		if(!peerCon || peerCon.iceConnectionState=="closed") {
