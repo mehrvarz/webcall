@@ -907,6 +907,11 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 		cleanMsg := strings.Replace(payload, "\n", " ", -1)
 		cleanMsg = strings.Replace(cleanMsg, "\r", " ", -1)
 		cleanMsg = strings.TrimSpace(cleanMsg)
+		if cleanMsg == c.hub.CalleeClient.callerTextMsg {
+			// same text msg was already processed / forwarded
+			return
+		}
+
 		//logTxtMsg := cleanMsg
 		logTxtMsg := "(hidden)"
 		if c.hub==nil {
@@ -953,25 +958,6 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 		//fmt.Printf("%s (%s) callerOffer... %s\n", c.connType, c.calleeID, c.RemoteAddr)
 
 		c.hub.HubMutex.RLock()
-		/* this is not required, since we don't use c.hub.CallerClient below
-		if c.hub.CallerClient==nil {
-			c.hub.HubMutex.RUnlock()
-			fmt.Printf("# %s (%s) CALL☎️  but hub.CallerClient==nil\n", c.connType, c.calleeID)
-
-			// add missed call if dbUser.StoreMissedCalls is set
-			userKey := c.calleeID + "_" + strconv.FormatInt(int64(c.hub.registrationStartTime),10)
-			var dbUser DbUser
-			err := kvMain.Get(dbUserBucket, userKey, &dbUser)
-			if err!=nil {
-				fmt.Printf("# %s (%s) failed to get dbUser\n",c.connType,c.calleeID)
-			} else if dbUser.StoreMissedCalls {
-				addMissedCall(c.calleeID, CallerInfo{c.RemoteAddr, "", time.Now().Unix(), "",c.callerTextMsg, ""},
-					"err no CallerClient")
-			}
-			return
-		}
-		*/
-
 		if c.hub.CalleeClient==nil {
 			fmt.Printf("# %s (%s) CALL🔔 from (%s) %s but hub.CalleeClient==nil\n",
 				c.connType, c.calleeID, c.callerID, c.RemoteAddr)
@@ -1019,6 +1005,10 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			// this data is used to display caller-info in the callee-client
 			// NOTE: c.callerID and c.callerHost must not contain colons
 			sendCmd := "callerInfo|"+c.callerID+"\t"+c.callerName
+			// if txtMsg exists, attach it to callerInfo as 3rd token
+			if c.hub.CalleeClient.callerTextMsg!="" {
+				sendCmd += "\t"+c.hub.CalleeClient.callerTextMsg
+			}
 			err = c.hub.CalleeClient.Write([]byte(sendCmd))
 			if err != nil {
 				// callee is gone

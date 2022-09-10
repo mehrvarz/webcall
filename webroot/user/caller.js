@@ -1272,18 +1272,19 @@ function calleeOnlineAction(comment) {
 			dialAfterCalleeOnline = false;
 
 			if(localStream) {
-				connectSignaling("",dial); 
+				connectSignaling("",dial); // when ws-connected to server, call dial() to call peer
 			} else {
 				gLog('callee is online dialAfterLocalStream');
 				dialAfterLocalStream = true;
 
 				if(typeof Android !== "undefined" && Android !== null) {
+					// remote audio will be played back on earpiece (if available) instead of speakerphone
 					// not sure this is still needed
 					Android.prepareDial();
 				}
 
 				getStream().then(() => navigator.mediaDevices.enumerateDevices()).then(gotDevices);
-				// also: -> gotStream -> connectSignaling
+				// and bc of dialAfterLocalStream also: -> gotStream -> gotStream2 -> connectSignaling
 			}
 		} else {
 			// no autodial after we detected callee is online
@@ -1672,10 +1673,11 @@ function errorAction(errString,errcode) {
 }
 
 function gotStream2() {
-	if(dialAfterLocalStream) { // set by dialButtonClick() -> dialAfterCalleeOnline
+	if(dialAfterLocalStream) {
+		// dialAfterLocalStream was set by calleeOnlineAction() -> dialAfterCalleeOnline
 		gLog("gotStream2 dialAfter connectSignaling()");
 		dialAfterLocalStream=false;
-		connectSignaling("",dial);
+		connectSignaling("",dial); // when ws-connected to server, call dial() to call peer
 	} else {
 		// in caller we land here after audio/video was initialzed
 		gLog("gotStream2 !dialAfter");
@@ -2121,7 +2123,7 @@ function signalingCommand(message) {
 			setTimeout(function() {
 				if(wsConn) {
 					if(!mediaConnect) {
-						// before wsConn.close(): send msgbox text to server
+						// before wsConn.close(): send msgbox text (via server) to peer
 						let msgboxText = cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen);
 						if(msgboxText!="") {
 							wsSend("msg|"+msgboxText);
@@ -2317,6 +2319,16 @@ function dial2() {
 					dataChannel.send("cmd|callerOfferUpd|"+JSON.stringify(localDescription));
 				} else {
 					gLog('peerCon onnegotiationneeded send callerOffer via ws');
+					// when server receives our callerOffer, it sends 'callerInfo|' to the callee
+					// if msgboxText exists, send it before callerOffer
+
+					let msgboxText = cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen);
+					//gLog('msgboxText=('+msgboxText+')');
+					if(msgboxText!="") {
+						gLog('msg=('+msgboxText+')');
+						wsSend("msg|"+msgboxText);
+					}
+
 					wsSend("callerOffer|"+JSON.stringify(localDescription));
 				}
 			}, err => console.error(`Failed to set local descr: ${err.toString()}`));

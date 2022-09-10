@@ -593,7 +593,7 @@ function login(retryFlag) {
 			if(parts.length>=4) {
 				serviceSecs = parseInt(parts[3], 10);
 			}
-			gLog('outboundIP '+outboundIP);
+			gLog('login outboundIP '+outboundIP);
 
 			getSettings();
 			/*
@@ -635,6 +635,7 @@ function login(retryFlag) {
 
 			// login success -> send "init|"
 			sendInit("xhr login success");
+			gLog('login sendInit done');
 			return;
 		}
 
@@ -967,7 +968,7 @@ console.log("callee beforeunload: enable goonline");
 	});
 */
 	if(wsSendMessage!="") {
-		gLog('ws connection send '+wsSendMessage);
+		gLog("wsOnOpen wsSend("+wsSendMessage+")");
 		wsSend(wsSendMessage);
 		wsSendMessage = "";
 	}
@@ -1127,6 +1128,7 @@ function signalingCommand(message) {
 		});
 
 	} else if(cmd=="callerInfo") {
+		//gLog('cmd callerInfo payload=(%s)',payload);
 		let idxSeparator = payload.indexOf("\t");
 		if(idxSeparator<0) {
 			// for backward compatibility only
@@ -1307,7 +1309,6 @@ function signalingCommand(message) {
 			missedCallsSlice = JSON.parse(payload);
 		}
 		showMissedCalls();
-
 	} else if(cmd=="ua") {
 		otherUA = payload;
 		gLog("otherUA",otherUA);
@@ -1840,6 +1841,7 @@ function goOnline(sendInitFlag,comment) {
 		console.log('goOnline have wsConn');
 		if(divspinnerframe) divspinnerframe.style.display = "none";
 		menuClearCookieElement.style.display = "block";
+		fileselectLabel.style.display = "block";
 		if(sendInitFlag) {
 			gLog('goOnline have wsConn -> send init');
 			sendInit("goOnline <- "+comment);
@@ -2590,10 +2592,7 @@ function clearcache() {
 	if(typeof Android !== "undefined" && Android !== null) {
 		if(typeof Android.reload !== "undefined" && Android.reload !== null) {
 			let wasConnected = wsConn!=null;
-
-			console.log("----- wsClose() -----");
 			Android.wsClose();
-
 			console.log("----- wsClearCache(true,"+wasConnected+") -----");
 			Android.wsClearCache(true, wasConnected); // autoreload, autoreconnect
 		}

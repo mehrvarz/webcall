@@ -269,7 +269,7 @@ function sendFile(file) {
 				gLog("file send complete", file.size);
 				offset = 0;
 				progressSendElement.style.display = "none";
-				showStatus("sent '"+file.name.substring(0,25)+"' "+Math.floor(file.size/1000)+" KB",-1);
+				showStatus("sent "+file.name.substring(0,28)+" "+Math.floor(file.size/1000)+" KB",-1);
 				if(mediaConnect && isDataChlOpen()) {
 					if(isP2pCon()) {
 						fileselectLabel.style.display = "block";
