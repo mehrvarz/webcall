@@ -2141,13 +2141,15 @@ function dataChannelOnmessage(event) {
 				if(cleanString!="") {
 					//gLog("dataChannel.onmessage msg",cleanString);
 					if(msgbox) {
-						let curDate = new Date().toString();
+						/*let curDate = new Date().toString();
 						// cut off trailing "GMT... (Central European Summer Time)"
 						let bracketIdx = curDate.indexOf(" GMT");
 						if(bracketIdx>=0) {
 							curDate = curDate.substring(0,bracketIdx);
 						}
 						let msg = "["+curDate+"]\n" + cleanString + "\n";
+						*/
+						let msg = "Message: " + cleanString + "\n";
 						msgbox.value = msg;
 					}
 				}
