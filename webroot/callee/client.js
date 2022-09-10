@@ -1613,15 +1613,6 @@ function isP2pCon() {
 function dataChannelOnclose(event) {
 	gLog("dataChannel.onclose");
 	dataChannel = null;
-/*
-	if(rtcConnect) {
-		if(mediaConnect) {
-			hangupWithBusySound(false,"dataChannel.close");
-		} else {
-			hangup(true,true,"dataChannel.close");
-		}
-	}
-*/
 }
 
 function dataChannelOnerror(event) {
