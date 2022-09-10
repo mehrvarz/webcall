@@ -220,8 +220,13 @@ function fileSelectInit() {
 }
 
 function sendFile(file) {
+	let fileName = file.name;
+	let idxLastSlash = fileName.lastIndexOf("/");
+	if(idxLastSlash>=0) {
+		fileName = fileName.substring(idxLastSlash+1);
+	}
 	console.log("fileSelect: "+file.name, file.size, file.type, file.lastModified);
-	dataChannel.send("file|"+file.name+","+file.size+","+file.type+","+file.lastModified);
+	dataChannel.send("file|"+fileName+","+file.size+","+file.type+","+file.lastModified);
 	fileselectLabel.style.display = "none";
 	showStatus("",-1);
 
@@ -233,7 +238,7 @@ function sendFile(file) {
 	fileSendAbort = false;
 	progressSendBar.max = file.size;
 	progressSendElement.style.display = "block";
-	progressSendLabel.innerHTML = "Sending: "+file.name.substring(0,25);
+	progressSendLabel.innerHTML = "Sending: "+fileName.substring(0,25);
 	fileReader.addEventListener('error', error => console.error("# Error reading file:", error));
 	fileReader.addEventListener('abort', event => console.log("# File reading aborted:", event));
 	fileReader.addEventListener('load', e => {
@@ -254,7 +259,8 @@ function sendFile(file) {
 		let sinceStartSecs = Math.floor((Date.now() - fileSendStartDate + 500)/1000);
 		if(sinceStartSecs!=fileSendLastSinceStartSecs && sinceStartSecs!=0) {
 			let kbytesPerSec = Math.floor(offset/1000/sinceStartSecs);
-			progressSendLabel.innerHTML = "sending '"+file.name.substring(0,22)+"' "+kbytesPerSec+" KB/s";
+			progressSendLabel.innerHTML = "sending '"+fileName.substring(0,22)+"' "+kbytesPerSec+" KB/s";
+			//console.log("sending: "+fileName +" "+ file.size);
 			fileSendLastSinceStartSecs = sinceStartSecs;
 		}
 		if (offset < file.size) {
@@ -269,7 +275,7 @@ function sendFile(file) {
 				gLog("file send complete", file.size);
 				offset = 0;
 				progressSendElement.style.display = "none";
-				showStatus("sent "+file.name.substring(0,28)+" "+Math.floor(file.size/1000)+" KB",-1);
+				showStatus("sent "+fileName.substring(0,28)+" "+Math.floor(file.size/1000)+" KB",-1);
 				if(mediaConnect && isDataChlOpen()) {
 					if(isP2pCon()) {
 						fileselectLabel.style.display = "block";

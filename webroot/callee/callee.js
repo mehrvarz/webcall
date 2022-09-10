@@ -1841,7 +1841,7 @@ function goOnline(sendInitFlag,comment) {
 		console.log('goOnline have wsConn');
 		if(divspinnerframe) divspinnerframe.style.display = "none";
 		menuClearCookieElement.style.display = "block";
-		fileselectLabel.style.display = "block";
+		//nonesense: fileselectLabel.style.display = "block";
 		if(sendInitFlag) {
 			gLog('goOnline have wsConn -> send init');
 			sendInit("goOnline <- "+comment);
