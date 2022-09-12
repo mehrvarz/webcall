@@ -1031,22 +1031,20 @@ function wsOnClose2() {
 	buttonBlinking=false; // will abort blinkButtonFunc()
 	stopAllAudioEffects("wsOnClose");
 	showStatus("disconnected from signaling server");
-//	if(!mediaConnect) { // ???
-		onlineIndicator.src="";
-//	}
+	onlineIndicator.src="";
 }
 
 function wsOnMessage(evt) {
-	wsOnMessage2(evt.data);
+	signalingCommand(evt.data,"wsOnMessage");
 }
 
-function wsOnMessage2(str) {
+function wsOnMessage2(str, comment) {
 	// WebCall service uses this to push msgs from WebCall server
-	signalingCommand(str);
+	signalingCommand(str, comment);
 }
 
-function signalingCommand(message) {
-	//gLog("signalingCommand "+message);
+function signalingCommand(message, comment) {
+	//console.log("signalingCommand "+message+" comment="+comment);
 	let tok = message.split("|");
 	let cmd = tok[0];
 	let payload = "";
@@ -2155,7 +2153,7 @@ function dataChannelOnmessage(event) {
 				}
 			} else if(event.data.startsWith("cmd|")) {
 				let subCmd = event.data.substring(4);
-				signalingCommand(subCmd);
+				signalingCommand(subCmd,"dataChl");
 			} else if(event.data.startsWith("file|")) {
 				var fileDescr = event.data.substring(5);
 

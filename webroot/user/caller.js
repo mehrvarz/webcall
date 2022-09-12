@@ -468,6 +468,7 @@ window.onload = function() {
 				} else {
 					//console.log("we are no iframe")
 				}
+				// NOTE: DO NOT CHANGE THE console.log() BELOW !!!
 				console.log("showNumberForm pos",
 					rect1.left, rect1.top, rect1.right, rect1.bottom,	// x/y x2/y2 of input form (rel to ifra)
 					iframeX, iframeY, screen.width, screen.height);		// x/y of iframe + web width/height pix

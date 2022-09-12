@@ -956,11 +956,13 @@ func waitingCallerToCallee(calleeID string, waitingCallerSlice []CallerInfo, mis
 		if err != nil {
 			fmt.Printf("# waitingCallerToCallee (%s) failed on json.Marshal err=%v\n", calleeID,err)
 		} else if hubclient==nil {
-// TODO may need HubMutex locking for hubclient!=nil
+			// TODO may need HubMutex locking for hubclient!=nil
 			fmt.Printf("# waitingCallerToCallee cannot send waitingCallers (%s) hubclient==nil\n", calleeID)
 		} else {
-			//fmt.Printf("waitingCallerToCallee send waitingCallers (%s) (%s) (%s)\n",
-			//	calleeID, hubclient.hub.IsUnHiddenForCallerAddr, string(jsonStr))
+			if logWantedFor("missedcalljson") {
+				fmt.Printf("waitingCallerToCallee send waitingCallers (%s) (%s) (%s)\n",
+					calleeID, hubclient.hub.IsUnHiddenForCallerAddr, string(jsonStr))
+			}
 			err := hubclient.Write([]byte("waitingCallers|"+string(jsonStr)))
 			if err != nil {
 				fmt.Printf("# %s (%s) send waitingCallers %s  <- to callee err=%v\n",
@@ -979,13 +981,15 @@ func waitingCallerToCallee(calleeID string, waitingCallerSlice []CallerInfo, mis
 		} else if hubclient==nil {
 			fmt.Printf("# waitingCallerToCallee cannot send missedCalls (%s) hubclient==nil\n", calleeID)
 		} else {
-			//fmt.Printf("waitingCallerToCallee send missedCalls (callee=%s) (unHidden=%s) (%s)\n",
-			//	calleeID, hubclient.hub.IsUnHiddenForCallerAddr, string(jsonStr))
+			if logWantedFor("missedcalljson") {
+				fmt.Printf("waitingCallerToCallee send missedCalls (callee=%s) (unHidden=%s) (%s)\n",
+					calleeID, hubclient.hub.IsUnHiddenForCallerAddr, string(jsonStr))
+			}
 			hubclient.Write([]byte("missedCalls|"+string(jsonStr)))
 			if err != nil {
 				fmt.Printf("# %s (%s) send waitingCallers %s  <- to callee err=%v\n",
 					hubclient.connType, hubclient.calleeID, hubclient.RemoteAddr, err)
-// TODO this is NOT a reason to abort?
+				// TODO is this NOT a reason to abort?
 				//hubclient.wsConn.Close()
 				//return
 			}
