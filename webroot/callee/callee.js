@@ -1978,17 +1978,18 @@ function peerConnected2() {
 	}
 
 	if(!skipRinging) {
+		// ringtoneSound.volume = 0.9;
 		if(ringtoneSound) {
-			console.log('peerConnected2 playRingtoneSound');
+			console.log('peerConnected2 playRingtoneSound '+ringtoneSound.volume);
 			allAudioEffectsStopped = false;
 			var playRingtoneSound = function() {
 				if(allAudioEffectsStopped) {
 					if(!ringtoneSound.paused && ringtoneIsPlaying) {
-						gLog('playRingtoneSound ringtoneSound.pause');
+						gLog('peerConnected2 playRingtoneSound ringtoneSound.pause');
 						ringtoneSound.pause();
 						ringtoneSound.currentTime = 0;
 					} else {
-						gLog('playRingtoneSound NO ringtoneSound.pause',
+						gLog('peerConnected2 playRingtoneSound NO ringtoneSound.pause',
 							ringtoneSound.paused, ringtoneIsPlaying);
 					}
 					return;
@@ -1996,12 +1997,12 @@ function peerConnected2() {
 				ringtoneSound.onended = playRingtoneSound;
 
 				if(ringtoneSound.paused && !ringtoneIsPlaying) {
-					gLog('ringtone play...');
+					gLog('peerConnected2 ringtone play...');
 					ringtoneSound.play().catch(error => {
 						gLog('ringtone play',error.message);
 					});
 				} else {
-					gLog('ringtone play NOT started',
+					gLog('peerConnected2 ringtone play NOT started',
 						ringtoneSound.paused,ringtoneIsPlaying);
 				}
 			}
@@ -2020,11 +2021,11 @@ function peerConnected2() {
 				answerButton.style.background = "#04c";
 				buttonBgHighlighted = false;
 				if(!buttonBlinking || wsConn==null) {
-					//gLog("buttonBlinking stop");
+					//gLog("peerConnected2 buttonBlinking stop");
 					answerButton.style.background = "#04c";
 					return;
 				}
-				gLog("buttonBlinking...");
+				gLog("peerConnected2 buttonBlinking...");
 				setTimeout(blinkButtonFunc, 500);
 			}
 		}
@@ -2034,14 +2035,14 @@ function peerConnected2() {
 	setTimeout(function() {
 		if(!peerCon || peerCon.iceConnectionState=="closed") {
 			// caller early abort
-			gLog('caller early abort');
+			gLog('peerConnected2 caller early abort');
 			//hangup(true,true,"caller early abort");
 			stopAllAudioEffects();
 			endWebRtcSession(true,true,"caller early abort"); // -> peerConCloseFunc
 			return;
 		}
 		// instead of listOfClientIps
-		gLog('accept incoming call?',listOfClientIps);
+		gLog('peerConnected2 accept incoming call?',listOfClientIps);
 		peerCon.getStats(null)
 		.then((results) => getStatsCandidateTypes(results,"Incoming", ""),
 			err => console.log(err.message)); // -> wsSend("log|callee Incoming p2p/p2p")
@@ -2075,12 +2076,12 @@ function peerConnected2() {
 
 		answerButton.onclick = function(ev) {
 			ev.stopPropagation();
-			gLog("answer button");
+			gLog("peerConnected2 answer button");
 			pickup();
 		}
 		rejectButton.onclick = function(ev) {
 			ev.stopPropagation();
-			gLog("hangup button");
+			gLog("peerConnected2 hangup button");
 			hangup(true,true,"rejectButton");
 		}
 	},400);
