@@ -1979,6 +1979,12 @@ function peerConnected2() {
 
 	if(!skipRinging) {
 		// ringtoneSound.volume = 0.9;
+		if(typeof Android !== "undefined" && Android !== null) {
+			if(typeof Android.ringtoneVol !== "undefined" && Android.ringtoneVol !== null) {
+				ringtoneSound.volume = Android.ringtoneVol();
+			}
+		}
+
 		if(ringtoneSound) {
 			console.log('peerConnected2 playRingtoneSound '+ringtoneSound.volume);
 			allAudioEffectsStopped = false;
