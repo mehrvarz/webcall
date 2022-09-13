@@ -1978,9 +1978,9 @@ function peerConnected2() {
 	}
 
 	if(!skipRinging) {
-		// ringtoneSound.volume = 0.9;
 		if(typeof Android !== "undefined" && Android !== null) {
 			if(typeof Android.ringtoneVol !== "undefined" && Android.ringtoneVol !== null) {
+				// making sure the ringtone volume is the same in Android and JS
 				ringtoneSound.volume = Android.ringtoneVol();
 			}
 		}
