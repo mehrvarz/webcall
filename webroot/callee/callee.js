@@ -1978,41 +1978,41 @@ function peerConnected2() {
 	}
 
 	if(!skipRinging) {
-		if(typeof Android !== "undefined" && Android !== null) {
-			if(typeof Android.ringtoneVol !== "undefined" && Android.ringtoneVol !== null) {
-				// making sure the ringtone volume is the same in Android and JS
-				ringtoneSound.volume = Android.ringtoneVol();
-			}
-		}
-
-		if(ringtoneSound) {
-			console.log('peerConnected2 playRingtoneSound '+ringtoneSound.volume);
-			allAudioEffectsStopped = false;
-			var playRingtoneSound = function() {
-				if(allAudioEffectsStopped) {
-					if(!ringtoneSound.paused && ringtoneIsPlaying) {
-						gLog('peerConnected2 playRingtoneSound ringtoneSound.pause');
-						ringtoneSound.pause();
-						ringtoneSound.currentTime = 0;
-					} else {
-						gLog('peerConnected2 playRingtoneSound NO ringtoneSound.pause',
-							ringtoneSound.paused, ringtoneIsPlaying);
+		if(typeof Android !== "undefined" && Android !== null &&
+		   typeof Android.ringStart !== "undefined" && Android.ringStart !== null) {
+			// making sure the ringtone volume is the same in Android and JS
+			console.log('peerConnected2 Android.ringStart()');
+			Android.ringStart();
+		} else {
+			if(ringtoneSound) {
+				console.log('peerConnected2 playRingtoneSound '+ringtoneSound.volume);
+				allAudioEffectsStopped = false;
+				var playRingtoneSound = function() {
+					if(allAudioEffectsStopped) {
+						if(!ringtoneSound.paused && ringtoneIsPlaying) {
+							gLog('peerConnected2 playRingtoneSound ringtoneSound.pause');
+							ringtoneSound.pause();
+							ringtoneSound.currentTime = 0;
+						} else {
+							gLog('peerConnected2 playRingtoneSound NO ringtoneSound.pause',
+								ringtoneSound.paused, ringtoneIsPlaying);
+						}
+						return;
 					}
-					return;
-				}
-				ringtoneSound.onended = playRingtoneSound;
+					ringtoneSound.onended = playRingtoneSound;
 
-				if(ringtoneSound.paused && !ringtoneIsPlaying) {
-					gLog('peerConnected2 ringtone play...');
-					ringtoneSound.play().catch(error => {
-						gLog('ringtone play',error.message);
-					});
-				} else {
-					gLog('peerConnected2 ringtone play NOT started',
-						ringtoneSound.paused,ringtoneIsPlaying);
+					if(ringtoneSound.paused && !ringtoneIsPlaying) {
+						gLog('peerConnected2 ringtone play...');
+						ringtoneSound.play().catch(error => {
+							gLog('ringtone play',error.message);
+						});
+					} else {
+						gLog('peerConnected2 ringtone play NOT started',
+							ringtoneSound.paused,ringtoneIsPlaying);
+					}
 				}
+				playRingtoneSound();
 			}
-			playRingtoneSound();
 		}
 
 		// blinking answer button
@@ -2261,22 +2261,28 @@ function stopAllAudioEffects(comment) {
 		gLog("stopAllAudioEffects ("+comment+")");
 	}
 	allAudioEffectsStopped = true;
-	try {
-		if(!ringtoneSound.paused && ringtoneIsPlaying) {
-			gLog('stopAllAudioEffects ringtoneSound.pause');
-			ringtoneSound.pause();
-			ringtoneSound.currentTime = 0;
-		} else {
-			//gLog('stopAllAudioEffects NO ringtoneSound.pause',
-			//	ringtoneSound.paused, ringtoneIsPlaying);
-		}
+	if(typeof Android !== "undefined" && Android !== null &&
+	   typeof Android.ringStop !== "undefined" && Android.ringStop !== null) {
+		console.log('stopAllAudioEffects Android.ringStop()');
+		Android.ringStop();
+	} else {
+		try {
+			if(!ringtoneSound.paused && ringtoneIsPlaying) {
+				gLog('stopAllAudioEffects ringtoneSound.pause');
+				ringtoneSound.pause();
+				ringtoneSound.currentTime = 0;
+			} else {
+				//gLog('stopAllAudioEffects NO ringtoneSound.pause',
+				//	ringtoneSound.paused, ringtoneIsPlaying);
+			}
 
-		if(playDialSounds) {
-			busySignalSound.pause();
-			busySignalSound.currentTime = 0;
+			if(playDialSounds) {
+				busySignalSound.pause();
+				busySignalSound.currentTime = 0;
+			}
+		} catch(ex) {
+			console.log('# ex stopAllAudioEffects '+ex.message);
 		}
-	} catch(ex) {
-		console.log('# ex stopAllAudioEffects '+ex.message);
 	}
 	//gLog('stopAllAudioEffects done');
 }
