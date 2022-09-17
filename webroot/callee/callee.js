@@ -1961,7 +1961,7 @@ function peerConnected2() {
 	goOfflineButton.disabled = true;
 	rtcConnectStartDate = Date.now();
 	mediaConnectStartDate = 0;
-	gLog("peerConnected2 rtcConnect");
+	console.log("peerConnected2 rtcConnect");
 	// scroll to top
 	window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -1978,41 +1978,41 @@ function peerConnected2() {
 	}
 
 	if(!skipRinging) {
+		let doneRing = false;
 		if(typeof Android !== "undefined" && Android !== null &&
 		   typeof Android.ringStart !== "undefined" && Android.ringStart !== null) {
 			// making sure the ringtone volume is the same in Android and JS
 			console.log('peerConnected2 Android.ringStart()');
-			Android.ringStart();
-		} else {
-			if(ringtoneSound) {
-				console.log('peerConnected2 playRingtoneSound '+ringtoneSound.volume);
-				allAudioEffectsStopped = false;
-				var playRingtoneSound = function() {
-					if(allAudioEffectsStopped) {
-						if(!ringtoneSound.paused && ringtoneIsPlaying) {
-							gLog('peerConnected2 playRingtoneSound ringtoneSound.pause');
-							ringtoneSound.pause();
-							ringtoneSound.currentTime = 0;
-						} else {
-							gLog('peerConnected2 playRingtoneSound NO ringtoneSound.pause',
-								ringtoneSound.paused, ringtoneIsPlaying);
-						}
-						return;
-					}
-					ringtoneSound.onended = playRingtoneSound;
-
-					if(ringtoneSound.paused && !ringtoneIsPlaying) {
-						gLog('peerConnected2 ringtone play...');
-						ringtoneSound.play().catch(error => {
-							gLog('ringtone play',error.message);
-						});
+			doneRing = Android.ringStart();
+		}
+		if(!doneRing && ringtoneSound) {
+			console.log('peerConnected2 playRingtoneSound '+ringtoneSound.volume);
+			allAudioEffectsStopped = false;
+			var playRingtoneSound = function() {
+				if(allAudioEffectsStopped) {
+					if(!ringtoneSound.paused && ringtoneIsPlaying) {
+						gLog('peerConnected2 playRingtoneSound ringtoneSound.pause');
+						ringtoneSound.pause();
+						ringtoneSound.currentTime = 0;
 					} else {
-						gLog('peerConnected2 ringtone play NOT started',
-							ringtoneSound.paused,ringtoneIsPlaying);
+						gLog('peerConnected2 playRingtoneSound NO ringtoneSound.pause',
+							ringtoneSound.paused, ringtoneIsPlaying);
 					}
+					return;
 				}
-				playRingtoneSound();
+				ringtoneSound.onended = playRingtoneSound;
+
+				if(ringtoneSound.paused && !ringtoneIsPlaying) {
+					gLog('peerConnected2 ringtone play...');
+					ringtoneSound.play().catch(error => {
+						gLog('ringtone play',error.message);
+					});
+				} else {
+					gLog('peerConnected2 ringtone play NOT started',
+						ringtoneSound.paused,ringtoneIsPlaying);
+				}
 			}
+			playRingtoneSound();
 		}
 
 		// blinking answer button
@@ -2263,28 +2263,27 @@ function stopAllAudioEffects(comment) {
 	allAudioEffectsStopped = true;
 	if(typeof Android !== "undefined" && Android !== null &&
 	   typeof Android.ringStop !== "undefined" && Android.ringStop !== null) {
-		console.log('stopAllAudioEffects Android.ringStop()');
-		Android.ringStop();
-	} else {
-		try {
-			if(!ringtoneSound.paused && ringtoneIsPlaying) {
-				gLog('stopAllAudioEffects ringtoneSound.pause');
-				ringtoneSound.pause();
-				ringtoneSound.currentTime = 0;
-			} else {
-				//gLog('stopAllAudioEffects NO ringtoneSound.pause',
-				//	ringtoneSound.paused, ringtoneIsPlaying);
-			}
-
-			if(playDialSounds) {
-				busySignalSound.pause();
-				busySignalSound.currentTime = 0;
-			}
-		} catch(ex) {
-			console.log('# ex stopAllAudioEffects '+ex.message);
-		}
+		//console.log('stopAllAudioEffects Android.ringStop()');
+		if(Android.ringStop())
+			return;
 	}
-	//gLog('stopAllAudioEffects done');
+	try {
+		if(!ringtoneSound.paused && ringtoneIsPlaying) {
+			gLog('stopAllAudioEffects ringtoneSound.pause');
+			ringtoneSound.pause();
+			ringtoneSound.currentTime = 0;
+		} else {
+			//gLog('stopAllAudioEffects NO ringtoneSound.pause',
+			//	ringtoneSound.paused, ringtoneIsPlaying);
+		}
+
+		if(playDialSounds) {
+			busySignalSound.pause();
+			busySignalSound.currentTime = 0;
+		}
+	} catch(ex) {
+		console.log('# ex stopAllAudioEffects '+ex.message);
+	}
 }
 
 var goOnlinePending = false;
