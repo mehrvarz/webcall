@@ -442,6 +442,7 @@ func cleanupClientRequestsMap(w io.Writer, min int, title string) {
 
 // send url (pointing to update news) to all online callees
 var newsLinkDeliveredCounter int = 0
+var lastDate string = ""
 func broadcastNewsLink(date string, url string) {
 	// let's loop through hubMap, so we see all connected callee users
 	hubMapMutex.RLock()
@@ -449,7 +450,10 @@ func broadcastNewsLink(date string, url string) {
 	countAll := 0
 	countSent := 0
 	countSentNoErr := 0
-	data := "news|"+date+"|"+url;
+	if date>lastDate {
+		newsLinkDeliveredCounter = 0
+	}
+	sendData := "news|"+date+"|"+url;
 	for calleeID,hub := range hubMap {
 		if strings.HasPrefix(calleeID,"answie") || 
 		   strings.HasPrefix(calleeID,"talkback") {
@@ -460,19 +464,19 @@ func broadcastNewsLink(date string, url string) {
 			hub.HubMutex.RLock()
 			// we make sure to send each news with a particular date string only once
 			if hub.CalleeClient==nil {
-				fmt.Printf("# newsLink hub.CalleeClient==nil to=%s data=%s\n",calleeID,data)
+				fmt.Printf("# newsLink hub.CalleeClient==nil to=%s sendData=%s\n",calleeID,sendData)
 			} else {
 				// the callee in this hub is online
 				// we don't need newsDateMutex bc no one else is using newsDateMap
 				//newsDateMutex.RLock()
-				lastNews := newsDateMap[calleeID]
+				lastNewsCallee := newsDateMap[calleeID]
 				//newsDateMutex.RUnlock()
-				if date <= lastNews {
+				if date <= lastNewsCallee {
 					// this news-msg was sent to calleeID already
-					//fmt.Printf("# newsLink date(%s) <= lastNews(%s) to=%s\n",date,lastNews,calleeID)
+					//fmt.Printf("# newsLink date(%s) <= lastNewsCallee(%s) to=%s\n",date,lastNewsCallee,calleeID)
 				} else {
 					// send it now
-					err := hub.CalleeClient.Write([]byte(data))
+					err := hub.CalleeClient.Write([]byte(sendData))
 					countSent++
 
 					if err!=nil {
@@ -487,13 +491,13 @@ func broadcastNewsLink(date string, url string) {
 			}
 			hub.HubMutex.RUnlock()
 		} else {
-			fmt.Printf("# newsLink hub==nil to=%s data=%s\n",calleeID,data)
+			fmt.Printf("# newsLink hub==nil to=%s sendData=%s\n",calleeID,sendData)
 		}
 	}
 	if countSent>0 {
 		newsLinkDeliveredCounter += countSentNoErr
-		fmt.Printf("newsLink sent=%d/%d total=%d data=%s\n",
-			countSentNoErr, countSent, newsLinkDeliveredCounter, data)
+		fmt.Printf("newsLink sent=%d/%d total=%d sendData=%s\n",
+			countSentNoErr, countSent, newsLinkDeliveredCounter, sendData)
 	}
 	return
 }
