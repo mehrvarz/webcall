@@ -2568,10 +2568,10 @@ function clearcookie() {
 	setTimeout(function() {
 		// ask yes/no
 		//console.log("clearcookie cont (id=%s)",calleeID);
-		let yesNoInner = "<div style='position:absolute; z-index:110; background:#45dd; color:#fff; padding:20px 20px; line-height:1.6em; border-radius:3px; cursor:pointer;'><div style='font-weight:600'>Clear coockie?</div><br>"+
-		"If you clear your login cookie, you will need to enter your password again next time you log in.<br><br>"+
+		let yesNoInner = "<div style='position:absolute; z-index:110; background:#45dd; color:#fff; padding:20px 20px; line-height:1.6em; border-radius:3px; cursor:pointer;'><div style='font-weight:600'>Clear cookie?</div><br>"+
+		"If you clear the login cookie, you will need to enter your password again next time you log in.<br><br>"+
 		"<a onclick='clearcookie2();history.back();'>Clear cookie!</a> &nbsp; &nbsp; <a onclick='history.back();'>Cancel</a></div>";
-		menuDialogOpen(dynDialog,true,yesNoInner);
+		menuDialogOpen(dynDialog,false,yesNoInner);
 	},300);
 }
 
@@ -2627,10 +2627,19 @@ function clearcache() {
 }
 
 function exit() {
-	gLog("exit");
+	gLog("exits");
 	if(typeof Android !== "undefined" && Android !== null) {
-		Android.wsExit();
+		history.back();
+		// wait for pulldown menu to close
+		setTimeout(function() {
+			// ask yes/no
+			let yesNoInner = "<div style='position:absolute; z-index:110; background:#45dd; color:#fff; padding:20px 20px; line-height:1.6em; border-radius:3px; cursor:pointer;'><div style='font-weight:600'>Full shut down?</div><br>"+
+			"There will be no incoming calls until WebCall is started again.<br><br>"+
+			"<a onclick='Android.wsExit();history.back();'>Exit!</a> &nbsp; &nbsp; <a onclick='history.back();'>Cancel</a></div>";
+			menuDialogOpen(dynDialog,false,yesNoInner);
+		},300);
 	} else {
+		// this is not used: exit() is currently only available in Android mode
 		history.back();
 	}
 }
