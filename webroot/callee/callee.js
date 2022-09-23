@@ -2562,12 +2562,26 @@ function openSettings() {
 }
 
 function clearcookie() {
-	gLog("clearcookie (id=%s)",calleeID);
+	//console.log("clearcookie (id=%s)",calleeID);
+	history.back();
+	// wait for pulldown menu to close
+	setTimeout(function() {
+		// ask yes/no
+		//console.log("clearcookie cont (id=%s)",calleeID);
+		let yesNoInner = "<div style='position:absolute; z-index:110; background:#45dd; color:#fff; padding:20px 20px; line-height:1.6em; border-radius:3px; cursor:pointer;'><div style='font-weight:600'>Clear coockie?</div><br>"+
+		"If you clear your login cookie, you will need to enter your password again next time you log in.<br><br>"+
+		"<a onclick='clearcookie2();history.back();'>Clear cookie!</a> &nbsp; &nbsp; <a onclick='history.back();'>Cancel</a></div>";
+		menuDialogOpen(dynDialog,true,yesNoInner);
+	},300);
+}
+
+function clearcookie2() {
+	console.log("clearcookie2 (id=%s)",calleeID);
 	containerElement.style.filter = "blur(0.8px) brightness(60%)";
 	goOffline();
 
 	if(iframeWindowOpenFlag || menuDialogOpenElement) {
-		gLog("clearcookie history.back");
+		gLog("clearcookie2 history.back");
 		history.back();
 	}
 

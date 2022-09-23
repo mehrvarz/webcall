@@ -609,15 +609,15 @@ function getStatsCandidateTypesEx(results,eventString1,eventString2) {
 var menuDialogOpenElement = null;
 function menuDialogOpen(menuDialog,atMousePos,inner) {
 	if(menuDialogOpenElement) {
-		gLog('# menuDialogOpen menuDialogOpenElement');
+		console.log('# menuDialogOpen menuDialogOpenElement');
 		return;
 	}
 	if(typeof menuDialog=="undefined" || menuDialog==null) {
-		gLog('# menuDialog undefined');
+		console.log('# menuDialog undefined');
 		return;
 	}
 
-	//gLog('menuDialogOpen '+menuDialog);
+	//console.log('menuDialogOpen');
 	menuDialogOpenElement = menuDialog;
 	if(typeof inner!="undefined" && inner!=null) {
 		menuDialogOpenElement.innerHTML = inner;
@@ -625,10 +625,10 @@ function menuDialogOpen(menuDialog,atMousePos,inner) {
 
 	hashcounter++;
 	location.hash = hashcounter;
-	gLog("menuDialogOpen hashcounter="+hashcounter+" "+location.hash);
+	//console.log("menuDialogOpen hashcounter="+hashcounter+" "+location.hash);
 	fullScreenOverlayElement.style.display = "block";
 	fullScreenOverlayElement.onclick = function() {
-		gLog('fullScreenOverlayElement.onclick');
+		//console.log('fullScreenOverlayElement.onclick');
 		history.back();
 	}
 	containerElement.style.filter = "blur(0.8px) brightness(60%)";
@@ -648,7 +648,7 @@ function menuDialogOpen(menuDialog,atMousePos,inner) {
 
 	const menuDialogOpenChildElement = menuDialogOpenElement.firstElementChild;
 	var posY = 0;
-	if(atMousePos) {
+	if(atMousePos && typeof e !== "undefined") {
 		// position menuDialog at mouse coordinate
 		var e = window.event;
 		var posX = e.clientX * 0.70 -40;
@@ -688,11 +688,14 @@ function menuDialogOpen(menuDialog,atMousePos,inner) {
 
 function menuDialogClose() {
 	if(menuDialogOpenElement) {
+		//console.log("menuDialogClose()");
 		menuDialogOpenElement.style.display = "none";
 		containerElement.style.filter = "";
 		fullScreenOverlayElement.style.display = "none";
 		fullScreenOverlayElement.onclick = null;
 		menuDialogOpenElement = null;
+	} else {
+		//console.log("menuDialogClose() was not open");
 	}
 }
 
@@ -756,6 +759,7 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString, dontIframeOnload
 		iframeWindowClose();
 	}
 	if(menuDialogOpenElement) {
+		//console.log('iframeWindowOpen menuDialogOpenElement menuDialogClose()');
 		menuDialogClose();
 	} else {
 		hashcounter++;
@@ -1549,6 +1553,7 @@ function hashchange() {
 		if(iframeWindowOpenFlag) {
 			iframeWindowClose();
 		} else if(menuDialogOpenElement) {
+			//console.log('hashchange menuDialogOpenElement menuDialogClose()');
 			menuDialogClose();
 		}
 	}
