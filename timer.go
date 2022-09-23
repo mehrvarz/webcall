@@ -356,7 +356,7 @@ func cleanupCalleeLoginMap(w io.Writer, min int, title string) {
 					calleeIP = hub.CalleeClient.RemoteAddrNoPort
 				}
 
-				fmt.Fprintf(w,"%s calleeLoginMap (%-11s) %d/%d %s\n",
+				fmt.Fprintf(w,"%s calleeLoginMap %-11s %d/%d %s\n",
 					title, calleeID, len(calleeLoginSlice), maxLoginPer30min, calleeIP)
 			}
 		}
