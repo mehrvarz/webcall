@@ -647,18 +647,22 @@ function menuDialogOpen(menuDialog,atMousePos,inner) {
 	}
 
 	const menuDialogOpenChildElement = menuDialogOpenElement.firstElementChild;
-	var posY = 0;
-	if(atMousePos && typeof e !== "undefined") {
+	var posY = menuDialogOpenChildElement.style.top;
+	if(atMousePos) {
 		// position menuDialog at mouse coordinate
 		var e = window.event;
-		var posX = e.clientX * 0.70 -40;
-		if(posX<0) posX=0;
-		posY = e.clientY;
-		if(posY>50) posY-=50;
-		//gLog('menuDialogOpen x/y',posX,e.clientX,posY,e.clientY);
-		menuDialogOpenChildElement.style.left = posX+"px";
-		menuDialogOpenChildElement.style.top = (posY+window.scrollY)+"px"; // add scrollY-offset to posY
-		gLog('menuDialogOpen2 x/y',posX,posY+window.scrollY);
+		if(typeof e !== "undefined" && e !== null) {
+			var posX = e.clientX * 0.70 -60;
+			if(posX<0) posX=0;
+			posY = e.clientY;
+			if(posY>50) posY-=50;
+			//gLog('menuDialogOpen x/y',posX,e.clientX,posY,e.clientY);
+			menuDialogOpenChildElement.style.left = posX+"px";
+			menuDialogOpenChildElement.style.top = (posY+window.scrollY)+"px";
+			gLog('menuDialogOpen2 x/y',posX,posY+window.scrollY);
+		} else {
+			// centered?
+		}
 	}
 
 	menuDialogOpenElement.style.display = "block";
@@ -668,11 +672,11 @@ function menuDialogOpen(menuDialog,atMousePos,inner) {
 	setTimeout(function() {
 		let menuHeight = menuDialogOpenChildElement.clientHeight;
 		let pageHeight = mainElement.clientHeight;
-		//gLog('menuDialogOpen up',posY, menuHeight, pageHeight);
+		//console.log('menuDialogOpen up',posY, menuHeight, pageHeight);
 		while(posY>10 && posY + menuHeight > pageHeight) {
 			posY -= 10;
 		}
-		gLog('menuDialogOpen up2',posY, menuHeight, pageHeight);
+		//console.log('menuDialogOpen up2',posY, menuHeight, pageHeight);
 		menuDialogOpenChildElement.style.top = (posY+window.scrollY)+"px"; // add scrollY-offset to posY
 /*
 		let menuWidth = menuDialogOpenChildElement.clientWidth;

@@ -210,7 +210,7 @@ function remove(tableElement,id,name) {
 	myTableElement = tableElement;
 	removeId = id;
 
-	let yesNoInner = "<div style='position:absolute; z-index:110; background:#45dd; color:#fff; padding:20px 20px; line-height:1.6em; border-radius:3px; cursor:pointer;'><div style='font-weight:600'>Delete contact?</div><br>"+
+	let yesNoInner = "<div style='position:absolute; z-index:110; background:#45dd; color:#fff; padding:20px 20px; line-height:1.6em; border-radius:3px; cursor:pointer; min-width:280px;'><div style='font-weight:600'>Delete contact?</div><br>"+
 	"Name:&nbsp;"+name+"<br>ID:&nbsp;"+id+"<br><br>"+
 	"<a onclick='removeDo();history.back();'>Delete!</a> &nbsp; &nbsp; <a onclick='history.back();'>Cancel</a></div>";
 	menuDialogOpen(dynDialog,true,yesNoInner);
