@@ -2633,8 +2633,8 @@ function exit() {
 		// wait for pulldown menu to close
 		setTimeout(function() {
 			// ask yes/no
-			let yesNoInner = "<div style='position:absolute; z-index:110; background:#45dd; color:#fff; padding:20px 20px; line-height:1.6em; border-radius:3px; cursor:pointer; min-width:240px; top:40px; left:50%; transform:translate(-50%,0%);'><div style='font-weight:600;'>Full shut down?</div><br>"+
-			"There will be no incoming calls until you restart WebCall.<br><br>"+
+			let yesNoInner = "<div style='position:absolute; z-index:110; background:#45dd; color:#fff; padding:20px 20px; line-height:1.6em; border-radius:3px; cursor:pointer; min-width:240px; top:40px; left:50%; transform:translate(-50%,0%);'><div style='font-weight:600;'>Exit?</div><br>"+
+			"WebCall will shut down. You will need to restart the app to receive calls.<br><br>"+
 			"<a onclick='Android.wsExit();history.back();'>Exit!</a> &nbsp; &nbsp; <a onclick='history.back();'>Cancel</a></div>";
 			menuDialogOpen(dynDialog,false,yesNoInner);
 		},300);
