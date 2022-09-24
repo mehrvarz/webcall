@@ -2569,7 +2569,7 @@ function clearcookie() {
 		// ask yes/no
 		//console.log("clearcookie cont (id=%s)",calleeID);
 		let yesNoInner = "<div style='position:absolute; z-index:110; background:#45dd; color:#fff; padding:20px 20px; line-height:1.6em; border-radius:3px; cursor:pointer; min-width:240px; top:40px; left:50%; transform:translate(-50%,0%);'><div style='font-weight:600'>Clear cookie?</div><br>"+
-		"You will need to enter your password on next login.<br><br>"+
+		"You will be disconnected.<br>You will need to enter your password to reconnect.<br><br>"+
 		"<a onclick='clearcookie2();history.back();'>Clear cookie!</a> &nbsp; &nbsp; <a onclick='history.back();'>Cancel</a></div>";
 		menuDialogOpen(dynDialog,false,yesNoInner);
 	},300);
