@@ -819,16 +819,13 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 		}
 
 		if !strings.HasPrefix(c.calleeID,"answie") && !strings.HasPrefix(c.calleeID,"talkback") {
-/* TODO
 			// send "newer client available"
 			if clientUpdateBelowVersion!="" && !c.autologin {
-				if c.clientVersion < clientUpdateBelowVersion || 
-						strings.HasPrefix(c.clientVersion,"1.0F") ||
-						strings.HasPrefix(c.clientVersion,"1.0T") {
+				if c.clientVersion < clientUpdateBelowVersion {
 					//fmt.Printf("%s (%s) v=%s\n",c.connType,c.calleeID,c.clientVersion)
 					// NOTE: msg MUST NOT contain apostroph (') characters
-					msg := "A new release of WebCall for Android is available. "+
-							"<a href=\"/webcall/update/\">More...</a>"
+					msg := "Please upgrade WebCall client to "+
+						   "<a href=\"/webcall/update/\">v"+clientUpdateBelowVersion+"&nbsp;or higher</a>"
 					if logWantedFor("login") {
 						fmt.Printf("%s (%s) send status|%s\n",c.connType,c.calleeID,msg)
 					}
@@ -836,12 +833,12 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 					if err != nil {
 						fmt.Printf("# %s (%s) send status (%s) %s <- to callee err=%v\n",
 							c.connType, c.calleeID, c.RemoteAddr, err)
-						c.hub.doUnregister(c, "init, send status to callee: "+err.Error())
-						return
+						//c.hub.doUnregister(c, "init, send status to callee: "+err.Error())
+						//return
 					}
 				}
 			}
-*/
+
 			// send list of waitingCaller to callee client
 			var waitingCallerSlice []CallerInfo
 			// err can be ignored
