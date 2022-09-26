@@ -825,7 +825,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 					//fmt.Printf("%s (%s) v=%s\n",c.connType,c.calleeID,c.clientVersion)
 					// NOTE: msg MUST NOT contain apostroph (') characters
 					msg := "Please upgrade WebCall client to "+
-						   "<a href=\"/webcall/update/\">v"+clientUpdateBelowVersion+"&nbsp;or higher</a>"
+						   "<a href=\"/webcall/update/\">v"+clientUpdateBelowVersion+"&nbsp;or&nbsp;higher</a>"
 					if logWantedFor("attach") {
 						fmt.Printf("%s (%s) %s %s send status %s\n",
 							c.connType, c.calleeID, c.RemoteAddr, c.clientVersion, msg)
