@@ -1951,12 +1951,12 @@ function signalingCommand(message) {
 				return
 			}
 
-			//gLog('calleeCandidate',calleeCandidate);
+			//gLog('calleeCandidate',calleeCandidate.candidate);
 
 			let tok = calleeCandidate.candidate.split(' ');
 			if(tok.length>=5) {
 				let address = tok[4];
-				if(tok.length>=10 && tok[8]=="raddr" && tok[9]!="0.0.0.0") {
+				if(tok.length>=10 && tok[8]=="raddr" && tok[9]!="" && tok[9].length>=7 && tok[9]!="0.0.0.0") {
 					address = tok[9];
 				}
 				gLog('calleeCandidate addIce',address,calleeCandidate.candidate);
