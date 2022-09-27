@@ -1540,7 +1540,7 @@ function peerConOntrack(track, streams) {
 				} else {
 					remoteVideoHide();
 				}
-			},500);
+			},600);
 		}
 	}
 };

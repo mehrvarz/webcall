@@ -2479,7 +2479,7 @@ function dataChannelOnmessage(event) {
 		return;
 	}
 	if(typeof event.data === "string") {
-		gLog("dataChannel.onmessage");
+		gLog("dataChannel.onmessage "+event.data);
 		if(event.data) {
 			if(event.data.startsWith("disconnect")) {
 				gLog("dataChannel.close on 'disconnect'");
