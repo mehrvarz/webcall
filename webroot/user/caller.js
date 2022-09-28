@@ -2226,7 +2226,8 @@ function dial() {
 			}
 			loop++;
 			dtmfDialingSound.play().catch(function(error) {
-				console.log("# DialSound err="+error);
+				//console.log("# DialSound err="+error);
+				showStatus("Error DialSound "+error,-1);
 			});
 			dtmfDialingSound.onended = playDialSound;
 		}
