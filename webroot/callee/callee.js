@@ -1371,7 +1371,7 @@ function signalingCommand(message, comment) {
 		}
 
 	} else {
-		gLog('# ignore incom cmd',cmd);
+		console.log('# ignore incom cmd',cmd);
 	}
 }
 

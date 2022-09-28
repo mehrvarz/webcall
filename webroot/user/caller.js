@@ -619,7 +619,7 @@ function changeId(selectObject) {
 			}
 		}
 	} else {
-		gLog("# changeId no selectObject");
+		console.log("# changeId no selectObject");
 	}
 }
 
@@ -1419,7 +1419,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 						}
 						gLog('play notificationSound');
 						notificationSound.play().catch(function(error) { 
-							gLog('# notificationSound err='+error);
+							console.log('# notificationSound err='+error);
 						});
 						return;
 					}
@@ -1433,7 +1433,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 						ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 							gLog('/missedCall success');
 						}, function(errString,err) {
-							gLog('# /missedCall xhr error: '+errString+' '+err);
+							console.log('# /missedCall xhr error: '+errString+' '+err);
 						});
 					}
 				}, function(errString,errcode) {
@@ -1451,7 +1451,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 						ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 							gLog('/missedCall success');
 						}, function(errString,err) {
-							gLog('# /missedCall xhr error: '+errString+' '+err);
+							console.log('# /missedCall xhr error: '+errString+' '+err);
 						});
 						goodbyMissedCall = "";
 					}
@@ -1523,7 +1523,7 @@ function goodby() {
 			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 				   gLog('goodby /missedCall sent to '+goodbyMissedCall);
 			}, function(errString,err) {
-				   gLog('# goodby xhr error '+errString);
+				   console.log('# goodby xhr error '+errString);
 			}, false, true);
 		}
 	} else if(goodbyTextMsg!="" && wsConn!=null) {
@@ -1686,7 +1686,7 @@ function gotStream2() {
 		if(videoEnabled) {
 			gLog("gotStream2 videoEnabled: no mute mic until dial");
 		} else if(!localStream) {
-			gLog("# gotStream2 !localStream: no mute mic until dial");
+			console.log("# gotStream2 !localStream: no mute mic until dial");
 		} else if(rtcConnect) {
 			gLog("gotStream2 rtcConnect: no mute mic until dial");
 		} else {
@@ -2177,7 +2177,7 @@ function signalingCommand(message) {
 		connectLocalVideo(true);
 
 	} else {
-		gLog('# ignore incom cmd',cmd);
+		console.log('# ignore incom cmd',cmd);
 	}
 }
 
@@ -2226,7 +2226,7 @@ function dial() {
 			}
 			loop++;
 			dtmfDialingSound.play().catch(function(error) {
-				gLog('# DialSound err='+error);
+				console.log("# DialSound err="+error);
 			});
 			dtmfDialingSound.onended = playDialSound;
 		}
@@ -2290,7 +2290,7 @@ function dial2() {
 		// don't warn on 701 (chrome "701 STUN allocate request timed out")
 		// 400 = bad request
 		if(e.errorCode==701 || e.errorCode==400) {
-			gLog("# peerCon onicecandidateerror", e.errorCode, e.errorText, e.url);
+			console.log("# peerCon onicecandidateerror", e.errorCode, e.errorText, e.url);
 		} else {
 			if(!gentle) console.warn("peerCon onicecandidateerror", e.errorCode, e.errorText, e.url);
 			showStatus("iceCandidate error "+e.errorCode+" "+e.errorText,-1);
@@ -2299,7 +2299,7 @@ function dial2() {
 	peerCon.ontrack = ({track, streams}) => peerConOntrack(track, streams);
 	peerCon.onnegotiationneeded = async () => {
 		if(!peerCon || peerCon.iceConnectionState=="closed") {
-			gLog('# peerCon onnegotiationneeded !peerCon');
+			console.log('# peerCon onnegotiationneeded !peerCon');
 			return;
 		}
 		try {

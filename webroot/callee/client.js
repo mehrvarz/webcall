@@ -215,7 +215,7 @@ function fileSelectInit() {
 			gLog("fileSelectInit already initialzed");
 		}
 	} else {
-		gLog("# no fileSelectElement");
+		console.log("# no fileSelectElement");
 	}
 }
 
@@ -1183,7 +1183,7 @@ function gotStream(stream) {
 		gLog('gotStream videoEnabled but relayed con: no addTrack vid (%s)(%s) '+
 			localCandidateType+" "+remoteCandidateType);
 	} else if(localStream.getTracks().length<2) {
-		gLog('# gotStream videoEnabled but getTracks().length<2: no addTrack vid '+localStream.getTracks().length);
+		console.log('# gotStream videoEnabled but getTracks().length<2: no addTrack vid '+localStream.getTracks().length);
 	} else {
 		gLog('peerCon addTrack local video input '+localStream.getTracks()[1]);
 		addedVideoTrack = peerCon.addTrack(localStream.getTracks()[1],localStream);
@@ -1228,7 +1228,7 @@ function connectLocalVideo(forceOff) {
 			pickupAfterLocalStream = true; // will cause: pickup2()
 			getStream(); // -> gotStream() -> gotStream2() -> pickup2(): "calleeDescriptionUpd"
 		} else {
-			gLog("# connectLocalVideo no dataChannel");
+			console.log("# connectLocalVideo no dataChannel");
 		}
 	} else {
 		// stop streaming localVideo to other peer
