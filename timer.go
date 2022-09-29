@@ -452,6 +452,7 @@ func broadcastNewsLink(date string, url string) {
 	countSentNoErr := 0
 	if date>lastDate {
 		newsLinkDeliveredCounter = 0
+		lastDate = date
 	}
 	sendData := "news|"+date+"|"+url;
 	for calleeID,hub := range hubMap {
