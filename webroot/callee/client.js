@@ -1002,9 +1002,9 @@ function getStream(selectObject) {
 		})
 		.catch(function(err) {
 			if(!videoEnabled) {
-				console.log("# audio input error " + err.message);
+				console.log("# audio error " + err.message);
 				if(!doneHangup) {
-					alert("audio input error: " + err.message +
+					alert("audio error: " + err.message +
 						  "\nLooks like an issue with your browser");
 				}
 			} else {
