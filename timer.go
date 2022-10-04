@@ -112,7 +112,8 @@ func ticker3hours() {
 				continue
 			}
 			userID := key[:idxUnderline]
-			fmt.Printf("ticker3hours delete outdated key=%s userID=%s\n", key, userID)
+//			fmt.Printf("ticker3hours delete outdated key=%s userID=%s\n", key, userID)
+
 /*
 				starttimeStr := key[idxUnderline+1:]
 				starttime64, err := strconv.ParseInt(starttimeStr, 10, 64)
