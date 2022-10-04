@@ -2324,11 +2324,13 @@ function dial2() {
 					// when server receives our callerOffer, it sends 'callerInfo|' to the callee
 					// if msgboxText exists, send it before callerOffer
 
-					let msgboxText = cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen);
-					//gLog('msgboxText=('+msgboxText+')');
-					if(msgboxText!="") {
-						gLog('msg=('+msgboxText+')');
-						wsSend("msg|"+msgboxText);
+					if(!singlebutton) {
+						let msgboxText = cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen);
+						//gLog('msgboxText=('+msgboxText+')');
+						if(msgboxText!="") {
+							gLog('msg=('+msgboxText+')');
+							wsSend("msg|"+msgboxText);
+						}
 					}
 
 					wsSend("callerOffer|"+JSON.stringify(localDescription));
