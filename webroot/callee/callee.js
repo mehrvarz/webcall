@@ -895,10 +895,13 @@ function showOnlineReadyMsg() {
 	// "You receive calls made by this link"
 	let calleeLink = window.location.href;
 	let userLink = "";
-	if(calleeLink.indexOf("callee/")
+	if(calleeLink.indexOf("callee/") {
 		userLink = calleeLink.replace("callee/","user/");
-	else if(calleeLink.indexOf("calleelog/")
+		console.log("showOnlineReadyMsg a userLink="+userLink);
+	} else if(calleeLink.indexOf("calleelog/") {
 		userLink = calleeLink.replace("calleelog/","user/");
+		console.log("showOnlineReadyMsg b userLink="+userLink);
+	}
 	let idxParameter = userLink.indexOf("?");
 	if(idxParameter>=0) {
 		userLink = userLink.substring(0,idxParameter);
