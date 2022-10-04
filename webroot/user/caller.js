@@ -1133,7 +1133,7 @@ function checkServerMode(callback) {
 }
 
 function checkCalleeOnline(waitForCallee,comment) {
-	callerName = cleanStringParameter(nickname.value,true);
+	//callerName = cleanStringParameter(nickname.value,true);
 
 	// Connecting P2P...
 	//console.log("checkCalleeOnline callerId="+callerId+" callerName="+callerName);
