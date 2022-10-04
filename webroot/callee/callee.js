@@ -1466,7 +1466,7 @@ function showMissedCalls() {
 			missedCallsElement.style.display = "block";
 			let timeNowSecs = Math.floor((Date.now()+500)/1000);
 			let mainLink = window.location.href;
-			let idx = mainLink.indexOf("/callee/");
+			let idx = mainLink.indexOf("/callee");
 			if(idx>0) {
 				mainLink = mainLink.substring(0,idx) + "/user/";
 			}
