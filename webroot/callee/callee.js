@@ -895,6 +895,7 @@ function showOnlineReadyMsg() {
 	// "You receive calls made by this link"
 	let calleeLink = window.location.href;
 	let userLink = "";
+	console.log("showOnlineReadyMsg calleeLink="+calleeLink);
 	if(calleeLink.indexOf("callee/")>0) {
 		userLink = calleeLink.replace("callee/","user/");
 		console.log("showOnlineReadyMsg a userLink="+userLink);
