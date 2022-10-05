@@ -1538,7 +1538,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 							clientRequestsMutex.Unlock()
 						}
 
-						// clear calleeLoginMap[c.calleeID]
+						// clear calleeLoginMap[c.calleeID] (to prevent '/login (id) 12 >= 12 logins/30m')
 						calleeLoginMutex.Lock()
 						//calleeLoginMap[c.calleeID] = nil
 						delete(calleeLoginMap,c.calleeID)
