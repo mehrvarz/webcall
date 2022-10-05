@@ -1537,7 +1537,12 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 							delete(clientRequestsMap,c.hub.CallerIpNoPort)
 							clientRequestsMutex.Unlock()
 						}
-						// TODO also reset calleeLoginMap?
+
+						// clear calleeLoginMap[c.calleeID]
+						calleeLoginMutex.Lock()
+						//calleeLoginMap[c.calleeID] = nil
+						delete(calleeLoginMap,c.calleeID)
+						calleeLoginMutex.Unlock()
 
 						// store the caller (c.hub.CallerID)
 						// into contacts of user being called (c.calleeID)

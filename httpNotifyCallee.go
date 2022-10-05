@@ -134,14 +134,17 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		msg := "Unknown caller"
 		if callerName!="" {
 			if callerIdLong!="" {
-				msg = callerName + "("+callerIdLong+")"
+				msg = callerName + " ("+callerIdLong+")"
 			} else {
 				msg = callerName
 			}
 		} else if callerIdLong!="" {
 			msg = callerIdLong
 		}
-		msg += " is waiting for you to pick up the phone."
+		msg += " is waiting for you to pick up the phone"
+		if callerMsg!="" {
+			msg += " '"+callerMsg+"'"
+		}
 /*
 		if dbUser.Str2 != "" {
 			// web push device 1 subscription is specified
