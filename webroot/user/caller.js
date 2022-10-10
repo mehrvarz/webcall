@@ -930,6 +930,22 @@ function dialButtonClick() {
 	mediaConnectStartDate = 0;
 	connectionstatechangeCounter = 0;
 
+	if(!notificationSound) {
+		gLog('dialButton lazy load notificationSound');
+		notificationSound = new Audio("notification.mp3");
+	}
+	if(!dtmfDialingSound) {
+		// TODO why can I not do this?
+//		if(playDialSounds) {
+			gLog('dialButton lazy load dtmfDialingSound');
+			dtmfDialingSound = new Audio('dtmf-dial.mp3');
+//		}
+	}
+	if(!busySignalSound) {
+		gLog('dialButton lazy load busySignalSound');
+		busySignalSound = new Audio('busy-signal.mp3');
+	}
+
 	if(singlebutton) {
 		// switch from dialButton to hangupButton "Connecting..."
 		hangupButton.innerHTML = "Connecting...";
@@ -1232,6 +1248,7 @@ function calleeOnlineStatus(onlineStatus,waitForCallee) {
 
 function calleeOnlineAction(comment) {
 	gLog('calleeOnlineAction='+comment+' dialAfterCalleeOnline='+dialAfterCalleeOnline);
+/*
 	if(!notificationSound) {
 		gLog('loading audio files');
 		notificationSound = new Audio("notification.mp3");
@@ -1241,10 +1258,14 @@ function calleeOnlineAction(comment) {
 			busySignalSound = new Audio('busy-signal.mp3');
 //		}
 	}
-
-	if(haveBeenWaitingForCalleeOnline && notificationSound) {
+*/
+	if(haveBeenWaitingForCalleeOnline) {
 		haveBeenWaitingForCalleeOnline = false;
-		notificationSound.play().catch(function(error) { });
+		if(notificationSound) {
+			notificationSound.play().catch(function(error) { });
+		} else {
+			console.log("calleeOnlineAction no notificationSound");
+		}
 	}
 
 	// switch to callee-is-online layout (call and hangupButton)
@@ -1412,15 +1433,20 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 						showStatus("Enter text message before the call (optional):",-1);
 						msgbox.style.display = "block";
 						haveBeenWaitingForCalleeOnline=true; // will cause notificationSound to play
-
+/*
 						if(!notificationSound) {
 							gLog('load notificationSound');
 							notificationSound = new Audio("notification.mp3");
 						}
-						gLog('play notificationSound');
-						notificationSound.play().catch(function(error) { 
-							console.log('# notificationSound err='+error);
-						});
+*/
+						if(notificationSound) {
+							gLog('play notificationSound');
+							notificationSound.play().catch(function(error) { 
+								console.log('# notificationSound err='+error);
+							});
+						} else {
+							console.log("calleeOnlineAction no notificationSound");
+						}
 						return;
 					}
 					if(!goodbyDone) {
@@ -2216,8 +2242,16 @@ function dial() {
 
 		let loop = 0;
 		var playDialSound = function() {
-			if(!wsConn || mediaConnect || dtmfDialingSound==null) {
-				gLog('playDialSound abort');
+			if(!wsConn) {
+				gLog('playDialSound abort no wsConn');
+				return;
+			}
+			if(mediaConnect) {
+				gLog('playDialSound abort is mediaConnect');
+				return;
+			}
+			if(dtmfDialingSound==null) {
+				gLog('playDialSound abort no dtmfDialingSound');
 				return;
 			}
 			gLog('DialSound play()');
