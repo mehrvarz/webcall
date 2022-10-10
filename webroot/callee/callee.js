@@ -239,9 +239,10 @@ window.onload = function() {
 		if(mode==0 || mode==1) {
 			// normal mode
 			gLog("onload load audio files more="+mode);
+/*
 			notificationSound = new Audio("notification.mp3");
 			busySignalSound = new Audio('busy-signal.mp3');
-/*
+
 			ringtoneSound = new Audio('1980-phone-ringing.mp3');
 			ringtoneSound.onplaying = function() {
 				ringtoneIsPlaying = true;
@@ -1302,8 +1303,10 @@ function signalingCommand(message, comment) {
 			waitingCallerSlice = JSON.parse(payload);
 			//gLog('showWaitingCallers msg',waitingCallerSlice.length);
 			if(waitingCallerSlice && waitingCallerSlice.length>0) {
-				// TODO would be nice to use a different sound here
-				notificationSound.play().catch(function(error) { });
+				// TODO would be nice to use a different sound here?
+				if(notificationSound) {
+					notificationSound.play().catch(function(error) { });
+				}
 			}
 		}
 		showWaitingCallers();
@@ -1787,16 +1790,23 @@ function hangup(mustDisconnect,dummy2,message) {
 	pickupAfterLocalStream = false;
 
 	// if mediaConnect -> play short busy tone
-	if(mediaConnect && playDialSounds) {
+	if(!mediaConnect) {
+		stopAllAudioEffects("hangup no mediaConnect");
+	} else if(!playDialSounds) {
+		stopAllAudioEffects("hangup no playDialSounds");
+	} else if(!busySignalSound) {
+		console.log('# hangup no busySignalSound');
+	} else {
 		gLog("hangup short busy sound");
-		busySignalSound.play().catch(function(error) { });
+		busySignalSound.play().catch(error => {
+			console.log('# busySignal play',error.message);
+		});
+
 		setTimeout(function() {
 			busySignalSound.pause();
 			busySignalSound.currentTime = 0;
 			stopAllAudioEffects("hangup mediaConnect busy");
 		},1000);
-	} else {
-		stopAllAudioEffects("hangup no mediaConnect");
 	}
 
 	connectLocalVideo(true); // force disconnect
@@ -1835,6 +1845,30 @@ function goOnline(sendInitFlag,comment) {
 	} else {
 		gLog('goOnline spinner on');
 		if(divspinnerframe) divspinnerframe.style.display = "block";
+	}
+
+//tmtmtm
+	if(!ringtoneSound) {
+		console.log('goOnline lazy load ringtoneSound');
+		ringtoneSound = new Audio('1980-phone-ringing.mp3');
+		if(ringtoneSound) {
+			ringtoneSound.onplaying = function() {
+				ringtoneIsPlaying = true;
+			};
+			ringtoneSound.onpause = function() {
+				ringtoneIsPlaying = false;
+			};
+		}
+	}
+
+	if(!busySignalSound) {
+		console.log('goOnline lazy load busySignalSound');
+		busySignalSound = new Audio('busy-signal.mp3');
+	}
+
+	if(!notificationSound) {
+		console.log('goOnline lazy load notificationSound');
+		notificationSound = new Audio("notification.mp3");
 	}
 
 	// going online also means we need to be ready to receive peer connections
@@ -1993,7 +2027,7 @@ function peerConnected2() {
 			console.log('peerConnected2 Android.ringStart()');
 			doneRing = Android.ringStart();
 		}
-
+/*
 		if(!doneRing && !ringtoneSound) {
 			// browser must play ringtone, but ringtoneSound not yet loaded
 			console.log('peerConnected2 lazy loading playRingtoneSound');
@@ -2005,6 +2039,7 @@ function peerConnected2() {
 				ringtoneIsPlaying = false;
 			};
 		}
+*/
 		if(!doneRing && ringtoneSound) {
 			// browser must play ringtone
 			console.log('peerConnected2 playRingtoneSound '+ringtoneSound.volume);
@@ -2026,7 +2061,7 @@ function peerConnected2() {
 				if(ringtoneSound.paused && !ringtoneIsPlaying) {
 					gLog('peerConnected2 ringtone play...');
 					ringtoneSound.play().catch(error => {
-						gLog('ringtone play',error.message);
+						console.log('# ringtone play',error.message);
 					});
 				} else {
 					gLog('peerConnected2 ringtone play NOT started',
@@ -2298,7 +2333,7 @@ function stopAllAudioEffects(comment) {
 			//	ringtoneSound.paused, ringtoneIsPlaying);
 		}
 
-		if(playDialSounds) {
+		if(playDialSounds && busySignalSound) {
 			busySignalSound.pause();
 			busySignalSound.currentTime = 0;
 		}
