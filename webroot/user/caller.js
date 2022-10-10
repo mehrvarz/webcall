@@ -2715,12 +2715,12 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 	}
 
 	if(wsConn && wsConn.readyState==1) {
-		gLog('mustDisconnect='+mustDisconnectCallee+' readyState='+wsConn.readyState+" mediaCon="+mediaConnect);
+		gLog('hangup mustDisc='+mustDisconnectCallee+' readyState='+wsConn.readyState+" mediaCon="+mediaConnect);
 		if(!mediaConnect) {
 			let msgboxText = cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen);
 			//gLog('msgboxText=('+msgboxText+')');
 			if(msgboxText!="") {
-				gLog('msg=('+msgboxText+')');
+				gLog('hangup wsSend msg=('+msgboxText+')');
 				wsSend("msg|"+msgboxText);
 			}
 		}

@@ -1638,13 +1638,14 @@ function dataChannelOnerror(event) {
 
 function hangupWithBusySound(mustDisconnectCallee,message) {
 	dialing = false;
+	gLog("hangupWithBusySound stopAllAudioEffects "+message);
 	stopAllAudioEffects();
 	if(peerCon && peerCon.iceConnectionState!="closed") {
 		if(playDialSounds && busySignalSound!=null) {
-			gLog(`hangupWithBusySound `+message);
+			gLog("hangupWithBusySound busySignalSound.play");
 			busySignalSound.play().catch(function(error) { });
 			setTimeout(function() {
-				gLog(`hangupWithBusySound stopAllAudioEffects`);
+				gLog("hangupWithBusySound stopAllAudioEffects");
 				stopAllAudioEffects();
 			},1500);
 		}
