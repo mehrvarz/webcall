@@ -133,6 +133,12 @@ func ticker3hours() {
 				}
 			}
 
+			// also delete userID's contacts
+			err = kvContacts.Delete(dbContactsBucket, userID)
+			if err!=nil {
+				fmt.Printf("# ticker3hours delete contacts of id=%s err=%v\n", userID, err)
+			}
+
 			err = kv.Delete(dbUserBucket, key)
 			if err!=nil {
 				// this is bad
@@ -150,8 +156,8 @@ func ticker3hours() {
 			}
 		}
 
-		var deleteKeyArray2 []string  // for deleting
 		// loop all dbBlockedIDs to delete blocked entries
+		var deleteKeyArray2 []string  // for deleting
 		fmt.Printf("ticker3hours start looking for outdated blocked entries...\n")
 		var blockedForDays int64 = 60
 		counterDeleted2 := 0

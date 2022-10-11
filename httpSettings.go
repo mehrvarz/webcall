@@ -623,6 +623,7 @@ func httpDeleteContact(w http.ResponseWriter, r *http.Request, urlID string, cal
 		return
 	}
 
+	// delete a single contactID from calleeID's contacts
 	var idNameMap map[string]string // callerID -> name
 	err := kvContacts.Get(dbContactsBucket,calleeID,&idNameMap)
 	if err!=nil {
