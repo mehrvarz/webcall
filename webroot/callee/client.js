@@ -1251,10 +1251,13 @@ function connectLocalVideo(forceOff) {
 
 		if(isDataChlOpen()) {
 			// make other side stop our cam (their remote cam)
+			gLog("connectLocalVideo dataChannel.send cmd|rtcVideoOff");
 			dataChannel.send("cmd|rtcVideoOff");
 		}
 
+		gLog("connectLocalVideo remoteFullScreen");
 		remoteFullScreen(true); // force end
+		gLog("connectLocalVideo end done");
 	}
 }
 
@@ -1416,7 +1419,7 @@ function remoteFullScreen(forceClose) {
 	if(document.fullscreenElement) {
 		fullScreenId = document.fullscreenElement.id;
 	}
-	//gLog("remoteFullScreen "+fullScreenId+" "+forceClose);
+	gLog("remoteFullScreen "+fullScreenId+" forceClose="+forceClose);
 	if(fullScreenId!="remoteVideoDiv" && !forceClose) {
 		// not yet in remoteVideoDiv fullscreen mode
 		if(remoteVideoDiv.requestFullscreen) {
@@ -1433,9 +1436,11 @@ function remoteFullScreen(forceClose) {
 		}
 	} else {
 		// exit remoteVideoDiv fullscreen mode
-		//gLog('remoteFullScreen end');
+		gLog('remoteFullScreen end');
 		remoteVideoFrame.style.aspectRatio = "16/9";
-		document.exitFullscreen().catch(err => { });
+		document.exitFullscreen().catch(err => { 
+			console.log('remoteFullScreen exitFullscreen err='+err.message);
+		});
 		// make remotefullscreen label white
 		let remotefullscreenLabel = document.getElementById("remotefullscreen");
 		if(remotefullscreenLabel) {
@@ -1608,8 +1613,14 @@ function showStatus(msg,timeoutMs) {
 }
 
 function isDataChlOpen() {
-	if(dataChannel && dataChannel.readyState=="open")
-		return true;
+	if(dataChannel) {
+		gLog("isDataChlOpen state="+dataChannel.readyState);
+		if(dataChannel.readyState=="open") {
+			return true;
+		}
+	} else {
+		gLog("isDataChlOpen no dataChannel");
+	}
 	return false;
 }
 
