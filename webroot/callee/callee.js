@@ -239,18 +239,6 @@ window.onload = function() {
 		if(mode==0 || mode==1) {
 			// normal mode
 			gLog("onload load audio files more="+mode);
-/*
-			notificationSound = new Audio("notification.mp3");
-			busySignalSound = new Audio('busy-signal.mp3');
-
-			ringtoneSound = new Audio('1980-phone-ringing.mp3');
-			ringtoneSound.onplaying = function() {
-				ringtoneIsPlaying = true;
-			};
-			ringtoneSound.onpause = function() {
-				ringtoneIsPlaying = false;
-			};
-*/
 			var calleeIdTitle = calleeID.charAt(0).toUpperCase() + calleeID.slice(1);
 			document.title = "WebCall Callee "+calleeIdTitle;
 			if(titleElement) {
@@ -1847,7 +1835,6 @@ function goOnline(sendInitFlag,comment) {
 		if(divspinnerframe) divspinnerframe.style.display = "block";
 	}
 
-//tmtmtm
 	if(!ringtoneSound) {
 		console.log('goOnline lazy load ringtoneSound');
 		ringtoneSound = new Audio('1980-phone-ringing.mp3');
@@ -2027,19 +2014,7 @@ function peerConnected2() {
 			console.log('peerConnected2 Android.ringStart()');
 			doneRing = Android.ringStart();
 		}
-/*
-		if(!doneRing && !ringtoneSound) {
-			// browser must play ringtone, but ringtoneSound not yet loaded
-			console.log('peerConnected2 lazy loading playRingtoneSound');
-			ringtoneSound = new Audio('1980-phone-ringing.mp3');
-			ringtoneSound.onplaying = function() {
-				ringtoneIsPlaying = true;
-			};
-			ringtoneSound.onpause = function() {
-				ringtoneIsPlaying = false;
-			};
-		}
-*/
+
 		if(!doneRing && ringtoneSound) {
 			// browser must play ringtone
 			console.log('peerConnected2 playRingtoneSound '+ringtoneSound.volume);

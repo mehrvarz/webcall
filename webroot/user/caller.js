@@ -936,10 +936,10 @@ function dialButtonClick() {
 	}
 	if(!dtmfDialingSound) {
 		// TODO why can I not do this?
-//		if(playDialSounds) {
+		//if(playDialSounds) {
 			gLog('dialButton lazy load dtmfDialingSound');
 			dtmfDialingSound = new Audio('dtmf-dial.mp3');
-//		}
+		//}
 	}
 	if(!busySignalSound) {
 		gLog('dialButton lazy load busySignalSound');
@@ -1248,17 +1248,6 @@ function calleeOnlineStatus(onlineStatus,waitForCallee) {
 
 function calleeOnlineAction(comment) {
 	gLog('calleeOnlineAction='+comment+' dialAfterCalleeOnline='+dialAfterCalleeOnline);
-/*
-	if(!notificationSound) {
-		gLog('loading audio files');
-		notificationSound = new Audio("notification.mp3");
-// TODO why can I not do this?
-//		if(playDialSounds) {
-			dtmfDialingSound = new Audio('dtmf-dial.mp3');
-			busySignalSound = new Audio('busy-signal.mp3');
-//		}
-	}
-*/
 	if(haveBeenWaitingForCalleeOnline) {
 		haveBeenWaitingForCalleeOnline = false;
 		if(notificationSound) {
@@ -1433,12 +1422,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 						showStatus("Enter text message before the call (optional):",-1);
 						msgbox.style.display = "block";
 						haveBeenWaitingForCalleeOnline=true; // will cause notificationSound to play
-/*
-						if(!notificationSound) {
-							gLog('load notificationSound');
-							notificationSound = new Audio("notification.mp3");
-						}
-*/
+
 						if(notificationSound) {
 							gLog('play notificationSound');
 							notificationSound.play().catch(function(error) { 
