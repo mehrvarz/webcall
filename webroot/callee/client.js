@@ -1437,13 +1437,19 @@ function remoteFullScreen(forceClose) {
 	} else {
 		// exit remoteVideoDiv fullscreen mode
 		gLog('remoteFullScreen end');
-		remoteVideoFrame.style.aspectRatio = "16/9";
+		if(remoteVideoFrame) {
+			gLog('remoteFullScreen aspectRatio 16/9');
+			remoteVideoFrame.style.aspectRatio = "16/9";
+		}
+		gLog('remoteFullScreen exitFullscreen');
 		document.exitFullscreen().catch(err => { 
 			console.log('remoteFullScreen exitFullscreen err='+err.message);
 		});
 		// make remotefullscreen label white
+		gLog('remoteFullScreen remotefullscreenLabel');
 		let remotefullscreenLabel = document.getElementById("remotefullscreen");
 		if(remotefullscreenLabel) {
+			gLog('remoteFullScreen remotefullscreenLabel #fff');
 			remotefullscreenLabel.style.color = "#fff";
 		}
 	}
