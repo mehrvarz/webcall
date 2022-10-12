@@ -43,10 +43,10 @@ func ticker3hours() {
 		var deleteKeyArray []string  // for deleting
 		skv.DbMutex.Lock()
 		counterDeleted := 0
+		counter := 0
 		err := db.Update(func(tx *bolt.Tx) error {
 			b := tx.Bucket([]byte(dbRegisteredIDs))
 			c := b.Cursor()
-			counter := 0
 			for k, v := c.First(); k != nil; k, v = c.Next() {
 				userID := string(k)
 				if strings.HasPrefix(userID,"answie") || strings.HasPrefix(userID,"talkback") {
@@ -102,8 +102,9 @@ func ticker3hours() {
 		if err!=nil {
 			// this is bad
 			fmt.Printf("# ticker3hours delete=%d offline for %d days err=%v\n", counterDeleted,maxDaysOffline,err)
-		} else if counterDeleted>0 {
-			fmt.Printf("ticker3hours delete=%d offline for %d days (no err)\n", counterDeleted, maxDaysOffline)
+		} else /*if counterDeleted>0*/ {
+			fmt.Printf("ticker3hours delete=%d/%d offline for %d days (no err)\n",
+				counterDeleted, counter, maxDaysOffline)
 		}
 		for _,key := range deleteKeyArray {
 			idxUnderline := strings.LastIndex(key,"_")
@@ -161,11 +162,11 @@ func ticker3hours() {
 		fmt.Printf("ticker3hours start looking for outdated blocked entries...\n")
 		var blockedForDays int64 = 60
 		counterDeleted2 := 0
+		counter2 := 0
 		skv.DbMutex.Lock()
 		err = db.Update(func(tx *bolt.Tx) error {
 			b := tx.Bucket([]byte(dbBlockedIDs))
 			c := b.Cursor()
-			counter := 0
 			for k, _ := c.First(); k != nil; k, _ = c.Next() {
 /*
 				userID := string(k) // key_timeNowUnix
@@ -188,7 +189,7 @@ func ticker3hours() {
 */
 				dbUserKey := string(k)
 				// dbUserKey format: 'calleeID_unixtime'
-				counter++
+				counter2++
 				idxUnderline := strings.LastIndex(dbUserKey,"_")
 				if idxUnderline<0 {
 					fmt.Printf("# ticker3hours error bucket=%s key=%s no underline\n", dbBlockedIDs, dbUserKey)
@@ -228,8 +229,9 @@ func ticker3hours() {
 		if err!=nil {
 			// this is bad
 			fmt.Printf("# ticker3hours delete=%d blocked for %d days err=%v\n",counterDeleted2,blockedForDays,err)
-		} else if counterDeleted2>0 {
-			fmt.Printf("ticker3hours delete=%d id's blocked for %d days (no err)\n",counterDeleted2,blockedForDays)
+		} else /*if counterDeleted2>0*/ {
+			fmt.Printf("ticker3hours delete=%d/%d id's blocked for %d days (no err)\n",
+				counterDeleted2, counter2, blockedForDays)
 		}
 		for _,key := range deleteKeyArray2 {
 			fmt.Printf("ticker3hours delete blocked user-id=%s\n", key)
