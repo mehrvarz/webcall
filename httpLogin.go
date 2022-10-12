@@ -125,10 +125,11 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		calleeLoginMutex.Lock()
 		calleeLoginMap[urlID] = calleeLoginSlice
 		calleeLoginMutex.Unlock()
-		if logWantedFor("attach") {
-			fmt.Printf("/login (%s) +1 %d/%d rip=%s v=%s\n",
-				urlID, len(calleeLoginSlice), maxLoginPer30minTmp, remoteAddr, clientVersion)
-		}
+
+		//if logWantedFor("attach") {
+		//	fmt.Printf("/login (%s) +1 %d/%d rip=%s v=%s\n",
+		//		urlID, len(calleeLoginSlice), maxLoginPer30minTmp, remoteAddr, clientVersion)
+		//}
 	}
 
 	// reached maxCallees?
