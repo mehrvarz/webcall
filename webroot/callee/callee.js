@@ -223,7 +223,13 @@ window.onload = function() {
 			}
 		} else {
 			// user is requesting fullscreen exit
-			document.exitFullscreen().catch(err => { });
+			// exitFullscreen is not supported in iOS (iOS aborts JS without err-msg if exitFullscreen is called)
+			let ua = navigator.userAgent;
+			if(ua.indexOf("iPhone")<0 && ua.indexOf("iPad")<0) {
+				document.exitFullscreen().catch(err => {
+					console.log('fullscreenCheckbox exitFullscreen err='+err.message);
+				});
+			}
 		}
 		setTimeout(function(){history.back();},150);
 	});

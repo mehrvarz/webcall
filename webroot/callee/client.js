@@ -626,11 +626,16 @@ function menuDialogOpen(menuDialog,atMousePos,inner) {
 	hashcounter++;
 	location.hash = hashcounter;
 	//console.log("menuDialogOpen hashcounter="+hashcounter+" "+location.hash);
-	fullScreenOverlayElement.style.display = "block";
-	fullScreenOverlayElement.onclick = function() {
-		//console.log('fullScreenOverlayElement.onclick');
-		history.back();
+
+	let ua = navigator.userAgent;
+	if(ua.indexOf("iPhone")<0 && ua.indexOf("iPad")<0) {
+		fullScreenOverlayElement.style.display = "block";
+		fullScreenOverlayElement.onclick = function() {
+			//console.log('fullScreenOverlayElement.onclick');
+			history.back();
+		}
 	}
+
 	containerElement.style.filter = "blur(0.8px) brightness(60%)";
 	if(calleeMode) {
 		if(wsConn && navigator.cookieEnabled && getCookieSupport()) {
@@ -1436,20 +1441,26 @@ function remoteFullScreen(forceClose) {
 		}
 	} else {
 		// exit remoteVideoDiv fullscreen mode
-		gLog('remoteFullScreen end');
+		gLog('remoteFullScreen exit');
 		if(remoteVideoFrame) {
-			gLog('remoteFullScreen aspectRatio 16/9');
+			//gLog('remoteFullScreen aspectRatio 16/9');
 			remoteVideoFrame.style.aspectRatio = "16/9";
 		}
-		gLog('remoteFullScreen exitFullscreen');
-		document.exitFullscreen().catch(err => { 
-			console.log('remoteFullScreen exitFullscreen err='+err.message);
-		});
+
+		// exitFullscreen is not supported in iOS (iOS aborts JS without err-msg if exitFullscreen() is called)
+		let ua = navigator.userAgent;
+		if(ua.indexOf("iPhone")<0 && ua.indexOf("iPad")<0) {
+			gLog('remoteFullScreen exitFullscreen');
+			document.exitFullscreen().catch(err => {
+				console.log('remoteFullScreen exitFullscreen err='+err.message);
+			});
+		}
+
 		// make remotefullscreen label white
-		gLog('remoteFullScreen remotefullscreenLabel');
+		//gLog('remoteFullScreen remotefullscreenLabel');
 		let remotefullscreenLabel = document.getElementById("remotefullscreen");
 		if(remotefullscreenLabel) {
-			gLog('remoteFullScreen remotefullscreenLabel #fff');
+			//gLog('remoteFullScreen remotefullscreenLabel #fff');
 			remotefullscreenLabel.style.color = "#fff";
 		}
 	}
