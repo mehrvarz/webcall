@@ -98,16 +98,6 @@ window.onload = function() {
 	fileSelectInit();
 	window.onhashchange = hashchange;
 
-	if(typeof Android !== "undefined" && Android !== null) {
-		menuExitElement.style.display = "block";
-
-		if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
-			if(Android.getVersionName()>="1.1.0") {
-				menuClearCacheElement.style.display = "block"; // calls clearcache()
-			}
-		}
-	}
-
 	//console.log("callee.js onload getUrlParams('id') search="+window.location.search);
 	let id = getUrlParams("id");
 	if(typeof id!=="undefined" && id!="") {
@@ -156,6 +146,13 @@ window.onload = function() {
 	if(typeof Android !== "undefined" && Android !== null) {
 		// running on Android
 		fullscreenLabel.style.display = "none";
+		menuExitElement.style.display = "block";
+
+		if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
+			if(Android.getVersionName()>="1.1.0") {
+				menuClearCacheElement.style.display = "block"; // calls clearcache()
+			}
+		}
 
 		let element = document.getElementById("nativeMenu");
 		if(element) element.style.display = "block";
@@ -164,6 +161,11 @@ window.onload = function() {
 		element = document.getElementById("webcallhome");
 		if(element) element.href = "https://timur.mobi/webcall/update/";
 		// TODO ideally open 'webcallhome' url in an iframe
+	}
+
+	let ua = navigator.userAgent;
+	if(ua.indexOf("iPhone")>=0 || ua.indexOf("iPad")>=0) {
+		fullscreenLabel.style.display = "none";
 	}
 
 	try {
@@ -211,35 +213,34 @@ window.onload = function() {
 		setTimeout(function(){history.back();},150);
 	});
 
-	fullscreenCheckbox.addEventListener('change', function() {
-		if(this.checked) {
-			// user is requesting fullscreen mode
-			if(!document.fullscreenElement) {
-				// not yet in fullscreen-mode
-				if(mainElement.requestFullscreen) {
-					// switch to fullscreen mode
-					mainElement.requestFullscreen();
+	// requestFullscreen and exitFullscreen are not supported in iOS (will abort JS without err-msg)
+	if(fullscreenCheckbox && fullscreenLabel.style.display!="none") {
+		fullscreenCheckbox.addEventListener('change', function() {
+			if(this.checked) {
+				// user is requesting fullscreen mode
+				if(!document.fullscreenElement) {
+					// not yet in fullscreen-mode
+					if(mainElement.requestFullscreen) {
+						// switch to fullscreen mode
+						mainElement.requestFullscreen();
+					}
 				}
-			}
-		} else {
-			// user is requesting fullscreen exit
-			// exitFullscreen is not supported in iOS (iOS aborts JS without err-msg if exitFullscreen is called)
-			let ua = navigator.userAgent;
-			if(ua.indexOf("iPhone")<0 && ua.indexOf("iPad")<0) {
+			} else {
+				// user is requesting fullscreen exit
 				document.exitFullscreen().catch(err => {
 					console.log('fullscreenCheckbox exitFullscreen err='+err.message);
 				});
 			}
-		}
-		setTimeout(function(){history.back();},150);
-	});
-	document.addEventListener('fullscreenchange', (event) => {
-		if(document.fullscreenElement) {
-			fullscreenCheckbox.checked = true;
-		} else {
-			fullscreenCheckbox.checked = false;
-		}
-	});
+			setTimeout(function(){history.back();},150);
+		});
+		document.addEventListener('fullscreenchange', (event) => {
+			if(document.fullscreenElement) {
+				fullscreenCheckbox.checked = true;
+			} else {
+				fullscreenCheckbox.checked = false;
+			}
+		});
+	}
 
 	checkServerMode(function(mode) {
 		if(mode==0 || mode==1) {

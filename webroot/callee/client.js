@@ -627,13 +627,10 @@ function menuDialogOpen(menuDialog,atMousePos,inner) {
 	location.hash = hashcounter;
 	//console.log("menuDialogOpen hashcounter="+hashcounter+" "+location.hash);
 
-	let ua = navigator.userAgent;
-	if(ua.indexOf("iPhone")<0 && ua.indexOf("iPad")<0) {
-		fullScreenOverlayElement.style.display = "block";
-		fullScreenOverlayElement.onclick = function() {
-			//console.log('fullScreenOverlayElement.onclick');
-			history.back();
-		}
+	fullScreenOverlayElement.style.display = "block";
+	fullScreenOverlayElement.onclick = function() {
+		//console.log('fullScreenOverlayElement.onclick');
+		history.back();
 	}
 
 	containerElement.style.filter = "blur(0.8px) brightness(60%)";

@@ -174,7 +174,18 @@ window.onload = function() {
 	if(remoteVideoFrame)
 		remoteVideoFrame.onresize = showVideoResolutionRemote;
 
-	if(fullscreenCheckbox) {
+	if(typeof Android !== "undefined" && Android !== null) {
+		// running on Android
+		fullscreenLabel.style.display = "none";
+	}
+
+	// requestFullscreen and exitFullscreen are not supported in iOS (will abort JS without err-msg)
+	let ua = navigator.userAgent;
+	if(ua.indexOf("iPhone")>=0 || ua.indexOf("iPad")>=0) {
+		fullscreenLabel.style.display = "none";
+	}
+
+	if(fullscreenCheckbox && fullscreenLabel.style.display!="none") {
 		fullscreenCheckbox.addEventListener('change', function() {
 			if(this.checked) {
 				// user is requesting fullscreen mode
@@ -188,26 +199,23 @@ window.onload = function() {
 			} else {
 				// user is requesting fullscreen exit
 				// exitFullscreen not supported in iOS (iOS aborts JS without err-msg if exitFullscreen is called)
-				let ua = navigator.userAgent;
-				if(ua.indexOf("iPhone")<0 && ua.indexOf("iPad")<0) {
-					document.exitFullscreen().catch(err => {
-						console.log('fullscreenCheckbox exitFullscreen err='+err.message);
-					});
-				}
+				document.exitFullscreen().catch(err => {
+					console.log('fullscreenCheckbox exitFullscreen err='+err.message);
+				});
 			}
 			setTimeout(function(){history.back();},150);
 		});
-	}
 
-	document.addEventListener('fullscreenchange', (event) => {
-		if(document.fullscreenElement) {
-			// we have switched to fullscreen mode
-			fullscreenCheckbox.checked = true;
-		} else {
-			// we have left fullscreen mode
-			fullscreenCheckbox.checked = false;
-		}
-	});
+		document.addEventListener('fullscreenchange', (event) => {
+			if(document.fullscreenElement) {
+				// we have switched to fullscreen mode
+				fullscreenCheckbox.checked = true;
+			} else {
+				// we have left fullscreen mode
+				fullscreenCheckbox.checked = false;
+			}
+		});
+	}
 
 	if(typeof numericIdCheckbox!=="undefined" && numericIdCheckbox!=null) {
 		// numericIdCheckbox (activated for smartphones only) for switching input-type text/number
