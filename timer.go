@@ -25,7 +25,9 @@ var followerIDs twitter.FollowerIDs
 var followerIDsLock sync.RWMutex
 
 func ticker3hours() {
-	fmt.Printf("ticker3hours start\n")
+	if logWantedFor("timer") {
+		fmt.Printf("ticker3hours start\n")
+	}
 	kv := kvMain.(skv.SKV)
 	db := kv.Db
 
@@ -38,7 +40,9 @@ func ticker3hours() {
 		timeNowUnix := time.Now().Unix()
 
 		// loop all dbRegisteredIDs to delete outdated dbUserBucket entries (not online for 180+ days)
-		fmt.Printf("ticker3hours start looking for outdated IDs...\n")
+		if logWantedFor("timer") {
+			fmt.Printf("ticker3hours start looking for outdated IDs...\n")
+		}
 		var maxDaysOffline int64 = 180
 		var deleteKeyArray []string  // for deleting
 		skv.DbMutex.Lock()
@@ -73,22 +77,28 @@ func ticker3hours() {
 						lastLoginTime = dbEntry.StartTime // created by httpRegister()
 					}
 					if(lastLoginTime==0) {
-						fmt.Printf("ticker3hours %d id=%s sinceLastLogin=0 StartTime=0\n", counter, k)
+						if logWantedFor("timer") {
+							fmt.Printf("ticker3hours %d id=%s sinceLastLogin=0 StartTime=0\n", counter, k)
+						}
 					} else {
 						sinceLastLoginSecs := timeNowUnix - lastLoginTime
 						sinceLastLoginDays := sinceLastLoginSecs/(24*60*60)
 						if sinceLastLoginDays > maxDaysOffline {
 							// account is outdated, delete this entry
-							fmt.Printf("ticker3hours %d id=%s regist delete sinceLastLogin=%ds days=%d\n",
-								counter, k, sinceLastLoginSecs, sinceLastLoginDays)
+							if logWantedFor("timer") {
+								fmt.Printf("ticker3hours %d id=%s regist delete sinceLastLogin=%ds days=%d\n",
+									counter, k, sinceLastLoginSecs, sinceLastLoginDays)
+							}
 							err2 = c.Delete()
 							if err2!=nil {
 								// this is bad
-								fmt.Printf("ticker3hours %d id=%s regist delete err=%v\n", counter, k, err2)
+								fmt.Printf("# ticker3hours %d id=%s regist delete err=%v\n", counter, k, err2)
 							} else {
 								counterDeleted++
-								//fmt.Printf("ticker3hours %d id=%s regist deleted %d\n",
-								//	counter, k, counterDeleted)
+								//if logWantedFor("timer") {
+								//	fmt.Printf("ticker3hours %d id=%s regist deleted %d\n",
+								//		counter, k, counterDeleted)
+								//}
 								// we will delete dbUserKey from dbUserBucket after db.Update() is finished
 								deleteKeyArray = append(deleteKeyArray,dbUserKey)
 							}
@@ -103,8 +113,10 @@ func ticker3hours() {
 			// this is bad
 			fmt.Printf("# ticker3hours delete=%d offline for %d days err=%v\n", counterDeleted,maxDaysOffline,err)
 		} else /*if counterDeleted>0*/ {
-			fmt.Printf("ticker3hours delete=%d/%d offline for %d days (no err)\n",
-				counterDeleted, counter, maxDaysOffline)
+			if logWantedFor("timer") {
+				fmt.Printf("ticker3hours delete=%d/%d offline for %d days (no err)\n",
+					counterDeleted, counter, maxDaysOffline)
+			}
 		}
 		for _,key := range deleteKeyArray {
 			idxUnderline := strings.LastIndex(key,"_")
@@ -113,8 +125,9 @@ func ticker3hours() {
 				continue
 			}
 			userID := key[:idxUnderline]
-//			fmt.Printf("ticker3hours delete outdated key=%s userID=%s\n", key, userID)
-
+			//if logWantedFor("timer") {
+			//	fmt.Printf("ticker3hours delete outdated key=%s userID=%s\n", key, userID)
+			//}
 /*
 				starttimeStr := key[idxUnderline+1:]
 				starttime64, err := strconv.ParseInt(starttimeStr, 10, 64)
@@ -159,7 +172,9 @@ func ticker3hours() {
 
 		// loop all dbBlockedIDs to delete blocked entries
 		var deleteKeyArray2 []string  // for deleting
-		fmt.Printf("ticker3hours start looking for outdated blocked entries...\n")
+		if logWantedFor("timer") {
+			fmt.Printf("ticker3hours start looking for outdated blocked entries...\n")
+		}
 		var blockedForDays int64 = 60
 		counterDeleted2 := 0
 		counter2 := 0
@@ -214,10 +229,12 @@ func ticker3hours() {
 							counterDeleted2++
 						} else {
 							// TODO we need to be able to switch this log off
-							if logWantedFor("ticker3hours") {
+							if logWantedFor("timer") {
 								secsToLive := blockedForDays * 24*60*60 - sinceDeletedInSecs
-								fmt.Printf("ticker3hours blocked but not outdated key=%s (wait %ds %ddays)\n",
-									dbUserKey, secsToLive, secsToLive/24*60*60)
+								if logWantedFor("timer") {
+									fmt.Printf("ticker3hours blocked but not outdated key=%s (wait %ds %ddays)\n",
+										dbUserKey, secsToLive, secsToLive/24*60*60)
+								}
 							}
 						}
 					}
@@ -230,11 +247,15 @@ func ticker3hours() {
 			// this is bad
 			fmt.Printf("# ticker3hours delete=%d blocked for %d days err=%v\n",counterDeleted2,blockedForDays,err)
 		} else /*if counterDeleted2>0*/ {
-			fmt.Printf("ticker3hours delete=%d/%d id's blocked for %d days (no err)\n",
-				counterDeleted2, counter2, blockedForDays)
+			if logWantedFor("timer") {
+				fmt.Printf("ticker3hours delete=%d/%d id's blocked for %d days (no err)\n",
+					counterDeleted2, counter2, blockedForDays)
+			}
 		}
 		for _,key := range deleteKeyArray2 {
-			fmt.Printf("ticker3hours delete blocked user-id=%s\n", key)
+			if logWantedFor("timer") {
+				fmt.Printf("ticker3hours delete blocked user-id=%s\n", key)
+			}
 			err = kv.Delete(dbBlockedIDs, key)
 			if err!=nil {
 				// this is bad
@@ -246,7 +267,9 @@ func ticker3hours() {
 		}
 
 		if counterDeleted>0 || counterDeleted2>0 {
-			fmt.Printf("ticker3hours done\n")
+			if logWantedFor("timer") {
+				fmt.Printf("ticker3hours done\n")
+			}
 		}
 
 		<-threeHoursTicker.C
@@ -287,7 +310,9 @@ func ticker20min() {
 			if twitterClient==nil {
 				fmt.Printf("# ticker20min no twitterClient\n")
 			} else {
-				fmt.Printf("ticker20min fetch list of twitter followers...\n")
+				if logWantedFor("timer") {
+					fmt.Printf("ticker20min fetch list of twitter followers...\n")
+				}
 				// TODO we must later support more than 5000 followers
 				var err error
 				followerIDsLock.Lock()
@@ -296,10 +321,12 @@ func ticker20min() {
 				if err!=nil {
 					fmt.Printf("# ticker20min QueryFollowerIDs err=%v [%v]\n", err, data)
 				} else {
-					fmt.Printf("ticker20min QueryFollowerIDs count=%d\n", len(followerIDs.Ids))
-					if logWantedFor("twitter") {
-						for idx,id := range followerIDs.Ids {
-							fmt.Printf("ticker20min %d followerIDs.Id=%v\n", idx+1, int64(id))
+					if logWantedFor("timer") {
+						fmt.Printf("ticker20min QueryFollowerIDs count=%d\n", len(followerIDs.Ids))
+						if logWantedFor("twitter") {
+							for idx,id := range followerIDs.Ids {
+								fmt.Printf("ticker20min %d followerIDs.Id=%v\n", idx+1, int64(id))
+							}
 						}
 					}
 				}
@@ -506,8 +533,10 @@ func broadcastNewsLink(date string, url string) {
 	}
 	if countSent>0 {
 		newsLinkDeliveredCounter += countSentNoErr
-		fmt.Printf("newsLink sent=%d/%d total=%d sendData=%s\n",
-			countSentNoErr, countSent, newsLinkDeliveredCounter, sendData)
+		if logWantedFor("timer") {
+			fmt.Printf("newsLink sent=%d/%d total=%d sendData=%s\n",
+				countSentNoErr, countSent, newsLinkDeliveredCounter, sendData)
+		}
 	}
 	return
 }
@@ -550,8 +579,10 @@ func ticker3min() {
 						d.Decode(&notifTweet)
 						ageSecs := unixNow - notifTweet.TweetTime
 						if ageSecs >= 60*60 {
-							fmt.Printf("ticker3min outdated ID=%s ageSecs=%d > 1h (%s) deleting\n",
-								idStr, ageSecs, notifTweet.Comment)
+							if logWantedFor("timer") {
+								fmt.Printf("ticker3min outdated ID=%s ageSecs=%d > 1h (%s) deleting\n",
+									idStr, ageSecs, notifTweet.Comment)
+							}
 /* kvNotif is currently not fed from httpNotifyCallee.go
 							twitterClientLock.Lock()
 							if twitterClient==nil {
@@ -622,8 +653,10 @@ func ticker3min() {
 			}
 		}
 		for _,ip := range deleteIpArray {
-			if logWantedFor("missedcall") {
-//				fmt.Printf("ticker3min delete (%s) from missedCallAllowedMap\n",ip)
+			if logWantedFor("timer") {
+				if logWantedFor("missedcall") {
+					fmt.Printf("ticker3min delete (%s) from missedCallAllowedMap\n",ip)
+				}
 			}
 			delete(missedCallAllowedMap,ip)
 		}
@@ -718,9 +751,11 @@ func ticker30sec() {
 			}
 		}
 		if deleted>0 {
-			if logWantedFor("turn") {
-				fmt.Printf("ticker30sec deleted %d entries from recentTurnCalleeIps (remain=%d)\n",
-					deleted, len(recentTurnCalleeIps))
+			if logWantedFor("timer") {
+				if logWantedFor("turn") {
+					fmt.Printf("ticker30sec deleted %d entries from recentTurnCalleeIps (remain=%d)\n",
+						deleted, len(recentTurnCalleeIps))
+				}
 			}
 		}
 		recentTurnCalleeIpMutex.Unlock()
@@ -747,7 +782,9 @@ func ticker30sec() {
 		}
 */
 	}
-	fmt.Printf("ticker30sec ending\n")
+	if logWantedFor("timer") {
+		fmt.Printf("ticker30sec ending\n")
+	}
 }
 
 // 10s-ticker: periodically call readConfig()
