@@ -231,7 +231,7 @@ func ticker3hours() {
 							// TODO we need to be able to switch this log off
 							if logWantedFor("timer") {
 								secsToLive := blockedForDays * 24*60*60 - sinceDeletedInSecs
-								if logWantedFor("timer") {
+								if logWantedFor("blocked") {
 									fmt.Printf("ticker3hours blocked but not outdated key=%s (wait %ds %ddays)\n",
 										dbUserKey, secsToLive, secsToLive/24*60*60)
 								}
