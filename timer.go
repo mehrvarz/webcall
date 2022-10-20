@@ -228,7 +228,6 @@ func ticker3hours() {
 							deleteKeyArray2 = append(deleteKeyArray2,dbUserKey)
 							counterDeleted2++
 						} else {
-							// TODO we need to be able to switch this log off
 							if logWantedFor("timer") {
 								secsToLive := blockedForDays * 24*60*60 - sinceDeletedInSecs
 								if logWantedFor("blocked") {
