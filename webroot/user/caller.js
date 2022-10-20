@@ -2642,12 +2642,15 @@ function dataChannelOnmessage(event) {
 }
 
 function stopAllAudioEffects() {
+	gLog('stopAllAudioEffects');
 	if(playDialSounds) {
-		gLog('stopAllAudioEffects DialSound stop');
 		if(dtmfDialingSound) {
+			gLog('stopAllAudioEffects dtmfDialingSound stop');
+			dtmfDialingSound.pause();
 			dtmfDialingSound.currentTime = 100000;
 		}
 		if(busySignalSound) {
+			gLog('stopAllAudioEffects busySignalSound stop');
 			busySignalSound.pause();
 			busySignalSound.currentTime = 0;
 		}
