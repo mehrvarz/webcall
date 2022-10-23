@@ -1443,8 +1443,8 @@ function remoteFullScreen(forceClose) {
 			//gLog('remoteFullScreen aspectRatio 16/9');
 			remoteVideoFrame.style.aspectRatio = "16/9";
 		}
-
-		// exitFullscreen is not supported in iOS (iOS aborts JS without err-msg if exitFullscreen() is called)
+/*
+		// exitFullscreen is not supported in webkit (aborts JS without err-msg if exitFullscreen() is called)
 		let ua = navigator.userAgent;
 		if(ua.indexOf("iPhone")<0 && ua.indexOf("iPad")<0) {
 			gLog('remoteFullScreen exitFullscreen');
@@ -1452,7 +1452,7 @@ function remoteFullScreen(forceClose) {
 				console.log('remoteFullScreen exitFullscreen err='+err.message);
 			});
 		}
-
+*/
 		// make remotefullscreen label white
 		//gLog('remoteFullScreen remotefullscreenLabel');
 		let remotefullscreenLabel = document.getElementById("remotefullscreen");
