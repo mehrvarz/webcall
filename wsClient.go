@@ -1722,7 +1722,24 @@ func (c *WsClient) SendPing(maxWaitMS int) {
 	if err != nil {
 		fmt.Printf("# sendPing (%s) %s err=%v\n", c.calleeID, c.wsConn.RemoteAddr().String(), err)
 		c.isOnline.Set(false) // ??? prevent Close() from trying to close this already closed connection
-		c.hub.closeCallee("sendPing error: "+err.Error())
+		if c.hub!=nil {
+			comment := "sendPing error: "+err.Error()
+			//c.hub.closeCallee(comment)
+			// instead:
+			c.hub.LocalP2p = false
+			c.hub.RemoteP2p = false
+			fmt.Printf("# sendPing (%s) %s setDeadline()\n", c.calleeID, c.wsConn.RemoteAddr().String())
+			c.hub.setDeadline(0,comment)
+			if c.hub.CalleeClient!=nil {
+				fmt.Printf("# sendPing (%s) %s keepAliveMgr.Delete\n", c.calleeID, c.wsConn.RemoteAddr().String())
+				keepAliveMgr.Delete(c.hub.CalleeClient.wsConn)
+				c.hub.CalleeClient.wsConn.SetReadDeadline(time.Time{})
+				c.hub.CalleeClient.isConnectedToPeer.Set(false)
+				c.hub.CalleeClient.isMediaConnectedToPeer.Set(false)
+				c.hub.CalleeClient.pickupSent.Set(false)
+			}
+		}
+		fmt.Printf("# sendPing (%s) %s done\n", c.calleeID, c.wsConn.RemoteAddr().String())
 		return
 	}
 
