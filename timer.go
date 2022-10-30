@@ -214,6 +214,7 @@ func ticker3hours() {
 						continue
 					}
 					if !isOnlyNumericString(userID) {
+						fmt.Printf("_ticker3hours !isOnlyNumericString key=%s\n", userID)
 						continue
 					}
 
@@ -232,7 +233,7 @@ func ticker3hours() {
 								secsToLive := blockedForDays * 24*60*60 - sinceDeletedInSecs
 								if logWantedFor("blocked") {
 									fmt.Printf("ticker3hours blocked but not outdated key=%s (wait %ds %ddays)\n",
-										dbUserKey, secsToLive, secsToLive/24*60*60)
+										dbUserKey, secsToLive, secsToLive/(24*60*60))
 								}
 							}
 						}
