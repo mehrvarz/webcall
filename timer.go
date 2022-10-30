@@ -652,11 +652,11 @@ func ticker3min() {
 			}
 		}
 		for _,ip := range deleteIpArray {
-			if logWantedFor("timer") {
-				if logWantedFor("missedcall") {
-					fmt.Printf("ticker3min delete (%s) from missedCallAllowedMap\n",ip)
-				}
-			}
+//			if logWantedFor("timer") {
+//				if logWantedFor("missedcall") {
+//					fmt.Printf("ticker3min delete (%s) from missedCallAllowedMap\n",ip)
+//				}
+//			}
 			delete(missedCallAllowedMap,ip)
 		}
 		missedCallAllowedMutex.Unlock()
