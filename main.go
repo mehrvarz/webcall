@@ -487,6 +487,7 @@ func getStats() string {
 	var numberOfOnlineCallers int64
 	numberOfActivePureP2pCalls := 0
 	hubMapMutex.RLock()
+	defer hubMapMutex.RUnlock()
 	for _,hub := range hubMap {
 		if hub!=nil {
 			numberOfOnlineCallees++
@@ -500,7 +501,7 @@ func getStats() string {
 //			hub.HubMutex.RUnlock()
 		}
 	}
-	hubMapMutex.RUnlock()
+	//hubMapMutex.RUnlock()
 
 	numberOfCallsTodayMutex.RLock()
 	retStr := fmt.Sprintf("stats %d/%d/%d calls:%d/%d %d/%d go:%d",
