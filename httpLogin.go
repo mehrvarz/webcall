@@ -51,7 +51,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			readConfigLock.RUnlock()
 
 			// NOTE: msg MUST NOT contain apostroph (') characters
-			msg := "The version of WebCall you are using has a technical problem and is no longer supported."+
+			msg := "The version of WebCall you are using is no longer supported."+
 					" <a href=\"/webcall/update/\">Please upgrade.</a>"
 			fmt.Fprintf(w,msg)
 			return
@@ -138,6 +138,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	hubMapMutex.RUnlock()
 	readConfigLock.RLock()
 	myMaxCallees := maxCallees
+	myMultiCallees := multiCallees
 	readConfigLock.RUnlock()
 	if lenHubMap > myMaxCallees {
 		fmt.Printf("# /login lenHubMap %d > myMaxCallees %d rip=%s v=%s\n",
@@ -145,10 +146,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		fmt.Fprintf(w, "error")
 		return
 	}
-
-	readConfigLock.RLock()
-	myMultiCallees := multiCallees
-	readConfigLock.RUnlock()
 
 	if strings.Index(myMultiCallees, "|"+urlID+"|") < 0 {
 		// urlID is NOT a multiCallee user

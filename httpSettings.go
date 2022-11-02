@@ -40,8 +40,6 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		return
 	}
 
-	//fmt.Printf("/getsettings (%s) %s ua=%s\n", calleeID, remoteAddr, r.UserAgent())
-
 	var dbEntry DbEntry
 	err := kvMain.Get(dbRegisteredIDs,calleeID,&dbEntry)
 	if err!=nil {
@@ -57,6 +55,9 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		return
 	}
 
+	if logWantedFor("getsettings") {
+		fmt.Printf("/getsettings (%s) %s ua=%s\n", calleeID, remoteAddr, r.UserAgent())
+	}
 	var reqBody []byte
 	readConfigLock.RLock() // for vapidPublicKey
 	reqBody, err = json.Marshal(map[string]string{
@@ -78,7 +79,7 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		return
 	}
 	if logWantedFor("getsettings") {
-		fmt.Printf("/getsettings for (%s) [%s]\n",calleeID,reqBody)
+		fmt.Printf("/getsettings (%s) done [%s]\n",calleeID,reqBody)
 	}
 	fmt.Fprintf(w,string(reqBody))
 	return
