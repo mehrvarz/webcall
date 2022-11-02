@@ -730,10 +730,11 @@ func ticker30sec() {
 		}
 
 		readConfigLock.RLock()
-		if thirtySecStats {
+		mythirtySecStats := thirtySecStats
+		readConfigLock.RUnlock()
+		if mythirtySecStats {
 			fmt.Printf("%s\n",getStats())
 		}
-		readConfigLock.RUnlock()
 
 		// cleanup recentTurnCalleeIps
 		timeNow := time.Now()
