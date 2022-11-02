@@ -1724,7 +1724,8 @@ func (c *WsClient) SendPing(maxWaitMS int) {
 		c.isOnline.Set(false) // ??? prevent Close() from trying to close this already closed connection
 		if c.hub!=nil {
 			comment := "sendPing error: "+err.Error()
-			//c.hub.closeCallee(comment)
+			c.hub.closeCallee(comment)
+/*
 			// instead:
 			c.hub.LocalP2p = false
 			c.hub.RemoteP2p = false
@@ -1738,6 +1739,7 @@ func (c *WsClient) SendPing(maxWaitMS int) {
 				c.hub.CalleeClient.isMediaConnectedToPeer.Set(false)
 				c.hub.CalleeClient.pickupSent.Set(false)
 			}
+*/
 		}
 		fmt.Printf("# sendPing (%s) %s done\n", c.calleeID, c.wsConn.RemoteAddr().String())
 		return
