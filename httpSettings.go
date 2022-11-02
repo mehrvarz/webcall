@@ -66,11 +66,11 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		"twid": dbUser.Str1, // twitter user_id
 		"storeContacts": strconv.FormatBool(dbUser.StoreContacts),
 		"storeMissedCalls": strconv.FormatBool(dbUser.StoreMissedCalls),
-		"webPushSubscription1": dbUser.Str2,
-		"webPushUA1": dbUser.Str2ua,
-		"webPushSubscription2": dbUser.Str3,
-		"webPushUA2": dbUser.Str3ua,
-		"vapidPublicKey": vapidPublicKey,
+//		"webPushSubscription1": dbUser.Str2,
+//		"webPushUA1": dbUser.Str2ua,
+//		"webPushSubscription2": dbUser.Str3,
+//		"webPushUA2": dbUser.Str3ua,
+//		"vapidPublicKey": vapidPublicKey,
 		"dialSounds": strconv.FormatBool(!(dbUser.Int2&4==4)), // bit4 set for mute (bit4 clear = play dialsounds)
 	})
 	readConfigLock.RUnlock()
