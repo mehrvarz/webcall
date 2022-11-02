@@ -759,13 +759,14 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 			var hubSlice []*Hub
 			for _,hub := range hubMap {
 				if hub!=nil {
-					hub.HubMutex.RLock()
+					//hub.HubMutex.RLock()
 					if hub.CalleeClient != nil {
 						hubSlice = append(hubSlice,hub)
 					}
-					hub.HubMutex.RUnlock()
+					//hub.HubMutex.RUnlock()
 				}
 			}
+			//hubMapMutex.RUnlock()
 			sortableIpAddrFunc := func(remoteAddr string) string {
 				// takes "192.168.3.29" and returns "192168003029"
 				toks := strings.Split(remoteAddr, ".")
@@ -839,6 +840,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 					}
 				}
 			}
+			//hubMapMutex.RUnlock()
 			sort.Slice(hubinfoSlice, func(i, j int) bool {
 				return hubinfoSlice[i] < hubinfoSlice[j]
 			})
@@ -866,6 +868,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 func clientRequestAdd(remoteAddr string, count int) bool {
 	ret := false
 	clientRequestsMutex.Lock()
+	defer clientRequestsMutex.Unlock()
 	clientRequestsSlice,ok := clientRequestsMap[remoteAddr]
 	if ok {
 		for len(clientRequestsSlice)>0 {
@@ -888,7 +891,7 @@ func clientRequestAdd(remoteAddr string, count int) bool {
 		ret = true
 	}
 
-	clientRequestsMutex.Unlock()
+	//clientRequestsMutex.Unlock()
 	return ret
 }
 
