@@ -347,6 +347,7 @@ func cleanupCalleeLoginMap(w io.Writer, min int, title string) {
 	// cleanup calleeLoginMap so we don't hold on to memory after we don't have to
 	var deleteID []string
 	calleeLoginMutex.Lock()
+	defer calleeLoginMutex.Unlock()
 	for calleeID,calleeLoginSlice := range calleeLoginMap {
 		//fmt.Fprintf(w,"%s calleeLoginMap (%s) A len=%d\n", title, calleeID, len(calleeLoginSlice))
 		for len(calleeLoginSlice)>0 {
@@ -397,7 +398,7 @@ func cleanupCalleeLoginMap(w io.Writer, min int, title string) {
 			}
 		}
 	}
-	calleeLoginMutex.Unlock()
+	//calleeLoginMutex.Unlock()
 }
 
 func cleanupClientRequestsMap(w io.Writer, min int, title string) {
@@ -406,6 +407,7 @@ func cleanupClientRequestsMap(w io.Writer, min int, title string) {
 	//fmt.Fprintf(w,"%s clientRequestsMap len=%d\n", title, len(clientRequestsMap))
 	var deleteIps []string
 	clientRequestsMutex.Lock()
+	defer clientRequestsMutex.Unlock()
 	for ip,clientRequestsSlice := range clientRequestsMap {
 		//fmt.Fprintf(w,"%s clientRequestsMap (%s) A len=%d\n", title, ip, len(clientRequestsSlice))
 		for len(clientRequestsSlice)>0 {
@@ -473,7 +475,7 @@ func cleanupClientRequestsMap(w io.Writer, min int, title string) {
 				title, ip, len(clientRequestsSlice), maxClientRequestsPer30min)
 		}
 	}
-	clientRequestsMutex.Unlock()
+	//clientRequestsMutex.Unlock()
 }
 
 // send url (pointing to update news) to all online callees
