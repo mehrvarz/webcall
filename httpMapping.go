@@ -30,6 +30,7 @@ func httpGetMapping(w http.ResponseWriter, r *http.Request, urlID string, callee
 
 	errcode,altIDs := getMapping(calleeID,remoteAddr)
 	if errcode==0 && altIDs!="" {
+		// TODO here we might want to parse altIDs for plausibility
 		fmt.Fprintf(w,altIDs)
 	}
 	// if(xhr.responseText=="") there are no altIDs
@@ -104,6 +105,7 @@ func httpSetMapping(w http.ResponseWriter, r *http.Request, urlID string, callee
 	}
 
 	// NOTE: one mistake and the current .AltIDs are gone
+	// TODO: plausibility check on data would be useful
 	dbUser.AltIDs = data
 	err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, true)
 	if err != nil {
@@ -112,7 +114,7 @@ func httpSetMapping(w http.ResponseWriter, r *http.Request, urlID string, callee
 		return
 	}
 	// no error
-	fmt.Printf("/setmapping (%s) data=(%s)\n",calleeID, data)
+	fmt.Printf("/setmapping (%s) done data=(%s)\n",calleeID, data)
 	return
 }
 

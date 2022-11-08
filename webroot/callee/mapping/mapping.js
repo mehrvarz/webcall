@@ -118,10 +118,25 @@ function displayMapping() {
 				}
 				//console.log("assign=("+assign+")");
 
+				// plausibility fixes
+				// id and assign may not contain blanks
+				// id and assign have a max length
+				if(id.indexOf(" ")>=0) {
+					id = id.replace(" ","");
+				}
+				if(id.length>11) {
+					id = id.substring(0,11);
+				}
+				if(assign.indexOf(" ")>=0) {
+					assign = assign.replace(" ","");
+				}
+				if(assign.length>8) {
+					assign = assign.substring(0,8);
+				}
 				dataBoxContent += "<tr>"+
-				  "<td><a href='" +mainLink +id + "' onclick='clickID("+id+");return false;'>"+id+"</a></td>"+
-				  "<td><a onclick='edit(this,event,\""+id+"\",\""+assign+"\")'>"+ assign +"</a></td>"+
-				  "<td align='right'><a onclick='remove("+i+","+id+")' style='font-weight:600;'>X</a></td></tr>";
+				    "<td><a href='" +mainLink +id + "' onclick='clickID("+id+");return false;'>"+id+"</a></td>"+
+				    "<td><a onclick='edit(this,event,\""+id+"\",\""+assign+"\")'>"+ assign +"</a></td>"+
+				    "<td align='right'><a onclick='remove("+i+","+id+")' style='font-weight:600;'>X</a></td></tr>";
 			}
 		}
 		dataBoxContent += "</table>";
