@@ -105,7 +105,7 @@ func httpSetMapping(w http.ResponseWriter, r *http.Request, urlID string, callee
 	}
 
 	// NOTE: one mistake and the current .AltIDs are gone
-	// TODO: plausibility check on data would be useful
+	// TODO: plausibility check on data: id must be numerical, must not contain blanks, max len of id and assign
 	dbUser.AltIDs = data
 	err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, true)
 	if err != nil {

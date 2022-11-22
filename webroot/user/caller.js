@@ -935,6 +935,11 @@ function onload3(comment) {
 }
 
 function dialButtonClick() {
+	let nicknameElement = document.getElementById("nickname");
+	if(nicknameElement) {
+		callerName = cleanStringParameter(nicknameElement.value,true);
+	}
+
 	console.log("dialButtonClick calleeID="+calleeID+" callerId="+callerId+" callerName="+callerName);
 	showStatus(connectingText,-1);
 
