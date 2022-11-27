@@ -576,6 +576,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 						pwIdCombo, calleeID)
 					cookie = nil
 				} else {
+					// here we could decrypt the pw
 					//fmt.Printf("httpApi cookie available for id=(%s) (%s)(%s) reqPath=%s ref=%s rip=%s\n",
 					//	pwIdCombo.CalleeId, calleeID, urlID, r.URL.Path, referer, remoteAddrWithPort)
 					pw = pwIdCombo.Pw

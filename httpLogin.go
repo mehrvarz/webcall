@@ -610,6 +610,7 @@ func createCookie(w http.ResponseWriter, urlID string, pw string, pwIdCombo *PwI
 		fmt.Printf("/login cookie created (%v)\n", cookieValue)
 	}
 
+	// here we could encrypt the pw
 	pwIdCombo.Pw = pw
 	pwIdCombo.CalleeId = urlID
 	pwIdCombo.Created = time.Now().Unix()
