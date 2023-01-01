@@ -127,7 +127,8 @@ loop:
 							mMgr.processMessage(textMessage,event)
 						}
 					case html.ErrorToken:
-						fmt.Printf("mastodonhandler ErrorToken re-loop\n")
+						t := htmlTokens.Token()
+						fmt.Printf("mastodonhandler ErrorToken re-loop (%v)\n",t.Data)
 						break loop
 					}
 				}
@@ -185,7 +186,7 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 
 			// /pickup will display mastodonUserID as username (new WebCall ID) and will let user enter a password
 			// &register will cause pickup.js to skip choices
-			sendmsg :=	"Click to register as WebCall callee: "+mMgr.hostUrl+"/callee/pickup?mid="+mID+"&register"
+			sendmsg :=	"Register WebCall ID: "+mMgr.hostUrl+"/callee/pickup?mid="+mID+"&register"
 			fmt.Printf("PostStatus (%s)\n",sendmsg)
 			status,err := mMgr.c.PostStatus(context.Background(), &mastodon.Toot{
 				Status:			sendmsg,
@@ -194,9 +195,9 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 			})
 			if err!=nil {
 				// TODO this is fatal
-				fmt.Printf("# PostStatus err=%v",err)
+				fmt.Printf("# PostStatus err=%v\n",err)
 			} else {
-				fmt.Printf("PostStatus sent id=%v (inreply=%v)",status.ID,event.Notification.Status.ID)
+				fmt.Printf("PostStatus sent id=%v (inreply=%v)\n", status.ID, event.Notification.Status.ID)
 
 				// TODO at some point later we need to delete (from mastodon) all direct messages
 				// note: deleting a (direct) mastodon msg does NOT delete it on the receiver/caller side
@@ -303,9 +304,9 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 				})
 				if err!=nil {
 					// TODO this is fatal
-					fmt.Println("# PostStatus err=",err)
+					fmt.Printf("# PostStatus err=%v\n",err)
 				} else {
-					fmt.Println("PostStatus sent id=",status.ID)
+					fmt.Printf("PostStatus sent id=%v\n",status.ID)
 
 					// TODO at some point later we need to delete (from mastodon) all direct messages
 					// note: deleting a (direct) mastodon msg does NOT delete it on the receiver/caller side
@@ -353,9 +354,9 @@ func (mMgr *MastodonMgr) sendCallerMsgToMid(mid string, calleeID string) {
 			Visibility:		"direct",
 		})
 		if err!=nil {
-			fmt.Println("# PostStatus err=",err)
+			fmt.Printf("# PostStatus err=%v\n",err)
 		} else {
-			fmt.Println("PostStatus sent id=",status.ID)
+			fmt.Printf("PostStatus sent id=%v\n",status.ID)
 		}
 	} else {
 		fmt.Printf("# sendCallerMsgToMid inReplyToID empty, calleeID=%s mid=%s\n",calleeID,mid)
@@ -395,9 +396,9 @@ func (mMgr *MastodonMgr) sendCallerMsg(mastodonSenderMsgID mastodon.ID, msg stri
 		Visibility:		"direct", //"private",
 	})
 	if err!=nil {
-		fmt.Println("# PostStatus err=",err)
+		fmt.Printf("# PostStatus err=%v\n",err)
 	} else {
-		fmt.Println("PostStatus sent id=",status.ID)
+		fmt.Printf("PostStatus sent id=%v\n",status.ID)
 	}
 }
 
@@ -462,7 +463,8 @@ func (mMgr *MastodonMgr) isValidCallee(calleeID string) bool {
 	var dbEntry DbEntry
 	err := kvMain.Get(dbRegisteredIDs, calleeID, &dbEntry)
 	if err != nil {
-		fmt.Printf("# isValidCallee(%s) dbEntry err=%v\n",calleeID,err)
+		// this is not necessarily fatal
+		fmt.Printf("isValidCallee(%s) dbEntry err=%v\n",calleeID,err)
 	} else {
 		dbUserKey := fmt.Sprintf("%s_%d", calleeID, dbEntry.StartTime)
 		var dbUser DbUser

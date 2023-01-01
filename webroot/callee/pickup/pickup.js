@@ -20,6 +20,12 @@ window.onload = function() {
 
 	var register = getUrlParams("register");
 	if(typeof register!="undefined") {
+		document.title = "WebCall Register";
+		let titleElement = document.getElementById('title');
+		if(titleElement) {
+			titleElement.innerHTML = "WebCall Register";
+		}
+
 		let api = apiPath+"/getmiduser?mid="+mid;
 		console.log('pwForm api',api);
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
@@ -33,7 +39,18 @@ window.onload = function() {
 				let isValidCalleeID = false;
 				let isOnlineCalleeID = false;
 				if(tok.length>=1) {
-					mastodonUserID = tok[0]; // this is always a mastodon-user-id, never a calleeID
+					mastodonUserID = tok[0]; // always a mastodon-user-id, never a calleeID
+					if(tok.length>=2) {
+						if(tok[1]=="true") {
+							isValidCalleeID = true;
+						}
+						if(tok.length>=3) {
+							if(tok[2]=="true") {
+								isOnlineCalleeID = true;
+							}
+						}
+					}
+					// TODO if isValidCalleeID: mastodonUserID account exists already
 					pwForm(mastodonUserID);
 				}
 			}
@@ -203,8 +220,11 @@ function submitForm(theForm) {
 }
 
 function clearForm() {
-	document.getElementById("username").value = "";
-	document.getElementById("username").focus();
+	let userNameElement = document.getElementById("username");
+	if(userNameElement) {
+		userNameElement.value = "";
+		userNameElement.focus();
+	}
 }
 
 function pwForm(mastodonUserID) {
@@ -250,7 +270,7 @@ function submitPw(theForm,mastodonUserID) {
 			let idxArg = calleeLink.indexOf("?");
 			if(idxArg>=0) calleeLink = calleeLink.substring(0,idxArg);
 			//if(!gentle) console.log('calleeLink1='+calleeLink);
-			calleeLink = calleeLink.replace("register/","");
+			calleeLink = calleeLink.replace("pickup/","");
 			//if(!gentle) console.log('calleeLink2='+calleeLink+" mastodonUserID="+mastodonUserID);
 			calleeLink += mastodonUserID;
 			if(!gentle) console.log('calleeLink='+calleeLink);
