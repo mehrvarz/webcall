@@ -57,7 +57,7 @@ var	kvMain skv.KV
 const dbMainName = "rtcsig.db"
 const dbRegisteredIDs = "activeIDs"
 const dbBlockedIDs = "blockedIDs"
-const dbUserBucket = "userData2"
+const dbUserBucket = "userData2"	// see dbObjects.go
 
 var	kvCalls skv.KV
 const dbCallsName = "rtccalls.db"
@@ -103,17 +103,23 @@ var hubMap map[string]*Hub
 var hubMapMutex sync.RWMutex
 
 // ws-connect timeout blocker
+// blockMap lets us temp-block an ip in response to a ws-reconnect issue (likely caused by battery optimization)
 var blockMap map[string]time.Time
 var blockMapMutex sync.RWMutex
 
+// calleeLoginMap contains an array of timestamps of previous login attempts
+// this lets us limit the number of login attempts to maxLoginPer30min (e.g. 30)
 var calleeLoginMap map[string][]time.Time
 var calleeLoginMutex sync.RWMutex
 var maxLoginPer30min = 0 // ideal value 9 - 12
 
+// clientRequestsMap contains an array of timestamps of previous http requests
+// this lets us limit the number of http requests to maxClientRequestsPer30min (e.g. 180)
 var clientRequestsMap map[string][]time.Time // ip -> []time.Time
 var clientRequestsMutex sync.RWMutex
 var maxClientRequestsPer30min = 0 // ideal value 60
 
+// remoteAddr listed in missedCallAllowedMap are temporarily eligible to send xhr /missedCall
 var missedCallAllowedMap map[string]time.Time
 var missedCallAllowedMutex sync.RWMutex
 
@@ -140,6 +146,8 @@ var wsAddr string
 var wssAddr string
 var svr *nbhttp.Server
 var svrs *nbhttp.Server
+
+var mastodonMgr *MastodonMgr
 
 type wsClientDataType struct {
 	hub *Hub
@@ -176,6 +184,7 @@ var pprofPort = 0
 var dbPath = ""
 var wsUrl = ""
 var wssUrl = ""
+var mastodonhandler = ""
 var twitterKey = ""
 var twitterSecret = ""
 var vapidPublicKey = ""
@@ -228,7 +237,6 @@ func main() {
 	newsDateMap = make(map[string]string)
 
 	wsClientMap = make(map[uint64]wsClientDataType) // wsClientID -> wsClientData
-	readConfig(true)
 
 	var err error
 	kvMain,err = skv.DbOpen(dbMainName,dbPath)
@@ -308,8 +316,6 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 	queryFollowerIDsNeeded.Set(true)
 
-	readStatsFile()
-
 	outboundIP,err = iptools.GetOutboundIP()
 	fmt.Printf("outboundIP %s\n",outboundIP)
 
@@ -347,10 +353,18 @@ func main() {
 					}
 				}
 			}
+
+			if dbUser.MastodonID!="" {
+				mapping[dbUser.MastodonID] = MappingDataType{calleeID,"none"}
+			}
 		}
 		return nil
 	})
 	skv.DbMutex.Unlock()
+
+	readConfig(true)
+
+	readStatsFile()
 
 	// websocket handler
 	if wsPort > 0 {
@@ -554,6 +568,8 @@ func readConfig(init bool) {
 		configIni = nil
 	}
 
+	mastodonhandlerNew := ""
+
 	readConfigLock.Lock()
 	if init {
 		hostname = readIniString(configIni, "hostname", hostname, "127.0.0.1")
@@ -626,7 +642,26 @@ func readConfig(init bool) {
 	maxLoginPer30min = readIniInt(configIni, "maxLoginPer30min", maxLoginPer30min, 0, 1)
 	maxClientRequestsPer30min = readIniInt(configIni, "maxRequestsPer30min", maxClientRequestsPer30min, 0, 1)
 
+	mastodonhandlerNew = readIniString(configIni, "mastodonhandler", mastodonhandler, "")
 	readConfigLock.Unlock()
+
+	if mastodonhandlerNew != mastodonhandler {
+		fmt.Printf("config.ini mastodonhandler '%s' <- '%s'\n", mastodonhandlerNew, mastodonhandler)
+		mastodonhandler = mastodonhandlerNew
+		if mastodonhandler=="" {
+			if mastodonMgr != nil {
+				fmt.Printf("mastodonStop\n")
+				mastodonMgr.mastodonStop()
+				mastodonMgr = nil
+			}
+		} else {
+			if mastodonMgr == nil {NewMastodonMgr()
+				fmt.Printf("mastodonStart...\n")
+				mastodonMgr = NewMastodonMgr()
+				go mastodonMgr.mastodonStart(mastodonhandler)
+			}
+		}
+	}
 }
 
 // readStatsFile() reads a file "stats.ini" in which some information

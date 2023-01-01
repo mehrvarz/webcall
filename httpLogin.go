@@ -34,6 +34,12 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		clientVersion = url_arg_array[0]
 	}
 
+	mid := ""
+	url_arg_array, ok = r.URL.Query()["mid"]
+	if ok && len(url_arg_array[0]) >= 1 {
+		mid = url_arg_array[0]
+	}
+
 	// answie and talkback can only log in from localhost
 	if strings.HasPrefix(urlID, "answie") || strings.HasPrefix(urlID, "talkback") {
 		if remoteAddr!="127.0.0.1" && remoteAddr!=outboundIP {
@@ -451,7 +457,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	//fmt.Printf("/login create wsClientMap[] with urlID=%s globalID=%s \n",urlID,globalID)
 	wsClientMutex.Lock()
 	// dialID empty for now, will be patched in by /online
-	wsClientMap[wsClientID] = wsClientDataType{hub, dbEntry, dbUser, urlID, globalID, "", clientVersion, false}
+	wsClientMap[wsClientID] =
+		wsClientDataType{hub, dbEntry, dbUser, urlID, globalID, "", clientVersion, false}
 	wsClientMutex.Unlock()
 
 	//fmt.Printf("/login newHub store in local hubMap with globalID=%s\n", globalID)
@@ -541,8 +548,13 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				//	urlID, globalID, waitedFor)
 			} else {
 				if hub.CalleeLogin.Get() {
-					// this is perfect: ws-connect / init did occur
+					// this is perfect: ws-connect / init did occur (callee fully logged in)
 					myHubMutex.RUnlock()
+
+					if mid!="" {
+						// tell caller that callee is ready to receive a call (and maybe other related tasks)
+						mastodonMgr.calleeLoginSuccess(mid,urlID,remoteAddr)
+					}
 				} else {
 					// hub!=nil but CalleeLogin==false (callee still there but did NOT send 'init' within 26s)
 					hub.HubMutex.RLock()

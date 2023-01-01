@@ -2,12 +2,12 @@
 'use strict';
 const form = document.querySelector('form#settings');
 const formPw = document.querySelector('input#nickname');
-const webpush1button = document.getElementById("webpush1but");
-const webpush2button = document.getElementById("webpush2but");
-const webpush1subscrElement = document.getElementById("webpush1subscr");
-const webpush2subscrElement = document.getElementById("webpush2subscr");
-const webpush1uaElement = document.getElementById("webpush1ua");
-const webpush2uaElement = document.getElementById("webpush2ua");
+//const webpush1button = document.getElementById("webpush1but");
+//const webpush2button = document.getElementById("webpush2but");
+//const webpush1subscrElement = document.getElementById("webpush1subscr");
+//const webpush2subscrElement = document.getElementById("webpush2subscr");
+//const webpush1uaElement = document.getElementById("webpush1ua");
+//const webpush2uaElement = document.getElementById("webpush2ua");
 var calleeID = "";
 var calleeLink = "";
 var vapidPublicKey = ""
@@ -73,15 +73,52 @@ function prepareSettings(xhrresponse) {
 		if(!gentle) console.log('serverSettings.vapidPublicKey',serverSettings.vapidPublicKey);
 		vapidPublicKey = serverSettings.vapidPublicKey
 	}
+
+	if(typeof serverSettings.mastodonID!=="undefined") {
+//TODO tmtmtm: only doing this bc my test-account does not have .mastodonID set
+		serverSettings.mastodonID = "tm@mastodontech.de";
+
+		console.log('serverSettings.mastodonID',serverSettings.mastodonID);
+		if(serverSettings.mastodonID=="") {
+			document.getElementById("madiv").style.display = "none";
+		} else {
+			document.getElementById("madiv").style.display = "block";
+			document.getElementById("maid").innerHTML = "Mastodon ID: "+serverSettings.mastodonID;
+		}
+
+		if(typeof serverSettings.tootOnCall!=="undefined") {
+			if(!gentle) console.log('serverSettings.tootOnCall',serverSettings.tootOnCall);
+			if(serverSettings.tootOnCall=="true") {
+				document.getElementById("tootOnCall").checked = true;
+			} else {
+				document.getElementById("tootOnCall").checked = false;
+			}
+		}
+		if(typeof serverSettings.acceptTootCalls!=="undefined") {
+			if(!gentle) console.log('serverSettings.acceptTootCalls',serverSettings.acceptTootCalls);
+			if(serverSettings.acceptTootCalls=="true") {
+				document.getElementById("acceptTootCalls").checked = true;
+			} else {
+				document.getElementById("acceptTootCalls").checked = false;
+			}
+		}
+	}
+
 	if(typeof serverSettings.nickname!=="undefined") {
 		if(!gentle) console.log('serverSettings.nickname',serverSettings.nickname);
 		document.getElementById("nickname").value = serverSettings.nickname;
 	}
 	if(typeof serverSettings.twname!=="undefined") {
 		if(!gentle) console.log('serverSettings.twname',serverSettings.twname);
-		document.getElementById("twname").value = serverSettings.twname;
-		document.getElementById("twname2").value = serverSettings.twname; // backup of twname so we detect change
+		if(serverSettings.twname=="") {
+			document.getElementById("twdiv").style.display = "none";
+		} else {
+			document.getElementById("twname").value = serverSettings.twname;
+			document.getElementById("twname2").value = serverSettings.twname; // backup of twname to detect change
+		}
 	}
+
+
 	if(typeof serverSettings.twid!=="undefined") {
 		if(!gentle) console.log('serverSettings.twid',serverSettings.twid);
 		document.getElementById("twid").value = serverSettings.twid;	  // not being displayed
@@ -411,16 +448,19 @@ function submitForm(autoclose) {
 		if(!gentle) console.log('submitForm store twName='+valueTwName+" twID="+valueTwID);
 		// we use encodeURI to encode the subscr-strings bc these strings are themselves json 
 		// and cannot just be packaged inside json
-		var newSettings = '{ "nickname":"'+document.getElementById("nickname").value.trim()+'",'+
+		var newSettings = 
+		   '{"nickname":"'+document.getElementById("nickname").value.trim()+'",'+
 			'"twname":"'+valueTwName+'",'+
 			'"twid":"'+valueTwID+'",'+
 			'"storeContacts":"'+document.getElementById("storeContacts").checked+'",'+
 			'"storeMissedCalls":"'+document.getElementById("storeMissedCalls").checked+'",'+
-			'"webPushSubscription1":"'+encodeURI(serverSettings.webPushSubscription1)+'",'+
-			'"webPushUA1":"'+encodeURI(serverSettings.webPushUA1)+'",'+
-			'"webPushSubscription2":"'+encodeURI(serverSettings.webPushSubscription2)+'",'+
-			'"webPushUA2":"'+encodeURI(serverSettings.webPushUA2)+'"'+
-		'}';
+			'"tootOnCall":"'+document.getElementById("tootOnCall").checked+'",'+
+			'"acceptTootCalls":"'+document.getElementById("acceptTootCalls").checked+'"'+
+//			'"webPushSubscription1":"'+encodeURI(serverSettings.webPushSubscription1)+'",'+
+//			'"webPushUA1":"'+encodeURI(serverSettings.webPushUA1)+'",'+
+//			'"webPushSubscription2":"'+encodeURI(serverSettings.webPushSubscription2)+'",'+
+//			'"webPushUA2":"'+encodeURI(serverSettings.webPushUA2)+'"'+
+		   '}';
 		if(!gentle) console.log('submitForm newSettings',newSettings);
 
 		let api = apiPath+"/setsettings?id="+calleeID;

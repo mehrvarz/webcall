@@ -856,7 +856,8 @@ function fetchMapping(contFunc,idSelectElement,idSelectLabelElement) {
 function onload3(comment) {
 	gLog('onload3 '+comment);
 
-	var calleeIdTitle = calleeID.charAt(0).toUpperCase() + calleeID.slice(1);
+//	var calleeIdTitle = calleeID.charAt(0).toUpperCase() + calleeID.slice(1);
+	var calleeIdTitle = calleeID;
 	document.title = "WebCall "+calleeIdTitle;
 	if(titleElement) {
 		titleElement.innerHTML = "WebCall "+calleeIdTitle;
@@ -894,7 +895,7 @@ function onload3(comment) {
 			if(calleeID.match(/^[0-9]*$/) != null) {
 				// calleeID is pure numeric - don't show
 			} else {
-				dialButton.innerHTML = "Call "+calleeIdTitle;
+				//dialButton.innerHTML = "Call "+calleeIdTitle;
 			}
 		}
 

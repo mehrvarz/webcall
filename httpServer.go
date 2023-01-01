@@ -480,6 +480,8 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		tok := strings.Split(urlID, "|")
 		if len(tok) >= 5 {
 			// don't log 5-token (like this: "54281001702||65511272157|1653030153|msgtext")
+		} else if strings.Index(urlID,"@")>=0 {
+			// don't log id's containing @
 		} else {
 			fmt.Printf("# httpApi (%s) long urlID=(%s) %s (%s)\n", calleeID, urlID, remoteAddr, urlPath)
 			clientRequestAdd(remoteAddr,3)
@@ -675,6 +677,52 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		httpNewId(w, r, urlID, calleeID, remoteAddr)
 		return
 	}
+
+	// mastodon specific functions
+	if strings.HasPrefix(urlPath,"/getmiduser") {
+		if mastodonMgr != nil {
+			fmt.Printf("/getmiduser rip=%s call mastodonMgr.httpGetMidUser()\n",remoteAddr)
+			mastodonMgr.httpGetMidUser(w, r, cookie, remoteAddr)
+		} else {
+			fmt.Printf("# /getmiduser no mastodonMgr rip=%s\n",remoteAddr)
+		}
+		return
+	}
+	if strings.HasPrefix(urlPath,"/registermid/") {
+		if mastodonMgr != nil {
+			mastodonMgr.httpRegisterMid(w, r, urlPath, remoteAddr, startRequestTime)
+		}
+		return
+	}
+	if strings.HasPrefix(urlPath,"/midmsg") {
+		if cookie!=nil {
+			if mastodonMgr != nil {
+				// send a msg to tmpkeyMastodonCallerMap[mid]:
+				// "Click to call /user/"+tmpkeyMastodonCalleeMap[mid]
+				mastodonMgr.sendCallerMsgCalleeIsOnline(w, r, calleeID, cookie, remoteAddr)
+			}
+		}
+		return
+	}
+	if strings.HasPrefix(urlPath,"/midcalleelogin") {
+// TODO check cookie?
+//		if cookie!=nil {
+		if mastodonMgr != nil {
+			url_arg_array, ok := r.URL.Query()["mid"]
+			fmt.Printf("/midcalleelogin url_arg_array=%v ok=%v\n",url_arg_array, ok)
+			if ok && len(url_arg_array[0]) >= 1 {
+				mid := url_arg_array[0]
+				if(mid=="") {
+					mastodonMgr.calleeLoginSuccess(mid,urlID,remoteAddr)
+				}
+			}
+		}
+		return
+	}
+
+
+
+
 	if urlPath=="/mode" {
 		if maintenanceMode {
 			fmt.Printf("/mode maintenance rip=%s\n",remoteAddr)

@@ -9,6 +9,16 @@ var myCalleeID = "";
 var calleeLink = "";
 
 window.onload = function() {
+	// TODO: ?id=... ist NICHT eine richtige callee-id, sondern nur ein Verweis auf eine callee-ID
+	// der server verwendet dafür eine dedizierte map (verweis-id -> echte callee-id)
+	let id = getUrlParams("id");
+	if(typeof id!=="undefined" && id!="") {
+		myCalleeID = id;
+		console.log('myCalleeID=',myCalleeID);
+		isAvailActionPlaceholder();
+		return;
+	}
+
 	showStatus("<br><br>please wait...<br><br><br><br><br>",-1);
 	makeNewId(); // -> isAvailAction()
 }
@@ -41,6 +51,21 @@ function makeNewId() {
 
 function isAvailAction() {
 	showStatus("Anybody with a web browser can now give you a call. Here is your phone number for the web:<br><br><b>"+myCalleeID+"</b><br><br>Enter a password so only you can receive these calls.",-1);
+	// show form and clear pw input field
+	document.getElementById("pw").value = "";
+	document.getElementById("username").value = myCalleeID;
+	form.style.display = "block";
+	setTimeout(function() {
+		console.log('formPw.focus');
+		formPw.focus();
+	},400);
+	// pw confirmation will take place in submitForm()
+}
+
+function isAvailActionPlaceholder() {
+	showStatus( "WebCall lets you receive audio/video calls on the web. "+
+				"Please enter a password so only you can receive calls targeting your Mastodon ID."+
+				"(Please use a password you are not using anywhere else.)",-1);
 	// show form and clear pw input field
 	document.getElementById("pw").value = "";
 	document.getElementById("username").value = myCalleeID;

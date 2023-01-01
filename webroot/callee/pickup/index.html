@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1">
-<title>WebCall - New Callee</title>
+<title>WebCall Pickup</title>
 <meta property="og:title" content="WebCall Audiophile Telephony">
 <meta name="twitter:title" content="WebCall Audiophile Telephony">
 <meta name="mobile-web-app-capable" content="yes">
@@ -45,7 +45,7 @@ a:hover {
 .status {
 	margin-top:18px;
 	margin-bottom:18px;
-	max-width:540px;
+	max-width:660px;
     font-size:1.05em;
 	min-height:2.1em;
 	transition:opacity 600ms;
@@ -65,7 +65,7 @@ select {
 .formtext {
 	border-radius:4px;
 	border:none;
-	width:86%;
+	_width:86%;
 	font-size:1.1em;
 	color:#000;
 	max-width:420px;
@@ -95,21 +95,23 @@ input[type=submit]:focus {
 </head>
 <body>
 <img src="../phone.svg"
-   style="position:absolute;right:0;top:2vh;width:440px;max-height:80vh;padding:2%;opacity:0.1;z-index:-1;">
+   style="position:absolute;right:0;top:2vh;width:540px;max-height:80vh;padding:2%;opacity:0.1;z-index:-1;">
 <div id="container" style="margin-top:3vh;">
-	<h1>New WebCall ID</h1>
+	<h1>WebCall Pickup</h1>
 	<div id="status" class="status"></div>
+<!--
 	<form action="javascript:;" onsubmit="submitForm(this)" style="max-width:450px;" id="password">
 		<label for="pw" style="display:inline-block; width:32px; padding-bottom:4px;">Password:</label>
 		<span onclick="showPw()" style="font-size:0.95em;float:right;margin-right:16%;margin-top:2px;opacity:0.9;user-select:none;cursor:pointer;">show</span><br>
 
-		<!-- value="" must be set to an instance-specific value (calleeID) -->
+		<!- value="" must be set to an instance-specific value (calleeID) ->
 		<input type="text" autocomplete="username" id="username" name="username" value="" style="display:none;">
 		<input name="pw" id="pw" type="password" class="formtext" _autocomplete="new-password" autofocus required>
 		<span onclick="clearForm()" style="margin-left:5px; user-select:none;">X</span>
 		<br>
 		<input type="submit" name="Submit" id="submit" value="OK" style="width:100px; margin-top:16px;">
 	</form>
+-->
 <!--
 	<br><br>
 	<div style="font-size:0.85em; opacity:0.8;">
@@ -120,5 +122,5 @@ input[type=submit]:focus {
 </body>
 <script src="custom.js"></script>
 <script src="../client.js"></script>
-<script src="register.js"></script>
+<script src="pickup.js"></script>
 

@@ -21,6 +21,7 @@
 package main
 
 import (
+	"context"
 	"net/http"
 	"time"
 	"strings"
@@ -29,6 +30,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"sync"
+	"github.com/mattn/go-mastodon"
 	"github.com/mehrvarz/webcall/twitter"
 	"github.com/mrjones/oauth"
 //	webpush "github.com/SherClockHolmes/webpush-go"
@@ -141,7 +143,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		} else if callerIdLong!="" {
 			msg = callerIdLong
 		}
-		msg += " is waiting for you to pick up the phone"
+		msg += " is waiting for you to pick up a WebCall"
 		if callerMsg!="" {
 			msg += " '"+callerMsg+"'"
 		}
@@ -179,10 +181,35 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 			}
 		}
 */
-		// notify urlID via twitter message
-		// here we use twitter message (or twitter direct message) to send a notification
+
+		if dbUser.MastodonID != "" {
+			// if mastodon handle exists and MastodonAcceptTootCalls==true:
+			// notify dbUser.MastodonID via mastodon direct message
+
+			if mastodonMgr == nil {
+				// TODO log no mgr
+			} else if dbUser.MastodonAcceptTootCalls==false {
+				// TODO log toot not wanted
+			} else {
+				// send a msg to dbUser.MastodonID:
+				sendmsg :=	"@"+dbUser.MastodonID+" "+msg
+				fmt.Printf("PostStatus (%s)\n",sendmsg)
+				status,err := mastodonMgr.c.PostStatus(context.Background(), &mastodon.Toot{
+					Status:			sendmsg,
+					Visibility:		"direct",
+				})
+				if err!=nil {
+					fmt.Println("# PostStatus err=",err)
+				} else {
+					fmt.Println("PostStatus sent id=",status.ID)
+					// TODO at some point later we need to delete (from mastodon) all direct messages
+					// note: deleting a (direct) mastodon msg does NOT delete it on the receiver/caller side
+				}
+			}
+		} else
 		if dbUser.Email2 != "" {
-			// twitter handle exists
+			// twitter handle exists: notify urlID via twitter message
+			// here we use twitter message (or twitter direct message) to send a notification
 			twitterClientLock.Lock()
 			if twitterClient == nil {
 				twitterAuth()

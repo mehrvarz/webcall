@@ -62,6 +62,9 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 	readConfigLock.RLock() // for vapidPublicKey
 	reqBody, err = json.Marshal(map[string]string{
 		"nickname": dbUser.Name,
+		"mastodonID": dbUser.MastodonID,
+		"tootOnCall": strconv.FormatBool(dbUser.MastodonSendTootOnCall),
+		"acceptTootCalls": strconv.FormatBool(dbUser.MastodonAcceptTootCalls),
 		"twname": dbUser.Email2, // twitter handle (starting with @)
 		"twid": dbUser.Str1, // twitter user_id
 		"storeContacts": strconv.FormatBool(dbUser.StoreContacts),
@@ -73,6 +76,7 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 //		"vapidPublicKey": vapidPublicKey,
 		"dialSounds": strconv.FormatBool(!(dbUser.Int2&4==4)), // bit4 set for mute (bit4 clear = play dialsounds)
 	})
+
 	readConfigLock.RUnlock()
 	if err != nil {
 		fmt.Printf("# /getsettings (%s) fail on json.Marshal %s\n", calleeID, remoteAddr)
@@ -144,6 +148,41 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 				fmt.Printf("/setsettings (%s) new nickname (%s) (old:%s) %s\n",calleeID,val,dbUser.Name,remoteAddr)
 				dbUser.Name = val
 			}
+		case "mastodonID":
+			if val != dbUser.MastodonID {
+				fmt.Printf("/setsettings (%s) new mastodonID (%s) (old:%s) %s\n",
+					calleeID,val,dbUser.MastodonID,remoteAddr)
+				dbUser.MastodonID = val
+			}
+		case "tootOnCall":
+			if(val=="true") {
+				if dbUser.MastodonSendTootOnCall != true {
+					fmt.Printf("/setsettings (%s) new tootOnCall (%s) (old:%v) %s\n",
+						calleeID, val, dbUser.MastodonSendTootOnCall, remoteAddr)
+					dbUser.MastodonSendTootOnCall = true
+				}
+			} else {
+				if dbUser.MastodonSendTootOnCall != false {
+					fmt.Printf("/setsettings (%s) new tootOnCall (%s) (old:%v) %s\n",
+						calleeID, val, dbUser.MastodonSendTootOnCall, remoteAddr)
+					dbUser.MastodonSendTootOnCall = false
+				}
+			}
+		case "acceptTootCalls":
+			if(val=="true") {
+				if dbUser.MastodonAcceptTootCalls != true {
+					fmt.Printf("/setsettings (%s) new acceptTootCalls (%s) (old:%v) %s\n",
+						calleeID, val, dbUser.MastodonAcceptTootCalls, remoteAddr)
+					dbUser.MastodonAcceptTootCalls = true
+				}
+			} else {
+				if dbUser.MastodonAcceptTootCalls != false {
+					fmt.Printf("/setsettings (%s) new acceptTootCalls (%s) (old:%v) %s\n",
+						calleeID, val, dbUser.MastodonAcceptTootCalls, remoteAddr)
+					dbUser.MastodonAcceptTootCalls = false
+				}
+			}
+
 		case "twname":
 			if val != dbUser.Email2 {
 				fmt.Printf("/setsettings (%s) new twname (%s) (old:%s) %s\n",calleeID,val,dbUser.Email2,remoteAddr)

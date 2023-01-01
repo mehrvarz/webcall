@@ -84,6 +84,7 @@ var fileSendAbort=false;
 var fileReceiveAbort=false;
 //var loginResponse=false;
 var minNewsDate=0;
+var mid = "";
 
 window.onload = function() {
 	console.log("callee.js onload...");
@@ -103,7 +104,12 @@ window.onload = function() {
 	if(typeof id!=="undefined" && id!="") {
 		calleeID = cleanStringParameter(id,true,"id");
 	}
-	gLog("onload calleeID="+calleeID);
+	id = getUrlParams("mid");
+	if(typeof id!=="undefined" && id!="") {
+		mid = cleanStringParameter(id,true,"mid");
+		// TODO if given, send msg to caller (mastodon user) when this callee has logged in (see "login success")
+	}
+	gLog("onload calleeID="+calleeID+" mid="+mid);
 
 	if(calleeID=="") {
 		// if callee was started without a calleeID, reload with calleeID from cookie
@@ -246,7 +252,8 @@ window.onload = function() {
 		if(mode==0 || mode==1) {
 			// normal mode
 			gLog("onload load audio files more="+mode);
-			var calleeIdTitle = calleeID.charAt(0).toUpperCase() + calleeID.slice(1);
+			//var calleeIdTitle = calleeID.charAt(0).toUpperCase() + calleeID.slice(1);
+			var calleeIdTitle = calleeID;
 			document.title = "WebCall Callee "+calleeIdTitle;
 			if(titleElement) {
 				titleElement.innerHTML = "WebCall Callee "+calleeIdTitle;
@@ -554,6 +561,10 @@ function start() {
 function login(retryFlag) {
 	gLog("login to signaling server..."+retryFlag+" "+calleeID+" "+wsSecret.length);
 	let api = apiPath+"/login?id="+calleeID;
+	// mid-parameter will make server send a msg to caller (mastodon user with id = tmpkeyMastodonCallerMap[mid])
+	if(mid!="") {
+		api += "&mid="+mid;
+	}
 	if(typeof Android !== "undefined" && Android !== null) {
 		if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
 			api = api + "&ver="+Android.getVersionName();

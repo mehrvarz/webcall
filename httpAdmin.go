@@ -196,6 +196,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		// show the list of callee-IDs that have been registered and are not yet outdated
 		// ".../makeregistered?id=answie&days=xx&pw=123456"
 
+/*
 		// get service days from url-arg
 		url_arg_array, ok := r.URL.Query()["sdays"]
 		if !ok || len(url_arg_array[0]) < 1 {
@@ -223,13 +224,14 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 				urlSMinutes = int(urlSMinutesI64)
 			}
 		}
-		if (urlSDays<=0 && urlSMinutes<=0) /*|| urlTMinutes<0*/ {
+		if (urlSDays<=0 && urlSMinutes<=0) {
 			printFunc(w,"# /makeregistered error both 'sdays' and 'smin' or 'tmin' <0\n")
 			return true
 		}
+*/
 
 		// get pw from url-arg
-		url_arg_array, ok = r.URL.Query()["pw"]
+		url_arg_array, ok := r.URL.Query()["pw"]
 		if !ok || len(url_arg_array[0]) < 1 {
 			printFunc(w,"# /makeregistered url arg 'pw' not given\n")
 			return true
@@ -241,7 +243,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		unixTime := time.Now().Unix()
 		dbUserKey := fmt.Sprintf("%s_%d",urlID, unixTime)
 		dbUser := DbUser{Ip1:remoteAddr}
-		err = kv.Put(dbUserBucket, dbUserKey, dbUser, false)
+		err := kv.Put(dbUserBucket, dbUserKey, dbUser, false)
 		if err!=nil {
 			printFunc(w,"# /makeregistered error db=%s bucket=%s put key=%s err=%v\n",
 				dbMainName,dbUserBucket,urlID,err)

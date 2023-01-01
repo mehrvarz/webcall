@@ -135,9 +135,20 @@ input[type=submit]:focus {
 	<form action="javascript:;" onsubmit="submitForm(true)" style="display:none; width:100%;" id="settings">
 		<label for="nickname" style="display:inline-block; padding-bottom:4px; color:#1b1; font-weight:600;">Your WebCall nickname:</label><br>
 		<input name="nickname" id="nickname" type="text" class="formtext" size="14" maxlength="14" style="max-width:240px;" autofocus>&nbsp;<span onclick="clearForm(0)" style="_margin-left:5px; user-select:none;">X</span><br>
-		<div style="margin-top:6px;font-size:0.90em;">We use this to communicate with your callers.</div>
+		<div style="margin-top:6px;font-size:0.90em;">Will be used to communicate with your callers when you are offline.</div>
+
+		<div id="madiv" style="display:none;">
+			<div id="maid" style="margin-top:20px;"></div>
+			<label id="acceptTootCallsLabel" style="margin-left:-4px; display:block; margin-top:6px;">
+				<input type="checkbox" id="acceptTootCalls" class="checkbox"> Allow Mastodon users to WebCall me by toot</label>
+			</label>
+			<label id="tootOnCallLabel" style="margin-left:-4px; display:block; margin-top:6px;">
+				<input type="checkbox" id="tootOnCall" class="checkbox"> If offline on WebCall, toot me on Mastodon</label>
+			</label>
+		</div>
 
 		<br>
+		<div id="twdiv" _style="display:none">
 		<label for="twname" style="display:inline-block; padding-bottom:4px; color:#1b1; font-weight:600;">Your Twitter handle: (optional)</label><br>
 		<input name="twname" id="twname" type="text" class="formtext" autofocus style="width:78%;">
 		<span id="twnameWithId" style="display:none;">@</span>
@@ -152,8 +163,9 @@ input[type=submit]:focus {
 		<span onclick="clearForm(2)" style="margin-left:5px; user-select:none;">X</span><br>
 		<div style="margin-top:10px;font-size:0.85em;">We use this to tweet you in realtime about incoming calls. We ask the caller to wait a while for you to pick up the phone. For this to work you need to follow our <a href="https://twitter.com/webcall">@WebCall</a> Twitter account.</div>
 		</div>
-
 		<br>
+		</div>
+
 		<label id="storeContactsLabel" style="margin-left:-4px; display:block; margin-bottom:5px;">
 			<input type="checkbox" id="storeContacts" class="checkbox"> Save contacts</label>
 		</label>

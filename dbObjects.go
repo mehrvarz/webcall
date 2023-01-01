@@ -11,6 +11,7 @@ type DbUser struct {
 	Name string             // nickname, if given
 	Ip1 string              // used for httpRegister
 	UserAgent string        // used for httpRegister
+	MastodonID string
 	Email2 string           // now used as tw_handle
 	Str1 string             // now used as tw_user_id
 	Str2 string             //  web push device 1 subscription
@@ -27,6 +28,8 @@ type DbUser struct {
 	RemoteP2pCounter int    // incremented by wsHub processTimeValues()
 	StoreContacts bool      // TODO could also be encoded in Int2
 	StoreMissedCalls bool	// TODO could also be encoded in Int2
+	MastodonSendTootOnCall bool
+	MastodonAcceptTootCalls bool
 }
 
 type NotifTweet struct { // key = TweetID string
