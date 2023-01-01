@@ -238,6 +238,8 @@ func main() {
 
 	wsClientMap = make(map[uint64]wsClientDataType) // wsClientID -> wsClientData
 
+	readConfig(true) // need dbPath
+
 	var err error
 	kvMain,err = skv.DbOpen(dbMainName,dbPath)
 	if err!=nil {
@@ -362,7 +364,7 @@ func main() {
 	})
 	skv.DbMutex.Unlock()
 
-	readConfig(true)
+	readConfig(false) // if configured start mastodonhandler
 
 	readStatsFile()
 
@@ -439,7 +441,7 @@ func main() {
 	go ticker20min()   // update news notifieer
 	go ticker3min()    // backupScript + delete old tw notifications
 	go ticker30sec()   // log stats
-	go ticker10sec()   // readConfig()
+	go ticker10sec()   // readConfig(false)
 	go ticker2sec()    // check for new day
 	if pprofPort>0 {
 		go func() {
@@ -596,6 +598,8 @@ func readConfig(init bool) {
 		// currently not used
 		vapidPublicKey = readIniString(configIni, "vapidPublicKey", vapidPublicKey, "")
 		vapidPrivateKey = readIniString(configIni, "vapidPrivateKey", vapidPrivateKey, "")
+//		readConfigLock.Unlock()
+//		return
 	}
 
 	maintenanceMode = readIniBoolean(configIni, "maintenanceMode", maintenanceMode, false)
@@ -645,20 +649,22 @@ func readConfig(init bool) {
 	mastodonhandlerNew = readIniString(configIni, "mastodonhandler", mastodonhandler, "")
 	readConfigLock.Unlock()
 
-	if mastodonhandlerNew != mastodonhandler {
-		fmt.Printf("config.ini mastodonhandler '%s' <- '%s'\n", mastodonhandlerNew, mastodonhandler)
-		mastodonhandler = mastodonhandlerNew
-		if mastodonhandler=="" {
-			if mastodonMgr != nil {
-				fmt.Printf("mastodonStop\n")
-				mastodonMgr.mastodonStop()
-				mastodonMgr = nil
-			}
-		} else {
-			if mastodonMgr == nil {NewMastodonMgr()
-				fmt.Printf("mastodonStart...\n")
-				mastodonMgr = NewMastodonMgr()
-				go mastodonMgr.mastodonStart(mastodonhandler)
+	if !init {
+		if mastodonhandlerNew != mastodonhandler {
+			fmt.Printf("config.ini mastodonhandler '%s' <- '%s'\n", mastodonhandlerNew, mastodonhandler)
+			mastodonhandler = mastodonhandlerNew
+			if mastodonhandler=="" {
+				if mastodonMgr != nil {
+					fmt.Printf("mastodonStop\n")
+					mastodonMgr.mastodonStop()
+					mastodonMgr = nil
+				}
+			} else {
+				if mastodonMgr == nil {NewMastodonMgr()
+					fmt.Printf("mastodonStart...\n")
+					mastodonMgr = NewMastodonMgr()
+					go mastodonMgr.mastodonStart(mastodonhandler)
+				}
 			}
 		}
 	}
