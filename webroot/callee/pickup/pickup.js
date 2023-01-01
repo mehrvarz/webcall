@@ -32,6 +32,7 @@ window.onload = function() {
 			console.log('xhr.responseText',xhr.responseText);
 			if(xhr.responseText=="") {
 				// no Mastodon user-id exists for this mid
+				console.warn('# xhr error',errString,err);
 			} else {
 				// Mastodon user-id exists for this mid
 				let tok = xhr.responseText.split("|");
@@ -51,11 +52,14 @@ window.onload = function() {
 						}
 					}
 					// TODO if isValidCalleeID: mastodonUserID account exists already
+					if(isValidCalleeID) {
+						console.warn('account exists already',mastodonUserID);
+					}
 					pwForm(mastodonUserID);
 				}
 			}
 		}, function(errString,err) {
-			console.log('xhr error',errString,err);
+			console.warn('# xhr error',errString,err);
 		});
 		return;
 	}
@@ -102,7 +106,7 @@ window.onload = function() {
 				onload2(mastodonUserID,isValidCalleeID,isOnlineCalleeID,cookieName);
 			}
 		}, function(errString,err) {
-			console.log('xhr error',errString,err);
+			console.warn('# xhr error',errString,err);
 			onload2("",false,false,cookieName);
 		});
 	} else {
@@ -129,7 +133,7 @@ function onload2(mastodonUserID,isValidCalleeID,isOnlineCalleeID,cookieName) {
 				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 					console.log('xhr.responseText',xhr.responseText);
 				}, function(errString,err) {
-					console.warn('xhr error',errString,err);
+					console.warn('# xhr error',errString,err);
 				});
 			}
 		} else {
@@ -288,7 +292,7 @@ function submitPw(theForm,mastodonUserID) {
 			showStatus("Sorry, it is not possible to register your ID right now. Please try again later.",-1);
 		}
 	}, function(errString,err) {
-		console.log('xhr error',errString,err);
+		console.warn('# xhr error',errString,err);
 		showStatus("Error "+errString+". Registration not possible at this time. Please try again later. Thank you.<br><br>",-1);
 	}, "pw="+valuePw);
 }

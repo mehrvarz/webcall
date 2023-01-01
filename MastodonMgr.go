@@ -158,9 +158,12 @@ loop:
 // @webcall@mastodon.social !tm@mastodontech.de
 func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.NotificationEvent) {
 	msg = strings.TrimSpace(msg)
+	callerMastodonMsgId := event.Notification.Status.ID
 
 	tok := strings.Split(msg, " ")
-	fmt.Printf("mastodonhandler processMessage msg=(%v) lenTok=%d\n",msg,len(tok)) // msg=(test2) lenTok=1
+	fmt.Printf("mastodonhandler processMessage msg=(%v) id=%v lenTok=%d\n",
+		msg, callerMastodonMsgId, len(tok))
+
 	if len(tok)>0 {
 		command := strings.ToLower(strings.TrimSpace(tok[0]))
 		switch {
@@ -186,18 +189,19 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 
 			// /pickup will display mastodonUserID as username (new WebCall ID) and will let user enter a password
 			// &register will cause pickup.js to skip choices
+// TODO ask to do it within a short amount of time
 			sendmsg :=	"Register WebCall ID: "+mMgr.hostUrl+"/callee/pickup?mid="+mID+"&register"
 			fmt.Printf("PostStatus (%s)\n",sendmsg)
 			status,err := mMgr.c.PostStatus(context.Background(), &mastodon.Toot{
 				Status:			sendmsg,
-				InReplyToID:	event.Notification.Status.ID,
+				InReplyToID:	callerMastodonMsgId,
 				Visibility:		"direct",
 			})
 			if err!=nil {
 				// TODO this is fatal
-				fmt.Printf("# PostStatus err=%v\n",err)
+				fmt.Printf("# PostStatus err=%v (inreply=%v)\n",err,callerMastodonMsgId)
 			} else {
-				fmt.Printf("PostStatus sent id=%v (inreply=%v)\n", status.ID, event.Notification.Status.ID)
+				fmt.Printf("PostStatus sent id=%v (inreply=%v)\n", status.ID, callerMastodonMsgId)
 
 				// TODO at some point later we need to delete (from mastodon) all direct messages
 				// note: deleting a (direct) mastodon msg does NOT delete it on the receiver/caller side
@@ -210,7 +214,6 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 			// if command starts with "!", the msg-originator wants to make a call
 			calleeIdOnMastodon := command[1:] // skip "!"
 			callerIdOnMastodon := event.Notification.Account.Acct
-			callerMastodonMsgId := event.Notification.Status.ID
 //			fmt.Printf("mastodonhandler processMessage from=(%s) call calleeIdOnMastodon=(%v)\n",
 //				callerIdOnMastodon, calleeIdOnMastodon)
 
