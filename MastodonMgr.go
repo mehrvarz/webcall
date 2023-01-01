@@ -190,6 +190,8 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 			// /pickup will display mastodonUserID as username (new WebCall ID) and will let user enter a password
 			// &register will cause pickup.js to skip choices
 // TODO ask to do it within a short amount of time
+			retryCount := 0
+retry:
 			sendmsg :=	"Register WebCall ID: "+mMgr.hostUrl+"/callee/pickup?mid="+mID+"&register"
 			fmt.Printf("PostStatus (%s)\n",sendmsg)
 			status,err := mMgr.c.PostStatus(context.Background(), &mastodon.Toot{
@@ -200,6 +202,11 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 			if err!=nil {
 				// TODO this is fatal
 				fmt.Printf("# PostStatus err=%v (inreply=%v)\n",err,callerMastodonMsgId)
+				retryCount++
+				if retryCount<3 {
+					time.Sleep(2 * time.Second)
+					goto retry;
+				}
 			} else {
 				fmt.Printf("PostStatus sent id=%v (inreply=%v)\n", status.ID, callerMastodonMsgId)
 
