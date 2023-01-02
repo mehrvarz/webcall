@@ -32,7 +32,7 @@ window.onload = function() {
 			console.log('xhr.responseText',xhr.responseText);
 			if(xhr.responseText=="") {
 				// no Mastodon user-id exists for this mid
-				console.warn('# xhr error',errString,err);
+				console.warn('# xhr response empty for api='+api);
 			} else {
 				// Mastodon user-id exists for this mid
 				let tok = xhr.responseText.split("|");
