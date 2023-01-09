@@ -23,11 +23,6 @@ import (
 )
 
 func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *http.Cookie, pw string, remoteAddr string, remoteAddrWithPort string, nocookie bool, startRequestTime time.Time, pwIdCombo PwIdCombo, userAgent string) {
-	if logWantedFor("loginex") {
-		fmt.Printf("/login (%s) %s rt=%v\n",
-			urlID, remoteAddrWithPort, time.Since(startRequestTime)) // rt=4.393µs
-	}
-
 	clientVersion := ""
 	url_arg_array, ok := r.URL.Query()["ver"]
 	if ok && len(url_arg_array[0]) >= 1 {
@@ -39,6 +34,13 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	if ok && len(url_arg_array[0]) >= 1 {
 		mid = url_arg_array[0]
 	}
+
+//	if logWantedFor("loginex") {
+	if logWantedFor("login") {
+		fmt.Printf("/login (%s) mid=%s ip=%s rt=%v\n",
+			urlID, mid, remoteAddrWithPort, time.Since(startRequestTime)) // rt=4.393µs
+	}
+
 
 	// answie and talkback can only log in from localhost
 	if strings.HasPrefix(urlID, "answie") || strings.HasPrefix(urlID, "talkback") {
@@ -509,6 +511,11 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		// to invalidate this callee/hub
 		go func() {
 			waitForClientWsConnectSecs := 26 // timeout26s
+
+			if logWantedFor("login") {
+				fmt.Printf("/login (%s) waitForClientWsConnectSecs...\n", urlID)
+			}
+
 			waitedFor := 0
 			for i := 0; i < waitForClientWsConnectSecs; i++ {
 				myHubMutex.RLock()
@@ -538,26 +545,47 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				myHubMutex.Unlock()
 			}
 
+			if logWantedFor("login") {
+				fmt.Printf("/login (%s) waitForClientWsConnectSecs done waitedFor=%d\n", urlID, waitedFor)
+			}
+
 			// hub.CalleeLogin will be set by callee-client sending "init|"
 			// if hub.CalleeLogin is not set, the client couldn't send "init|", may be due to battery optimization
 			myHubMutex.RLock()
 			if hub==nil {
 				// callee is already gone
 				myHubMutex.RUnlock()
-				//fmt.Printf("/login (%s/%s) skip waitForWsConnect hub==nil callee gone %ds\n",
-				//	urlID, globalID, waitedFor)
+				if logWantedFor("login") {
+					fmt.Printf("/login (%s) no hub\n", urlID)
+				}
 			} else {
+				if logWantedFor("login") {
+					fmt.Printf("/login (%s) has hub\n", urlID)
+				}
 				if hub.CalleeLogin.Get() {
 					// this is perfect: ws-connect / init did occur (callee fully logged in)
 					myHubMutex.RUnlock()
 
+					if logWantedFor("login") {
+						fmt.Printf("/login (%s) has CalleeLogin.Get\n", urlID)
+					}
+
 					if mid!="" {
 						// tell caller that callee is ready to receive a call (and maybe other related tasks)
+
+						if logWantedFor("login") {
+							fmt.Printf("/login (%s) mastodonMgr.calleeLoginSuccess mid=%s\n", urlID, mid)
+						}
 						mastodonMgr.calleeLoginSuccess(mid,urlID,remoteAddr)
 					}
 				} else {
 					// hub!=nil but CalleeLogin==false (callee still there but did NOT send 'init' within 26s)
 					hub.HubMutex.RLock()
+
+					if logWantedFor("login") {
+						fmt.Printf("/login (%s) has no CalleeLogin.Get\n", urlID)
+					}
+
 					unregisterNeeded := false
 					if hub.CalleeClient != nil {
 						unregisterNeeded = true

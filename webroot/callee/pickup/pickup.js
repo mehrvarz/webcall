@@ -14,54 +14,7 @@ window.onload = function() {
 	// -> callerIdOnMastodon = tmpkeyMastodonCallerReplyMap[mid]
 	mid = getUrlParams("mid");
 	if(typeof mid=="undefined") {
-		// TODO console.log()
 		mid = "";
-	}
-
-	var register = getUrlParams("register");
-	if(typeof register!="undefined") {
-		document.title = "WebCall Register";
-		let titleElement = document.getElementById('title');
-		if(titleElement) {
-			titleElement.innerHTML = "WebCall Register";
-		}
-
-		let api = apiPath+"/getmiduser?mid="+mid;
-		console.log('pwForm api',api);
-		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-			console.log('xhr.responseText',xhr.responseText);
-			if(xhr.responseText=="") {
-				// no Mastodon user-id exists for this mid
-				console.warn('# xhr response empty for api='+api);
-			} else {
-				// Mastodon user-id exists for this mid
-				let tok = xhr.responseText.split("|");
-				let mastodonUserID = "";
-				let isValidCalleeID = false;
-				let isOnlineCalleeID = false;
-				if(tok.length>=1) {
-					mastodonUserID = tok[0]; // always a mastodon-user-id, never a calleeID
-					if(tok.length>=2) {
-						if(tok[1]=="true") {
-							isValidCalleeID = true;
-						}
-						if(tok.length>=3) {
-							if(tok[2]=="true") {
-								isOnlineCalleeID = true;
-							}
-						}
-					}
-					// TODO if isValidCalleeID: mastodonUserID account exists already
-					if(isValidCalleeID) {
-						console.warn('account exists already',mastodonUserID);
-					}
-					pwForm(mastodonUserID);
-				}
-			}
-		}, function(errString,err) {
-			console.warn('# xhr error',errString,err);
-		});
-		return;
 	}
 
 	// detect callee-id from cookie
@@ -75,8 +28,61 @@ window.onload = function() {
 		cookieName = cleanStringParameter(cookieName,true);
 	}
 
-	if(mid!="") {
-		// if mid is given, try to get mastodonUserID of callee, valid/registered user, currently online user
+	if(mid=="") {
+		onload2("",false,false,cookieName); // no mid -> no mastodonUserID
+	} else {
+		var register = getUrlParams("register");
+		if(typeof register!="undefined") {
+			document.title = "WebCall Register";
+			let titleElement = document.getElementById('title');
+			if(titleElement) {
+				titleElement.innerHTML = "WebCall Register";
+			}
+
+			let api = apiPath+"/getmiduser?mid="+mid;
+			console.log('pwForm api',api);
+			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+				console.log('xhr.responseText',xhr.responseText);
+				if(xhr.responseText=="") {
+					// no Mastodon user-id exists for this mid
+					console.warn('# xhr response empty for api='+api);
+				} else {
+					// Mastodon user-id exists for this mid
+					let tok = xhr.responseText.split("|");
+					let mastodonUserID = "";
+					let isValidCalleeID = false;
+					let isOnlineCalleeID = false;
+					if(tok.length>=1) {
+						mastodonUserID = tok[0]; // always a mastodon-user-id, never a calleeID
+						if(tok.length>=2) {
+							if(tok[1]=="true") {
+								isValidCalleeID = true;
+							}
+							if(tok.length>=3) {
+								if(tok[2]=="true") {
+									isOnlineCalleeID = true;
+								}
+							}
+						}
+						if(isValidCalleeID) {
+							//console.warn('account exists already',mastodonUserID);
+							// as a result /registermid will fail with "already registered"
+							// switch to /callee/(id) now
+							console.info('account exists already',mastodonUserID);
+							let replaceURL = "/callee/"+mastodonUserID+"?mid="+mid+"&auto=1";
+							window.location.replace(replaceURL);
+							return;
+						}
+						pwForm(mastodonUserID);
+					}
+				}
+			}, function(errString,err) {
+				console.warn('# xhr error',errString,err);
+			});
+			return;
+		}
+
+		// try to get mastodonUserID of callee, valid/registered user, currently online user
 		let api = apiPath+"/getmiduser?mid="+mid;
 		console.log('pwForm api',api);
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
@@ -109,8 +115,6 @@ window.onload = function() {
 			console.warn('# xhr error',errString,err);
 			onload2("",false,false,cookieName);
 		});
-	} else {
-		onload2("",false,false,cookieName); // no mid, no mastodonUserID
 	}
 }
 
