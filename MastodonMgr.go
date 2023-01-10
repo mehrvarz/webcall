@@ -477,6 +477,22 @@ func (mMgr *MastodonMgr) sendCallerMsg(mastodonSenderMsgID mastodon.ID, callerId
 	}
 }
 
+func (mMgr *MastodonMgr) postCallerMsg(sendmsg string) error {
+	fmt.Printf("postCallerMsg PostStatus (%s)\n",sendmsg)
+	status,err := mMgr.c.PostStatus(context.Background(), &mastodon.Toot{
+		Status:			sendmsg,
+		Visibility:		"direct",
+	})
+	if err!=nil {
+		fmt.Println("# postCallerMsg PostStatus err=",err)
+		return err
+	}
+	fmt.Println("postCallerMsg PostStatus sent id=",status.ID)
+	// TODO at some point later we need to delete (from mastodon) all direct messages
+	// note: deleting a (direct) mastodon msg does NOT delete it on the receiver/caller side
+	return nil
+}
+
 func (mMgr *MastodonMgr) httpGetMidUser(w http.ResponseWriter, r *http.Request, cookie *http.Cookie, remoteAddr string) {
 	url_arg_array, ok := r.URL.Query()["mid"]
 	fmt.Printf("/getMidUser url_arg_array=%v ok=%v\n",url_arg_array, ok)

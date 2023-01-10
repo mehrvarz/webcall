@@ -21,7 +21,6 @@
 package main
 
 import (
-	"context"
 	"net/http"
 	"time"
 	"strings"
@@ -30,7 +29,6 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"sync"
-	"github.com/mattn/go-mastodon"
 	"github.com/mehrvarz/webcall/twitter"
 	"github.com/mrjones/oauth"
 //	webpush "github.com/SherClockHolmes/webpush-go"
@@ -193,15 +191,11 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 			} else {
 				// send a msg to dbUser.MastodonID:
 				sendmsg :=	"@"+dbUser.MastodonID+" "+msg
-				fmt.Printf("PostStatus (%s)\n",sendmsg)
-				status,err := mastodonMgr.c.PostStatus(context.Background(), &mastodon.Toot{
-					Status:			sendmsg,
-					Visibility:		"direct",
-				})
+				err := mastodonMgr.postCallerMsg(sendmsg)
 				if err!=nil {
-					fmt.Println("# PostStatus err=",err)
+//					fmt.Println("# PostStatus err=",err)
 				} else {
-					fmt.Println("PostStatus sent id=",status.ID)
+//					fmt.Println("PostStatus sent OK")
 					// TODO at some point later we need to delete (from mastodon) all direct messages
 					// note: deleting a (direct) mastodon msg does NOT delete it on the receiver/caller side
 				}
