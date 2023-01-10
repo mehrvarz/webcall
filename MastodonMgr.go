@@ -363,9 +363,10 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 
 
 				// send msg to calleeIdOnMastodon, with link to /callee/pickup
+// TODO "(callerIdOnMastodon) is trying to..." is missig @instance
 				sendmsg :=	"@"+calleeIdOnMastodon+" "+
-					callerIdOnMastodon+" is trying to give you a web telephony call.\n"+
-					"Click to answer call: "+mMgr.hostUrl+"/callee/pickup?mid="+mID
+					callerIdOnMastodon+" wants to give you a web telephony call.\n"+
+					"Answer call: "+mMgr.hostUrl+"/callee/pickup?mid="+mID
 				fmt.Printf("mastodon processMessage PostStatus (%s)\n",sendmsg)
 				status,err := mMgr.c.PostStatus(context.Background(), &mastodon.Toot{
 					Status:			sendmsg,

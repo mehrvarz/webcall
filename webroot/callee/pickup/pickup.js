@@ -33,12 +33,6 @@ window.onload = function() {
 	} else {
 		var register = getUrlParams("register");
 		if(typeof register!="undefined") {
-			document.title = "WebCall Register";
-			let titleElement = document.getElementById('title');
-			if(titleElement) {
-				titleElement.innerHTML = "WebCall Register";
-			}
-
 			let api = apiPath+"/getmiduser?mid="+mid;
 			console.log('pwForm api',api);
 			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
@@ -46,6 +40,7 @@ window.onload = function() {
 				if(xhr.responseText=="") {
 					// no Mastodon user-id exists for this mid
 					console.warn('# xhr response empty for api='+api);
+// TODO give client visual feedback
 				} else {
 					// Mastodon user-id exists for this mid
 					let tok = xhr.responseText.split("|");
@@ -73,6 +68,13 @@ window.onload = function() {
 							let replaceURL = "/callee/"+mastodonUserID+"?mid="+mid+"&auto=1";
 							window.location.replace(replaceURL);
 							return;
+						}
+
+						// calleeID does not yet exist: offer register
+						document.title = "WebCall Register";
+						let titleElement = document.getElementById('title');
+						if(titleElement) {
+							titleElement.innerHTML = "WebCall Register";
 						}
 						pwForm(mastodonUserID);
 					}
