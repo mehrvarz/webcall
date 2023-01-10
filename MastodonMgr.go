@@ -346,6 +346,8 @@ func (mMgr *MastodonMgr) offerRegisterLink(calleeMastodonUserID string, callerMa
 	mMgr.tmpkeyMastodonCalleeMap[mID] = calleeMastodonUserID
 	mMgr.tmpkeyMastodonCalleeMutex.Unlock()
 
+// "Register WebCall ID" is not enough; this new callee needs context as to why he should register
+// bc X is trying to call him!
 	sendmsg :="@"+callerMastodonUserId+" Register WebCall ID: "+mMgr.hostUrl+"/callee/pickup?mid="+mID+"&register"
 	fmt.Printf("mastodon processMessage PostStatus (%s)\n",sendmsg)
 	status,err := mMgr.c.PostStatus(context.Background(), &mastodon.Toot{
@@ -393,16 +395,16 @@ func (mMgr *MastodonMgr) makeSecretID() (string,error) {
 func (mMgr *MastodonMgr) sendCallerMsgToMid(mid string, calleeID string) {
 	// send message containing url="/user/"+urlID to tmpkeyMastodonCallerReplyMap[mid]
 	mMgr.tmpkeyMastodonCallerMutex.RLock()
-//	inReplyToID := mMgr.tmpkeyMastodonCallerReplyMap[mid]
+	//inReplyToID := mMgr.tmpkeyMastodonCallerReplyMap[mid]
 	callerMastodonUserId := mMgr.tmpkeyMastodonCallerMap[mid]
-
 	mMgr.tmpkeyMastodonCallerMutex.RUnlock()
-//	if inReplyToID!="" {
+
+	//if inReplyToID!="" {
 	if callerMastodonUserId!="" {
 		sendmsg :=	"@"+callerMastodonUserId+" Click to call: "+mMgr.hostUrl+"/user/"+calleeID
 		status,err := mMgr.c.PostStatus(context.Background(), &mastodon.Toot{
 			Status:			sendmsg,
-//			InReplyToID:	inReplyToID,	// TODO remove
+			//InReplyToID:	inReplyToID,
 			Visibility:		"direct",
 		})
 		if err!=nil {
@@ -410,11 +412,11 @@ func (mMgr *MastodonMgr) sendCallerMsgToMid(mid string, calleeID string) {
 		} else {
 			fmt.Printf("mastodon sendCallerMsgToMid PostStatus sent id=%v\n",status.ID)
 		}
+		delete(mMgr.tmpkeyMastodonCallerReplyMap,mid)
 	} else {
-//		fmt.Printf("# mastodon sendCallerMsgToMid inReplyToID empty, calleeID=%s mid=%s\n",calleeID,mid)
-		fmt.Printf("# mastodon sendCallerMsgToMid callerMastodonUserId empty, calleeID=%s mid=%s\n",calleeID,mid)
+// TODO this can happen a lot; no need to log this every time
+//		fmt.Printf("# mastodon sendCallerMsgToMid callerMastodonUserId empty, calleeID=%s mid=%s\n",calleeID,mid)
 	}
-	delete(mMgr.tmpkeyMastodonCallerReplyMap,mid)
 }
 
 func (mMgr *MastodonMgr) sendCallerMsgCalleeIsOnline(w http.ResponseWriter, r *http.Request, calleeID string, cookie *http.Cookie, remoteAddr string) {

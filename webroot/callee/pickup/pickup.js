@@ -130,7 +130,7 @@ function onload2(mastodonUserID,isValidCalleeID,isOnlineCalleeID,cookieName) {
 		let replaceURL = "/callee/"+cookieName;
 		if(isOnlineCalleeID) {
 			// if callee is already online, no new login will take place
-			replaceURL += "?auto";
+			replaceURL += "?auto=1";
 			if(mid!="") {
 				// send the caller-link to the mastodon caller
 				// and trigger all other steps, such as: if the calleeID is 11-digit...
@@ -223,7 +223,7 @@ function submitForm(theForm) {
 	console.log('submitForm valueUsername',valueUsername);
 
 	// hand over mid to the callee app
-	let replaceURL = "/callee/"+valueUsername + "?mid="+mid+"&auto";
+	let replaceURL = "/callee/"+valueUsername + "?mid="+mid+"&auto=1";
 	console.log('submitForm replaceURL',replaceURL);
 
 //	window.location.replace(replaceURL); // does not allow back button (TODO which is better?)
@@ -284,13 +284,19 @@ function submitPw(theForm,mastodonUserID) {
 			calleeLink = calleeLink.replace("pickup/","");
 			//if(!gentle) console.log('calleeLink2='+calleeLink+" mastodonUserID="+mastodonUserID);
 			calleeLink += mastodonUserID;
+
+			calleeLink += "?auto=1";
+			if(mid!="") {
+				// TODO add mid (so that caller can be notified)
+				calleeLink += "&mid="+mid;
+			}
 			if(!gentle) console.log('calleeLink='+calleeLink);
 
 			// exelink() will use calleeLink
-			showStatus( "Please store your ID and password in a safe place. "+
-			"We can not send you this data.<br><br>"+
-			"Your full WebCall callee link is shown below. "+
-			"This link works in any web browser. "+
+			showStatus( "Please keep ID and password in a secure place. "+
+			//"We can not send you this data."+
+			"<br><br>Your WebCall callee link is shown below. "+
+			"It lets you receive calls and should work in any web browser. "+
 			"Click to start:<br><br>"+
 			"<a onclick='exelink(this.href); return false;' href='"+calleeLink+"'>"+calleeLink+"</a>",-1);
 		} else {
