@@ -141,7 +141,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		} else if callerIdLong!="" {
 			msg = callerIdLong
 		}
-		msg += " is waiting for you to pick up a WebCall"
+		msg += " wants to WebCall you"
 		if callerMsg!="" {
 			msg += " '"+callerMsg+"'"
 		}
@@ -187,14 +187,16 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 			if mastodonMgr == nil {
 				// TODO log no mgr
 			} else if dbUser.MastodonAcceptTootCalls==false {
-				// TODO log toot not wanted
+				// TODO log toot-calls not wanted
 			} else {
 				// send a msg to dbUser.MastodonID:
 				sendmsg :=	"@"+dbUser.MastodonID+" "+msg
 				err := mastodonMgr.postCallerMsg(sendmsg)
 				if err!=nil {
+					// TODO log
 //					fmt.Println("# PostStatus err=",err)
 				} else {
+					// TODO log
 //					fmt.Println("PostStatus sent OK")
 					// TODO at some point later we need to delete (from mastodon) all direct messages
 					// note: deleting a (direct) mastodon msg does NOT delete it on the receiver/caller side
