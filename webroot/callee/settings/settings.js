@@ -76,7 +76,7 @@ function prepareSettings(xhrresponse) {
 
 	if(typeof serverSettings.mastodonID!=="undefined") {
 //TODO tmtmtm: only doing this bc my test-account does not have .mastodonID set
-		serverSettings.mastodonID = "tm@mastodontech.de";
+//		serverSettings.mastodonID = "tm@mastodontech.de";
 
 		console.log('serverSettings.mastodonID',serverSettings.mastodonID);
 		if(serverSettings.mastodonID=="") {
