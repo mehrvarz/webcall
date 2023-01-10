@@ -64,11 +64,12 @@ window.onload = function() {
 								}
 							}
 						}
+						// what if isOnlineCalleeID==true? in that case isValidCalleeID should also be true
 						if(isValidCalleeID) {
-							//console.warn('account exists already',mastodonUserID);
-							// as a result /registermid will fail with "already registered"
 							// switch to /callee/(id) now
-							console.info('account exists already',mastodonUserID);
+							// yes, ANYBODY can resolve mid to mastodonUserID; but they still need to login
+							// adv of using mid= is that we can delete the mapping after a succesful callee-login
+							console.info('calleeID does already exist',mastodonUserID);
 							let replaceURL = "/callee/"+mastodonUserID+"?mid="+mid+"&auto=1";
 							window.location.replace(replaceURL);
 							return;

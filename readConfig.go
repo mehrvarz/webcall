@@ -67,7 +67,10 @@ func readIniString(configIni *ini.File, cfgKeyword string, currentVal string, de
 		newVal = cfgValue
 	}
 	// don't log entries ending in 'Key' or 'Secret'
-	if newVal!=currentVal && !strings.HasSuffix(cfgKeyword, "Key") && !strings.HasSuffix(cfgKeyword, "Secret") {
+	if newVal!=currentVal &&
+			!strings.HasSuffix(cfgKeyword, "Key") && 
+			!strings.HasSuffix(cfgKeyword, "Secret") &&
+			!strings.HasSuffix(cfgKeyword, "mastodonhandler") {
 		isDefault:=""; if newVal==defaultValue { isDefault="*" }
 		fmt.Printf("%s str  %s=(%v)%s\n", configFileName, cfgKeyword, newVal, isDefault)
 	}
