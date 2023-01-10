@@ -570,7 +570,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 						fmt.Printf("/login (%s) has CalleeLogin.Get\n", urlID)
 					}
 
-					if mid!="" {
+					if mastodonMgr!=nil && mid!="" {
 						// tell caller that callee is ready to receive a call (and maybe other related tasks)
 
 						if logWantedFor("login") {
