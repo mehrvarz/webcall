@@ -201,10 +201,13 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 				return
 			}
 
-			err = mMgr.offerRegisterLink(mastodonUserID,callerMastodonUserId)
+			err = mMgr.offerRegisterLink(mastodonUserID,callerMastodonUserId,"")
 			if err!=nil {
 				// TODO
 			}
+
+		case command=="delete":
+			// TODO here we can remove a calleeID based on callerMastodonUserId
 
 		case strings.HasPrefix(command, "!"):
 			// if command starts with "!", the msg-originator wants to make a call
@@ -321,7 +324,8 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 			} else {
 				// calleeID (for instance timurmobi@mastodon.social) does not exist
 				// msg-receiver should register a WebCall callee account, so calls can be received
-				err := mMgr.offerRegisterLink(calleeIdOnMastodon,callerMastodonUserId) 
+				msg := callerMastodonUserId+" wants to give you a WebCall. To answer:"
+				err := mMgr.offerRegisterLink(calleeIdOnMastodon,callerMastodonUserId,msg)
 				if err!=nil {
 					// TODO
 				}
@@ -330,7 +334,7 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 	}
 }
 
-func (mMgr *MastodonMgr) offerRegisterLink(calleeMastodonUserID string, callerMastodonUserId string) error {
+func (mMgr *MastodonMgr) offerRegisterLink(calleeMastodonUserID string, callerMastodonUserId string, msg string) error {
 	// offer link to pickup, where calleeMastodonUserID can be registered
 	// first we need a unique mID (refering to calleeMastodonUserID)
 	mMgr.tmpkeyMastodonCalleeMutex.Lock()
@@ -338,7 +342,7 @@ func (mMgr *MastodonMgr) offerRegisterLink(calleeMastodonUserID string, callerMa
 	if err!=nil {
 		// TODO this is fatal (and we are not yet notifying the mastodon user)
 		mMgr.tmpkeyMastodonCalleeMutex.Unlock()
-		fmt.Printf("# mastodon processMessage register makeSecretID err=(%v)\n", err)
+		fmt.Printf("# offerRegisterLink register makeSecretID err=(%v)\n", err)
 		return err
 	}
 	// mid -> calleeIdOnMastodon
@@ -348,18 +352,18 @@ func (mMgr *MastodonMgr) offerRegisterLink(calleeMastodonUserID string, callerMa
 
 // "Register WebCall ID" is not enough; this new callee needs context as to why he should register
 // bc X is trying to call him!
-	sendmsg :="@"+callerMastodonUserId+" Register WebCall ID: "+mMgr.hostUrl+"/callee/pickup?mid="+mID+"&register"
-	fmt.Printf("mastodon processMessage PostStatus (%s)\n",sendmsg)
+	sendmsg :="@"+callerMastodonUserId+" "+msg+" Register your WebCall ID: "+mMgr.hostUrl+"/callee/pickup?mid="+mID+"&register"
+	fmt.Printf("offerRegisterLink PostStatus (%s)\n",sendmsg)
 	status,err := mMgr.c.PostStatus(context.Background(), &mastodon.Toot{
 		Status:			sendmsg,
 		Visibility:		"direct",
 	})
 	if err!=nil {
 		// TODO this is fatal
-		fmt.Printf("# mastodon processMessage PostStatus err=%v (to=%v)\n",err,callerMastodonUserId)
+		fmt.Printf("# offerRegisterLink PostStatus err=%v (to=%v)\n",err,callerMastodonUserId)
 		return err
 	}
-	fmt.Printf("mastodon processMessage PostStatus sent id=%v (to=%v)\n",
+	fmt.Printf("offerRegisterLink PostStatus sent id=%v (to=%v)\n",
 		status.ID, callerMastodonUserId)
 	// TODO at some point later we need to delete (from mastodon) all direct messages
 	// note: deleting a (direct) mastodon msg does NOT delete it on the receiver/caller side
