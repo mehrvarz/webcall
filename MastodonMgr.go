@@ -454,8 +454,8 @@ func (mMgr *MastodonMgr) sendCallerMsgToMid(mid string, calleeID string) {
 		mMgr.postCallerMsgEx(sendmsg,inReplyToID)
 		delete(mMgr.tmpkeyMastodonCallerReplyMap,mid)
 	} else {
-// TODO this can happen a lot; no need to log this every time
-//		fmt.Printf("# mastodon sendCallerMsgToMid callerMastodonUserId empty, calleeID=%s mid=%s\n",calleeID,mid)
+		// TODO this can happen a lot; no need to log this every time
+		//fmt.Printf("# mastodon sendCallerMsgToMid callerMastodonUserId empty, calleeID=%s mid=%s\n",calleeID,mid)
 	}
 }
 
