@@ -651,7 +651,7 @@ func readConfig(init bool) {
 
 	if !init {
 		if mastodonhandlerNew != mastodonhandler {
-			fmt.Printf("config.ini mastodonhandler '%s' <- '%s'\n", mastodonhandlerNew, mastodonhandler)
+			//fmt.Printf("config.ini mastodonhandler '%s' <- '%s'\n", mastodonhandlerNew, mastodonhandler)
 			mastodonhandler = mastodonhandlerNew
 			if mastodonhandler=="" {
 				if mastodonMgr != nil {
