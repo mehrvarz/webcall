@@ -287,10 +287,10 @@ function submitPw(theForm,mastodonUserID) {
 
 			calleeLink += "?auto=1";
 			if(mid!="") {
-				// TODO add mid (so that caller can be notified)
+				// add mid (so that caller can be notified)
 				calleeLink += "&mid="+mid;
 			}
-			if(!gentle) console.log('calleeLink='+calleeLink);
+			console.log("calleeLink="+calleeLink+" mid="+mid);
 
 			// exelink() will use calleeLink
 			showStatus( "Please keep ID and password in a secure place. "+
@@ -319,7 +319,7 @@ function exelink(url) {
 	} else {
 		// not running inside an iframe -> continue in the same tab
 		//console.log("exelink replace",calleeLink);
-		window.location.replace(calleeLink+"?auto=1");
+		window.location.replace(calleeLink);
 	}
 }
 

@@ -660,7 +660,7 @@ func readConfig(init bool) {
 					mastodonMgr = nil
 				}
 			} else {
-				if mastodonMgr == nil {NewMastodonMgr()
+				if mastodonMgr == nil {
 					fmt.Printf("mastodonStart...\n")
 					mastodonMgr = NewMastodonMgr()
 					go mastodonMgr.mastodonStart(mastodonhandler)
