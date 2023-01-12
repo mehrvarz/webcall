@@ -173,8 +173,18 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 
 	if len(tok)>0 {
 		command := strings.ToLower(strings.TrimSpace(tok[0]))
+		if command=="self" {
+			// replace "self" with callers mastodon-userid to mimic webcall to self (possibly causing registration)
+			command = "!"+callerMastodonUserId
+		}
+
 		switch {
+/*
 		case command=="register":
+// TODO not sure we really need this
+// current disadvantage: this always registers the mastodon-user-id as calleeID
+// does not give a choice to reuse existing 11-digit calleeID
+// alt idea: use command=="self" to mimic a call to self (causing registration)
 			// msg-originator wants to register it's account as WebCall callee
 			fmt.Printf("mastodon processMessage register (%v)\n", callerMastodonUserId)
 
@@ -202,10 +212,10 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 			if err!=nil {
 				// TODO
 			}
-
+*/
 		case command=="delete":
 			// here we remove a callerMastodonUserId
-// TODO of course this must be handled with upmost care (ask user: are you sure?)
+// TODO this must be handled with upmost care (ask user: are you sure?)
 			fmt.Printf("mastodon processMessage delete (%v)\n", callerMastodonUserId)
 
 			var dbEntryRegistered DbEntry
@@ -213,7 +223,18 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 			if err!=nil {
 				fmt.Printf("# mastodon processMessage delete user=%s err=%v\n", callerMastodonUserId, err)
 			} else {
-				// callerMastodonUserId is registered
+				// callerMastodonUserId is a registered calleeID
+
+				// if user is currently online / logged-in as callee
+				hubMapMutex.RLock()
+				hub := hubMap[callerMastodonUserId]
+				hubMapMutex.RUnlock()
+				if hub != nil {
+					// kick callee user out
+					hub.closeCallee("unregister") // -> hub.exitFunc()
+					// new callee.js will delete cookie on "User ID unknown"
+				}
+
 				dbUserKey := fmt.Sprintf("%s_%d", callerMastodonUserId, dbEntryRegistered.StartTime)
 
 				// delete/outdate mapped tmpIDs of outdated callerMastodonUserId
@@ -250,14 +271,20 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 					fmt.Printf("mastodon processMessage delete user-id=%s done\n", callerMastodonUserId)
 // TODO send msg telling user that their webcall account has been deleted
 				}
-
 			}
 
 		case strings.HasPrefix(command, "!"):
 			// if command starts with "!", the msg-originator wants to make a call
-			calleeIdOnMastodon := command[1:] // skip "!"
-//			fmt.Printf("mastodon processMessage from=(%s) call calleeIdOnMastodon=(%v)\n",
-//				callerMastodonUserId, calleeIdOnMastodon)
+			// skip "!"
+			calleeIdOnMastodon := command[1:]
+			// if 2nd char is @, then skip that, too
+			if strings.HasPrefix(calleeIdOnMastodon,"@") {
+				// skip "!@"
+				calleeIdOnMastodon = command[2:]
+			}
+
+			//fmt.Printf("mastodon processMessage from=(%s) call calleeIdOnMastodon=(%v)\n",
+			//	callerMastodonUserId, calleeIdOnMastodon)
 
 			// server sends a mastodon-msg to callee, containing a links to /callee/pickup
             // if /callee/pickup detects a webcall-id from cookie, it forwards the user to /callee/(ID)
@@ -359,10 +386,11 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 			} else {
 				// calleeID (for instance timurmobi@mastodon.social) does not exist
 				// msg-receiver should register a WebCall callee account, so calls can be received
-				msg := callerMastodonUserId+" wants to give you a WebCall. "
+				msg := "User "+callerMastodonUserId+" wants to give you a WebCall. "
 				// arg2 none-empty string: notify caller after callee-login
 				// arg3 none-empty string: callerMsgID to notify after callee-login (not currently used)
 				// arg4 none-empty string: there is no special msg (will only say: "Register your WebCall ID:")
+// TODO must test arg4!=""
 				err := mMgr.offerRegisterLink(calleeIdOnMastodon,callerMastodonUserId,callerMastodonMsgId,msg)
 				if err!=nil {
 					// TODO
@@ -394,9 +422,8 @@ func (mMgr *MastodonMgr) offerRegisterLink(mastodonUserId string, mastodonCaller
 	}
 	mMgr.tmpkeyMastodonCalleeMutex.Unlock()
 
-// "Register WebCall ID" is not enough; this new callee needs context as to why he should register
-// bc X is trying to call him!
-	sendmsg :="@"+mastodonUserId+" "+msg+" Register your WebCall ID: "+mMgr.hostUrl+"/callee/pickup?mid="+mID+"&register"
+	sendmsg :="@"+mastodonUserId+" "+
+				msg+" Register your WebCall ID: "+mMgr.hostUrl+"/callee/pickup?mid="+mID+"&register"
 	fmt.Printf("offerRegisterLink PostStatus (%s)\n",sendmsg)
 	err = mMgr.postCallerMsgEx(sendmsg,mastodonSenderMsgID)
 	if err!=nil {

@@ -32,7 +32,9 @@ window.onload = function() {
 		onload2("",false,false,cookieName); // no mid -> no mastodonUserID
 	} else {
 		var register = getUrlParams("register");
-		if(typeof register!="undefined") {
+		if(typeof register!="undefined" && register!="") {
+			console.log('arg register is set',register);
+
 			let api = apiPath+"/getmiduser?mid="+mid;
 			console.log('pwForm api',api);
 			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
@@ -85,6 +87,7 @@ window.onload = function() {
 			return;
 		}
 
+		console.log('arg register not set');
 		// try to get mastodonUserID of callee, valid/registered user, currently online user
 		let api = apiPath+"/getmiduser?mid="+mid;
 		console.log('pwForm api',api);
@@ -123,10 +126,38 @@ window.onload = function() {
 
 function onload2(mastodonUserID,isValidCalleeID,isOnlineCalleeID,cookieName) {
 	console.log('onload2',mid,mastodonUserID,isValidCalleeID,isOnlineCalleeID,cookieName);
-
 	if(cookieName!="") {
 		// cookieName found! it can be an 11-digit ID or a mastodonUserID
-		// TODO if cookieName is NOT an 11-digit ID, it should be the same as mastodonUserID, true?
+		if(cookieName.match(/^[0-9]*$/) != null && cookieName.length==11) {
+			// cookieName is 11-digit numeric
+			console.log('cookieName is 11-digit numeric');
+			if(mastodonUserID!="") {
+// TODO PROBLEM: if cookieName is 11-digit we don't know if the server maps it to mastodonUserID
+				if(false) { // server does NOT map 11-digit cookieName to mastodonUserID
+					console.log('# abort cookieName!=mastodonUserID');
+			        document.cookie = "webcallid=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+					// TODO generate user-facing message
+					return;
+				}
+			}
+		} else {
+			// cookieName is NOT 11-digit
+			console.log('cookieName is NOT 11-digit numeric');
+			// if mastodonUserID!="" and cookieName not= mastodonUserID: abort
+			if(mastodonUserID=="") {
+				console.log('mastodonUserID is empty');
+			} else {
+				console.log('mastodonUserID is NOT empty');
+				if(cookieName!=mastodonUserID) {
+					console.log('# abort cookieName!=mastodonUserID');
+			        document.cookie = "webcallid=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+					// TODO generate user-facing message
+					return;
+				}
+				console.log('cookieName is same as mastodonUserID');
+			}
+		}
+
 		let replaceURL = "/callee/"+cookieName;
 		if(isOnlineCalleeID) {
 			// if callee is already online, no new login will take place

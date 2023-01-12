@@ -663,8 +663,27 @@ function login(retryFlag) {
 		if(loginStatus=="notregistered") {
 			wsSecret = "";
 			showStatus("User ID unknown<br>",-1);
+
+			// clear "You receive calls made by this link"
+			ownlinkElement.innerHTML = "";
+
 			form.style.display = "none";
 			offlineAction();
+
+			// clear cookie
+			console.log('clear cookie');
+			if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
+				let cookieName = document.cookie.substring(10);
+				let idxAmpasent = cookieName.indexOf("&");
+				if(idxAmpasent>0) {
+					cookieName = cookieName.substring(0,idxAmpasent);
+				}
+				cookieName = cleanStringParameter(cookieName,true);
+				console.log('clear cookieName',cookieName);
+				if(cookieName!="") {
+			        document.cookie = "webcallid=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+				}
+			}
 		} else if(loginStatus=="busy") {
 			showStatus("User is busy",-1);
 			form.style.display = "none";
@@ -1047,6 +1066,8 @@ function wsOnClose2() {
 	stopAllAudioEffects("wsOnClose");
 	showStatus("disconnected from signaling server");
 	onlineIndicator.src="";
+	// clear "You receive calls made by this link"
+	ownlinkElement.innerHTML = "";
 }
 
 function wsOnMessage(evt) {
