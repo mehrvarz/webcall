@@ -339,11 +339,7 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 				// requested callee is online, we do NOT need to send them a mastodon msg
 				// instead we immediately send a mastodon-msg back to the caller with the correct caller-URL
 
-				// TODO these msgs do often not show up in the web client as notifications
-				// and also not in webcall fetching the caller (@timurmobi)
-				// (maybe bc of the 192.168. hostname?)
-				// but they always show up here in MastodonMgr.go: "mastodonhandler UpdateEvent content=(<p>...)"
-// TODO add callerMastodonMsgId as username to link
+// TODO do we really want to send the calleeID in clear?
 				mMgr.sendCallerMsg(callerMastodonMsgId, callerMastodonUserId,
 					"Click to call "+mMgr.hostUrl+"/user/"+calleeID)
 
@@ -422,8 +418,10 @@ func (mMgr *MastodonMgr) offerRegisterLink(mastodonUserId string, mastodonCaller
 	}
 	mMgr.tmpkeyMastodonCalleeMutex.Unlock()
 
+// TODO not sure about &register (as a result pickup.js never offers multipe choice)
+// TODO add callerMastodonUserId as username to link (so caller.js can forward it to callee)
 	sendmsg :="@"+mastodonUserId+" "+
-				msg+" Register your WebCall ID: "+mMgr.hostUrl+"/callee/pickup?mid="+mID+"&register"
+				msg+" Register your WebCall ID: "+mMgr.hostUrl+"/callee/pickup?mid="+mID //+"&register"
 	fmt.Printf("offerRegisterLink PostStatus (%s)\n",sendmsg)
 	err = mMgr.postCallerMsgEx(sendmsg,mastodonSenderMsgID)
 	if err!=nil {
@@ -474,9 +472,8 @@ func (mMgr *MastodonMgr) sendCallerMsgToMid(mid string, calleeID string) {
 		calleeID, mid, callerMastodonUserId)
 	// calleeID and callerMastodonUserId (if set) appear to be the same?
 
-	//if inReplyToID!="" {
 	if callerMastodonUserId!="" {
-// TODO add callerMastodonMsgId as username to link
+// TODO add callerMastodonUserId as username to link (so caller.js can forward it to callee)
 		sendmsg :=	"@"+callerMastodonUserId+" Click to call: "+mMgr.hostUrl+"/user/"+calleeID
 		mMgr.postCallerMsgEx(sendmsg,inReplyToID)
 		delete(mMgr.tmpkeyMastodonCallerReplyMap,mid)
@@ -502,7 +499,7 @@ func (mMgr *MastodonMgr) sendCallerMsgCalleeIsOnline(w http.ResponseWriter, r *h
 			if callerIdOnMastodon!="" {
 				calleeIdOnMastodon := mMgr.tmpkeyMastodonCalleeMap[mid]
 				if calleeIdOnMastodon!="" {
-// TODO add callerMastodonMsgId as username to link
+// TODO add callerMastodonUserId as username to link (so caller.js can forward it to callee)
 					mMgr.sendCallerMsg(callerMastodonMsgId, callerIdOnMastodon,
 						"Click to call "+mMgr.hostUrl+"/user/"+calleeIdOnMastodon)
 				}

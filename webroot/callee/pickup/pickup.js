@@ -29,73 +29,25 @@ window.onload = function() {
 	}
 
 	if(mid=="") {
-		onload2("",false,false,cookieName); // no mid -> no mastodonUserID
-	} else {
-		var register = getUrlParams("register");
-		if(typeof register!="undefined" && register!="") {
-			console.log('arg register is set',register);
+		// no mid -> no mastodonUserID
+		onload2("",false,false,cookieName);
+		return;
+	}
 
-			let api = apiPath+"/getmiduser?mid="+mid;
-			console.log('pwForm api',api);
-			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-				console.log('xhr.responseText',xhr.responseText);
-				if(xhr.responseText=="") {
-					// no Mastodon user-id exists for this mid
-					console.warn('# xhr response empty for api='+api);
-// TODO give client visual feedback
-				} else {
-					// Mastodon user-id exists for this mid
-					let tok = xhr.responseText.split("|");
-					let mastodonUserID = "";
-					let isValidCalleeID = false;
-					let isOnlineCalleeID = false;
-					if(tok.length>=1) {
-						mastodonUserID = tok[0]; // always a mastodon-user-id, never a calleeID
-						if(tok.length>=2) {
-							if(tok[1]=="true") {
-								isValidCalleeID = true;
-							}
-							if(tok.length>=3) {
-								if(tok[2]=="true") {
-									isOnlineCalleeID = true;
-								}
-							}
-						}
-						// what if isOnlineCalleeID==true? in that case isValidCalleeID should also be true
-						if(isValidCalleeID) {
-							// switch to /callee/(id) now
-							// yes, ANYBODY can resolve mid to mastodonUserID; but they still need to login
-							// adv of using mid= is that we can delete the mapping after a succesful callee-login
-							console.info('calleeID does already exist',mastodonUserID);
-							let replaceURL = "/callee/"+mastodonUserID+"?mid="+mid+"&auto=1";
-							window.location.replace(replaceURL);
-							return;
-						}
+	// mid is given
+/*
+	var register = getUrlParams("register");
+	if(typeof register!="undefined" && register!="") {
+		console.log('arg register is set',register);
 
-						// calleeID does not yet exist: offer register
-						document.title = "WebCall Register";
-						let titleElement = document.getElementById('title');
-						if(titleElement) {
-							titleElement.innerHTML = "WebCall Register";
-						}
-						pwForm(mastodonUserID);
-					}
-				}
-			}, function(errString,err) {
-				console.warn('# xhr error',errString,err);
-			});
-			return;
-		}
-
-		console.log('arg register not set');
-		// try to get mastodonUserID of callee, valid/registered user, currently online user
 		let api = apiPath+"/getmiduser?mid="+mid;
 		console.log('pwForm api',api);
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 			console.log('xhr.responseText',xhr.responseText);
 			if(xhr.responseText=="") {
 				// no Mastodon user-id exists for this mid
-				onload2("",false,false,cookieName);
+				console.warn('# xhr response empty for api='+api);
+// TODO give client visual feedback
 			} else {
 				// Mastodon user-id exists for this mid
 				let tok = xhr.responseText.split("|");
@@ -103,7 +55,7 @@ window.onload = function() {
 				let isValidCalleeID = false;
 				let isOnlineCalleeID = false;
 				if(tok.length>=1) {
-					mastodonUserID = tok[0]; // this is always a mastodon-user-id, never a calleeID
+					mastodonUserID = tok[0]; // always a mastodon-user-id, never a calleeID
 					if(tok.length>=2) {
 						if(tok[1]=="true") {
 							isValidCalleeID = true;
@@ -114,14 +66,67 @@ window.onload = function() {
 							}
 						}
 					}
+					// what if isOnlineCalleeID==true? in that case isValidCalleeID should also be true
+					if(isValidCalleeID) {
+						// switch to /callee/(id) now
+						// yes, ANYBODY can resolve mid to mastodonUserID; but they still need to login
+						// adv of using mid= is that we can delete the mapping after a succesful callee-login
+						console.info('calleeID does already exist',mastodonUserID);
+						let replaceURL = "/callee/"+mastodonUserID+"?mid="+mid+"&auto=1";
+						window.location.replace(replaceURL);
+						return;
+					}
+
+					// calleeID does not yet exist: offer register
+					document.title = "WebCall Register";
+					let titleElement = document.getElementById('title');
+					if(titleElement) {
+						titleElement.innerHTML = "WebCall Register";
+					}
+					pwForm(mastodonUserID);
 				}
-				onload2(mastodonUserID,isValidCalleeID,isOnlineCalleeID,cookieName);
 			}
 		}, function(errString,err) {
 			console.warn('# xhr error',errString,err);
-			onload2("",false,false,cookieName);
 		});
+		return;
 	}
+	console.log('arg register not set');
+*/
+
+	// try to get mastodonUserID of callee, valid/registered user, currently online user
+	let api = apiPath+"/getmiduser?mid="+mid;
+	console.log('pwForm api',api);
+	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+		console.log('xhr.responseText',xhr.responseText);
+		if(xhr.responseText=="") {
+			// no Mastodon user-id exists for this mid
+			onload2("",false,false,cookieName);
+		} else {
+			// Mastodon user-id exists for this mid
+			let tok = xhr.responseText.split("|");
+			let mastodonUserID = "";
+			let isValidCalleeID = false;
+			let isOnlineCalleeID = false;
+			if(tok.length>=1) {
+				mastodonUserID = tok[0]; // this is always a mastodon-user-id, never a calleeID
+				if(tok.length>=2) {
+					if(tok[1]=="true") {
+						isValidCalleeID = true;
+					}
+					if(tok.length>=3) {
+						if(tok[2]=="true") {
+							isOnlineCalleeID = true;
+						}
+					}
+				}
+			}
+			onload2(mastodonUserID,isValidCalleeID,isOnlineCalleeID,cookieName);
+		}
+	}, function(errString,err) {
+		console.warn('# xhr error',errString,err);
+		onload2("",false,false,cookieName);
+	});
 }
 
 function onload2(mastodonUserID,isValidCalleeID,isOnlineCalleeID,cookieName) {
@@ -132,9 +137,13 @@ function onload2(mastodonUserID,isValidCalleeID,isOnlineCalleeID,cookieName) {
 			// cookieName is 11-digit numeric
 			console.log('cookieName is 11-digit numeric');
 			if(mastodonUserID!="") {
-// TODO PROBLEM: if cookieName is 11-digit we don't know if the server maps it to mastodonUserID
-				if(false) { // server does NOT map 11-digit cookieName to mastodonUserID
+// TODO PROBLEM: cookieName is 11-digit and we don't know if the server maps it to mastodonUserID (from mid)
+// should we fetch serverSettings for cookieName ?
+//				if(serverSettings.mastodonID!="" && serverSettings.mastodonID!=mastodonUserID) {
+				if(false) { // assunption
+					// server does NOT map 11-digit cookieName to mastodonUserID
 					console.log('# abort cookieName!=mastodonUserID');
+// BUT THIS COULD BE THE !ST TIME (in which case it would be false to clear the cookie
 			        document.cookie = "webcallid=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
 					// TODO generate user-facing message
 					return;
@@ -158,15 +167,15 @@ function onload2(mastodonUserID,isValidCalleeID,isOnlineCalleeID,cookieName) {
 			}
 		}
 
+		// switch to callee app
 		let replaceURL = "/callee/"+cookieName;
 		if(isOnlineCalleeID) {
 			// if callee is already online, no new login will take place
 			replaceURL += "?auto=1";
 			if(mid!="") {
-				// send the caller-link to the mastodon caller
-				// and trigger all other steps, such as: if the calleeID is 11-digit...
-				// - store callee's mastodonUserID in dbUser
-				// - create mapping[mastodonUserID] = MappingDataType{valueUsername,"none"}
+				// bc the callee is already logged in,
+				// we send the caller-link to mastodon caller (and trigger all other steps) right here
+// TODO maybe we should postpone this a little to allow the callee app to "show up in front" ?
 				let api = apiPath+"/midcalleelogin?mid="+mid;
 				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 					console.log('xhr.responseText',xhr.responseText);
@@ -183,13 +192,16 @@ function onload2(mastodonUserID,isValidCalleeID,isOnlineCalleeID,cookieName) {
 			}
 		}
 
+		// if the callee app is not yet running, this will start it
+// TODO but if it IS already running, does this switch to it?
+//      and how does this work if the user is using the android app
 		window.location.replace(replaceURL);
 		return;
 	}
+	// cookieName is empty; this should also mean that callee is NOT currently logged in
 
-	// no cookieName was found; this should also mean that callee is NOT currently logged in
+	// offer multiple choice
 	let dispMsg = "To answer the call...<br><br>";
-
 	if(mastodonUserID!="") {
 		if(isValidCalleeID) {
 			// offer user to login with its existing calleeID==mastodonUserID account
