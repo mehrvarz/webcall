@@ -18,26 +18,46 @@ import (
 	"github.com/mehrvarz/webcall/skv"
 )
 
+// TODO must make sure we don't run into msg-send-quota (triggered by invalid user requests)
+// so NO unnecessary sendmsgs !
+
+type Inviter struct { // key = mastodon msgID
+	MastodonUserId string
+	MidId string
+	// calleeID string ?
+	// callerID string ?
+	statusID mastodon.ID
+	statusID2 mastodon.ID
+	Expiration int64
+}
+
+type MidKey struct { // key = midID
+	mastodonIdCallee string
+	mastodonIdCaller string
+	msgID string
+	statusID mastodon.ID
+	statusID2 mastodon.ID
+}
+
 type MastodonMgr struct {
 	c *mastodon.Client
 	abortChan chan bool
 	hostUrl string
 
-	// tmpkeyMastodonCalleeMap maps a secret/random key to the callees mastodon user-id
-	tmpkeyMastodonCalleeMap map[string]string
-	tmpkeyMastodonCalleeMutex sync.RWMutex
+	// a map of all active inviter requests
+// TODO make inviterMap[] persistent, so we can restart the server at any time
+	inviterMap map[string]*Inviter
+	inviterMutex sync.RWMutex
 
-	// tmpkeyMastodonCallerReplyMap maps a secret/random key to the callers mastodon InReplyToID
-	tmpkeyMastodonCallerReplyMap map[string]mastodon.ID
-	tmpkeyMastodonCallerMap map[string]string
-	tmpkeyMastodonCallerMutex sync.RWMutex
+	// a map of all active mid's
+	midkeyMap map[string]*MidKey
+	midkeyMutex sync.RWMutex
 }
 
 func NewMastodonMgr() *MastodonMgr {
 	return &MastodonMgr{
-		tmpkeyMastodonCalleeMap:      make(map[string]string),
-		tmpkeyMastodonCallerReplyMap: make(map[string]mastodon.ID),
-		tmpkeyMastodonCallerMap:      make(map[string]string),
+		inviterMap:  make(map[string]*Inviter),
+		midkeyMap:   make(map[string]*MidKey),
 	}
 }
 
@@ -107,6 +127,7 @@ func (mMgr *MastodonMgr) mastodonStart(config string) {
 					fmt.Printf("mastodonhandler stripped p Content=(%v)\n",content)
 				}
 
+				command := ""
 				htmlTokens := html.NewTokenizer(strings.NewReader(content))
 				depth := 0
 loop:
@@ -125,8 +146,11 @@ loop:
 						if depth==0 {
 							t := htmlTokens.Token()
 							textMessage := t.Data
-							fmt.Printf("mastodonhandler TextToken=(%v)\n",textMessage) // ' test2'
-							mMgr.processMessage(textMessage,event)
+							if textMessage!="" {
+								fmt.Printf("mastodonhandler TextToken=(%v)\n",textMessage) // ' test2'
+								command += textMessage + " "
+							}
+							break
 						}
 					case html.ErrorToken:
 						fmt.Printf("mastodonhandler ErrorToken re-loop\n")
@@ -134,22 +158,24 @@ loop:
 					}
 				}
 				fmt.Printf("mastodonhandler Notif-Type=(%v) done\n", event.Notification.Type)
+				mMgr.processMessage(command,event)
 
-			case *mastodon.UpdateEvent:
+/*			case *mastodon.UpdateEvent:
 				if event.Status.Content!="" {
 					fmt.Printf("mastodonhandler UpdateEvent content=(%v)\n",event.Status.Content)
 				} else {
 					fmt.Printf("mastodonhandler UpdateEvent reblog=(%v)\n",event.Status.Reblog)
 				}
-
+*/
 			case *mastodon.DeleteEvent:
 				fmt.Printf("mastodonhandler DeleteEvent id=(%v)\n",event.ID)
 
 			case *mastodon.ErrorEvent:
 				fmt.Printf("mastodonhandler ErrorEvent %v\n",event.Error())
-
+/*
 			default:
 				fmt.Printf("mastodonhandler default\n")
+*/
 			}
 		}
 	}
@@ -161,281 +187,432 @@ loop:
 // @webcall@mastodon.social !tm@mastodontech.de
 func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.NotificationEvent) {
 	msg = strings.TrimSpace(msg)
-	callerMastodonMsgId := event.Notification.Status.ID
-	callerMastodonUserId := event.Notification.Account.Acct
-	if strings.Index(callerMastodonUserId,"@")<0 {
-		callerMastodonUserId += "@mastodon.social"
+
+	mastodonUserId := event.Notification.Account.Acct
+	if strings.Index(mastodonUserId,"@")<0 {
+		// this notif was sent by a user on "our" instance
+		mastodonUserId += "@mastodon.social"	// TODO hack
 	}
 
+	msgID := fmt.Sprint(event.Notification.Status.ID)
+	if msgID == "<nil>" { msgID = "" }
+	inReplyToID := fmt.Sprint(event.Notification.Status.InReplyToID)
+	if inReplyToID == "<nil>" { inReplyToID = "" }
 	tok := strings.Split(msg, " ")
-	fmt.Printf("mastodon processMessage msg=(%v) id=%v lenTok=%d\n",
-		msg, callerMastodonMsgId, len(tok))
+	fmt.Printf("mastodon processMessage msg=(%v) msgId=%v InReplyToID=%v lenTok=%d\n",
+		msg, msgID, inReplyToID, len(tok))
 
-	if len(tok)>0 {
-		command := strings.ToLower(strings.TrimSpace(tok[0]))
-		if command=="self" {
-			// replace "self" with callers mastodon-userid to mimic webcall to self (possibly causing registration)
-			command = "!"+callerMastodonUserId
-		}
-
-		switch {
+	if msgID=="" {
+		// can't work without a msgID
+		fmt.Printf("# mastodon processMessage empty event.Notification.Status.ID\n")
+		return
+	}
 /*
-		case command=="register":
-// TODO not sure we really need this
-// current disadvantage: this always registers the mastodon-user-id as calleeID
-// does not give a choice to reuse existing 11-digit calleeID
-// alt idea: use command=="self" to mimic a call to self (causing registration)
-			// msg-originator wants to register it's account as WebCall callee
-			fmt.Printf("mastodon processMessage register (%v)\n", callerMastodonUserId)
-
-			var dbEntryRegistered DbEntry
-			err := kvMain.Get(dbRegisteredIDs,callerMastodonUserId,&dbEntryRegistered)
-			if err==nil {
-				// callerMastodonUserId is already registered
-				fmt.Printf("# mastodon processMessage (%s) fail 'already registered'\n", callerMastodonUserId)
-
-				sendmsg :="@"+callerMastodonUserId+" Account is already registered"
-// TODO add a callee link?
-				fmt.Printf("mastodon processMessage PostStatus (%s)\n",sendmsg)
-				err = mMgr.postCallerMsgEx(sendmsg,callerMastodonMsgId)
-				if err==nil {
-					// TODO at some point later we need to delete (from mastodon) all direct messages
-					// note: deleting a (direct) mastodon msg does NOT delete it on the receiver/caller side
-				}
-				return
-			}
-
-			// arg2 empty string: there is no caller to notify of callee-login
-			// arg3 empty string: there is no callerMsgID to notify of callee-login (not currently used anyways)
-			// arg4 empty string: there is no special msg (will only say: "Register your WebCall ID:")
-			err = mMgr.offerRegisterLink(callerMastodonUserId,"","","")
-			if err!=nil {
-				// TODO
-			}
+	if inReplyToID=="" {
+		// can't work without a msgID
+		fmt.Printf("# mastodon processMessage empty event.Notification.Status.InReplyToID\n")
+		return
+	}
 */
-		case command=="delete":
-			// here we remove a callerMastodonUserId
-// TODO this must be handled with upmost care (ask user: are you sure?)
-			fmt.Printf("mastodon processMessage delete (%v)\n", callerMastodonUserId)
+	if inReplyToID=="" {
+		// this is a request/invite msg (could also be any kind of msg)
 
-			var dbEntryRegistered DbEntry
-			err := kvMain.Get(dbRegisteredIDs,callerMastodonUserId,&dbEntryRegistered)
-			if err!=nil {
-				fmt.Printf("# mastodon processMessage delete user=%s err=%v\n", callerMastodonUserId, err)
-			} else {
-				// callerMastodonUserId is a registered calleeID
+		if len(tok)>0 {
+			command := strings.ToLower(strings.TrimSpace(tok[0]))
 
-				// if user is currently online / logged-in as callee
-				hubMapMutex.RLock()
-				hub := hubMap[callerMastodonUserId]
-				hubMapMutex.RUnlock()
-				if hub != nil {
-					// kick callee user out
-					hub.closeCallee("unregister") // -> hub.exitFunc()
-					// new callee.js will delete cookie on "User ID unknown"
-				}
+			switch {
+			case command=="wc-delete":
+				// here we remove a mastodonUserId
+// TODO must be very carefully with this (ask user: are you sure?)
+				fmt.Printf("mastodon processMessage delete (%v)\n", mastodonUserId)
 
-				dbUserKey := fmt.Sprintf("%s_%d", callerMastodonUserId, dbEntryRegistered.StartTime)
+				var dbEntryRegistered DbEntry
+				err := kvMain.Get(dbRegisteredIDs,mastodonUserId,&dbEntryRegistered)
+				if err!=nil {
+					fmt.Printf("# mastodon processMessage delete user=%s err=%v\n", mastodonUserId, err)
+					// no need to notify user by msg (looks like an invalid request - ignore)
+				} else {
+					// mastodonUserId is a registered calleeID
 
-				// delete/outdate mapped tmpIDs of outdated callerMastodonUserId
-				errcode,altIDs := getMapping(callerMastodonUserId,"")
-				if errcode==0 && altIDs!="" {
-					tokenSlice := strings.Split(altIDs, "|")
-					for _, tok := range tokenSlice {
-						deleteMapping(callerMastodonUserId,tok,"")
+					// if user is currently online / logged-in as callee
+					hubMapMutex.RLock()
+					hub := hubMap[mastodonUserId]
+					hubMapMutex.RUnlock()
+					if hub != nil {
+						// kick callee user out
+						hub.closeCallee("unregister") // -> hub.exitFunc()
+						// new callee.js will delete cookie on "User ID unknown"
+					}
+
+					dbUserKey := fmt.Sprintf("%s_%d", mastodonUserId, dbEntryRegistered.StartTime)
+
+					// delete/outdate mapped tmpIDs of outdated mastodonUserId
+					errcode,altIDs := getMapping(mastodonUserId,"")
+					if errcode==0 && altIDs!="" {
+						tokenSlice := strings.Split(altIDs, "|")
+						for _, tok := range tokenSlice {
+							deleteMapping(mastodonUserId,tok,"")
+						}
+					}
+
+					// also delete mastodonUserId's contacts
+					err = kvContacts.Delete(dbContactsBucket, mastodonUserId)
+					if err!=nil {
+						fmt.Printf("# mastodon processMessage delete contacts of id=%s err=%v\n",
+							mastodonUserId, err)
+					}
+
+					kv := kvMain.(skv.SKV)
+					err = kv.Delete(dbUserBucket, dbUserKey)
+					if err!=nil {
+						// this is bad
+						fmt.Printf("# mastodon processMessage delete user-key=%s err=%v\n", dbUserKey, err)
+// TODO notify user by msg?
+					} else {
+						fmt.Printf("mastodon processMessage delete user-key=%s done\n", dbUserKey)
+					}
+
+					err = kvMain.Delete(dbRegisteredIDs, mastodonUserId)
+					if err!=nil {
+						// this is bad
+						fmt.Printf("# mastodon processMessage delete user-id=%s err=%v\n", mastodonUserId, err)
+// TODO notify user by msg?
+					} else {
+						fmt.Printf("mastodon processMessage delete user-id=%s done\n", mastodonUserId)
+// TODO send msg telling user that their webcall account has been deleted
 					}
 				}
-
-				// also delete callerMastodonUserId's contacts
-				err = kvContacts.Delete(dbContactsBucket, callerMastodonUserId)
-				if err!=nil {
-					fmt.Printf("# mastodon processMessage delete contacts of id=%s err=%v\n",
-						callerMastodonUserId, err)
-				}
-
-				kv := kvMain.(skv.SKV)
-				err = kv.Delete(dbUserBucket, dbUserKey)
-				if err!=nil {
-					// this is bad
-					fmt.Printf("# mastodon processMessage delete user-key=%s err=%v\n", dbUserKey, err)
-				} else {
-					fmt.Printf("mastodon processMessage delete user-key=%s done\n", dbUserKey)
-// TODO send msg telling user that their webcall account has been deleted
-				}
-
-				err = kvMain.Delete(dbRegisteredIDs, callerMastodonUserId)
-				if err!=nil {
-					// this is bad
-					fmt.Printf("# mastodon processMessage delete user-id=%s err=%v\n", callerMastodonUserId, err)
-				} else {
-					fmt.Printf("mastodon processMessage delete user-id=%s done\n", callerMastodonUserId)
-// TODO send msg telling user that their webcall account has been deleted
-				}
-			}
-
-		case strings.HasPrefix(command, "!"):
-			// if command starts with "!", the msg-originator wants to make a call
-			// skip "!"
-			calleeIdOnMastodon := command[1:]
-			// if 2nd char is @, then skip that, too
-			if strings.HasPrefix(calleeIdOnMastodon,"@") {
-				// skip "!@"
-				calleeIdOnMastodon = command[2:]
-			}
-
-			//fmt.Printf("mastodon processMessage from=(%s) call calleeIdOnMastodon=(%v)\n",
-			//	callerMastodonUserId, calleeIdOnMastodon)
-
-			// server sends a mastodon-msg to callee, containing a links to /callee/pickup
-            // if /callee/pickup detects a webcall-id from cookie, it forwards the user to /callee/(ID)
-            // else it allows the user to login manually, create a new account, etc.
-
-			calleeID := calleeIdOnMastodon
-			mappingMutex.RLock()
-			mappingData,ok := mapping[calleeIdOnMastodon]
-			mappingMutex.RUnlock()
-			if ok {
-				// calleeIdOnMastodon is mapped (caller is using a temporary (mapped) calleeID)
-				if mappingData.Assign!="" && mappingData.Assign!="none" {
-					calleeID = mappingData.Assign
-				}
-			}
-
-			hubMapMutex.RLock()
-			hub := hubMap[calleeID]
-			hubMapMutex.RUnlock()
-			calleeIDonline := ""
-			if hub != nil {
-				// calleeID is online / logged in
-
-				//if hub.ConnectedCallerIp!="" {
-				//	calleeID is busy
-				//}
-
-				if hub.CalleeClient!=nil && hub.CalleeClient.mastodonAcceptTootCalls==false {
-					// this user does not want calls from mastodon
-					fmt.Printf("mastodon processMessage (%s) has active hub but not accepting toot-calls (%s)\n",
-						calleeID, hub.ConnectedCallerIp)
-					calleeIDonline = "nowebcall"
-				} else {
-					fmt.Printf("mastodon processMessage (%s) has an active hub (is online) (%s)\n",
-						calleeID, hub.ConnectedCallerIp)
-					calleeIDonline = calleeID // callee is using its mastodon user id as key
-				}
-			} else {
-				// calleeID is NOT online
-				fmt.Printf("mastodon processMessage (%s) has NO active hub (is not online)\n", calleeID)
-			}
-
-			fmt.Printf("mastodon processMessage from=%s callerMsgId=%s calling=(%v) calleeIDonline=(%s)\n",
-				callerMastodonUserId, callerMastodonMsgId, calleeIdOnMastodon, calleeIDonline)
-
-			if calleeIDonline=="nowebcall" {
-				// this webcall user disabled incoming calls from mastodon
-				mMgr.sendCallerMsg(callerMastodonMsgId, callerMastodonUserId,
-					"User "+calleeIdOnMastodon+" does not accept WebCalls from Mastodon. Sorry!")
-
-			} else if calleeIDonline!="" {
-				// requested callee is online, we do NOT need to send them a mastodon msg
-				// instead we immediately send a mastodon-msg back to the caller with the correct caller-URL
-
-// TODO do we really want to send the calleeID in clear?
-				mMgr.sendCallerMsg(callerMastodonMsgId, callerMastodonUserId,
-					"Click to call "+mMgr.hostUrl+"/user/"+calleeID)
-
-			} else if mMgr.isValidCallee(calleeID) {
-				// calleeID is not currently online, but it is a valid/registered callee
-
-				// send a mastodon-msg to the callee and ask it to login to answer call or register a new calleeID
-				// for secure register we generate a unique random 11-digit mID to refer to calleeIdOnMastodon 
-				mMgr.tmpkeyMastodonCalleeMutex.Lock()
-				mID,err := mMgr.makeSecretID() //"xxxxxxxxxxx"
-				if err!=nil {
-					// TODO this is fatal
-					mMgr.tmpkeyMastodonCalleeMutex.Unlock()
-					return
-				}
-				// mid -> calleeIdOnMastodon
-				// this allows /callee/pickup to find calleeIdOnMastodon (a mastodon user id) via mID
-				mMgr.tmpkeyMastodonCalleeMap[mID] = calleeIdOnMastodon
-				mMgr.tmpkeyMastodonCalleeMutex.Unlock()
-
-				// mid -> callerMastodonUserId
-				// this is used to send a mastodon-msg to the caller
-				mMgr.tmpkeyMastodonCallerMutex.Lock()
-				mMgr.tmpkeyMastodonCallerReplyMap[mID] = callerMastodonMsgId
-				mMgr.tmpkeyMastodonCallerMap[mID] = callerMastodonUserId
-				mMgr.tmpkeyMastodonCallerMutex.Unlock()
-
-				// send msg to calleeIdOnMastodon, with link to /callee/pickup
-				sendmsg := "@"+calleeIdOnMastodon+" "+
-					callerMastodonUserId+" wants to give you a web telephony call.\n"+
-					"Answer call: "+mMgr.hostUrl+"/callee/pickup?mid="+mID
-				fmt.Printf("mastodon processMessage PostStatus (%s)\n",sendmsg)
-				err = mMgr.postCallerMsgEx(sendmsg,callerMastodonMsgId)
-				if err==nil {
-					// TODO at some point later we need to delete (from mastodon) all direct messages
-					// note: deleting a (direct) mastodon msg does NOT delete it on the receiver/caller side
-				}
-				// TODO at some point somewhere we need to remove the items from our two maps
-
-			} else {
-				// calleeID (for instance timurmobi@mastodon.social) does not exist
-				// msg-receiver should register a WebCall callee account, so calls can be received
-				msg := "User "+callerMastodonUserId+" wants to give you a WebCall. "
-				// arg2 none-empty string: notify caller after callee-login
-				// arg3 none-empty string: callerMsgID to notify after callee-login (not currently used)
-				// arg4 none-empty string: there is no special msg (will only say: "Register your WebCall ID:")
-// TODO must test arg4!=""
-				err := mMgr.offerRegisterLink(calleeIdOnMastodon,callerMastodonUserId,callerMastodonMsgId,msg)
-				if err!=nil {
-					// TODO
-				}
+// TODO  this 'return' MUST abort processing, not sure it does
+				return
 			}
 		}
+
+// TODO verify: msg MUST contain a target user-id (NOT webcall) in 1st place - otherwise abort here!
+
+		// we now assume this is a valid msg to webcall-invite another user (requesting a confirm msg)
+		// this inviter stays active for up to 60min
+		fmt.Printf("mastodon processMessage msgID=%v requesting call confirmation\n",msgID)
+		mMgr.inviterMutex.Lock()
+		inviter,ok := mMgr.inviterMap[msgID]
+		if !ok || inviter==nil {
+			inviter = &Inviter{}
+		}
+		inviter.MastodonUserId = mastodonUserId
+		inviter.Expiration = time.Now().Add(1 * time.Hour).Unix()
+		mMgr.inviterMap[msgID] = inviter
+		mMgr.inviterMutex.Unlock()
+		// mMgr.inviterMap[msgID] becomes relevant if target user sends a confirm msg back
+
+	} else {
+		// this is a reply/confirm msg (or might be one)
+		// reply/confirm msg (event.Notification.Status.InReplyToID == callerMastodonMsgId (of original msg)
+		mMgr.inviterMutex.RLock()
+		inviter,ok := mMgr.inviterMap[inReplyToID]
+		mMgr.inviterMutex.RUnlock()
+		if !ok || inviter==nil {
+			// most likely mMgr.inviterMap[inReplyToID] has been outdated (or was for some reason not stored)
+			// ignore / abort
+			// don't send msg to mastodonUserId (don't run into msg-send-quota triggered by invalid user)
+			fmt.Printf("# mastodon processMessage unknown Status.InReplyToID(%s) maybe outdated?\n",inReplyToID)
+			return
+		}
+
+		// now we sort out who becomes the callee and who becomes the caller
+		// if inviter.mastodonUserId a valid webcall account -> offer callee role to inviter
+		// if mastodonUserId is a valid webcall account -> offer callee role to callee
+		// else -> offer callee role to inviter
+		// by default: inviter -> callee; responder -> caller
+		mastodonCalleeID := inviter.MastodonUserId
+		calleeID := mastodonCalleeID
+		mappingMutex.RLock()
+		mappingData,ok := mapping[mastodonCalleeID]
+		mappingMutex.RUnlock()
+		if ok {
+			// calleeID is mapped (caller is using a temporary (mapped) calleeID)
+			if mappingData.Assign!="" && mappingData.Assign!="none" {
+				calleeID = mappingData.Assign
+			}
+		}
+
+		mastodonCallerID := mastodonUserId
+		callerID := mastodonCallerID
+		mappingMutex.RLock()
+		mappingData,ok = mapping[mastodonCalleeID]
+		mappingMutex.RUnlock()
+		if ok {
+			// calleeID is mapped (caller is using a temporary (mapped) calleeID)
+			if mappingData.Assign!="" && mappingData.Assign!="none" {
+				callerID = mappingData.Assign
+			}
+		}
+
+		if !mMgr.isValidCallee(calleeID) && mMgr.isValidCallee(callerID) {
+// TODO also: if callerID is online callee and calleeID is not
+			// inviter has no valid webcall account, but responder has
+			// this is the one case where we turn things around
+			// inviter becomes caller; responder becomes callee
+			tmpID := mastodonCallerID
+			mastodonCallerID = mastodonCalleeID
+			mastodonCalleeID = tmpID
+
+			tmpID = callerID
+			callerID = callerID
+			callerID = tmpID
+
+			fmt.Printf("mastodon processMessage roles (special): inviter -> caller, responder -> callee\n")
+		} else {
+			fmt.Printf("mastodon processMessage roles (default): inviter -> callee, responder -> caller\n")
+		}
+
+		// the two roles have now been decided 
+		// TODO not sure yet if callerID and calleeID need to be stored in inviter map
+
+		// when we offer the callee role, we first check
+		// - cookiename
+		// then we offer choice:
+		// - MastodonUserId
+		// - enter WebCall calleeID
+		// - create new persistent callee account
+		// - one-off session
+
+		var mastodonCallerMsgId mastodon.ID = "" //dummy not used TODO remove
+
+		// find out if calleeID is online right now 
+		hubMapMutex.RLock()
+		hub := hubMap[calleeID]
+		hubMapMutex.RUnlock()
+		calleeIDonline := ""
+		if hub != nil {
+			// calleeID is online / logged in
+			//if hub.ConnectedCallerIp!="" {
+			//	calleeID is busy
+			//}
+			fmt.Printf("mastodon processMessage callee(%s) has an active hub (is online) (%s)\n",
+				calleeID, hub.ConnectedCallerIp)
+			calleeIDonline = calleeID // callee is using its mastodon user id as key
+		} else {
+			// calleeID is NOT online
+			fmt.Printf("mastodon processMessage callee(%s) has NO active hub (is not online)\n", calleeID)
+		}
+		// if calleeID is offline, calleeIDonline is empty
+		// if calleeID is online, calleeIDonline contains calleeID
+
+		fmt.Printf("mastodon processMessage calleeID=%s(m=%s,onl=%s) callerID=(%v)\n",
+			calleeID, mastodonCalleeID, calleeIDonline, callerID)
+
+		if calleeIDonline!="" {
+			// callee is online, NO need to send a mastodon msg to callee
+			// instead we immediately send a mastodon-msg to the caller
+			fmt.Printf("mastodon processMessage callee online, send /user link to caller\n")
+
+// TODO do we really want to send the calleeID in clear?
+			status,err := mMgr.postCallerMsgEx("@"+mastodonCallerID+" "+
+							"Click to call "+mMgr.hostUrl+"/user/"+calleeID)
+			if err!=nil {
+				// this is fatal
+				fmt.Printf("# sendCallerMsg err=%v (to=%v)\n",err,mastodonCallerID)
+			} else {
+				fmt.Printf("sendCallerMsg done not deleting status.ID=%v\n",status.ID)
+/* let this msg stand
+				//fmt.Printf("sendCallerMsg done status.ID=%v\n",status.ID)
+				mMgr.inviterMutex.Lock()
+				inviter.statusID2 = status.ID
+				mMgr.inviterMap[msgID] = inviter
+				mMgr.inviterMutex.Unlock()
+*/
+			}
+			// remove the inviter now
+			mMgr.clearInviter(msgID)
+
+		} else if mMgr.isValidCallee(calleeID) {
+			// calleeID is not currently online, but it is a valid/registered callee
+			fmt.Printf("mastodon processMessage callee offline but valid, send /callee link to callee\n")
+
+			// send a mastodon-msg to the callee and ask it to login to answer call or register a new calleeID
+			// for secure register we generate a unique random 11-digit mID to refer to mastodonCalleeID 
+			mMgr.midkeyMutex.Lock()
+			mID,err := mMgr.makeSecretID() //"xxxxxxxxxxx"
+			if err!=nil {
+				// this is fatal
+				fmt.Printf("# mastodon processMessage makeSecretID fatal err=%v\n",err)
+				mMgr.midkeyMutex.Unlock()
+				return
+			}
+			// mid -> mastodonCalleeID
+			// this allows /callee/pickup to find mastodonCalleeID (a mastodon user id) via mID
+			midkey := &MidKey{}
+			midkey.mastodonIdCallee = mastodonCalleeID
+			midkey.mastodonIdCaller = mastodonCallerID
+			midkey.msgID = msgID
+			//midkey.mastodonIdCallerReplyId = mastodonCallerMsgId
+			mMgr.midkeyMap[mID] = midkey
+			mMgr.midkeyMutex.Unlock()
+
+			// store mid in inviter, so we can delete it later
+			mMgr.inviterMutex.Lock()
+			inviter,ok := mMgr.inviterMap[msgID]
+			if !ok || inviter==nil {
+				inviter = &Inviter{}
+			}
+			inviter.MidId = mID
+			mMgr.inviterMap[msgID] = inviter
+			mMgr.inviterMutex.Unlock()
+
+			// send msg to mastodonCalleeID, with link to /callee/pickup
+			sendmsg := "@"+mastodonCalleeID+" "+
+				mastodonCallerID+" wants to give you a web telephony call.\n"+
+				"Answer call: "+mMgr.hostUrl+"/callee/pickup?mid="+mID
+			fmt.Printf("mastodon processMessage PostStatus (%s)\n",sendmsg)
+			status,err := mMgr.postCallerMsgEx(sendmsg)
+			if err!=nil {
+				fmt.Printf("# mastodon processMessage postCallerMsgEx err=%v\n",err)
+			} else {
+				// at some point later we need to delete msg status.ID
+				// note: deleting a (direct) mastodon msg does NOT delete it on the receiver/caller side
+/*
+				mMgr.midkeyMutex.Lock()
+				midkey.statusID = status.ID
+				mMgr.midkeyMap[mID] = midkey
+				mMgr.midkeyMutex.Unlock()
+*/
+				mMgr.inviterMutex.Lock()
+				inviter.statusID = status.ID
+				mMgr.inviterMap[msgID] = inviter
+				mMgr.inviterMutex.Unlock()
+			}
+
+		} else {
+			// calleeID (for instance timurmobi@mastodon.social) does not exist
+			// msg-receiver should register a WebCall callee account, so calls can be received
+			fmt.Printf("mastodon processMessage callee is no webcall user, sending offerRegister\n")
+			// NOTE: msg must end with a blank
+			msg := "User "+mastodonCallerID+" wants to give you a WebCall. "
+
+// TODO: we need to put instructions for new users on the mastodon @webcall homepage
+// "if you receive call request from an account that you don't want to make phone calls with,
+// you may want to consider to mute or block it
+
+			// arg2 none-empty string: notify caller after callee-login
+			// arg3 none-empty string: callerMsgID to notify after callee-login (not currently used)
+			// arg4 none-empty string: there is no special msg (will only say: "Register your WebCall ID:")
+// TODO must test arg4!=""
+			err := mMgr.offerRegisterLink(mastodonCalleeID,mastodonCallerID,mastodonCallerMsgId,msg,msgID)
+			if err!=nil {
+				fmt.Printf("# mastodon processMessage offerRegisterLink err=%v\n",err)
+			}
+		}
+
+		// once callee has logged in, the caller link to send to the caller
 	}
 }
 
-func (mMgr *MastodonMgr) offerRegisterLink(mastodonUserId string, mastodonCallerUserId string, mastodonSenderMsgID mastodon.ID, msg string) error {
+func (mMgr *MastodonMgr) cleanupMastodonInviter(w io.Writer) {
+	// delete/outdate inviterMap[] entries in parallel based on inviter.Expiration
+	// timer.go calls this func periodically every 20 min
+	fmt.Printf("cleanupMastodonInviter...\n")
+	timeNowUnix := time.Now().Unix()
+	var deleteInviterArray []string
+
+	mMgr.inviterMutex.Lock()
+	for mastodonMsgID, inviter := range mMgr.inviterMap {
+		if inviter!=nil && timeNowUnix - inviter.Expiration > 60*60 {
+			// this invitation is older than 60min: delete it
+
+			// DeleteStatus() previously sent msgs
+			if inviter.statusID != "" {
+				err := mMgr.c.DeleteStatus(context.Background(), inviter.statusID)
+				if err!=nil {
+					fmt.Printf("# calleeLoginSuccess DeleteStatus(statusID=%v)\n",inviter.statusID)
+				}
+			}
+			if inviter.statusID2 != "" {
+				err := mMgr.c.DeleteStatus(context.Background(), inviter.statusID2)
+				if err!=nil {
+					fmt.Printf("# calleeLoginSuccess DeleteStatus(statusID2=%v)\n",inviter.statusID2)
+				}
+			}
+			// TODO remove remark: delete the inviter: mMgr.inviterMap[msgId]
+
+			// delete the inviter itself below, outside of range loop
+			deleteInviterArray = append(deleteInviterArray,mastodonMsgID)
+		}
+	}
+
+	if len(deleteInviterArray)>0 {
+		fmt.Printf("cleanupMastodonInviter delete %d/%d inviterMap entries\n",
+			len(deleteInviterArray), len(mMgr.inviterMap))
+		for _,mastodonMsgID := range deleteInviterArray {
+			mid := mMgr.inviterMap[mastodonMsgID].MidId
+			if mid!="" {
+				mMgr.clearMid(mid,false) // will also DeleteStatus(midkey.statusID) but not inviter.status
+			}
+			fmt.Printf("cleanupMastodonInviter delete inviterMap msgId(%s)\n",mastodonMsgID)
+			delete(mMgr.inviterMap,mastodonMsgID)
+		}
+	}
+	mMgr.inviterMutex.Unlock()
+
+	fmt.Printf("cleanupMastodonInviter done\n")
+}
+
+func (mMgr *MastodonMgr) offerRegisterLink(mastodonUserId string, mastodonCallerUserId string, mastodonSenderMsgID mastodon.ID, msg string, msgID string) error {
 	// offer link to /pickup, where mastodonUserId can be registered
 	// 1) is called in response to a call, we want to send a msg to caller after login
 	// 2) is called in response to "register", we DONT want to send a msg to caller after login
 
 	// first we need a unique mID (refering to mastodonUserId)
-	mMgr.tmpkeyMastodonCalleeMutex.Lock()
+	mMgr.midkeyMutex.Lock()
 	mID,err := mMgr.makeSecretID() //"xxxxxxxxxxx"
 	if err!=nil {
-		// TODO this is fatal (and we are not yet notifying the mastodon user)
-		mMgr.tmpkeyMastodonCalleeMutex.Unlock()
+		// this is fatal
+		mMgr.midkeyMutex.Unlock()
 		fmt.Printf("# offerRegisterLink register makeSecretID err=(%v)\n", err)
 		return err
 	}
-	// tmpkeyMastodonCalleeMap[mID]: allows /callee/pickup to find mastodonUserId via mID
-	// tmpkeyMastodonCallerMap[mID]: allows sendCallerMsgToMid() to send msg back
-	mMgr.tmpkeyMastodonCalleeMap[mID] = mastodonUserId
-	if mastodonCallerUserId!="" {
-		mMgr.tmpkeyMastodonCallerMap[mID] = mastodonCallerUserId
+	midkey,ok := mMgr.midkeyMap[mID]
+	if !ok || midkey==nil {
+		midkey = &MidKey{}
 	}
-	mMgr.tmpkeyMastodonCalleeMutex.Unlock()
+	midkey.mastodonIdCallee = mastodonUserId
+	midkey.mastodonIdCaller = mastodonCallerUserId
+	midkey.msgID = msgID
+	mMgr.midkeyMap[mID] = midkey
+	mMgr.midkeyMutex.Unlock()
+
+	// store mid in inviter, so we can delete it later
+	mMgr.inviterMutex.Lock()
+	inviter,ok := mMgr.inviterMap[msgID]
+	if !ok || inviter==nil {
+		inviter = &Inviter{}
+	}
+	inviter.MidId = mID
+	mMgr.inviterMap[msgID] = inviter
+	mMgr.inviterMutex.Unlock()
 
 // TODO not sure about &register (as a result pickup.js never offers multipe choice)
 // TODO add callerMastodonUserId as username to link (so caller.js can forward it to callee)
 	sendmsg :="@"+mastodonUserId+" "+
-				msg+" Register your WebCall ID: "+mMgr.hostUrl+"/callee/pickup?mid="+mID //+"&register"
+				msg+"Answer call: "+mMgr.hostUrl+"/callee/pickup?mid="+mID //+"&register"
 	fmt.Printf("offerRegisterLink PostStatus (%s)\n",sendmsg)
-	err = mMgr.postCallerMsgEx(sendmsg,mastodonSenderMsgID)
+	status,err := mMgr.postCallerMsgEx(sendmsg)
 	if err!=nil {
-		// TODO this is fatal
+		// this is fatal
 		fmt.Printf("# offerRegisterLink PostStatus err=%v (to=%v)\n",err,mastodonUserId)
 		return err
 	}
 
+	// at some point later we need to delete (from mastodon) all direct messages
 	fmt.Printf("offerRegisterLink PostStatus sent to=%v\n", mastodonUserId)
-	// TODO at some point later we need to delete (from mastodon) all direct messages
-	// note: deleting a (direct) mastodon msg does NOT delete it on the receiver/caller side
-
-	// TODO at some point we must delete mMgr.tmpkeyMastodonCalleeMap[mID]
-	// even if the user never calls the provided link
+/*
+	mMgr.midkeyMutex.Lock()
+	midkey.statusID = status.ID
+	mMgr.midkeyMap[mID] = midkey
+	mMgr.midkeyMutex.Unlock()
+*/
+	mMgr.inviterMutex.Lock()
+	inviter.statusID = status.ID
+	mMgr.inviterMap[msgID] = inviter
+	mMgr.inviterMutex.Unlock()
 	return nil
 }
 
@@ -449,8 +626,9 @@ func (mMgr *MastodonMgr) makeSecretID() (string,error) {
 			continue;
 		}
 		newSecretId := strconv.FormatInt(int64(intID),10)
-		oldMastodonID := mMgr.tmpkeyMastodonCalleeMap[newSecretId]
-		if oldMastodonID!="" {
+
+		midkey,ok := mMgr.midkeyMap[newSecretId]
+		if ok && midkey!=nil && midkey.mastodonIdCallee != "" {
 			// already taken
 			continue;
 		}
@@ -464,10 +642,14 @@ func (mMgr *MastodonMgr) makeSecretID() (string,error) {
 
 func (mMgr *MastodonMgr) sendCallerMsgToMid(mid string, calleeID string) {
 	// send message containing url="/user/"+urlID to tmpkeyMastodonCallerReplyMap[mid]
-	mMgr.tmpkeyMastodonCallerMutex.RLock()
-	callerMastodonUserId := mMgr.tmpkeyMastodonCallerMap[mid]
-	inReplyToID := mMgr.tmpkeyMastodonCallerReplyMap[mid] // currently not being used
-	mMgr.tmpkeyMastodonCallerMutex.RUnlock()
+	callerMastodonUserId := ""
+	mMgr.midkeyMutex.RLock()
+	midkey,ok := mMgr.midkeyMap[mid]
+	if ok && midkey!=nil {
+		callerMastodonUserId = midkey.mastodonIdCaller
+	}
+	mMgr.midkeyMutex.RUnlock()
+
 	fmt.Printf("mastodon sendCallerMsgToMid calleeID=%s mid=%s callerMastodonUserId=%s\n",
 		calleeID, mid, callerMastodonUserId)
 	// calleeID and callerMastodonUserId (if set) appear to be the same?
@@ -475,12 +657,27 @@ func (mMgr *MastodonMgr) sendCallerMsgToMid(mid string, calleeID string) {
 	if callerMastodonUserId!="" {
 // TODO add callerMastodonUserId as username to link (so caller.js can forward it to callee)
 		sendmsg :=	"@"+callerMastodonUserId+" Click to call: "+mMgr.hostUrl+"/user/"+calleeID
-		mMgr.postCallerMsgEx(sendmsg,inReplyToID)
-		delete(mMgr.tmpkeyMastodonCallerReplyMap,mid)
+		status,err := mMgr.postCallerMsgEx(sendmsg)
+		if err!=nil {
+			// this is fatal
+			fmt.Printf("# sendCallerMsgToMid err=%v (to=%v)\n",err,callerMastodonUserId)
+			return
+		}
+		fmt.Printf("sendCallerMsgToMid to=%v done ID=%v\n",callerMastodonUserId, status.ID)
+		if midkey!=nil {
+/* let this msg stand
+			mMgr.midkeyMutex.Lock()
+			midkey.statusID2 = status.ID
+			mMgr.midkeyMap[mid] = midkey
+			mMgr.midkeyMutex.Unlock()
+*/
+		}
 	} else {
-		// TODO this can happen a lot; no need to log this every time
+		// TODO outdated? this can happen a lot; no need to log this every time
 		//fmt.Printf("# mastodon sendCallerMsgToMid callerMastodonUserId empty, calleeID=%s mid=%s\n",calleeID,mid)
 	}
+
+// TODO we can remove the inviter now (but here we have no msgId)
 }
 
 func (mMgr *MastodonMgr) sendCallerMsgCalleeIsOnline(w http.ResponseWriter, r *http.Request, calleeID string, cookie *http.Cookie, remoteAddr string) {
@@ -494,48 +691,51 @@ func (mMgr *MastodonMgr) sendCallerMsgCalleeIsOnline(w http.ResponseWriter, r *h
 		if(mid=="") {
 			fmt.Printf("# mastodon sendCallerMsgCalleeIsOnline mid=%v\n",mid)
 		} else {
-			callerIdOnMastodon := mMgr.tmpkeyMastodonCallerMap[mid]
-			callerMastodonMsgId := mMgr.tmpkeyMastodonCallerReplyMap[mid]	// currently not used
-			if callerIdOnMastodon!="" {
-				calleeIdOnMastodon := mMgr.tmpkeyMastodonCalleeMap[mid]
-				if calleeIdOnMastodon!="" {
-// TODO add callerMastodonUserId as username to link (so caller.js can forward it to callee)
-					mMgr.sendCallerMsg(callerMastodonMsgId, callerIdOnMastodon,
-						"Click to call "+mMgr.hostUrl+"/user/"+calleeIdOnMastodon)
+			mMgr.midkeyMutex.Lock()
+			midkey,ok := mMgr.midkeyMap[mid]
+			if ok && midkey!=nil && midkey.mastodonIdCaller!="" && midkey.mastodonIdCallee!="" {
+// TODO do we really want to send the calleeID in clear?
+// TODO add callerMastodonUserId as username to link (so caller.js can forward/signal it to callee)
+				status,err := mMgr.postCallerMsgEx("@"+midkey.mastodonIdCaller+" "+
+					"Click to call "+mMgr.hostUrl+"/user/"+midkey.mastodonIdCallee)
+				if err!=nil {
+					// this is fatal
+					fmt.Printf("# sendCallerMsg err=%v (to=%v)\n",err,midkey.mastodonIdCaller)
+				} else {
+					fmt.Printf("sendCallerMsg to=%v done ID=%v\n",midkey.mastodonIdCaller, status.ID)
+/* let this msg stand
+					midkey.statusID2 = status.ID
+					mMgr.midkeyMap[mid] = midkey
+*/
 				}
+// TODO we can remove the inviter now (but here we have no msgId, bc this is called by httpServer.go /midmsg)
 			}
+			mMgr.midkeyMutex.Unlock()
 		}
 	}
 }
 
-func (mMgr *MastodonMgr) sendCallerMsg(mastodonSenderMsgID mastodon.ID, callerIdOnMastodon string, msg string) {
-	// send message containing url="/user/"+urlID  InReply to mastodonSenderMsgID
-	fmt.Printf("mastodon sendCallerMsg msg=%v\n",msg)
-	mMgr.postCallerMsgEx("@"+callerIdOnMastodon+" "+msg, mastodonSenderMsgID)
-}
-
-func (mMgr *MastodonMgr) postCallerMsgEx(sendmsg string, inReplyToID mastodon.ID) error {
-	// inReplyToID is currently not used
+func (mMgr *MastodonMgr) postCallerMsgEx(sendmsg string) (*mastodon.Status,error) {
 	fmt.Printf("postCallerMsgEx PostStatus (%s)\n",sendmsg)
 	status,err := mMgr.c.PostStatus(context.Background(), &mastodon.Toot{
 		Status:			sendmsg,
-		//InReplyToID:	inReplyToID,
 		Visibility:		"direct",
 	})
 	if err!=nil {
 		fmt.Println("# postCallerMsgEx PostStatus err=",err)
-		return err
+		return nil,err
 	}
 	fmt.Println("postCallerMsgEx PostStatus sent id=",status.ID)
 	// TODO at some point later we need to delete (from mastodon) all direct messages
 	// note: deleting a (direct) mastodon msg does NOT delete it on the receiver/caller side
-	return nil
+	return status,nil
 }
 
 // called from httpNotifyCallee.go
 func (mMgr *MastodonMgr) postCallerMsg(sendmsg string) error {
-	var inReplyToID mastodon.ID = ""
-	return mMgr.postCallerMsgEx(sendmsg,inReplyToID)
+	_,err := mMgr.postCallerMsgEx(sendmsg)
+// TODO here we should also save status
+	return err
 }
 
 func (mMgr *MastodonMgr) httpGetMidUser(w http.ResponseWriter, r *http.Request, cookie *http.Cookie, remoteAddr string) {
@@ -547,7 +747,14 @@ func (mMgr *MastodonMgr) httpGetMidUser(w http.ResponseWriter, r *http.Request, 
 			// no mid given
 			fmt.Printf("# /getMidUser no mid=%v ip=%v\n",mid,remoteAddr)
 		} else {
-			calleeIdOnMastodon := mMgr.tmpkeyMastodonCalleeMap[mid]
+			calleeIdOnMastodon := ""
+			mMgr.midkeyMutex.RLock()
+			midkey,ok := mMgr.midkeyMap[mid]
+			if ok && midkey!=nil {
+				calleeIdOnMastodon = midkey.mastodonIdCallee
+			}
+			mMgr.midkeyMutex.RUnlock()
+
 			isValidCalleeID := "false"
 			isOnlineCalleeID := "false"
 			if(calleeIdOnMastodon=="") {
@@ -641,7 +848,13 @@ func (mMgr *MastodonMgr) httpRegisterMid(w http.ResponseWriter, r *http.Request,
 
 		fmt.Printf("/register (mid=%s) ip=%s v=%s ua=%s\n",
 			mID, remoteAddr, clientVersion, r.UserAgent())
-		registerID := mMgr.tmpkeyMastodonCalleeMap[mID]
+		registerID := ""
+		mMgr.midkeyMutex.RLock()
+		midkey,ok := mMgr.midkeyMap[mID]
+		if ok && midkey!=nil {
+			registerID = midkey.mastodonIdCallee
+		}
+		mMgr.midkeyMutex.RUnlock()
 		if registerID=="" {
 			fmt.Printf("# /registermid fail no registerID mID=(%s) %s v=%s ua=%s\n",
 				mID, remoteAddr, clientVersion, r.UserAgent())
@@ -748,9 +961,19 @@ func (mMgr *MastodonMgr) calleeLoginSuccess(mid string, urlID string, remoteAddr
 	if urlID=="" {
 		// TODO abort with log
 	}
-	mastodonUserID := mMgr.tmpkeyMastodonCalleeMap[mid]
+
+	mMgr.midkeyMutex.RLock()
+	midkey,ok := mMgr.midkeyMap[mid]
+	if !ok || midkey==nil {
+		mMgr.midkeyMutex.RUnlock()
+		// TODO err log
+		return
+	}
+	mastodonUserID := midkey.mastodonIdCallee
+	mMgr.midkeyMutex.RUnlock()
 	if mastodonUserID=="" {
-		// TODO abort with log
+		// TODO err log
+		return
 	}
 
 	fmt.Printf("calleeLoginSuccess urlID=%s mid=%s mastodonUserID=%s\n",urlID,mid,mastodonUserID)
@@ -806,11 +1029,73 @@ func (mMgr *MastodonMgr) calleeLoginSuccess(mid string, urlID string, remoteAddr
 	// (for instance: after command=="register" there is no caller to send a msg to)
 	mMgr.sendCallerMsgToMid(mid,urlID)
 
+	mMgr.clearMid(mid,true) // will also DeleteStatus(midkey.statusID and inviter.status)
+}
+
+func (mMgr *MastodonMgr) clearMid(mid string, deleteInviter bool) {
+	if mid=="" {
+		fmt.Printf("# clearMid(%s) deleteInviter=%v\n",mid,deleteInviter)
+		return
+	}
+	mMgr.midkeyMutex.RLock()
+	midkey,ok := mMgr.midkeyMap[mid]
+	mMgr.midkeyMutex.RUnlock()
+	if !ok || midkey==nil {
+		// TODO err log
+		fmt.Printf("# clearMid(%s) no midkey\n",mid)
+		return
+	}
+
+	fmt.Printf("clearMid(%s) deleteInviter=%v\n",mid,deleteInviter)
+	if midkey.statusID != "" {
+		err := mMgr.c.DeleteStatus(context.Background(), midkey.statusID)
+		if err!=nil {
+			fmt.Printf("# clearMid() DeleteStatus(statusID=%v)\n",midkey.statusID)
+		}
+	}
+	if midkey.statusID2 != "" {
+		err := mMgr.c.DeleteStatus(context.Background(), midkey.statusID2)
+		if err!=nil {
+			fmt.Printf("# clearMid() DeleteStatus(statusID2=%v)\n",midkey.statusID2)
+		}
+	}
+
+	if deleteInviter {
+		mMgr.clearInviter(midkey.msgID)
+	}
+
 	// now we can discard mid
-	mMgr.tmpkeyMastodonCallerMutex.Lock()
-	delete(mMgr.tmpkeyMastodonCalleeMap,mid)
-	delete(mMgr.tmpkeyMastodonCallerReplyMap,mid) // may not exist
-	mMgr.tmpkeyMastodonCallerMutex.Unlock()
+	fmt.Printf("clearMid(%s) delete midkeyMap\n",mid)
+	mMgr.midkeyMutex.Lock()
+	delete(mMgr.midkeyMap,mid)
+	mMgr.midkeyMutex.Unlock()
+}
+
+func (mMgr *MastodonMgr) clearInviter(msgId string) {
+	fmt.Printf("clearInviter msgID=%s\n",msgId)
+	if msgId != "" {
+		mMgr.inviterMutex.Lock()
+		inviter,ok := mMgr.inviterMap[msgId]
+		if ok && inviter!=nil {
+			// DeleteStatus() previously sent msgs
+			if inviter.statusID != "" {
+				err := mMgr.c.DeleteStatus(context.Background(), inviter.statusID)
+				if err!=nil {
+					fmt.Printf("# clearInviter DeleteStatus(statusID=%v)\n",inviter.statusID)
+				}
+			}
+			if inviter.statusID2 != "" {
+				err := mMgr.c.DeleteStatus(context.Background(), inviter.statusID2)
+				if err!=nil {
+					fmt.Printf("# clearInviter DeleteStatus(statusID2=%v)\n",inviter.statusID2)
+				}
+			}
+			// delete inviter
+			delete(mMgr.inviterMap,msgId)
+			fmt.Printf("clearInviter msgID=%s done\n",msgId)
+		}
+		mMgr.inviterMutex.Unlock()
+	}
 }
 
 func (mMgr *MastodonMgr) mastodonStop() {

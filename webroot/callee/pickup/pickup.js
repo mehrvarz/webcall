@@ -201,7 +201,7 @@ function onload2(mastodonUserID,isValidCalleeID,isOnlineCalleeID,cookieName) {
 	// cookieName is empty; this should also mean that callee is NOT currently logged in
 
 	// offer multiple choice
-	let dispMsg = "To answer the call...<br><br>";
+	let dispMsg = "Answer the call...<br><br>";
 	if(mastodonUserID!="") {
 		if(isValidCalleeID) {
 			// offer user to login with its existing calleeID==mastodonUserID account
@@ -211,14 +211,15 @@ function onload2(mastodonUserID,isValidCalleeID,isOnlineCalleeID,cookieName) {
 			// register new account tmpkeyMastodonCalleeMap[mid] as calleeID
 			// we ONLY hand over (mid) to server (similar to /register, see: httpRegister() in httpOnline.go)
 			// server knows that tmpkeyMastodonCalleeMap[mid] is the desired mastodon user-id
-			dispMsg += "- <a onclick='pwForm(\""+mastodonUserID+"\"); return false;'>register my Mastodon user-ID as WebCall ID</a><br><br>";
+// TODO show 'my Mastodon user-ID'
+			dispMsg += "- <a onclick='pwForm(\""+mastodonUserID+"\"); return false;'>with "+mastodonUserID+" as my WebCall user-ID</a><br><br>";
 		}
 	}
 
 	// offer to enter (via keyboard) a possibly existing calleeID for login
 	// on submit: forward to callee-app (password will be entered there), hand over mid
 	// on login, the server will use mid to send a mastodon msg to the caller, telling the call-url
-	dispMsg += "- <a onclick='loginForm(); return false;'>let me enter my WebCall ID</a><br><br>";
+	dispMsg += "- <a onclick='loginForm(); return false;'>with the WebCall ID I will enter</a><br><br>";
 
 /*
 	// TODO tell server that "#(mid)" is the calleeID that belongs to mid
