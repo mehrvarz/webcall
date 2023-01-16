@@ -655,13 +655,13 @@ func readConfig(init bool) {
 			mastodonhandler = mastodonhandlerNew
 			if mastodonhandler=="" {
 				if mastodonMgr != nil {
-					fmt.Printf("mastodonStop\n")
+					//fmt.Printf("mastodonStop\n")
 					mastodonMgr.mastodonStop()
 					mastodonMgr = nil
 				}
 			} else {
 				if mastodonMgr == nil {
-					fmt.Printf("mastodonStart...\n")
+					//fmt.Printf("mastodonStart...\n")
 					mastodonMgr = NewMastodonMgr()
 					go mastodonMgr.mastodonStart(mastodonhandler)
 				}

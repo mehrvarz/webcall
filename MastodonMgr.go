@@ -65,12 +65,14 @@ func (mMgr *MastodonMgr) mastodonStart(config string) {
 		fmt.Printf("# mastodonStart already running\n")
 		return
 	}
-	// config format: 'Server|ClientID|ClientSecret|username|password'
+	// config format: 'mastodon-domain|server-url|ClientID|ClientSecret|username|password'
 	tokSlice := strings.Split(config, "|")
-	if len(tokSlice)!=5 {
-		fmt.Printf("# mastodonStart config should have 5 tokens, has %d (%s)\n",len(tokSlice),config)
+	if len(tokSlice)!=6 {
+		fmt.Printf("# mastodonStart config should have 6 tokens, has %d (%s)\n",len(tokSlice),config)
 		return
 	}
+
+	fmt.Printf("mastodonStart (%s) ...\n",tokSlice[0])
 
 	mMgr.hostUrl = "https://"+hostname
 	if httpsPort>0 {
@@ -78,11 +80,11 @@ func (mMgr *MastodonMgr) mastodonStart(config string) {
 	}
 
 	mMgr.c = mastodon.NewClient(&mastodon.Config{
-		Server:       tokSlice[0],
-		ClientID:	  tokSlice[1],
-		ClientSecret: tokSlice[2],
+		Server:       tokSlice[1],
+		ClientID:     tokSlice[2],
+		ClientSecret: tokSlice[3],
 	})
-	err := mMgr.c.Authenticate(context.Background(), tokSlice[3], tokSlice[4])
+	err := mMgr.c.Authenticate(context.Background(), tokSlice[4], tokSlice[5])
 	if err != nil {
 		fmt.Printf("# mastodonStart fail Authenticate (%v)\n",err)
 		return
@@ -156,7 +158,7 @@ loop:
 					}
 				}
 				fmt.Printf("mastodonhandler Notif-Type=(%v) done\n", event.Notification.Type)
-				mMgr.processMessage(command,event)
+				mMgr.processMessage(command,event,tokSlice[0])
 
 /*			case *mastodon.UpdateEvent:
 				if event.Status.Content!="" {
@@ -184,14 +186,13 @@ loop:
 	return
 }
 
-// @webcall@mastodon.social !tm@mastodontech.de
-func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.NotificationEvent) {
+func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.NotificationEvent, domainName string) {
 	msg = strings.TrimSpace(msg)
 
-	mastodonUserId := event.Notification.Account.Acct
+	mastodonUserId := event.Notification.Account.Acct // from
 	if strings.Index(mastodonUserId,"@")<0 {
 		// this notif was sent by a user on "our" instance
-		mastodonUserId += "@mastodon.social"	// TODO hack
+		mastodonUserId += "@"+domainName
 	}
 
 	msgID := fmt.Sprint(event.Notification.Status.ID)
@@ -199,21 +200,15 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 	inReplyToID := fmt.Sprint(event.Notification.Status.InReplyToID)
 	if inReplyToID == "<nil>" { inReplyToID = "" }
 	tok := strings.Split(msg, " ")
-	fmt.Printf("mastodon processMessage msg=(%v) msgId=%v InReplyToID=%v lenTok=%d\n",
-		msg, msgID, inReplyToID, len(tok))
+	fmt.Printf("mastodon processMessage msg=(%v) msgId=%v InReplyToID=%v RecipientCount=%d lenTok=%d\n",
+		msg, msgID, inReplyToID, -1, len(tok))
 
 	if msgID=="" {
 		// can't work without a msgID
 		fmt.Printf("# mastodon processMessage empty event.Notification.Status.ID\n")
 		return
 	}
-/*
-	if inReplyToID=="" {
-		// can't work without a msgID
-		fmt.Printf("# mastodon processMessage empty event.Notification.Status.InReplyToID\n")
-		return
-	}
-*/
+
 	if inReplyToID=="" {
 		// this is a request/invite msg (could also be any kind of msg)
 
@@ -290,12 +285,23 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 							mastodonUserId)
 					}
 				}
-// TODO  this 'return' MUST abort processing, not sure it does
+				// abort processMessage here
 				return
 			}
 		}
 
-// TODO verify: msg MUST contain a target user-id (NOT webcall) in 1st place - otherwise abort here!
+// TODO msg MUST contain a target user-id (NOT webcall) - otherwise abort here!
+// in other words: if webcall is the only recipient, this is not valid
+// looks like we need to parse html in Content for "<span>timurmobi</span>":
+//     <span class="h-card"><a href="https://mastodon.social/@timurmobi" class="u-url mention" rel="nofollow noopener noreferrer" target="_blank">@<span>timurmobi</span></a></span>
+// or parse html in Content for "<span>webcall</span>":
+//     <span class="h-card"><a href="https://mastodon.social/@webcall" class="u-url mention" rel="nofollow noopener noreferrer" target="_blank">@<span>webcall</span></a></span>
+/*
+		if webcall is the only recipient {
+			fmt.Printf("# mastodon processMessage: webcall is the only recipient\n")
+			return
+		}
+*/
 
 		// we now assume this is a valid msg to webcall-invite another user (requesting a confirm msg)
 		// this inviter stays active for up to 60min
@@ -309,7 +315,7 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 		inviter.Expiration = time.Now().Unix() + 60*60
 		mMgr.inviterMap[msgID] = inviter
 		mMgr.inviterMutex.Unlock()
-		// mMgr.inviterMap[msgID] becomes relevant if target user sends a confirm msg back
+		// mMgr.inviterMap[msgID] only becomes relevant if target user sends a confirm msg back
 
 	} else {
 		// this is a reply/confirm msg (or might be one)
