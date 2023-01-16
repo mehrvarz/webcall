@@ -375,8 +375,6 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 		// - create new persistent callee account
 		// - one-off session
 
-		var mastodonCallerMsgId mastodon.ID = "" //dummy not used TODO remove
-
 		// find out if calleeID is online right now 
 		hubMapMutex.RLock()
 		hub := hubMap[calleeID]
@@ -405,7 +403,7 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 			// instead we immediately send a mastodon-msg to the caller
 			fmt.Printf("mastodon processMessage callee online, send /user link to caller\n")
 
-// TODO do we really want to send the calleeID in clear?
+// TODO do we really want to send-msg calleeID in clear?
 			status,err := mMgr.postCallerMsgEx("@"+mastodonCallerID+" "+
 							"Click to call "+mMgr.hostUrl+"/user/"+calleeID)
 			if err!=nil {
@@ -444,7 +442,6 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 			midkey.mastodonIdCallee = mastodonCalleeID
 			midkey.mastodonIdCaller = mastodonCallerID
 			midkey.msgID = msgID
-			//midkey.mastodonIdCallerReplyId = mastodonCallerMsgId
 			mMgr.midkeyMap[mID] = midkey
 			mMgr.midkeyMutex.Unlock()
 
@@ -494,9 +491,8 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 
 			// arg2 none-empty string: notify caller after callee-login
 			// arg3 none-empty string: callerMsgID to notify after callee-login (not currently used)
-			// arg4 none-empty string: there is no special msg (will only say: "Register your WebCall ID:")
-// TODO must test arg4!=""
-			err := mMgr.offerRegisterLink(mastodonCalleeID,mastodonCallerID,mastodonCallerMsgId,msg,msgID)
+			// arg4 none-empty string: msg will be put in front of "Answer call:"
+			err := mMgr.offerRegisterLink(mastodonCalleeID,mastodonCallerID,msg,msgID)
 			if err!=nil {
 				fmt.Printf("# mastodon processMessage offerRegisterLink err=%v\n",err)
 			}
@@ -531,7 +527,6 @@ func (mMgr *MastodonMgr) cleanupMastodonInviter(w io.Writer) {
 					fmt.Printf("# calleeLoginSuccess DeleteStatus(statusID2=%v)\n",inviter.statusID2)
 				}
 			}
-			// TODO remove remark: delete the inviter: mMgr.inviterMap[msgId]
 
 			// delete the inviter itself below, outside of range loop
 			deleteInviterArray = append(deleteInviterArray,mastodonMsgID)
@@ -555,7 +550,7 @@ func (mMgr *MastodonMgr) cleanupMastodonInviter(w io.Writer) {
 	fmt.Printf("cleanupMastodonInviter done\n")
 }
 
-func (mMgr *MastodonMgr) offerRegisterLink(mastodonUserId string, mastodonCallerUserId string, mastodonSenderMsgID mastodon.ID, msg string, msgID string) error {
+func (mMgr *MastodonMgr) offerRegisterLink(mastodonUserId string, mastodonCallerUserId string, msg string, msgID string) error {
 	// offer link to /pickup, where mastodonUserId can be registered
 	// 1) is called in response to a call, we want to send a msg to caller after login
 	// 2) is called in response to "register", we DONT want to send a msg to caller after login
@@ -589,10 +584,8 @@ func (mMgr *MastodonMgr) offerRegisterLink(mastodonUserId string, mastodonCaller
 	mMgr.inviterMap[msgID] = inviter
 	mMgr.inviterMutex.Unlock()
 
-// TODO not sure about &register (as a result pickup.js never offers multipe choice)
 // TODO add callerMastodonUserId as username to link (so caller.js can forward it to callee)
-	sendmsg :="@"+mastodonUserId+" "+
-				msg+"Answer call: "+mMgr.hostUrl+"/callee/pickup?mid="+mID //+"&register"
+	sendmsg :="@"+mastodonUserId+" "+msg+"Answer call: "+mMgr.hostUrl+"/callee/pickup?mid="+mID
 	fmt.Printf("offerRegisterLink PostStatus (%s)\n",sendmsg)
 	status,err := mMgr.postCallerMsgEx(sendmsg)
 	if err!=nil {
@@ -655,6 +648,7 @@ func (mMgr *MastodonMgr) sendCallerMsgToMid(mid string, calleeID string) {
 	// calleeID and callerMastodonUserId (if set) appear to be the same?
 
 	if callerMastodonUserId!="" {
+// TODO do we really want to send-msg calleeID in clear?
 // TODO add callerMastodonUserId as username to link (so caller.js can forward it to callee)
 		sendmsg :=	"@"+callerMastodonUserId+" Click to call: "+mMgr.hostUrl+"/user/"+calleeID
 		status,err := mMgr.postCallerMsgEx(sendmsg)
@@ -694,7 +688,7 @@ func (mMgr *MastodonMgr) sendCallerMsgCalleeIsOnline(w http.ResponseWriter, r *h
 			mMgr.midkeyMutex.Lock()
 			midkey,ok := mMgr.midkeyMap[mid]
 			if ok && midkey!=nil && midkey.mastodonIdCaller!="" && midkey.mastodonIdCallee!="" {
-// TODO do we really want to send the calleeID in clear?
+// TODO do we really want to send-msg calleeID in clear?
 // TODO add callerMastodonUserId as username to link (so caller.js can forward/signal it to callee)
 				status,err := mMgr.postCallerMsgEx("@"+midkey.mastodonIdCaller+" "+
 					"Click to call "+mMgr.hostUrl+"/user/"+midkey.mastodonIdCallee)
@@ -726,15 +720,13 @@ func (mMgr *MastodonMgr) postCallerMsgEx(sendmsg string) (*mastodon.Status,error
 		return nil,err
 	}
 	fmt.Println("postCallerMsgEx PostStatus sent id=",status.ID)
-	// TODO at some point later we need to delete (from mastodon) all direct messages
-	// note: deleting a (direct) mastodon msg does NOT delete it on the receiver/caller side
 	return status,nil
 }
 
 // called from httpNotifyCallee.go
 func (mMgr *MastodonMgr) postCallerMsg(sendmsg string) error {
 	_,err := mMgr.postCallerMsgEx(sendmsg)
-// TODO here we should also save status
+// TODO here we should also save status.ID
 	return err
 }
 
@@ -790,8 +782,6 @@ func (mMgr *MastodonMgr) httpGetMidUser(w http.ResponseWriter, r *http.Request, 
 				} else {
 					// user is NOT online: check if account valid
 					if mMgr.isValidCallee(calleeID) {
-// TODO this does not seem to work (was set to false for tm@mastodontech.de)
-// but now it has worked
 						isValidCalleeID = "true"
 					}
 				}
@@ -956,23 +946,25 @@ func (mMgr *MastodonMgr) httpRegisterMid(w http.ResponseWriter, r *http.Request,
 func (mMgr *MastodonMgr) calleeLoginSuccess(mid string, urlID string, remoteAddr string) {
 	// called by httpLogin() on successful login with mid-parameter
 	if mid=="" {
-		// TODO abort with log
+		fmt.Printf("# calleeLoginSuccess abort urlID=%s mid=%s\n", urlID, mid)
+		return
 	}
 	if urlID=="" {
-		// TODO abort with log
+		fmt.Printf("# calleeLoginSuccess abort urlID=%s mid=%s\n", urlID, mid)
+		return
 	}
 
 	mMgr.midkeyMutex.RLock()
 	midkey,ok := mMgr.midkeyMap[mid]
 	if !ok || midkey==nil {
 		mMgr.midkeyMutex.RUnlock()
-		// TODO err log
+		fmt.Printf("# calleeLoginSuccess no midkey for mid urlID=%s mid=%s\n", urlID, mid)
 		return
 	}
 	mastodonUserID := midkey.mastodonIdCallee
 	mMgr.midkeyMutex.RUnlock()
 	if mastodonUserID=="" {
-		// TODO err log
+		fmt.Printf("# calleeLoginSuccess no mastodonUserID from midkey urlID=%s mid=%s\n", urlID, mid)
 		return
 	}
 
@@ -1018,7 +1010,8 @@ func (mMgr *MastodonMgr) calleeLoginSuccess(mid string, urlID string, remoteAddr
 		mappingMutex.Lock()
 		mappingData,ok := mapping[mastodonUserID]
 		if ok && mappingData.CalleeId != urlID {
-			// TODO log SUSPICIOUS?
+			// TODO SUSPICIOUS?
+			fmt.Printf("! calleeLoginSuccess CalleeId=%s != urlID=%s\n", mappingData.CalleeId, urlID)
 		}
 		mapping[mastodonUserID] = MappingDataType{urlID,"none"}
 		mappingMutex.Unlock()
@@ -1041,7 +1034,6 @@ func (mMgr *MastodonMgr) clearMid(mid string, deleteInviter bool) {
 	midkey,ok := mMgr.midkeyMap[mid]
 	mMgr.midkeyMutex.RUnlock()
 	if !ok || midkey==nil {
-		// TODO err log
 		fmt.Printf("# clearMid(%s) no midkey\n",mid)
 		return
 	}
