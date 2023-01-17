@@ -158,8 +158,7 @@ func httpFetchID(w http.ResponseWriter, r *http.Request, urlID string, calleeID 
 		}
 
 		unixTime := startRequestTime.Unix()
-		// "nopw": tmpID's don't have passwords
-		err = kvMain.Put(dbRegisteredIDs, registerID, DbEntry{unixTime, remoteAddr, "nopw"}, false)
+		err = kvMain.Put(dbRegisteredIDs, registerID, DbEntry{unixTime, remoteAddr, ""}, false)
 		if err!=nil {
 			fmt.Printf("# /fetchid (%s) error db=%s bucket=%s put err=%v\n",
 				registerID,dbMainName,dbRegisteredIDs,err)

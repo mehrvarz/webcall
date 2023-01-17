@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"math/rand"
 	"golang.org/x/net/html"
+//	"golang.org/x/crypto/bcrypt"
 	"github.com/mattn/go-mastodon"
 	"github.com/mehrvarz/webcall/skv"
 )
@@ -935,8 +936,19 @@ func (mMgr *MastodonMgr) httpRegisterMid(w http.ResponseWriter, r *http.Request,
 					registerID, dbMainName, dbUserBucket, err)
 				fmt.Fprintf(w,"cannot register user")
 			} else {
+/*
+				storePw := pw
+				hash, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.MinCost)
+				if err != nil {
+					fmt.Printf("# /login bcrypt err=%v\n", err)
+					// cont to use unencrypt pw
+				} else {
+					fmt.Printf("/login bcrypt store (%v)\n", string(hash))
+					storePw = string(hash)
+				}
+*/
 				err = kvMain.Put(dbRegisteredIDs, registerID,
-						DbEntry{unixTime, remoteAddr, pw}, false)
+						DbEntry{unixTime, remoteAddr, ""}, false)
 				if err!=nil {
 					fmt.Printf("# /registermid (%s) error db=%s bucket=%s put err=%v\n",
 						registerID,dbMainName,dbRegisteredIDs,err)

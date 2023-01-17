@@ -4,7 +4,7 @@ package main
 type DbEntry struct {
 	StartTime int64
 	Ip string
-	Password string
+	Paassword string        // not used
 }
 
 type DbUser struct {

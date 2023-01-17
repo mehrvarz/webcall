@@ -23,7 +23,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *http.Cookie, pw string, remoteAddr string, remoteAddrWithPort string, nocookie bool, startRequestTime time.Time, pwIdCombo PwIdCombo, userAgent string) {
+func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *http.Cookie, hashPw string, remoteAddr string, remoteAddrWithPort string, nocookie bool, startRequestTime time.Time, pwIdCombo PwIdCombo, userAgent string) {
 	clientVersion := ""
 	url_arg_array, ok := r.URL.Query()["ver"]
 	if ok && len(url_arg_array[0]) >= 1 {
@@ -237,7 +237,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		}
 	}
 
-	pw2 := ""
+	formPw := ""
 	postBuf := make([]byte, 128)
 	length, _ := io.ReadFull(r.Body, postBuf)
 	if length > 0 {
@@ -250,35 +250,111 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			if strings.HasPrefix(tok, "pw=") {
 				pwFromPost := tok[3:]
 				if(pwFromPost!="") {
-					pw2 = pwFromPost
+					formPw = pwFromPost
 					break
 				}
 			}
 		}
 	}
-
-	if pw == "" && pw2 == "" {
+/*
+	if hashPw == "" && formPw == "" {
 		fmt.Fprintf(w, "error")
 		return
 	}
-	if pw == "" && len(pw2) < 6 {
+*/
+	if hashPw == "" && len(formPw) < 6 {
 		// delay guessing
-		fmt.Printf("/login (%s) pw too short %s v=%s\n", urlID, remoteAddr, clientVersion)
+		fmt.Printf("/login (%s) formPw too short %s v=%s\n", urlID, remoteAddr, clientVersion)
 		time.Sleep(3000 * time.Millisecond)
 		fmt.Fprintf(w, "error")
 		return
 	}
 
-	//fmt.Printf("/login (%s) pw given rip=%s rt=%v\n",
+	if formPw!="" {
+		// pw form-input is given
+		if hashPw=="" {
+			// no cookie: compare form input against dbEntry.Password
+// TODO rather than use dbEntry.Password we should use dbHashedPwBucket with key urlID
+// but without a cookie we can't, bc we don't know the rand-number for the key
+// we store the rand-number in the cookie, so a client cannot send a fake cookie with only the (public) urlID
+//			hashPw = dbEntry.Password
+			var pwIdCombo PwIdCombo
+			err := kvHashedPw.Get(dbHashedPwBucket,urlID,&pwIdCombo)
+			if err==nil {
+				hashPw = pwIdCombo.Pw
+			}
+
+			fmt.Printf("/login (%s) got formPw, no cookiePw\n", urlID)
+		} else {
+			fmt.Printf("/login (%s) got formPw, cookiePw\n", urlID)
+		}
+		// this gets executed after form-field submit
+		// compare form-cleartext-formPw vs. hashPw-dbHashedPw-plus-cookie (if empty: hashPw-dbEntry.Password)
+//fmt.Printf("/login (%s) compare (%s) (%s)\n", urlID, hashPw, formPw)
+		err := bcrypt.CompareHashAndPassword([]byte(hashPw), []byte(formPw))
+		if err != nil {
+			fmt.Printf("# /login (%s) bcrypt.CompareHashAndPassword err=%v\n", urlID, err)
+			// in case hashPw was not crypted:
+			if hashPw != formPw {
+//fmt.Printf("# /login (%s) clear pw err (%s|%s) %s\n", urlID, hashPw, formPw, remoteAddr)
+				fmt.Printf("# /login (%s) clear pw err %s\n", urlID, remoteAddr)
+				// make pw guessing slow
+				time.Sleep(2000 * time.Millisecond)
+				fmt.Fprintf(w, "error")
+				return
+			}
+			fmt.Printf("/login (%s) clear pw success\n", urlID)
+		} else {
+			fmt.Printf("/login (%s) bcrypt.CompareHashAndPassword success\n", urlID)
+		}
+	} else {
+		// no pw form-input is given
+		// this happens on page reload
+		if hashPw=="" {
+			// without a cookie and without formPw, we will fail, causing the pw-form to be shown on the client
+			fmt.Printf("/login (%s) got no formPw, no cookiePw\n", urlID)
+			// make pw guessing slow
+			time.Sleep(2000 * time.Millisecond)
+			fmt.Fprintf(w, "error")
+			return
+		}
+
+		// no pw form-input but a coolie is given
+		// hashPw comes from our local dbHashedPw (based on key=cookie)
+		// hashPw!="" means that the cookie is valid
+		fmt.Printf("/login (%s) got no formPw, cookiePw\n", urlID)
+/*
+		// compare hashPw-from-dbHashedPw-plus-cookie vs hashPw-pw-from-dbEntry.Password-with-urlID/calleeID
+fmt.Printf("/login (%s) compare (%s) (%s)\n", urlID, hashPw, dbEntry.Password)
+// hashPw            = pwIdCombo.Pw from dbHashedPwBucket via cookie.Value
+// dbEntry.Password  = dbRegisteredIDs via urlID
+// TODO this cmp may fail even though the 2 hashes are the same
+// (was: if formPw = dbEntry.Password success, then "/login bcrypt store (" stores a different)
+		if hashPw != dbEntry.Password {
+			//fmt.Printf("# /login (%s) fail dbEntry.password %d %s\n", urlID, len(calleeLoginSlice), remoteAddr)
+			// compare hashPw-from-dbHashedPw-plus-cookie vs cleartext-pw from dbEntry.Password with urlID/calleeID
+			err = bcrypt.CompareHashAndPassword([]byte(hashPw), []byte(dbEntry.Password))
+			if err != nil {
+				fmt.Printf("# /login (%s) bcrypt.CompareHashAndPassword dbEntry err=%v\n", urlID, err)
+				// make pw guessing slow
+				time.Sleep(2000 * time.Millisecond)
+				fmt.Fprintf(w, "error")
+				return
+			}
+			fmt.Printf("/login (%s) bcrypt.CompareHashAndPassword dbEntry success\n", urlID)
+		} else {
+			fmt.Printf("/login (%s) hashPw = dbEntry.Password\n", urlID)
+		}
+*/
+	}
+
+	// pw is accepted, get dbEntry and dbUser based on urlID
+
+	//fmt.Printf("/login (%s) rip=%s rt=%v\n",
 	//	urlID, remoteAddr, time.Since(startRequestTime)) // rt=23.184µs
 	var dbEntry DbEntry
 	var dbUser DbUser
 	var wsClientID uint64
-	var lenGlobalHubMap int64
-	serviceSecs := 0
-	globalID := ""
-	dbUserKey := ""
-
 	err := kvMain.Get(dbRegisteredIDs, urlID, &dbEntry)
 	if err != nil {
 		// err is most likely "skv key not found"
@@ -307,50 +383,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		return
 	}
 
-	if pw=="" {
-		// if no cookie exists yet
-		pw = dbEntry.Password
-	}
-
-	if pw2!="" {
-		// this gets executed after form-field submit
-		// compare form-cleartext-pw2 vs. hashPw-dbHashedPw-plus-cookie (if empty: hashPw-dbEntry.Password)
-		err = bcrypt.CompareHashAndPassword([]byte(pw), []byte(pw2))
-		if err != nil {
-			fmt.Printf("# /login (%s) bcrypt.CompareHashAndPassword err=%v\n", urlID, err)
-			// in case pw was not crypted:
-			if pw != pw2 {
-				fmt.Printf("# /login (%s) fail wrong password %d %s\n", urlID, len(calleeLoginSlice), remoteAddr)
-				// delay to make pw guessing slow
-				time.Sleep(2000 * time.Millisecond)
-				fmt.Fprintf(w, "error")
-				return
-			}
-		} else {
-			fmt.Printf("/login (%s) bcrypt.CompareHashAndPassword success\n", urlID)
-		}
-	} else {
-		// this gets executed on page reload
-		// compare hashPw-from-dbHashedPw-plus-cookie vs hashPw-pw-from-dbEntry.Password-with-urlID/calleeID
-		if pw != dbEntry.Password {
-			//fmt.Printf("# /login (%s) fail dbEntry.password %d %s\n", urlID, len(calleeLoginSlice), remoteAddr)
-			// compare hashPw-from-dbHashedPw-plus-cookie vs cleartext-pw from dbEntry.Password with urlID/calleeID
-			err = bcrypt.CompareHashAndPassword([]byte(pw), []byte(dbEntry.Password))
-			if err != nil {
-				fmt.Printf("# /login (%s) bcrypt.CompareHashAndPassword dbEntry err=%v\n", urlID, err)
-				// delay to make pw guessing slow
-				time.Sleep(2000 * time.Millisecond)
-				fmt.Fprintf(w, "error")
-				return
-			}
-			fmt.Printf("/login (%s) bcrypt.CompareHashAndPassword dbEntry success\n", urlID)
-		} else {
-			fmt.Printf("/login (%s) compared pw(%s) = dbEntry.Password(%s) success\n", urlID, pw, dbEntry.Password)
-		}
-	}
-
-	// pw accepted
-	dbUserKey = fmt.Sprintf("%s_%d", urlID, dbEntry.StartTime)
+	dbUserKey := fmt.Sprintf("%s_%d", urlID, dbEntry.StartTime)
 	err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 	if err != nil {
 		fmt.Printf("# /login (%s) error db=%s bucket=%s get %s err=%v v=%s\n",
@@ -378,6 +411,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	//fmt.Printf("/login (%s) set wsClientMap[%d] for\n", globalID, wsClientID)
 	// hub.WsClientID and hub.ConnectedCallerIp will be set by wsclient.go
 
+	globalID := ""
 	globalID,_,err = StoreCalleeInHubMap(urlID, myMultiCallees, remoteAddrWithPort, wsClientID, false)
 	if err != nil || globalID == "" {
 		fmt.Printf("# /login (%s/%s) StoreCalleeInHubMap err=%v v=%s\n",
@@ -388,8 +422,9 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	//fmt.Printf("/login (%s) urlID=(%s) rip=%s rt=%v\n",
 	//	globalID, urlID, remoteAddr, time.Since(startRequestTime))
 
+	var lenGlobalHubMap int64
 	if cookie == nil && !nocookie {
-		err,cookieValue := createCookie(w, urlID, pw, &pwIdCombo)
+		err,cookieValue := createCookie(w, urlID, hashPw, &pwIdCombo)
 		if err != nil {
 			if globalID != "" {
 				_,lenGlobalHubMap = DeleteFromHubMap(globalID)
@@ -529,6 +564,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			remoteAddrWithPort, clientVersion, userAgent)
 	}
 
+	serviceSecs := 0
 	responseString := fmt.Sprintf("%s|%d|%s|%d|%v|%v",
 		wsAddr,                     // 0
 		dbUser.ConnectedToPeerSecs, // 1
@@ -698,6 +734,8 @@ func createCookie(w http.ResponseWriter, urlID string, pw string, pwIdCombo *PwI
 	pwIdCombo.Expiration = expiration.Unix()
 
 	skipConfirm := true
-	return kvHashedPw.Put(dbHashedPwBucket, cookieValue, pwIdCombo, skipConfirm), cookieValue
+//	return kvHashedPw.Put(dbHashedPwBucket, cookieValue, pwIdCombo, skipConfirm), cookieValue
+	// cookieSecret is no opsolete
+	return kvHashedPw.Put(dbHashedPwBucket, urlID, pwIdCombo, skipConfirm), cookieValue
 }
 

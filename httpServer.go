@@ -553,7 +553,11 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				fmt.Printf("httpApi cookie avail req=%s ref=%s cookieName=%s cValue=%s calleeID=%s urlID=%s\n",
 					r.URL.Path, referer, cookieName, cookie.Value, calleeID, urlID)
 			}
+// TODO here we could use calleeIdFromCookie instead of cookie.Value
 			err = kvHashedPw.Get(dbHashedPwBucket,cookie.Value,&pwIdCombo)
+			if err!=nil {
+				err = kvHashedPw.Get(dbHashedPwBucket,calleeIdFromCookie,&pwIdCombo)
+			}
 			if err!=nil {
 				// callee is using an unknown cookie
 				fmt.Printf("httpApi %v unknown cookie '%s' err=%v\n", r.URL, cookie.Value, err)
