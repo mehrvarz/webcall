@@ -559,6 +559,7 @@ func ticker3min() {
 		}
 
 		if isLocalDb() {
+/*
 			// delete old twitter notifications
 			readConfigLock.RLock()
 			mytwitterKey := twitterKey
@@ -590,22 +591,22 @@ func ticker3min() {
 								fmt.Printf("ticker3min outdated ID=%s ageSecs=%d > 1h (%s) deleting\n",
 									idStr, ageSecs, notifTweet.Comment)
 							}
-/* kvNotif is currently not fed from httpNotifyCallee.go
-							twitterClientLock.Lock()
-							if twitterClient==nil {
-								twitterAuth()
-							}
-							if twitterClient==nil {
-								fmt.Printf("# ticker3min failed on no twitterClient\n")
-								twitterClientLock.Unlock()
-								break
-							}
-							respdata,err := twitterClient.DeleteTweet(idStr)
-							twitterClientLock.Unlock()
-							if err!=nil {
-								fmt.Printf("# ticker3min DeleteTweet %s err=%v (%s)\n", idStr, err, respdata)
-							} else 
-*/
+// kvNotif is currently not fed from httpNotifyCallee.go
+//							twitterClientLock.Lock()
+//							if twitterClient==nil {
+//								twitterAuth()
+//							}
+//							if twitterClient==nil {
+//								fmt.Printf("# ticker3min failed on no twitterClient\n")
+//								twitterClientLock.Unlock()
+//								break
+//							}
+//							respdata,err := twitterClient.DeleteTweet(idStr)
+//							twitterClientLock.Unlock()
+//							if err!=nil {
+//								fmt.Printf("# ticker3min DeleteTweet %s err=%v (%s)\n", idStr, err, respdata)
+//							} else 
+
 							{
 								//fmt.Printf("ticker3min DeleteTweet %s OK\n", idStr)
 								err := c.Delete()
@@ -626,6 +627,7 @@ func ticker3min() {
 				})
 				skv.DbMutex.Unlock()
 			}
+*/
 
 			// call backupScript
 			readConfigLock.RLock()
@@ -706,10 +708,12 @@ func callBackupScript(scriptName string) error {
 	if err := kv.Db.Sync(); err != nil {
 		fmt.Printf("# callBackupScript kvContacts sync error: %s\n", err)
 	}
+/*
 	kv = kvNotif.(skv.SKV)
 	if err := kv.Db.Sync(); err != nil {
 		fmt.Printf("# callBackupScript kvNotif sync error: %s\n", err)
 	}
+*/
 	kv = kvHashedPw.(skv.SKV)
 	if err := kv.Db.Sync(); err != nil {
 		fmt.Printf("# callBackupScript kvHashedPw sync error: %s\n", err)

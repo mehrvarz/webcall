@@ -75,9 +75,9 @@ var	kvContacts skv.KV
 const dbContactsName = "rtccontacts.db"
 const dbContactsBucket = "contacts" // calleeID -> map[callerID]name
 
-var	kvNotif skv.KV
-const dbNotifName = "rtcnotif.db"
-const dbSentNotifTweets = "sentNotifTweets"
+//var	kvNotif skv.KV
+//const dbNotifName = "rtcnotif.db"
+//const dbSentNotifTweets = "sentNotifTweets"
 
 var	kvHashedPw skv.KV
 const dbHashedPwName = "rtchashedpw.db"
@@ -281,6 +281,7 @@ func main() {
 		kvCalls.Close()
 		return
 	}
+/*
 	kvNotif,err = skv.DbOpen(dbNotifName,dbPath)
 	if err!=nil {
 		fmt.Printf("# error DbOpen %s path %s err=%v\n",dbNotifName,dbPath,err)
@@ -292,6 +293,7 @@ func main() {
 		kvNotif.Close()
 		return
 	}
+*/
 	kvHashedPw,err = skv.DbOpen(dbHashedPwName,dbPath)
 	if err!=nil {
 		fmt.Printf("# error DbOpen %s path %s err=%v\n",dbHashedPwName,dbPath,err)
@@ -476,11 +478,13 @@ func main() {
 	if err!=nil {
 		fmt.Printf("# error dbName %s close err=%v\n",dbHashedPwName,err)
 	}
+/*
 	fmt.Printf("kvNotif.Close...\n")
 	err = kvNotif.Close()
 	if err!=nil {
 		fmt.Printf("# error dbName %s close err=%v\n",dbNotifName,err)
 	}
+*/
 	fmt.Printf("kvCalls.Close...\n")
 	err = kvCalls.Close()
 	if err!=nil {
