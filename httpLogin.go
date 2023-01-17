@@ -20,6 +20,7 @@ import (
 	"io"
 	"math/rand"
 	"sync"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *http.Cookie, pw string, remoteAddr string, remoteAddrWithPort string, nocookie bool, startRequestTime time.Time, pwIdCombo PwIdCombo, userAgent string) {
@@ -236,6 +237,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		}
 	}
 
+	pw2 := ""
 	postBuf := make([]byte, 128)
 	length, _ := io.ReadFull(r.Body, postBuf)
 	if length > 0 {
@@ -248,17 +250,21 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			if strings.HasPrefix(tok, "pw=") {
 				pwFromPost := tok[3:]
 				if(pwFromPost!="") {
-					pw = pwFromPost
-					//fmt.Printf("/login pw from httpPost (%s)\n", pw)
+					pw2 = pwFromPost
 					break
 				}
 			}
 		}
 	}
 
-	// pw must be available now
-	if pw == "" {
-		fmt.Printf("/login (%s) no pw %s v=%s ua=%s\n", urlID, remoteAddr, clientVersion, userAgent)
+	if pw == "" && pw2 == "" {
+		fmt.Fprintf(w, "error")
+		return
+	}
+	if pw == "" && len(pw2) < 6 {
+		// delay guessing
+		fmt.Printf("/login (%s) pw too short %s v=%s\n", urlID, remoteAddr, clientVersion)
+		time.Sleep(3000 * time.Millisecond)
 		fmt.Fprintf(w, "error")
 		return
 	}
@@ -272,14 +278,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 	serviceSecs := 0
 	globalID := ""
 	dbUserKey := ""
-
-	if len(pw) < 6 {
-		// guessing more difficult if delayed
-		fmt.Printf("/login (%s) pw too short %s v=%s\n", urlID, remoteAddr, clientVersion)
-		time.Sleep(3000 * time.Millisecond)
-		fmt.Fprintf(w, "error")
-		return
-	}
 
 	err := kvMain.Get(dbRegisteredIDs, urlID, &dbEntry)
 	if err != nil {
@@ -308,12 +306,47 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		fmt.Fprintf(w, "notregistered")
 		return
 	}
-	if pw != dbEntry.Password {
-		fmt.Printf("/login (%s) fail wrong password %d %s\n", urlID, len(calleeLoginSlice), remoteAddr)
-		// delay to make pw guessing harder
-		time.Sleep(2000 * time.Millisecond)
-		fmt.Fprintf(w, "error")
-		return
+
+	if pw=="" {
+		// if no cookie exists yet
+		pw = dbEntry.Password
+	}
+
+	if pw2!="" {
+		// this gets executed after form-field submit
+		// compare form-cleartext-pw2 vs. hashPw-dbHashedPw-plus-cookie (if empty: hashPw-dbEntry.Password)
+		err = bcrypt.CompareHashAndPassword([]byte(pw), []byte(pw2))
+		if err != nil {
+			fmt.Printf("# /login (%s) bcrypt.CompareHashAndPassword err=%v\n", urlID, err)
+			// in case pw was not crypted:
+			if pw != pw2 {
+				fmt.Printf("# /login (%s) fail wrong password %d %s\n", urlID, len(calleeLoginSlice), remoteAddr)
+				// delay to make pw guessing slow
+				time.Sleep(2000 * time.Millisecond)
+				fmt.Fprintf(w, "error")
+				return
+			}
+		} else {
+			fmt.Printf("/login (%s) bcrypt.CompareHashAndPassword success\n", urlID)
+		}
+	} else {
+		// this gets executed on page reload
+		// compare hashPw-from-dbHashedPw-plus-cookie vs hashPw-pw-from-dbEntry.Password-with-urlID/calleeID
+		if pw != dbEntry.Password {
+			//fmt.Printf("# /login (%s) fail dbEntry.password %d %s\n", urlID, len(calleeLoginSlice), remoteAddr)
+			// compare hashPw-from-dbHashedPw-plus-cookie vs cleartext-pw from dbEntry.Password with urlID/calleeID
+			err = bcrypt.CompareHashAndPassword([]byte(pw), []byte(dbEntry.Password))
+			if err != nil {
+				fmt.Printf("# /login (%s) bcrypt.CompareHashAndPassword dbEntry err=%v\n", urlID, err)
+				// delay to make pw guessing slow
+				time.Sleep(2000 * time.Millisecond)
+				fmt.Fprintf(w, "error")
+				return
+			}
+			fmt.Printf("/login (%s) bcrypt.CompareHashAndPassword dbEntry success\n", urlID)
+		} else {
+			fmt.Printf("/login (%s) compared pw(%s) = dbEntry.Password(%s) success\n", urlID, pw, dbEntry.Password)
+		}
 	}
 
 	// pw accepted
@@ -650,8 +683,16 @@ func createCookie(w http.ResponseWriter, urlID string, pw string, pwIdCombo *PwI
 		fmt.Printf("/login cookie created (%v)\n", cookieValue)
 	}
 
-	// here we could encrypt the pw
-	pwIdCombo.Pw = pw
+	//pwIdCombo.Pw = pw
+    hash, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.MinCost)
+    if err != nil {
+		fmt.Printf("# /login bcrypt err=%v\n", err)
+		pwIdCombo.Pw = pw
+    } else {
+		fmt.Printf("/login bcrypt store (%v)\n", string(hash))
+		pwIdCombo.Pw = string(hash)
+	}
+
 	pwIdCombo.CalleeId = urlID
 	pwIdCombo.Created = time.Now().Unix()
 	pwIdCombo.Expiration = expiration.Unix()

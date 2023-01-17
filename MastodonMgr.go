@@ -220,12 +220,12 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 				// here we remove a mastodonUserId
 // TODO must be very carefully with this (ask user: are you sure?)
 // TODO wc-delete apparently does not delete missed calls
-				fmt.Printf("mastodon processMessage delete (%v)\n", mastodonUserId)
+				fmt.Printf("mastodon wc-delete (%v)\n", mastodonUserId)
 
 				var dbEntryRegistered DbEntry
 				err := kvMain.Get(dbRegisteredIDs,mastodonUserId,&dbEntryRegistered)
 				if err!=nil {
-					fmt.Printf("# mastodon processMessage delete user=%s err=%v\n", mastodonUserId, err)
+					fmt.Printf("# mastodon wc-delete user=%s err=%v\n", mastodonUserId, err)
 					// no need to notify user by msg (looks like an invalid request - ignore)
 				} else {
 					// mastodonUserId is a registered calleeID
@@ -254,7 +254,7 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 					// also delete mastodonUserId's contacts
 					err = kvContacts.Delete(dbContactsBucket, mastodonUserId)
 					if err!=nil {
-						fmt.Printf("# mastodon processMessage delete contacts of id=%s err=%v\n",
+						fmt.Printf("# mastodon wc-delete contacts of id=%s err=%v\n",
 							mastodonUserId, err)
 					}
 
@@ -262,27 +262,36 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 					err = kv.Delete(dbUserBucket, dbUserKey)
 					if err!=nil {
 						// this is bad
-						fmt.Printf("# mastodon processMessage delete user-key=%s err=%v\n", dbUserKey, err)
+						fmt.Printf("# mastodon wc-delete user-key=%s err=%v\n", dbUserKey, err)
 // TODO notify user by msg?
 					} else {
-						fmt.Printf("mastodon processMessage delete user-key=%s done\n", dbUserKey)
+						fmt.Printf("mastodon wc-delete user-key=%s done\n", dbUserKey)
 					}
 
 					err = kvMain.Delete(dbRegisteredIDs, mastodonUserId)
 					if err!=nil {
 						// this is bad
-						fmt.Printf("# mastodon processMessage delete user-id=%s err=%v\n", mastodonUserId, err)
+						fmt.Printf("# mastodon wc-delete user-id=%s err=%v\n", mastodonUserId, err)
 // TODO notify user by msg?
 					} else {
-						fmt.Printf("mastodon processMessage delete user-id=%s done\n", mastodonUserId)
+						fmt.Printf("mastodon wc-delete user-id=%s done\n", mastodonUserId)
 // TODO send msg telling user that their webcall account has been deleted
 					}
 
 					var missedCallsSlice []CallerInfo
-					err := kvCalls.Put(dbMissedCalls, mastodonUserId, missedCallsSlice, false)
+					err = kvCalls.Put(dbMissedCalls, mastodonUserId, missedCallsSlice, false)
 					if err!=nil {
-						fmt.Printf("# mastodon processMessage deleteMissedCall (%s) fail store dbMissedCalls\n",
+						fmt.Printf("# mastodon wc-delete (%s) fail store dbMissedCalls\n",
 							mastodonUserId)
+					}
+
+					cookieValue := mastodonUserId
+					pwIdCombo := PwIdCombo{}
+					err = kvHashedPw.Put(dbHashedPwBucket, cookieValue, pwIdCombo, true)
+					if err!=nil {
+						fmt.Printf("# mastodon wc-delete (%s) fail dbHashedPwBucket\n",	mastodonUserId)
+					} else {
+						fmt.Printf("mastodon wc-delete kvHashedPw cookieValue=%s\n", cookieValue)
 					}
 				}
 				// abort processMessage here

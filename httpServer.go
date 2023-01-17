@@ -504,7 +504,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		cookieName = "webcallid-"+urlID
 	}
 	var pwIdCombo PwIdCombo
-	pw := ""
+	hashPw := ""
 	cookie, err := r.Cookie(cookieName)
 	if err != nil {
 		// cookie not avail, not valid or disabled (which is fine for localhost requests)
@@ -520,7 +520,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		// cookie avail: could be a callee
 		// could also be a client sending the cookie of a previous callee session
 
-		// we should only show this if a callee is making use of the pw
+		// we should only show this if a callee is making use of hashPw
 		//maxlen:=20; if len(cookie.Value)<20 { maxlen=len(cookie.Value) }
 		//fmt.Printf("httpApi cookie avail(%s) req=(%s) ref=(%s) callee=(%s)\n", 
 		//	cookie.Value[:maxlen], r.URL.Path, referer, calleeID)
@@ -548,7 +548,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			// calleeID == calleeIdFromCookie (this is good) - now get PW from kvHashedPw
+			// calleeID == calleeIdFromCookie (this is good) - now get hashPw from kvHashedPw
 			if logWantedFor("cookie") {
 				fmt.Printf("httpApi cookie avail req=%s ref=%s cookieName=%s cValue=%s calleeID=%s urlID=%s\n",
 					r.URL.Path, referer, cookieName, cookie.Value, calleeID, urlID)
@@ -578,17 +578,17 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 						pwIdCombo, calleeID)
 					cookie = nil
 				} else {
-					// here we could decrypt the pw
+					// get hashPw from dbHashedPw with cookie.Value
 					//fmt.Printf("httpApi cookie available for id=(%s) (%s)(%s) reqPath=%s ref=%s rip=%s\n",
 					//	pwIdCombo.CalleeId, calleeID, urlID, r.URL.Path, referer, remoteAddrWithPort)
-					pw = pwIdCombo.Pw
+					hashPw = pwIdCombo.Pw
 				}
 			}
 		}
 	}
 
 	if urlPath=="/login" {
-		httpLogin(w, r, urlID, cookie, pw, remoteAddr, remoteAddrWithPort,
+		httpLogin(w, r, urlID, cookie, hashPw, remoteAddr, remoteAddrWithPort,
 				 nocookie, startRequestTime, pwIdCombo, r.UserAgent())
 		return
 	}
@@ -732,7 +732,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			return
 		}
-		if cookie!=nil && pw!="" && calleeID==urlID {
+		if cookie!=nil && hashPw!="" && calleeID==urlID {
 			// if calleeID (from cookie) == urlID, then we do NOT need pw-entry on the client
 			//fmt.Printf("/mode normal callee avail (cookie:%s) (url:%s) rip=%s\n",
 			//	calleeID, urlID, remoteAddr)

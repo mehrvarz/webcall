@@ -16,6 +16,7 @@ import (
 	"time"
 	"fmt"
 	"io"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, dialID string, remoteAddr string) {
@@ -427,8 +428,18 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 					registerID, dbMainName, dbUserBucket, err)
 				fmt.Fprintf(w,"cannot register user")
 			} else {
+				// store crypted pw
+				storePw := pw
+				hash, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.MinCost)
+				if err != nil {
+					fmt.Printf("# /login bcrypt err=%v\n", err)
+					// cont to use unencrypt pw
+				} else {
+					fmt.Printf("/login bcrypt store (%v)\n", string(hash))
+					storePw = string(hash)
+				}
 				err = kvMain.Put(dbRegisteredIDs, registerID,
-						DbEntry{unixTime, remoteAddr, pw}, false)
+						DbEntry{unixTime, remoteAddr, storePw}, false)
 				if err!=nil {
 					fmt.Printf("# /register (%s) error db=%s bucket=%s put err=%v\n",
 						registerID,dbMainName,dbRegisteredIDs,err)
