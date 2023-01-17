@@ -272,40 +272,47 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 	if formPw!="" {
 		// pw form-input is given
-		if hashPw=="" {
-			// no cookie: compare form input against dbEntry.Password
+//fmt.Printf("/login (%s) nocookie=%v\n", urlID, nocookie)
+		if nocookie && (strings.HasPrefix(urlID,"answie") || strings.HasPrefix(urlID,"talkback")) {
+			// accept
+		} else {
+			if hashPw=="" {
+				// no cookie: compare form input against dbEntry.Password
 // TODO rather than use dbEntry.Password we should use dbHashedPwBucket with key urlID
 // but without a cookie we can't, bc we don't know the rand-number for the key
 // we store the rand-number in the cookie, so a client cannot send a fake cookie with only the (public) urlID
 //			hashPw = dbEntry.Password
-			var pwIdCombo PwIdCombo
-			err := kvHashedPw.Get(dbHashedPwBucket,urlID,&pwIdCombo)
-			if err==nil {
-				hashPw = pwIdCombo.Pw
+				var pwIdCombo PwIdCombo
+				err := kvHashedPw.Get(dbHashedPwBucket,urlID,&pwIdCombo)
+				if err==nil {
+					hashPw = pwIdCombo.Pw
+					fmt.Printf("/login (%s) got formPw, no cookiePw\n", urlID)
+				} else {
+					fmt.Printf("# /login (%s) got formPw, no cookiePw err=%v\n", urlID, err)
+				}
+			} else {
+				fmt.Printf("/login (%s) got formPw, cookiePw\n", urlID)
 			}
+			// this gets executed after form-field submit
+			// compare form-cleartext-formPw vs. hashPw-dbHashedPw-plus-cookie (if empty: hashPw-dbEntry.Password)
+	//fmt.Printf("/login (%s) compare (%s) (%s)\n", urlID, hashPw, formPw)
 
-			fmt.Printf("/login (%s) got formPw, no cookiePw\n", urlID)
-		} else {
-			fmt.Printf("/login (%s) got formPw, cookiePw\n", urlID)
-		}
-		// this gets executed after form-field submit
-		// compare form-cleartext-formPw vs. hashPw-dbHashedPw-plus-cookie (if empty: hashPw-dbEntry.Password)
-//fmt.Printf("/login (%s) compare (%s) (%s)\n", urlID, hashPw, formPw)
-		err := bcrypt.CompareHashAndPassword([]byte(hashPw), []byte(formPw))
-		if err != nil {
-			fmt.Printf("# /login (%s) bcrypt.CompareHashAndPassword err=%v\n", urlID, err)
-			// in case hashPw was not crypted:
-			if hashPw != formPw {
-//fmt.Printf("# /login (%s) clear pw err (%s|%s) %s\n", urlID, hashPw, formPw, remoteAddr)
-				fmt.Printf("# /login (%s) clear pw err %s\n", urlID, remoteAddr)
-				// make pw guessing slow
-				time.Sleep(2000 * time.Millisecond)
-				fmt.Fprintf(w, "error")
-				return
+			err := bcrypt.CompareHashAndPassword([]byte(hashPw), []byte(formPw))
+			if err != nil {
+				fmt.Printf("# /login (%s) bcrypt.CompareHashAndPassword err=%v\n", urlID, err)
+				// in case hashPw was not crypted:
+				if hashPw != formPw {
+	//fmt.Printf("# /login (%s) clear pw err (%s|%s) %s\n", urlID, hashPw, formPw, remoteAddr)
+					fmt.Printf("# /login (%s) clear pw err %s\n", urlID, remoteAddr)
+					// make pw guessing slow
+					time.Sleep(2000 * time.Millisecond)
+					fmt.Fprintf(w, "error")
+					return
+				}
+				fmt.Printf("/login (%s) clear pw success\n", urlID)
+			} else {
+				fmt.Printf("/login (%s) bcrypt.CompareHashAndPassword success\n", urlID)
 			}
-			fmt.Printf("/login (%s) clear pw success\n", urlID)
-		} else {
-			fmt.Printf("/login (%s) bcrypt.CompareHashAndPassword success\n", urlID)
 		}
 	} else {
 		// no pw form-input is given
