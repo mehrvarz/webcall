@@ -272,21 +272,21 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			// accept
 		} else {
 			if hashPw=="" {
-				// no cookie: compare form input against dbEntry.Password
+				// no cookie (maybe client deleted it): compare form input against pw-of-urlID
 				var pwIdCombo PwIdCombo
 				err := kvHashedPw.Get(dbHashedPwBucket,urlID,&pwIdCombo)
 				if err==nil {
 					hashPw = pwIdCombo.Pw
-					fmt.Printf("/login (%s) got formPw, no cookiePw\n", urlID)
+fmt.Printf("/login (%s) got formPw, no cookiePw, pwIdCombo.Pw=%s\n", urlID, pwIdCombo.Pw)
 				} else {
 					fmt.Printf("# /login (%s) got formPw, no cookiePw err=%v\n", urlID, err)
 				}
 			} else {
-				fmt.Printf("/login (%s) got formPw, cookiePw\n", urlID)
+fmt.Printf("/login (%s) got formPw, cookiePw=(%s)\n", urlID, hashPw)
 			}
 			// this gets executed after form-field submit
 			// compare form-cleartext-formPw vs. hashPw-dbHashedPw-plus-cookie (if empty: hashPw-dbEntry.Password)
-//fmt.Printf("/login (%s) compare (%s) (%s)\n", urlID, hashPw, formPw)
+fmt.Printf("/login (%s) compare (%s) (%s)\n", urlID, hashPw, formPw)
 
 			err := bcrypt.CompareHashAndPassword([]byte(hashPw), []byte(formPw))
 			if err != nil {
@@ -399,7 +399,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 	var lenGlobalHubMap int64
 	if cookie == nil && !nocookie {
-		err,cookieValue := createCookie(w, urlID, hashPw, &pwIdCombo)
+//		err,cookieValue := createCookie(w, urlID, hashPw, &pwIdCombo)
+		err,cookieValue := createCookie(w, urlID, formPw, &pwIdCombo)
 		if err != nil {
 			if globalID != "" {
 				_,lenGlobalHubMap = DeleteFromHubMap(globalID)
@@ -700,7 +701,8 @@ func createCookie(w http.ResponseWriter, urlID string, pw string, pwIdCombo *PwI
 		fmt.Printf("# /login bcrypt err=%v\n", err)
 		pwIdCombo.Pw = pw
     } else {
-		fmt.Printf("/login bcrypt store (%v)\n", string(hash))
+		fmt.Printf("/login (%s) bcrypt store (%v)\n", urlID, string(hash))
+fmt.Printf("createCookie (%s) pw(%s) hashPw(%s)\n", urlID, pw, string(hash))
 		pwIdCombo.Pw = string(hash)
 	}
 
