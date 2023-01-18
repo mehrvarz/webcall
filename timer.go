@@ -292,7 +292,7 @@ func dbHashedPwLoop() {
 	err := db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(dbHashedPwBucket))
 		if b==nil {
-			fmt.Printf("# ticker3hours dbHashedPwBucket tx.Bucket==nil\n")
+			fmt.Printf("# dbHashedPwLoop tx.Bucket==nil\n")
 		} else {
 			c := b.Cursor()
 			for k, v := c.First(); k != nil; k, v = c.Next() {
@@ -305,12 +305,16 @@ func dbHashedPwLoop() {
 				var pwIdCombo PwIdCombo
 				d := gob.NewDecoder(bytes.NewReader(v))
 				d.Decode(&pwIdCombo)
-				fmt.Printf("ticker3hours dbHashedPwBucket (%s) (%s) secs=%d\n",
+				fmt.Printf("dbHashedPwLoop (%s) (%s) secs=%d\n",
 					userID, pwIdCombo.Pw, timeNow - pwIdCombo.Expiration)
 				if timeNow - pwIdCombo.Expiration >= 0 {
 					deleteKeyArray = append(deleteKeyArray,userID)
+					if len(deleteKeyArray)>=30 {
+						return nil
+					}
 				}
 			}
+			fmt.Printf("dbHashedPwLoop loop end\n")
 		}
 		return nil
 	})
@@ -318,12 +322,12 @@ func dbHashedPwLoop() {
 
 	if err!=nil {
 		// this is bad
-		fmt.Printf("# ticker3hours dbHashedPwBucket done err=%v\n", err)
+		fmt.Printf("# dbHashedPwLoop done err=%v\n", err)
 	} else /*if counterDeleted>0*/ {
-		fmt.Printf("ticker3hours dbHashedPwBucket done\n")
+		fmt.Printf("dbHashedPwLoop done\n")
 	}
 
-	fmt.Printf("ticker3hours dbHashedPwBucket count=%d deleteCount=%d\n",count,len(deleteKeyArray))
+	fmt.Printf("dbHashedPwLoop count=%d deleteCount=%d\n",count,len(deleteKeyArray))
 	deleteCount := 0
 	for _,key := range deleteKeyArray {
 		err = kv.Delete(dbHashedPwBucket, key)
@@ -334,7 +338,7 @@ func dbHashedPwLoop() {
 			deleteCount++
 		}
 	}
-	fmt.Printf("ticker3hours dbHashedPwBucket actual deleteCount=%d\n",len(deleteKeyArray))
+	fmt.Printf("dbHashedPwLoop actual deleteCount=%d\n",len(deleteKeyArray))
 }
 
 func isOnlyNumericString(s string) bool {
