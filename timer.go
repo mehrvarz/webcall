@@ -272,11 +272,69 @@ func ticker3hours() {
 			}
 		}
 
+		dbHashedPwLoop()
+
 		<-threeHoursTicker.C
 		if shutdownStarted.Get() {
 			break
 		}
 	}
+}
+
+func dbHashedPwLoop() {
+	kv := kvHashedPw.(skv.SKV)
+	db := kv.Db
+	timeNow := time.Now().Unix()
+	var deleteKeyArray []string  // for deleting
+	count := 0
+
+	skv.DbMutex.Lock()
+	err := db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(dbHashedPwBucket))
+		if b==nil {
+			fmt.Printf("# ticker3hours dbHashedPwBucket tx.Bucket==nil\n")
+		} else {
+			c := b.Cursor()
+			for k, v := c.First(); k != nil; k, v = c.Next() {
+				userID := string(k)
+				if strings.HasPrefix(userID,"answie") || strings.HasPrefix(userID,"talkback") {
+					continue
+				}
+				count++
+
+				var pwIdCombo PwIdCombo
+				d := gob.NewDecoder(bytes.NewReader(v))
+				d.Decode(&pwIdCombo)
+				fmt.Printf("ticker3hours dbHashedPwBucket (%s) (%s) secs=%d\n",
+					userID, pwIdCombo.Pw, timeNow - pwIdCombo.Expiration)
+				if timeNow - pwIdCombo.Expiration >= 0 {
+					deleteKeyArray = append(deleteKeyArray,userID)
+				}
+			}
+		}
+		return nil
+	})
+	skv.DbMutex.Unlock()
+
+	if err!=nil {
+		// this is bad
+		fmt.Printf("# ticker3hours dbHashedPwBucket done err=%v\n", err)
+	} else /*if counterDeleted>0*/ {
+		fmt.Printf("ticker3hours dbHashedPwBucket done\n")
+	}
+
+	fmt.Printf("ticker3hours dbHashedPwBucket count=%d deleteCount=%d\n",count,len(deleteKeyArray))
+	deleteCount := 0
+	for _,key := range deleteKeyArray {
+		err = kv.Delete(dbHashedPwBucket, key)
+		if err!=nil {
+			// this is bad
+			fmt.Printf("# ticker3hours delete user-id=%s err=%v\n", key, err)
+		} else {
+			deleteCount++
+		}
+	}
+	fmt.Printf("ticker3hours dbHashedPwBucket actual deleteCount=%d\n",len(deleteKeyArray))
 }
 
 func isOnlyNumericString(s string) bool {

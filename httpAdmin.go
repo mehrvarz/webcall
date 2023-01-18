@@ -336,6 +336,11 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		return true
 	}
 
+	if urlPath=="/dumpHashedPw" {
+		dbHashedPwLoop()
+		return true
+	}
+
 	return false
 }
 
