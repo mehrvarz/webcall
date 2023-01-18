@@ -14,7 +14,6 @@ import (
 	"net/http"
 	"math/rand"
 	"golang.org/x/net/html"
-//	"golang.org/x/crypto/bcrypt"
 	"github.com/mattn/go-mastodon"
 	"github.com/mehrvarz/webcall/skv"
 )
@@ -297,6 +296,19 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 				}
 				// abort processMessage here
 				return
+			case command=="wc-register":
+				fmt.Printf("mastodon wc-register (%v)\n", mastodonUserId)
+				// NOTE: msg must end with a blank
+				msg := "WebCall Register: "
+
+				// arg2 none-empty string: notify caller after callee-login
+				// arg3 none-empty string: callerMsgID to notify after callee-login (not currently used)
+				// arg4 none-empty string: msg will be put in front of "Answer call:"
+				err := mMgr.offerRegisterLink(mastodonUserId,"",msg,msgID)
+				if err!=nil {
+					fmt.Printf("# mastodon processMessage offerRegisterLink err=%v\n",err)
+				}
+				return
 			}
 		}
 
@@ -500,7 +512,7 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 			// msg-receiver should register a WebCall callee account, so calls can be received
 			fmt.Printf("mastodon processMessage callee is no webcall user, sending offerRegister\n")
 			// NOTE: msg must end with a blank
-			msg := "User "+mastodonCallerID+" wants to give you a WebCall. "
+			msg := "User "+mastodonCallerID+" wants to give you a WebCall. Answer call: "
 
 // TODO: we need to put instructions for new users on the mastodon @webcall homepage
 // "if you receive call request from an account that you don't want to make phone calls with,
@@ -581,10 +593,7 @@ func (mMgr *MastodonMgr) cleanupMastodonInviter(w io.Writer) {
 }
 
 func (mMgr *MastodonMgr) offerRegisterLink(mastodonUserId string, mastodonCallerUserId string, msg string, msgID string) error {
-	// offer link to /pickup, where mastodonUserId can be registered
-	// 1) is called in response to a call, we want to send a msg to caller after login
-	// 2) is called in response to "register", we DONT want to send a msg to caller after login
-
+	// offer link to /pickup, with which mastodonUserId can be registered
 	// first we need a unique mID (refering to mastodonUserId)
 	mMgr.midMutex.Lock()
 	mID,err := mMgr.makeSecretID() //"xxxxxxxxxxx"
@@ -599,7 +608,9 @@ func (mMgr *MastodonMgr) offerRegisterLink(mastodonUserId string, mastodonCaller
 		midEntry = &MidEntry{}
 	}
 	midEntry.mastodonIdCallee = mastodonUserId
-	midEntry.mastodonIdCaller = mastodonCallerUserId
+	if mastodonCallerUserId!="" {
+		midEntry.mastodonIdCaller = mastodonCallerUserId
+	}
 	midEntry.msgID = msgID
 	mMgr.midMap[mID] = midEntry
 	mMgr.midMutex.Unlock()
@@ -615,7 +626,7 @@ func (mMgr *MastodonMgr) offerRegisterLink(mastodonUserId string, mastodonCaller
 	mMgr.inviterMutex.Unlock()
 
 // TODO add callerMastodonUserId as username to link (so caller.js can forward it to callee)
-	sendmsg :="@"+mastodonUserId+" "+msg+"Answer call: "+mMgr.hostUrl+"/callee/pickup?mid="+mID
+	sendmsg :="@"+mastodonUserId+" "+msg+" "+mMgr.hostUrl+"/callee/pickup?mid="+mID
 	fmt.Printf("offerRegisterLink PostStatus (%s)\n",sendmsg)
 	status,err := mMgr.postCallerMsgEx(sendmsg)
 	if err!=nil {
@@ -936,17 +947,6 @@ func (mMgr *MastodonMgr) httpRegisterMid(w http.ResponseWriter, r *http.Request,
 					registerID, dbMainName, dbUserBucket, err)
 				fmt.Fprintf(w,"cannot register user")
 			} else {
-/*
-				storePw := pw
-				hash, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.MinCost)
-				if err != nil {
-					fmt.Printf("# /login bcrypt err=%v\n", err)
-					// cont to use unencrypt pw
-				} else {
-					fmt.Printf("/login bcrypt store (%v)\n", string(hash))
-					storePw = string(hash)
-				}
-*/
 				err = kvMain.Put(dbRegisteredIDs, registerID,
 						DbEntry{unixTime, remoteAddr, ""}, false)
 				if err!=nil {

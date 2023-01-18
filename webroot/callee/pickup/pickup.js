@@ -289,7 +289,7 @@ function pwForm(mastodonUserID) {
 		"<form action='javascript:;' onsubmit='submitPw(this,\""+mastodonUserID+"\")' id='pwf'>"+
 		"<label for='username' style='display:inline-block; padding-bottom:4px;'>Password:&nbsp;</label>"+
 		"<input type='text' autocomplete='password' id='pwi' name='pw' value='' style='display:none;'>"+
-		"<input name='username' id='pw' type='password' class='formtext' autofocus required>"+
+		"<input name='username' id='pw' type='password' autocomplete='current-password' class='formtext' autofocus required>"+
 		"<span onclick='clearForm()' style='margin-left:5px; user-select:none;'>X</span>"+
 		"<br>"+
 		"<input type='submit' name='Submit' id='submit' value='OK' style='width:100px; margin-top:16px;'>"+

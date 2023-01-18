@@ -643,7 +643,7 @@ fmt.Printf("/login (%s) compare (%s) (%s)\n", urlID, hashPw, dbEntry.Password)
 					myHubMutex.RUnlock()
 
 					if logWantedFor("login") {
-						fmt.Printf("/login (%s) has CalleeLogin.Get\n", urlID)
+						fmt.Printf("/login (%s) has CalleeLogin.Get (is online, did init)\n", urlID)
 					}
 
 					if mastodonMgr!=nil && mid!="" {
