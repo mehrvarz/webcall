@@ -256,12 +256,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			}
 		}
 	}
-/*
-	if hashPw == "" && formPw == "" {
-		fmt.Fprintf(w, "error")
-		return
-	}
-*/
+
 	if hashPw == "" && len(formPw) < 6 {
 		// delay guessing
 		fmt.Printf("/login (%s) formPw too short %s v=%s\n", urlID, remoteAddr, clientVersion)
@@ -278,10 +273,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 		} else {
 			if hashPw=="" {
 				// no cookie: compare form input against dbEntry.Password
-// TODO rather than use dbEntry.Password we should use dbHashedPwBucket with key urlID
-// but without a cookie we can't, bc we don't know the rand-number for the key
-// we store the rand-number in the cookie, so a client cannot send a fake cookie with only the (public) urlID
-//			hashPw = dbEntry.Password
 				var pwIdCombo PwIdCombo
 				err := kvHashedPw.Get(dbHashedPwBucket,urlID,&pwIdCombo)
 				if err==nil {
@@ -295,14 +286,14 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			}
 			// this gets executed after form-field submit
 			// compare form-cleartext-formPw vs. hashPw-dbHashedPw-plus-cookie (if empty: hashPw-dbEntry.Password)
-	//fmt.Printf("/login (%s) compare (%s) (%s)\n", urlID, hashPw, formPw)
+//fmt.Printf("/login (%s) compare (%s) (%s)\n", urlID, hashPw, formPw)
 
 			err := bcrypt.CompareHashAndPassword([]byte(hashPw), []byte(formPw))
 			if err != nil {
 				fmt.Printf("# /login (%s) bcrypt.CompareHashAndPassword err=%v\n", urlID, err)
 				// in case hashPw was not crypted:
 				if hashPw != formPw {
-	//fmt.Printf("# /login (%s) clear pw err (%s|%s) %s\n", urlID, hashPw, formPw, remoteAddr)
+//fmt.Printf("# /login (%s) clear pw err (%s|%s) %s\n", urlID, hashPw, formPw, remoteAddr)
 					fmt.Printf("# /login (%s) clear pw err %s\n", urlID, remoteAddr)
 					// make pw guessing slow
 					time.Sleep(2000 * time.Millisecond)
@@ -326,33 +317,10 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			return
 		}
 
-		// no pw form-input but a coolie is given
+		// no pw form-input but a cookie is given
 		// hashPw comes from our local dbHashedPw (based on key=cookie)
 		// hashPw!="" means that the cookie is valid
 		fmt.Printf("/login (%s) got no formPw, cookiePw\n", urlID)
-/*
-		// compare hashPw-from-dbHashedPw-plus-cookie vs hashPw-pw-from-dbEntry.Password-with-urlID/calleeID
-fmt.Printf("/login (%s) compare (%s) (%s)\n", urlID, hashPw, dbEntry.Password)
-// hashPw            = pwIdCombo.Pw from dbHashedPwBucket via cookie.Value
-// dbEntry.Password  = dbRegisteredIDs via urlID
-// TODO this cmp may fail even though the 2 hashes are the same
-// (was: if formPw = dbEntry.Password success, then "/login bcrypt store (" stores a different)
-		if hashPw != dbEntry.Password {
-			//fmt.Printf("# /login (%s) fail dbEntry.password %d %s\n", urlID, len(calleeLoginSlice), remoteAddr)
-			// compare hashPw-from-dbHashedPw-plus-cookie vs cleartext-pw from dbEntry.Password with urlID/calleeID
-			err = bcrypt.CompareHashAndPassword([]byte(hashPw), []byte(dbEntry.Password))
-			if err != nil {
-				fmt.Printf("# /login (%s) bcrypt.CompareHashAndPassword dbEntry err=%v\n", urlID, err)
-				// make pw guessing slow
-				time.Sleep(2000 * time.Millisecond)
-				fmt.Fprintf(w, "error")
-				return
-			}
-			fmt.Printf("/login (%s) bcrypt.CompareHashAndPassword dbEntry success\n", urlID)
-		} else {
-			fmt.Printf("/login (%s) hashPw = dbEntry.Password\n", urlID)
-		}
-*/
 	}
 
 	// pw is accepted, get dbEntry and dbUser based on urlID
