@@ -398,7 +398,7 @@ fmt.Printf("/login (%s) compare (%s) (%s)\n", urlID, hashPw, formPw)
 	//	globalID, urlID, remoteAddr, time.Since(startRequestTime))
 
 	var lenGlobalHubMap int64
-	if cookie == nil && !nocookie {
+	if cookie == nil && !nocookie && formPw!="" {
 //		err,cookieValue := createCookie(w, urlID, hashPw, &pwIdCombo)
 		err,cookieValue := createCookie(w, urlID, formPw, &pwIdCombo)
 		if err != nil {

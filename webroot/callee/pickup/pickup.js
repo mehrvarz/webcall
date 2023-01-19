@@ -9,15 +9,7 @@ var calleeLink = "";
 var mid = "";
 
 window.onload = function() {
-	// mid maps to mastodon user-id's of the caller and callee
-	// -> calleeIdOnMastodon = tmpkeyMastodonCalleeMap[mid]
-	// -> callerIdOnMastodon = tmpkeyMastodonCallerReplyMap[mid]
-	mid = getUrlParams("mid");
-	if(typeof mid=="undefined") {
-		mid = "";
-	}
-
-	// detect callee-id from cookie
+	// get callee-id from cookie
 	let cookieName = "";
 	if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
 		cookieName = document.cookie.substring(10);
@@ -28,9 +20,16 @@ window.onload = function() {
 		cookieName = cleanStringParameter(cookieName,true);
 	}
 
+	// mid maps to mastodon user-id's of the caller and callee
+	// -> calleeIdOnMastodon = tmpkeyMastodonCalleeMap[mid]
+	// -> callerIdOnMastodon = tmpkeyMastodonCallerReplyMap[mid]
+	mid = getUrlParams("mid");
+	if(typeof mid=="undefined") {
+		mid = "";
+	}
 	if(mid=="") {
 		// no mid -> no mastodonUserID
-		onload2("",false,false,cookieName);
+		onload2("",false,false,cookieName,"","");
 		return;
 	}
 
@@ -101,13 +100,15 @@ window.onload = function() {
 		console.log('xhr.responseText',xhr.responseText);
 		if(xhr.responseText=="") {
 			// no Mastodon user-id exists for this mid
-			onload2("",false,false,cookieName);
+			onload2("",false,false,cookieName,"","");
 		} else {
 			// Mastodon user-id exists for this mid
 			let tok = xhr.responseText.split("|");
 			let mastodonUserID = "";
 			let isValidCalleeID = false;
 			let isOnlineCalleeID = false;
+			let mappedCalleeID = "";
+			let wsCliMastodonID = "";
 			if(tok.length>=1) {
 				mastodonUserID = tok[0]; // this is always a mastodon-user-id, never a calleeID
 				if(tok.length>=2) {
@@ -118,32 +119,44 @@ window.onload = function() {
 						if(tok[2]=="true") {
 							isOnlineCalleeID = true;
 						}
+						if(tok.length>=4) {
+							mappedCalleeID = tok[3]
+							if(tok.length>=5) {
+								wsCliMastodonID = tok[4]
+							}
+						}
 					}
 				}
 			}
-			onload2(mastodonUserID,isValidCalleeID,isOnlineCalleeID,cookieName);
+			onload2(mastodonUserID,isValidCalleeID,isOnlineCalleeID,cookieName,mappedCalleeID,wsCliMastodonID);
 		}
 	}, function(errString,err) {
 		console.warn('# xhr error',errString,err);
-		onload2("",false,false,cookieName);
+		onload2("",false,false,cookieName,"","");
 	});
 }
 
-function onload2(mastodonUserID,isValidCalleeID,isOnlineCalleeID,cookieName) {
-	console.log('onload2',mid,mastodonUserID,isValidCalleeID,isOnlineCalleeID,cookieName);
+function onload2(mastodonUserID,isValidCalleeID,isOnlineCalleeID,cookieName,calleeID,wsCliMastodonID) {
+	// cookieName                                  = currently logged-in calleeID, or ""
+	// calleeID                                    = mastodonUserID or 11-digit ID or ""
+	// wsCliMastodonID (midEntry.mastodonIdCallee) = mastodonUserID or ""
+	console.log('onload2', mid, mastodonUserID, isValidCalleeID, isOnlineCalleeID,
+		cookieName, mappedCalleeID, wsCliMastodonID);
 	if(cookieName!="") {
 		// cookieName found! it can be an 11-digit ID or a mastodonUserID
 		if(cookieName.match(/^[0-9]*$/) != null && cookieName.length==11) {
-			// cookieName is 11-digit numeric
-			console.log('cookieName is 11-digit numeric');
+			// cookieName is 11-digit
+			console.log('cookieName is 11-digit');
 			if(mastodonUserID!="") {
-// TODO PROBLEM: cookieName is 11-digit and we don't know if the server maps it to mastodonUserID (from mid)
-// should we fetch serverSettings for cookieName ?
-//				if(serverSettings.mastodonID!="" && serverSettings.mastodonID!=mastodonUserID) {
-				if(false) { // assunption
-					// server does NOT map 11-digit cookieName to mastodonUserID
-					console.log('# abort cookieName!=mastodonUserID');
-// BUT THIS COULD BE THE !ST TIME (in which case it would be false to clear the cookie
+				// the request comes from a valid mastodonUserID
+				if(mastodonUserID==wsCliMastodonID) {
+					console.log('mastodonUserID==wsCliMastodonID');
+					// server maps cookieName (11-digit) to requesting mastodonUserID
+				} else {
+					// server does NOT map 11-digit cookieName to requesting mastodonUserID
+					// it makes no sense to switch to callee
+					console.log('# abort! mastodonUserID!=wsCliMastodonID');
+// BUT THIS COULD BE THE 1ST TIME (in which case it would be wrong to clear the cookie?)
 			        document.cookie = "webcallid=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
 					// TODO generate user-facing message
 					return;
@@ -151,37 +164,40 @@ function onload2(mastodonUserID,isValidCalleeID,isOnlineCalleeID,cookieName) {
 			}
 		} else {
 			// cookieName is NOT 11-digit
-			console.log('cookieName is NOT 11-digit numeric');
+			console.log('cookieName is NOT 11-digit');
 			// if mastodonUserID!="" and cookieName not= mastodonUserID: abort
 			if(mastodonUserID=="") {
 				console.log('mastodonUserID is empty');
 			} else {
 				console.log('mastodonUserID is NOT empty');
 				if(cookieName!=mastodonUserID) {
-					console.log('# abort cookieName!=mastodonUserID');
+					// it makes no sense to switch to callee
+					console.log('# abort! cookieName!=mastodonUserID');
 			        document.cookie = "webcallid=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
 					// TODO generate user-facing message
 					return;
 				}
-				console.log('cookieName is same as mastodonUserID');
+				console.log('cookieName==mastodonUserID');
 			}
 		}
 
-		// switch to callee app
+		// switch to callee
 		let replaceURL = "/callee/"+cookieName;
 		if(isOnlineCalleeID) {
-			// if callee is already online, no new login will take place
+			// if callee is already online, no new server-login will take place
 			replaceURL += "?auto=1";
 			if(mid!="") {
-				// bc the callee is already logged in,
-				// we send the caller-link to mastodon caller (and trigger all other steps) right here
-// TODO maybe we should postpone this a little to allow the callee app to "show up in front" ?
+				// bc the callee is already logged-in,
+				// we send the caller-link to mastodon-caller (and trigger all other steps) right here
+				// TODO maybe we should postpone this a little to allow the callee app to "show up in front" ?
 				let api = apiPath+"/midcalleelogin?mid="+mid;
 				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 					console.log('xhr.responseText',xhr.responseText);
 				}, function(errString,err) {
 					console.warn('# xhr error',errString,err);
 				});
+			} else {
+				// isOnlineCalleeID can only be true if mid!=""
 			}
 		} else {
 			// callee is not currently online/logged-in
@@ -194,11 +210,12 @@ function onload2(mastodonUserID,isValidCalleeID,isOnlineCalleeID,cookieName) {
 
 		// if the callee app is not yet running, this will start it
 // TODO but if it IS already running, does this switch to it?
-//      and how does this work if the user is using the android app
+//      and how does this work if the user is using the android app?
 		window.location.replace(replaceURL);
 		return;
 	}
-	// cookieName is empty; this should also mean that callee is NOT currently logged in
+
+	// cookieName is empty; this means no callee is currently logged-in
 
 	// offer multiple choice
 	let dispMsg = "Answer the call...<br><br>";

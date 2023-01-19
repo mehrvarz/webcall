@@ -382,8 +382,8 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 			}
 		}
 
-		if !mMgr.isValidCallee(calleeID) && mMgr.isValidCallee(callerID) {
-// TODO also: if callerID is online callee and calleeID is not
+		if mMgr.isValidCallee(callerID)!=nil && mMgr.isValidCallee(calleeID)==nil {
+// TODO also: if callerID is online and calleeID is not online
 			// inviter has no valid webcall account, but responder has
 			// this is the one case where we turn things around
 			// inviter becomes caller; responder becomes callee
@@ -457,7 +457,7 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 			// remove the inviter now
 			//mMgr.clearInviter(msgID)
 
-		} else if mMgr.isValidCallee(calleeID) {
+		} else if mMgr.isValidCallee(calleeID)!=nil {
 			// calleeID is not currently online, but it is a valid/registered callee
 			fmt.Printf("mastodon processMessage callee offline but valid, send /callee link to callee\n")
 
@@ -800,43 +800,51 @@ func (mMgr *MastodonMgr) httpGetMidUser(w http.ResponseWriter, r *http.Request, 
 			isValidCalleeID := "false"
 			isOnlineCalleeID := "false"
 			if(calleeIdOnMastodon=="") {
-				// invalid mid
+				// given mid is invalid
 				fmt.Printf("# /getMidUser invalid mid=%s calleeIdOnMastodon=%v ip=%v\n",
 					mid,calleeIdOnMastodon,remoteAddr)
 			} else {
-				// valid mid + calleeIdOnMastodon
-				// calleeIdOnMastodon (eg "tm@mastodontech.de") may already be in use
-				// httpRegisterMid() below will detect this
-				// TODO but we should act now, to prevent registration-offer
-
+				// calleeIdOnMastodon is set, therefor: mid is valid
+				// let's see if calleeIdOnMastodon is mapped to a 11-digit calleeID
 				fmt.Printf("/getMidUser mid=%s calleeIdOnMastodon=%v ip=%v\n",mid,calleeIdOnMastodon,remoteAddr)
 				calleeID := calleeIdOnMastodon
 				mappingMutex.RLock()
 				mappingData,ok := mapping[calleeIdOnMastodon]
 				mappingMutex.RUnlock()
-				if ok {
-					// calleeIdOnMastodon is mapped (caller is using a temporary (mapped) calleeID)
-					if mappingData.Assign!="" && mappingData.Assign!="none" {
-						calleeID = mappingData.Assign
-						fmt.Printf("/getMidUser mapped calleeID=%s calleeIdOnMastodon=%v ip=%v\n",
-							calleeID,calleeIdOnMastodon,remoteAddr)
-					}
+				if ok && mappingData.Assign!="" && mappingData.Assign!="none" {
+					// calleeIdOnMastodon is mapped to a 11-digit calleeID
+					calleeID = mappingData.Assign
+					fmt.Printf("/getMidUser mapped calleeID=%s calleeIdOnMastodon=%v ip=%v\n",
+						calleeID,calleeIdOnMastodon,remoteAddr)
 				}
 
+				// lets see if calleeID is online (or at least a valid account)
 				hubMapMutex.RLock()
 				hub := hubMap[calleeID]
 				hubMapMutex.RUnlock()
+				wsCliMastodonID := ""
 				if hub!=nil {
+					// calleeID is online (so it is valid)
 					isOnlineCalleeID = "true"
 					isValidCalleeID = "true"
+					if hub.CalleeClient!=nil {
+						// hub.CalleeClient.mastodonID is set by registerID in /registermid (httpRegisterMid())
+						wsCliMastodonID = hub.CalleeClient.mastodonID
+					}
 				} else {
-					// user is NOT online: check if account valid
-					if mMgr.isValidCallee(calleeID) {
+					// no hub currently exists: calleeID is NOT online: check if calleeID is a valid account
+					dbUser := mMgr.isValidCallee(calleeID)
+					if dbUser!=nil {
+						// calleeID is NOT online, but account is valid
 						isValidCalleeID = "true"
+						wsCliMastodonID = dbUser.MastodonID
 					}
 				}
 
-				codedString := calleeIdOnMastodon+"|"+isValidCalleeID+"|"+isOnlineCalleeID 
+				// NOTE: calleeID may be same as calleeIdOnMastodon, or may be a 11-digit ID
+				// NOTE: wsCliMastodonID may be calleeIdOnMastodon or empty string
+				codedString := calleeIdOnMastodon+"|"+isValidCalleeID+"|"+isOnlineCalleeID+"|"+
+					calleeID+"|"+wsCliMastodonID
 				fmt.Printf("/getMidUser codedString=%v\n",codedString)
 				fmt.Fprintf(w,codedString)
 				return
@@ -847,7 +855,7 @@ func (mMgr *MastodonMgr) httpGetMidUser(w http.ResponseWriter, r *http.Request, 
 	return
 }
 
-func (mMgr *MastodonMgr) isValidCallee(calleeID string) bool {
+func (mMgr *MastodonMgr) isValidCallee(calleeID string) *DbUser {
 	var dbEntry DbEntry
 	err := kvMain.Get(dbRegisteredIDs, calleeID, &dbEntry)
 	if err != nil {
@@ -860,11 +868,11 @@ func (mMgr *MastodonMgr) isValidCallee(calleeID string) bool {
 		if err != nil {
 			fmt.Printf("# isValidCallee(%s) dbUser err=%v\n",calleeID,err)
 		} else {
-			// calleeID exists as a valid account
-			return true
+			// calleeID has a valid account
+			return &dbUser
 		}
 	}
-	return false
+	return nil
 }
 
 func (mMgr *MastodonMgr) httpRegisterMid(w http.ResponseWriter, r *http.Request, urlPath string, remoteAddr string, startRequestTime time.Time) {
@@ -938,7 +946,7 @@ func (mMgr *MastodonMgr) httpRegisterMid(w http.ResponseWriter, r *http.Request,
 			dbUser := DbUser{Ip1:remoteAddr, UserAgent:r.UserAgent()}
 			dbUser.StoreContacts = true
 			dbUser.StoreMissedCalls = true
-			dbUser.MastodonID = registerID
+			dbUser.MastodonID = registerID // wsClient.go uses this to set client.mastodonID
 			dbUser.MastodonSendTootOnCall = true
 			dbUser.MastodonAcceptTootCalls = true
 			err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
