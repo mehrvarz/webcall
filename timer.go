@@ -305,8 +305,8 @@ func dbHashedPwLoop() {
 				var pwIdCombo PwIdCombo
 				d := gob.NewDecoder(bytes.NewReader(v))
 				d.Decode(&pwIdCombo)
-//				fmt.Printf("dbHashedPwLoop %d (%s) (%s) secs=%d\n",
-//					count, userID, pwIdCombo.Pw, timeNow - pwIdCombo.Expiration)
+				fmt.Printf("dbHashedPwLoop %d (%s) (%s) secs=%d\n",
+					count, userID, pwIdCombo.Pw, timeNow - pwIdCombo.Expiration)
 				if timeNow - pwIdCombo.Expiration >= 0 {
 					fmt.Printf("dbHashedPwLoop del (%s) (%s) secs=%d\n",
 						userID, pwIdCombo.Pw, timeNow - pwIdCombo.Expiration)

@@ -7,10 +7,24 @@ const form = document.querySelector('form#password');
 const singlebutton = false;
 var calleeLink = "";
 var mid = "";
+var cookieName = "";
+var mastodonUserID = "";
+var isValidCalleeID = false;
+var isOnlineCalleeID = false;
+var mappedCalleeID = "";
+var wsCliMastodonID = "";
+var callerID = "";
 
 window.onload = function() {
+	cookieName = "";
+	mastodonUserID = "";
+	isValidCalleeID = false;
+	isOnlineCalleeID = false;
+	mappedCalleeID = "";
+	wsCliMastodonID = "";
+	callerID = "";
+
 	// get callee-id from cookie
-	let cookieName = "";
 	if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
 		cookieName = document.cookie.substring(10);
 		let idxAmpasent = cookieName.indexOf("&");
@@ -29,70 +43,12 @@ window.onload = function() {
 	}
 	if(mid=="") {
 		// no mid -> no mastodonUserID
-		onload2("",false,false,cookieName,"","");
+		showStatus("Missing data<br><br><br>", -1);
+		//onload2();
 		return;
 	}
 
 	// mid is given
-/*
-	var register = getUrlParams("register");
-	if(typeof register!="undefined" && register!="") {
-		console.log('arg register is set',register);
-
-		let api = apiPath+"/getmiduser?mid="+mid;
-		console.log('pwForm api',api);
-		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-			console.log('xhr.responseText',xhr.responseText);
-			if(xhr.responseText=="") {
-				// no Mastodon user-id exists for this mid
-				console.warn('# xhr response empty for api='+api);
-// TODO give client visual feedback
-			} else {
-				// Mastodon user-id exists for this mid
-				let tok = xhr.responseText.split("|");
-				let mastodonUserID = "";
-				let isValidCalleeID = false;
-				let isOnlineCalleeID = false;
-				if(tok.length>=1) {
-					mastodonUserID = tok[0]; // always a mastodon-user-id, never a calleeID
-					if(tok.length>=2) {
-						if(tok[1]=="true") {
-							isValidCalleeID = true;
-						}
-						if(tok.length>=3) {
-							if(tok[2]=="true") {
-								isOnlineCalleeID = true;
-							}
-						}
-					}
-					// what if isOnlineCalleeID==true? in that case isValidCalleeID should also be true
-					if(isValidCalleeID) {
-						// switch to /callee/(id) now
-						// yes, ANYBODY can resolve mid to mastodonUserID; but they still need to login
-						// adv of using mid= is that we can delete the mapping after a succesful callee-login
-						console.info('calleeID does already exist',mastodonUserID);
-						let replaceURL = "/callee/"+mastodonUserID+"?mid="+mid+"&auto=1";
-						window.location.replace(replaceURL);
-						return;
-					}
-
-					// calleeID does not yet exist: offer register
-					document.title = "WebCall Register";
-					let titleElement = document.getElementById('title');
-					if(titleElement) {
-						titleElement.innerHTML = "WebCall Register";
-					}
-					pwForm(mastodonUserID);
-				}
-			}
-		}, function(errString,err) {
-			console.warn('# xhr error',errString,err);
-		});
-		return;
-	}
-	console.log('arg register not set');
-*/
-
 	// try to get mastodonUserID of callee, valid/registered user, currently online user
 	let api = apiPath+"/getmiduser?mid="+mid;
 	console.log('pwForm api',api);
@@ -100,15 +56,9 @@ window.onload = function() {
 		console.log('xhr.responseText',xhr.responseText);
 		if(xhr.responseText=="") {
 			// no Mastodon user-id exists for this mid
-			onload2("",false,false,cookieName,"","");
 		} else {
 			// Mastodon user-id exists for this mid
 			let tok = xhr.responseText.split("|");
-			let mastodonUserID = "";
-			let isValidCalleeID = false;
-			let isOnlineCalleeID = false;
-			let mappedCalleeID = "";
-			let wsCliMastodonID = "";
 			if(tok.length>=1) {
 				mastodonUserID = tok[0]; // this is always a mastodon-user-id, never a calleeID
 				if(tok.length>=2) {
@@ -123,120 +73,154 @@ window.onload = function() {
 							mappedCalleeID = tok[3]
 							if(tok.length>=5) {
 								wsCliMastodonID = tok[4]
+								if(tok.length>=6) {
+									callerID = tok[5]
+								}
 							}
 						}
 					}
 				}
 			}
-			onload2(mastodonUserID,isValidCalleeID,isOnlineCalleeID,cookieName,mappedCalleeID,wsCliMastodonID);
 		}
+		onload2();
 	}, function(errString,err) {
 		console.warn('# xhr error',errString,err);
-		onload2("",false,false,cookieName,"","");
+		onload2();
 	});
 }
 
-function onload2(mastodonUserID,isValidCalleeID,isOnlineCalleeID,cookieName,calleeID,wsCliMastodonID) {
-	// cookieName                                  = currently logged-in calleeID, or ""
-	// calleeID                                    = mastodonUserID or 11-digit ID or ""
+function onload2() {
+	// cookieName                                  = now or previously logged-in calleeID, or ""
+	// mappedCalleeID                              = mastodonUserID or 11-digit ID or ""
 	// wsCliMastodonID (midEntry.mastodonIdCallee) = mastodonUserID or ""
-	console.log('onload2', mid, mastodonUserID, isValidCalleeID, isOnlineCalleeID,
-		cookieName, mappedCalleeID, wsCliMastodonID);
-	if(cookieName!="") {
-		// cookieName found! it can be an 11-digit ID or a mastodonUserID
-		if(cookieName.match(/^[0-9]*$/) != null && cookieName.length==11) {
-			// cookieName is 11-digit
-			console.log('cookieName is 11-digit');
-			if(mastodonUserID!="") {
-				// the request comes from a valid mastodonUserID
-				if(mastodonUserID==wsCliMastodonID) {
-					console.log('mastodonUserID==wsCliMastodonID');
-					// server maps cookieName (11-digit) to requesting mastodonUserID
-				} else {
-					// server does NOT map 11-digit cookieName to requesting mastodonUserID
-					// it makes no sense to switch to callee
-					console.log('# abort! mastodonUserID!=wsCliMastodonID');
-// BUT THIS COULD BE THE 1ST TIME (in which case it would be wrong to clear the cookie?)
-			        document.cookie = "webcallid=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
-					// TODO generate user-facing message
-					return;
-				}
-			}
-		} else {
-			// cookieName is NOT 11-digit
-			console.log('cookieName is NOT 11-digit');
-			// if mastodonUserID!="" and cookieName not= mastodonUserID: abort
-			if(mastodonUserID=="") {
-				console.log('mastodonUserID is empty');
-			} else {
-				console.log('mastodonUserID is NOT empty');
-				if(cookieName!=mastodonUserID) {
-					// it makes no sense to switch to callee
-					console.log('# abort! cookieName!=mastodonUserID');
-			        document.cookie = "webcallid=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
-					// TODO generate user-facing message
-					return;
-				}
-				console.log('cookieName==mastodonUserID');
-			}
-		}
+	console.log('onload2 mid cookie', mid, cookieName);
+	console.log('onload2 mastodonUserID', mastodonUserID);
+	console.log('onload2 flags', isValidCalleeID, isOnlineCalleeID);
+	console.log('onload2 mappedCalleeID', mappedCalleeID);
+	console.log('onload2 wsCliMastodonID', wsCliMastodonID);
+	console.log('onload2 callerID', callerID);
 
-		// switch to callee
-		let replaceURL = "/callee/"+cookieName;
-		if(isOnlineCalleeID) {
-			// if callee is already online, no new server-login will take place
-			replaceURL += "?auto=1";
-			if(mid!="") {
-				// bc the callee is already logged-in,
-				// we send the caller-link to mastodon-caller (and trigger all other steps) right here
-				// TODO maybe we should postpone this a little to allow the callee app to "show up in front" ?
-				let api = apiPath+"/midcalleelogin?mid="+mid;
-				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-					console.log('xhr.responseText',xhr.responseText);
-				}, function(errString,err) {
-					console.warn('# xhr error',errString,err);
-				});
-			} else {
-				// isOnlineCalleeID can only be true if mid!=""
-			}
-		} else {
-			// callee is not currently online/logged-in
-			// once login is complete, the steps above are triggered by the server
-			if(mid!="") {
-				// forward mid to the callee client
-				replaceURL += "?mid="+mid;
-			}
-		}
-
-		// if the callee app is not yet running, this will start it
-// TODO but if it IS already running, does this switch to it?
-//      and how does this work if the user is using the android app?
-		window.location.replace(replaceURL);
+	if(mastodonUserID=="") {
+		showStatus("Missing data<br><br><br>", -1);
 		return;
 	}
 
-	// cookieName is empty; this means no callee is currently logged-in
+	let dispMsg = "";
+
+// TODO show incoming call request m-user-id
+	if(callerID!="") {
+		dispMsg += "Incoming call from: "+callerID+"<br>";
+	}
+
+	dispMsg += "Your Mastodon ID: "+mastodonUserID;
+	if(wsCliMastodonID!="" && mastodonUserID!=wsCliMastodonID) {
+		dispMsg += " ("+wsCliMastodonID+")";
+	}
+	dispMsg += "<br>";
+
+/*
+	if(cookieName!="") {
+		// cookieName found! it can be an 11-digit ID or a mastodonUserID
+		dispMsg += "Found WebCall cookie for ID: "+cookieName+"<br>";
+	}
+
+	// DO NOT SHOW WARNING if wsCliMastodonID!="" && wsCliMastodonID==mastodonUserID
+	if(wsCliMastodonID!="" && wsCliMastodonID==mastodonUserID) {
+		// do not show warning (cookieName is already prepared to answer mastodonUserID
+	} else
+	if(mappedCalleeID!="" && cookieName!=mappedCalleeID) {
+		// TODO warn user "you may run into a cookie issue" ?
+		dispMsg += "Warning: User-ID and WebCall-ID differ<br>";
+	}
+*/
+
+	dispMsg += "<br>"; // v-gap
 
 	// offer multiple choice
-	let dispMsg = "Answer the call...<br><br>";
-	if(mastodonUserID!="") {
-		if(isValidCalleeID) {
-			// offer user to login with its existing calleeID==mastodonUserID account
-			dispMsg += "- <a onclick='replaceCurrentUrl(\""+mastodonUserID+"\"); return false;'>use my Mastodon user ID: "+mastodonUserID+"</a><br><br>";
-		} else {
-			// offer user to register its mastodonUserID as calleeID
-			// register new account tmpkeyMastodonCalleeMap[mid] as calleeID
-			// we ONLY hand over (mid) to server (similar to /register, see: httpRegister() in httpOnline.go)
-			// server knows that tmpkeyMastodonCalleeMap[mid] is the desired mastodon user-id
-// TODO show 'my Mastodon user-ID'
-			dispMsg += "- <a onclick='pwForm(\""+mastodonUserID+"\"); return false;'>with "+mastodonUserID+" as my WebCall user-ID</a><br><br>";
+//	dispMsg += "Answer call using WebCall-ID...<br><br>";
+	dispMsg += "Select your WebCall identity to answer call:<br><br>";
+
+	if(isOnlineCalleeID) {
+		dispMsg += "A WebCall client ";
+		if(mappedCalleeID!="") {
+			dispMsg += "("+mappedCalleeID+") ";
+		} else if(mastodonUserID!="") {
+			dispMsg += "("+mastodonUserID+") ";
+		} else if(cookieName!="") {
+			dispMsg += "("+cookieName+") ";
 		}
+		dispMsg += "is already active.<br>Incoming WebCalls will be received there.<br>";
+
+		// callee for mid is online -> no new server-login will take place; server will NOT send caller-link
+		// so we send the caller-link to mastodon-caller (and trigger all other steps) right here
+		let api = apiPath+"/midcalleelogin?mid="+mid;
+		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+			console.log('xhr.responseText',xhr.responseText);
+		}, function(errString,err) {
+			console.warn('# xhr error',errString,err);
+		});
+
+	} else if(isValidCalleeID) {
+		// mastodonUserID has been registered already
+//		dispMsg += mastodonUserID+" is a valid WebCall ID<br>";
+		console.log("onload2 "+mastodonUserID+" is a valid WebCall ID");
+
+		if(!isOnlineCalleeID) {
+			// but is NOT currently online
+			if(mastodonUserID!="") {
+				// mastodonUserID is NOT currently online/logged-in - offer a link to start it
+				// once login is complete, server will send caller-link to mastodon-caller, etc.
+				let replaceURL = "/callee/"+mastodonUserID;
+				if(mid!="") {
+					// forward mid to the callee client
+					replaceURL += "?mid="+mid;
+				}
+				dispMsg += "- <a href='"+replaceURL+"'>"+mastodonUserID+"</a><br><br>";
+			}
+
+			if(mappedCalleeID!="" && mappedCalleeID!=mastodonUserID) {
+				// mappedCalleeID is NOT currently online/logged-in - offer a link to start it
+				// once login is complete, server will send caller-link to mastodon-caller, etc.
+				let replaceURL = "/callee/"+mappedCalleeID;
+				if(mid!="") {
+					// forward mid to the callee client
+					replaceURL += "?mid="+mid;
+				}
+				dispMsg += "- <a href='"+replaceURL+"'>"+mappedCalleeID+"</a><br><br>";
+			}
+		}
+	} else {
+		// not isValidCalleeID
+		// offer user to register mastodonUserID as calleeID
+		// register new account tmpkeyMastodonCalleeMap[mid] as calleeID
+		// we ONLY hand over (mid) to server (similar to /register, see: httpRegister() in httpOnline.go)
+		// server knows that tmpkeyMastodonCalleeMap[mid] is the desired mastodon user-id
+		dispMsg += "- register new ID: <a onclick='pwForm(\""+mastodonUserID+"\"); return false;'>"+mastodonUserID+"</a><br><br>";
+
+/*
+		if(cookieName!="") {
+			if((mastodonUserID!="" && cookieName!=mastodonUserID) ||
+			   (mappedCalleeID!="" && cookieName!=mappedCalleeID)) {
+				dispMsg += "- add your User-ID to <a onclick='pwForm(\""+cookieName+"\"); return false;'>WebCall-ID "+cookieName+"</a><br><br>";
+			}
+		}
+*/
+	}
+
+	if(cookieName!="" && mastodonUserID!=cookieName) {
+		dispMsg += "- <a onclick='startCallee("+cookieName+"); return false;'>"+cookieName+"</a><br><br>";
+// TODO problem: this will cause "already logged in" if cookieName is already logged in
+//      we do not know if cookieName is online (or even loaded), just that the cookie exists
+//      this is unrelated to isOnlineCalleeID, which relates to mastodonUserID being online or not
+
+// TODO if cookieName is not online: offer link to open callee-client
+//      if cookieName is online: tell user to manually switch to client and send link to caller !!!
 	}
 
 	// offer to enter (via keyboard) a possibly existing calleeID for login
 	// on submit: forward to callee-app (password will be entered there), hand over mid
 	// on login, the server will use mid to send a mastodon msg to the caller, telling the call-url
-	dispMsg += "- <a onclick='loginForm(); return false;'>with the WebCall ID I will enter</a><br><br>";
+	dispMsg += "- enter ID: <a onclick='loginForm(); return false;'>[Input form]</a><br><br>";
 
 /*
 	// TODO tell server that "#(mid)" is the calleeID that belongs to mid
@@ -282,10 +266,30 @@ function submitForm(theForm) {
 	// we assume the callee has to login now, so the server should trigger all this once callee online
 	var valueUsername = document.getElementById("username").value;
 	console.log('submitForm valueUsername',valueUsername);
+	startCallee(valueUsername);
+}
+
+function startCallee(valueUsername) {
+	if(isOnlineCalleeID) {
+		// this means the callee referenced by mid is currently online
+		// mappedCalleeID may be cookiename or 11-digits
+		if(valueUsername==cookiename) {
+			// "Your WebCall callee is already online. Incoming calls can be received there." 
+			return;
+		}
+	} else {
+	}
+
 
 	// hand over mid to the callee app
 	let replaceURL = "/callee/"+valueUsername + "?mid="+mid+"&auto=1";
 	console.log('submitForm replaceURL',replaceURL);
+
+// TODO but if it IS already running, does this switch to it?
+//      no! instead we get "Login failed. Already logged in from another device?"
+//      note: the two URL's may be slightly different (for instance bc of a mid-parameter)
+
+// TODO and how does this work if the user is using the android app?
 
 //	window.location.replace(replaceURL); // does not allow back button (TODO which is better?)
 	window.location.href = replaceURL;
@@ -383,4 +387,102 @@ function exelink(url) {
 		window.location.replace(calleeLink);
 	}
 }
+
+/*
+		if(cookieName.match(/^[0-9]*$/) != null && cookieName.length==11) {
+			// cookieName is 11-digit
+			console.log('cookieName is 11-digit');
+			if(mastodonUserID!="") {
+				// the request comes from a valid mastodonUserID
+				if(mastodonUserID==wsCliMastodonID) {
+					console.log('mastodonUserID==wsCliMastodonID');
+					// server maps cookieName (11-digit) to requesting mastodonUserID
+				} else {
+					// server does NOT map 11-digit cookieName to requesting mastodonUserID
+					// it makes no sense to switch to callee
+					console.log('# abort! mastodonUserID!=wsCliMastodonID');
+// BUT THIS COULD BE THE 1ST TIME (in which case it would be wrong to clear the cookie?)
+			        document.cookie = "webcallid=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+// TODO generate user-facing message
+					return;
+				}
+			}
+		} else {
+			// cookieName is NOT 11-digit
+			console.log('cookieName is NOT 11-digit');
+			// if mastodonUserID!="" and cookieName not= mastodonUserID: abort
+			if(mastodonUserID=="") {
+				console.log('mastodonUserID is empty');
+			} else {
+				console.log('mastodonUserID is NOT empty');
+				if(cookieName!=mastodonUserID) {
+					// it makes no sense to switch to callee
+					console.log('# abort! cookieName!=mastodonUserID');
+			        document.cookie = "webcallid=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+// TODO generate user-facing message
+					return;
+				}
+				console.log('cookieName==mastodonUserID');
+			}
+		}
+*/
+
+/*
+	var register = getUrlParams("register");
+	if(typeof register!="undefined" && register!="") {
+		console.log('arg register is set',register);
+
+		let api = apiPath+"/getmiduser?mid="+mid;
+		console.log('pwForm api',api);
+		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+			console.log('xhr.responseText',xhr.responseText);
+			if(xhr.responseText=="") {
+				// no Mastodon user-id exists for this mid
+				console.warn('# xhr response empty for api='+api);
+// TODO give client visual feedback
+			} else {
+				// Mastodon user-id exists for this mid
+				let tok = xhr.responseText.split("|");
+				let mastodonUserID = "";
+				let isValidCalleeID = false;
+				let isOnlineCalleeID = false;
+				if(tok.length>=1) {
+					mastodonUserID = tok[0]; // always a mastodon-user-id, never a calleeID
+					if(tok.length>=2) {
+						if(tok[1]=="true") {
+							isValidCalleeID = true;
+						}
+						if(tok.length>=3) {
+							if(tok[2]=="true") {
+								isOnlineCalleeID = true;
+							}
+						}
+					}
+					// what if isOnlineCalleeID==true? in that case isValidCalleeID should also be true
+					if(isValidCalleeID) {
+						// switch to /callee/(id) now
+						// yes, ANYBODY can resolve mid to mastodonUserID; but they still need to login
+						// adv of using mid= is that we can delete the mapping after a succesful callee-login
+						console.info('calleeID does already exist',mastodonUserID);
+						let replaceURL = "/callee/"+mastodonUserID+"?mid="+mid+"&auto=1";
+						window.location.replace(replaceURL);
+						return;
+					}
+
+					// calleeID does not yet exist: offer register
+					document.title = "WebCall Register";
+					let titleElement = document.getElementById('title');
+					if(titleElement) {
+						titleElement.innerHTML = "WebCall Register";
+					}
+					pwForm(mastodonUserID);
+				}
+			}
+		}, function(errString,err) {
+			console.warn('# xhr error',errString,err);
+		});
+		return;
+	}
+	console.log('arg register not set');
+*/
 

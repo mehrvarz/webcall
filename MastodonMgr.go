@@ -790,10 +790,12 @@ func (mMgr *MastodonMgr) httpGetMidUser(w http.ResponseWriter, r *http.Request, 
 			fmt.Printf("# /getMidUser no mid=%v ip=%v\n",mid,remoteAddr)
 		} else {
 			calleeIdOnMastodon := ""
+			callerIdOnMastodon := ""
 			mMgr.midMutex.RLock()
 			midEntry,ok := mMgr.midMap[mid]
 			if ok && midEntry!=nil {
 				calleeIdOnMastodon = midEntry.mastodonIdCallee
+				callerIdOnMastodon = midEntry.mastodonIdCaller
 			}
 			mMgr.midMutex.RUnlock()
 
@@ -844,7 +846,7 @@ func (mMgr *MastodonMgr) httpGetMidUser(w http.ResponseWriter, r *http.Request, 
 				// NOTE: calleeID may be same as calleeIdOnMastodon, or may be a 11-digit ID
 				// NOTE: wsCliMastodonID may be calleeIdOnMastodon or empty string
 				codedString := calleeIdOnMastodon+"|"+isValidCalleeID+"|"+isOnlineCalleeID+"|"+
-					calleeID+"|"+wsCliMastodonID
+					calleeID+"|"+wsCliMastodonID+"|"+callerIdOnMastodon
 				fmt.Printf("/getMidUser codedString=%v\n",codedString)
 				fmt.Fprintf(w,codedString)
 				return

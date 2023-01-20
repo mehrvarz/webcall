@@ -765,16 +765,19 @@ function getSettings() {
 	gLog('getsettings api '+api);
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 		if(xhr.responseText!="") {
-			let serverSettings = "";
-			try {
-				serverSettings = JSON.parse(xhr.responseText);
-			} catch(ex) {
-				console.log("# getSettings JSON.parse err "+ex);
-				return;
-			}
-			if(typeof serverSettings.nickname!=="undefined") {
-				calleeName = serverSettings.nickname;
-				gLog("getsettings calleeName "+calleeName);
+			if(xhr.responseText=="wrongcookie") {
+			} else {
+				let serverSettings = "";
+				try {
+					serverSettings = JSON.parse(xhr.responseText);
+				} catch(ex) {
+					console.log("# getSettings JSON.parse err "+ex);
+					return;
+				}
+				if(typeof serverSettings.nickname!=="undefined") {
+					calleeName = serverSettings.nickname;
+					gLog("getsettings calleeName "+calleeName);
+				}
 			}
 		}
 	}, function(errString,errcode) {
@@ -2632,8 +2635,8 @@ function openSettings() {
 }
 
 function clearcookie() {
-	//console.log("clearcookie (id=%s)",calleeID);
-	history.back();
+	console.log("clearcookie (id=%s)",calleeID);
+	//history.back();
 	// wait for pulldown menu to close
 	setTimeout(function() {
 		// ask yes/no
@@ -2650,11 +2653,13 @@ function clearcookie2() {
 	containerElement.style.filter = "blur(0.8px) brightness(60%)";
 	goOffline();
 
-	if(iframeWindowOpenFlag || menuDialogOpenElement) {
+	if(iframeWindowOpenFlag /*|| menuDialogOpenElement*/) {
 		gLog("clearcookie2 history.back");
 		history.back();
 	}
 
+	document.cookie = "webcallid=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+/*
 	setTimeout(function() {
 		// ask server to delete cookie
 		let api = apiPath+"/logout?id="+calleeID;
@@ -2664,12 +2669,12 @@ function clearcookie2() {
 		}, function(errString,err) {
 			console.log("# clearcookie xhr error "+errString);
 		});
-/*
-		if(pushRegistration) {
-			gLog('exit delete serviceWorker');
-			pushRegistration.unregister();
-			pushRegistration = null;
-		}
+
+//		if(pushRegistration) {
+//			gLog('exit delete serviceWorker');
+//			pushRegistration.unregister();
+//			pushRegistration = null;
+//		}
 */
 		setTimeout(function() {
 			if(typeof Android !== "undefined" && Android !== null &&
@@ -2680,7 +2685,9 @@ function clearcookie2() {
 				window.location.reload(false);
 			}
 		},1000);
+/*
 	},1000);
+*/
 }
 
 function clearcache() {
