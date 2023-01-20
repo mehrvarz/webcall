@@ -107,7 +107,6 @@ function onload2() {
 
 	let dispMsg = "";
 
-// TODO show incoming call request m-user-id
 	if(callerID!="") {
 		dispMsg += "Incoming call from: "+callerID+"<br>";
 	}
@@ -129,7 +128,7 @@ function onload2() {
 		// do not show warning (cookieName is already prepared to answer mastodonUserID
 	} else
 	if(mappedCalleeID!="" && cookieName!=mappedCalleeID) {
-		// TODO warn user "you may run into a cookie issue" ?
+		// warn user "you may run into a cookie issue" ?
 		dispMsg += "Warning: User-ID and WebCall-ID differ<br>";
 	}
 */
@@ -138,7 +137,7 @@ function onload2() {
 
 	// offer multiple choice
 //	dispMsg += "Answer call using WebCall-ID...<br><br>";
-	dispMsg += "Select your WebCall identity to answer call:<br><br>";
+	dispMsg += "To answer the call, select your WebCall identity:<br><br>";
 
 	if(isOnlineCalleeID) {
 		dispMsg += "A WebCall client ";
@@ -162,7 +161,6 @@ function onload2() {
 
 	} else if(isValidCalleeID) {
 		// mastodonUserID has been registered already
-//		dispMsg += mastodonUserID+" is a valid WebCall ID<br>";
 		console.log("onload2 "+mastodonUserID+" is a valid WebCall ID");
 
 		if(!isOnlineCalleeID) {
@@ -175,7 +173,7 @@ function onload2() {
 					// forward mid to the callee client
 					replaceURL += "?mid="+mid;
 				}
-				dispMsg += "- <a href='"+replaceURL+"'>"+mastodonUserID+"</a><br><br>";
+				dispMsg += "&nbsp; <a href='"+replaceURL+"'>"+mastodonUserID+"</a><br><br>";
 			}
 
 			if(mappedCalleeID!="" && mappedCalleeID!=mastodonUserID) {
@@ -186,7 +184,7 @@ function onload2() {
 					// forward mid to the callee client
 					replaceURL += "?mid="+mid;
 				}
-				dispMsg += "- <a href='"+replaceURL+"'>"+mappedCalleeID+"</a><br><br>";
+				dispMsg += "&nbsp; <a href='"+replaceURL+"'>"+mappedCalleeID+"</a><br><br>";
 			}
 		}
 	} else {
@@ -195,40 +193,33 @@ function onload2() {
 		// register new account tmpkeyMastodonCalleeMap[mid] as calleeID
 		// we ONLY hand over (mid) to server (similar to /register, see: httpRegister() in httpOnline.go)
 		// server knows that tmpkeyMastodonCalleeMap[mid] is the desired mastodon user-id
-		dispMsg += "- register new ID: <a onclick='pwForm(\""+mastodonUserID+"\"); return false;'>"+mastodonUserID+"</a><br><br>";
+		dispMsg += "&nbsp; register new ID: <a onclick='pwForm(\""+mastodonUserID+"\"); return false;'>"+mastodonUserID+"</a><br><br>";
 
 /*
 		if(cookieName!="") {
 			if((mastodonUserID!="" && cookieName!=mastodonUserID) ||
 			   (mappedCalleeID!="" && cookieName!=mappedCalleeID)) {
-				dispMsg += "- add your User-ID to <a onclick='pwForm(\""+cookieName+"\"); return false;'>WebCall-ID "+cookieName+"</a><br><br>";
+				dispMsg += "&nbsp; add your User-ID to <a onclick='pwForm(\""+cookieName+"\"); return false;'>WebCall-ID "+cookieName+"</a><br><br>";
 			}
 		}
 */
 	}
 
 	if(cookieName!="" && mastodonUserID!=cookieName) {
-		dispMsg += "- <a onclick='startCallee("+cookieName+"); return false;'>"+cookieName+"</a><br><br>";
-// TODO problem: this will cause "already logged in" if cookieName is already logged in
-//      we do not know if cookieName is online (or even loaded), just that the cookie exists
-//      this is unrelated to isOnlineCalleeID, which relates to mastodonUserID being online or not
-
-// TODO if cookieName is not online: offer link to open callee-client
-//      if cookieName is online: tell user to manually switch to client and send link to caller !!!
+		dispMsg += "&nbsp; <a onclick='startCallee("+cookieName+"); return false;'>"+cookieName+"</a><br><br>";
 	}
 
-	// offer to enter (via keyboard) a possibly existing calleeID for login
-	// on submit: forward to callee-app (password will be entered there), hand over mid
-	// on login, the server will use mid to send a mastodon msg to the caller, telling the call-url
-	dispMsg += "- enter ID: <a onclick='loginForm(); return false;'>[Input form]</a><br><br>";
+	if(cookieName=="") {
+		// offer to enter (via keyboard) a possibly existing calleeID for login
+		// on submit: forward to callee-app (password will be entered there), hand over mid
+		// on login, the server will use mid to send a mastodon msg to the caller, telling the call-url
+		dispMsg += "&nbsp; enter ID: <a onclick='loginForm(); return false;'>[Input form]</a><br><br>";
+	}
 
 /*
-	// TODO tell server that "#(mid)" is the calleeID that belongs to mid
+// TODO one-time session: tell server that "#(mid)" is the calleeID that belongs to mid
 	// ajax: setCalleeIdTmpkey("#"+mid,mid)
-	dispMsg += "- <a href=''>let me use a one-time session</a><br><br>";
-
-	// TODO  (if we fw this to /register, mid needs to be passed through)
-	dispMsg += "- <a onclick='xxx(); return false;'>create me a new WebCall-ID (11-digit)</a><br><br>";
+	dispMsg += "&nbsp; <a href=''>let me use a one-time session</a><br><br>";
 */
 
 	showStatus(dispMsg + "<br><br><br>", -1);
@@ -270,29 +261,45 @@ function submitForm(theForm) {
 }
 
 function startCallee(valueUsername) {
-	if(isOnlineCalleeID) {
-		// this means the callee referenced by mid is currently online
-		// mappedCalleeID may be cookiename or 11-digits
-		if(valueUsername==cookiename) {
-			// "Your WebCall callee is already online. Incoming calls can be received there." 
-			return;
-		}
+	// we need to know if valueUsername (for instance cookieName) is online/valid
+	// why? bc opening this callee can cause "already logged in" if it is already logged in
+	// we need to do an ajax to find out. problem: we must prevent this api from being misused
+	let isOnline = false;
+	if(valueUsername==mastodonUserID && isOnlineCalleeID) {
+		isOnline = true;
+		startCallee2(valueUsername,isOnline);
 	} else {
+		// do ajax to find out if valueUsername is online
+		// we attach a valid mid, so the server can verify we are a valid client
+		let api = apiPath+"/getonline?id="+valueUsername+"&mid="+mid;
+		console.log('pwForm api',api);
+		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+			console.log('xhr.responseText',xhr.responseText);
+			if(xhr.responseText=="") {
+				// no Mastodon user-id exists for this mid
+			} else {
+				startCallee2(valueUsername,xhr.responseText=="true");
+			}
+		});
+	}
+}
+
+
+function startCallee2(valueUsername,isOnline) {
+	console.log('startCallee2 valueUsername/online',valueUsername,isOnline);
+	if(isOnline) {
+		showStatus("Your WebCall user "+valueUsername+" is online."+
+			" To receive incoming calls, switch to your running WebCall app.<br><br><br>", -1);
+// TODO send caller-link
+		return;
 	}
 
-
-	// hand over mid to the callee app
 	let replaceURL = "/callee/"+valueUsername + "?mid="+mid+"&auto=1";
-	console.log('submitForm replaceURL',replaceURL);
-
-// TODO but if it IS already running, does this switch to it?
-//      no! instead we get "Login failed. Already logged in from another device?"
-//      note: the two URL's may be slightly different (for instance bc of a mid-parameter)
-
-// TODO and how does this work if the user is using the android app?
-
+	console.log('startCallee2 replaceURL',replaceURL);
 //	window.location.replace(replaceURL); // does not allow back button (TODO which is better?)
 	window.location.href = replaceURL;
+
+// TODO  how does this work if the user is using the android app?
 }
 
 function clearForm() {
@@ -403,7 +410,7 @@ function exelink(url) {
 					console.log('# abort! mastodonUserID!=wsCliMastodonID');
 // BUT THIS COULD BE THE 1ST TIME (in which case it would be wrong to clear the cookie?)
 			        document.cookie = "webcallid=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
-// TODO generate user-facing message
+// generate user-facing message
 					return;
 				}
 			}
@@ -419,7 +426,7 @@ function exelink(url) {
 					// it makes no sense to switch to callee
 					console.log('# abort! cookieName!=mastodonUserID');
 			        document.cookie = "webcallid=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
-// TODO generate user-facing message
+// generate user-facing message
 					return;
 				}
 				console.log('cookieName==mastodonUserID');
@@ -439,7 +446,7 @@ function exelink(url) {
 			if(xhr.responseText=="") {
 				// no Mastodon user-id exists for this mid
 				console.warn('# xhr response empty for api='+api);
-// TODO give client visual feedback
+// give client visual feedback
 			} else {
 				// Mastodon user-id exists for this mid
 				let tok = xhr.responseText.split("|");
