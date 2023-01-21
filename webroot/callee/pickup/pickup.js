@@ -51,7 +51,7 @@ window.onload = function() {
 	// mid is given
 	// try to get mastodonUserID of callee, valid/registered user, currently online user
 	let api = apiPath+"/getmiduser?mid="+mid;
-	console.log('pwForm api',api);
+	console.log('ajax',api);
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 		console.log('xhr.responseText',xhr.responseText);
 		if(xhr.responseText=="") {
@@ -108,14 +108,16 @@ function onload2() {
 	let dispMsg = "";
 
 	if(callerID!="") {
-		dispMsg += "Incoming call from: "+callerID+"<br>";
+		dispMsg += "Incoming call ☎️ from "+callerID+"<br>";
 	}
 
+/*
 	dispMsg += "Your Mastodon ID: "+mastodonUserID;
 	if(wsCliMastodonID!="" && mastodonUserID!=wsCliMastodonID) {
 		dispMsg += " ("+wsCliMastodonID+")";
 	}
 	dispMsg += "<br>";
+*/
 
 /*
 	if(cookieName!="") {
@@ -133,11 +135,10 @@ function onload2() {
 	}
 */
 
-	dispMsg += "<br>"; // v-gap
+	dispMsg += "<br>"; // visual vertical gap
 
 	// offer multiple choice
-//	dispMsg += "Answer call using WebCall-ID...<br><br>";
-	dispMsg += "To answer the call, select your WebCall identity:<br><br>";
+	dispMsg += "Chose your WebCall identity to answer the call:<br><br>";
 
 	if(isOnlineCalleeID) {
 		dispMsg += "A WebCall client ";
@@ -152,12 +153,14 @@ function onload2() {
 
 		// callee for mid is online -> no new server-login will take place; server will NOT send caller-link
 		// so we send the caller-link to mastodon-caller (and trigger all other steps) right here
-		let api = apiPath+"/midcalleelogin?mid="+mid;
+		let api = apiPath+"/midcalleelogin?id="+mappedCalleeID+"&mid="+mid;
+		console.log('ajax',api);
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 			console.log('xhr.responseText',xhr.responseText);
 		}, function(errString,err) {
 			console.warn('# xhr error',errString,err);
 		});
+		return;
 
 	} else if(isValidCalleeID) {
 		// mastodonUserID has been registered already
@@ -173,7 +176,7 @@ function onload2() {
 					// forward mid to the callee client
 					replaceURL += "?mid="+mid;
 				}
-				dispMsg += "&nbsp; <a href='"+replaceURL+"'>"+mastodonUserID+"</a><br><br>";
+				dispMsg += "➡️ <a href='"+replaceURL+"'>"+mastodonUserID+"</a><br><br>";
 			}
 
 			if(mappedCalleeID!="" && mappedCalleeID!=mastodonUserID) {
@@ -184,7 +187,7 @@ function onload2() {
 					// forward mid to the callee client
 					replaceURL += "?mid="+mid;
 				}
-				dispMsg += "&nbsp; <a href='"+replaceURL+"'>"+mappedCalleeID+"</a><br><br>";
+				dispMsg += "➡️ <a href='"+replaceURL+"'>"+mappedCalleeID+"</a><br><br>";
 			}
 		}
 	} else {
@@ -193,27 +196,18 @@ function onload2() {
 		// register new account tmpkeyMastodonCalleeMap[mid] as calleeID
 		// we ONLY hand over (mid) to server (similar to /register, see: httpRegister() in httpOnline.go)
 		// server knows that tmpkeyMastodonCalleeMap[mid] is the desired mastodon user-id
-		dispMsg += "&nbsp; register new ID: <a onclick='pwForm(\""+mastodonUserID+"\"); return false;'>"+mastodonUserID+"</a><br><br>";
-
-/*
-		if(cookieName!="") {
-			if((mastodonUserID!="" && cookieName!=mastodonUserID) ||
-			   (mappedCalleeID!="" && cookieName!=mappedCalleeID)) {
-				dispMsg += "&nbsp; add your User-ID to <a onclick='pwForm(\""+cookieName+"\"); return false;'>WebCall-ID "+cookieName+"</a><br><br>";
-			}
-		}
-*/
+		dispMsg += "➡️ register new ID: <a onclick='pwForm(\""+mastodonUserID+"\"); return false;'>"+mastodonUserID+"</a><br><br>";
 	}
 
 	if(cookieName!="" && mastodonUserID!=cookieName) {
-		dispMsg += "&nbsp; <a onclick='startCallee("+cookieName+"); return false;'>"+cookieName+"</a><br><br>";
+		dispMsg += "➡️ <a onclick='startCallee("+cookieName+"); return false;'>"+cookieName+"</a><br><br>";
 	}
 
 	if(cookieName=="") {
 		// offer to enter (via keyboard) a possibly existing calleeID for login
 		// on submit: forward to callee-app (password will be entered there), hand over mid
 		// on login, the server will use mid to send a mastodon msg to the caller, telling the call-url
-		dispMsg += "&nbsp; enter ID: <a onclick='loginForm(); return false;'>[Input form]</a><br><br>";
+		dispMsg += "➡️ enter ID: <a onclick='loginForm(); return false;'>[Input form]</a><br><br>";
 	}
 
 /*
@@ -235,7 +229,8 @@ function replaceCurrentUrl(mastodonUserID) {
 		replaceURL += "?mid="+mid;
 	}
 
-	window.location.replace(replaceURL);
+//	window.location.replace(replaceURL);
+	exelink(replaceURL);
 }
 
 
@@ -272,7 +267,7 @@ function startCallee(valueUsername) {
 		// do ajax to find out if valueUsername is online
 		// we attach a valid mid, so the server can verify we are a valid client
 		let api = apiPath+"/getonline?id="+valueUsername+"&mid="+mid;
-		console.log('pwForm api',api);
+		console.log('ajax',api);
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 			console.log('xhr.responseText',xhr.responseText);
 			if(xhr.responseText=="") {
@@ -288,16 +283,27 @@ function startCallee(valueUsername) {
 function startCallee2(valueUsername,isOnline) {
 	console.log('startCallee2 valueUsername/online',valueUsername,isOnline);
 	if(isOnline) {
-		showStatus("Your WebCall user "+valueUsername+" is online."+
-			" To receive incoming calls, switch to your running WebCall app.<br><br><br>", -1);
-// TODO send caller-link
+		showStatus("Your WebCall app is online (ID "+valueUsername+").<br><br>"+
+			"To receive incoming calls, switch to the running app.<br><br>"+
+			"This tab can now be closed.<br>", -1);
+		// send caller link
+		// callee for mid is online -> no new server-login will take place; server will NOT send caller-link
+		// so we send the caller-link to mastodon-caller (and trigger all other steps) right here
+		let api = apiPath+"/midcalleelogin?id="+valueUsername+"&mid="+mid;
+		console.log('ajax',api);
+		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+			console.log('xhr.responseText',xhr.responseText);
+		}, function(errString,err) {
+			console.warn('# xhr error',errString,err);
+		});
 		return;
 	}
 
 	let replaceURL = "/callee/"+valueUsername + "?mid="+mid+"&auto=1";
 	console.log('startCallee2 replaceURL',replaceURL);
 //	window.location.replace(replaceURL); // does not allow back button (TODO which is better?)
-	window.location.href = replaceURL;
+//	window.location.href = replaceURL;
+	exelink(replaceURL);
 
 // TODO  how does this work if the user is using the android app?
 }
@@ -311,8 +317,8 @@ function clearForm() {
 }
 
 function pwForm(mastodonUserID) {
-	// display the callee's mastodonUserID 
-	// and ask for a password to register it as a new calleeID (via submitPw())
+	// let user register their mastodonUserID as calleeID
+	// show the mastodonUserID and ask for a password to register it as a new calleeID (via submitPw())
 	showStatus("Username: "+mastodonUserID+"<br>"+
 		"<form action='javascript:;' onsubmit='submitPw(this,\""+mastodonUserID+"\")' id='pwf'>"+
 		"<label for='username' style='display:inline-block; padding-bottom:4px;'>Password:&nbsp;</label>"+
@@ -325,6 +331,7 @@ function pwForm(mastodonUserID) {
 }
 
 function submitPw(theForm,mastodonUserID) {
+	// cont. letting user register their mastodonUserID as calleeID
 	// use the entered password (and the mastodon user-id via mid) to register a new calleeID
 	// for this we ajax(post) /registermid/(mid)
 	// /registermid will do: calleeIdOnMastodon = tmpkeyMastodonCalleeMap[mid]
@@ -343,7 +350,7 @@ function submitPw(theForm,mastodonUserID) {
 	} else {
 		//api = api + "&ver="+clientVersion;
 	}
-	if(!gentle) console.log('register via api='+api);
+	if(!gentle) console.log('ajax',api);
 	ajaxFetch(new XMLHttpRequest(), "POST", api, function(xhr) {
 		// only if we get back "OK" do we continue with:
 		if(xhr.responseText=="OK") {
@@ -370,7 +377,7 @@ function submitPw(theForm,mastodonUserID) {
 			"<br><br>Your WebCall callee link is shown below. "+
 			"It lets you receive calls and should work in any web browser. "+
 			"Click to start:<br><br>"+
-			"<a onclick='exelink(this.href); return false;' href='"+calleeLink+"'>"+calleeLink+"</a>",-1);
+			"<a onclick='exelink("+calleeLink+"); return false;' href='"+calleeLink+"'>"+calleeLink+"</a>",-1);
 		} else {
 			// register fail
 			console.log('response:',xhr.responseText);
@@ -383,17 +390,24 @@ function submitPw(theForm,mastodonUserID) {
 }
 
 function exelink(url) {
+	// exelink(url) is used so we can do window.location or window.open(new-tab)
 	console.log("exelink parent", window.location, window.parent.location);
 	if(window.location !== window.parent.location) {
 		// running inside an iframe -> open in a new tab
 		//console.log("exelink open",calleeLink);
-		window.open(calleeLink, '_blank');
+		window.open(url, '_blank');
 	} else {
 		// not running inside an iframe -> continue in the same tab
 		//console.log("exelink replace",calleeLink);
-		window.location.replace(calleeLink);
+//		window.location.replace(url); // does not allow back button (TODO which is better?)
+		window.location.href = url;
 	}
 }
+
+
+
+
+
 
 /*
 		if(cookieName.match(/^[0-9]*$/) != null && cookieName.length==11) {

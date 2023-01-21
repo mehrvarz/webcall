@@ -715,22 +715,25 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if strings.HasPrefix(urlPath,"/midcalleelogin") {
-// TODO check cookie?
-//		if cookie!=nil {
 		if mastodonMgr != nil {
 			url_arg_array, ok := r.URL.Query()["mid"]
-			fmt.Printf("/midcalleelogin url_arg_array=%v ok=%v\n",url_arg_array, ok)
-			if ok && len(url_arg_array[0]) >= 1 {
-				mid := url_arg_array[0]
-				if(mid=="") {
-					mastodonMgr.calleeLoginSuccess(mid,urlID,remoteAddr)
+			fmt.Printf("/midcalleelogin urlID=%s url_arg_array=%v ok=%v\n",urlID, url_arg_array, ok)
+			if ok {
+				if len(url_arg_array[0]) >= 1 {
+					mid := url_arg_array[0]
+					if(mid!="") {
+// TODO we have no urlID! do we need it???
+						mastodonMgr.calleeLoginSuccess(mid,urlID,remoteAddr)
+					} else {
+						fmt.Printf("# /midcalleelogin mid=%s\n",mid)
+					}
+				} else {
+					fmt.Printf("# /midcalleelogin len(url_arg_array)=%d\n",len(url_arg_array))
 				}
 			}
 		}
 		return
 	}
-
-
 
 
 	if urlPath=="/mode" {
