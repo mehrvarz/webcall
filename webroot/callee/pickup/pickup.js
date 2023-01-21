@@ -43,7 +43,8 @@ window.onload = function() {
 	}
 	if(mid=="") {
 		// no mid -> no mastodonUserID
-		showStatus("Missing data<br><br><br>", -1);
+		showStatus("Data outdated<br><br><br>", -1);
+		// TODO add context links (info about webcall, etc.)
 		//onload2();
 		return;
 	}
@@ -101,7 +102,8 @@ function onload2() {
 	console.log('onload2 callerID', callerID);
 
 	if(mastodonUserID=="") {
-		showStatus("Missing data<br><br><br>", -1);
+		showStatus("Data outdated<br><br><br>", -1);
+		// TODO add context links (info about webcall, etc.)
 		return;
 	}
 
