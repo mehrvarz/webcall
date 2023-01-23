@@ -23,6 +23,7 @@ window.onload = function() {
 	mappedCalleeID = "";
 	wsCliMastodonID = "";
 	callerID = "";
+	cmappedCalleeID = "";
 
 	// get callee-id from cookie
 	if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
@@ -52,6 +53,9 @@ window.onload = function() {
 	// mid is given
 	// try to get mastodonUserID of callee, valid/registered user, currently online user
 	let api = apiPath+"/getmiduser?mid="+mid;
+	if(cookieName!="") {
+		api += "&cid="+cookieName;
+	}
 	console.log('ajax',api);
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 		console.log('xhr.responseText',xhr.responseText);
@@ -76,6 +80,9 @@ window.onload = function() {
 								wsCliMastodonID = tok[4]
 								if(tok.length>=6) {
 									callerID = tok[5]
+									if(tok.length>=7) {
+										cmappedCalleeID = tok[6]
+									}
 								}
 							}
 						}
@@ -167,7 +174,7 @@ function onload2() {
 			// once login is complete, server will send caller-link to mastodon-caller, etc.
 			let replaceURL = "/callee/"+mastodonUserID;
 			if(mid!="") {
-				// forward mid to the callee client
+				// handing over mid will cause httpLogin() to call mastodonMgr.sendCallerLink()
 				replaceURL += "?mid="+mid;
 			}
 			if(mappedCalleeID!="" && mappedCalleeID!=mastodonUserID) {
@@ -181,7 +188,7 @@ function onload2() {
 			// once login is complete, server will send caller-link to mastodon-caller, etc.
 			let replaceURL = "/callee/"+mappedCalleeID;
 			if(mid!="") {
-				// forward mid to the callee client
+				// handing over mid will cause httpLogin() to call mastodonMgr.sendCallerLink()
 				replaceURL += "?mid="+mid;
 			}
 			dispMsg += "➡️ <a href='"+replaceURL+"'>"+mappedCalleeID+"</a> (mapped ID)<br><br>";
@@ -193,7 +200,15 @@ function onload2() {
 		// register new account tmpkeyMastodonCalleeMap[mid] as calleeID
 		// we ONLY hand over (mid) to server (similar to /register, see: httpRegister() in httpOnline.go)
 		// server knows that tmpkeyMastodonCalleeMap[mid] is the desired mastodon user-id
-		dispMsg += "➡️ <a onclick='pwForm(\""+mastodonUserID+"\"); return false;'>"+mastodonUserID+"</a> (New)<br><br>";
+
+// TODO we should NOT offer this, if cookieName is 11-digit AND it's dbUser.MastodonID == mastodonUserID
+//                                                          OR mapping[mastodonUserID] == cookiename
+// would it make sense to hand over cookieName to /getmiduser -> httpGetMidUser()
+// httpGetMidUser() could return dbUser.MastodonID
+		// cmappedCalleeID is dbUser.MastodonID of cookiename
+		if(cookiename!="" || cmappedCalleeID != mastodonUserID) {
+			dispMsg += "➡️ <a onclick='pwForm(\""+mastodonUserID+"\"); return false;'>"+mastodonUserID+"</a> (New)<br><br>";
+		}
 		choices++;
 	}
 
@@ -201,7 +216,13 @@ function onload2() {
 		if(mappedCalleeID==cookieName) {
 			// don't repeat
 		} else {
-			dispMsg += "➡️ <a onclick='startCallee("+cookieName+",false); return false;'>"+cookieName+"</a> (cookie)<br><br>";
+			let dispCname = cookieName;
+			if(cmappedCalleeID!="") {
+				dispCname += " ("+cmappedCalleeID+")";
+			} else {
+				dispCname += " (cookie)";
+			}
+			dispMsg += "➡️ <a onclick='startCallee("+cookieName+",false); return false;'>"+dispCname+"</a><br><br>";
 			choices++;
 		}
 	}
@@ -238,11 +259,16 @@ function onload2() {
 		dispMsg += "Warning: User-ID and WebCall-ID differ<br>";
 	}
 */
+/*
 	if(cookieName!="") {
 		console.log('cookieName is set',cookieName,mappedCalleeID);
 		if(mappedCalleeID!="" && cookieName!=mappedCalleeID) {
 			dispMsg += "Note: WebCall-ID in cookie differs from Mastodon-ID<br>";
 		}
+	}
+*/
+	if(!isValidCalleeID) {
+		// mastodonUserID from mid (the true mastodonUserID) is NOT a valid calleeID
 	}
 
 	showStatus(dispMsg + "<br><br><br>", -1);
@@ -313,7 +339,8 @@ function submitForm(theForm) {
 function startCallee(valueUsername,fromForm) {
 	// we need to know if valueUsername (for instance cookieName) is online/valid
 	// why? bc opening this callee can cause "already logged in" if it is already logged in
-	// we need to do an ajax to find out. problem: we must prevent this api from being misused
+	// we need to do an ajax to find out.
+	// to prevent this api from being misused, a valid mid needs to be handed over
 	let isOnline = false;
 	if(valueUsername==mastodonUserID && isOnlineCalleeID) {
 		isOnline = true;
@@ -325,22 +352,6 @@ function startCallee(valueUsername,fromForm) {
 		console.log('ajax',api);
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 			console.log('xhr.responseText',xhr.responseText);
-/*
-			if(xhr.responseText=="") {
-				// WebCall-ID (valueUsername) is not online
-				if(fromForm) {
-					// user coming from loginForm() ("Form-Input WebCall-ID")
-					loginForm("WebCall-ID ["+valueUsername+"] does not exist.");
-				} else {
-					// user trying to login cookieName
-					showStatus("WebCall-ID ["+valueUsername+"] is not online.<br><br>");
-					setTimeout(function() { onload2(); },2000);
-				}
-				startCallee2(valueUsername,false);
-			} else {
-				isAlreadyOnline(valueUsername);
-			}
-*/
 			startCallee2(valueUsername,xhr.responseText=="true");
 		});
 	}
@@ -350,25 +361,13 @@ function startCallee(valueUsername,fromForm) {
 function startCallee2(valueUsername,isOnline) {
 	console.log('startCallee2 valueUsername/online',valueUsername,isOnline);
 	if(isOnline) {
-/*
-		showStatus("Your WebCall app is online (ID "+valueUsername+").<br><br>"+
-			"To receive incoming calls, switch to the running app.<br><br>"+
-			"This tab can be closed now.<br>", -1);
-		// send caller link
-		// callee for mid is online -> no new server-login will take place; server will NOT send caller-link
-		// so we send the caller-link to mastodon-caller (and trigger all other steps) right here
-		let api = apiPath+"/sendCallerLink?id="+valueUsername+"&mid="+mid;
-		console.log('ajax',api);
-		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-			console.log('xhr.responseText',xhr.responseText);
-		}, function(errString,err) {
-			console.warn('# xhr error',errString,err);
-		});
-*/
 		isAlreadyOnline(valueUsername,mid)
 		return;
 	}
 
+	// handing over mid will cause httpLogin() (on login success) to call mastodonMgr.sendCallerLink()
+	// sendCallerLink() will send the caller-ling
+	// if valueUsername = 11-digit, sendCallerLink() will also: set dbUser.MastodonID <- midEntry.MastodonIdCallee
 	let replaceURL = "/callee/"+valueUsername + "?mid="+mid+"&auto=1";
 	console.log('startCallee2 replaceURL',replaceURL);
 	exelink(replaceURL);

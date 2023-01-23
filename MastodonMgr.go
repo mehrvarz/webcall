@@ -917,7 +917,13 @@ func (mMgr *MastodonMgr) httpGetMidUser(w http.ResponseWriter, r *http.Request, 
 			// no mid given
 			fmt.Printf("# httpGetMidUser no mid=%v ip=%v\n",mid,remoteAddr)
 		} else {
-			fmt.Printf("httpGetMidUser mid=%v ip=%v\n",mid,remoteAddr)
+			cid := ""
+			url_arg_array, ok = r.URL.Query()["cid"]
+			if ok && len(url_arg_array[0]) >= 1 {
+				cid = url_arg_array[0]
+			}
+
+			fmt.Printf("httpGetMidUser mid=%v cid=%s ip=%v\n",mid,cid,remoteAddr)
 			calleeIdOnMastodon := ""
 			callerIdOnMastodon := ""
 
@@ -933,6 +939,8 @@ func (mMgr *MastodonMgr) httpGetMidUser(w http.ResponseWriter, r *http.Request, 
 
 			isValidCalleeID := "false"
 			isOnlineCalleeID := "false"
+			wsCliMastodonID := ""
+			calleeID := ""
 			if(calleeIdOnMastodon=="") {
 				// given mid is invalid
 				fmt.Printf("# httpGetMidUser invalid or outdated mid=%s calleeIdOnMastodon=%v ip=%v\n",
@@ -942,7 +950,7 @@ func (mMgr *MastodonMgr) httpGetMidUser(w http.ResponseWriter, r *http.Request, 
 				// let's see if calleeIdOnMastodon is mapped to a 11-digit calleeID
 				fmt.Printf("httpGetMidUser mid=%s calleeIdOnMastodon=%v ip=%v\n",
 					mid,calleeIdOnMastodon,remoteAddr)
-				calleeID := calleeIdOnMastodon
+				calleeID = calleeIdOnMastodon
 				mappingMutex.RLock()
 				mappingData,ok := mapping[calleeIdOnMastodon]
 				mappingMutex.RUnlock()
@@ -957,7 +965,6 @@ func (mMgr *MastodonMgr) httpGetMidUser(w http.ResponseWriter, r *http.Request, 
 				hubMapMutex.RLock()
 				hub := hubMap[calleeID]
 				hubMapMutex.RUnlock()
-				wsCliMastodonID := ""
 				if hub!=nil {
 					// calleeID is online (so it is valid)
 					isOnlineCalleeID = "true"
@@ -975,15 +982,24 @@ func (mMgr *MastodonMgr) httpGetMidUser(w http.ResponseWriter, r *http.Request, 
 						wsCliMastodonID = dbUser.MastodonID
 					}
 				}
-
-				// NOTE: calleeID may be same as calleeIdOnMastodon, or may be a 11-digit ID
-				// NOTE: wsCliMastodonID may be calleeIdOnMastodon or empty string
-				codedString := calleeIdOnMastodon+"|"+isValidCalleeID+"|"+isOnlineCalleeID+"|"+
-					calleeID+"|"+wsCliMastodonID+"|"+callerIdOnMastodon
-				fmt.Printf("httpGetMidUser codedString=%v\n",codedString)
-				fmt.Fprintf(w,codedString)
-				return
 			}
+
+			cMastodonID := ""
+			if cid!="" {
+				cdbUser := mMgr.isValidCallee(cid)
+				if cdbUser!=nil {
+					// cid account is valid
+					cMastodonID = cdbUser.MastodonID
+				}
+			}
+
+			// NOTE: calleeID may be same as calleeIdOnMastodon, or may be a 11-digit ID
+			// NOTE: wsCliMastodonID may be calleeIdOnMastodon or empty string
+			codedString := calleeIdOnMastodon+"|"+isValidCalleeID+"|"+isOnlineCalleeID+"|"+
+				calleeID+"|"+wsCliMastodonID+"|"+callerIdOnMastodon+"|"+cMastodonID
+			fmt.Printf("httpGetMidUser codedString=%v\n",codedString)
+			fmt.Fprintf(w,codedString)
+			return
 		}
 	}
 
@@ -1251,6 +1267,7 @@ func (mMgr *MastodonMgr) sendCallerLink(mid string, urlID string, remoteAddr str
 		}
 
 		// store the mastodonUserID in mapping[], pointing to 11-digit urlID
+// TODO how does this work?
 		mappingMutex.Lock()
 		mappingData,ok := mapping[mastodonUserID]
 		if ok && mappingData.CalleeId != urlID {
