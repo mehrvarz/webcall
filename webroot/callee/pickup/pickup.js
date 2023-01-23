@@ -204,7 +204,7 @@ function onload2() {
 
 	if(cookieName!="") {
 		if(mappedCalleeID==cookieName) {
-			dispMsg += "➡️ <a onclick='startCallee("+cookieName+"); return false;'>"+cookieName+"</a><br><br>";
+//			dispMsg += "➡️ <a onclick='startCallee("+cookieName+"); return false;'>"+cookieName+"</a><br><br>";
 		} else {
 			dispMsg += "➡️ <a onclick='startCallee("+cookieName+"); return false;'>"+cookieName+" (other)</a><br><br>";
 		}
