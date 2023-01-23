@@ -124,7 +124,8 @@ function onload2() {
 	dispMsg += "<br>"; // visual vertical gap
 
 	// offer multiple choice
-	dispMsg += "Select your WebCall identity to answer call:<br><br>";
+	let choices = 0;
+	dispMsg += "Select your WebCall-ID to answer this call:<br><br>";
 
 	if(isOnlineCalleeID) {
 		// the callee referenced by mid is currently online
@@ -136,7 +137,7 @@ function onload2() {
 //		} else if(cookieName!="") {					// cookieName could be from a different ID
 //			dispMsg += "("+cookieName+") ";
 		}
-		dispMsg += "is already active.<br>Incoming WebCalls will be received there.<br>";
+		dispMsg += "is already active.<br>Incoming WebCalls can be received there.<br>";
 
 		// callee for mid is online -> no new server-login will take place; server will NOT send caller-link
 		// so we send the caller-link to mastodon-caller (and trigger all other steps) right here
@@ -165,6 +166,7 @@ function onload2() {
 			} else {
 				dispMsg += "➡️ <a href='"+replaceURL+"'>"+mastodonUserID+"</a> (user ID)<br><br>";
 			}
+			choices++;
 		} else if(mappedCalleeID!="") {
 			// mappedCalleeID is NOT currently online/logged-in - offer a link to start it
 			// once login is complete, server will send caller-link to mastodon-caller, etc.
@@ -174,14 +176,16 @@ function onload2() {
 				replaceURL += "?mid="+mid;
 			}
 			dispMsg += "➡️ <a href='"+replaceURL+"'>"+mappedCalleeID+"</a> (mapped ID)<br><br>";
+			choices++;
 		}
 	} else {
-		// not isValidCalleeID
+		// NOT isValidCalleeID (and NOT online also)
 		// offer user to register mastodonUserID as calleeID
 		// register new account tmpkeyMastodonCalleeMap[mid] as calleeID
 		// we ONLY hand over (mid) to server (similar to /register, see: httpRegister() in httpOnline.go)
 		// server knows that tmpkeyMastodonCalleeMap[mid] is the desired mastodon user-id
-		dispMsg += "➡️ register new ID: <a onclick='pwForm(\""+mastodonUserID+"\"); return false;'>"+mastodonUserID+"</a><br><br>";
+		dispMsg += "➡️ <a onclick='pwForm(\""+mastodonUserID+"\"); return false;'>"+mastodonUserID+"</a> (New)<br><br>";
+		choices++;
 	}
 
 	if(cookieName!="") {
@@ -190,13 +194,15 @@ function onload2() {
 			//dispMsg += "➡️ <a onclick='startCallee("+cookieName+"); return false;'>"+cookieName+"</a><br><br>";
 		} else {
 			dispMsg += "➡️ <a onclick='startCallee("+cookieName+"); return false;'>"+cookieName+"</a> (cookie)<br><br>";
+			choices++;
 		}
 	}
 
 	// offer user to enter (via keyboard) a possibly existing calleeID for login
 	// on submit: forward to callee-app (password will be entered there), hand over mid
 	// on login, the server will use mid to send a mastodon msg to the caller, telling the call-url
-	dispMsg += "➡️ enter ID: <a onclick='loginForm(); return false;'>[Input form]</a><br><br>";
+	dispMsg += "➡️ <a onclick='loginForm(); return false;'>[Input WebCall-ID]</a><br><br>";
+	choices++;
 
 	dispMsg += "<br>"; // visual vertical gap
 
@@ -204,7 +210,10 @@ function onload2() {
 // TODO one-time session: tell server that "#(mid)" is the calleeID that belongs to mid
 	// ajax: setCalleeIdTmpkey("#"+mid,mid)
 	dispMsg += "&nbsp; <a href=''>let me use a one-time session</a><br><br>";
+	choices++;
 */
+
+	// TODO if(choices==1) -> autostart the one link
 
 /*
 	if(cookieName!="") {
@@ -223,8 +232,8 @@ function onload2() {
 */
 	if(cookieName!="") {
 		console.log('cookieName is set',cookieName,mappedCalleeID);
-		if(cookieName!=mappedCalleeID) {
-			dispMsg += "Warning: WebCall-ID in cookie differs from Mastodon-ID<br>";
+		if(mappedCalleeID!="" && cookieName!=mappedCalleeID) {
+			dispMsg += "Note: WebCall-ID in cookie differs from Mastodon-ID<br>";
 		}
 	}
 
@@ -246,7 +255,7 @@ function replaceCurrentUrl(mastodonUserID) {
 }
 
 
-function loginForm() {
+function loginForm(msg) {
 	// user is trying to log-in as callee with an entered calleeID (but no cookie, so not yet logged in?)
 	showStatus("<form action='javascript:;' onsubmit='submitForm(this)' _style='max-width:450px;' id='usernamef'>"+
 		"<label for='username' style='display:inline-block; _width:32px; padding-bottom:4px;'>ID:&nbsp;</label>"+
@@ -255,7 +264,7 @@ function loginForm() {
 		"<span onclick='clearForm()' style='margin-left:5px; user-select:none;'>X</span>"+
 		"<br>"+
 		"<input type='submit' name='Submit' id='submit' value='OK' style='width:100px; margin-top:16px;'>"+
-	"</form>",-1);
+	"</form><br><br>"+msg,-1);
 	// see submitForm() below
 }
 
@@ -283,7 +292,8 @@ function startCallee(valueUsername) {
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 			console.log('xhr.responseText',xhr.responseText);
 			if(xhr.responseText=="") {
-				// no Mastodon user-id exists for this mid
+				// TODO valueUsername is not an existing WebCall-ID
+				loginForm("WebCall-ID ["+valueUsername+"] does not exist.");
 			} else {
 				startCallee2(valueUsername,xhr.responseText=="true");
 			}
