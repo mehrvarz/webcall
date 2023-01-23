@@ -176,7 +176,7 @@ function onload2() {
 				// forward mid to the callee client
 				replaceURL += "?mid="+mid;
 			}
-			if(mappedCalleeID!="") {
+			if(mappedCalleeID!="" && mappedCalleeID!=mastodonUserID) {
 				dispMsg += "➡️ <a href='"+replaceURL+"'>"+mastodonUserID+"</a> ("+mappedCalleeID+")<br><br>";
 			} else {
 				dispMsg += "➡️ <a href='"+replaceURL+"'>"+mastodonUserID+"</a> (user ID)<br><br>";
