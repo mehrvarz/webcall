@@ -704,6 +704,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+/*
 	if strings.HasPrefix(urlPath,"/midmsg") {
 		if cookie!=nil {
 			if mastodonMgr != nil {
@@ -714,21 +715,23 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	if strings.HasPrefix(urlPath,"/midcalleelogin") {
+*/
+
+	if strings.HasPrefix(urlPath,"/sendCallerLink") {
 		if mastodonMgr != nil {
 			url_arg_array, ok := r.URL.Query()["mid"]
-			fmt.Printf("/midcalleelogin urlID=%s url_arg_array=%v ok=%v\n",urlID, url_arg_array, ok)
+			fmt.Printf("/sendCallerLink urlID=%s url_arg_array=%v ok=%v\n",urlID, url_arg_array, ok)
 			if ok {
 				if len(url_arg_array[0]) >= 1 {
 					mid := url_arg_array[0]
 					if(mid!="") {
-// TODO we have no urlID! do we need it???
-						mastodonMgr.calleeLoginSuccess(mid,urlID,remoteAddr)
+// TODO what if we have no urlID? do we need it???
+						mastodonMgr.sendCallerLink(mid,urlID,remoteAddr)
 					} else {
-						fmt.Printf("# /midcalleelogin mid=%s\n",mid)
+						fmt.Printf("# /sendCallerLink mid=%s\n",mid)
 					}
 				} else {
-					fmt.Printf("# /midcalleelogin len(url_arg_array)=%d\n",len(url_arg_array))
+					fmt.Printf("# /sendCallerLink len(url_arg_array)=%d\n",len(url_arg_array))
 				}
 			}
 		}

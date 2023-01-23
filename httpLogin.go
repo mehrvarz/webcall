@@ -280,13 +280,14 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 fmt.Printf("/login (%s) got formPw, no cookiePw, pwIdCombo.Pw=%s\n", urlID, pwIdCombo.Pw)
 				} else {
 					fmt.Printf("# /login (%s) got formPw, no cookiePw err=%v\n", urlID, err)
+// TODO: if err="skv key not found" -> say: unknown user, offer link to register (don't cont with bcrypt below)
 				}
 			} else {
-fmt.Printf("/login (%s) got formPw, cookiePw=(%s)\n", urlID, hashPw)
+				fmt.Printf("/login (%s) got formPw, cookiePw=(%s)\n", urlID, hashPw)
 			}
 			// this gets executed after form-field submit
 			// compare form-cleartext-formPw vs. hashPw-dbHashedPw-plus-cookie (if empty: hashPw-dbEntry.Password)
-fmt.Printf("/login (%s) compare (%s) (%s)\n", urlID, hashPw, formPw)
+fmt.Printf("/login (%s) compare hash(%s) form(%s)\n", urlID, hashPw, formPw) // TODO remove
 
 			err := bcrypt.CompareHashAndPassword([]byte(hashPw), []byte(formPw))
 			if err != nil {
@@ -621,7 +622,7 @@ fmt.Printf("/login (%s) compare (%s) (%s)\n", urlID, hashPw, formPw)
 						if logWantedFor("login") {
 							fmt.Printf("/login (%s) mastodonMgr.calleeLoginSuccess mid=%s\n", urlID, mid)
 						}
-						mastodonMgr.calleeLoginSuccess(mid,urlID,remoteAddr)
+						mastodonMgr.sendCallerLink(mid,urlID,remoteAddr)
 					}
 				} else {
 					// hub!=nil but CalleeLogin==false (callee still there but did NOT send 'init' within 26s)
@@ -701,8 +702,8 @@ func createCookie(w http.ResponseWriter, urlID string, pw string, pwIdCombo *PwI
 		fmt.Printf("# /login bcrypt err=%v\n", err)
 		pwIdCombo.Pw = pw
     } else {
-		fmt.Printf("/login (%s) bcrypt store (%v)\n", urlID, string(hash))
-fmt.Printf("createCookie (%s) pw(%s) hashPw(%s)\n", urlID, pw, string(hash))
+		fmt.Printf("/login (%s) createCookie bcrypt store (%v)\n", urlID, string(hash))
+fmt.Printf("createCookie (%s) pw(%s) hashPw(%s)\n", urlID, pw, string(hash)) // TODO remove
 		pwIdCombo.Pw = string(hash)
 	}
 

@@ -143,19 +143,20 @@ function onload2() {
 	dispMsg += "Chose your WebCall identity to answer the call:<br><br>";
 
 	if(isOnlineCalleeID) {
+		// the callee referenced by mid is currently online
 		dispMsg += "A WebCall client ";
 		if(mappedCalleeID!="") {
 			dispMsg += "("+mappedCalleeID+") ";
 		} else if(mastodonUserID!="") {
 			dispMsg += "("+mastodonUserID+") ";
-		} else if(cookieName!="") {
-			dispMsg += "("+cookieName+") ";
+//		} else if(cookieName!="") {					// cookieName could be from a different ID
+//			dispMsg += "("+cookieName+") ";
 		}
 		dispMsg += "is already active.<br>Incoming WebCalls will be received there.<br>";
 
 		// callee for mid is online -> no new server-login will take place; server will NOT send caller-link
 		// so we send the caller-link to mastodon-caller (and trigger all other steps) right here
-		let api = apiPath+"/midcalleelogin?id="+mappedCalleeID+"&mid="+mid;
+		let api = apiPath+"/sendCallerLink?id="+mappedCalleeID+"&mid="+mid;
 		console.log('ajax',api);
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 			console.log('xhr.responseText',xhr.responseText);
@@ -165,7 +166,7 @@ function onload2() {
 		return;
 
 	} else if(isValidCalleeID) {
-		// mastodonUserID has been registered already
+		// the callee referenced by mid is NOT online but IS a valid webcall account
 		console.log("onload2 "+mastodonUserID+" is a valid WebCall ID");
 
 		if(!isOnlineCalleeID) {
@@ -201,12 +202,14 @@ function onload2() {
 		dispMsg += "➡️ register new ID: <a onclick='pwForm(\""+mastodonUserID+"\"); return false;'>"+mastodonUserID+"</a><br><br>";
 	}
 
-	if(cookieName!="" && mastodonUserID!=cookieName) {
-		dispMsg += "➡️ <a onclick='startCallee("+cookieName+"); return false;'>"+cookieName+"</a><br><br>";
-	}
-
-	if(cookieName=="") {
-		// offer to enter (via keyboard) a possibly existing calleeID for login
+	if(cookieName!="") {
+//		if(mastodonUserID!=cookieName) {
+		if(mappedCalleeID!=cookieName) {
+			dispMsg += "➡️ <a onclick='startCallee("+cookieName+"); return false;'>"+cookieName+"</a><br><br>";
+		}
+	} else {
+		// no calleeID stored in cookie
+		// offer user to enter (via keyboard) a possibly existing calleeID for login
 		// on submit: forward to callee-app (password will be entered there), hand over mid
 		// on login, the server will use mid to send a mastodon msg to the caller, telling the call-url
 		dispMsg += "➡️ enter ID: <a onclick='loginForm(); return false;'>[Input form]</a><br><br>";
@@ -291,7 +294,7 @@ function startCallee2(valueUsername,isOnline) {
 		// send caller link
 		// callee for mid is online -> no new server-login will take place; server will NOT send caller-link
 		// so we send the caller-link to mastodon-caller (and trigger all other steps) right here
-		let api = apiPath+"/midcalleelogin?id="+valueUsername+"&mid="+mid;
+		let api = apiPath+"/sendCallerLink?id="+valueUsername+"&mid="+mid;
 		console.log('ajax',api);
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 			console.log('xhr.responseText',xhr.responseText);
@@ -303,8 +306,6 @@ function startCallee2(valueUsername,isOnline) {
 
 	let replaceURL = "/callee/"+valueUsername + "?mid="+mid+"&auto=1";
 	console.log('startCallee2 replaceURL',replaceURL);
-//	window.location.replace(replaceURL); // does not allow back button (TODO which is better?)
-//	window.location.href = replaceURL;
 	exelink(replaceURL);
 
 // TODO  how does this work if the user is using the android app?
@@ -402,7 +403,7 @@ function exelink(url) {
 		// not running inside an iframe -> continue in the same tab
 		//console.log("exelink replace",calleeLink);
 //		window.location.replace(url); // does not allow back button (TODO which is better?)
-		window.location.href = url;
+		window.location.href = url;   // allows back button
 	}
 }
 
