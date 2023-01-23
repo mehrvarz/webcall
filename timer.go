@@ -407,7 +407,6 @@ func ticker20min() {
 			mastodonMgr.cleanupMastodonInviter(os.Stdout)
 		}
 
-
 		<-twentyMinTicker.C
 	}
 }
@@ -782,6 +781,11 @@ func callBackupScript(scriptName string) error {
 	if err := kv.Db.Sync(); err != nil {
 		fmt.Printf("# callBackupScript kvHashedPw sync error: %s\n", err)
 	}
+
+	if mastodonMgr != nil {
+		mastodonMgr.dbSync()
+	}
+
 
 	fmt.Printf("callBackupScript exec (%s)...\n",scriptName)
 	cmd, err := exec.Command("/bin/sh", scriptName).Output()

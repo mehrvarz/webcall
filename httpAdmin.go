@@ -236,7 +236,8 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 			printFunc(w,"# /makeregistered url arg 'pw' not given\n")
 			return true
 		}
-		urlPw := url_arg_array[0]
+// TODO outdated
+//		urlPw := url_arg_array[0]
 
 		fmt.Printf("/makeregistered dbName=%s\n", dbMainName)
 
@@ -249,7 +250,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 				dbMainName,dbUserBucket,urlID,err)
 		} else {
 			err = kv.Put(dbRegisteredIDs, urlID,
-				DbEntry{unixTime, remoteAddr, urlPw}, false)
+				DbEntry{unixTime, remoteAddr /*, urlPw*/}, false)
 			if err!=nil {
 				printFunc(w,"# /makeregistered error db=%s bucket=%s put key=%s err=%v\n",
 					dbMainName,dbRegisteredIDs,urlID,err)

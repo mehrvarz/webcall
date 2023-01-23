@@ -16,7 +16,6 @@ import (
 	"time"
 	"fmt"
 	"io"
-	"golang.org/x/crypto/bcrypt"
 )
 
 func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, dialID string, remoteAddr string) {
@@ -428,22 +427,12 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 					registerID, dbMainName, dbUserBucket, err)
 				fmt.Fprintf(w,"cannot register user")
 			} else {
-				// store crypted pw
-				storePw := pw
-				hash, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.MinCost)
-				if err != nil {
-					fmt.Printf("# /login bcrypt err=%v\n", err)
-					// cont to use unencrypt pw
-				} else {
-					fmt.Printf("/login bcrypt store (%v)\n", string(hash))
-					storePw = string(hash)
-				}
 				err = kvMain.Put(dbRegisteredIDs, registerID,
-						DbEntry{unixTime, remoteAddr, storePw}, false)
+						DbEntry{unixTime, remoteAddr}, false)
 				if err!=nil {
 					fmt.Printf("# /register (%s) error db=%s bucket=%s put err=%v\n",
 						registerID,dbMainName,dbRegisteredIDs,err)
-					fmt.Fprintf(w,"cannot register ID")
+					fmt.Fprintf(w,"cannot register user")
 					// TODO this is bad! got to role back kvMain.Put((dbUser...) from above
 				} else {
 					//fmt.Printf("/register (%s) db=%s bucket=%s stored OK\n",
@@ -454,25 +443,24 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 					if err!=nil {
 						fmt.Printf("/register (%s) create cookie error cookie=%s err=%v\n",
 							registerID, cookieValue, err)
-						// not fatal, but user needs to enter pw again now
-					}
-
-					// preload contacts with 2 Answie accounts
-					var idNameMap map[string]string // callerID -> name
-					err = kvContacts.Get(dbContactsBucket, registerID, &idNameMap)
-					if err!=nil {
-						idNameMap = make(map[string]string)
-					}
-					idNameMap["answie"] = "Answie Spoken"
-					idNameMap["answie7"] = "Answie Jazz"
-					err = kvContacts.Put(dbContactsBucket, registerID, idNameMap, false)
-					if err!=nil {
-						fmt.Printf("# /register (%s) kvContacts.Put err=%v\n", registerID, err)
 					} else {
-						//fmt.Printf("/register (%s) kvContacts.Put OK\n", registerID)
-					}
+						// preload contacts with 2 Answie accounts
+						var idNameMap map[string]string // callerID -> name
+						err = kvContacts.Get(dbContactsBucket, registerID, &idNameMap)
+						if err!=nil {
+							idNameMap = make(map[string]string)
+						}
+						idNameMap["answie"] = "Answie Spoken"
+						idNameMap["answie7"] = "Answie Jazz"
+						err = kvContacts.Put(dbContactsBucket, registerID, idNameMap, false)
+						if err!=nil {
+							fmt.Printf("# /register (%s) kvContacts.Put err=%v\n", registerID, err)
+						} else {
+							//fmt.Printf("/register (%s) kvContacts.Put OK\n", registerID)
+						}
 
-					fmt.Fprintf(w, "OK")
+						fmt.Fprintf(w, "OK")
+					}
 				}
 			}
 		}

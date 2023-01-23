@@ -287,7 +287,7 @@ function startCallee2(valueUsername,isOnline) {
 	if(isOnline) {
 		showStatus("Your WebCall app is online (ID "+valueUsername+").<br><br>"+
 			"To receive incoming calls, switch to the running app.<br><br>"+
-			"This tab can now be closed.<br>", -1);
+			"This tab can be closed now.<br>", -1);
 		// send caller link
 		// callee for mid is online -> no new server-login will take place; server will NOT send caller-link
 		// so we send the caller-link to mastodon-caller (and trigger all other steps) right here
