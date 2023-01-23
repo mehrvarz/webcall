@@ -248,15 +248,15 @@ function onload2() {
 	showStatus(dispMsg + "<br><br><br>", -1);
 }
 
-function isAlreadyOnline(id)
+function isAlreadyOnline(idStr)
 	// the callee referenced by mid is currently online
-	showStatus( "WebCall client ("+id+") is already active.<br>"+
+	showStatus( "WebCall client ("+idStr+") is already active.<br>"+
 				"Incoming WebCalls can be received there.<br>"+
 				"This tab can be closed now.<br>", -1);
 
 	// callee for mid is online -> no new server-login will take place; server will NOT send caller-link
 	// so we send the caller-link to mastodon-caller (and trigger all other steps) right here
-	let api = apiPath+"/sendCallerLink?id="+id;
+	let api = apiPath+"/sendCallerLink?id="+idStr;
 	if(mid!="") {
 		api += "&mid="+mid;
 	}
