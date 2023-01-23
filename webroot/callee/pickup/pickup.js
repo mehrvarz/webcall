@@ -256,6 +256,9 @@ function replaceCurrentUrl(mastodonUserID) {
 
 
 function loginForm(msg) {
+	if(typeof msg == "undefined") {
+		msg = "";
+	}
 	// user is trying to log-in as callee with an entered calleeID (but no cookie, so not yet logged in?)
 	showStatus("<form action='javascript:;' onsubmit='submitForm(this)' _style='max-width:450px;' id='usernamef'>"+
 		"<label for='username' style='display:inline-block; _width:32px; padding-bottom:4px;'>ID:&nbsp;</label>"+
