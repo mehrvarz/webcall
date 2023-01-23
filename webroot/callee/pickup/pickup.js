@@ -140,7 +140,7 @@ function onload2() {
 	dispMsg += "<br>"; // visual vertical gap
 
 	// offer multiple choice
-	dispMsg += "Chose your WebCall identity to answer the call:<br><br>";
+	dispMsg += "Your WebCall identity to answer call:<br><br>";
 
 	if(isOnlineCalleeID) {
 		// the callee referenced by mid is currently online
@@ -166,32 +166,30 @@ function onload2() {
 		return;
 
 	} else if(isValidCalleeID) {
-		// the callee referenced by mid is NOT online but IS a valid webcall account
+		// mid-callee is NOT online but IS a valid webcall account
 		console.log("onload2 "+mastodonUserID+" is a valid WebCall ID");
-
-		if(!isOnlineCalleeID) {
-			// but is NOT currently online
-			if(mastodonUserID!="") {
-				// mastodonUserID is NOT currently online/logged-in - offer a link to start it
-				// once login is complete, server will send caller-link to mastodon-caller, etc.
-				let replaceURL = "/callee/"+mastodonUserID;
-				if(mid!="") {
-					// forward mid to the callee client
-					replaceURL += "?mid="+mid;
-				}
+		if(mastodonUserID!="") {
+			// mastodonUserID is NOT currently online/logged-in - offer a link to start it
+			// once login is complete, server will send caller-link to mastodon-caller, etc.
+			let replaceURL = "/callee/"+mastodonUserID;
+			if(mid!="") {
+				// forward mid to the callee client
+				replaceURL += "?mid="+mid;
+			}
+			if(mappedCalleeID!="") {
+				dispMsg += "➡️ <a href='"+replaceURL+"'>"+mastodonUserID+"</a> ("+mappedCalleeID+")<br><br>";
+			} else {
 				dispMsg += "➡️ <a href='"+replaceURL+"'>"+mastodonUserID+"</a> (user ID)<br><br>";
 			}
-
-			if(mappedCalleeID!="" && mappedCalleeID!=mastodonUserID) {
-				// mappedCalleeID is NOT currently online/logged-in - offer a link to start it
-				// once login is complete, server will send caller-link to mastodon-caller, etc.
-				let replaceURL = "/callee/"+mappedCalleeID;
-				if(mid!="") {
-					// forward mid to the callee client
-					replaceURL += "?mid="+mid;
-				}
-				dispMsg += "➡️ <a href='"+replaceURL+"'>"+mappedCalleeID+"</a> (mapped ID)<br><br>";
+		} else if(mappedCalleeID!="") {
+			// mappedCalleeID is NOT currently online/logged-in - offer a link to start it
+			// once login is complete, server will send caller-link to mastodon-caller, etc.
+			let replaceURL = "/callee/"+mappedCalleeID;
+			if(mid!="") {
+				// forward mid to the callee client
+				replaceURL += "?mid="+mid;
 			}
+			dispMsg += "➡️ <a href='"+replaceURL+"'>"+mappedCalleeID+"</a> (mapped ID)<br><br>";
 		}
 	} else {
 		// not isValidCalleeID
