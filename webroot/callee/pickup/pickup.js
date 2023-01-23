@@ -179,7 +179,7 @@ function onload2() {
 					// forward mid to the callee client
 					replaceURL += "?mid="+mid;
 				}
-				dispMsg += "➡️ <a href='"+replaceURL+"'>"+mastodonUserID+"</a><br><br>";
+				dispMsg += "➡️ <a href='"+replaceURL+"'>"+mastodonUserID+"</a> (user ID)<br><br>";
 			}
 
 			if(mappedCalleeID!="" && mappedCalleeID!=mastodonUserID) {
@@ -190,7 +190,7 @@ function onload2() {
 					// forward mid to the callee client
 					replaceURL += "?mid="+mid;
 				}
-				dispMsg += "➡️ <a href='"+replaceURL+"'>"+mappedCalleeID+"</a><br><br>";
+				dispMsg += "➡️ <a href='"+replaceURL+"'>"+mappedCalleeID+"</a> (mapped ID)<br><br>";
 			}
 		}
 	} else {
@@ -204,17 +204,20 @@ function onload2() {
 
 	if(cookieName!="") {
 		if(mappedCalleeID==cookieName) {
-//			dispMsg += "➡️ <a onclick='startCallee("+cookieName+"); return false;'>"+cookieName+"</a><br><br>";
+			// don't repeat
+			//dispMsg += "➡️ <a onclick='startCallee("+cookieName+"); return false;'>"+cookieName+"</a><br><br>";
 		} else {
-			dispMsg += "➡️ <a onclick='startCallee("+cookieName+"); return false;'>"+cookieName+" (other)</a><br><br>";
+			dispMsg += "➡️ <a onclick='startCallee("+cookieName+"); return false;'>"+cookieName+"</a> (cookie)<br><br>";
 		}
-	} else {
+	}
+
+//	if(cookieName!="") {
 		// no calleeID stored in cookie
 		// offer user to enter (via keyboard) a possibly existing calleeID for login
 		// on submit: forward to callee-app (password will be entered there), hand over mid
 		// on login, the server will use mid to send a mastodon msg to the caller, telling the call-url
 		dispMsg += "➡️ enter ID: <a onclick='loginForm(); return false;'>[Input form]</a><br><br>";
-	}
+//	}
 
 /*
 // TODO one-time session: tell server that "#(mid)" is the calleeID that belongs to mid
