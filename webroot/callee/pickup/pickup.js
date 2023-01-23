@@ -128,6 +128,7 @@ function onload2() {
 	dispMsg += "Select your WebCall-ID to answer this call:<br><br>";
 
 	if(isOnlineCalleeID) {
+/*
 		// the callee referenced by mid is currently online
 		dispMsg += "A WebCall client ";
 		if(mappedCalleeID!="") {
@@ -148,6 +149,14 @@ function onload2() {
 		}, function(errString,err) {
 			console.warn('# xhr error',errString,err);
 		});
+*/
+		if(mappedCalleeID!="") {
+			isAlreadyOnline(mappedCalleeID);
+		} else if(mastodonUserID!="") {
+			isAlreadyOnline(mastodonUserID);
+		} else {
+// TODO
+		}
 		return;
 
 	} else if(isValidCalleeID) {
@@ -239,6 +248,29 @@ function onload2() {
 	showStatus(dispMsg + "<br><br><br>", -1);
 }
 
+function isAlreadyOnline(id)
+	// the callee referenced by mid is currently online
+	dispMsg +=  "WebCall client ("+id+") is already active.<br>"+
+				"Incoming WebCalls can be received there.<br>"+
+				"This tab can be closed now.<br>";
+	showStatus(dispMsg, -1);
+
+	// callee for mid is online -> no new server-login will take place; server will NOT send caller-link
+	// so we send the caller-link to mastodon-caller (and trigger all other steps) right here
+	let api = apiPath+"/sendCallerLink?id="+id;
+	if(mid!="") {
+		api += "&mid="+mid;
+	}
+	console.log('ajax',api);
+	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+		console.log('xhr.responseText',xhr.responseText);
+	}, function(errString,err) {
+		console.warn('# xhr error',errString,err);
+	});
+	return;
+}
+
+/*
 function replaceCurrentUrl(mastodonUserID) {
 	// user is trying to log-in as callee with an existing mastodonUserID (but no cookie, so not yet logged in?)
 	// we assume the callee has to login now, so the server should trigger all this once callee online
@@ -252,7 +284,7 @@ function replaceCurrentUrl(mastodonUserID) {
 //	window.location.replace(replaceURL);
 	exelink(replaceURL);
 }
-
+*/
 
 function loginForm(msg) {
 	// note: bc we replace the status-div with the input field, the back button may not work as expected
@@ -294,19 +326,23 @@ function startCallee(valueUsername,fromForm) {
 		console.log('ajax',api);
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 			console.log('xhr.responseText',xhr.responseText);
+/*
 			if(xhr.responseText=="") {
-				// valueUsername does not exist as WebCall-ID
+				// WebCall-ID (valueUsername) is not online
 				if(fromForm) {
 					// user coming from loginForm() ("Form-Input WebCall-ID")
 					loginForm("WebCall-ID ["+valueUsername+"] does not exist.");
 				} else {
 					// user trying to login cookieName
-					showStatus("["+valueUsername+"] is not a valid WebCall-ID.<br><br>");
+					showStatus("WebCall-ID ["+valueUsername+"] is not online.<br><br>");
 					setTimeout(function() { onload2(); },2000);
 				}
+				startCallee2(valueUsername,false);
 			} else {
-				startCallee2(valueUsername,xhr.responseText=="true");
+				isAlreadyOnline(valueUsername);
 			}
+*/
+			startCallee2(valueUsername,xhr.responseText=="true");
 		});
 	}
 }
@@ -315,6 +351,7 @@ function startCallee(valueUsername,fromForm) {
 function startCallee2(valueUsername,isOnline) {
 	console.log('startCallee2 valueUsername/online',valueUsername,isOnline);
 	if(isOnline) {
+/*
 		showStatus("Your WebCall app is online (ID "+valueUsername+").<br><br>"+
 			"To receive incoming calls, switch to the running app.<br><br>"+
 			"This tab can be closed now.<br>", -1);
@@ -328,6 +365,8 @@ function startCallee2(valueUsername,isOnline) {
 		}, function(errString,err) {
 			console.warn('# xhr error',errString,err);
 		});
+*/
+		isAlreadyOnline(valueUsername,mid)
 		return;
 	}
 
