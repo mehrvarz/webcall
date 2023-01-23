@@ -14,6 +14,7 @@ var isOnlineCalleeID = false;
 var mappedCalleeID = "";
 var wsCliMastodonID = "";
 var callerID = "";
+var cmappedCalleeID = "";
 
 window.onload = function() {
 	cookieName = "";
