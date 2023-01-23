@@ -275,12 +275,19 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				// no cookie (maybe client deleted it): compare form input against pw-of-urlID
 				var pwIdCombo PwIdCombo
 				err := kvHashedPw.Get(dbHashedPwBucket,urlID,&pwIdCombo)
-				if err==nil {
-					hashPw = pwIdCombo.Pw
-fmt.Printf("/login (%s) got formPw, no cookiePw, pwIdCombo.Pw=%s\n", urlID, pwIdCombo.Pw)
-				} else {
+				if err!=nil {
+					if strings.Index(err.Error(),"key not found")>=0 {
+// TODO: tmtmtm tell user: unknown ID, offer link to register (don't cont with bcrypt below)
+						fmt.Printf("# /login (%s) ID not found\n", urlID)
+						//fmt.Fprintf(w, "error")
+						fmt.Fprintf(w, "notregistered")
+						return
+					}
+					// some other error;
 					fmt.Printf("# /login (%s) got formPw, no cookiePw err=%v\n", urlID, err)
-// TODO: if err="skv key not found" -> say: unknown user, offer link to register (don't cont with bcrypt below)
+				} else {
+					hashPw = pwIdCombo.Pw
+fmt.Printf("/login (%s) got formPw, no cookiePw, pwIdCombo.Pw=%s\n", urlID, pwIdCombo.Pw) // TODO remove
 				}
 			} else {
 				fmt.Printf("/login (%s) got formPw, cookiePw=(%s)\n", urlID, hashPw)

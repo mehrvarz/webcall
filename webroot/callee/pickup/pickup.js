@@ -110,7 +110,7 @@ function onload2() {
 	let dispMsg = "";
 
 	if(callerID!="") {
-		dispMsg += "Incoming call ☎️ from "+callerID+"<br>";
+		dispMsg += "Incoming call ☎️ from "+callerID+"!<br>";
 	}
 
 /*
@@ -164,7 +164,7 @@ function onload2() {
 			if(mappedCalleeID!="" && mappedCalleeID!=mastodonUserID) {
 				dispMsg += "➡️ <a href='"+replaceURL+"'>"+mastodonUserID+"</a> ("+mappedCalleeID+")<br><br>";
 			} else {
-				dispMsg += "➡️ <a href='"+replaceURL+"'>"+mastodonUserID+"</a> (user ID)<br><br>";
+				dispMsg += "➡️ <a href='"+replaceURL+"'>"+mastodonUserID+"</a><br><br>";
 			}
 			choices++;
 		} else if(mappedCalleeID!="") {
@@ -191,9 +191,8 @@ function onload2() {
 	if(cookieName!="") {
 		if(mappedCalleeID==cookieName) {
 			// don't repeat
-			//dispMsg += "➡️ <a onclick='startCallee("+cookieName+"); return false;'>"+cookieName+"</a><br><br>";
 		} else {
-			dispMsg += "➡️ <a onclick='startCallee("+cookieName+"); return false;'>"+cookieName+"</a> (cookie)<br><br>";
+			dispMsg += "➡️ <a onclick='startCallee("+cookieName+",false); return false;'>"+cookieName+"</a> (cookie)<br><br>";
 			choices++;
 		}
 	}
@@ -201,7 +200,7 @@ function onload2() {
 	// offer user to enter (via keyboard) a possibly existing calleeID for login
 	// on submit: forward to callee-app (password will be entered there), hand over mid
 	// on login, the server will use mid to send a mastodon msg to the caller, telling the call-url
-	dispMsg += "➡️ <a onclick='loginForm(); return false;'>[Input WebCall-ID]</a><br><br>";
+	dispMsg += "➡️ <a onclick='loginForm(); return false;'>Form-Input WebCall-ID</a><br><br>";
 	choices++;
 
 	dispMsg += "<br>"; // visual vertical gap
@@ -256,19 +255,20 @@ function replaceCurrentUrl(mastodonUserID) {
 
 
 function loginForm(msg) {
+	// note: bc we replace the status-div with the input field, the back button may not work as expected
 	if(typeof msg == "undefined") {
 		msg = "";
 	}
 	// user is trying to log-in as callee with an entered calleeID (but no cookie, so not yet logged in?)
 	showStatus("<form action='javascript:;' onsubmit='submitForm(this)' _style='max-width:450px;' id='usernamef'>"+
-		"<label for='username' style='display:inline-block; _width:32px; padding-bottom:4px;'>ID:&nbsp;</label>"+
+		"<label for='username' style='display:inline-block; padding-bottom:4px;'>ID:&nbsp;</label>"+
 		"<input type='text' autocomplete='username' id='usernamei' name='username' value='' style='display:none;'>"+
 		"<input name='username' id='username' type='text' class='formtext' autofocus required>"+
 		"<span onclick='clearForm()' style='margin-left:5px; user-select:none;'>X</span>"+
 		"<br>"+
 		"<input type='submit' name='Submit' id='submit' value='OK' style='width:100px; margin-top:16px;'>"+
 	"</form><br><br>"+msg,-1);
-	// see submitForm() below
+	// continues with: submitForm()
 }
 
 function submitForm(theForm) {
@@ -276,10 +276,10 @@ function submitForm(theForm) {
 	// we assume the callee has to login now, so the server should trigger all this once callee online
 	var valueUsername = document.getElementById("username").value;
 	console.log('submitForm valueUsername',valueUsername);
-	startCallee(valueUsername);
+	startCallee(valueUsername,true);
 }
 
-function startCallee(valueUsername) {
+function startCallee(valueUsername,fromForm) {
 	// we need to know if valueUsername (for instance cookieName) is online/valid
 	// why? bc opening this callee can cause "already logged in" if it is already logged in
 	// we need to do an ajax to find out. problem: we must prevent this api from being misused
@@ -295,8 +295,15 @@ function startCallee(valueUsername) {
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 			console.log('xhr.responseText',xhr.responseText);
 			if(xhr.responseText=="") {
-				// TODO valueUsername is not an existing WebCall-ID
-				loginForm("WebCall-ID ["+valueUsername+"] does not exist.");
+				// valueUsername does not exist as WebCall-ID
+				if(fromForm) {
+					// user coming from loginForm() ("Form-Input WebCall-ID")
+					loginForm("WebCall-ID ["+valueUsername+"] does not exist.");
+				} else {
+					// user trying to login cookieName
+					showStatus("["+valueUsername+"] is not a valid WebCall-ID.<br><br>");
+					setTimeout(function() { onload2(); },2000);
+				}
 			} else {
 				startCallee2(valueUsername,xhr.responseText=="true");
 			}

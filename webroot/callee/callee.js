@@ -662,13 +662,15 @@ function login(retryFlag) {
 		*/
 		if(loginStatus=="notregistered") {
 			wsSecret = "";
-			showStatus("User ID unknown<br>",-1);
+			showStatus( "Unknown callee ID "+calleeID+"<br>"+
+						"<a href='/callee/register'>Register new ID</a>",-1);
 
 			// clear "You receive calls made by this link"
 			ownlinkElement.innerHTML = "";
 
 			form.style.display = "none";
 			offlineAction();
+			goOnlineButton.disabled = true;
 
 			// clear cookie
 			console.log('clear cookie');

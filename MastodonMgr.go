@@ -661,7 +661,7 @@ func (mMgr *MastodonMgr) cleanupMastodonInviter(w io.Writer) {
 			mid := inviter.MidString
 
 			if mid!="" {
-				mMgr.clearMid(mid)
+				mMgr.clearMid(mid,"")
 			} else {
 				fmt.Printf("! cleanupMastodonInviter not calling clearMid() mid=%s mastodonMsgID=%s\n",
 					mid, mastodonMsgID)
@@ -1228,7 +1228,7 @@ func (mMgr *MastodonMgr) sendCallerLink(mid string, urlID string, remoteAddr str
 			var dbUser DbUser
 			err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 			if err!=nil {
-				fmt.Printf("# sendCallerLink numeric(%s) fail on dbUserBucket %s\n", urlID, remoteAddr)
+				fmt.Printf("# sendCallerLink numeric(%s) fail on dbUserBucket ip=%s\n", urlID, remoteAddr)
 			} else {
 				if dbUser.MastodonID != "" && dbUser.MastodonID != mastodonUserID {
 					// SUSPICIOUS?
@@ -1270,12 +1270,12 @@ func (mMgr *MastodonMgr) sendCallerLink(mid string, urlID string, remoteAddr str
 // callee is now logged-in, but caller has just now received the call-link
 // if we want to send the caller a mid-link (so the calleeID does not get logged), we should not clearMid here
 //	fmt.Printf("sendCallerLink clearMid(%s)\n", mid)
-	mMgr.clearMid(mid)
+	mMgr.clearMid(mid,remoteAddr)
 }
 
-func (mMgr *MastodonMgr) clearMid(mid string) {
+func (mMgr *MastodonMgr) clearMid(mid string, remoteAddr string) {
 	if mid=="" {
-		fmt.Printf("# clearMid(%s)\n",mid)
+		fmt.Printf("# clearMid(%s) ip=\n",mid,remoteAddr)
 		return
 	}
 
@@ -1284,24 +1284,26 @@ func (mMgr *MastodonMgr) clearMid(mid string) {
 	midEntry := &MidEntry{}
 	err := kvMastodon.Get(dbMid, mid, midEntry)
 	if err != nil {
-		fmt.Printf("! clearMid(%s) get midMap[mid] fail err=%v\n",mid,err)
+		fmt.Printf("! clearMid(%s) get midMap[mid] fail err=%v ip=%s\n",mid,err,remoteAddr)
 	} else if midEntry.MsgID=="" {
-		fmt.Printf("! clearMid(%s) midMap[mid].msgID is empty\n",mid)
+		fmt.Printf("! clearMid(%s) midMap[mid].msgID is empty ip=%s\n",mid,remoteAddr)
 	} else {
 		fmt.Printf("clearMid(%s) got midMap[mid].msgID=%s, get inviter...\n",mid,midEntry.MsgID)
 		inviter := &Inviter{}
 		err := kvMastodon.Get(dbInviter, midEntry.MsgID, inviter)
 		if err != nil {
-			fmt.Printf("! clearMid(%s) kvMastodon.Get midEntry.MsgID=%s is invalid err=%v\n",
-				mid,midEntry.MsgID,err)
+			fmt.Printf("! clearMid(%s) kvMastodon.Get midEntry.MsgID=%s is invalid err=%v ip=%s\n",
+				mid,midEntry.MsgID,err,remoteAddr)
 		} else {
 			if inviter.StatusID1 == "" {
-				fmt.Printf("! clearMid(%s) inviterMap[midEntry.MsgID=%s].StatusID1 is empty\n",mid,midEntry.MsgID)
+				fmt.Printf("! clearMid(%s) inviterMap[midEntry.MsgID=%s].StatusID1 is empty ip=%s\n",
+					mid,midEntry.MsgID,remoteAddr)
 			} else {
-				fmt.Printf("! clearMid(%s) delete inviterMap[midEntry.MsgID=%s].StatusID1\n",mid,midEntry.MsgID)
+				fmt.Printf("! clearMid(%s) delete inviterMap[midEntry.MsgID=%s].StatusID1 ip=%s\n",
+					mid,midEntry.MsgID, remoteAddr)
 				err := mMgr.c.DeleteStatus(context.Background(), inviter.StatusID1)
 				if err!=nil {
-					fmt.Printf("# clearMid DeleteStatus(ID1=%v) err=%v\n",inviter.StatusID1,err)
+					fmt.Printf("# clearMid DeleteStatus(ID1=%v) err=%v ip=%s\n",inviter.StatusID1,err,remoteAddr)
 				} else {
 					fmt.Printf("clearMid DeleteStatus(ID1=%v) done\n",inviter.StatusID1)
 				}
@@ -1309,8 +1311,8 @@ func (mMgr *MastodonMgr) clearMid(mid string) {
 				inviter.StatusID1 = ""
 				err = kvMastodon.Put(dbInviter, midEntry.MsgID, inviter, false)
 				if err != nil {
-					fmt.Printf("# mastodon processMessage msgID=%v failed to store dbInviter\n",
-						midEntry.MsgID)
+					fmt.Printf("# mastodon processMessage msgID=%v failed to store dbInviter ip=%s\n",
+						midEntry.MsgID, remoteAddr)
 					return
 				}
 			}
@@ -1322,7 +1324,7 @@ func (mMgr *MastodonMgr) clearMid(mid string) {
 
 	err = kvMastodon.Delete(dbMid, mid)
 	if err!=nil {
-		fmt.Printf("# clearMid(%s) delete midMap err=%v\n",mid,err)
+		fmt.Printf("# clearMid(%s) delete midMap err=%v ip=%s\n",mid,err,remoteAddr)
 	}
 }
 
