@@ -250,7 +250,7 @@ function onload2() {
 
 function isAlreadyOnline(id)
 	// the callee referenced by mid is currently online
-	dispMsg =   "WebCall client ("+id+") is already active.<br>"+
+	let dispMsg = "WebCall client ("+id+") is already active.<br>"+
 				"Incoming WebCalls can be received there.<br>"+
 				"This tab can be closed now.<br>";
 	showStatus(dispMsg, -1);
