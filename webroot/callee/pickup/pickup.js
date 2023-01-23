@@ -206,8 +206,8 @@ function onload2() {
 //                                                          OR mapping[mastodonUserID] == cookiename
 // would it make sense to hand over cookieName to /getmiduser -> httpGetMidUser()
 // httpGetMidUser() could return dbUser.MastodonID
-		// cmappedCalleeID is dbUser.MastodonID of cookiename
-		if(cookiename!="" || cmappedCalleeID != mastodonUserID) {
+		// cmappedCalleeID is dbUser.MastodonID of cookieName
+		if(cookieName!="" || cmappedCalleeID != mastodonUserID) {
 			dispMsg += "➡️ <a onclick='pwForm(\""+mastodonUserID+"\"); return false;'>"+mastodonUserID+"</a> (New)<br><br>";
 		}
 		choices++;
