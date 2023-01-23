@@ -248,7 +248,7 @@ function onload2() {
 	showStatus(dispMsg + "<br><br><br>", -1);
 }
 
-function isAlreadyOnline(idStr)
+function isAlreadyOnline(idStr) {
 	// the callee referenced by mid is currently online
 	showStatus( "WebCall client ("+idStr+") is already active.<br>"+
 				"Incoming WebCalls can be received there.<br>"+
