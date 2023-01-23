@@ -623,19 +623,19 @@ func (mMgr *MastodonMgr) cleanupMastodonInviter(w io.Writer) {
 				if inviter.StatusID1 != "" {
 					err := mMgr.c.DeleteStatus(context.Background(), inviter.StatusID1)
 					if err!=nil {
-						fmt.Printf("# cleanupMastodonInviter DeleteStatus(ID1=%v) err=%v\n",
+						fmt.Printf("# cleanupMastodonInviter DeleteStatus ID1 (%v) err=%v\n",
 							inviter.StatusID1,err)
 					} else {
-						fmt.Printf("cleanupMastodonInviter DeleteStatus(ID1=%v) done\n",inviter.StatusID1)
+						fmt.Printf("cleanupMastodonInviter DeleteStatus ID1 (%v) done\n",inviter.StatusID1)
 					}
 				}
 				if inviter.StatusID2 != "" {
 					err := mMgr.c.DeleteStatus(context.Background(), inviter.StatusID2)
 					if err!=nil {
-						fmt.Printf("# cleanupMastodonInviter DeleteStatus(ID2=%v) err=%v\n",
+						fmt.Printf("# cleanupMastodonInviter DeleteStatus ID2 (%v) err=%v\n",
 							inviter.StatusID2, err)
 					} else {
-						fmt.Printf("cleanupMastodonInviter DeleteStatus(ID2=%v) done\n",inviter.StatusID2)
+						fmt.Printf("cleanupMastodonInviter DeleteStatus ID2 (%v) done\n",inviter.StatusID2)
 					}
 				}
 
@@ -1303,9 +1303,9 @@ func (mMgr *MastodonMgr) clearMid(mid string, remoteAddr string) {
 					mid,midEntry.MsgID, remoteAddr)
 				err := mMgr.c.DeleteStatus(context.Background(), inviter.StatusID1)
 				if err!=nil {
-					fmt.Printf("# clearMid DeleteStatus(ID1=%v) err=%v ip=%s\n",inviter.StatusID1,err,remoteAddr)
+					fmt.Printf("# clearMid DeleteStatus ID1 (%v) err=%v ip=%s\n",inviter.StatusID1,err,remoteAddr)
 				} else {
-					fmt.Printf("clearMid DeleteStatus(ID1=%v) done\n",inviter.StatusID1)
+					fmt.Printf("clearMid DeleteStatus ID1 (%v) done\n",inviter.StatusID1)
 				}
 
 				inviter.StatusID1 = ""

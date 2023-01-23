@@ -1,4 +1,4 @@
-// WebCall Copyright 2022 timur.mobi. All rights reserved.
+// WebCall Copyright 2023 timur.mobi. All rights reserved.
 'use strict';
 const goOnlineButton = document.querySelector('button#onlineButton');
 const goOfflineButton = document.querySelector('button#offlineButton');
@@ -663,7 +663,7 @@ function login(retryFlag) {
 		if(loginStatus=="notregistered") {
 			wsSecret = "";
 			showStatus( "Unknown callee ID "+calleeID+"<br>"+
-						"<a href='/callee/register'>Register new ID</a>",-1);
+						"<a href='/callee/register'>Register a new ID</a>",-1);
 
 			// clear "You receive calls made by this link"
 			ownlinkElement.innerHTML = "";
