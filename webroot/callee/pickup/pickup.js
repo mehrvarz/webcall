@@ -121,26 +121,10 @@ function onload2() {
 	dispMsg += "<br>";
 */
 
-/*
-	if(cookieName!="") {
-		// cookieName found! it can be an 11-digit ID or a mastodonUserID
-		dispMsg += "Found WebCall cookie for ID: "+cookieName+"<br>";
-	}
-
-	// DO NOT SHOW WARNING if wsCliMastodonID!="" && wsCliMastodonID==mastodonUserID
-	if(wsCliMastodonID!="" && wsCliMastodonID==mastodonUserID) {
-		// do not show warning (cookieName is already prepared to answer mastodonUserID
-	} else
-	if(mappedCalleeID!="" && cookieName!=mappedCalleeID) {
-		// warn user "you may run into a cookie issue" ?
-		dispMsg += "Warning: User-ID and WebCall-ID differ<br>";
-	}
-*/
-
 	dispMsg += "<br>"; // visual vertical gap
 
 	// offer multiple choice
-	dispMsg += "Your WebCall identity to answer call:<br><br>";
+	dispMsg += "Select your WebCall identity to answer call:<br><br>";
 
 	if(isOnlineCalleeID) {
 		// the callee referenced by mid is currently online
@@ -209,19 +193,39 @@ function onload2() {
 		}
 	}
 
-//	if(cookieName!="") {
-		// no calleeID stored in cookie
-		// offer user to enter (via keyboard) a possibly existing calleeID for login
-		// on submit: forward to callee-app (password will be entered there), hand over mid
-		// on login, the server will use mid to send a mastodon msg to the caller, telling the call-url
-		dispMsg += "➡️ enter ID: <a onclick='loginForm(); return false;'>[Input form]</a><br><br>";
-//	}
+	// offer user to enter (via keyboard) a possibly existing calleeID for login
+	// on submit: forward to callee-app (password will be entered there), hand over mid
+	// on login, the server will use mid to send a mastodon msg to the caller, telling the call-url
+	dispMsg += "➡️ enter ID: <a onclick='loginForm(); return false;'>[Input form]</a><br><br>";
+
+	dispMsg += "<br>"; // visual vertical gap
 
 /*
 // TODO one-time session: tell server that "#(mid)" is the calleeID that belongs to mid
 	// ajax: setCalleeIdTmpkey("#"+mid,mid)
 	dispMsg += "&nbsp; <a href=''>let me use a one-time session</a><br><br>";
 */
+
+/*
+	if(cookieName!="") {
+		// cookieName found! it can be an 11-digit ID or a mastodonUserID
+		dispMsg += "Found WebCall-ID in cookie: "+cookieName+"<br>";
+	}
+
+	// DO NOT SHOW WARNING if wsCliMastodonID!="" && wsCliMastodonID==mastodonUserID
+	if(wsCliMastodonID!="" && wsCliMastodonID==mastodonUserID) {
+		// do not show warning (cookieName is already prepared to answer mastodonUserID
+	} else
+	if(mappedCalleeID!="" && cookieName!=mappedCalleeID) {
+		// warn user "you may run into a cookie issue" ?
+		dispMsg += "Warning: User-ID and WebCall-ID differ<br>";
+	}
+*/
+	if(cookieName!="") {
+		if(cookieName!=mappedCalleeID) {
+			dispMsg += "Warning: WebCall-ID in cookie differs from Mastodon-ID<br>";
+		}
+	}
 
 	showStatus(dispMsg + "<br><br><br>", -1);
 }
