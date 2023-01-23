@@ -222,6 +222,7 @@ function onload2() {
 	}
 */
 	if(cookieName!="") {
+		console.log('cookieName is set',cookieName,mappedCalleeID);
 		if(cookieName!=mappedCalleeID) {
 			dispMsg += "Warning: WebCall-ID in cookie differs from Mastodon-ID<br>";
 		}
