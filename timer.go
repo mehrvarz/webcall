@@ -19,7 +19,6 @@ import (
 	"github.com/mehrvarz/webcall/twitter"
 	"gopkg.in/ini.v1"
 	bolt "go.etcd.io/bbolt"
-//	"golang.org/x/crypto/bcrypt"
 )
 
 var followerIDs twitter.FollowerIDs
@@ -129,15 +128,6 @@ func ticker3hours() {
 			//if logWantedFor("timer") {
 			//	fmt.Printf("ticker3hours delete outdated key=%s userID=%s\n", key, userID)
 			//}
-/*
-				starttimeStr := key[idxUnderline+1:]
-				starttime64, err := strconv.ParseInt(starttimeStr, 10, 64)
-				if err!=nil {
-					fmt.Printf("# ticker3hours error bucket=%s key=%s conv timestr err=%v\n",
-						dbBlockedIDs, key, err)
-				} else {
-					sinceDeletedInSecs := timeNowUnix - starttime64
-*/
 
 			// delete/outdate mapped tmpIDs of outdated userID
 			errcode,altIDs := getMapping(userID,"")
@@ -184,25 +174,6 @@ func ticker3hours() {
 			b := tx.Bucket([]byte(dbBlockedIDs))
 			c := b.Cursor()
 			for k, _ := c.First(); k != nil; k, _ = c.Next() {
-/*
-				userID := string(k) // key_timeNowUnix
-				if strings.HasPrefix(userID,"answie") || strings.HasPrefix(userID,"talkback") {
-					continue
-				}
-				if !isOnlyNumericString(userID) {
-					continue
-				}
-
-				var dbEntry DbEntry // DbEntry{unixTime, remoteAddr, urlPw}
-				d := gob.NewDecoder(bytes.NewReader(v))
-				d.Decode(&dbEntry)
-
-				sinceDeletedInSecs := timeNowUnix - dbEntry.StartTime
-				if sinceDeletedInSecs > blockedForDays * 24*60*60 {
-					deleteKeyArray2 = append(deleteKeyArray2,userID)
-					counterDeleted2++
-				}
-*/
 				dbUserKey := string(k)
 				// dbUserKey format: 'calleeID_unixtime'
 				counter2++
@@ -306,38 +277,20 @@ func dbHashedPwLoop() {
 				var pwIdCombo PwIdCombo
 				d := gob.NewDecoder(bytes.NewReader(v))
 				d.Decode(&pwIdCombo)
+
+				/*
+				hashedPwDisp := pwIdCombo.Pw
+				if len(hashedPwDisp)>30 {
+					hashedPwDisp = hashedPwDisp[0:30]
+				}
 				fmt.Printf("dbHashedPwLoop %d (%s) (%s) secs=%d\n",
-					count, userID, pwIdCombo.Pw, timeNow - pwIdCombo.Expiration)
+					count, userID, hashedPwDisp, timeNow - pwIdCombo.Expiration)
+				*/
 
 				if timeNow - pwIdCombo.Expiration >= 0 || pwIdCombo.Pw=="" {
 					fmt.Printf("dbHashedPwLoop del (%s) (%s) secs=%d\n",
 						userID, pwIdCombo.Pw, timeNow - pwIdCombo.Expiration)
 					deleteKeyArray = append(deleteKeyArray,userID)
-//					if len(deleteKeyArray)>=30 {
-//						return nil
-//					}
-/*
-				} else if !strings.HasPrefix(pwIdCombo.Pw,"$") && len(pwIdCombo.Pw)<50 {
-					// pwIdCombo.Pw is cleartext
-					hash, err := bcrypt.GenerateFromPassword([]byte(pwIdCombo.Pw), bcrypt.MinCost)
-					if err != nil {
-						fmt.Printf("# dbHashedPwLoop bcrypt pw=(%s) err=%v\n", pwIdCombo.Pw, err)
-					} else {
-fmt.Printf("dbHashedPwLoop bcrypt pw=(%s) hashPw(%s)\n", pwIdCombo.Pw, string(hash))
-						pwIdCombo.Pw = string(hash)
-						// store
-						var buf bytes.Buffer
-						if err := gob.NewEncoder(&buf).Encode(&pwIdCombo); err != nil {
-							//return err
-fmt.Printf("# dbHashedPwLoop bcrypt pw=(%s) hashPw(%s) Encode err=%v\n", pwIdCombo.Pw, string(hash), err)
-						} else {
-							err = tx.Bucket([]byte(dbHashedPwBucket)).Put([]byte(userID), buf.Bytes())
-							if err!=nil {
-fmt.Printf("# dbHashedPwLoop bcrypt pw=(%s) hashPw(%s) put err=%v\n", pwIdCombo.Pw, string(hash), err)
-							}
-						}
-					}
-*/
 				}
 			}
 			fmt.Printf("dbHashedPwLoop loop end, count=%d del=%d\n",count,len(deleteKeyArray))
@@ -490,7 +443,6 @@ func cleanupCalleeLoginMap(w io.Writer, min int, title string) {
 			}
 		}
 	}
-	//calleeLoginMutex.Unlock()
 }
 
 func cleanupClientRequestsMap(w io.Writer, min int, title string) {
@@ -523,14 +475,14 @@ func cleanupClientRequestsMap(w io.Writer, min int, title string) {
 	}
 	if len(clientRequestsMap)>0 {
 		fmt.Fprintf(w,"%s clientRequestsMap len=%d\n", title, len(clientRequestsMap))
-/*
+		/*
 		for ip,clientRequestsSlice := range clientRequestsMap {
 			if len(clientRequestsSlice)>=min {
 				fmt.Fprintf(w,"%s clientRequestsMap (%s) %d/%d\n",
 					title, ip, len(clientRequestsSlice), maxClientRequestsPer30min)
 			}
 		}
-*/
+		*/
 		var tmpSlice []string
 		for ip,clientRequestsSlice := range clientRequestsMap {
 			if len(clientRequestsSlice)>=min {
@@ -567,7 +519,6 @@ func cleanupClientRequestsMap(w io.Writer, min int, title string) {
 				title, ip, len(clientRequestsSlice), maxClientRequestsPer30min)
 		}
 	}
-	//clientRequestsMutex.Unlock()
 }
 
 // send url (pointing to update news) to all online callees
@@ -598,10 +549,7 @@ func broadcastNewsLink(date string, url string) {
 				fmt.Printf("# newsLink hub.CalleeClient==nil to=%s sendData=%s\n",calleeID,sendData)
 			} else {
 				// the callee in this hub is online
-				// we don't need newsDateMutex bc no one else is using newsDateMap
-				//newsDateMutex.RLock()
 				lastNewsCallee := newsDateMap[calleeID]
-				//newsDateMutex.RUnlock()
 				if date <= lastNewsCallee {
 					// this news-msg was sent to calleeID already
 					//fmt.Printf("# newsLink date(%s) <= lastNewsCallee(%s) to=%s\n",date,lastNewsCallee,calleeID)
@@ -613,9 +561,7 @@ func broadcastNewsLink(date string, url string) {
 					if err!=nil {
 						fmt.Printf("# newsLink write to=%s err=%v\n",calleeID,err)
 					} else {
-						//newsDateMutex.Lock()
 						newsDateMap[calleeID] = date
-						//newsDateMutex.Unlock()
 						countSentNoErr++
 					}
 				}
