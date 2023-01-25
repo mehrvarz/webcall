@@ -19,6 +19,7 @@ import (
 	"github.com/mehrvarz/webcall/twitter"
 	"gopkg.in/ini.v1"
 	bolt "go.etcd.io/bbolt"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var followerIDs twitter.FollowerIDs
@@ -307,12 +308,33 @@ func dbHashedPwLoop() {
 				d.Decode(&pwIdCombo)
 				fmt.Printf("dbHashedPwLoop %d (%s) (%s) secs=%d\n",
 					count, userID, pwIdCombo.Pw, timeNow - pwIdCombo.Expiration)
-				if timeNow - pwIdCombo.Expiration >= 0 {
+
+				if timeNow - pwIdCombo.Expiration >= 0 || pwIdCombo.Pw=="" {
 					fmt.Printf("dbHashedPwLoop del (%s) (%s) secs=%d\n",
 						userID, pwIdCombo.Pw, timeNow - pwIdCombo.Expiration)
 					deleteKeyArray = append(deleteKeyArray,userID)
-					if len(deleteKeyArray)>=30 {
-						return nil
+//					if len(deleteKeyArray)>=30 {
+//						return nil
+//					}
+				} else if !strings.HasPrefix(pwIdCombo.Pw,"$") && len(pwIdCombo.Pw)<50 {
+					// pwIdCombo.Pw is cleartext
+					hash, err := bcrypt.GenerateFromPassword([]byte(pwIdCombo.Pw), bcrypt.MinCost)
+					if err != nil {
+						fmt.Printf("# dbHashedPwLoop bcrypt pw=(%s) err=%v\n", pwIdCombo.Pw, err)
+					} else {
+fmt.Printf("dbHashedPwLoop bcrypt pw=(%s) hashPw(%s)\n", pwIdCombo.Pw, string(hash))
+						pwIdCombo.Pw = string(hash)
+						// store
+						var buf bytes.Buffer
+						if err := gob.NewEncoder(&buf).Encode(&pwIdCombo); err != nil {
+							//return err
+fmt.Printf("# dbHashedPwLoop bcrypt pw=(%s) hashPw(%s) Encode err=%v\n", pwIdCombo.Pw, string(hash), err)
+						} else {
+							err = tx.Bucket([]byte(dbHashedPwBucket)).Put([]byte(userID), buf.Bytes())
+							if err!=nil {
+fmt.Printf("# dbHashedPwLoop bcrypt pw=(%s) hashPw(%s) put err=%v\n", pwIdCombo.Pw, string(hash), err)
+							}
+						}
 					}
 				}
 			}
@@ -771,12 +793,7 @@ func callBackupScript(scriptName string) error {
 	if err := kv.Db.Sync(); err != nil {
 		fmt.Printf("# callBackupScript kvContacts sync error: %s\n", err)
 	}
-/*
-	kv = kvNotif.(skv.SKV)
-	if err := kv.Db.Sync(); err != nil {
-		fmt.Printf("# callBackupScript kvNotif sync error: %s\n", err)
-	}
-*/
+
 	kv = kvHashedPw.(skv.SKV)
 	if err := kv.Db.Sync(); err != nil {
 		fmt.Printf("# callBackupScript kvHashedPw sync error: %s\n", err)

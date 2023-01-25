@@ -75,10 +75,6 @@ var	kvContacts skv.KV
 const dbContactsName = "rtccontacts.db"
 const dbContactsBucket = "contacts" // calleeID -> map[callerID]name
 
-//var	kvNotif skv.KV
-//const dbNotifName = "rtcnotif.db"
-//const dbSentNotifTweets = "sentNotifTweets"
-
 var	kvHashedPw skv.KV
 const dbHashedPwName = "rtchashedpw.db"
 const dbHashedPwBucket = "hashedpwbucket"
@@ -281,19 +277,7 @@ func main() {
 		kvCalls.Close()
 		return
 	}
-/*
-	kvNotif,err = skv.DbOpen(dbNotifName,dbPath)
-	if err!=nil {
-		fmt.Printf("# error DbOpen %s path %s err=%v\n",dbNotifName,dbPath,err)
-		return
-	}
-	err = kvNotif.CreateBucket(dbSentNotifTweets)
-	if err!=nil {
-		fmt.Printf("# error db %s CreateBucket %s err=%v\n",dbNotifName,dbSentNotifTweets,err)
-		kvNotif.Close()
-		return
-	}
-*/
+
 	kvHashedPw,err = skv.DbOpen(dbHashedPwName,dbPath)
 	if err!=nil {
 		fmt.Printf("# error DbOpen %s path %s err=%v\n",dbHashedPwName,dbPath,err)
@@ -441,7 +425,7 @@ func main() {
 	go runTurnServer()
 	go ticker3hours()  // check time since last login
 	go ticker20min()   // update news notifieer
-	go ticker3min()    // backupScript + delete old tw notifications
+	go ticker3min()    // backupScript
 	go ticker30sec()   // log stats
 	go ticker10sec()   // readConfig(false)
 	go ticker2sec()    // check for new day
@@ -478,13 +462,6 @@ func main() {
 	if err!=nil {
 		fmt.Printf("# error dbName %s close err=%v\n",dbHashedPwName,err)
 	}
-/*
-	fmt.Printf("kvNotif.Close...\n")
-	err = kvNotif.Close()
-	if err!=nil {
-		fmt.Printf("# error dbName %s close err=%v\n",dbNotifName,err)
-	}
-*/
 	fmt.Printf("kvCalls.Close...\n")
 	err = kvCalls.Close()
 	if err!=nil {
@@ -495,6 +472,11 @@ func main() {
 	if err!=nil {
 		fmt.Printf("# error dbName %s close err=%v\n",dbMainName,err)
 	}
+	if mastodonMgr != nil {
+		mastodonMgr.mastodonStop()
+		mastodonMgr = nil
+	}
+
 	skv.Exit()
 	os.Exit(0)
 }

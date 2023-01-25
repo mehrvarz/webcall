@@ -277,9 +277,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				err := kvHashedPw.Get(dbHashedPwBucket,urlID,&pwIdCombo)
 				if err!=nil {
 					if strings.Index(err.Error(),"key not found")>=0 {
-// TODO: tmtmtm tell user: unknown ID, offer link to register (don't cont with bcrypt below)
 						fmt.Printf("# /login (%s) ID not found\n", urlID)
-						//fmt.Fprintf(w, "error")
 						fmt.Fprintf(w, "notregistered")
 						return
 					}
