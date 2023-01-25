@@ -15,6 +15,7 @@ var mappedCalleeID = "";
 var wsCliMastodonID = "";
 var callerID = "";
 var cmappedCalleeID = "";
+var isOnlineCmappedCalleeID = false;
 
 window.onload = function() {
 	cookieName = "";
@@ -25,6 +26,7 @@ window.onload = function() {
 	wsCliMastodonID = "";
 	callerID = "";
 	cmappedCalleeID = "";
+	isOnlineCmappedCalleeID = false;
 
 	// get callee-id from cookie
 	if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
@@ -45,9 +47,7 @@ window.onload = function() {
 	}
 	if(mid=="") {
 		// no mid -> no mastodonUserID
-		showStatus("Data outdated<br><br><br>", -1);
-		// TODO add context links (info about webcall, etc.)
-		//onload2();
+		showStatus("Data is outdated<br><br><br>", -1);
 		return;
 	}
 
@@ -57,7 +57,7 @@ window.onload = function() {
 	if(cookieName!="") {
 		api += "&cid="+cookieName;
 	}
-	console.log('ajax',api);
+	console.log('onload ajax',api);
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 		console.log('xhr.responseText',xhr.responseText);
 		if(xhr.responseText=="") {
@@ -83,6 +83,11 @@ window.onload = function() {
 									callerID = tok[5]
 									if(tok.length>=7) {
 										cmappedCalleeID = tok[6]
+										if(tok.length>=8) {
+											if(tok[7]=="true") {
+												isOnlineCmappedCalleeID = true;
+											}
+										}
 									}
 								}
 							}
@@ -110,90 +115,76 @@ function onload2() {
 	console.log('onload2 callerID', callerID);
 
 	if(mastodonUserID=="") {
-		showStatus("Data outdated<br><br><br>", -1);
-		// TODO add context links (info about webcall, etc.)
+		showStatus("Data is outdated<br><br><br>", -1);
 		return;
 	}
 
 	let dispMsg = "";
 
 	if(callerID!="") {
-		dispMsg += "Incoming call ☎️ from "+callerID+"!<br>";
+		dispMsg += "Incoming call ☎️ from "+callerID+"<br>";
 	}
 
-/*
-	dispMsg += "Your Mastodon ID: "+mastodonUserID;
-	if(wsCliMastodonID!="" && mastodonUserID!=wsCliMastodonID) {
-		dispMsg += " ("+wsCliMastodonID+")";
-	}
-	dispMsg += "<br>";
-*/
-
-	dispMsg += "<br>"; // visual vertical gap
+//	dispMsg += "<br>"; // visual vertical gap
 
 	// offer multiple choice
 	let choices = 0;
-	dispMsg += "Select your WebCall-ID to answer this call:<br><br>";
+	dispMsg += "To answer, select your WebCall identity:<br><br>";
+
+	if(cookieName!="") {
+		if(cookieName==mappedCalleeID) {
+			// don't offer
+		} else {
+			let dispCname = cookieName;
+			if(cmappedCalleeID!="") {
+				dispCname += " ("+cmappedCalleeID+")";
+			}
+			dispMsg += "➡️ <a onclick='startCallee("+cookieName+","+isOnlineCmappedCalleeID+"); return false;'>"+dispCname+"</a> (cookie)<br><br>";
+			choices++;
+		}
+	}
 
 	if(isOnlineCalleeID) {
-/*
-		// the callee referenced by mid is currently online
-		dispMsg += "A WebCall client ";
 		if(mappedCalleeID!="") {
-			dispMsg += "("+mappedCalleeID+") ";
-		} else if(mastodonUserID!="") {
-			dispMsg += "("+mastodonUserID+") ";
-//		} else if(cookieName!="") {					// cookieName could be from a different ID
-//			dispMsg += "("+cookieName+") ";
-		}
-		dispMsg += "is already active.<br>Incoming WebCalls can be received there.<br>";
+			dispMsg += "➡️ <a onclick='startCallee(\""+mappedCalleeID+"\",true); return false;'>"+mappedCalleeID+"</a><br><br>";
 
-		// callee for mid is online -> no new server-login will take place; server will NOT send caller-link
-		// so we send the caller-link to mastodon-caller (and trigger all other steps) right here
-		let api = apiPath+"/sendCallerLink?id="+mappedCalleeID+"&mid="+mid;
-		console.log('ajax',api);
-		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-			console.log('xhr.responseText',xhr.responseText);
-		}, function(errString,err) {
-			console.warn('# xhr error',errString,err);
-		});
-*/
-		if(mappedCalleeID!="") {
-			isAlreadyOnline(mappedCalleeID);
 		} else if(mastodonUserID!="") {
-			isAlreadyOnline(mastodonUserID);
+			dispMsg += "➡️ <a onclick='startCallee(\""+mastodonUserID+"\",true); return false;'>"+mappedCalleeID+"</a><br><br>";
 		} else {
 // TODO
 		}
-		return;
 
 	} else if(isValidCalleeID) {
-		// mid-callee is NOT online but IS a valid webcall account
-		console.log("onload2 "+mastodonUserID+" is a valid WebCall ID");
-		if(mastodonUserID!="") {
-			// mastodonUserID is NOT currently online/logged-in - offer a link to start it
-			// once login is complete, server will send caller-link to mastodon-caller, etc.
-			let replaceURL = "/callee/"+mastodonUserID;
-			if(mid!="") {
-				// handing over mid will cause httpLogin() to call mastodonMgr.sendCallerLink()
-				replaceURL += "?mid="+mid;
+		if(mastodonUserID==cmappedCalleeID) {
+			// skip
+		} else {
+			// mid-callee is NOT online but IS a valid webcall account
+			console.log("onload2 "+mastodonUserID+" is a valid WebCall ID");
+			if(mastodonUserID!="") {
+				// mastodonUserID is NOT currently online/logged-in - offer a link to start it
+				// once login is complete, server will send caller-link to mastodon-caller, etc.
+				let replaceURL = "/callee/"+mastodonUserID;
+				if(mid!="") {
+					// handing over mid will cause httpLogin() to call mastodonMgr.sendCallerLink()
+					replaceURL += "?mid="+mid;
+				}
+				if(mappedCalleeID!="" && mappedCalleeID!=mastodonUserID) {
+					dispMsg += "➡️ <a href='"+replaceURL+"'>"+mastodonUserID+"</a> ("+mappedCalleeID+")<br><br>";
+				} else {
+					dispMsg += "➡️ <a href='"+replaceURL+"'>"+mastodonUserID+"</a> (offline)<br><br>";
+				}
+				choices++;
+			} else if(mappedCalleeID!="") {
+				// mappedCalleeID is NOT currently online/logged-in - offer a link to start it
+				// once login is complete, server will send caller-link to mastodon-caller, etc.
+				let replaceURL = "/callee/"+mappedCalleeID;
+				if(mid!="") {
+					// handing over mid will cause httpLogin() to call mastodonMgr.sendCallerLink()
+					replaceURL += "?mid="+mid;
+				}
+				dispMsg += "➡️ <a href='"+replaceURL+"'>"+mappedCalleeID+"</a> (mapped ID)<br><br>";
+				choices++;
 			}
-			if(mappedCalleeID!="" && mappedCalleeID!=mastodonUserID) {
-				dispMsg += "➡️ <a href='"+replaceURL+"'>"+mastodonUserID+"</a> ("+mappedCalleeID+")<br><br>";
-			} else {
-				dispMsg += "➡️ <a href='"+replaceURL+"'>"+mastodonUserID+"</a><br><br>";
-			}
-			choices++;
-		} else if(mappedCalleeID!="") {
-			// mappedCalleeID is NOT currently online/logged-in - offer a link to start it
-			// once login is complete, server will send caller-link to mastodon-caller, etc.
-			let replaceURL = "/callee/"+mappedCalleeID;
-			if(mid!="") {
-				// handing over mid will cause httpLogin() to call mastodonMgr.sendCallerLink()
-				replaceURL += "?mid="+mid;
-			}
-			dispMsg += "➡️ <a href='"+replaceURL+"'>"+mappedCalleeID+"</a> (mapped ID)<br><br>";
-			choices++;
 		}
 	} else {
 		// NOT isValidCalleeID (and NOT online also)
@@ -202,46 +193,24 @@ function onload2() {
 		// we ONLY hand over (mid) to server (similar to /register, see: httpRegister() in httpOnline.go)
 		// server knows that tmpkeyMastodonCalleeMap[mid] is the desired mastodon user-id
 
-// TODO we should NOT offer this, if cookieName is 11-digit AND it's dbUser.MastodonID == mastodonUserID
-//                                                          OR mapping[mastodonUserID] == cookiename
-// would it make sense to hand over cookieName to /getmiduser -> httpGetMidUser()
-// httpGetMidUser() could return dbUser.MastodonID
-		// cmappedCalleeID is dbUser.MastodonID of cookieName
+		// we do NOT offer this register link, 
+		// if dbUser.MastodonID of cookieName (cmappedCalleeID) == mastodonUserID
 		if(cookieName=="" || cmappedCalleeID=="" || cmappedCalleeID != mastodonUserID) {
 			dispMsg += "➡️ <a onclick='pwForm(\""+mastodonUserID+"\"); return false;'>"+mastodonUserID+"</a> (New)<br><br>";
 		}
 		choices++;
 	}
 
-	if(cookieName!="") {
-		if(mappedCalleeID==cookieName) {
-			// don't repeat
-		} else {
-			let dispCname = cookieName;
-			if(cmappedCalleeID!="") {
-				dispCname += " ("+cmappedCalleeID+")";
-			} else {
-				dispCname += " (cookie)";
-			}
-			dispMsg += "➡️ <a onclick='startCallee("+cookieName+",false); return false;'>"+dispCname+"</a><br><br>";
-			choices++;
-		}
-	}
+	let replaceURL = "/callee/register?mid="+mid;
+	dispMsg += "➡️ <a onclick='exelink(\""+replaceURL+"\"); return false;'>Create new 11-digit WebCall-ID</a><br><br>";
 
 	// offer user to enter (via keyboard) a possibly existing calleeID for login
 	// on submit: forward to callee-app (password will be entered there), hand over mid
 	// on login, the server will use mid to send a mastodon msg to the caller, telling the call-url
-	dispMsg += "➡️ <a onclick='loginForm(); return false;'>Form-Input WebCall-ID</a><br><br>";
+	dispMsg += "➡️ <a onclick='loginForm(); return false;'>Enter previously created WebCall-ID</a><br><br>";
 	choices++;
 
 	dispMsg += "<br>"; // visual vertical gap
-
-/*
-// TODO one-time session: tell server that "#(mid)" is the calleeID that belongs to mid
-	// ajax: setCalleeIdTmpkey("#"+mid,mid)
-	dispMsg += "&nbsp; <a href=''>let me use a one-time session</a><br><br>";
-	choices++;
-*/
 
 	// TODO if(choices==1) -> autostart the one link
 
@@ -277,9 +246,9 @@ function onload2() {
 
 function isAlreadyOnline(idStr) {
 	// the callee referenced by mid is currently online
-	showStatus( "WebCall client ("+idStr+") is already active.<br>"+
-				"Incoming WebCalls can be received there.<br>"+
-				"This tab can be closed now.<br>", -1);
+	showStatus( "WebCall client ("+idStr+") is online.<br>"+
+				"Switch to it to received incoming WebCalls.<br>"+
+				"This tab can now be closed.<br>", -1);
 
 	// callee for mid is online -> no new server-login will take place; server will NOT send caller-link
 	// so we send the caller-link to mastodon-caller (and trigger all other steps) right here
@@ -287,7 +256,7 @@ function isAlreadyOnline(idStr) {
 	if(mid!="") {
 		api += "&mid="+mid;
 	}
-	console.log('ajax',api);
+	console.log('isAlreadyOnline ajax',api);
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 		console.log('xhr.responseText',xhr.responseText);
 	}, function(errString,err) {
@@ -295,22 +264,6 @@ function isAlreadyOnline(idStr) {
 	});
 	return;
 }
-
-/*
-function replaceCurrentUrl(mastodonUserID) {
-	// user is trying to log-in as callee with an existing mastodonUserID (but no cookie, so not yet logged in?)
-	// we assume the callee has to login now, so the server should trigger all this once callee online
-	console.log('replaceCurrentUrl',mastodonUserID,mid);
-	let replaceURL = "/callee/"+mastodonUserID;
-	if(mid!="") {
-		// forward mid to the callee client
-		replaceURL += "?mid="+mid;
-	}
-
-//	window.location.replace(replaceURL);
-	exelink(replaceURL);
-}
-*/
 
 function loginForm(msg) {
 	// note: bc we replace the status-div with the input field, the back button may not work as expected
@@ -334,33 +287,24 @@ function submitForm(theForm) {
 	// we assume the callee has to login now, so the server should trigger all this once callee online
 	var valueUsername = document.getElementById("username").value;
 	console.log('submitForm valueUsername',valueUsername);
-	startCallee(valueUsername,true);
-}
 
-function startCallee(valueUsername,fromForm) {
 	// we need to know if valueUsername (for instance cookieName) is online/valid
 	// why? bc opening this callee can cause "already logged in" if it is already logged in
 	// we need to do an ajax to find out.
 	// to prevent this api from being misused, a valid mid needs to be handed over
-	let isOnline = false;
-	if(valueUsername==mastodonUserID && isOnlineCalleeID) {
-		isOnline = true;
-		startCallee2(valueUsername,isOnline);
-	} else {
-		// do ajax to find out if valueUsername is online
-		// we attach a valid mid, so the server can verify we are a valid client
-		let api = apiPath+"/getonline?id="+valueUsername+"&mid="+mid;
-		console.log('ajax',api);
-		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-			console.log('xhr.responseText',xhr.responseText);
-			startCallee2(valueUsername,xhr.responseText=="true");
-		});
-	}
+	// do ajax to find out if valueUsername is online
+	// we attach a valid mid, so the server can verify we are a valid client
+// TODO not sure we need to hand over mid here
+	let api = apiPath+"/getonline?id="+valueUsername+"&mid="+mid;
+	console.log('submitForm ajax',api);
+	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+		console.log('submitForm xhr.responseText',xhr.responseText);
+		startCallee(valueUsername,xhr.responseText=="true");
+	});
 }
 
-
-function startCallee2(valueUsername,isOnline) {
-	console.log('startCallee2 valueUsername/online',valueUsername,isOnline);
+function startCallee(valueUsername,isOnline) {
+	console.log('startCallee valueUsername/online',valueUsername,isOnline);
 	if(isOnline) {
 		isAlreadyOnline(valueUsername,mid)
 		return;
@@ -418,7 +362,7 @@ function submitPw(theForm,mastodonUserID) {
 	} else {
 		//api = api + "&ver="+clientVersion;
 	}
-	if(!gentle) console.log('ajax',api);
+	if(!gentle) console.log('submitPw ajax',api);
 	ajaxFetch(new XMLHttpRequest(), "POST", api, function(xhr) {
 		// only if we get back "OK" do we continue with:
 		if(xhr.responseText=="OK") {
@@ -445,7 +389,7 @@ function submitPw(theForm,mastodonUserID) {
 			"<br><br>Your WebCall callee link is shown below. "+
 			"It lets you receive calls and should work in any web browser. "+
 			"Click to start:<br><br>"+
-			"<a onclick='exelink("+calleeLink+"); return false;' href='"+calleeLink+"'>"+calleeLink+"</a>",-1);
+			"<a onclick='exelink(\""+calleeLink+"\"); return false;' href='"+calleeLink+"'>"+calleeLink+"</a>",-1);
 		} else {
 			// register fail
 			console.log('response:',xhr.responseText);
@@ -471,10 +415,6 @@ function exelink(url) {
 		window.location.href = url;   // allows back button
 	}
 }
-
-
-
-
 
 
 /*
@@ -573,5 +513,21 @@ function exelink(url) {
 		return;
 	}
 	console.log('arg register not set');
+*/
+
+/*
+function replaceCurrentUrl(mastodonUserID) {
+	// user is trying to log-in as callee with an existing mastodonUserID (but no cookie, so not yet logged in?)
+	// we assume the callee has to login now, so the server should trigger all this once callee online
+	console.log('replaceCurrentUrl',mastodonUserID,mid);
+	let replaceURL = "/callee/"+mastodonUserID;
+	if(mid!="") {
+		// forward mid to the callee client
+		replaceURL += "?mid="+mid;
+	}
+
+//	window.location.replace(replaceURL);
+	exelink(replaceURL);
+}
 */
 

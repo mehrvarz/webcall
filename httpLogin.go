@@ -407,7 +407,6 @@ fmt.Printf("/login (%s) compare hash(%s) form(%s)\n", urlID, hashPw, formPw) // 
 
 	var lenGlobalHubMap int64
 	if cookie == nil && !nocookie && formPw!="" {
-//		err,cookieValue := createCookie(w, urlID, hashPw, &pwIdCombo)
 		err,cookieValue := createCookie(w, urlID, formPw, &pwIdCombo)
 		if err != nil {
 			if globalID != "" {

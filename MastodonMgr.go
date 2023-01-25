@@ -826,64 +826,6 @@ func (mMgr *MastodonMgr) sendCallerMsgToMid(mid string, calleeID string) {
 	}
 }
 
-/*
-func (mMgr *MastodonMgr) sendCallerMsgCalleeIsOnline(w http.ResponseWriter, r *http.Request, calleeID string, cookie *http.Cookie, remoteAddr string) {
-	// called by httpServer.go /midmsg
-	// send a msg to tmpkeyMastodonCallerReplyMap[mid] with tmpkeyMastodonCalleeMap[mid]:
-	// get mid from urlarg tmtmtm
-	url_arg_array, ok := r.URL.Query()["mid"]
-	fmt.Printf("mastodon sendCallerMsgCalleeIsOnline url_arg_array=%v ok=%v\n",url_arg_array, ok)
-	if ok && len(url_arg_array[0]) >= 1 {
-		mid := url_arg_array[0]
-		if(mid=="") {
-			fmt.Printf("# mastodon sendCallerMsgCalleeIsOnline mid=%v\n",mid)
-		} else {
-			mMgr.midMutex.Lock()
-			midEntry := &MidEntry{}
-			err := kvMastodon.Get(dbMid, mid, midEntry)
-			if err != nil {
-				// TODO log err
-				fmt.Printf("# mastodon sendCallerMsgCalleeIsOnline get midEntry mid=%v err=%v\n",mid,err)
-			} else if midEntry.MastodonIdCaller!="" && midEntry.MastodonIdCallee!="" {
-
-// TODO do we really want to send-msg calleeID in clear?
-				status,err := mMgr.postCallerMsgEx("@"+midEntry.MastodonIdCaller+" "+
-					"Click to call "+mMgr.hostUrl+"/user/"+midEntry.MastodonIdCallee)
-				if err!=nil {
-					// this is fatal
-					fmt.Printf("# sendCallerMsg err=%v (to=%v)\n",err,midEntry.MastodonIdCaller)
-				} else {
-					fmt.Printf("sendCallerMsg to=%v done ID=%v\n",midEntry.MastodonIdCaller, status.ID)
-					if midEntry.MsgID!="" {
-						fmt.Printf("sendCallerMsg midEntry.MsgID=%v\n",midEntry.MsgID)
-// TODO not sure we can have nested inviterMutex.Lock inside midMutex.Lock()
-						mMgr.inviterMutex.Lock()
-						inviter := &Inviter{}
-						err = kvMastodon.Get(dbInviter, midEntry.MsgID, inviter)
-						if err != nil {
-							// can be ignored
-// TODO but it is odd !!
-						}
-						inviter.StatusID2 = status.ID
-						err = kvMastodon.Put(dbInviter, midEntry.MsgID, inviter, false)
-						mMgr.inviterMutex.Unlock()
-						if err != nil {
-							fmt.Printf("# mastodon processMessage msgID=%v failed to store dbInviter\n",
-								midEntry.MsgID)
-							return
-						}
-
-					} else {
-						fmt.Printf("# sendCallerMsg statusID2=%v msgID=%s\n",status.ID,midEntry.MsgID)
-					}
-				}
-			}
-			mMgr.midMutex.Unlock()
-		}
-	}
-}
-*/
-
 func (mMgr *MastodonMgr) postCallerMsgEx(sendmsg string) (*mastodon.Status,error) {
 	fmt.Printf("postCallerMsgEx PostStatus (%s)\n",sendmsg)
 	status,err := mMgr.c.PostStatus(context.Background(), &mastodon.Toot{
@@ -909,100 +851,112 @@ func (mMgr *MastodonMgr) httpGetMidUser(w http.ResponseWriter, r *http.Request, 
 	url_arg_array, ok := r.URL.Query()["mid"]
 	if !ok {
 		fmt.Printf("# httpGetMidUser fail URL.Query mid\n")
-	} else if len(url_arg_array[0]) < 1 {
+		return
+	}
+	if len(url_arg_array[0]) < 1 {
 		fmt.Printf("# httpGetMidUser len(url_arg_array[0])<1 (%v)\n",url_arg_array)
+		return
+	}
+
+	mid := url_arg_array[0]
+	if(mid=="") {
+		// no mid given
+		fmt.Printf("# httpGetMidUser no mid=%v ip=%v\n",mid,remoteAddr)
+		return
+	}
+
+	cid := ""
+	url_arg_array, ok = r.URL.Query()["cid"]
+	if ok && len(url_arg_array[0]) >= 1 {
+		cid = url_arg_array[0]
+	}
+
+	fmt.Printf("httpGetMidUser mid=%v cid=%s ip=%v\n",mid,cid,remoteAddr)
+	calleeIdOnMastodon := ""
+	callerIdOnMastodon := ""
+
+	midEntry := &MidEntry{}
+	err := kvMastodon.Get(dbMid, mid, midEntry)
+	if err != nil {
+		fmt.Printf("# httpGetMidUser invalid or outdated mid=%s err=%v\n",mid,err)
+		return
+	}
+
+	fmt.Printf("httpGetMidUser get midEntry mid=%s ok\n",mid)
+	calleeIdOnMastodon = midEntry.MastodonIdCallee
+	callerIdOnMastodon = midEntry.MastodonIdCaller
+
+	isValidCalleeID := "false"
+	isOnlineCalleeID := "false"
+	wsCliMastodonID := ""
+	calleeID := ""
+	if(calleeIdOnMastodon=="") {
+		// given mid is invalid
+		fmt.Printf("# httpGetMidUser invalid or outdated mid=%s calleeIdOnMastodon=%v ip=%v\n",
+			mid,calleeIdOnMastodon,remoteAddr)
+		return
+	}
+
+	// calleeIdOnMastodon is set, therefor: mid is valid
+	// let's see if calleeIdOnMastodon is mapped to a 11-digit calleeID
+	fmt.Printf("httpGetMidUser mid=%s calleeIdOnMastodon=%v ip=%v\n",
+		mid,calleeIdOnMastodon,remoteAddr)
+	calleeID = calleeIdOnMastodon
+	mappingMutex.RLock()
+	mappingData,ok := mapping[calleeIdOnMastodon]
+	mappingMutex.RUnlock()
+	if ok && mappingData.Assign!="" && mappingData.Assign!="none" {
+		// calleeIdOnMastodon is mapped to a 11-digit calleeID
+		calleeID = mappingData.Assign
+		fmt.Printf("httpGetMidUser mapped calleeID=%s calleeIdOnMastodon=%v ip=%v\n",
+			calleeID,calleeIdOnMastodon,remoteAddr)
+	}
+
+	// lets see if calleeID is online (or at least a valid account)
+	hubMapMutex.RLock()
+	hub := hubMap[calleeID]
+	hubMapMutex.RUnlock()
+	if hub!=nil {
+		// calleeID is online (so it is valid)
+		isOnlineCalleeID = "true"
+		isValidCalleeID = "true"
+		if hub.CalleeClient!=nil {
+			// hub.CalleeClient.mastodonID is set by registerID in /registermid (httpRegisterMid())
+			wsCliMastodonID = hub.CalleeClient.mastodonID
+		}
 	} else {
-		mid := url_arg_array[0]
-		if(mid=="") {
-			// no mid given
-			fmt.Printf("# httpGetMidUser no mid=%v ip=%v\n",mid,remoteAddr)
-		} else {
-			cid := ""
-			url_arg_array, ok = r.URL.Query()["cid"]
-			if ok && len(url_arg_array[0]) >= 1 {
-				cid = url_arg_array[0]
-			}
-
-			fmt.Printf("httpGetMidUser mid=%v cid=%s ip=%v\n",mid,cid,remoteAddr)
-			calleeIdOnMastodon := ""
-			callerIdOnMastodon := ""
-
-			midEntry := &MidEntry{}
-			err := kvMastodon.Get(dbMid, mid, midEntry)
-			if err != nil {
-				fmt.Printf("# httpGetMidUser fail get midEntry mid=%s err=%v\n",mid,err)
-			} else {
-				fmt.Printf("httpGetMidUser get midEntry mid=%s ok\n",mid)
-				calleeIdOnMastodon = midEntry.MastodonIdCallee
-				callerIdOnMastodon = midEntry.MastodonIdCaller
-			}
-
-			isValidCalleeID := "false"
-			isOnlineCalleeID := "false"
-			wsCliMastodonID := ""
-			calleeID := ""
-			if(calleeIdOnMastodon=="") {
-				// given mid is invalid
-				fmt.Printf("# httpGetMidUser invalid or outdated mid=%s calleeIdOnMastodon=%v ip=%v\n",
-					mid,calleeIdOnMastodon,remoteAddr)
-			} else {
-				// calleeIdOnMastodon is set, therefor: mid is valid
-				// let's see if calleeIdOnMastodon is mapped to a 11-digit calleeID
-				fmt.Printf("httpGetMidUser mid=%s calleeIdOnMastodon=%v ip=%v\n",
-					mid,calleeIdOnMastodon,remoteAddr)
-				calleeID = calleeIdOnMastodon
-				mappingMutex.RLock()
-				mappingData,ok := mapping[calleeIdOnMastodon]
-				mappingMutex.RUnlock()
-				if ok && mappingData.Assign!="" && mappingData.Assign!="none" {
-					// calleeIdOnMastodon is mapped to a 11-digit calleeID
-					calleeID = mappingData.Assign
-					fmt.Printf("httpGetMidUser mapped calleeID=%s calleeIdOnMastodon=%v ip=%v\n",
-						calleeID,calleeIdOnMastodon,remoteAddr)
-				}
-
-				// lets see if calleeID is online (or at least a valid account)
-				hubMapMutex.RLock()
-				hub := hubMap[calleeID]
-				hubMapMutex.RUnlock()
-				if hub!=nil {
-					// calleeID is online (so it is valid)
-					isOnlineCalleeID = "true"
-					isValidCalleeID = "true"
-					if hub.CalleeClient!=nil {
-						// hub.CalleeClient.mastodonID is set by registerID in /registermid (httpRegisterMid())
-						wsCliMastodonID = hub.CalleeClient.mastodonID
-					}
-				} else {
-					// no hub currently exists: calleeID is NOT online: check if calleeID is a valid account
-					dbUser := mMgr.isValidCallee(calleeID)
-					if dbUser!=nil {
-						// calleeID is NOT online, but account is valid
-						isValidCalleeID = "true"
-						wsCliMastodonID = dbUser.MastodonID
-					}
-				}
-			}
-
-			cMastodonID := ""
-			if cid!="" {
-				cdbUser := mMgr.isValidCallee(cid)
-				if cdbUser!=nil {
-					// cid account is valid
-					cMastodonID = cdbUser.MastodonID
-				}
-			}
-
-			// NOTE: calleeID may be same as calleeIdOnMastodon, or may be a 11-digit ID
-			// NOTE: wsCliMastodonID may be calleeIdOnMastodon or empty string
-			codedString := calleeIdOnMastodon+"|"+isValidCalleeID+"|"+isOnlineCalleeID+"|"+
-				calleeID+"|"+wsCliMastodonID+"|"+callerIdOnMastodon+"|"+cMastodonID
-			fmt.Printf("httpGetMidUser codedString=%v\n",codedString)
-			fmt.Fprintf(w,codedString)
-			return
+		// no hub currently exists: calleeID is NOT online: check if calleeID is a valid account
+		dbUser := mMgr.isValidCallee(calleeID)
+		if dbUser!=nil {
+			// calleeID is NOT online, but account is valid
+			isValidCalleeID = "true"
+			wsCliMastodonID = dbUser.MastodonID
 		}
 	}
 
+	cMastodonID := ""
+	cMastodonIDOnline := ""
+	if cid!="" {
+		cdbUser := mMgr.isValidCallee(cid)
+		if cdbUser!=nil {
+			// cid account is valid
+			cMastodonID = cdbUser.MastodonID
+
+			hubMapMutex.RLock()
+			hub := hubMap[cMastodonID]
+			hubMapMutex.RUnlock()
+			if hub!=nil {
+				cMastodonIDOnline = "true"
+			}
+		}
+	}
+
+	// NOTE: calleeID may be same as calleeIdOnMastodon, or may be a 11-digit ID
+	// NOTE: wsCliMastodonID may be calleeIdOnMastodon or empty string
+	codedString := calleeIdOnMastodon+"|"+isValidCalleeID+"|"+isOnlineCalleeID+"|"+
+		calleeID+"|"+wsCliMastodonID+"|"+callerIdOnMastodon+"|"+cMastodonID+"|"+cMastodonIDOnline
+	fmt.Printf("httpGetMidUser codedString=%v\n",codedString)
+	fmt.Fprintf(w,codedString)
 	return
 }
 
@@ -1195,61 +1149,61 @@ func (mMgr *MastodonMgr) httpRegisterMid(w http.ResponseWriter, r *http.Request,
 	return
 }
 
-func (mMgr *MastodonMgr) sendCallerLink(mid string, urlID string, remoteAddr string) {
+func (mMgr *MastodonMgr) sendCallerLink(mid string, calleeID string, remoteAddr string) {
 	// called by httpLogin() on successful login with mid-parameter
 	// called by pickup.js (via /midcalleelogin) if mid-callee is already online
 	// send the callerlink '/user/(calleeID)' to mid-caller
 	// do NOT send more than once (ensured by clearMid(mid))
 
-	if mid=="" {
-		fmt.Printf("# sendCallerLink abort urlID=%s mid=%s\n", urlID, mid)
-		return
-	}
-	if urlID=="" {
-		fmt.Printf("# sendCallerLink abort urlID=%s mid=%s\n", urlID, mid)
+	if calleeID=="" {
+		fmt.Printf("# sendCallerLink abort empty calleeID (mid=%s)\n", mid)
 		return
 	}
 
+	if mid=="" {
+		fmt.Printf("# sendCallerLink abort empty mid (calleeID=%s)\n", calleeID)
+		return
+	}
 	midEntry := &MidEntry{}
 	err := kvMastodon.Get(dbMid, mid, midEntry)
 	if err != nil {
-		// we should not log this as error bc midMap[mid] can be outdated and this is fine
-		//fmt.Printf("# sendCallerLink no midEntry for mid urlID=%s mid=%s err=%v\n", urlID, mid, err)
+		// we may not want to log this as error, bc mid can be outdated and this may happen often
+		fmt.Printf("# sendCallerLink no midEntry for mid=%s (calleeID=%s) err=%v\n", mid, calleeID, err)
 		return
 	}
 	mastodonUserID := midEntry.MastodonIdCallee
 
 	if mastodonUserID=="" {
 		// invalid mastodonUserID
-		fmt.Printf("# sendCallerLink no mastodonUserID from midEntry urlID=%s mid=%s\n", urlID, mid)
+		fmt.Printf("# sendCallerLink no mastodonUserID from midEntry calleeID=%s mid=%s\n", calleeID, mid)
 		return
 	}
 
 	// only the 1st valid call to sendCallerLink will get processed
 	// (we want to send the caller-link only once)
 
-	fmt.Printf("sendCallerLink urlID=%s mid=%s mastodonUserID=%s\n",urlID,mid,mastodonUserID)
-	if isOnlyNumericString(urlID) {
-		// if urlID/calleeID is 11-digit
+	fmt.Printf("sendCallerLink calleeID=%s mid=%s mastodonUserID=%s\n",calleeID,mid,mastodonUserID)
+	if isOnlyNumericString(calleeID) {
+		// if calleeID is 11-digit
 		// - store mastodonUserID in dbUser and in mapping[]
 		// - so 11-digit ID does not need to be entered again next time a mastodon call request comes in
 		var dbEntry DbEntry
-		err := kvMain.Get(dbRegisteredIDs,urlID,&dbEntry)
+		err := kvMain.Get(dbRegisteredIDs,calleeID,&dbEntry)
 		if err!=nil {
-			// urlID was not yet registered
+			// calleeID was not yet registered
 			fmt.Printf("# sendCallerLink numeric(%s) fail db=%s bucket=%s not yet registered\n",
-				urlID, dbMainName, dbRegisteredIDs)
+				calleeID, dbMainName, dbRegisteredIDs)
 		} else {
-			dbUserKey := fmt.Sprintf("%s_%d",urlID, dbEntry.StartTime)
+			dbUserKey := fmt.Sprintf("%s_%d",calleeID, dbEntry.StartTime)
 			var dbUser DbUser
 			err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 			if err!=nil {
-				fmt.Printf("# sendCallerLink numeric(%s) fail on dbUserBucket ip=%s\n", urlID, remoteAddr)
+				fmt.Printf("# sendCallerLink numeric(%s) fail on dbUserBucket ip=%s\n", calleeID, remoteAddr)
 			} else {
 				if dbUser.MastodonID != "" && dbUser.MastodonID != mastodonUserID {
 					// SUSPICIOUS?
 					fmt.Printf("! sendCallerLink numeric(%s) dbUser.MastodonID=%s != mastodonUserID=%s\n",
-						urlID, dbUser.MastodonID, mastodonUserID)
+						calleeID, dbUser.MastodonID, mastodonUserID)
 				}
 
 				dbUser.MastodonID = mastodonUserID
@@ -1258,31 +1212,31 @@ func (mMgr *MastodonMgr) sendCallerLink(mid string, urlID string, remoteAddr str
 				err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
 				if err!=nil {
 					fmt.Printf("# sendCallerLink numeric(%s) error db=%s bucket=%s put err=%v\n",
-						urlID,dbMainName,dbRegisteredIDs,err)
+						calleeID,dbMainName,dbRegisteredIDs,err)
 				} else {
 					fmt.Printf("sendCallerLink numeric(%s) stored mastodonUserID=%s\n",
-						urlID, mastodonUserID)
+						calleeID, mastodonUserID)
 				}
 			}
 		}
 
-		// store the mastodonUserID in mapping[], pointing to 11-digit urlID
+		// store the mastodonUserID in mapping[], pointing to 11-digit calleeID
 // TODO how does this work?
 		mappingMutex.Lock()
 		mappingData,ok := mapping[mastodonUserID]
-		if ok && mappingData.CalleeId != urlID {
-			// this happens if CalleeId=mastodonID and urlID=11-digits
-			// ! sendCallerLink CalleeId=webcall@mastodon.social != urlID=19325349797
-			fmt.Printf("sendCallerLink CalleeId=%s != urlID=%s\n", mappingData.CalleeId, urlID)
+		if ok && mappingData.CalleeId != calleeID {
+			// this happens if CalleeId=mastodonID and calleeID=11-digits
+			// ! sendCallerLink CalleeId=webcall@mastodon.social != calleeID=19325349797
+			fmt.Printf("sendCallerLink CalleeId=%s != calleeID=%s\n", mappingData.CalleeId, calleeID)
 		}
-		mapping[mastodonUserID] = MappingDataType{urlID,"none"}
+		mapping[mastodonUserID] = MappingDataType{calleeID,"none"}
 		mappingMutex.Unlock()
 	}
 
 	// finally: tell caller that callee is now online and ready to receive the call
 	// this will only send a msg ("Click to call") to caller, if tmpkeyMastodonCallerMap[mid] NOT empty string
 	// (for instance: after command=="register" there is no caller to send a msg to)
-	mMgr.sendCallerMsgToMid(mid,urlID)
+	mMgr.sendCallerMsgToMid(mid,calleeID)
 
 // callee is now logged-in, but caller has just now received the call-link
 // if we want to send the caller a mid-link (so the calleeID does not get logged), we should not clearMid here
@@ -1316,7 +1270,7 @@ func (mMgr *MastodonMgr) clearMid(mid string, remoteAddr string) {
 				fmt.Printf("! clearMid(%s) inviterMap[midEntry.MsgID=%s].StatusID1 is empty ip=%s\n",
 					mid,midEntry.MsgID,remoteAddr)
 			} else {
-				fmt.Printf("! clearMid(%s) delete inviterMap[midEntry.MsgID=%s].StatusID1 ip=%s\n",
+				fmt.Printf("clearMid(%s) delete inviterMap[midEntry.MsgID=%s].StatusID1 ip=%s\n",
 					mid,midEntry.MsgID, remoteAddr)
 				err := mMgr.c.DeleteStatus(context.Background(), inviter.StatusID1)
 				if err!=nil {
@@ -1357,4 +1311,62 @@ func (mMgr *MastodonMgr) mastodonStop() {
 	mMgr.abortChan <- true
 	return
 }
+
+/*
+func (mMgr *MastodonMgr) sendCallerMsgCalleeIsOnline(w http.ResponseWriter, r *http.Request, calleeID string, cookie *http.Cookie, remoteAddr string) {
+	// called by httpServer.go /midmsg
+	// send a msg to tmpkeyMastodonCallerReplyMap[mid] with tmpkeyMastodonCalleeMap[mid]:
+	// get mid from urlarg tmtmtm
+	url_arg_array, ok := r.URL.Query()["mid"]
+	fmt.Printf("mastodon sendCallerMsgCalleeIsOnline url_arg_array=%v ok=%v\n",url_arg_array, ok)
+	if ok && len(url_arg_array[0]) >= 1 {
+		mid := url_arg_array[0]
+		if(mid=="") {
+			fmt.Printf("# mastodon sendCallerMsgCalleeIsOnline mid=%v\n",mid)
+		} else {
+			mMgr.midMutex.Lock()
+			midEntry := &MidEntry{}
+			err := kvMastodon.Get(dbMid, mid, midEntry)
+			if err != nil {
+				// TODO log err
+				fmt.Printf("# mastodon sendCallerMsgCalleeIsOnline get midEntry mid=%v err=%v\n",mid,err)
+			} else if midEntry.MastodonIdCaller!="" && midEntry.MastodonIdCallee!="" {
+
+// TODO do we really want to send-msg calleeID in clear?
+				status,err := mMgr.postCallerMsgEx("@"+midEntry.MastodonIdCaller+" "+
+					"Click to call "+mMgr.hostUrl+"/user/"+midEntry.MastodonIdCallee)
+				if err!=nil {
+					// this is fatal
+					fmt.Printf("# sendCallerMsg err=%v (to=%v)\n",err,midEntry.MastodonIdCaller)
+				} else {
+					fmt.Printf("sendCallerMsg to=%v done ID=%v\n",midEntry.MastodonIdCaller, status.ID)
+					if midEntry.MsgID!="" {
+						fmt.Printf("sendCallerMsg midEntry.MsgID=%v\n",midEntry.MsgID)
+// TODO not sure we can have nested inviterMutex.Lock inside midMutex.Lock()
+						mMgr.inviterMutex.Lock()
+						inviter := &Inviter{}
+						err = kvMastodon.Get(dbInviter, midEntry.MsgID, inviter)
+						if err != nil {
+							// can be ignored
+// TODO but it is odd !!
+						}
+						inviter.StatusID2 = status.ID
+						err = kvMastodon.Put(dbInviter, midEntry.MsgID, inviter, false)
+						mMgr.inviterMutex.Unlock()
+						if err != nil {
+							fmt.Printf("# mastodon processMessage msgID=%v failed to store dbInviter\n",
+								midEntry.MsgID)
+							return
+						}
+
+					} else {
+						fmt.Printf("# sendCallerMsg statusID2=%v msgID=%s\n",status.ID,midEntry.MsgID)
+					}
+				}
+			}
+			mMgr.midMutex.Unlock()
+		}
+	}
+}
+*/
 

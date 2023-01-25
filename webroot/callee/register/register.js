@@ -1,4 +1,4 @@
-// WebCall Copyright 2022 timur.mobi. All rights reserved.
+// WebCall Copyright 2023 timur.mobi. All rights reserved.
 'use strict';
 const registerButton = document.querySelector('button#register');
 const statusLine = document.getElementById('status');
@@ -7,9 +7,15 @@ const form = document.querySelector('form#password');
 const formPw = document.querySelector('input#pw');
 var myCalleeID = "";
 var calleeLink = "";
+var mid = "";
 
 window.onload = function() {
-	// TODO: ?id=... ist NICHT eine richtige callee-id, sondern nur ein Verweis auf eine callee-ID
+	mid = getUrlParams("mid");
+	if(typeof mid=="undefined") {
+		mid = "";
+	}
+
+	// TODO: id=... ist NICHT eine richtige callee-id, sondern nur ein Verweis auf eine callee-ID
 	// der server verwendet dafür eine dedizierte map (verweis-id -> echte callee-id)
 	let id = getUrlParams("id");
 	if(typeof id!=="undefined" && id!="") {
@@ -49,6 +55,7 @@ function makeNewId() {
 	}, errorAction);
 }
 
+// TODO modify text (also "Please store your ID" in submitForm())
 function isAvailAction() {
 	showStatus("Anybody with a web browser can now give you a call. Here is your phone number for the web:<br><br><b>"+myCalleeID+"</b><br><br>Enter a password so only you can receive these calls.",-1);
 	// show form and clear pw input field
@@ -150,12 +157,19 @@ function submitForm(theForm) {
 		if(typeof Android !== "undefined" && Android !== null) {
 			if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
 				api = api + "?ver="+Android.getVersionName();
-			}
-			if(typeof Android.webviewVersion !== "undefined" && Android.webviewVersion !== null) {
-				api = api + "_" + Android.webviewVersion();
+				if(typeof Android.webviewVersion !== "undefined" && Android.webviewVersion !== null) {
+					api = api + "_" + Android.webviewVersion();
+				}
 			}
 		} else {
 			//api = api + "&ver="+clientVersion;
+		}
+		if(mid!="") {
+			if(api.indexOf("?ver=")>=0) {
+				api += "&mid="+mid;
+			} else {
+				api += "?mid="+mid;
+			}
 		}
 		if(!gentle) console.log('register via api='+api);
 		ajaxFetch(new XMLHttpRequest(), "POST", api, function(xhr) {
@@ -176,7 +190,7 @@ function submitForm(theForm) {
 				"Your full WebCall callee link is shown below. "+
 				"This link works in any web browser. "+
 				"Click to start:<br><br>"+
-				"<a onclick='exelink(this.href); return false;' href='"+calleeLink+"'>"+calleeLink+"</a>",-1);
+				"<a onclick='exelink(\""+calleeLink+"\"); return false;' href='"+calleeLink+"'>"+calleeLink+"</a>",-1);
 			} else {
 				console.log('response:',xhr.responseText);
 				showStatus("Sorry, it is not possible to register your ID right now. Please try again a little later.",-1);
@@ -189,12 +203,12 @@ function exelink(url) {
 	console.log("exelink parent", window.location, window.parent.location);
 	if(window.location !== window.parent.location) {
 		// running inside an iframe -> open in a new tab
-		//console.log("exelink open",calleeLink);
-		window.open(calleeLink, '_blank');
+		//console.log("exelink open",url);
+		window.open(url, '_blank');
 	} else {
 		// not running inside an iframe -> continue in the same tab
-		//console.log("exelink replace",calleeLink);
-		window.location.replace(calleeLink+"?auto=1");
+		//console.log("exelink replace",url);
+		window.location.replace(url+"?auto=1");
 	}
 }
 

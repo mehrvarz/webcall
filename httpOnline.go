@@ -362,111 +362,130 @@ func httpNewId(w http.ResponseWriter, r *http.Request, urlID string, calleeID st
 }
 
 func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath string, remoteAddr string, startRequestTime time.Time) {
-	if allowNewAccounts {
-		registerID := urlPath[10:]
-		argIdx := strings.Index(registerID,"&")
-		if argIdx>=0 {
-			registerID = registerID[0:argIdx]
-		}
+	if !allowNewAccounts {
+		fmt.Printf("# /register newAccounts not allowed urlPath=(%s) %s ua=%s\n",
+			urlPath, remoteAddr, r.UserAgent())
+		return
+	}
 
-		clientVersion := ""
-		url_arg_array, ok := r.URL.Query()["ver"]
-		if ok && len(url_arg_array[0]) >= 1 {
-			clientVersion = url_arg_array[0]
-		}
+	registerID := urlPath[10:]
+	argIdx := strings.Index(registerID,"&")
+	if argIdx>=0 {
+		registerID = registerID[0:argIdx]
+	}
 
-		if registerID=="" {
-			fmt.Printf("# /register fail no ID urlPath=(%s) %s v=%s ua=%s\n",
-				urlPath, remoteAddr, clientVersion, r.UserAgent())
+	mid := ""
+	url_arg_array, ok := r.URL.Query()["mid"]
+	if ok && len(url_arg_array[0]) >= 1 {
+		mid = url_arg_array[0]
+	}
+
+	clientVersion := ""
+	url_arg_array, ok = r.URL.Query()["ver"]
+	if ok && len(url_arg_array[0]) >= 1 {
+		clientVersion = url_arg_array[0]
+	}
+
+	if registerID=="" {
+		fmt.Printf("# /register fail no ID urlPath=(%s) mid=(%s) id=%s v=%s ua=%s\n",
+			urlPath, mid, remoteAddr, clientVersion, r.UserAgent())
+		return
+	}
+
+	fmt.Printf("/register (%s) %s v=%s ua=%s\n",
+		registerID, remoteAddr, clientVersion, r.UserAgent())
+
+	postBuf := make([]byte, 128)
+	length,_ := io.ReadFull(r.Body, postBuf)
+	if length>0 {
+		pw := ""
+		pwData := string(postBuf[:length])
+		pwData = strings.ToLower(pwData)
+		pwData = strings.TrimSpace(pwData)
+		pwData = strings.TrimRight(pwData,"\r\n")
+		pwData = strings.TrimRight(pwData,"\n")
+		if strings.HasPrefix(pwData,"pw=") {
+			pw = pwData[3:]
+		}
+		// deny if pw is too short or not valid
+		if len(pw)<6 {
+			fmt.Printf("# /register (%s) fail pw too short\n",registerID)
+			fmt.Fprintf(w, "too short")
+			return
+		}
+		//fmt.Printf("register pw=%s(%d)\n",pw,len(pw))
+
+		// this can be a fake request
+		// we need to verify if registerID is in use
+		var dbEntryRegistered DbEntry
+		err := kvMain.Get(dbRegisteredIDs,registerID,&dbEntryRegistered)
+		if err==nil {
+			// registerID is already registered
+			fmt.Printf("# /register (%s) fail db=%s bucket=%s get already registered\n",
+				registerID, dbMainName, dbRegisteredIDs)
+			fmt.Fprintf(w, "was already registered")
 			return
 		}
 
-		fmt.Printf("/register (%s) %s v=%s ua=%s\n",
-			registerID, remoteAddr, clientVersion, r.UserAgent())
-
-		postBuf := make([]byte, 128)
-		length,_ := io.ReadFull(r.Body, postBuf)
-		if length>0 {
-			pw := ""
-			pwData := string(postBuf[:length])
-			pwData = strings.ToLower(pwData)
-			pwData = strings.TrimSpace(pwData)
-			pwData = strings.TrimRight(pwData,"\r\n")
-			pwData = strings.TrimRight(pwData,"\n")
-			if strings.HasPrefix(pwData,"pw=") {
-				pw = pwData[3:]
-			}
-			// deny if pw is too short or not valid
-			if len(pw)<6 {
-				fmt.Printf("/register (%s) fail pw too short\n",registerID)
-				fmt.Fprintf(w, "too short")
-				return
-			}
-			//fmt.Printf("register pw=%s(%d)\n",pw,len(pw))
-
-			// this can be a fake request
-			// we need to verify if registerID is in use
-			var dbEntryRegistered DbEntry
-			err := kvMain.Get(dbRegisteredIDs,registerID,&dbEntryRegistered)
-			if err==nil {
-				// registerID is already registered
-				fmt.Printf("/register (%s) fail db=%s bucket=%s get already registered\n",
-					registerID, dbMainName, dbRegisteredIDs)
-				fmt.Fprintf(w, "was already registered")
-				return
-			}
-
-			unixTime := startRequestTime.Unix()
-			dbUserKey := fmt.Sprintf("%s_%d",registerID, unixTime)
-			dbUser := DbUser{Ip1:remoteAddr, UserAgent:r.UserAgent()}
-			dbUser.StoreContacts = true
-			dbUser.StoreMissedCalls = true
-			err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
+		unixTime := startRequestTime.Unix()
+		dbUserKey := fmt.Sprintf("%s_%d",registerID, unixTime)
+		dbUser := DbUser{Ip1:remoteAddr, UserAgent:r.UserAgent()}
+		dbUser.StoreContacts = true
+		dbUser.StoreMissedCalls = true
+		err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
+		if err!=nil {
+			fmt.Printf("# /register (%s) error db=%s bucket=%s put err=%v\n",
+				registerID, dbMainName, dbUserBucket, err)
+			fmt.Fprintf(w,"cannot register user")
+		} else {
+			err = kvMain.Put(dbRegisteredIDs, registerID,
+					DbEntry{unixTime, remoteAddr}, false)
 			if err!=nil {
 				fmt.Printf("# /register (%s) error db=%s bucket=%s put err=%v\n",
-					registerID, dbMainName, dbUserBucket, err)
+					registerID,dbMainName,dbRegisteredIDs,err)
 				fmt.Fprintf(w,"cannot register user")
+				// TODO this is bad! got to role back kvMain.Put((dbUser...) from above
 			} else {
-				err = kvMain.Put(dbRegisteredIDs, registerID,
-						DbEntry{unixTime, remoteAddr}, false)
+				//fmt.Printf("/register (%s) db=%s bucket=%s stored OK\n",
+				//	registerID, dbMainName, dbRegisteredIDs)
+				// registerID is now available for use
+				var pwIdCombo PwIdCombo
+				err,cookieValue := createCookie(w, registerID, pw, &pwIdCombo)
 				if err!=nil {
-					fmt.Printf("# /register (%s) error db=%s bucket=%s put err=%v\n",
-						registerID,dbMainName,dbRegisteredIDs,err)
-					fmt.Fprintf(w,"cannot register user")
-					// TODO this is bad! got to role back kvMain.Put((dbUser...) from above
-				} else {
-					//fmt.Printf("/register (%s) db=%s bucket=%s stored OK\n",
-					//	registerID, dbMainName, dbRegisteredIDs)
-					// registerID is now available for use
-					var pwIdCombo PwIdCombo
-					err,cookieValue := createCookie(w, registerID, pw, &pwIdCombo)
-					if err!=nil {
-						fmt.Printf("/register (%s) create cookie error cookie=%s err=%v\n",
-							registerID, cookieValue, err)
-					} else {
-						// preload contacts with 2 Answie accounts
-						var idNameMap map[string]string // callerID -> name
-						err = kvContacts.Get(dbContactsBucket, registerID, &idNameMap)
-						if err!=nil {
-							idNameMap = make(map[string]string)
-						}
-						idNameMap["answie"] = "Answie Spoken"
-						idNameMap["answie7"] = "Answie Jazz"
-						err = kvContacts.Put(dbContactsBucket, registerID, idNameMap, false)
-						if err!=nil {
-							fmt.Printf("# /register (%s) kvContacts.Put err=%v\n", registerID, err)
-						} else {
-							//fmt.Printf("/register (%s) kvContacts.Put OK\n", registerID)
-						}
-
-						fmt.Fprintf(w, "OK")
-					}
+					// fatal
+					fmt.Printf("# /register (%s) create cookie error cookie=%s err=%v\n",
+						registerID, cookieValue, err)
+					return
 				}
+
+				// preload contacts with 2 Answie accounts
+				var idNameMap map[string]string // callerID -> name
+				err = kvContacts.Get(dbContactsBucket, registerID, &idNameMap)
+				if err!=nil {
+					idNameMap = make(map[string]string)
+				}
+				idNameMap["answie"] = "Answie Spoken"
+				idNameMap["answie7"] = "Answie Jazz"
+				err = kvContacts.Put(dbContactsBucket, registerID, idNameMap, false)
+				if err!=nil {
+					// not fatal
+					fmt.Printf("# /register (%s) kvContacts.Put err=%v\n", registerID, err)
+				} else {
+					//fmt.Printf("/register (%s) kvContacts.Put OK\n", registerID)
+				}
+
+				if mid!="" && mastodonMgr!=nil {
+					// tell caller that callee is ready to receive a call (and maybe other related tasks)
+
+					if logWantedFor("login") {
+						fmt.Printf("/login (%s) mastodonMgr.calleeLoginSuccess mid=%s\n", urlID, mid)
+					}
+					mastodonMgr.sendCallerLink(mid,registerID,remoteAddr)
+				}
+
+				fmt.Fprintf(w, "OK")
 			}
 		}
-	} else {
-		fmt.Printf("# /register newAccounts not allowed urlPath=(%s) %s ua=%s\n",
-			urlPath, remoteAddr, r.UserAgent())
 	}
 	return
 }

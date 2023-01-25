@@ -688,7 +688,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Printf("/getmiduser rip=%s call mastodonMgr.httpGetMidUser()\n",remoteAddr)
 			mastodonMgr.httpGetMidUser(w, r, cookie, remoteAddr)
 		} else {
-			fmt.Printf("# /getmiduser no mastodonMgr rip=%s\n",remoteAddr)
+			fmt.Printf("# /getmiduser mastodonMgr not enabled rip=%s\n",remoteAddr)
 		}
 		return
 	}
@@ -704,20 +704,8 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-/*
-	if strings.HasPrefix(urlPath,"/midmsg") {
-		if cookie!=nil {
-			if mastodonMgr != nil {
-				// send a msg to tmpkeyMastodonCallerMap[mid]:
-				// "Click to call /user/"+tmpkeyMastodonCalleeMap[mid]
-				mastodonMgr.sendCallerMsgCalleeIsOnline(w, r, calleeID, cookie, remoteAddr)
-			}
-		}
-		return
-	}
-*/
-
 	if strings.HasPrefix(urlPath,"/sendCallerLink") {
+		// arg id=... becomes urlID
 		if mastodonMgr != nil {
 			url_arg_array, ok := r.URL.Query()["mid"]
 			fmt.Printf("/sendCallerLink urlID=%s url_arg_array=%v ok=%v\n",urlID, url_arg_array, ok)
@@ -737,6 +725,18 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+/*
+	if strings.HasPrefix(urlPath,"/midmsg") {
+		if cookie!=nil {
+			if mastodonMgr != nil {
+				// send a msg to tmpkeyMastodonCallerMap[mid]:
+				// "Click to call /user/"+tmpkeyMastodonCalleeMap[mid]
+				mastodonMgr.sendCallerMsgCalleeIsOnline(w, r, calleeID, cookie, remoteAddr)
+			}
+		}
+		return
+	}
+*/
 
 
 	if urlPath=="/mode" {
