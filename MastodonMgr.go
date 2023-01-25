@@ -1267,6 +1267,7 @@ func (mMgr *MastodonMgr) clearMid(mid string, remoteAddr string) {
 			} else {
 				fmt.Printf("clearMid(%s) delete inviterMap[midEntry.MsgID=%s].StatusID1 ip=%s\n",
 					mid,midEntry.MsgID, remoteAddr)
+// TODO: # clearMid DeleteStatus ID1 (109749542658645300) err=bad request: 404 Not Found: Record not found
 				err := mMgr.c.DeleteStatus(context.Background(), inviter.StatusID1)
 				if err!=nil {
 					fmt.Printf("# clearMid DeleteStatus ID1 (%v) err=%v ip=%s\n",inviter.StatusID1,err,remoteAddr)
