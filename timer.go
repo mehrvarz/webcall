@@ -19,7 +19,7 @@ import (
 	"github.com/mehrvarz/webcall/twitter"
 	"gopkg.in/ini.v1"
 	bolt "go.etcd.io/bbolt"
-	"golang.org/x/crypto/bcrypt"
+//	"golang.org/x/crypto/bcrypt"
 )
 
 var followerIDs twitter.FollowerIDs
@@ -316,6 +316,7 @@ func dbHashedPwLoop() {
 //					if len(deleteKeyArray)>=30 {
 //						return nil
 //					}
+/*
 				} else if !strings.HasPrefix(pwIdCombo.Pw,"$") && len(pwIdCombo.Pw)<50 {
 					// pwIdCombo.Pw is cleartext
 					hash, err := bcrypt.GenerateFromPassword([]byte(pwIdCombo.Pw), bcrypt.MinCost)
@@ -336,6 +337,7 @@ fmt.Printf("# dbHashedPwLoop bcrypt pw=(%s) hashPw(%s) put err=%v\n", pwIdCombo.
 							}
 						}
 					}
+*/
 				}
 			}
 			fmt.Printf("dbHashedPwLoop loop end, count=%d del=%d\n",count,len(deleteKeyArray))

@@ -297,6 +297,7 @@ fmt.Printf("/login (%s) compare hash(%s) form(%s)\n", urlID, hashPw, formPw) // 
 			err := bcrypt.CompareHashAndPassword([]byte(hashPw), []byte(formPw))
 			if err != nil {
 				fmt.Printf("# /login (%s) bcrypt.CompareHashAndPassword err=%v\n", urlID, err)
+/*
 				// in case hashPw was not crypted:
 				if hashPw != formPw {
 //fmt.Printf("# /login (%s) clear pw err (%s|%s) %s\n", urlID, hashPw, formPw, remoteAddr)
@@ -307,6 +308,8 @@ fmt.Printf("/login (%s) compare hash(%s) form(%s)\n", urlID, hashPw, formPw) // 
 					return
 				}
 				fmt.Printf("/login (%s) clear pw success\n", urlID)
+*/
+				return
 			} else {
 				fmt.Printf("/login (%s) bcrypt.CompareHashAndPassword success\n", urlID)
 			}
