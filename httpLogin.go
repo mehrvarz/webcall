@@ -285,7 +285,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 					fmt.Printf("# /login (%s) got formPw, no cookiePw err=%v\n", urlID, err)
 				} else {
 					hashPw = pwIdCombo.Pw
-fmt.Printf("/login (%s) got formPw, no cookiePw, pwIdCombo.Pw=%s\n", urlID, pwIdCombo.Pw) // TODO remove
+//fmt.Printf("/login (%s) got formPw, no cookiePw, pwIdCombo.Pw=%s\n", urlID, pwIdCombo.Pw) // TODO remove
 				}
 			} else {
 //				fmt.Printf("/login (%s) got formPw, cookiePw=(%s)\n", urlID, hashPw)
@@ -710,7 +710,7 @@ func createCookie(w http.ResponseWriter, urlID string, pw string, pwIdCombo *PwI
 		pwIdCombo.Pw = pw
     } else {
 		fmt.Printf("/login (%s) createCookie bcrypt store (%v)\n", urlID, string(hash))
-fmt.Printf("createCookie (%s) pw(%s) hashPw(%s)\n", urlID, pw, string(hash)) // TODO remove
+//fmt.Printf("createCookie (%s) pw(%s) hashPw(%s)\n", urlID, pw, string(hash)) // TODO remove
 		pwIdCombo.Pw = string(hash)
 	}
 
