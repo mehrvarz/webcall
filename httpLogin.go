@@ -288,11 +288,11 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 fmt.Printf("/login (%s) got formPw, no cookiePw, pwIdCombo.Pw=%s\n", urlID, pwIdCombo.Pw) // TODO remove
 				}
 			} else {
-				fmt.Printf("/login (%s) got formPw, cookiePw=(%s)\n", urlID, hashPw)
+//				fmt.Printf("/login (%s) got formPw, cookiePw=(%s)\n", urlID, hashPw)
 			}
 			// this gets executed after form-field submit
 			// compare form-cleartext-formPw vs. hashPw-dbHashedPw-plus-cookie (if empty: hashPw-dbEntry.Password)
-fmt.Printf("/login (%s) compare hash(%s) form(%s)\n", urlID, hashPw, formPw) // TODO remove
+//fmt.Printf("/login (%s) compare hash(%s) form(%s)\n", urlID, hashPw, formPw) // TODO remove
 
 			err := bcrypt.CompareHashAndPassword([]byte(hashPw), []byte(formPw))
 			if err != nil {
@@ -311,7 +311,7 @@ fmt.Printf("/login (%s) compare hash(%s) form(%s)\n", urlID, hashPw, formPw) // 
 */
 				return
 			} else {
-				fmt.Printf("/login (%s) bcrypt.CompareHashAndPassword success\n", urlID)
+//				fmt.Printf("/login (%s) bcrypt.CompareHashAndPassword success\n", urlID)
 			}
 		}
 	} else {
@@ -329,7 +329,7 @@ fmt.Printf("/login (%s) compare hash(%s) form(%s)\n", urlID, hashPw, formPw) // 
 		// no pw form-input but a cookie is given
 		// hashPw comes from our local dbHashedPw (based on key=cookie)
 		// hashPw!="" means that the cookie is valid
-		fmt.Printf("/login (%s) got no formPw, cookiePw\n", urlID)
+		//fmt.Printf("/login (%s) got no formPw, cookiePw\n", urlID)
 	}
 
 	// pw is accepted, get dbEntry and dbUser based on urlID

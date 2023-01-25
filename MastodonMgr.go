@@ -873,7 +873,7 @@ func (mMgr *MastodonMgr) httpGetMidUser(w http.ResponseWriter, r *http.Request, 
 	midEntry := &MidEntry{}
 	err := kvMastodon.Get(dbMid, mid, midEntry)
 	if err != nil {
-		fmt.Printf("# httpGetMidUser invalid or outdated mid=%s err=%v\n",mid,err)
+		fmt.Printf("! httpGetMidUser invalid or outdated mid=%s err=%v\n",mid,err)
 		return
 	}
 
@@ -887,7 +887,7 @@ func (mMgr *MastodonMgr) httpGetMidUser(w http.ResponseWriter, r *http.Request, 
 	calleeID := ""
 	if(calleeIdOnMastodon=="") {
 		// given mid is invalid
-		fmt.Printf("# httpGetMidUser invalid or outdated mid=%s calleeIdOnMastodon=%v ip=%v\n",
+		fmt.Printf("! httpGetMidUser invalid or outdated mid=%s calleeIdOnMastodon=%v ip=%v\n",
 			mid,calleeIdOnMastodon,remoteAddr)
 		return
 	}
