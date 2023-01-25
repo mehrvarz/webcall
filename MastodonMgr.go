@@ -37,7 +37,7 @@ type Inviter struct { // key = mastodon msgID
 	// callerID string ?
 	StatusID1 mastodon.ID // for callee
 	StatusID2 mastodon.ID // for caller
-	Expiration int64
+	Created int64
 }
 
 type MidEntry struct { // key = mid
@@ -366,8 +366,7 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 			// can be ignored
 		}
 		inviter.MastodonUserId = mastodonUserId
-// TODO better store timeNow and cope with max duration later
-		inviter.Expiration = time.Now().Unix() + 60*60 - 45
+		inviter.Created = time.Now().Unix()
 		err = kvMastodon.Put(dbInviter, msgID, inviter, false)
 		mMgr.inviterMutex.Unlock()
 		if err != nil {
@@ -580,7 +579,7 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 }
 
 func (mMgr *MastodonMgr) cleanupMastodonInviter(w io.Writer) {
-	// delete/outdate inviterMap[] entries in parallel based on inviter.Expiration
+	// delete/outdate inviterMap[] entries in parallel based on age of inviter.Created
 	// timer.go calls this func periodically every 20 min
 	fmt.Printf("cleanupMastodonInviter...\n")
 	timeNowUnix := time.Now().Unix()
@@ -611,14 +610,10 @@ func (mMgr *MastodonMgr) cleanupMastodonInviter(w io.Writer) {
 			var inviter Inviter
 			d.Decode(&inviter)
 
-			fmt.Printf("cleanupMastodonInviter timeNowUnix=%d - inviter.Expiration=%d = %d (>0 fire)\n",
-				timeNowUnix, inviter.Expiration, timeNowUnix - inviter.Expiration)
-			if inviter.Expiration <= 0 {
-				continue
-			}
-
-			if timeNowUnix - inviter.Expiration >= 0 {
-				// this invitation is older than it's Expiration time: delete it
+			fmt.Printf("cleanupMastodonInviter timeNowUnix=%d - inviter.Created=%d = %d (>=3600 fire)\n",
+				timeNowUnix, inviter.Created, timeNowUnix-inviter.Created)
+			if timeNowUnix - inviter.Created >= 60*60 {
+				// this invitation is now outdated: delete it
 				// DeleteStatus() previously sent msgs
 				if inviter.StatusID1 != "" {
 					err := mMgr.c.DeleteStatus(context.Background(), inviter.StatusID1)
