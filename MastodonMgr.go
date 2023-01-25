@@ -1163,14 +1163,14 @@ func (mMgr *MastodonMgr) sendCallerLink(mid string, calleeID string, remoteAddr 
 	err := kvMastodon.Get(dbMid, mid, midEntry)
 	if err != nil {
 		// we may not want to log this as error, bc mid can be outdated and this may happen often
-		fmt.Printf("# sendCallerLink no midEntry for mid=%s (calleeID=%s) err=%v\n", mid, calleeID, err)
+		fmt.Printf("! sendCallerLink no midEntry for mid=%s (calleeID=%s) err=%v\n", mid, calleeID, err)
 		return
 	}
 	mastodonUserID := midEntry.MastodonIdCallee
 
 	if mastodonUserID=="" {
 		// invalid mastodonUserID
-		fmt.Printf("# sendCallerLink no mastodonUserID from midEntry calleeID=%s mid=%s\n", calleeID, mid)
+		fmt.Printf("! sendCallerLink no mastodonUserID from midEntry calleeID=%s mid=%s\n", calleeID, mid)
 		return
 	}
 
