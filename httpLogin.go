@@ -276,6 +276,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				var pwIdCombo PwIdCombo
 				err := kvHashedPw.Get(dbHashedPwBucket,urlID,&pwIdCombo)
 				if err!=nil {
+/************* START ***************/
 					var pwIdComboSearch PwIdCombo
 					if strings.Index(err.Error(),"key not found")>=0 {
 						// look for the newest
@@ -319,6 +320,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 							}
 						}
 					}
+/************* END ***************/
 
 					if err!=nil {
 						if strings.Index(err.Error(),"key not found")>=0 {
@@ -672,13 +674,23 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 						fmt.Printf("/login (%s) has CalleeLogin.Get (is online, did init)\n", urlID)
 					}
 
-					if mastodonMgr!=nil && mid!="" {
-						// tell caller that callee is ready to receive a call (and maybe other related tasks)
-
-						if logWantedFor("login") {
-							fmt.Printf("/login (%s) mastodonMgr.calleeLoginSuccess mid=%s\n", urlID, mid)
+					if mastodonMgr!=nil {
+						if mid=="" {
+							// if we have no mid, search dbInviter for urlID
+							midStr,msgId,err := mastodonMgr.isCallerWaitingForCallee(urlID)
+							if err==nil && midStr!="" && msgId!="" {
+								// mid for urlID found!
+								mid = midStr
+							}
 						}
-						mastodonMgr.sendCallerLink(mid,urlID,remoteAddr)
+						if mid!="" {
+							// this means that there is an invited caller currently waiting for this callee login
+							if logWantedFor("login") {
+								fmt.Printf("/login (%s) mastodonMgr.sendCallerLink mid=%s\n", urlID, mid)
+							}
+							// tell caller that callee is ready to receive a call (and maybe other related tasks)
+							mastodonMgr.sendCallerLink(mid,urlID,remoteAddr)
+						}
 					}
 				} else {
 					// hub!=nil but CalleeLogin==false (callee still there but did NOT send 'init' within 26s)
