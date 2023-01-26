@@ -236,27 +236,30 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 			printFunc(w,"# /makeregistered url arg 'pw' not given\n")
 			return true
 		}
-// TODO outdated
-//		urlPw := url_arg_array[0]
+		urlPw := url_arg_array[0]
 
 		fmt.Printf("/makeregistered dbName=%s\n", dbMainName)
-
 		unixTime := time.Now().Unix()
 		dbUserKey := fmt.Sprintf("%s_%d",urlID, unixTime)
 		dbUser := DbUser{Ip1:remoteAddr}
 		err := kv.Put(dbUserBucket, dbUserKey, dbUser, false)
 		if err!=nil {
-			printFunc(w,"# /makeregistered error db=%s bucket=%s put key=%s err=%v\n",
+			printFunc(w,"# /makeregistered db=%s bucket=%s put key=%s err=%v\n",
 				dbMainName,dbUserBucket,urlID,err)
 		} else {
 			err = kv.Put(dbRegisteredIDs, urlID,
-				DbEntry{unixTime, remoteAddr /*, urlPw*/}, false)
+				DbEntry{unixTime, remoteAddr}, false)
 			if err!=nil {
-				printFunc(w,"# /makeregistered error db=%s bucket=%s put key=%s err=%v\n",
+				printFunc(w,"# /makeregistered db=%s bucket=%s put key=%s err=%v\n",
 					dbMainName,dbRegisteredIDs,urlID,err)
 			} else {
 				printFunc(w,"/makeregistered db=%s bucket=%s new id=%s created\n",
 					dbMainName,dbRegisteredIDs,urlID)
+				var pwIdCombo PwIdCombo
+				err := createHashPw(urlID, urlPw, &pwIdCombo)
+				if err!=nil {
+					printFunc(w,"# /makeregistered createHashPw key=%s err=%v\n", urlID, err)
+				}
 			}
 		}
 		if err!=nil {

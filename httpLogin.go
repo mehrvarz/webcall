@@ -744,14 +744,14 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 func createCookie(w http.ResponseWriter, urlID string, pw string, pwIdCombo *PwIdCombo) (error,string) {
 	// create new cookie with name=webcallid value=urlID
 	// store only if url parameter nocookie is NOT set
-	cookieSecret := fmt.Sprintf("%d", rand.Int63n(99999999999))
+	expiration := time.Now().Add(6 * 31 * 24 * time.Hour) // same as in createHashPw()
 
 	// we need urlID in cookieName only for answie#
 	cookieName := "webcallid"
 	if strings.HasPrefix(urlID, "answie") {
 		cookieName = "webcallid-" + urlID
 	}
-	expiration := time.Now().Add(6 * 31 * 24 * time.Hour)
+	cookieSecret := fmt.Sprintf("%d", rand.Int63n(99999999999))
 	cookieValue := fmt.Sprintf("%s&%s", urlID, string(cookieSecret))
 	cookieObj := http.Cookie{Name: cookieName, Value: cookieValue,
 		Path:     "/",
@@ -763,24 +763,26 @@ func createCookie(w http.ResponseWriter, urlID string, pw string, pwIdCombo *PwI
 	if logWantedFor("cookie") {
 		fmt.Printf("/login cookie created (%v)\n", cookieValue)
 	}
+	err := createHashPw(urlID, pw, pwIdCombo)
+	return err, cookieValue
+}
 
+func createHashPw(urlID string, pw string, pwIdCombo *PwIdCombo) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.MinCost)
 	if err != nil {
-		fmt.Printf("# /login bcrypt err=%v\n", err)
-		pwIdCombo.Pw = pw
-	} else {
-		fmt.Printf("/login (%s) createCookie bcrypt store (%v)\n", urlID, string(hash))
-//fmt.Printf("createCookie (%s) pw(%s) hashPw(%s)\n", urlID, pw, string(hash)) // TODO remove
-		pwIdCombo.Pw = string(hash)
+		fmt.Printf("# /login createHashPw bcrypt err=%v\n", err)
+		return err
 	}
 
+	fmt.Printf("/login (%s) createHashPw bcrypt store (%v)\n", urlID, string(hash))
+	pwIdCombo.Pw = string(hash)
 	pwIdCombo.CalleeId = urlID
 	pwIdCombo.Created = time.Now().Unix()
+	expiration := time.Now().Add(6 * 31 * 24 * time.Hour) // same as in createCookie()
 	pwIdCombo.Expiration = expiration.Unix()
 
-	skipConfirm := true
-	//return kvHashedPw.Put(dbHashedPwBucket, cookieValue, pwIdCombo, skipConfirm), cookieValue
 	// cookieSecret is now opsolete
-	return kvHashedPw.Put(dbHashedPwBucket, urlID, pwIdCombo, skipConfirm), cookieValue
+	skipConfirm := true
+	return kvHashedPw.Put(dbHashedPwBucket, urlID, pwIdCombo, skipConfirm)
 }
 
