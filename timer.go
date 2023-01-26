@@ -159,7 +159,13 @@ func ticker3hours() {
 						dbMainName,dbBlockedIDs,dbUserKey,err)
 				}
 			}
-// TODO also delete hashedPw?
+
+			err = kv.Delete(dbHashedPwBucket, userID)
+			if err!=nil {
+				fmt.Printf("# ticker3hours delete dbHashedPwBucket user-id=%s err=%v\n", userID, err)
+			} else {
+				// all is well
+			}
 		}
 
 		// loop all dbBlockedIDs to delete blocked entries

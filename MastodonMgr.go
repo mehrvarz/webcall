@@ -322,13 +322,12 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 							mastodonUserId)
 					}
 
-					cookieValue := mastodonUserId
 					pwIdCombo := PwIdCombo{}
-					err = kvHashedPw.Put(dbHashedPwBucket, cookieValue, pwIdCombo, true)
+					err = kvHashedPw.Put(dbHashedPwBucket, mastodonUserId, pwIdCombo, true)
 					if err!=nil {
 						fmt.Printf("# mastodon wc-delete (%s) fail dbHashedPwBucket\n",	mastodonUserId)
 					} else {
-						fmt.Printf("mastodon wc-delete kvHashedPw cookieValue=%s\n", cookieValue)
+						fmt.Printf("mastodon wc-delete kvHashedPw mastodonUserId=%s\n", mastodonUserId)
 					}
 				}
 				// abort processMessage here
