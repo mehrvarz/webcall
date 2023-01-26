@@ -196,7 +196,7 @@ function onload2() {
 		// we do NOT offer this register link, 
 		// if dbUser.MastodonID of cookieName (cmappedCalleeID) == mastodonUserID
 		if(cookieName=="" || cmappedCalleeID=="" || cmappedCalleeID != mastodonUserID) {
-			dispMsg += "➡️ <a onclick='pwForm(\""+mastodonUserID+"\"); return false;'>"+mastodonUserID+"</a> (New)<br><br>";
+			dispMsg += "➡️ <a onclick='pwForm(\""+mastodonUserID+"\"); return false;'>Create "+mastodonUserID+"</a><br><br>";
 		}
 		choices++;
 	}
