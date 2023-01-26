@@ -283,6 +283,21 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 						if err==nil {
 							pwIdCombo = pwIdComboSearch
 							hashPw = pwIdCombo.Pw
+							// if hashPw is empty and formPw exists, createCookie
+							if hashPw=="" {
+								fmt.Printf("# /login (%s) hashPw empty after dbHashedPwSearch createCookie(%s)\n",
+									urlID, formPw)
+								if formPw!="" {
+									err,cookieValue := createCookie(w, urlID, formPw, &pwIdCombo)
+									if err != nil {
+										fmt.Printf("# /login (%s) persist PwIdCombo bucket=%s cookie=%s err=%v\n",
+											urlID, dbHashedPwBucket, cookieValue, err)
+										fmt.Fprintf(w, "noservice")
+										return
+									}
+									hashPw = pwIdCombo.Pw
+								}
+							}
 						}
 					}
 
@@ -306,6 +321,10 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 			// compare form-cleartext-formPw vs. hashPw-dbHashedPw-plus-cookie (if empty: hashPw-dbEntry.Password)
 //fmt.Printf("/login (%s) compare hash(%s) form(%s)\n", urlID, hashPw, formPw) // TODO remove
 
+			if hashPw=="" {
+				fmt.Printf("# /login (%s) hashPw=(%s) is empty\n", urlID, hashPw)
+				return
+			}
 			err := bcrypt.CompareHashAndPassword([]byte(hashPw), []byte(formPw))
 			if err != nil {
 				fmt.Printf("# /login (%s) (%s) bcrypt.CompareHashAndPassword err=%v\n", urlID, hashPw, err)
@@ -322,9 +341,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				fmt.Printf("/login (%s) clear pw success\n", urlID)
 */
 				return
-			} else {
-//				fmt.Printf("/login (%s) bcrypt.CompareHashAndPassword success\n", urlID)
 			}
+//			fmt.Printf("/login (%s) bcrypt.CompareHashAndPassword success\n", urlID)
 		}
 	} else {
 		// no pw form-input is given
@@ -716,11 +734,11 @@ func createCookie(w http.ResponseWriter, urlID string, pw string, pwIdCombo *PwI
 	}
 
 	//pwIdCombo.Pw = pw
-    hash, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.MinCost)
-    if err != nil {
+	hash, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.MinCost)
+	if err != nil {
 		fmt.Printf("# /login bcrypt err=%v\n", err)
 		pwIdCombo.Pw = pw
-    } else {
+	} else {
 		fmt.Printf("/login (%s) createCookie bcrypt store (%v)\n", urlID, string(hash))
 //fmt.Printf("createCookie (%s) pw(%s) hashPw(%s)\n", urlID, pw, string(hash)) // TODO remove
 		pwIdCombo.Pw = string(hash)
