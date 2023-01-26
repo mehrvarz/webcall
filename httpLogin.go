@@ -276,7 +276,17 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 				var pwIdCombo PwIdCombo
 				err := kvHashedPw.Get(dbHashedPwBucket,urlID,&pwIdCombo)
 				if err!=nil {
+					var pwIdComboSearch PwIdCombo
 					if strings.Index(err.Error(),"key not found")>=0 {
+						// look for the newest
+						pwIdComboSearch,err = dbHashedPwSearch(urlID)
+						if err==nil {
+							pwIdCombo = pwIdComboSearch
+							hashPw = pwIdCombo.Pw
+						}
+					}
+
+					if err!=nil && strings.Index(err.Error(),"key not found")>=0 {
 						fmt.Printf("# /login (%s) ID not found\n", urlID)
 						fmt.Fprintf(w, "notregistered")
 						return

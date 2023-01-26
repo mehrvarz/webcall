@@ -320,6 +320,57 @@ func dbHashedPwLoop(logFlag bool) {
 	fmt.Printf("dbHashedPwLoop actual deleteCount=%d\n",len(deleteKeyArray))
 }
 
+func dbHashedPwSearch(name string) (PwIdCombo,error) {
+	kv := kvHashedPw.(skv.SKV)
+	db := kv.Db
+	var pwIdComboNewest PwIdCombo
+
+	fmt.Printf("dbHashedPwSearch...\n")
+	skv.DbMutex.Lock()
+	err := db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(dbHashedPwBucket))
+		if b==nil {
+			fmt.Printf("# dbHashedPwSearch tx.Bucket==nil\n")
+		} else {
+			c := b.Cursor()
+			for k, v := c.First(); k != nil; k, v = c.Next() {
+				userID := string(k)
+				if !strings.HasPrefix(userID,name+"&") {
+					continue
+				}
+
+				var pwIdCombo PwIdCombo
+				d := gob.NewDecoder(bytes.NewReader(v))
+				d.Decode(&pwIdCombo)
+
+				if pwIdCombo.Expiration > pwIdComboNewest.Expiration {
+					pwIdComboNewest = pwIdCombo
+
+					hashedPwDisp := pwIdCombo.Pw
+					if len(hashedPwDisp)>30 {
+						hashedPwDisp = hashedPwDisp[0:30]
+					}
+					fmt.Printf("dbHashedPwSearch (%s) (%s) exp=%d\n",
+						userID, hashedPwDisp, pwIdCombo.Expiration)
+				}
+			}
+			fmt.Printf("dbHashedPwSearch loop end, userID=(%s)\n",pwIdComboNewest.CalleeId)
+		}
+		return nil
+	})
+	skv.DbMutex.Unlock()
+
+	if err!=nil {
+		// this is bad
+		fmt.Printf("# dbHashedPwLoop done err=%v\n", err)
+		return pwIdComboNewest,err
+	} else /*if counterDeleted>0*/ {
+		fmt.Printf("dbHashedPwLoop done\n")
+		return pwIdComboNewest,nil
+	}
+}
+
+
 func isOnlyNumericString(s string) bool {
     for _, r := range s {
         if unicode.IsLetter(r) {
