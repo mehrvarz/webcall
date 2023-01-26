@@ -244,7 +244,7 @@ func ticker3hours() {
 			}
 		}
 
-		dbHashedPwLoop()
+		dbHashedPwLoop(false)
 
 		<-threeHoursTicker.C
 		if shutdownStarted.Get() {
@@ -253,7 +253,7 @@ func ticker3hours() {
 	}
 }
 
-func dbHashedPwLoop() {
+func dbHashedPwLoop(logFlag bool) {
 	kv := kvHashedPw.(skv.SKV)
 	db := kv.Db
 	timeNow := time.Now().Unix()
@@ -278,14 +278,14 @@ func dbHashedPwLoop() {
 				d := gob.NewDecoder(bytes.NewReader(v))
 				d.Decode(&pwIdCombo)
 
-				/*
-				hashedPwDisp := pwIdCombo.Pw
-				if len(hashedPwDisp)>30 {
-					hashedPwDisp = hashedPwDisp[0:30]
+				if logFlag {
+					hashedPwDisp := pwIdCombo.Pw
+					if len(hashedPwDisp)>30 {
+						hashedPwDisp = hashedPwDisp[0:30]
+					}
+					fmt.Printf("dbHashedPwLoop %d (%s) (%s) secs=%d\n",
+						count, userID, hashedPwDisp, timeNow - pwIdCombo.Expiration)
 				}
-				fmt.Printf("dbHashedPwLoop %d (%s) (%s) secs=%d\n",
-					count, userID, hashedPwDisp, timeNow - pwIdCombo.Expiration)
-				*/
 
 				if timeNow - pwIdCombo.Expiration >= 0 || pwIdCombo.Pw=="" {
 					fmt.Printf("dbHashedPwLoop del (%s) (%s) secs=%d\n",
