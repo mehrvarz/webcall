@@ -159,6 +159,7 @@ func ticker3hours() {
 						dbMainName,dbBlockedIDs,dbUserKey,err)
 				}
 			}
+// TODO also delete hashedPw?
 		}
 
 		// loop all dbBlockedIDs to delete blocked entries

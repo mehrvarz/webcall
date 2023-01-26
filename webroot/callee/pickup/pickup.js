@@ -47,7 +47,7 @@ window.onload = function() {
 	}
 	if(mid=="") {
 		// no mid -> no mastodonUserID
-		showStatus("Data is outdated<br><br><br>", -1);
+		showStatus("Outdated event<br><br><br>", -1);
 		return;
 	}
 
@@ -115,7 +115,7 @@ function onload2() {
 	console.log('onload2 callerID', callerID);
 
 	if(mastodonUserID=="") {
-		showStatus("Data is outdated<br><br><br>", -1);
+		showStatus("Outdated event<br><br><br>", -1);
 		return;
 	}
 
