@@ -287,6 +287,7 @@ func dbHashedPwLoop(logFlag bool) {
 						count, userID, hashedPwDisp, timeNow - pwIdCombo.Expiration)
 				}
 
+// TODO do not delete none-numeric
 				if timeNow - pwIdCombo.Expiration >= 0 || pwIdCombo.Pw=="" {
 					fmt.Printf("dbHashedPwLoop del (%s) (%s) secs=%d\n",
 						userID, pwIdCombo.Pw, timeNow - pwIdCombo.Expiration)
@@ -362,10 +363,10 @@ func dbHashedPwSearch(name string) (PwIdCombo,error) {
 
 	if err!=nil {
 		// this is bad
-		fmt.Printf("# dbHashedPwLoop done err=%v\n", err)
+		fmt.Printf("# dbHashedPwSearch done userID=(%s) err=%v\n", pwIdComboNewest.CalleeId, err)
 		return pwIdComboNewest,err
 	} else /*if counterDeleted>0*/ {
-		fmt.Printf("dbHashedPwLoop done\n")
+		fmt.Printf("dbHashedPwSearch userID=(%s) done\n",pwIdComboNewest.CalleeId)
 		return pwIdComboNewest,nil
 	}
 }

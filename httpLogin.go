@@ -286,13 +286,15 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 						}
 					}
 
-					if err!=nil && strings.Index(err.Error(),"key not found")>=0 {
-						fmt.Printf("# /login (%s) ID not found\n", urlID)
-						fmt.Fprintf(w, "notregistered")
-						return
+					if err!=nil {
+						if strings.Index(err.Error(),"key not found")>=0 {
+							fmt.Printf("# /login (%s) ID not found\n", urlID)
+							fmt.Fprintf(w, "notregistered")
+							return
+						}
+						// some other error;
+						fmt.Printf("# /login (%s) got formPw, no cookiePw err=%v\n", urlID, err)
 					}
-					// some other error;
-					fmt.Printf("# /login (%s) got formPw, no cookiePw err=%v\n", urlID, err)
 				} else {
 					hashPw = pwIdCombo.Pw
 //fmt.Printf("/login (%s) got formPw, no cookiePw, pwIdCombo.Pw=%s\n", urlID, pwIdCombo.Pw) // TODO remove
@@ -306,7 +308,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 			err := bcrypt.CompareHashAndPassword([]byte(hashPw), []byte(formPw))
 			if err != nil {
-				fmt.Printf("# /login (%s) bcrypt.CompareHashAndPassword err=%v\n", urlID, err)
+				fmt.Printf("# /login (%s) (%s) bcrypt.CompareHashAndPassword err=%v\n", urlID, hashPw, err)
 /*
 				// in case hashPw was not crypted:
 				if hashPw != formPw {
