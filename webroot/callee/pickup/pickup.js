@@ -196,13 +196,13 @@ function onload2() {
 		// we do NOT offer this register link, 
 		// if dbUser.MastodonID of cookieName (cmappedCalleeID) == mastodonUserID
 		if(cookieName=="" || cmappedCalleeID=="" || cmappedCalleeID != mastodonUserID) {
-			dispMsg += "➡️ <a onclick='pwForm(\""+mastodonUserID+"\"); return false;'>Create new: "+mastodonUserID+"</a><br><br>";
+			dispMsg += "➡️ <a onclick='pwForm(\""+mastodonUserID+"\"); return false;'>New: "+mastodonUserID+"</a><br><br>";
 		}
 		choices++;
 	}
 
 	let replaceURL = "/callee/register?mid="+mid;
-	dispMsg += "➡️ <a onclick='exelink(\""+replaceURL+"\"); return false;'>Create new: 11-digit WebCall-ID</a><br><br>";
+	dispMsg += "➡️ <a onclick='exelink(\""+replaceURL+"\"); return false;'>New: 11-digit WebCall-ID</a><br><br>";
 
 	// offer user to enter (via keyboard) a possibly existing calleeID for login
 	// on submit: forward to callee-app (password will be entered there), hand over mid
