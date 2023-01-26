@@ -287,7 +287,10 @@ func dbHashedPwLoop(logFlag bool) {
 						count, userID, hashedPwDisp, timeNow - pwIdCombo.Expiration)
 				}
 
-// TODO do not delete none-numeric
+				// do NOT delete none-numeric
+				if !isOnlyNumericString(userID) {
+					continue
+				}
 				if timeNow - pwIdCombo.Expiration >= 0 || pwIdCombo.Pw=="" {
 					fmt.Printf("dbHashedPwLoop del (%s) (%s) secs=%d\n",
 						userID, pwIdCombo.Pw, timeNow - pwIdCombo.Expiration)
