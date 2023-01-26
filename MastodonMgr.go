@@ -50,6 +50,11 @@ type MidEntry struct {         // key = mid
 	MsgID string
 }
 
+const dbCid = "dbCid"          // a calleeID to msgID map (of invited callees)
+type CidEntry struct {         // key = calleeID
+	MsgID string
+}
+
 
 func NewMastodonMgr() *MastodonMgr {
 	return &MastodonMgr{
@@ -110,6 +115,12 @@ func (mMgr *MastodonMgr) mastodonStart(config string) {
 	err = mMgr.kvMastodon.CreateBucket(dbMid)
 	if err!=nil {
 		fmt.Printf("# error db %s CreateBucket %s err=%v\n",dbMastodon,dbMid,err)
+		mMgr.kvMastodon.Close()
+		return
+	}
+	err = mMgr.kvMastodon.CreateBucket(dbCid)
+	if err!=nil {
+		fmt.Printf("# error db %s CreateBucket %s err=%v\n",dbMastodon,dbCid,err)
 		mMgr.kvMastodon.Close()
 		return
 	}
@@ -289,7 +300,7 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 					if err!=nil {
 						// this is bad / fatal
 						fmt.Printf("# mastodon wc-delete user-key=%s err=%v\n", dbUserKey, err)
-// TODO notify user by msg?
+// TODO send msg telling user that wc-delete failed=
 					} else {
 						fmt.Printf("mastodon wc-delete user-key=%s done\n", dbUserKey)
 					}
@@ -298,7 +309,7 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 					if err!=nil {
 						// this is bad / fatal
 						fmt.Printf("# mastodon wc-delete user-id=%s err=%v\n", mastodonUserId, err)
-// TODO notify user by msg?
+// TODO send msg telling user that wc-delete failed=
 					} else {
 						fmt.Printf("mastodon wc-delete user-id=%s done\n", mastodonUserId)
 // TODO send msg telling user that their webcall account has been deleted
@@ -359,16 +370,10 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 		// this inviter stays active for up to 60min
 		fmt.Printf("mastodon processMessage msgID=%v requesting call confirmation\n",msgID)
 
-//		mMgr.inviterMutex.Lock()
 		inviter := &Inviter{}
-//		err := mMgr.kvMastodon.Get(dbInviter, msgID, inviter)
-//		if err != nil {
-//			// can be ignored
-//		}
 		inviter.MastodonUserId = mastodonUserId
 		inviter.Created = time.Now().Unix()
 		err := mMgr.kvMastodon.Put(dbInviter, msgID, inviter, false)
-//		mMgr.inviterMutex.Unlock()
 		if err != nil {
 			fmt.Printf("# mastodon processMessage msgID=%v failed to store dbInviter\n", msgID)
 			return
@@ -486,6 +491,13 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 				// TODO fatal
 				return
 			}
+
+			err = mMgr.kvMastodon.Put(dbCid, inviter.CalleeID, &CidEntry{inReplyToID}, false)
+			if err!=nil {
+				fmt.Printf("# mastodon processMessage calleeID=%v failed to store dbCid\n", calleeID)
+				// TODO fatal
+				return
+			}
 			return
 		}
 
@@ -547,6 +559,13 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 			}
 			fmt.Printf("mastodon processMessage msgID=%v stored inviter with status.ID=%v\n",
 				inReplyToID, status.ID)
+
+			err = mMgr.kvMastodon.Put(dbCid, inviter.CalleeID, &CidEntry{inReplyToID}, false)
+			if err!=nil {
+				fmt.Printf("# mastodon processMessage calleeID=%v failed to store dbCid\n", calleeID)
+				// TODO fatal
+				return
+			}
 			return
 		}
 
@@ -660,7 +679,13 @@ func (mMgr *MastodonMgr) cleanupMastodonInviter(w io.Writer) {
 			err = kv.Delete(dbInviter, mastodonMsgID)
 			if err!=nil {
 				// this is bad
-				fmt.Printf("# cleanupMastodonInviter delete msg-id=%s err=%v\n", mastodonMsgID, err)
+				fmt.Printf("# cleanupMastodonInviter delete dbInviter msg-id=%s err=%v\n", mastodonMsgID, err)
+			}
+
+			err = kv.Delete(dbCid, inviter.CalleeID)
+			if err!=nil {
+				// this is bad
+				fmt.Printf("# cleanupMastodonInviter delete dbCid CalleeID=%s err=%v\n", inviter.CalleeID, err)
 			}
 		}
 	}
@@ -713,6 +738,13 @@ func (mMgr *MastodonMgr) offerRegisterLink(mastodonUserId string, mastodonCaller
 		return err
 	}
 	fmt.Printf("mastodon processMessage msgID=%v stored inviter with status.ID=%v\n", msgID, status.ID)
+
+	err = mMgr.kvMastodon.Put(dbCid, inviter.CalleeID, &CidEntry{msgID}, false)
+	if err!=nil {
+		fmt.Printf("# mastodon processMessage calleeID=%v failed to store dbCid\n", inviter.CalleeID)
+		// TODO fatal
+		return err
+	}
 	return nil
 }
 
@@ -1211,12 +1243,15 @@ func (mMgr *MastodonMgr) sendCallerLink(mid string, calleeID string, remoteAddr 
 	// finally: tell caller that callee is now online and ready to receive the call
 	// this will only send a msg ("Click to call") to caller, if tmpkeyMastodonCallerMap[mid] NOT empty string
 	// (for instance: after command=="register" there is no caller to send a msg to)
-	mMgr.sendCallerMsgToMid(mid,calleeID)
-
+	err = mMgr.sendCallerMsgToMid(mid,calleeID)
+	if err==nil {
 // callee is now logged-in, but caller has just now received the call-link
 // if we want to send the caller a mid-link (so the calleeID does not get logged), we should not clearMid here
 //	fmt.Printf("sendCallerLink clearMid(%s)\n", mid)
-	mMgr.clearMid(mid,remoteAddr)
+		mMgr.clearMid(mid,remoteAddr)
+
+		mMgr.kvMastodon.Delete(dbCid, calleeID)
+	}
 }
 
 func (mMgr *MastodonMgr) clearMid(mid string, remoteAddr string) {
@@ -1268,7 +1303,6 @@ func (mMgr *MastodonMgr) clearMid(mid string, remoteAddr string) {
 
 	// now we can discard mid
 	fmt.Printf("clearMid(%s) delete midMap\n",mid)
-
 	err = mMgr.kvMastodon.Delete(dbMid, mid)
 	if err!=nil {
 		fmt.Printf("# clearMid(%s) delete midMap err=%v ip=%s\n",mid,err,remoteAddr)
@@ -1276,6 +1310,7 @@ func (mMgr *MastodonMgr) clearMid(mid string, remoteAddr string) {
 }
 
 func (mMgr *MastodonMgr) isCallerWaitingForCallee(calleeID string) (string,string,error) {
+/*
 	// loop dbInviter
 	// search for inviter.CalleeID == calleeID, return key = msgId
 	fmt.Printf("isCallerWaitingForCallee(%s)\n",calleeID)
@@ -1315,6 +1350,32 @@ func (mMgr *MastodonMgr) isCallerWaitingForCallee(calleeID string) (string,strin
 		return mid,msgId,err
 	}
 	fmt.Printf("isCallerWaitingForCallee done userID=(%s) msgId=(%s) mid=%s\n", calleeID, msgId, mid)
+	return mid,msgId,nil
+*/
+	mid := ""
+	msgId := ""
+	var cidEntry = &CidEntry{}
+	err := mMgr.kvMastodon.Get(dbCid, calleeID, cidEntry)
+	if err!=nil {
+		// ignore err if key not found
+		if strings.Index(err.Error(),"key not found")<0 {
+			fmt.Printf("# mastodon processMessage calleeID=%s failed to get dbCid err=%v\n", calleeID, err)
+		}
+	}
+	if cidEntry.MsgID!="" {
+		msgId = cidEntry.MsgID
+		var inviter = &Inviter{}
+		err := mMgr.kvMastodon.Get(dbInviter, msgId, inviter)
+		if err!=nil {
+			// ignore err if key not found
+			if strings.Index(err.Error(),"key not found")<0 {
+				fmt.Printf("# mastodon processMessage msgId=%s failed to get dbInviter err=%v\n", msgId, err)
+			}
+		} else {
+			mid = inviter.MidString
+			fmt.Printf("isCallerWaitingForCallee done userID=(%s) msgId=(%s) mid=%s\n", calleeID, msgId, mid)
+		}
+	}
 	return mid,msgId,nil
 }
 
