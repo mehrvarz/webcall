@@ -697,6 +697,7 @@ function login(retryFlag) {
 			enablePasswordForm();
 		} else if(parts[0]=="") {
 			showStatus("No response from server",-1);
+			goOfflineButton.disabled = true;
 			form.style.display = "none";
 		} else if(parts[0]=="wrongcookie") {
 			window.location.reload(false);
