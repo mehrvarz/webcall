@@ -23,7 +23,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *http.Cookie, hashPw string, remoteAddr string, remoteAddrWithPort string, nocookie bool, startRequestTime time.Time, pwIdCombo PwIdCombo, userAgent string) {
+func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID string, cookie *http.Cookie, hashPw string, remoteAddr string, remoteAddrWithPort string, nocookie bool, startRequestTime time.Time, pwIdCombo PwIdCombo, userAgent string) {
 	clientVersion := ""
 	url_arg_array, ok := r.URL.Query()["ver"]
 	if ok && len(url_arg_array[0]) >= 1 {
@@ -225,8 +225,12 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, cookie *htt
 
 				if offlineReason==0 {
 					// abort this login attempt: old/sameId callee is already/still logged in
-					fmt.Printf("/login (%s) already/still logged in %v by %s <- %s v=%s ua=%s\n",
-						key, time.Since(startRequestTime), calleeIP, remoteAddrWithPort, clientVersion, userAgent)
+// urlID/key was found to be already online
+// note that user may have used a different urlID (now dialID) (say, timurmobi@mastodon.social)
+// which was mapped to the current urlID
+					fmt.Printf("/login (%s) already/still logged in (%s) %v %s<-%s v=%s ua=%s\n",
+						key, dialID, time.Since(startRequestTime),
+						calleeIP, remoteAddrWithPort, clientVersion, userAgent)
 					fmt.Fprintf(w,"fatal")
 					return
 				}

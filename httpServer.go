@@ -464,10 +464,10 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	mappingData,ok := mapping[urlID]
 	mappingMutex.RUnlock()
 	if ok {
-		if logWantedFor("http") {
+		//if logWantedFor("http") {
 			fmt.Printf("httpApi urlID=(%s) mapping->(%s) (assign=%s) urlPath=(%s)\n",
 				urlID, mappingData.CalleeId, mappingData.Assign, urlPath)
-		}
+		//}
 		urlID = mappingData.CalleeId
 	} else {
 		if logWantedFor("http") {
@@ -592,7 +592,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if urlPath=="/login" {
-		httpLogin(w, r, urlID, cookie, hashPw, remoteAddr, remoteAddrWithPort,
+		httpLogin(w, r, urlID, dialID, cookie, hashPw, remoteAddr, remoteAddrWithPort,
 				 nocookie, startRequestTime, pwIdCombo, r.UserAgent())
 		return
 	}
