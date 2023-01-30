@@ -224,14 +224,14 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 				}
 
 				if offlineReason==0 {
-					// abort this login attempt: old/sameId callee is already/still logged in
-// urlID/key was found to be already online
-// note that user may have used a different urlID (now dialID) (say, timurmobi@mastodon.social)
-// which was mapped to the current urlID
+					// abort login attempt: urlID/key is "already/still logged in"
+					// note: user may have used a different urlID (now dialID) (say, timurmobi@mastodon.social)
+					// mapped to the current urlID
+// TODO if urlID!=dialID: let user know dialID
 					fmt.Printf("/login (%s) already/still logged in (%s) %v %s<-%s v=%s ua=%s\n",
 						key, dialID, time.Since(startRequestTime),
 						calleeIP, remoteAddrWithPort, clientVersion, userAgent)
-					fmt.Fprintf(w,"fatal")
+					fmt.Fprintf(w,"fatal|"+urlID)
 					return
 				}
 

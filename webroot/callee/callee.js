@@ -581,7 +581,7 @@ function login(retryFlag) {
 		//console.log("login xhr loginStatus "+loginStatus);
 
 		var parts = loginStatus.split("|");
-		if(parts.length>=1 && parts[0].indexOf("wsid=")>=0) {
+		if(parts[0].indexOf("wsid=")>=0) {
 			wsAddr = parts[0];
 			// we're now a logged-in callee-user
 			gLog('login wsAddr='+wsAddr);
@@ -654,13 +654,13 @@ function login(retryFlag) {
 			mainLink = mainLink.substring(0,idx); //+ "/webcall";
 		}
 		/*
-		if(loginStatus=="noservice") {
+		if(parts[0]=="noservice") {
 			wsSecret = "";
 			showStatus("Service error<br><a href='"+mainLink+"'>Main page</a>",-1);
 			form.style.display = "none";
 		} else
 		*/
-		if(loginStatus=="notregistered") {
+		if(parts[0]=="notregistered") {
 			wsSecret = "";
 			showStatus( "Unknown callee ID "+calleeID+"<br>"+
 						"<a href='/callee/register'>Register a new ID</a>",-1);
@@ -686,25 +686,29 @@ function login(retryFlag) {
 			        document.cookie = "webcallid=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
 				}
 			}
-		} else if(loginStatus=="busy") {
+		} else if(parts[0]=="busy") {
 			showStatus("User is busy",-1);
 			form.style.display = "none";
-		} else if(loginStatus=="error") {
-			// loginStatus "error" = "wrong pw", "pw has less than 6 chars" or "empty pw"
+		} else if(parts[0]=="error") {
+			// parts[0] "error" = "wrong pw", "pw has less than 6 chars" or "empty pw"
 			// offer pw entry again
 			gLog('login error - try again');
 			goOnlineButton.disabled = true;
 			enablePasswordForm();
-		} else if(loginStatus=="") {
+		} else if(parts[0]=="") {
 			showStatus("No response from server",-1);
 			form.style.display = "none";
-		} else if(loginStatus=="wrongcookie") {
+		} else if(parts[0]=="wrongcookie") {
 			window.location.reload(false);
-		} else if(loginStatus=="fatal") {
+		} else if(parts[0]=="fatal") {
 			// loginStatus "fatal" = "already logged in" or "db.GetX err"
 			// no use offering pw entry again at this point
 			goOffline();
-			showStatus("Login failed. Already logged in from another device?",-1);
+			if(parts.length>=2) {
+				showStatus("Login "+parts[1]+" fail. Logged in from another device?",-1);
+			} else {
+				showStatus("Login fail. Logged in from another device?",-1);
+			}
 			form.style.display = "none";
 		} else {
 			goOffline();

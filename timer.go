@@ -160,6 +160,8 @@ func ticker3hours() {
 				}
 			}
 
+// TODO nil?
+			fmt.Printf("ticker3hours kv.Delete dbHashedPwBucket=%s userID=%s\n",dbHashedPwBucket,userID)
 			err = kv.Delete(dbHashedPwBucket, userID)
 			if err!=nil {
 				fmt.Printf("# ticker3hours delete dbHashedPwBucket user-id=%s err=%v\n", userID, err)
