@@ -1352,6 +1352,11 @@ func (mMgr *MastodonMgr) isCallerWaitingForCallee(calleeID string) (string,strin
 	return mid,msgId,nil
 */
 	if mMgr==nil {
+		fmt.Printf("# mastodon isCallerWaitingForCallee abort on mMgr==nil\n")
+		return "","",nil
+	}
+	if mMgr.abortChan==nil {
+		fmt.Printf("# mastodon isCallerWaitingForCallee abort on mMgr.abortChan\n")
 		return "","",nil
 	}
 	var cidEntry = &CidEntry{}
@@ -1359,7 +1364,8 @@ func (mMgr *MastodonMgr) isCallerWaitingForCallee(calleeID string) (string,strin
 	if err!=nil {
 		// ignore err if key not found
 		if strings.Index(err.Error(),"key not found")<0 {
-			fmt.Printf("# mastodon processMessage calleeID=%s failed to get dbCid err=%v\n", calleeID, err)
+			fmt.Printf("# mastodon isCallerWaitingForCallee calleeID=%s failed to get dbCid err=%v\n",
+				calleeID, err)
 		}
 		return "","",err
 	}
