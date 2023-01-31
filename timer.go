@@ -30,6 +30,7 @@ func ticker3hours() {
 	}
 	kv := kvMain.(skv.SKV)
 	db := kv.Db
+	kvpw := kvHashedPw.(skv.SKV)
 
 	// put ticker3hours out of step with other tickers
 	time.Sleep(37 * time.Second)
@@ -161,8 +162,8 @@ func ticker3hours() {
 			}
 
 // TODO nil?
-			fmt.Printf("ticker3hours kv.Delete dbHashedPwBucket=%s userID=%s\n",dbHashedPwBucket,userID)
-			err = kv.Delete(dbHashedPwBucket, userID)
+			fmt.Printf("ticker3hours kvpw.Delete dbHashedPwBucket=%s userID=%s\n",dbHashedPwBucket,userID)
+			err = kvpw.Delete(dbHashedPwBucket, userID)
 			if err!=nil {
 				fmt.Printf("# ticker3hours delete dbHashedPwBucket user-id=%s err=%v\n", userID, err)
 			} else {
