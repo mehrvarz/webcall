@@ -1354,8 +1354,6 @@ func (mMgr *MastodonMgr) isCallerWaitingForCallee(calleeID string) (string,strin
 	if mMgr==nil {
 		return "","",nil
 	}
-	mid := ""
-	msgId := ""
 	var cidEntry = CidEntry{}
 	err := mMgr.kvMastodon.Get(dbCid, calleeID, &cidEntry)
 	if err!=nil {
@@ -1363,7 +1361,11 @@ func (mMgr *MastodonMgr) isCallerWaitingForCallee(calleeID string) (string,strin
 		if strings.Index(err.Error(),"key not found")<0 {
 			fmt.Printf("# mastodon processMessage calleeID=%s failed to get dbCid err=%v\n", calleeID, err)
 		}
+		return "","",err
 	}
+	//fmt.Printf("isCallerWaitingForCallee userID=(%s) cidEntry=(%v) err=%v\n", calleeID, cidEntry, err)
+	mid := ""
+	msgId := ""
 	if cidEntry.MsgID!="" {
 		msgId = cidEntry.MsgID
 		var inviter = &Inviter{}
