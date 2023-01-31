@@ -1351,6 +1351,9 @@ func (mMgr *MastodonMgr) isCallerWaitingForCallee(calleeID string) (string,strin
 	fmt.Printf("isCallerWaitingForCallee done userID=(%s) msgId=(%s) mid=%s\n", calleeID, msgId, mid)
 	return mid,msgId,nil
 */
+	if mMgr==nil {
+		return "","",nil
+	}
 	mid := ""
 	msgId := ""
 	var cidEntry = &CidEntry{}
