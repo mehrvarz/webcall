@@ -1356,8 +1356,8 @@ func (mMgr *MastodonMgr) isCallerWaitingForCallee(calleeID string) (string,strin
 	}
 	mid := ""
 	msgId := ""
-	var cidEntry = &CidEntry{}
-	err := mMgr.kvMastodon.Get(dbCid, calleeID, cidEntry)
+	var cidEntry = CidEntry{}
+	err := mMgr.kvMastodon.Get(dbCid, calleeID, &cidEntry)
 	if err!=nil {
 		// ignore err if key not found
 		if strings.Index(err.Error(),"key not found")<0 {
