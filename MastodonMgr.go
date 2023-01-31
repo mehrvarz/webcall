@@ -1352,11 +1352,13 @@ func (mMgr *MastodonMgr) isCallerWaitingForCallee(calleeID string) (string,strin
 	return mid,msgId,nil
 */
 	if mMgr==nil {
+		// NewMastodonMgr() not executed?
 		fmt.Printf("# mastodon isCallerWaitingForCallee abort on mMgr==nil\n")
 		return "","",nil
 	}
 	if mMgr.abortChan==nil {
-		fmt.Printf("# mastodon isCallerWaitingForCallee abort on mMgr.abortChan\n")
+		// mastodon login failed?
+		fmt.Printf("# mastodon isCallerWaitingForCallee abort on mMgr.abortChan==nil\n")
 		return "","",nil
 	}
 	var cidEntry = &CidEntry{}
@@ -1392,12 +1394,22 @@ func (mMgr *MastodonMgr) isCallerWaitingForCallee(calleeID string) (string,strin
 func (mMgr *MastodonMgr) mastodonStop() {
 	fmt.Printf("mastodonStop\n")
 
+	if mMgr==nil {
+		// NewMastodonMgr() not executed?
+		fmt.Printf("# mastodonStop abort on mMgr==nil\n")
+		return
+	}
 	//fmt.Printf("mMgr.kvMastodon.Close...\n")
 	err := mMgr.kvMastodon.Close()
 	if err!=nil {
-		fmt.Printf("# error dbName %s close err=%v\n",dbMastodon,err)
+		fmt.Printf("# mastodonStop error dbName %s close err=%v\n",dbMastodon,err)
 	}
 
+	if mMgr.abortChan==nil {
+		// mastodon login failed?
+		fmt.Printf("# mastodonStop abort on mMgr.abortChan==nil\n")
+		return
+	}
 	mMgr.abortChan <- true
 	return
 }
