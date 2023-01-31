@@ -92,12 +92,14 @@ func (mMgr *MastodonMgr) mastodonStart(config string) {
 	err := mMgr.c.Authenticate(context.Background(), tokSlice[4], tokSlice[5])
 	if err != nil {
 		fmt.Printf("# mastodonStart fail Authenticate (%v)\n",err)
+// TODO must retry after pause
 		return
 	}
 
 	chl,err := mMgr.c.StreamingUser(context.Background())
 	if err != nil {
 		fmt.Printf("# mastodonStart fail StreamingUser (%v)\n",err)
+// TODO must retry after pause
 		return
 	}
 
@@ -1399,10 +1401,14 @@ func (mMgr *MastodonMgr) mastodonStop() {
 		fmt.Printf("# mastodonStop abort on mMgr==nil\n")
 		return
 	}
-	//fmt.Printf("mMgr.kvMastodon.Close...\n")
-	err := mMgr.kvMastodon.Close()
-	if err!=nil {
-		fmt.Printf("# mastodonStop error dbName %s close err=%v\n",dbMastodon,err)
+	if mMgr.kvMastodon==nil {
+		fmt.Printf("# mastodonStop mMgr.kvMastodon==nil before mMgr.kvMastodon.Close()\n")
+	} else {
+		fmt.Printf("mastodonStop mMgr.kvMastodon.Close...\n")
+		err := mMgr.kvMastodon.Close()
+		if err!=nil {
+			fmt.Printf("# mastodonStop error dbName %s close err=%v\n",dbMastodon,err)
+		}
 	}
 
 	if mMgr.abortChan==nil {
