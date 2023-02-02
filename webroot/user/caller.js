@@ -41,7 +41,6 @@ var wsAddr = "";
 var wsAddrTime;
 // in caller.js 'calleeID' is the id being called
 // note that the one making the call may also be a callee (is awaiting calls in parallel and has a cookie!)
-var calleeID = "";    // id of the party being called
 var callerId = "";    // this is the callers callback ID (from urlArg, cookie, or idSelect)
 var callerIdArg = ""  // this is the callers callback ID (from urlArg only)
 var cookieName = "";  // this is the callers nickname

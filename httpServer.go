@@ -704,6 +704,13 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+	if strings.HasPrefix(urlPath,"/storealtid/") {
+		if mastodonMgr != nil {
+			mastodonMgr.httpStoreAltID(w, r, urlPath, remoteAddr, startRequestTime)
+		}
+		return
+	}
+
 	if strings.HasPrefix(urlPath,"/sendCallerLink") {
 		// arg id=... becomes urlID
 		if mastodonMgr != nil {

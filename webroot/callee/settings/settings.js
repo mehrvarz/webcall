@@ -96,10 +96,13 @@ function prepareSettings(xhrresponse) {
 		}
 		if(typeof serverSettings.acceptTootCalls!=="undefined") {
 			if(!gentle) console.log('serverSettings.acceptTootCalls',serverSettings.acceptTootCalls);
-			if(serverSettings.acceptTootCalls=="true") {
-				document.getElementById("acceptTootCalls").checked = true;
-			} else {
-				document.getElementById("acceptTootCalls").checked = false;
+			let acceptTootCallsElement = document.getElementById("acceptTootCalls")
+			if(acceptTootCallsElement) {
+				if(serverSettings.acceptTootCalls=="true") {
+					acceptTootCallsElement.checked = true;
+				} else {
+					acceptTootCallsElement.checked = false;
+				}
 			}
 		}
 	}

@@ -59,8 +59,8 @@ var callerID = "";
 var callerName = "";
 var lastResult;
 var lastUserActionDate = 0;
-var calleeID = "";
 var calleeName = "";
+var mastodonID = "";
 var wsSecret = "";
 var audioContext = null;
 var audioStreamDest = null;
@@ -85,6 +85,7 @@ var fileReceiveAbort=false;
 //var loginResponse=false;
 var minNewsDate=0;
 var mid = "";
+var altIdArray = [];
 
 window.onload = function() {
 	console.log("callee.js onload...");
@@ -113,6 +114,7 @@ window.onload = function() {
 
 	if(calleeID=="") {
 		// if callee was started without a calleeID, reload with calleeID from cookie
+// TODO this sometimes does not work
 		if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
 			let cookieName = document.cookie.substring(10);
 			let idxAmpasent = cookieName.indexOf("&");
@@ -121,6 +123,7 @@ window.onload = function() {
 			}
 			cookieName = cleanStringParameter(cookieName,true);
 			if(cookieName!="") {
+				console.log("callee.js redirect to cookieName");
 				window.location.replace("/callee/"+cookieName);
 				return;
 			}
@@ -768,6 +771,7 @@ function sendInit(comment) {
 
 function getSettings() {
 	// main use is to get the calleeName (nickname)
+// TODO why do we add arg id?
 	let api = apiPath+"/getsettings?id="+calleeID;
 	gLog('getsettings api '+api);
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
@@ -784,12 +788,94 @@ function getSettings() {
 				if(typeof serverSettings.nickname!=="undefined") {
 					calleeName = serverSettings.nickname;
 					gLog("getsettings calleeName "+calleeName);
+					mastodonID = serverSettings.mastodonID;
 				}
 			}
 		}
+
+		// fetch mappings
+		api = apiPath+"/getmapping?id="+calleeID;
+		if(!gentle) console.log('request getmapping api',api);
+		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+			let altIDs = xhr.responseText;
+			altIdArray = [];
+
+			// parse altIDs, format: id,true,assign|id,true,assign|...
+			let tok = altIDs.split("|");
+			let count = tok.length;
+			for(var i=0; i<tok.length; i++) {
+				//console.log("tok["+i+"]="+tok[i]);
+				if(tok[i]!="") {
+					let tok2 = tok[i].split(",");
+					let id = tok2[0].trim();
+					if(id.indexOf(" ")>=0) {
+						id = id.replace(" ","");
+					}
+					if(id.length>11) {
+						id = id.substring(0,11);
+					}
+					altIdArray.push(id);
+					//console.log("getsettings altIdArray.length",altIdArray.length);
+				}
+			}
+			getSettingDone();
+
+		}, function(errString,errcode) {
+			console.log("# getsettings xhr error "+errString);
+			getSettingDone();
+		});
+
 	}, function(errString,errcode) {
 		console.log("# getsettings xhr error "+errString);
+		getSettingDone();
 	});
+}
+
+function getSettingDone() {
+	// "You receive calls made by this link"
+	let calleeLink = window.location.href;
+	let userLink = "";
+	//console.log("showOnlineReadyMsg calleeLink="+calleeLink);
+	if(calleeLink.indexOf("callee/")>0) {
+		userLink = calleeLink.replace("callee/","user/");
+		//console.log("showOnlineReadyMsg a userLink="+userLink);
+	} else if(calleeLink.indexOf("calleelog/")>0) {
+		userLink = calleeLink.replace("calleelog/","user/");
+		//console.log("showOnlineReadyMsg b userLink="+userLink);
+	}
+	let idxParameter = userLink.indexOf("?");
+	if(idxParameter>=0) {
+		userLink = userLink.substring(0,idxParameter);
+	}
+	idxParameter = userLink.indexOf("#");
+	if(idxParameter>=0) {
+		userLink = userLink.substring(0,idxParameter);
+	}
+
+//tmtmtm
+	let links = "";
+	links += "<div style='line-height:1.6em'>";
+
+	links += "<div class='callListTitle'>You receive calls made by these links:</div>";
+
+	links += "<a target='_blank' href='"+userLink+"'>"+userLink+"</a><br>";
+
+	if(mastodonID!="") {
+		let userLinkAlt = userLink.replace(calleeID,mastodonID);
+		links += "<a target='_blank' href='"+userLinkAlt+"'>"+userLinkAlt+"</a><br>";
+	}
+
+	// add active mapping entries
+	console.log("showOnlineReadyMsg altIdArray.length",altIdArray.length);
+	if(altIdArray.length>0) {
+		for(let i = 0; i < altIdArray.length; i++) {
+			let userLinkMap = userLink.replace(calleeID,altIdArray[i]);
+			links += "<a target='_blank' href='"+userLinkMap+"'>"+userLinkMap+"</a><br>";
+		}
+	}
+	links += "</div>";
+
+	ownlinkElement.innerHTML = links;
 }
 
 function offlineAction() {
@@ -927,31 +1013,6 @@ function showOnlineReadyMsg() {
 	if(isHiddenCheckbox.checked) {
 		showStatus("Your online status is hidden.<br>",2500);
 	}
-
-	// "You receive calls made by this link"
-	let calleeLink = window.location.href;
-	let userLink = "";
-	//console.log("showOnlineReadyMsg calleeLink="+calleeLink);
-	if(calleeLink.indexOf("callee/")>0) {
-		userLink = calleeLink.replace("callee/","user/");
-		//console.log("showOnlineReadyMsg a userLink="+userLink);
-	} else if(calleeLink.indexOf("calleelog/")>0) {
-		userLink = calleeLink.replace("calleelog/","user/");
-		//console.log("showOnlineReadyMsg b userLink="+userLink);
-	}
-	let idxParameter = userLink.indexOf("?");
-	if(idxParameter>=0) {
-		userLink = userLink.substring(0,idxParameter);
-	}
-	idxParameter = userLink.indexOf("#");
-	if(idxParameter>=0) {
-		userLink = userLink.substring(0,idxParameter);
-	}
-	var userLinkHref = userLink;
-
-	let msg2 = "You receive calls made by this link:<br>"+
-		"<a target='_blank' href='"+userLinkHref+"'>"+userLink+"</a><br>";
-	ownlinkElement.innerHTML = msg2;
 }
 
 let tryingToOpenWebSocket = false;
@@ -1021,14 +1082,7 @@ console.log("callee beforeunload: enable goonline");
 	dialsoundslabel.style.display = "block";
 	menuSettingsElement.style.display = "block";
 	iconContactsElement.style.display = "block";
-
-//	if(typeof Android !== "undefined" && Android !== null) {
-//		if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
-//			if(Android.getVersionName()>="1.1.0") {
-				idMappingElement.style.display = "block";
-//			}
-//		}
-//	}
+	idMappingElement.style.display = "block";
 	goOfflineButton.disabled = false;
 }
 
@@ -1549,7 +1603,13 @@ function showMissedCalls() {
 				let callerID = missedCallsSlice[i].CallerID;
 
 				let callerName = missedCallsSlice[i].CallerName;
-				if(callerName=="") callerName="unknown";
+				if(callerName=="") {
+					if(callerID==calleeID) {
+						callerName="self";
+					} else {
+						callerName="unknown";
+					}
+				}
 				// TODO if callerName=="" || callerName=="unknown" -> check contacts?
 
 				let callerNameMarkup = callerName;
@@ -2641,62 +2701,6 @@ function openSettings() {
 	// when iframe closes, client.js:iframeWindowClose() will call getSettings()
 }
 
-function clearcookie() {
-	console.log("clearcookie (id=%s)",calleeID);
-	//history.back();
-	// wait for pulldown menu to close
-	setTimeout(function() {
-		// ask yes/no
-		//console.log("clearcookie cont (id=%s)",calleeID);
-		let yesNoInner = "<div style='position:absolute; z-index:110; background:#45dd; color:#fff; padding:20px 20px; line-height:1.6em; border-radius:3px; cursor:pointer; min-width:240px; top:40px; left:50%; transform:translate(-50%,0%);'><div style='font-weight:600'>Clear cookie?</div><br>"+
-		"You will be disconnected.<br>You will need to enter your password to reconnect.<br><br>"+
-		"<a onclick='clearcookie2();history.back();'>Clear cookie!</a> &nbsp; &nbsp; <a onclick='history.back();'>Cancel</a></div>";
-		menuDialogOpen(dynDialog,false,yesNoInner);
-	},300);
-}
-
-function clearcookie2() {
-	console.log("clearcookie2 (id=%s)",calleeID);
-	containerElement.style.filter = "blur(0.8px) brightness(60%)";
-	goOffline();
-
-	if(iframeWindowOpenFlag /*|| menuDialogOpenElement*/) {
-		gLog("clearcookie2 history.back");
-		history.back();
-	}
-
-	document.cookie = "webcallid=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
-/*
-	setTimeout(function() {
-		// ask server to delete cookie
-		let api = apiPath+"/logout?id="+calleeID;
-		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-			let logoutStatus = xhr.responseText;
-			gLog('clearcookie logoutStatus (%s)',logoutStatus);
-		}, function(errString,err) {
-			console.log("# clearcookie xhr error "+errString);
-		});
-
-//		if(pushRegistration) {
-//			gLog('exit delete serviceWorker');
-//			pushRegistration.unregister();
-//			pushRegistration = null;
-//		}
-*/
-		setTimeout(function() {
-			if(typeof Android !== "undefined" && Android !== null &&
-					typeof Android.gotoBasepage !== "undefined" && Android.gotoBasepage !== null) {
-				Android.gotoBasepage();
-			} else {
-				gLog("exit reload");
-				window.location.reload(false);
-			}
-		},1000);
-/*
-	},1000);
-*/
-}
-
 function clearcache() {
 	// will only be enabled if Android.getVersionName() >= "1.0.8"
 	if(typeof Android !== "undefined" && Android !== null) {
@@ -2754,4 +2758,41 @@ function wakeShowOnline() {
 	console.log("wakeShowOnline done");
 }
 */
+
+function clearcookie() {
+	console.log("clearcookie (id=%s)",calleeID);
+	//history.back();
+	// wait for pulldown menu to close
+	setTimeout(function() {
+		// ask yes/no
+		//console.log("clearcookie cont (id=%s)",calleeID);
+		let yesNoInner = "<div style='position:absolute; z-index:110; background:#45dd; color:#fff; padding:20px 20px; line-height:1.6em; border-radius:3px; cursor:pointer; min-width:240px; top:40px; left:50%; transform:translate(-50%,0%);'><div style='font-weight:600'>Clear cookie?</div><br>"+
+		"You will be disconnected.<br>You will need to enter your password to reconnect.<br><br>"+
+		"<a onclick='clearcookie2();history.back();'>Clear cookie!</a> &nbsp; &nbsp; <a onclick='history.back();'>Cancel</a></div>";
+		menuDialogOpen(dynDialog,false,yesNoInner);
+	},300);
+}
+
+function clearcookie2() {
+	console.log("clearcookie2 (id=%s)",calleeID);
+	containerElement.style.filter = "blur(0.8px) brightness(60%)";
+	goOffline();
+
+	if(iframeWindowOpenFlag /*|| menuDialogOpenElement*/) {
+		gLog("clearcookie2 history.back");
+		history.back();
+	}
+
+	document.cookie = "webcallid=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+
+	setTimeout(function() {
+		if(typeof Android !== "undefined" && Android !== null &&
+				typeof Android.gotoBasepage !== "undefined" && Android.gotoBasepage !== null) {
+			Android.gotoBasepage();
+		} else {
+			gLog("exit reload");
+			window.location.reload(false);
+		}
+	},1000);
+}
 

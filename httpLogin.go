@@ -38,10 +38,22 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 
 //	if logWantedFor("loginex") {
 	if logWantedFor("login") {
-		fmt.Printf("/login (%s) mid=%s ip=%s rt=%v\n",
-			urlID, mid, remoteAddrWithPort, time.Since(startRequestTime)) // rt=4.393µs
+		if dialID!="" && dialID!=urlID {
+			fmt.Printf("/login (%s) (%s) mid=%s ip=%s rt=%v\n",
+				urlID, dialID, mid, remoteAddrWithPort, time.Since(startRequestTime)) // rt=4.393µs
+		} else {
+			fmt.Printf("/login (%s) mid=%s ip=%s rt=%v\n",
+				urlID, mid, remoteAddrWithPort, time.Since(startRequestTime)) // rt=4.393µs
+		}
 	}
 
+	if dialID!="" && dialID!=urlID {
+		// a callee MUST use it's main-id to login (not alt-id or mapping-id's)
+		fmt.Printf("/login (%s) dialID=(%s) deny\n", urlID, dialID)
+		time.Sleep(1000 * time.Millisecond)
+		fmt.Fprintf(w, "error")
+		return
+	}
 
 	// answie and talkback can only log in from localhost
 	if strings.HasPrefix(urlID, "answie") || strings.HasPrefix(urlID, "talkback") {

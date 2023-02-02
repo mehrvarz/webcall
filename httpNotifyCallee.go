@@ -191,7 +191,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 			} else {
 				// send a msg to dbUser.MastodonID:
 				sendmsg :=	"@"+dbUser.MastodonID+" "+msg
-				err := mastodonMgr.postCallerMsg(sendmsg)
+				err := mastodonMgr.postMsg(sendmsg)
 				if err!=nil {
 					// TODO log
 //					fmt.Println("# PostStatus err=",err)

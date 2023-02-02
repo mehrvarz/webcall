@@ -33,6 +33,7 @@ const progressRcvElement = document.getElementById('progressRcv');
 const progressRcvLabel = document.getElementById('progressRcvLabel');
 const progressRcvBar = document.getElementById('fileProgressRcv');
 
+var calleeID = "";
 var videoEnabled = false;
 var localVideoMonitorPaused = false;
 var hashcounter=0;
@@ -1739,5 +1740,13 @@ function cleanStringParameter(str, eliminateSpaces, comment) {
 		//console.log("cleanStringParameter ret2="+ret);
 	}
 	return ret;
+}
+
+function clearcookie() {
+	console.log("clearcookie (id=%s)",calleeID);
+	document.cookie = "webcallid=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+	setTimeout(function() {
+		window.location.reload(false);
+	},1000);
 }
 
