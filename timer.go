@@ -15,6 +15,7 @@ import (
 	"os/exec"
 	"sync"
 	"sync/atomic"
+	"net/http"
 	"github.com/mehrvarz/webcall/skv"
 	"github.com/mehrvarz/webcall/twitter"
 	"gopkg.in/ini.v1"
@@ -268,7 +269,7 @@ func ticker3hours() {
 			}
 		}
 
-		dbHashedPwLoop(false)
+		dbHashedPwLoop(nil)
 
 		<-threeHoursTicker.C
 		if shutdownStarted.Get() {
@@ -277,7 +278,7 @@ func ticker3hours() {
 	}
 }
 
-func dbHashedPwLoop(logFlag bool) {
+func dbHashedPwLoop(w http.ResponseWriter) {
 	kv := kvHashedPw.(skv.SKV)
 	db := kv.Db
 	timeNowUnix := time.Now().Unix()
@@ -289,12 +290,15 @@ func dbHashedPwLoop(logFlag bool) {
 		b := tx.Bucket([]byte(dbHashedPwBucket))
 		if b==nil {
 			fmt.Printf("# dbHashedPwLoop tx.Bucket==nil\n")
+			if w!=nil {
+				fmt.Fprintf(w,"# dbHashedPwLoop tx.Bucket==nil\n")
+			}
 		} else {
 			c := b.Cursor()
 			for k, v := c.First(); k != nil; k, v = c.Next() {
 				userID := string(k)
-				if logFlag {
-					fmt.Printf("dbHashedPwLoop userID=%s ...\n", userID)
+				if w!=nil {
+					fmt.Fprintf(w,"dbHashedPwLoop userID=%s ...\n", userID)
 				}
 				if strings.HasPrefix(userID,"answie") || strings.HasPrefix(userID,"talkback") {
 					continue
@@ -305,22 +309,19 @@ func dbHashedPwLoop(logFlag bool) {
 				d := gob.NewDecoder(bytes.NewReader(v))
 				d.Decode(&pwIdCombo)
 
-				if logFlag {
+				if w!=nil {
 					hashedPwDisp := pwIdCombo.Pw
 					if len(hashedPwDisp)>30 {
 						hashedPwDisp = hashedPwDisp[0:30]
 					}
-					fmt.Printf("dbHashedPwLoop %d (%s) (%s) secs=%d\n",
+					fmt.Fprintf(w,"dbHashedPwLoop %d (%s) (%s) secs=%d\n",
 						count, userID, hashedPwDisp, timeNowUnix - pwIdCombo.Expiration)
-				}
-				if(count%100==0) {
-					time.Sleep(1 * time.Second)
 				}
 
 				// do NOT delete none-numeric
 				if !isOnlyNumericString(userID) {
-					if logFlag {
-						fmt.Printf("dbHashedPwLoop !isOnlyNumericString userID=%s\n", userID)
+					if w!=nil {
+						fmt.Fprintf(w,"dbHashedPwLoop !isOnlyNumericString userID=%s\n", userID)
 					}
 					continue
 				}
@@ -328,10 +329,17 @@ func dbHashedPwLoop(logFlag bool) {
 				if timeNowUnix - pwIdCombo.Expiration >= 0 || pwIdCombo.Pw=="" {
 					fmt.Printf("dbHashedPwLoop del (%s) (%s) secs=%d\n",
 						userID, pwIdCombo.Pw, timeNowUnix - pwIdCombo.Expiration)
+					if w!=nil {
+						fmt.Fprintf(w,"dbHashedPwLoop del (%s) (%s) secs=%d\n",
+							userID, pwIdCombo.Pw, timeNowUnix - pwIdCombo.Expiration)
+					}
 					deleteKeyArray = append(deleteKeyArray,userID)
 				}
 			}
 			fmt.Printf("dbHashedPwLoop loop end, count=%d del=%d\n",count,len(deleteKeyArray))
+			if w!=nil {
+				fmt.Fprintf(w,"dbHashedPwLoop loop end, count=%d del=%d\n",count,len(deleteKeyArray))
+			}
 		}
 		return nil
 	})
@@ -340,11 +348,20 @@ func dbHashedPwLoop(logFlag bool) {
 	if err!=nil {
 		// this is bad
 		fmt.Printf("# dbHashedPwLoop done err=%v\n", err)
+		if w!=nil {
+			fmt.Fprintf(w,"# dbHashedPwLoop done err=%v\n", err)
+		}
 	} else /*if counterDeleted>0*/ {
 		fmt.Printf("dbHashedPwLoop done\n")
+		if w!=nil {
+			fmt.Fprintf(w,"dbHashedPwLoop done\n")
+		}
 	}
 
 	fmt.Printf("dbHashedPwLoop count=%d deleteCount=%d\n",count,len(deleteKeyArray))
+	if w!=nil {
+		fmt.Fprintf(w,"dbHashedPwLoop count=%d deleteCount=%d\n",count,len(deleteKeyArray))
+	}
 	deleteCount := 0
 	for _,key := range deleteKeyArray {
 		err = kv.Delete(dbHashedPwBucket, key)
@@ -356,6 +373,9 @@ func dbHashedPwLoop(logFlag bool) {
 		}
 	}
 	fmt.Printf("dbHashedPwLoop actual deleteCount=%d\n",len(deleteKeyArray))
+	if w!=nil {
+		fmt.Fprintf(w,"dbHashedPwLoop actual deleteCount=%d\n",len(deleteKeyArray))
+	}
 }
 
 func dbHashedPwSearch(name string) (PwIdCombo,error) {

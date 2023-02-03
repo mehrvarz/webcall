@@ -341,13 +341,14 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 	}
 
 	if urlPath=="/dumpHashedPw" {
-		dbHashedPwLoop(true)
+		dbHashedPwLoop(w)
 		return true
 	}
 
 	return false
 }
 
+// see adminLogPath1 + adminLogPath2 in httpServer.go
 var	adminlogBusy atombool.AtomBool
 var t *tail.Tail
 
