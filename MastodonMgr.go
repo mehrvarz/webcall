@@ -212,7 +212,7 @@ loop:
 				// TODO not sure what request is meant (probably from mattn/go-mastodon)
 				//      is this a mastodon.social issue? yes, mastodontech.de works
 				// TODO maybe after 1 (or X) such err 404 messages we should exit
-				if strings.Index(err.Error(),"404 Not Found")>=0 {
+				if strings.Index(event.Error(),"404 Not Found")>=0 {
 					time.Sleep(2 * time.Second)
 				}
 
