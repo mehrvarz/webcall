@@ -92,7 +92,7 @@ func (mMgr *MastodonMgr) mastodonStart(config string) {
 	err := mMgr.c.Authenticate(context.Background(), tokSlice[4], tokSlice[5])
 	if err != nil {
 		fmt.Printf("# mastodonStart fail Authenticate (%v)\n",err)
-// TODO must retry after pause
+// TODO must retry after pause?
 		return
 	}
 	fmt.Printf("mastodonStart authenticated\n")
@@ -100,7 +100,7 @@ func (mMgr *MastodonMgr) mastodonStart(config string) {
 	chl,err := mMgr.c.StreamingUser(context.Background())
 	if err != nil {
 		fmt.Printf("# mastodonStart fail StreamingUser (%v)\n",err)
-// TODO must retry after pause
+// TODO must retry after pause?
 		return
 	}
 	fmt.Printf("mastodonStart got StreamingUser\n")

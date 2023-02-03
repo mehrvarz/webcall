@@ -130,6 +130,9 @@ func ticker3hours() {
 			//	fmt.Printf("ticker3hours delete outdated key=%s userID=%s\n", key, userID)
 			//}
 
+			// key = as stored in deleteKeyArray
+			// userID = key without the trailing '_...' (without dbEntry.StartTime)
+
 			// delete/outdate mapped tmpIDs of outdated userID
 			errcode,altIDs := getMapping(userID,"")
 			if errcode==0 && altIDs!="" {
@@ -161,11 +164,22 @@ func ticker3hours() {
 				}
 			}
 
-// TODO nil?
+			// explanation on deletion of outdated elements in dbHashedPwBucket:
+			//   for as long as kvHashedPw keys have '&nnnnnnnnnnn' attached,
+			//   we will get 'skv key not found' errors here
+			// we can ignore these errors bc we also run dbHashedPwLoop() which currently takes care of deleting
+			// when these keys are gone (by july 2023) we will not anymore receive 'key not found' errors here
+			// and then
+			// - we can remove the deleting-code from dbHashedPwLoop()
+			// - we can stop ignoring any errors here
+			// fyi:
+			//   dbUserBucket entries are deleted in ticker3hours()   if timeNowUnix - lastLoginTime > 6 month
+			//   kvHashedPw   entries are deleted in dbHashedPwLoop() if timeNowUnix - pwIdCombo.Expiration >= 0
 			fmt.Printf("ticker3hours kvpw.Delete dbHashedPwBucket=%s userID=%s\n",dbHashedPwBucket,userID)
 			err = kvpw.Delete(dbHashedPwBucket, userID)
 			if err!=nil {
-				fmt.Printf("# ticker3hours delete dbHashedPwBucket user-id=%s err=%v\n", userID, err)
+				//fmt.Printf("# ticker3hours delete dbHashedPwBucket user-id=%s err=%v\n", userID, err)
+				// can be ignored for now (see above)
 			} else {
 				// all is well
 			}
@@ -266,7 +280,7 @@ func ticker3hours() {
 func dbHashedPwLoop(logFlag bool) {
 	kv := kvHashedPw.(skv.SKV)
 	db := kv.Db
-	timeNow := time.Now().Unix()
+	timeNowUnix := time.Now().Unix()
 	var deleteKeyArray []string  // for deleting
 	count := 0
 
@@ -294,16 +308,16 @@ func dbHashedPwLoop(logFlag bool) {
 						hashedPwDisp = hashedPwDisp[0:30]
 					}
 					fmt.Printf("dbHashedPwLoop %d (%s) (%s) secs=%d\n",
-						count, userID, hashedPwDisp, timeNow - pwIdCombo.Expiration)
+						count, userID, hashedPwDisp, timeNowUnix - pwIdCombo.Expiration)
 				}
 
 				// do NOT delete none-numeric
 				if !isOnlyNumericString(userID) {
 					continue
 				}
-				if timeNow - pwIdCombo.Expiration >= 0 || pwIdCombo.Pw=="" {
+				if timeNowUnix - pwIdCombo.Expiration >= 0 || pwIdCombo.Pw=="" {
 					fmt.Printf("dbHashedPwLoop del (%s) (%s) secs=%d\n",
-						userID, pwIdCombo.Pw, timeNow - pwIdCombo.Expiration)
+						userID, pwIdCombo.Pw, timeNowUnix - pwIdCombo.Expiration)
 					deleteKeyArray = append(deleteKeyArray,userID)
 				}
 			}
