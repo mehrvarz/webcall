@@ -297,9 +297,9 @@ func dbHashedPwLoop(w http.ResponseWriter) {
 			c := b.Cursor()
 			for k, v := c.First(); k != nil; k, v = c.Next() {
 				userID := string(k)
-				if w!=nil {
-					fmt.Fprintf(w,"dbHashedPwLoop userID=%s ...\n", userID)
-				}
+//				if w!=nil {
+//					fmt.Fprintf(w,"dbHashedPwLoop userID=%s ...\n", userID)
+//				}
 				if strings.HasPrefix(userID,"answie") || strings.HasPrefix(userID,"talkback") {
 					continue
 				}
@@ -320,9 +320,9 @@ func dbHashedPwLoop(w http.ResponseWriter) {
 
 				// do NOT delete none-numeric
 				if !isOnlyNumericString(userID) {
-					if w!=nil {
-						fmt.Fprintf(w,"dbHashedPwLoop !isOnlyNumericString userID=%s\n", userID)
-					}
+//					if w!=nil {
+//						fmt.Fprintf(w,"dbHashedPwLoop !isOnlyNumericString userID=%s\n", userID)
+//					}
 					continue
 				}
 				// NOTE userID ("19308086837&39426508334") is seen as OnlyNumeric
