@@ -293,6 +293,9 @@ func dbHashedPwLoop(logFlag bool) {
 			c := b.Cursor()
 			for k, v := c.First(); k != nil; k, v = c.Next() {
 				userID := string(k)
+				if logFlag {
+					fmt.Printf("dbHashedPwLoop userID=%s ...\n", userID)
+				}
 				if strings.HasPrefix(userID,"answie") || strings.HasPrefix(userID,"talkback") {
 					continue
 				}
@@ -313,8 +316,12 @@ func dbHashedPwLoop(logFlag bool) {
 
 				// do NOT delete none-numeric
 				if !isOnlyNumericString(userID) {
+					if logFlag {
+						fmt.Printf("dbHashedPwLoop !isOnlyNumericString userID=%s\n", userID)
+					}
 					continue
 				}
+				// NOTE userID ("19308086837&39426508334") is seen as OnlyNumeric
 				if timeNowUnix - pwIdCombo.Expiration >= 0 || pwIdCombo.Pw=="" {
 					fmt.Printf("dbHashedPwLoop del (%s) (%s) secs=%d\n",
 						userID, pwIdCombo.Pw, timeNowUnix - pwIdCombo.Expiration)
@@ -388,11 +395,17 @@ func dbHashedPwSearch(name string) (PwIdCombo,error) {
 	})
 	skv.DbMutex.Unlock()
 
+// TODO (in principle):
+// if pwIdComboNewest.CalleeId!="" and if we have found more than 1 entry
+// then all the older entries (all entries other than pwIdComboNewest) can be deleted
+
 	if err!=nil {
 		// this is bad
 		fmt.Printf("# dbHashedPwSearch done userID=(%s) err=%v\n", pwIdComboNewest.CalleeId, err)
 		return pwIdComboNewest,err
-	} else /*if counterDeleted>0*/ {
+	}
+
+	/*if counterDeleted>0*/ {
 		fmt.Printf("dbHashedPwSearch userID=(%s) done\n",pwIdComboNewest.CalleeId)
 		return pwIdComboNewest,nil
 	}

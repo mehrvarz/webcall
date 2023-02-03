@@ -295,8 +295,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 /************* START ***************/
 					var pwIdComboSearch PwIdCombo
 					if strings.Index(err.Error(),"key not found")>=0 {
-						// look for the newest
-						// TODO expensive operation
+						// search the newest
+						// NOTE: expensive operation
 						pwIdComboSearch,err = dbHashedPwSearch(urlID)
 						if err==nil {
 							pwIdCombo = pwIdComboSearch
@@ -316,16 +316,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 									hashPw = pwIdCombo.Pw
 								}
 							} else {
-/*
-								// always after dbHashedPwSearch(): create a new cookie
-								err,cookieValue := createCookie(w, urlID, "", &pwIdCombo, hashPw)
-								if err != nil {
-									fmt.Printf("# /login (%s) persist PwIdCombo bucket=%s cookie=%s err=%v\n",
-										urlID, dbHashedPwBucket, cookieValue, err)
-									fmt.Fprintf(w, "noservice")
-									return
-								}
-*/
 								// always after dbHashedPwSearch(): remove need for another dbHashedPwSearch()
 								pwIdCombo.CalleeId = urlID
 								pwIdCombo.Created = time.Now().Unix()
@@ -334,6 +324,9 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 								skipConfirm := true
 								kvHashedPw.Put(dbHashedPwBucket, urlID, pwIdCombo, skipConfirm)
 							}
+							// dbHashedPwBucket now contains a new entry with urlID as key
+							// but without "&nnnnnnnnnnn"
+							// all oder entries (urlkey)+"&nnnnnnnnnnn" could now be deleted
 						}
 					}
 /************* END ***************/
