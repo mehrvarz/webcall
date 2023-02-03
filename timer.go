@@ -313,6 +313,9 @@ func dbHashedPwLoop(logFlag bool) {
 					fmt.Printf("dbHashedPwLoop %d (%s) (%s) secs=%d\n",
 						count, userID, hashedPwDisp, timeNowUnix - pwIdCombo.Expiration)
 				}
+				if(count%100==0) {
+					time.Sleep(1 * time.Second)
+				}
 
 				// do NOT delete none-numeric
 				if !isOnlyNumericString(userID) {
