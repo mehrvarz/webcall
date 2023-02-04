@@ -137,6 +137,14 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		} else {
 			printFunc(w,"/deluserid deleted user key=%v\n", userKey)
 		}
+
+		// delete hashedPW
+		err = kvHashedPw.(skv.SKV).Delete(dbHashedPwBucket, urlID)
+		if err!=nil {
+			fmt.Printf("# /deluserid delete dbHashedPwBucket urlID=%s err=%v\n", urlID, err)
+		} else {
+			// all is well
+		}
 		return true
 	}
 
@@ -170,6 +178,8 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		} else {
 			printFunc(w,"/delregisteredid deleted id=%s\n", urlID)
 		}
+
+		// TODO delete hashedPW ?
 		return true
 	}
 

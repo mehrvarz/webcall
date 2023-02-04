@@ -232,12 +232,12 @@ function submitPw(ID,type) {
 	}
 
 	if(type==0) {
-		// let user register ID as calleeID
+		// let user register mastodon-ID as calleeID
 		// use the entered password (and the mastodon user-id via mid) to register a new calleeID
 		// for this we ajax(post) /registermid/(mid)
 		// /registermid will do: calleeIdOnMastodon = tmpkeyMastodonCalleeMap[mid]
 		// and it will register calleeIdOnMastodon with valuePw
-		let api = apiPath+"/registermid/"+mid;
+		let api = apiPath+"/registermid/"+mid; // -> httpRegisterMid()
 		if(typeof Android !== "undefined" && Android !== null) {
 			if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
 				api = api + "?ver="+Android.getVersionName();
@@ -254,14 +254,11 @@ function submitPw(ID,type) {
 			if(xhr.responseText=="OK") {
 				// register success; we now offer the callee-link to the user
 				calleeLink = window.location.href;
-				// calleeLink may have ?i=906735 attached: cut it off
-				let idxArg = calleeLink.indexOf("?");
-				if(idxArg>=0) calleeLink = calleeLink.substring(0,idxArg);
-				//if(!gentle) console.log('calleeLink1='+calleeLink);
-				calleeLink = calleeLink.replace("pickup/","");
-				//if(!gentle) console.log('calleeLink2='+calleeLink+" ID="+ID);
-				calleeLink += ID;
-
+				let idxCallee = calleeLink.indexOf("/callee/");
+				if(idxCallee<0) {
+					// very bad: abort
+				}
+				calleeLink = calleeLink.substring(0,idxCallee) + "/callee/"+ID;
 				calleeLink += "?auto=1";
 				if(mid!="") {
 					// add mid (so that caller can be notified)

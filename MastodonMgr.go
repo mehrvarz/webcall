@@ -285,6 +285,7 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 			mappingData,ok := mapping[mastodonUserId]
 			mappingMutex.RUnlock()
 			if ok {
+				fmt.Printf("mastodon command remove found mapping.CalleeId=(%v)\n", mappingData.CalleeId)
 				if mappingData.CalleeId!="" {
 					mappingMutex.Lock()
  		 			delete(mapping,mastodonUserId)
@@ -297,6 +298,8 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 					} else {
 // TODO send msg telling user that remove of mapping has been done
 					}
+
+					// TODO delete hashedPW ?
 
 					// don't delete the user account of mappingData.CalleeId
 					// end processMessage here
@@ -916,6 +919,8 @@ func (mMgr *MastodonMgr) isValidCallee(calleeID string) *DbUser {
 	mappingData,ok := mapping[calleeID]
 	mappingMutex.Unlock()
 	if ok && mappingData.CalleeId != "" {
+		// calleeID found in mapping[] and mappingData.CalleeId is set
+		// this means: calleeID is a mastodon or a mapping ID, and mappingData.CalleeId the 11-digit ID
 		fmt.Printf("isValidCallee(%s) used for mapping\n",calleeID)
 		var dbUser = &DbUser{}
 		dbUser.MastodonID = calleeID
@@ -933,7 +938,8 @@ func (mMgr *MastodonMgr) isValidCallee(calleeID string) *DbUser {
 		var dbUser DbUser
 		err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 		if err != nil {
-			fmt.Printf("# isValidCallee(%s) dbUser err=%v\n",calleeID,err)
+			// no error: account does not (yet) exist or was deleted
+			//fmt.Printf("# isValidCallee(%s) dbUser err=%v\n",calleeID,err)
 		} else {
 			// calleeID has a valid account
 			return &dbUser
@@ -1028,12 +1034,12 @@ func (mMgr *MastodonMgr) storeAltId(calleeID string, mastodonUserID string, remo
 	// set mastodonUserID as alt-id for calleeID (11-digit)
 	// - store mastodonUserID in dbUser and in mapping[]
 	// - so 11-digit ID does not need to be entered again next time a mastodon call request comes in
-	// called by httpStoreAltID() and sendCallerLink()
+	// called by httpStoreAltID(), sendCallerLink(), command=="remove" (with mastodonUserID=="")
 	var dbEntry DbEntry
 	err := kvMain.Get(dbRegisteredIDs,calleeID,&dbEntry)
 	if err!=nil {
 		// calleeID was not yet registered
-		fmt.Printf("# sendCallerLink numeric(%s) fail db=%s bucket=%s not yet registered\n",
+		fmt.Printf("# storeAltId numeric(%s) fail db=%s bucket=%s not yet registered\n",
 			calleeID, dbMainName, dbRegisteredIDs)
 		return err
 	}
@@ -1042,40 +1048,48 @@ func (mMgr *MastodonMgr) storeAltId(calleeID string, mastodonUserID string, remo
 	var dbUser DbUser
 	err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 	if err!=nil {
-		fmt.Printf("# sendCallerLink numeric(%s) fail on dbUserBucket ip=%s\n", calleeID, remoteAddr)
+		fmt.Printf("# storeAltId numeric(%s) fail on dbUserBucket ip=%s\n", calleeID, remoteAddr)
 		return err
 	}
 
-	if dbUser.MastodonID != "" && dbUser.MastodonID != mastodonUserID {
-		// SUSPICIOUS? TODO maybe this should be verboten?
-		fmt.Printf("! sendCallerLink numeric(%s) dbUser.MastodonID=%s != mastodonUserID=%s\n",
-			calleeID, dbUser.MastodonID, mastodonUserID)
-	}
+	if mastodonUserID=="" {
+		// remove AltId: only clear dbUser.MastodonID
+		dbUser.MastodonID = mastodonUserID
+		dbUser.MastodonSendTootOnCall = false
+		dbUser.MastodonAcceptTootCalls = false
+	} else {
+		// create AltId
+		if dbUser.MastodonID!="" && dbUser.MastodonID!=mastodonUserID {
+			// SUSPICIOUS?
+			fmt.Printf("! storeAltId numeric(%s) dbUser.MastodonID=%s != mastodonUserID=%s\n",
+				calleeID, dbUser.MastodonID, mastodonUserID)
+		}
 
-	dbUser.MastodonID = mastodonUserID
-	dbUser.MastodonSendTootOnCall = true
-	dbUser.MastodonAcceptTootCalls = true
+		dbUser.MastodonID = mastodonUserID
+		dbUser.MastodonSendTootOnCall = true
+		dbUser.MastodonAcceptTootCalls = true
+
+		// if mapping[mastodonUserID] != calleeID, set it
+		mappingMutex.Lock()
+		mappingData,ok := mapping[mastodonUserID]
+		if ok && mappingData.CalleeId != calleeID {
+			// this happens if CalleeId=mastodonID and calleeID=11-digits
+			// ! storeAltId mapping[webcall@mastodon.social] != calleeID=19325349797
+			fmt.Printf("! storeAltId mapping[%s]=%s != calleeID=%s (add)\n",
+				mastodonUserID, mappingData.CalleeId, calleeID)
+		}
+		mapping[mastodonUserID] = MappingDataType{calleeID,"none"}
+		mappingMutex.Unlock()
+	}
 	err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
 	if err!=nil {
-		fmt.Printf("# sendCallerLink numeric(%s) error db=%s bucket=%s put err=%v\n",
+		fmt.Printf("# storeAltId numeric(%s) error db=%s bucket=%s put err=%v\n",
 			calleeID,dbMainName,dbRegisteredIDs,err)
 		return err
 	}
 
-	fmt.Printf("sendCallerLink numeric(%s) stored mastodonUserID=%s\n",
+	fmt.Printf("storeAltId numeric(%s) stored mastodonUserID=%s\n",
 		calleeID, mastodonUserID)
-
-	// if mapping[mastodonUserID] != calleeID, set it
-	mappingMutex.Lock()
-	mappingData,ok := mapping[mastodonUserID]
-	if ok && mappingData.CalleeId != calleeID {
-		// this happens if CalleeId=mastodonID and calleeID=11-digits
-		// ! sendCallerLink mapping[webcall@mastodon.social] != calleeID=19325349797
-		fmt.Printf("! sendCallerLink mapping[%s]=%s != calleeID=%s (add)\n",
-			mastodonUserID, mappingData.CalleeId, calleeID)
-	}
-	mapping[mastodonUserID] = MappingDataType{calleeID,"none"}
-	mappingMutex.Unlock()
 	return nil
 }
 
@@ -1142,21 +1156,25 @@ func (mMgr *MastodonMgr) httpRegisterMid(w http.ResponseWriter, r *http.Request,
 			var dbEntryRegistered DbEntry
 			err := kvMain.Get(dbRegisteredIDs,registerID,&dbEntryRegistered)
 			if err==nil {
-				// registerID is already registered
-				fmt.Printf("# /registermid (%s) fail db=%s bucket=%s get 'already registered'\n",
-					registerID, dbMainName, dbRegisteredIDs)
-				fmt.Fprintf(w, "was already registered")
-				return
+				dbUserKey := fmt.Sprintf("%s_%d", registerID, dbEntryRegistered.StartTime)
+				var dbUser DbUser
+				err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
+				if err == nil {
+					// registerID is already registered
+					fmt.Printf("# /registermid (%s) fail db=%s bucket=%s get 'already registered'\n",
+						registerID, dbMainName, dbRegisteredIDs)
+					fmt.Fprintf(w, "was already registered")
+					return
+				}
 			}
 
-// TODO registerID should fail if already registered or used as mapping[]
+			// registerID needs to fail if already registered or used as mapping[]
 			mappingMutex.RLock()
 			mappingData,ok := mapping[registerID]
 			mappingMutex.RUnlock()
 			if ok {
 				// registerID is mapped
 				calleeID := ""
-//				if mappingData.Assign!="" && mappingData.Assign!="none" {
 				if mappingData.CalleeId!="" {
 					calleeID = mappingData.CalleeId
 				}

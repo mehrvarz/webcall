@@ -852,7 +852,6 @@ function getSettingDone() {
 		userLink = userLink.substring(0,idxParameter);
 	}
 
-//tmtmtm
 	let links = "";
 	links += "<div style='line-height:1.6em'>";
 
@@ -860,7 +859,7 @@ function getSettingDone() {
 
 	links += "<a target='_blank' href='"+userLink+"'>"+userLink+"</a><br>";
 
-	if(mastodonID!="") {
+	if(mastodonID!="" && mastodonID!=calleeID) {
 		let userLinkAlt = userLink.replace(calleeID,mastodonID);
 		links += "<a target='_blank' href='"+userLinkAlt+"'>"+userLinkAlt+"</a><br>";
 	}
