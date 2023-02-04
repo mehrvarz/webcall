@@ -918,46 +918,6 @@ func (mMgr *MastodonMgr) httpGetMidUser(w http.ResponseWriter, r *http.Request, 
 	return
 }
 
-func (mMgr *MastodonMgr) httpGetOnline(w http.ResponseWriter, r *http.Request, urlPath string, remoteAddr string) {
-	url_arg_array, ok := r.URL.Query()["id"]
-	if ok && len(url_arg_array[0]) >= 1 {
-		id := url_arg_array[0]
-		if id=="" {
-			fmt.Printf("# /getOnline no id given\n")
-			return
-		}
-		url_arg_array, ok := r.URL.Query()["mid"]
-		if ok && len(url_arg_array[0]) >= 1 {
-			mid := url_arg_array[0]
-			if mid=="" {
-				fmt.Printf("# /getOnline no mid given (id=%s)\n",id)
-				return
-			}
-
-			// check mid is valid
-			midEntry := &MidEntry{}
-			err := mMgr.kvMastodon.Get(dbMid, mid, midEntry)
-			if err != nil {
-				// mid is not valid
-				fmt.Printf("# /getOnline get midEntry mid=%s is not valid (id=%s)\n",mid,id)
-				return
-			}
-
-			hubMapMutex.RLock()
-			hub := hubMap[id]
-			hubMapMutex.RUnlock()
-			if hub != nil {
-				fmt.Printf("/getOnline id=%s is online\n",id)
-				fmt.Fprintf(w,"true")
-				return
-			}
-			fmt.Printf("/getOnline id=%s is NOT online\n",id)
-			return
-		}
-	}
-	fmt.Printf("# /getOnline fail\n")
-}
-
 func (mMgr *MastodonMgr) isValidCallee(calleeID string) *DbUser {
 	var dbEntry DbEntry
 
@@ -1379,6 +1339,46 @@ func (mMgr *MastodonMgr) mastodonStop() {
 
 
 /* opsolete:
+
+func (mMgr *MastodonMgr) httpGetOnline(w http.ResponseWriter, r *http.Request, urlPath string, remoteAddr string) {
+	url_arg_array, ok := r.URL.Query()["id"]
+	if ok && len(url_arg_array[0]) >= 1 {
+		id := url_arg_array[0]
+		if id=="" {
+			fmt.Printf("# /getOnline no id given\n")
+			return
+		}
+		url_arg_array, ok := r.URL.Query()["mid"]
+		if ok && len(url_arg_array[0]) >= 1 {
+			mid := url_arg_array[0]
+			if mid=="" {
+				fmt.Printf("# /getOnline no mid given (id=%s)\n",id)
+				return
+			}
+
+			// check mid is valid
+			midEntry := &MidEntry{}
+			err := mMgr.kvMastodon.Get(dbMid, mid, midEntry)
+			if err != nil {
+				// mid is not valid
+				fmt.Printf("# /getOnline get midEntry mid=%s is not valid (id=%s)\n",mid,id)
+				return
+			}
+
+			hubMapMutex.RLock()
+			hub := hubMap[id]
+			hubMapMutex.RUnlock()
+			if hub != nil {
+				fmt.Printf("/getOnline id=%s is online\n",id)
+				fmt.Fprintf(w,"true")
+				return
+			}
+			fmt.Printf("/getOnline id=%s is NOT online\n",id)
+			return
+		}
+	}
+	fmt.Printf("# /getOnline fail\n")
+}
 
 func (mMgr *MastodonMgr) cleanupMastodonInviter(w io.Writer) {
 	// delete/outdate inviterMap[] entries in parallel based on age of inviter.Created

@@ -692,12 +692,6 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	if strings.HasPrefix(urlPath,"/getonline") {
-		if mastodonMgr != nil {
-			mastodonMgr.httpGetOnline(w, r, urlPath, remoteAddr)
-		}
-		return
-	}
 	if strings.HasPrefix(urlPath,"/registermid/") {
 		if mastodonMgr != nil {
 			mastodonMgr.httpRegisterMid(w, r, urlPath, remoteAddr, startRequestTime)
@@ -712,6 +706,13 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 /* opsolte together with invite code
+	if strings.HasPrefix(urlPath,"/getonline") {
+		if mastodonMgr != nil {
+			mastodonMgr.httpGetOnline(w, r, urlPath, remoteAddr)
+		}
+		return
+	}
+
 	if strings.HasPrefix(urlPath,"/sendCallerLink") {
 		// arg id=... becomes urlID
 		if mastodonMgr != nil {
