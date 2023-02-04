@@ -78,7 +78,8 @@ func (mMgr *MastodonMgr) mastodonStart(config string) {
 
 	fmt.Printf("mastodonStart (%s) ...\n",tokSlice[0])
 
-	// TODO better way?
+	// create mMgr.hostUrl
+	// note hostname and httpsPort are init config-vars, they do not changed at runtime
 	mMgr.hostUrl = "https://"+hostname
 	if httpsPort>0 {
 		mMgr.hostUrl += ":"+strconv.FormatInt(int64(httpsPort),10)

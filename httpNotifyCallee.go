@@ -39,6 +39,7 @@ var twitterClientLock sync.RWMutex
 var twitterAuthFailedCount = 0
 
 func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr string, remoteAddrWithPort string) {
+	// called by caller.js /notifyCallee (via httpServer.go) if caller requests callee notification 
 	// caller wants to wait for callee (urlID) to come online to answer call
 	if urlID == "" {
 		fmt.Printf("# /notifyCallee failed no urlID\n")
@@ -67,7 +68,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		}
 	}
 
-	callerMsg := ""
+	callerMsg := "" // msgbox
 	url_arg_array, ok = r.URL.Query()["msg"]
 	if ok && len(url_arg_array[0]) >= 1 {
 		callerMsg = url_arg_array[0]
@@ -141,7 +142,15 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		} else if callerIdLong!="" {
 			msg = callerIdLong
 		}
-		msg += " wants to WebCall you"
+		msg += " is WebCalling you"
+
+		// here we add /callee link
+		hostUrl := "https://"+hostname
+		if httpsPort>0 {
+			hostUrl += ":"+strconv.FormatInt(int64(httpsPort),10)
+		}
+		msg += " "+hostUrl+"/callee"
+
 		if callerMsg!="" {
 			msg += " '"+callerMsg+"'"
 		}
