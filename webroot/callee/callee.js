@@ -868,10 +868,11 @@ function getSettingDone() {
 	console.log("showOnlineReadyMsg altIdArray.length",altIdArray.length);
 	if(altIdArray.length>0) {
 		for(let i = 0; i < altIdArray.length; i++) {
-			let userLinkMap = userLink.replace(calleeID,altIdArray[i]);
+			let userLinkMap = userLink.replace("/user/"+calleeID,"/user/"+altIdArray[i]);
 			links += "<a target='_blank' href='"+userLinkMap+"'>"+userLinkMap+"</a><br>";
 		}
 	}
+
 	links += "</div>";
 
 	ownlinkElement.innerHTML = links;
