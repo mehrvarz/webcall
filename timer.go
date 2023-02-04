@@ -495,10 +495,11 @@ func ticker20min() {
 		cleanupCalleeLoginMap(os.Stdout, 3, "ticker20min")
 		cleanupClientRequestsMap(os.Stdout, 10, "ticker20min")
 
+/* opsolte together with invite code
 		if mastodonMgr != nil {
 			mastodonMgr.cleanupMastodonInviter(os.Stdout)
 		}
-
+*/
 		<-twentyMinTicker.C
 	}
 }

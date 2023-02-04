@@ -711,6 +711,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+/* opsolte together with invite code
 	if strings.HasPrefix(urlPath,"/sendCallerLink") {
 		// arg id=... becomes urlID
 		if mastodonMgr != nil {
@@ -732,6 +733,8 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+*/
+
 /*
 	if strings.HasPrefix(urlPath,"/midmsg") {
 		if cookie!=nil {

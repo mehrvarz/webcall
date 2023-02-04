@@ -473,7 +473,7 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 				} else {
 					//fmt.Printf("/register (%s) kvContacts.Put OK\n", registerID)
 				}
-
+/*
 				if mid!="" && mastodonMgr!=nil {
 					// tell caller that callee is ready to receive a call (and maybe other related tasks)
 
@@ -482,7 +482,7 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 					}
 					mastodonMgr.sendCallerLink(mid,registerID,remoteAddr)
 				}
-
+*/
 				fmt.Fprintf(w, "OK")
 			}
 		}
