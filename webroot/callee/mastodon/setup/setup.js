@@ -53,7 +53,8 @@ window.onload = function() {
 	}
 
 	// mid is given
-	// try to get mastodonUserID of callee, valid/registered user, currently online user
+	// get mastodonUserID of callee, valid/registered user, currently online user
+	// NOTE: this call will outdate mid
 	let api = apiPath+"/getmiduser?mid="+mid;
 	if(cookieName!="") {
 		api += "&cid="+cookieName;

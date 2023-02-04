@@ -450,7 +450,8 @@ func ticker20min() {
 	//mytwitterSecret := twitterSecret
 	readConfigLock.RUnlock()
 
-	twentyMinTicker := time.NewTicker(20*60*time.Second)
+// TODO replace 3 with 20
+	twentyMinTicker := time.NewTicker(3*60*time.Second)
 	defer twentyMinTicker.Stop()
 	for {
 		if shutdownStarted.Get() {
@@ -495,11 +496,12 @@ func ticker20min() {
 		cleanupCalleeLoginMap(os.Stdout, 3, "ticker20min")
 		cleanupClientRequestsMap(os.Stdout, 10, "ticker20min")
 
-/* opsolte together with invite code
 		if mastodonMgr != nil {
-			mastodonMgr.cleanupMastodonInviter(os.Stdout)
+// opsolte together with invite code
+//			mastodonMgr.cleanupMastodonInviter(os.Stdout)
+			mastodonMgr.cleanupMastodonMidMap(os.Stdout)
 		}
-*/
+
 		<-twentyMinTicker.C
 	}
 }
