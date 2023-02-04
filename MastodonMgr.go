@@ -25,38 +25,16 @@ type MastodonMgr struct {
 	c *mastodon.Client
 	abortChan chan bool
 	hostUrl string
-//	inviterMutex sync.RWMutex
 	midMutex sync.RWMutex
 	kvMastodon skv.KV
 }
 
 const dbMastodon = "rtcmastodon.db"
-/*
-const dbInviter = "dbInviter"  // a map of all active inviter requests
-type Inviter struct {          // key = mastodon msgID
-	MastodonUserId string
-	MidString string           // enables clearMid(mid) before inviter is deleted
-	CalleeID string
-	CallerID string
-	StatusID1 mastodon.ID      // for callee
-	StatusID2 mastodon.ID      // for caller
-	Created int64
-}
-*/
-
 const dbMid = "dbMid"          // a map of all active mid's
 type MidEntry struct {         // key = mid
 	MastodonIdCallee string
 	Created int64
-//	MastodonIdCaller string
-//	MsgID string
 }
-/*
-const dbCid = "dbCid"          // a calleeID to msgID map (of invited callees)
-type CidEntry struct {         // key = calleeID
-	MsgID string
-}
-*/
 
 func NewMastodonMgr() *MastodonMgr {
 	return &MastodonMgr{
@@ -113,28 +91,13 @@ func (mMgr *MastodonMgr) mastodonStart(config string) {
 		fmt.Printf("# error DbOpen %s path %s err=%v\n",dbMastodon,dbPath,err)
 		return
 	}
-/*
-	err = mMgr.kvMastodon.CreateBucket(dbInviter)
-	if err!=nil {
-		fmt.Printf("# error db %s CreateBucket %s err=%v\n",dbMastodon,dbInviter,err)
-		mMgr.kvMastodon.Close()
-		return
-	}
-*/
 	err = mMgr.kvMastodon.CreateBucket(dbMid)
 	if err!=nil {
 		fmt.Printf("# error db %s CreateBucket %s err=%v\n",dbMastodon,dbMid,err)
 		mMgr.kvMastodon.Close()
 		return
 	}
-/*
-	err = mMgr.kvMastodon.CreateBucket(dbCid)
-	if err!=nil {
-		fmt.Printf("# error db %s CreateBucket %s err=%v\n",dbMastodon,dbCid,err)
-		mMgr.kvMastodon.Close()
-		return
-	}
-*/
+
 	mMgr.abortChan = make(chan bool)
 	fmt.Printf("mastodonStart reading StreamingUser...\n")
 	for {
@@ -151,6 +114,7 @@ func (mMgr *MastodonMgr) mastodonStart(config string) {
 			//fmt.Println(evt)
 			switch event := evt.(type) {
 			case *mastodon.NotificationEvent:
+				// direct msgs
 				fmt.Printf("mastodonhandler Notif-Type=(%v) Acct=(%v)\n",
 					event.Notification.Type, event.Notification.Account.Acct)
 				content := event.Notification.Status.Content
@@ -201,6 +165,7 @@ loop:
 				mMgr.processMessage(command,event,tokSlice[0])
 
 /*			case *mastodon.UpdateEvent:
+				// none-direct msgs
 				if event.Status.Content!="" {
 					fmt.Printf("mastodonhandler UpdateEvent content=(%v)\n",event.Status.Content)
 				} else {
@@ -302,16 +267,17 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 			mappingData,ok := mapping[mastodonUserId]
 			mappingMutex.RUnlock()
 			if ok {
-				fmt.Printf("mastodon command remove: found mapping.CalleeId=(%v)\n", mappingData.CalleeId)
+				fmt.Printf("mastodon command remove: found mapping %s->%s\n",
+					mastodonUserId, mappingData.CalleeId)
+				mappingMutex.Lock()
+	 			delete(mapping,mastodonUserId)
+				mappingMutex.Unlock()
+
+				var err error
 				if mappingData.CalleeId!="" {
-					fmt.Printf("mastodon command remove: delete mapping (%s)\n", mastodonUserId)
-
-					mappingMutex.Lock()
- 		 			delete(mapping,mastodonUserId)
-					mappingMutex.Unlock()
-
 					// also remove alt-id from mappingData.CalleeId
-					err := mMgr.storeAltId(mappingData.CalleeId, "", "")
+					err = mMgr.storeAltId(mappingData.CalleeId, "", "")
+/*
 					if err==nil {
 						// delete hashedPW
 						err2 := kvHashedPw.(skv.SKV).Delete(dbHashedPwBucket, mappingData.CalleeId)
@@ -321,27 +287,26 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 							// all is well
 						}
 					}
-
-					sendmsg :="@"+mastodonUserId+" on your request your ID has been deactivated"
-					if err!=nil {
-						// post msg telling user that remove has failed
-						sendmsg ="@"+mastodonUserId+" sorry, I am not able to proceed with your request"
-					}
-					status,err := mMgr.postMsgEx(sendmsg)
-					if err!=nil {
-						fmt.Printf("# mastodon command remove: issue resp failed (%s)\n",sendmsg)
-					} else {
-						fmt.Printf("mastodon command remove: issue resp posted (%s)\n",sendmsg)
-					}
-					if status!=nil {
-						// may be used to later delete the m-msg
-					}
-
-					// do not delete the user account of mappingData.CalleeId
-					// end processMessage here
-					return
+*/
 				}
-// TODO is it correct to delete the mapping ONLY if mappingData.CalleeId!="" ???
+
+				sendmsg :="@"+mastodonUserId+" on your request your ID has been deactivated"
+				if err!=nil {
+					// post msg telling user that remove has failed
+					sendmsg ="@"+mastodonUserId+" sorry, I am not able to proceed with your request"
+				}
+				status,err := mMgr.postMsgEx(sendmsg)
+				if err!=nil {
+					fmt.Printf("# mastodon command remove: issue resp failed (%s)\n",sendmsg)
+				} else {
+					fmt.Printf("mastodon command remove: issue resp posted (%s)\n",sendmsg)
+				}
+				if status!=nil {
+					// may be used to later delete the m-msg
+				}
+
+				// do NOT delete the user account of mappingData.CalleeId
+				// end processMessage here
 				return
 			}
 
@@ -1388,6 +1353,36 @@ func (mMgr *MastodonMgr) mastodonStop() {
 
 
 /* opsolete:
+
+const dbInviter = "dbInviter"  // a map of all active inviter requests
+type Inviter struct {          // key = mastodon msgID
+	MastodonUserId string
+	MidString string           // enables clearMid(mid) before inviter is deleted
+	CalleeID string
+	CallerID string
+	StatusID1 mastodon.ID      // for callee
+	StatusID2 mastodon.ID      // for caller
+	Created int64
+}
+
+const dbCid = "dbCid"          // a calleeID to msgID map (of invited callees)
+type CidEntry struct {         // key = calleeID
+	MsgID string
+}
+
+	err = mMgr.kvMastodon.CreateBucket(dbInviter)
+	if err!=nil {
+		fmt.Printf("# error db %s CreateBucket %s err=%v\n",dbMastodon,dbInviter,err)
+		mMgr.kvMastodon.Close()
+		return
+	}
+
+	err = mMgr.kvMastodon.CreateBucket(dbCid)
+	if err!=nil {
+		fmt.Printf("# error db %s CreateBucket %s err=%v\n",dbMastodon,dbCid,err)
+		mMgr.kvMastodon.Close()
+		return
+	}
 
 func (mMgr *MastodonMgr) clearMid(mid string, remoteAddr string) {
 	if mid=="" {

@@ -450,8 +450,7 @@ func ticker20min() {
 	//mytwitterSecret := twitterSecret
 	readConfigLock.RUnlock()
 
-// TODO replace 3 with 20
-	twentyMinTicker := time.NewTicker(3*60*time.Second)
+	twentyMinTicker := time.NewTicker(20*60*time.Second)
 	defer twentyMinTicker.Stop()
 	for {
 		if shutdownStarted.Get() {
