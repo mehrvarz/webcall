@@ -48,7 +48,7 @@ window.onload = function() {
 	if(mid=="") {
 		// no mid -> no mastodonUserID
 		console.log('mid empty');
-		showStatus("Outdated event<br><br><br>", -1);
+		showStatus("outdated<br><br><br>", -1);
 		return;
 	}
 
@@ -118,7 +118,7 @@ function onload2() {
 
 	if(mastodonUserID=="") {
 		console.log('mastodonUserID empty');
-		showStatus("Outdated event<br><br><br>", -1);
+		showStatus("outdated<br><br><br>", -1);
 		return;
 	}
 
@@ -149,7 +149,7 @@ function onload2() {
 
 	} else {
 		dispMsg += "➡️ <a onclick='pwForm(\""+mastodonUserID+"\",0); return false;'>Create new WebCall ID "+mastodonUserID+"</a><br>";
-		dispMsg += "(Your Mastodon ID becomes your WebCall ID)<br><br>";
+		dispMsg += "(Your Mastodon ID will become your WebCall ID)<br><br>";
 					;
 /*
 // TODO does /callee/register add mastodonUserID as shadow-id?
@@ -163,8 +163,8 @@ function onload2() {
 		// let user enter (via keyboard) a possibly existing calleeID for login
 		// on submit: forward to callee-app (password will be entered there), hand over mid
 		// on login, the server will use mid to send a mastodon msg to the caller, telling the call-url
-		dispMsg += "If you already have a WebCall ID...<br>➡️ <a onclick='enterID(); return false;'>Enter it to associate your Mastodon ID "+mastodonUserID+"</a><br>";
-		dispMsg += "(Your will be abke to receive calls with both ID's)<br><br>";
+		dispMsg += "If you already have a (11-digit) WebCall ID...<br>➡️ <a onclick='enterID(); return false;'>Associate it with your Mastodon ID "+mastodonUserID+"</a><br>";
+		dispMsg += "(This will let you receive calls with both ID's)<br><br>";
 	}
 
 	showStatus(dispMsg + "<br><br><br>", -1);
