@@ -235,11 +235,12 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 			fmt.Printf("mastodon command setup (%v)\n", mastodonUserId)
 
 			// NOTE: msg must end with a blank
-			msg := "Setup your WebCall-ID: "
+			msg1 := "Setup your WebCall ID: "
+			msg2 := "(active for 20 minutes)" // see "20*60" in cleanupMastodonMidMap()
 
 			// arg2: no callerID to notify after callee-login
 			// arg4: no msgID to notify after callee-login
-			err := mMgr.offerRegisterLink(mastodonUserId, "", msg, "", "/callee/mastodon/setup")
+			err := mMgr.offerRegisterLink(mastodonUserId, "", msg1, msg2, "", "/callee/mastodon/setup")
 			if err!=nil {
 				fmt.Printf("# mastodon processMessage offerRegisterLink err=%v\n",err)
 				// post msg telling user that request has failed
@@ -660,7 +661,7 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 }
 
 
-func (mMgr *MastodonMgr) offerRegisterLink(mastodonUserId string, mastodonCallerUserId string, msg string, msgID string, path string) error {
+func (mMgr *MastodonMgr) offerRegisterLink(mastodonUserId string, mastodonCallerUserId string, msg1 string, msg2 string, msgID string, path string) error {
 	// offer link to /pickup, with which mastodonUserId can be registered
 	// first we need a unique mID (refering to mastodonUserId)
 
@@ -693,7 +694,7 @@ func (mMgr *MastodonMgr) offerRegisterLink(mastodonUserId string, mastodonCaller
 	}
 	mMgr.midMutex.Unlock()
 
-	sendmsg :="@"+mastodonUserId+" " + msg + mMgr.hostUrl + path + "?mid=" + mID
+	sendmsg :="@"+mastodonUserId+" " + msg1 + mMgr.hostUrl + path + "?mid=" + mID + " "+msg2
 	fmt.Printf("offerRegisterLink PostStatus (%s)\n",sendmsg)
 	status,err := mMgr.postMsgEx(sendmsg)
 	if err!=nil {
@@ -1289,7 +1290,7 @@ func (mMgr *MastodonMgr) cleanupMastodonMidMap(w io.Writer) {
 			fmt.Printf("cleanupMastodonMidMap timeNowUnix=%d - midEntry.Created=%d = %d (>=3600 fire)\n",
 				timeNowUnix, midEntry.Created, timeNowUnix-midEntry.Created)
 
-			if timeNowUnix - midEntry.Created >= 60*60 {
+			if timeNowUnix - midEntry.Created >= 20*60 {
 				deleteMidArray = append(deleteMidArray,mID)
 			}
 		}
