@@ -909,8 +909,6 @@ func (mMgr *MastodonMgr) httpGetMidUser(w http.ResponseWriter, r *http.Request, 
 func (mMgr *MastodonMgr) isValidCallee(calleeID string) *DbUser {
 	var dbEntry DbEntry
 
-	fmt.Printf("isValidCallee(%s)...\n",calleeID)
-
 	mappingMutex.Lock()
 	mappingData,ok := mapping[calleeID]
 	mappingMutex.Unlock()
@@ -924,11 +922,14 @@ func (mMgr *MastodonMgr) isValidCallee(calleeID string) *DbUser {
 	}
 	fmt.Printf("isValidCallee(%s) NOT used for mapping\n",calleeID)
 
-
 	err := kvMain.Get(dbRegisteredIDs, calleeID, &dbEntry)
 	if err != nil {
-		// this is not necessarily fatal
-		fmt.Printf("! isValidCallee(%s) dbEntry err=%v\n",calleeID,err)
+		if strings.Index(err.Error(),"key not found")>0 {
+			// this is not an error
+			fmt.Printf("isValidCallee(%s) NOT used as main id\n",calleeID)
+		} else {
+			fmt.Printf("# isValidCallee(%s) dbEntry err=%v\n",calleeID,err)
+		}
 	} else {
 		dbUserKey := fmt.Sprintf("%s_%d", calleeID, dbEntry.StartTime)
 		var dbUser DbUser
