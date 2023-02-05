@@ -855,7 +855,7 @@ function getSettingDone() {
 	let links = "";
 	links += "<div style='line-height:1.6em'>";
 
-	links += "<div class='callListTitle'>You receive calls made by these links:</div>";
+	links += "<div class='callListTitle'>You will receive calls made by these links:</div>";
 
 	links += "<a target='_blank' href='"+userLink+"'>"+userLink+"</a><br>";
 

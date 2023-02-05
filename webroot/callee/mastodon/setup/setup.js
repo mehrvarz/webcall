@@ -82,7 +82,7 @@ window.onload = function() {
 							if(tok.length>=5) {
 								wsCliMastodonID = tok[4]
 								if(tok.length>=6) {
-									callerID = tok[5]
+									callerID = tok[5]		// TODO currently empty
 									if(tok.length>=7) {
 										cmappedCalleeID = tok[6]
 										if(tok.length>=8) {
@@ -114,7 +114,7 @@ function onload2() {
 	console.log('onload2 flags', isValidCalleeID, isOnlineCalleeID);
 	console.log('onload2 mappedCalleeID', mappedCalleeID);
 	console.log('onload2 wsCliMastodonID', wsCliMastodonID);
-	console.log('onload2 callerID', callerID);
+	console.log('onload2 cmappedCalleeID', cmappedCalleeID);
 
 	if(mastodonUserID=="") {
 		console.log('mastodonUserID empty');
@@ -123,6 +123,36 @@ function onload2() {
 	}
 
 	let dispMsg = "";
+
+	if(mastodonUserID!="") {
+		dispMsg += "Request from "+mastodonUserID+"<br><br>";
+	}
+
+	// mastodonUserID as a new account
+	if(isValidCalleeID) {
+		dispMsg += "ID "+mastodonUserID+" is already in use<br><br>";
+	} else if(cookieName!="" && cookieName==mastodonUserID) {
+		dispMsg += "ID "+mastodonUserID+" is already your WebCall ID<br><br>";
+	} else if(cookieName!="" && cmappedCalleeID!="") {
+		dispMsg += "Your WebCall account "+cookieName+" is already associated with Mastodon ID "+cmappedCalleeID+"<br><br>";
+	} else {
+		dispMsg += "➡️ <a onclick='pwForm(\""+mastodonUserID+"\",true,0); return false;'>Create new WebCall ID "+mastodonUserID+"</a><br>";
+		dispMsg += "(Your Mastodon ID will become your WebCall ID)<br><br>";
+	}
+
+	// mastodonUserID as a alt-id
+	if(cookieName!="") {
+		if(cookieName==mastodonUserID || (cookieName!=mastodonUserID && cmappedCalleeID!="")) {
+			// show nothing
+		} else {
+			dispMsg += "➡️ <a onclick='pwForm(\""+cookieName+"\",false,1); return false;'>Associate your Mastodon ID "+mastodonUserID+" with your exising ID "+cookieName+"</a><br>";
+			dispMsg += "(This will let you receive calls with both ID's)<br><br>";
+		}
+	}
+
+	showStatus(dispMsg + "<br><br><br>", -1);
+
+
 /*
 	if(cookieName!="") {
 		if(cookieName==mastodonUserID) {
@@ -137,6 +167,7 @@ function onload2() {
 
 	} else 
 */
+/*
 	if(isValidCalleeID) {
 		if(isOnlineCalleeID) {
 			dispMsg += "WebCall ID "+mastodonUserID+" is online already<br><br>";
@@ -147,29 +178,29 @@ function onload2() {
 			dispMsg += "<a href=\"/callee/"+mappedCalleeID+"\">Start WebCall to receive calls</a><br><br>";
 		}
 
-	} else {
-		dispMsg += "➡️ <a onclick='pwForm(\""+mastodonUserID+"\",0); return false;'>Create new WebCall ID "+mastodonUserID+"</a><br>";
-		dispMsg += "(Your Mastodon ID will become your WebCall ID)<br><br>";
-					;
-/*
-// TODO does /callee/register add mastodonUserID as shadow-id?
-		let replaceURL = "/callee/register?mid="+mid;
-		dispMsg += "➡️ <a onclick='exelink(\""+replaceURL+"\"); return false;'>Create new 11-digit WebCall ID and add your Mastodon ID "+mastodonUserID+" as shadow ID</a><br>";
-		dispMsg += "(Your Mastodon calls will be redirected to a vanilla WebCall ID)<br><br>";
-		// TODO text: you can receive webcalls when you are not using Mastodon
-		//            use this option if you want a more anonymous webcall id
+	} else
 */
 
-		// let user enter (via keyboard) a possibly existing calleeID for login
-		// on submit: forward to callee-app (password will be entered there), hand over mid
-		// on login, the server will use mid to send a mastodon msg to the caller, telling the call-url
-		dispMsg += "If you already have a (11-digit) WebCall ID...<br>➡️ <a onclick='enterID(); return false;'>Associate it with your Mastodon ID "+mastodonUserID+"</a><br>";
-		dispMsg += "(This will let you receive calls with both ID's)<br><br>";
-	}
+/*
+// TODO does /callee/register add mastodonUserID as shadow-id?
+	let replaceURL = "/callee/register?mid="+mid;
+	dispMsg += "➡️ <a onclick='exelink(\""+replaceURL+"\"); return false;'>Create new 11-digit WebCall ID and add your Mastodon ID "+mastodonUserID+" as shadow ID</a><br>";
+	dispMsg += "(Your Mastodon calls will be redirected to a vanilla WebCall ID)<br><br>";
+	// TODO text: you can receive webcalls when you are not using Mastodon
+	//            use this option if you want a more anonymous webcall id
+*/
 
-	showStatus(dispMsg + "<br><br><br>", -1);
+/*
+// TODO we should not ask user to input an ID, but rather use cookieName
+	// let user enter (via keyboard) a possibly existing calleeID for login
+	// on submit: forward to callee-app (password will be entered there), hand over mid
+	// on login, the server will use mid to send a mastodon msg to the caller, telling the call-url
+	dispMsg += "If you already have a (11-digit) WebCall ID...<br>➡️ <a onclick='enterID(); return false;'>Associate it with your Mastodon ID "+mastodonUserID+"</a><br>";
+	dispMsg += "(This will let you receive calls with both ID's)<br><br>";
+*/
 }
 
+/*
 function enterID(msg) {
 	// note: bc we replace the status-div with the input field, the back button may not work as expected
 	if(typeof msg == "undefined") {
@@ -199,11 +230,16 @@ function addShadowID(calleeID) {
 	// called by submitForm() and by onload2() (if cookieName is set)
 	pwForm(calleeID,1);
 }
+*/
 
-function pwForm(ID,type) {
+function pwForm(ID,newpw,type) {
 	// let user register their ID as calleeID
 	// show the ID and ask for a password to register it as a new calleeID (via submitPw())
-	showStatus("Username: "+ID+"<br>"+
+	let info = "Enter password for existing account:<br>";
+	if(newpw) {
+		info = "Enter password for new account:<br>";
+	}
+	showStatus("Username: "+ID+"<br>"+info+
 		"<form action='javascript:;' onsubmit='submitPw(\""+ID+"\","+type+")' id='pwf'>"+
 		"<label for='username' style='display:inline-block; padding-bottom:4px;'>Password:&nbsp;</label>"+
 		"<input type='text' autocomplete='password' id='pwi' name='pw' value='' style='display:none;'>"+
@@ -260,12 +296,14 @@ function submitPw(ID,type) {
 					// very bad: abort
 				}
 				calleeLink = calleeLink.substring(0,idxCallee) + "/callee/"+ID;
+				/*
 				calleeLink += "?auto=1";
 				if(mid!="") {
 					// add mid (so that caller can be notified)
 					calleeLink += "&mid="+mid;
 				}
 				console.log("calleeLink="+calleeLink+" mid="+mid);
+				*/
 
 				// exelink() will use calleeLink
 				showStatus( "Please keep ID and password in a secure place. "+
@@ -305,7 +343,7 @@ function submitPw(ID,type) {
 		ajaxFetch(new XMLHttpRequest(), "POST", api, function(xhr) {
 			// only if we get back "OK" do we continue with:
 			if(xhr.responseText=="OK") {
-				showStatus("Success! Your Mastodon ID "+mastodonUserID+" was added as alt-id for your WebCall ID "+ID+"<br><br>",-1);
+				showStatus("Success! Your Mastodon ID "+mastodonUserID+" is now associated with your WebCall ID "+ID+"<br><br>",-1);
 // TODO list all the benefits
 			} else {
 				console.warn('# xhr response error',xhr.responseText);

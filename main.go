@@ -309,14 +309,13 @@ func main() {
 
 	// init mapping from dbUserBucket
 	kv := kvMain.(skv.SKV)
-	bucketName := dbUserBucket
 	db := kv.Db
 	skv.DbMutex.Lock()
 	err = db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(bucketName))
+		b := tx.Bucket([]byte(dbUserBucket))
 		c := b.Cursor()
 		for k, v := c.First(); k != nil; k, v = c.Next() {
-			// k = ID ("timur_1619008491")
+			// k = ID ("calleeid_1619008491")
 			// v = dbUser []byte
 
 			calleeID := string(k)
@@ -335,14 +334,16 @@ func main() {
 					toks2 := strings.Split(toks[tok], ",")
 					if toks2[0] != "" { // tmpID
 						if toks2[1] == "true" {
+							fmt.Printf("initloop set mapping from AltIDs %s -> %s (%s)\n",
+								toks2[0], calleeID, toks2[2])
 							mapping[toks2[0]] = MappingDataType{calleeID,toks2[2]}
-							//fmt.Printf("initloop set %s -> %s (%s)\n",toks2[0],calleeID,toks2[2])
 						}
 					}
 				}
 			}
 
 			if dbUser.MastodonID!="" {
+				fmt.Printf("initloop set mapping from MastodonID %s -> %s\n", dbUser.MastodonID, calleeID)
 				mapping[dbUser.MastodonID] = MappingDataType{calleeID,"none"}
 			}
 		}

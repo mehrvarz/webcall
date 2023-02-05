@@ -16,6 +16,7 @@ import (
 	"golang.org/x/net/html"
 	"github.com/mattn/go-mastodon"
 	"github.com/mehrvarz/webcall/skv"
+	"golang.org/x/crypto/bcrypt"
 	"encoding/gob"
 	"bytes"
 	bolt "go.etcd.io/bbolt"
@@ -269,14 +270,16 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 			mappingData,ok := mapping[mastodonUserId]
 			mappingMutex.RUnlock()
 			if ok {
-				fmt.Printf("mastodon command remove: found mapping %s->%s\n",
-					mastodonUserId, mappingData.CalleeId)
-				mappingMutex.Lock()
-	 			delete(mapping,mastodonUserId)
-				mappingMutex.Unlock()
-
 				var err error
-				if mappingData.CalleeId!="" {
+				if mappingData.CalleeId!="" && mappingData.CalleeId!=mastodonUserId {
+					// this is a calleeID with an alt-id
+
+					fmt.Printf("mastodon command remove: found mapping %s->%s\n",
+						mastodonUserId, mappingData.CalleeId)
+					mappingMutex.Lock()
+					delete(mapping,mastodonUserId)
+					mappingMutex.Unlock()
+
 					// also remove alt-id from mappingData.CalleeId
 					err = mMgr.storeAltId(mappingData.CalleeId, "", "")
 /*
@@ -290,32 +293,34 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 						}
 					}
 */
-				}
+					sendmsg :="@"+mastodonUserId+" on your request your ID has been deactivated"
+					if err!=nil {
+						// post msg telling user that remove has failed
+						sendmsg ="@"+mastodonUserId+" sorry, I am not able to proceed with your request"
+					}
+					status,err := mMgr.postMsgEx(sendmsg)
+					if err!=nil {
+						fmt.Printf("# mastodon command remove: issue resp failed (%s)\n",sendmsg)
+					} else {
+						fmt.Printf("mastodon command remove: issue resp posted (%s)\n",sendmsg)
+					}
+					if status!=nil {
+						// may be used to later delete the m-msg
+					}
 
-				sendmsg :="@"+mastodonUserId+" on your request your ID has been deactivated"
-				if err!=nil {
-					// post msg telling user that remove has failed
-					sendmsg ="@"+mastodonUserId+" sorry, I am not able to proceed with your request"
+					// do NOT delete the user account of mappingData.CalleeId
+					// end processMessage here
+					return
 				}
-				status,err := mMgr.postMsgEx(sendmsg)
-				if err!=nil {
-					fmt.Printf("# mastodon command remove: issue resp failed (%s)\n",sendmsg)
-				} else {
-					fmt.Printf("mastodon command remove: issue resp posted (%s)\n",sendmsg)
-				}
-				if status!=nil {
-					// may be used to later delete the m-msg
-				}
-
-				// do NOT delete the user account of mappingData.CalleeId
-				// end processMessage here
-				return
+				// fall through
 			}
 
 			var dbEntryRegistered DbEntry
 			err := kvMain.Get(dbRegisteredIDs,mastodonUserId,&dbEntryRegistered)
 			if err!=nil {
-				fmt.Printf("# mastodon command remove user=%s err=%v\n", mastodonUserId, err)
+				if strings.Index(err.Error(),"key not found")>0 {
+					fmt.Printf("# mastodon command remove user=%s err=%v\n", mastodonUserId, err)
+				}
 				// ignore! no need to notify user by msg (looks like an invalid request)
 			} else {
 				// mastodonUserId is a registered calleeID
@@ -384,7 +389,7 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 				// dbUser has been deactivated
 // TODO NOTE: callee-user may still be online
 				// send msg telling user that their webcall account has been deactivated
-				sendmsg :="@"+mastodonUserId+" on your request your ID has been deactivated"
+				sendmsg :="@"+mastodonUserId+" on your request your ID has been deleted"
 				status,err := mMgr.postMsgEx(sendmsg)
 				if err!=nil {
 					fmt.Printf("# mastodon command remove: issue resp failed (%s)\n",sendmsg)
@@ -399,18 +404,15 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 				var missedCallsSlice []CallerInfo
 				err = kvCalls.Put(dbMissedCalls, mastodonUserId, missedCallsSlice, false)
 				if err!=nil {
-					fmt.Printf("# mastodon command remove (%s) fail store dbMissedCalls\n",
-						mastodonUserId)
+					fmt.Printf("# mastodon command remove (%s) fail store dbMissedCalls\n", mastodonUserId)
 					// not fatal
 				}
 
 				// also delete HashedPw
-				pwIdCombo := PwIdCombo{}
-				err = kvHashedPw.Put(dbHashedPwBucket, mastodonUserId, pwIdCombo, true)
+				err = kvHashedPw.Delete(dbHashedPwBucket, mastodonUserId)
 				if err!=nil {
-					fmt.Printf("# mastodon command remove (%s) fail dbHashedPwBucket\n", mastodonUserId)
-				} else {
-					fmt.Printf("mastodon command remove kvHashedPw mastodonUserId=%s\n", mastodonUserId)
+					fmt.Printf("# mastodon command remove (%s) fail delete hashedPw\n", mastodonUserId)
+					// not fatal
 				}
 			}
 			// end processMessage here
@@ -1056,46 +1058,74 @@ func (mMgr *MastodonMgr) httpStoreAltID(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 
-	postBuf := make([]byte, 128)
-	length,_ := io.ReadFull(r.Body, postBuf)
-	if length>0 {
-		pw := ""
-		pwData := string(postBuf[:length])
-		pwData = strings.ToLower(pwData)
-		pwData = strings.TrimSpace(pwData)
-		pwData = strings.TrimRight(pwData,"\r\n")
-		pwData = strings.TrimRight(pwData,"\n")
-		if strings.HasPrefix(pwData,"pw=") {
-			pw = pwData[3:]
-		}
-		// deny if pw is too short or not valid
-		if len(pw)<6 {
-			fmt.Printf("# /storealtid (%s) fail pw too short\n",calleeID)
-			fmt.Fprintf(w, "too short")
-			return
-		}
-
-		fmt.Printf("/storealtid (%s) mid=%s mastoId=%s pw=%s ip=%s ua=%s\n",
-			calleeID, mID, mastodonUserID, pw, remoteAddr, r.UserAgent())
-
-		// verify pw for calleeID
-/* TODO need to load hashedPw for calleeID
-		err := bcrypt.CompareHashAndPassword([]byte(hashPw), []byte(formPw))
-		if err != nil {
-			fmt.Printf("# /storealtid (%s) wrong pw\n",calleeID)
-			fmt.Fprintf(w, "error")
-			// abort
-			return
-		}
-*/
-
-		err = mMgr.storeAltId(calleeID, mastodonUserID, remoteAddr)
+	var dbEntry DbEntry
+	var dbUser DbUser
+	existingID := false
+	pwIdCombo := &PwIdCombo{}
+	err = kvMain.Get(dbRegisteredIDs,calleeID,&dbEntry)
+	if err!=nil {
+		// calleeID was not yet registered
+		fmt.Printf("! storeAltId numeric(%s) fail db=%s bucket=%s not yet registered\n",
+			calleeID, dbMainName, dbRegisteredIDs)
+	} else {
+		dbUserKey := fmt.Sprintf("%s_%d",calleeID, dbEntry.StartTime)
+		err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 		if err!=nil {
-			fmt.Fprintf(w, "error")
+			// calleeID not a valid account
+			fmt.Printf("# storeAltId numeric(%s) fail on dbUserBucket ip=%s\n", calleeID, remoteAddr)
 		} else {
-			fmt.Fprintf(w, "OK")
+			err = kvHashedPw.Get(dbHashedPwBucket, mastodonUserID, pwIdCombo)
+			if err!=nil {
+				fmt.Printf("# storeAltId (%s) fail get kvHashedPw err=%v\n", mastodonUserID, err)
+			} else {
+				existingID = true
+				fmt.Printf("storeAltId (%s) got kvHashedPw OK\n", mastodonUserID)
+			}
 		}
-		return
+	}
+
+	if existingID {
+		postBuf := make([]byte, 128)
+		length,_ := io.ReadFull(r.Body, postBuf)
+		if length>0 {
+			pw := ""
+			pwData := string(postBuf[:length])
+			pwData = strings.ToLower(pwData)
+			pwData = strings.TrimSpace(pwData)
+			pwData = strings.TrimRight(pwData,"\r\n")
+			pwData = strings.TrimRight(pwData,"\n")
+			if strings.HasPrefix(pwData,"pw=") {
+				pw = pwData[3:]
+			}
+			// deny if pw is too short or not valid
+			if len(pw)<6 {
+				fmt.Printf("# /storealtid (%s) fail pw too short\n",calleeID)
+				time.Sleep(1 * time.Second)
+				fmt.Fprintf(w, "pw too short")
+				return
+			}
+
+			fmt.Printf("/storealtid (%s) mid=%s mastoId=%s pw=%s ip=%s ua=%s\n",
+				calleeID, mID, mastodonUserID, pw, remoteAddr, r.UserAgent())
+
+			// verify pw for calleeID
+			err := bcrypt.CompareHashAndPassword([]byte(pwIdCombo.Pw), []byte(pw))
+			if err != nil {
+				fmt.Printf("# /storealtid (%s) wrong pw\n",calleeID)
+				time.Sleep(1 * time.Second)
+				fmt.Fprintf(w, "wrong pw")
+				return
+			}
+			err = mMgr.storeAltId(calleeID, mastodonUserID, remoteAddr)
+			if err!=nil {
+				fmt.Printf("# /storealtid (%s) storeAltId err=%v\n",calleeID,err)
+				fmt.Fprintf(w, "cannot store")
+				return
+			}
+			// success
+			fmt.Fprintf(w, "OK")
+			return
+		}
 	}
 	fmt.Fprintf(w, "error")
 }
