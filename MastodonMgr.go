@@ -234,9 +234,10 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 		case command=="setup":
 			fmt.Printf("mastodon command setup (%v)\n", mastodonUserId)
 
-			// NOTE: msg must end with a blank
+			// NOTE: msg1 must end with a blank
 			msg1 := "Setup your WebCall ID: "
-			msg2 := "(active for 20 minutes)" // see "20*60" in cleanupMastodonMidMap()
+			// NOTE: msg2 must start with a blank
+			msg2 := " (active for 20 minutes)" // see "20*60" in cleanupMastodonMidMap()
 
 			// arg2: no callerID to notify after callee-login
 			// arg4: no msgID to notify after callee-login
@@ -694,7 +695,7 @@ func (mMgr *MastodonMgr) offerRegisterLink(mastodonUserId string, mastodonCaller
 	}
 	mMgr.midMutex.Unlock()
 
-	sendmsg :="@"+mastodonUserId+" " + msg1 + mMgr.hostUrl + path + "?mid=" + mID + " "+msg2
+	sendmsg :="@"+mastodonUserId+" " + msg1 + mMgr.hostUrl + path + "?mid=" + mID + msg2
 	fmt.Printf("offerRegisterLink PostStatus (%s)\n",sendmsg)
 	status,err := mMgr.postMsgEx(sendmsg)
 	if err!=nil {
