@@ -163,8 +163,8 @@ function onload2() {
 		// let user enter (via keyboard) a possibly existing calleeID for login
 		// on submit: forward to callee-app (password will be entered there), hand over mid
 		// on login, the server will use mid to send a mastodon msg to the caller, telling the call-url
-		dispMsg += "➡️ <a onclick='enterID(); return false;'>Enter your existing WebCall ID to add your Mastodon ID "+mastodonUserID+" as shadow ID</a><br>";
-		dispMsg += "(Your Mastodon calls will be redirected to a vanilla WebCall ID)<br><br>";
+		dispMsg += "If you already have a WebCall ID...<br>➡️ <a onclick='enterID(); return false;'>Enter it to associate your Mastodon ID "+mastodonUserID+"</a><br>";
+		dispMsg += "(Your will be abke to receive calls with both ID's)<br><br>";
 	}
 
 	showStatus(dispMsg + "<br><br><br>", -1);
