@@ -203,12 +203,13 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 				err := mastodonMgr.postMsg(sendmsg)
 				if err!=nil {
 					// TODO log
-//					fmt.Println("# PostStatus err=",err)
+					fmt.Println("# PostStatus err=",err)
 				} else {
 					// TODO log
 //					fmt.Println("PostStatus sent OK")
 					// TODO at some point later we need to delete (from mastodon) all direct messages
 					// note: deleting a (direct) mastodon msg does NOT delete it on the receiver/caller side
+					notificationSent |= 4
 				}
 			}
 		} else
