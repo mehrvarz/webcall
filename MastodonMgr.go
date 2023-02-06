@@ -239,8 +239,7 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 			_,ok := mapping[mastodonUserId]
 			mappingMutex.RUnlock()
 			if ok {
-// TODO if mastodonUserId is already a main-ID or an alt-ID, then sending a register-link is useless
-// better post a different msg:
+				// if mastodonUserId is already a main-ID or an alt-ID, then sending a register-link is useless
 				sendmsg :="@"+mastodonUserId+" is already in use"
 				fmt.Printf("mastodon command setup post (%s)\n",sendmsg)
 				status,err := mMgr.postMsgEx(sendmsg)
