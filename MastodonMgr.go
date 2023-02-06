@@ -235,6 +235,26 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 		case command=="setup":
 			fmt.Printf("mastodon command setup (%v)\n", mastodonUserId)
 
+			mappingMutex.RLock()
+			_,ok := mapping[mastodonUserId]
+			mappingMutex.RUnlock()
+			if ok {
+// TODO if mastodonUserId is already a main-ID or an alt-ID, then sending a register-link is useless
+// better post a different msg:
+				sendmsg :="@"+mastodonUserId+" is already in use"
+				fmt.Printf("mastodon command setup post (%s)\n",sendmsg)
+				status,err := mMgr.postMsgEx(sendmsg)
+				if err!=nil {
+					fmt.Printf("# mastodon command setup post err=%v (to=%v)\n",err,mastodonUserId)
+				} else {
+					fmt.Printf("mastodon command setup post sent to=%v\n", mastodonUserId)
+					if status!=nil {
+						// can be used to delete this msg
+					}
+				}
+				return
+			}
+
 			// NOTE: msg1 must end with a blank
 			msg1 := "Setup your WebCall ID: "
 			// NOTE: msg2 must start with a blank
@@ -256,7 +276,7 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 					fmt.Printf("mastodon processMessage offerRegisterLink issue resp posted (%s)\n",sendmsg)
 				}
 				if status!=nil {
-					// may be used to later delete the m-msg
+					// can be used to delete posted msg at some point later
 				}
 			}
 			return
@@ -264,6 +284,8 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 		case command=="remove":
 			// here we delete the webcall id specified in mastodonUserId 
 			fmt.Printf("mastodon command remove (%v)\n", mastodonUserId)
+
+// TODO user needs to first enable command 'remove' in the web-app
 
 			// first check mapping[]
 			mappingMutex.RLock()
@@ -704,10 +726,10 @@ func (mMgr *MastodonMgr) offerRegisterLink(mastodonUserId string, mastodonCaller
 		fmt.Printf("# offerRegisterLink PostStatus err=%v (to=%v)\n",err,mastodonUserId)
 		return err
 	}
+	fmt.Printf("offerRegisterLink PostStatus sent to=%v\n", mastodonUserId)
 	if status!=nil {
 		// can be used to delete this msg
 	}
-	fmt.Printf("offerRegisterLink PostStatus sent to=%v\n", mastodonUserId)
 
 /*
 	if inviter!=nil {

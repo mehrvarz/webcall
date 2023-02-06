@@ -253,7 +253,7 @@ function pwForm(ID,newpw,type) {
 
 function submitPw(ID,type) {
 	var valuePw = document.getElementById("pw").value;
-	console.log('submitPw valuePw',valuePw);
+console.log('submitPw valuePw',valuePw);	// TODO remove
 	if(valuePw.length < 6) {
 		pwForm(ID,type);
 		// set focus
@@ -331,7 +331,7 @@ function submitPw(ID,type) {
 		let api = apiPath+"/storealtid/"+mid+"?id="+ID;
 		if(typeof Android !== "undefined" && Android !== null) {
 			if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
-				api = api + "?ver="+Android.getVersionName();
+				api = api + "&ver="+Android.getVersionName();
 			}
 			if(typeof Android.webviewVersion !== "undefined" && Android.webviewVersion !== null) {
 				api = api + "_" + Android.webviewVersion();
