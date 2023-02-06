@@ -753,9 +753,9 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 
 	calleeHasPushChannel := false
 	if !calleeIsHiddenOnline {
-		// has twitter account?
 		if dbUser.Email2!="" && dbUser.Str1!="" {
-			// if a follower?
+			// has twitter account
+			// if a twitter follower?
 			twid, err := strconv.ParseInt(dbUser.Str1, 10, 64)
 			if err!=nil {
 				fmt.Printf("# /notifyCallee (%s) ParseInt64 Str1=(%s) err=%v\n",
@@ -775,6 +775,10 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 					calleeHasPushChannel = true
 				}
 			}
+
+		} else if dbUser.MastodonID!="" {
+			// has mastodon account
+			calleeHasPushChannel = true
 		}
 	}
 
