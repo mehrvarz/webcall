@@ -1096,7 +1096,6 @@ func (mMgr *MastodonMgr) httpStoreAltID(w http.ResponseWriter, r *http.Request, 
 			// calleeID not a valid account
 			fmt.Printf("# storeAltId numeric(%s) fail on dbUserBucket ip=%s\n", calleeID, remoteAddr)
 		} else {
-// TODO need to use 
 			err = kvHashedPw.Get(dbHashedPwBucket, calleeID, pwIdCombo)
 			if err!=nil {
 				fmt.Printf("# storeAltId (%s) fail get kvHashedPw err=%v\n", calleeID, err)
@@ -1141,12 +1140,20 @@ func (mMgr *MastodonMgr) httpStoreAltID(w http.ResponseWriter, r *http.Request, 
 			}
 			err = mMgr.storeAltId(calleeID, mastodonUserID, remoteAddr)
 			if err!=nil {
+				// fatal
 				fmt.Printf("# /storealtid (%s) storeAltId err=%v\n",calleeID,err)
 				fmt.Fprintf(w, "cannot store")
 				return
 			}
 			// success
 			fmt.Fprintf(w, "OK")
+
+			// deactivate mid
+			err = mMgr.kvMastodon.Delete(dbMid, mID)
+			if err!=nil {
+				// this is bad, but we can continue
+				fmt.Printf("# /storealtid delete dbMid mid=%s err=%v\n", mID, err)
+			}
 			return
 		}
 	}

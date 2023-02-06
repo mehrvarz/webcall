@@ -334,8 +334,8 @@ func main() {
 					toks2 := strings.Split(toks[tok], ",")
 					if toks2[0] != "" { // tmpID
 						if toks2[1] == "true" {
-							fmt.Printf("initloop set mapping from AltIDs %s -> %s (%s)\n",
-								toks2[0], calleeID, toks2[2])
+							//fmt.Printf("initloop set mapping from AltIDs %s -> %s (%s)\n",
+							//	toks2[0], calleeID, toks2[2])
 							mapping[toks2[0]] = MappingDataType{calleeID,toks2[2]}
 						}
 					}
@@ -343,7 +343,7 @@ func main() {
 			}
 
 			if dbUser.MastodonID!="" {
-				fmt.Printf("initloop set mapping from MastodonID %s -> %s\n", dbUser.MastodonID, calleeID)
+				//fmt.Printf("initloop set mapping from MastodonID %s -> %s\n", dbUser.MastodonID, calleeID)
 				mapping[dbUser.MastodonID] = MappingDataType{calleeID,"none"}
 			}
 		}
