@@ -258,7 +258,7 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 			// NOTE: msg1 must end with a blank
 			msg1 := "Setup your WebCall ID: "
 			// NOTE: msg2 must start with a blank
-			msg2 := " (active for 20 minutes)" // see "20*60" in cleanupMastodonMidMap()
+			msg2 := "" //" (active for 20 minutes)" // see "20*60" in cleanupMastodonMidMap()
 
 			// arg2: no callerID to notify after callee-login
 			// arg4: no msgID to notify after callee-login
