@@ -1096,12 +1096,13 @@ func (mMgr *MastodonMgr) httpStoreAltID(w http.ResponseWriter, r *http.Request, 
 			// calleeID not a valid account
 			fmt.Printf("# storeAltId numeric(%s) fail on dbUserBucket ip=%s\n", calleeID, remoteAddr)
 		} else {
-			err = kvHashedPw.Get(dbHashedPwBucket, mastodonUserID, pwIdCombo)
+// TODO need to use 
+			err = kvHashedPw.Get(dbHashedPwBucket, calleeID, pwIdCombo)
 			if err!=nil {
-				fmt.Printf("# storeAltId (%s) fail get kvHashedPw err=%v\n", mastodonUserID, err)
+				fmt.Printf("# storeAltId (%s) fail get kvHashedPw err=%v\n", calleeID, err)
 			} else {
 				existingID = true
-				fmt.Printf("storeAltId (%s) got kvHashedPw OK\n", mastodonUserID)
+				fmt.Printf("storeAltId (%s) got kvHashedPw OK\n", calleeID)
 			}
 		}
 	}
