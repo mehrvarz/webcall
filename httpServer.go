@@ -555,17 +555,19 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// cookie.Value is the longform (with &nnnnnnnnn), calleeIdFromCookie is the short form
+			// TODO at some point later we want to prefer calleeIdFromCookie and use cookie.Value as 2nd try
 			err := kvHashedPw.Get(dbHashedPwBucket,cookie.Value,&pwIdCombo)
 			if err!=nil {
 				if calleeIdFromCookie!=cookie.Value {
-					fmt.Printf("! httpApi %v err=%v try=%s\n", r.URL, err, calleeIdFromCookie)
+					//fmt.Printf("! httpApi %v err=%v try=%s\n", r.URL, err, calleeIdFromCookie)
 					err = kvHashedPw.Get(dbHashedPwBucket,calleeIdFromCookie,&pwIdCombo)
 				}
 			}
 			if err!=nil {
 				// callee is using an unknown cookie
-				fmt.Printf("# httpApi %v err=%v\n", r.URL, err)
+				fmt.Printf("# httpApi %v (%s) (%s) err=%v\n", r.URL, cookie.Value, calleeIdFromCookie, err)
 				// delete clientside cookie
+				// NOTE: doing this is a little dangerous if the error (with kvHashedPw.Get() above) is on us
 				clearCookie(w, r, urlID, remoteAddr, "unknown cookie")
 				cookie = nil
 			} else {
