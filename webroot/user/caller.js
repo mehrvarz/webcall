@@ -1525,12 +1525,8 @@ function calleeNotificationAction() {
 		if(xhr.responseText.startsWith("ok")) {
 			// calleeID can be notified (or is hidden)
 			// if caller is willing to wait, caller can invoke confirmNotifyConnect() to enter own name
-// TODO				let calleeName = xhr.responseText.substring(3);
-//					if(calleeName=="" || calleeName.length<3) {
-//						calleeName = calleeID;
-//					}
 			let calleeName = xhr.responseText.substring(3);
-			if(calleeName=="") {
+			if(calleeName=="" || calleeName.length<3) {
 				calleeName = "this user";
 			}
 			var msg = "This user is currently not available.<br><br>"+
