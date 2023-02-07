@@ -149,7 +149,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		if httpsPort>0 {
 			hostUrl += ":"+strconv.FormatInt(int64(httpsPort),10)
 		}
-		msg += " "+hostUrl+"/callee"
+		msg += " "+hostUrl+"/callee/"
 
 		if callerMsg!="" {
 			msg += " '"+callerMsg+"'"
