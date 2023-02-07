@@ -342,7 +342,7 @@ func main() {
 				}
 			}
 
-			if dbUser.MastodonID!="" {
+			if dbUser.MastodonID!="" && dbUser.MastodonID!=calleeID {
 				//fmt.Printf("initloop set mapping from MastodonID %s -> %s\n", dbUser.MastodonID, calleeID)
 				mapping[dbUser.MastodonID] = MappingDataType{calleeID,"none"}
 			}
