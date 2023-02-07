@@ -13,7 +13,7 @@ var isValidCalleeID = false;
 var isOnlineCalleeID = false;
 var mappedCalleeID = "";
 var wsCliMastodonID = "";
-var callerID = "";
+//var callerID = "";
 var cmappedCalleeID = "";
 var isOnlineCmappedCalleeID = false;
 
@@ -24,7 +24,7 @@ window.onload = function() {
 	isOnlineCalleeID = false;
 	mappedCalleeID = "";
 	wsCliMastodonID = "";
-	callerID = "";
+//	callerID = "";
 	cmappedCalleeID = "";
 	isOnlineCmappedCalleeID = false;
 
@@ -82,7 +82,7 @@ window.onload = function() {
 							if(tok.length>=5) {
 								wsCliMastodonID = tok[4]
 								if(tok.length>=6) {
-									callerID = tok[5]		// TODO currently empty
+									//callerID = tok[5]		// currently empty
 									if(tok.length>=7) {
 										cmappedCalleeID = tok[6]
 										if(tok.length>=8) {
@@ -150,7 +150,8 @@ function onload2() {
 		}
 	}
 
-	showStatus(dispMsg + "<br><br><br>", -1);
+	dispMsg += "<br><br>"
+	showStatus(dispMsg, -1);
 
 
 /*
@@ -305,17 +306,25 @@ console.log('submitPw valuePw',valuePw);	// TODO remove
 				console.log("calleeLink="+calleeLink+" mid="+mid);
 				*/
 
-				// exelink() will use calleeLink
-				showStatus( "Please keep ID and password in a secure place. "+
-				//"We can not send you this data."+
-				"<br><br>Your WebCall callee link is shown below. "+
-				"It lets you receive calls and should work in any web browser. "+
-				"Click to start:<br><br>"+
-				"<a onclick='exelink(\""+calleeLink+"\"); return false;' href='"+calleeLink+"'>"+calleeLink+"</a>",-1);
+				let dispMsg = "Success! You can now use Mastodon ID "+ID+" as your WebCall ID.";
+				dispMsg += "Do not lose your password.";
+				if(window.location !== window.parent.location) {
+					// runnung in an iframe (android), do not offer a calleeLink
+					dispMsg += "<br><br>This window can now be closed.";
+				} else {
+					// NOT runnung in iframe, we don't offer a calleeLink
+					dispMsg += "<br><br>Your WebCall callee link is shown below. "+
+					"It lets you receive calls and should work in any web browser. "+
+					"Click to start:<br><br>"+
+					"<a onclick='exelink(\""+calleeLink+"\"); return false;' href='"+calleeLink+"'>"+
+						calleeLink+"</a>"
+				}
+				showStatus(dispMsg,-1);
+
 			} else {
 				// register fail
 				console.log('response:',xhr.responseText);
-				showStatus("Sorry, it is not possible to register your ID right now. ("+xhr.responseText+") Please try again later.",-1);
+				showStatus("Sorry, registration is not possible at this time. ("+xhr.responseText+") Please try again later.",-1);
 			}
 		}, function(errString,err) {
 			console.warn('# xhr error',errString,err);
@@ -343,15 +352,21 @@ console.log('submitPw valuePw',valuePw);	// TODO remove
 		ajaxFetch(new XMLHttpRequest(), "POST", api, function(xhr) {
 			// only if we get back "OK" do we continue with:
 			if(xhr.responseText=="OK") {
-				showStatus("Success! Your Mastodon ID "+mastodonUserID+" is now associated with your WebCall ID "+ID+"<br><br>",-1);
-// TODO list all the benefits
+				let dispMsg = "Success! Your Mastodon ID "+mastodonUserID+
+					" is now associated with your WebCall ID "+ID+"<br><br>";
+// TODO tmtmtm list all the benefits
+				if(window.location !== window.parent.location) {
+					// runnung in iframe, we don't offer a calleeLink
+					dispMsg += "You can close this window now.";
+				}
+				showStatus(dispMsg,-1);
 			} else {
 				console.warn('# xhr response error',xhr.responseText);
-				showStatus("Error "+xhr.responseText+". storealtid not possible at this time. Please try again later. Thank you.<br><br>",-1);
+				showStatus("Error "+xhr.responseText+". storeAltId is not possible at this time. Please try again later.<br><br>",-1);
 			}
 		}, function(errString,err) {
 			console.warn('# xhr error',errString,err);
-			showStatus("Error "+errString+". storealtid not possible at this time. Please try again later. Thank you.<br><br>",-1);
+			showStatus("Error "+errString+". storeAltId not possible at this time. Please try again later. Thank you.<br><br>",-1);
 		}, "pw="+valuePw);
 	}
 }
@@ -372,13 +387,12 @@ function exelink(url) {
 		//console.log("exelink open",calleeLink);
 		window.open(url, '_blank');
 	} else {
-		// not running inside an iframe -> continue in the same tab
+		// NOT running inside an iframe -> continue in the same tab
 		//console.log("exelink replace",calleeLink);
 //		window.location.replace(url); // does not allow back button (TODO which is better?)
 		window.location.href = url;   // allows back button
 	}
 }
-
 
 /*
 function isAlreadyOnline(idStr) {

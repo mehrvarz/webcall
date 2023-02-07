@@ -234,209 +234,14 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 		switch {
 		case command=="setup":
 			fmt.Printf("mastodon command setup (%v)\n", mastodonUserId)
-
-			mappingMutex.RLock()
-			_,ok := mapping[mastodonUserId]
-			mappingMutex.RUnlock()
-			if ok {
-				// if mastodonUserId is already a main-ID or an alt-ID, then sending a register-link is useless
-				sendmsg :="@"+mastodonUserId+" is already in use"
-				fmt.Printf("mastodon command setup post (%s)\n",sendmsg)
-				status,err := mMgr.postMsgEx(sendmsg)
-				if err!=nil {
-					fmt.Printf("# mastodon command setup post err=%v (to=%v)\n",err,mastodonUserId)
-				} else {
-					fmt.Printf("mastodon command setup post sent to=%v\n", mastodonUserId)
-					if status!=nil {
-						// can be used to delete this msg
-					}
-				}
-				return
-			}
-
-			// NOTE: msg1 must end with a blank
-			msg1 := "Setup your WebCall ID: "
-			// NOTE: msg2 must start with a blank
-			msg2 := "" //" (active for 20 minutes)" // see "20*60" in cleanupMastodonMidMap()
-
-			// arg2: no callerID to notify after callee-login
-			// arg4: no msgID to notify after callee-login
-			err := mMgr.offerRegisterLink(mastodonUserId, "", msg1, msg2, "", "/callee/mastodon/setup")
-			if err!=nil {
-				fmt.Printf("# mastodon processMessage offerRegisterLink err=%v\n",err)
-				// post msg telling user that request has failed
-				// what makes responding here difficult is that offerRegisterLink() may fail on different things:
-				//   create secret, error on kvMastodon.Put(dbMid/dbInviter/dbCid), error on postMsgEx()
-				sendmsg :="@"+mastodonUserId+" sorry, I am not able to proceed with your request"
-				status,err := mMgr.postMsgEx(sendmsg)
-				if err!=nil {
-					fmt.Printf("# mastodon processMessage offerRegisterLink issue resp failed (%s)\n",sendmsg)
-				} else {
-					fmt.Printf("mastodon processMessage offerRegisterLink issue resp posted (%s)\n",sendmsg)
-				}
-				if status!=nil {
-					// can be used to delete posted msg at some point later
-				}
-			}
+			mMgr.commandSetup(mastodonUserId,true)
 			return
 
 		case command=="remove":
 			// here we delete the webcall id specified in mastodonUserId 
 			fmt.Printf("mastodon command remove (%v)\n", mastodonUserId)
-
 // TODO user needs to first enable command 'remove' in the web-app
-
-			// first check mapping[]
-			mappingMutex.RLock()
-			mappingData,ok := mapping[mastodonUserId]
-			mappingMutex.RUnlock()
-			if ok {
-				var err error
-				if mappingData.CalleeId!="" && mappingData.CalleeId!=mastodonUserId {
-					// this is a calleeID with an alt-id
-
-					fmt.Printf("mastodon command remove: found mapping %s->%s\n",
-						mastodonUserId, mappingData.CalleeId)
-					mappingMutex.Lock()
-					delete(mapping,mastodonUserId)
-					mappingMutex.Unlock()
-
-					// also remove alt-id from mappingData.CalleeId
-					err = mMgr.storeAltId(mappingData.CalleeId, "", "")
-/*
-					if err==nil {
-						// delete hashedPW
-						err2 := kvHashedPw.(skv.SKV).Delete(dbHashedPwBucket, mappingData.CalleeId)
-						if err2!=nil {
-							// ignore
-						} else {
-							// all is well
-						}
-					}
-*/
-					sendmsg :="@"+mastodonUserId+" on your request your ID has been deactivated"
-					if err!=nil {
-						// post msg telling user that remove has failed
-						sendmsg ="@"+mastodonUserId+" sorry, I am not able to proceed with your request"
-					}
-					status,err := mMgr.postMsgEx(sendmsg)
-					if err!=nil {
-						fmt.Printf("# mastodon command remove: issue resp failed (%s)\n",sendmsg)
-					} else {
-						fmt.Printf("mastodon command remove: issue resp posted (%s)\n",sendmsg)
-					}
-					if status!=nil {
-						// may be used to later delete the m-msg
-					}
-
-					// do NOT delete the user account of mappingData.CalleeId
-					// end processMessage here
-					return
-				}
-				// fall through
-			}
-
-			var dbEntryRegistered DbEntry
-			err := kvMain.Get(dbRegisteredIDs,mastodonUserId,&dbEntryRegistered)
-			if err!=nil {
-				if strings.Index(err.Error(),"key not found")>0 {
-					fmt.Printf("# mastodon command remove user=%s err=%v\n", mastodonUserId, err)
-				}
-				// ignore! no need to notify user by msg (looks like an invalid request)
-			} else {
-				// mastodonUserId is a registered calleeID
-
-				// if user is currently online / logged-in as callee
-				hubMapMutex.RLock()
-				hub := hubMap[mastodonUserId]
-				hubMapMutex.RUnlock()
-				if hub != nil {
-					// disconnect online callee user
-					hub.closeCallee("unregister") // -> hub.exitFunc()
-					// new callee.js will delete cookie on "User ID unknown"
-				}
-
-				dbUserKey := fmt.Sprintf("%s_%d", mastodonUserId, dbEntryRegistered.StartTime)
-
-				// delete/outdate mapped tmpIDs of outdated mastodonUserId
-				errcode,altIDs := getMapping(mastodonUserId,"")
-				if errcode==0 && altIDs!="" {
-					tokenSlice := strings.Split(altIDs, "|")
-					for _, tok := range tokenSlice {
-						deleteMapping(mastodonUserId,tok,"")
-					}
-				}
-
-				// also delete mastodonUserId's contacts
-				err = kvContacts.Delete(dbContactsBucket, mastodonUserId)
-				if err!=nil {
-					fmt.Printf("# mastodon command remove contacts of id=%s err=%v\n",
-						mastodonUserId, err)
-					// not fatal
-				}
-
-				kv := kvMain.(skv.SKV)
-				err = kv.Delete(dbUserBucket, dbUserKey)
-				if err!=nil {
-					// this is fatal
-					fmt.Printf("# mastodon command remove user-key=%s err=%v\n", dbUserKey, err)
-				} else {
-					fmt.Printf("mastodon command remove user-key=%s done\n", dbUserKey)
-
-					err = kvMain.Delete(dbRegisteredIDs, mastodonUserId)
-					if err!=nil {
-						// this is fatal
-						fmt.Printf("# mastodon command remove user-id=%s err=%v\n", mastodonUserId, err)
-					} else {
-						fmt.Printf("mastodon command remove user-id=%s done\n", mastodonUserId)
-					}
-				}
-
-				if err!=nil {
-					// send msg telling user that remove has failed
-					sendmsg :="@"+mastodonUserId+" sorry, I am not able to proceed with your request"
-					status,err := mMgr.postMsgEx(sendmsg)
-					if err!=nil {
-						fmt.Printf("# mastodon command remove: issue resp failed (%s)\n",sendmsg)
-					} else {
-						fmt.Printf("mastodon command remove: issue resp posted (%s)\n",sendmsg)
-					}
-					if status!=nil {
-						// may be used later to delete this m-msg
-					}
-					return
-				}
-
-				// dbUser has been deactivated
-// TODO NOTE: callee-user may still be online
-				// send msg telling user that their webcall account has been deactivated
-				sendmsg :="@"+mastodonUserId+" on your request your ID has been deleted"
-				status,err := mMgr.postMsgEx(sendmsg)
-				if err!=nil {
-					fmt.Printf("# mastodon command remove: issue resp failed (%s)\n",sendmsg)
-				} else {
-					fmt.Printf("mastodon command remove: issue resp posted (%s)\n",sendmsg)
-				}
-				if status!=nil {
-					// may be used later to delete this m-msg
-				}
-
-				// also delete missed calls
-				var missedCallsSlice []CallerInfo
-				err = kvCalls.Put(dbMissedCalls, mastodonUserId, missedCallsSlice, false)
-				if err!=nil {
-					fmt.Printf("# mastodon command remove (%s) fail store dbMissedCalls\n", mastodonUserId)
-					// not fatal
-				}
-
-				// also delete HashedPw
-				err = kvHashedPw.Delete(dbHashedPwBucket, mastodonUserId)
-				if err!=nil {
-					fmt.Printf("# mastodon command remove (%s) fail delete hashedPw\n", mastodonUserId)
-					// not fatal
-				}
-			}
-			// end processMessage here
+			mMgr.commandRemove(mastodonUserId,true)
 			return
 		}
 	}
@@ -684,8 +489,249 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 */
 }
 
+func (mMgr *MastodonMgr) commandSetup(mastodonUserId string, postback bool) {
+	mappingMutex.RLock()
+	_,ok := mapping[mastodonUserId]
+	mappingMutex.RUnlock()
+	if ok {
+		// if mastodonUserId is already an alt-ID, then sending a register-link is useless
+		sendmsg :="@"+mastodonUserId+" is already associated"
+		fmt.Printf("mastodon command setup post (%s)\n",sendmsg)
+		if postback {
+			status,err := mMgr.postMsgEx(sendmsg)
+			if err!=nil {
+				fmt.Printf("# mastodon command setup post err=%v (to=%v)\n",err,mastodonUserId)
+			} else {
+				fmt.Printf("mastodon command setup post sent to=%v\n", mastodonUserId)
+				if status!=nil {
+					// can be used to delete this msg
+				}
+			}
+		}
+		return
+	}
 
-func (mMgr *MastodonMgr) offerRegisterLink(mastodonUserId string, mastodonCallerUserId string, msg1 string, msg2 string, msgID string, path string) error {
+	// now check for main-id
+	var dbEntry DbEntry
+	var dbUser DbUser
+	err := kvMain.Get(dbRegisteredIDs, mastodonUserId, &dbEntry)
+	if err != nil {
+		if strings.Index(err.Error(), "skv key not found") < 0 {
+			// some other error
+			fmt.Printf("# mastodon command setup get dbRegisteredID %s err=%v\n",mastodonUserId,err)
+			return
+		}
+		// key not found
+	} else {
+		// dbRegisteredIDs key was found
+		dbUserKey := fmt.Sprintf("%s_%d", mastodonUserId, dbEntry.StartTime)
+		err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
+		if err != nil {
+			if strings.Index(err.Error(), "skv key not found") < 0 {
+				// some other error
+				fmt.Printf("# mastodon command setup get dbUserBucket %s err=%v\n",mastodonUserId,err)
+				return
+			}
+			// key not found
+		} else {
+			// key exists
+			sendmsg :="@"+mastodonUserId+" user exists"
+			fmt.Printf("mastodon command setup (%s)\n",sendmsg)
+			if postback {
+				status,err := mMgr.postMsgEx(sendmsg)
+				if err!=nil {
+					fmt.Printf("# mastodon command setup post err=%v (to=%v)\n",err,mastodonUserId)
+				} else {
+					fmt.Printf("mastodon command setup post sent to=%v\n", mastodonUserId)
+					if status!=nil {
+						// can be used to delete this msg
+					}
+				}
+			}
+			return
+		}
+	}
+
+	// mastodonUserId is not yet being used
+
+	// NOTE: msg1 must end with a blank
+	msg1 := "Setup your WebCall ID: "
+	// NOTE: msg2 must start with a blank
+	msg2 := "" //" (active for 20 minutes)" // see "20*60" in cleanupMastodonMidMap()
+
+	// arg2: no callerID to notify after callee-login
+	// arg4: no msgID to notify after callee-login
+	err = mMgr.offerRegisterLink(mastodonUserId, "", msg1, msg2, "", "/callee/mastodon/setup", postback)
+	if err!=nil {
+		fmt.Printf("# mastodon processMessage offerRegisterLink err=%v\n",err)
+		// post msg telling user that request has failed
+		// what makes responding here difficult is that offerRegisterLink() may fail on different things:
+		//   create secret, error on kvMastodon.Put(dbMid/dbInviter/dbCid), error on postMsgEx()
+		sendmsg :="@"+mastodonUserId+" sorry, I am not able to proceed with your request"
+		status,err := mMgr.postMsgEx(sendmsg)
+		if err!=nil {
+			fmt.Printf("# mastodon processMessage offerRegisterLink issue resp failed (%s)\n",sendmsg)
+		} else {
+			fmt.Printf("mastodon processMessage offerRegisterLink issue resp posted (%s)\n",sendmsg)
+		}
+		if status!=nil {
+			// can be used to delete posted msg at some point later
+		}
+	}
+}
+
+func (mMgr *MastodonMgr) commandRemove(mastodonUserId string, postback bool) {
+	// first check mapping[]
+	mappingMutex.RLock()
+	mappingData,ok := mapping[mastodonUserId]
+	mappingMutex.RUnlock()
+	if ok {
+		var err error
+		fmt.Printf("mastodon command remove: found mapping %s->%s\n",
+			mastodonUserId, mappingData.CalleeId)
+		if mappingData.CalleeId!="" && mappingData.CalleeId!=mastodonUserId {
+			// this is a calleeID with an alt-id
+			mappingMutex.Lock()
+			delete(mapping,mastodonUserId)
+			mappingMutex.Unlock()
+
+			// remove alt-id from mappingData.CalleeId
+			err = mMgr.storeAltId(mappingData.CalleeId, "", "")
+
+			if postback {
+				sendmsg :="@"+mastodonUserId+" on your request your ID has been deactivated"
+				if err!=nil {
+					// post msg telling user that remove has failed
+					sendmsg ="@"+mastodonUserId+" sorry, I am not able to proceed with your request"
+				}
+				status,err := mMgr.postMsgEx(sendmsg)
+				if err!=nil {
+					fmt.Printf("# mastodon command remove: issue resp failed (%s)\n",sendmsg)
+				} else {
+					fmt.Printf("mastodon command remove: issue resp posted (%s)\n",sendmsg)
+				}
+				if status!=nil {
+					// may be used to later delete the m-msg
+				}
+			}
+
+			// do NOT delete the user account of mappingData.CalleeId
+			// end processMessage here
+			return
+		}
+// TODO must check this
+		// fall through
+	}
+
+	// now check for main-id
+	var dbEntryRegistered DbEntry
+	err := kvMain.Get(dbRegisteredIDs,mastodonUserId,&dbEntryRegistered)
+	if err!=nil {
+		if strings.Index(err.Error(),"key not found")>0 {
+			fmt.Printf("# mastodon command remove user=%s err=%v\n", mastodonUserId, err)
+		}
+		// ignore! no need to notify user by msg (looks like an invalid request)
+	} else {
+		// mastodonUserId is a registered calleeID
+
+		// if user is currently online / logged-in as callee
+		hubMapMutex.RLock()
+		hub := hubMap[mastodonUserId]
+		hubMapMutex.RUnlock()
+		if hub != nil {
+			// disconnect online callee user
+			hub.closeCallee("unregister") // -> hub.exitFunc()
+			// new callee.js will delete cookie on "User ID unknown"
+		}
+
+		dbUserKey := fmt.Sprintf("%s_%d", mastodonUserId, dbEntryRegistered.StartTime)
+
+		// delete/outdate mapped tmpIDs of outdated mastodonUserId
+		errcode,altIDs := getMapping(mastodonUserId,"")
+		if errcode==0 && altIDs!="" {
+			tokenSlice := strings.Split(altIDs, "|")
+			for _, tok := range tokenSlice {
+				deleteMapping(mastodonUserId,tok,"")
+			}
+		}
+
+		// also delete mastodonUserId's contacts
+		err = kvContacts.Delete(dbContactsBucket, mastodonUserId)
+		if err!=nil {
+			fmt.Printf("# mastodon command remove contacts of id=%s err=%v\n",
+				mastodonUserId, err)
+			// not fatal
+		}
+
+		kv := kvMain.(skv.SKV)
+		err = kv.Delete(dbUserBucket, dbUserKey)
+		if err!=nil {
+			// this is fatal
+			fmt.Printf("# mastodon command remove user-key=%s err=%v\n", dbUserKey, err)
+		} else {
+			fmt.Printf("mastodon command remove user-key=%s done\n", dbUserKey)
+
+			err = kvMain.Delete(dbRegisteredIDs, mastodonUserId)
+			if err!=nil {
+				// this is fatal
+				fmt.Printf("# mastodon command remove user-id=%s err=%v\n", mastodonUserId, err)
+			} else {
+				fmt.Printf("mastodon command remove user-id=%s done\n", mastodonUserId)
+			}
+		}
+
+		if err!=nil {
+			if postback {
+				// send msg telling user that remove has failed
+				sendmsg :="@"+mastodonUserId+" sorry, I am not able to proceed with your request"
+				status,err := mMgr.postMsgEx(sendmsg)
+				if err!=nil {
+					fmt.Printf("# mastodon command remove: issue resp failed (%s)\n",sendmsg)
+				} else {
+					fmt.Printf("mastodon command remove: issue resp posted (%s)\n",sendmsg)
+				}
+				if status!=nil {
+					// may be used later to delete this m-msg
+				}
+			}
+			return
+		}
+
+		// dbUser has been deactivated
+// TODO NOTE: callee-user may still be online
+		// send msg telling user that their webcall account has been deactivated
+		if postback {
+			sendmsg :="@"+mastodonUserId+" on your request your ID has been deleted"
+			status,err := mMgr.postMsgEx(sendmsg)
+			if err!=nil {
+				fmt.Printf("# mastodon command remove: issue resp failed (%s)\n",sendmsg)
+			} else {
+				fmt.Printf("mastodon command remove: issue resp posted (%s)\n",sendmsg)
+			}
+			if status!=nil {
+				// may be used later to delete this m-msg
+			}
+		}
+
+		// also delete missed calls
+		var missedCallsSlice []CallerInfo
+		err = kvCalls.Put(dbMissedCalls, mastodonUserId, missedCallsSlice, false)
+		if err!=nil {
+			fmt.Printf("# mastodon command remove (%s) fail store dbMissedCalls\n", mastodonUserId)
+			// not fatal
+		}
+
+		// also delete HashedPw
+		err = kvHashedPw.Delete(dbHashedPwBucket, mastodonUserId)
+		if err!=nil {
+			fmt.Printf("# mastodon command remove (%s) fail delete hashedPw\n", mastodonUserId)
+			// not fatal
+		}
+	}
+	// end processMessage here
+}
+
+func (mMgr *MastodonMgr) offerRegisterLink(mastodonUserId string, mastodonCallerUserId string, msg1 string, msg2 string, msgID string, path string, postback bool) error {
 	// offer link to /pickup, with which mastodonUserId can be registered
 	// first we need a unique mID (refering to mastodonUserId)
 
@@ -713,21 +759,23 @@ func (mMgr *MastodonMgr) offerRegisterLink(mastodonUserId string, mastodonCaller
 //	midEntry.MsgID = msgID
 	err = mMgr.kvMastodon.Put(dbMid, mID, midEntry, false)
 	if err != nil {
-		fmt.Printf("# mastodon processMessage mID=%v failed to store midEntry\n", mID)
+		fmt.Printf("# offerRegisterLink mID=%v failed to store midEntry\n", mID)
 		return err
 	}
 	mMgr.midMutex.Unlock()
 
 	sendmsg :="@"+mastodonUserId+" " + msg1 + mMgr.hostUrl + path + "?mid=" + mID + msg2
 	fmt.Printf("offerRegisterLink PostStatus (%s)\n",sendmsg)
-	status,err := mMgr.postMsgEx(sendmsg)
-	if err!=nil {
-		fmt.Printf("# offerRegisterLink PostStatus err=%v (to=%v)\n",err,mastodonUserId)
-		return err
-	}
-	fmt.Printf("offerRegisterLink PostStatus sent to=%v\n", mastodonUserId)
-	if status!=nil {
-		// can be used to delete this msg
+	if postback {
+		status,err := mMgr.postMsgEx(sendmsg)
+		if err!=nil {
+			fmt.Printf("# offerRegisterLink PostStatus err=%v (to=%v)\n",err,mastodonUserId)
+			return err
+		}
+		fmt.Printf("offerRegisterLink PostStatus sent to=%v\n", mastodonUserId)
+		if status!=nil {
+			// can be used to delete this msg
+		}
 	}
 
 /*
@@ -830,7 +878,6 @@ func (mMgr *MastodonMgr) httpGetMidUser(w http.ResponseWriter, r *http.Request, 
 	fmt.Printf("httpGetMidUser mid=%s cid=%s ip=%v\n",mid,cid,remoteAddr)
 
 	calleeIdOnMastodon := ""
-	callerIdOnMastodon := ""	// TODO kann weg
 
 	midEntry := &MidEntry{}
 	err := mMgr.kvMastodon.Get(dbMid, mid, midEntry)
@@ -839,17 +886,7 @@ func (mMgr *MastodonMgr) httpGetMidUser(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 	calleeIdOnMastodon = midEntry.MastodonIdCallee
-//	callerIdOnMastodon = midEntry.MastodonIdCaller
 	fmt.Printf("httpGetMidUser get midEntry mid=%s calleeIdOnMastodon=%s ok\n",mid,calleeIdOnMastodon)
-
-/* we can't do this here bc /registermid will need mid
-	// deactivate mid (TODO or shall we delay this a bit?)
-	err = mMgr.kvMastodon.Delete(dbMid, mid)
-	if err!=nil {
-		// this is bad
-		fmt.Printf("# httpGetMidUser delete dbMid mid=%s err=%v\n", mid, err)
-	}
-*/
 
 	isValidCalleeID := "false"
 	isOnlineCalleeID := "false"
@@ -925,7 +962,7 @@ func (mMgr *MastodonMgr) httpGetMidUser(w http.ResponseWriter, r *http.Request, 
 	// NOTE: calleeID may be same as calleeIdOnMastodon, or may be a 11-digit ID
 	// NOTE: wsCliMastodonID may be calleeIdOnMastodon or empty string
 	codedString := calleeIdOnMastodon+"|"+isValidCalleeID+"|"+isOnlineCalleeID+"|"+
-		calleeID+"|"+wsCliMastodonID+"|"+callerIdOnMastodon+"|"+cMastodonID+"|"+cMastodonIDOnline
+		calleeID+"|"+wsCliMastodonID+"||"+cMastodonID+"|"+cMastodonIDOnline
 	fmt.Printf("httpGetMidUser codedString=%v\n",codedString)
 	fmt.Fprintf(w,codedString)
 	return
@@ -934,9 +971,9 @@ func (mMgr *MastodonMgr) httpGetMidUser(w http.ResponseWriter, r *http.Request, 
 func (mMgr *MastodonMgr) isValidCallee(calleeID string) *DbUser {
 	var dbEntry DbEntry
 
-	mappingMutex.Lock()
+	mappingMutex.RLock()
 	mappingData,ok := mapping[calleeID]
-	mappingMutex.Unlock()
+	mappingMutex.RUnlock()
 	if ok && mappingData.CalleeId != "" {
 		// calleeID found in mapping[] and mappingData.CalleeId is set
 		// this means: calleeID is a mastodon or a mapping ID, and mappingData.CalleeId the 11-digit ID
@@ -1318,6 +1355,7 @@ func (mMgr *MastodonMgr) httpRegisterMid(w http.ResponseWriter, r *http.Request,
 }
 
 func (mMgr *MastodonMgr) cleanupMastodonMidMap(w io.Writer) {
+	// called from timer.go
 	fmt.Printf("cleanupMastodonMidMap...\n")
 	timeNowUnix := time.Now().Unix()
 	var deleteMidArray []string
@@ -1367,7 +1405,6 @@ func (mMgr *MastodonMgr) cleanupMastodonMidMap(w io.Writer) {
 
 	if len(deleteMidArray)>0 {
 		fmt.Printf("cleanupMastodonMidMap delete %d dbMid entries\n", len(deleteMidArray))
-// hang
 		for _,mid := range deleteMidArray {
 			if mid!="" {
 				fmt.Printf("cleanupMastodonMidMap kv.Delete(dbMid,%s)\n",mid)

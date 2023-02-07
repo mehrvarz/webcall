@@ -355,6 +355,33 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		return true
 	}
 
+	if urlPath=="/m-setup" {
+		// get time from url-arg
+		url_arg_array, ok := r.URL.Query()["id"]
+		if !ok || len(url_arg_array[0]) < 1 {
+			printFunc(w,"# /m-setup url arg 'id' not given\n")
+			return true
+		}
+		id := url_arg_array[0]
+		if mastodonMgr != nil {
+			mastodonMgr.commandSetup(id,false)
+		}
+		return true
+	}
+	if urlPath=="/m-remove" {
+		// get time from url-arg
+		url_arg_array, ok := r.URL.Query()["id"]
+		if !ok || len(url_arg_array[0]) < 1 {
+			printFunc(w,"# /m-remove url arg 'id' not given\n")
+			return true
+		}
+		id := url_arg_array[0]
+		if mastodonMgr != nil {
+			mastodonMgr.commandRemove(id,false)
+		}
+		return true
+	}
+
 	return false
 }
 

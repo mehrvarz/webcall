@@ -551,16 +551,16 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 			// calleeID == calleeIdFromCookie (this is good) - now get hashPw from kvHashedPw
 			if logWantedFor("cookie") {
 				fmt.Printf("httpApi cookie avail req=%s ref=%s cookieName=%s cValue=%s calleeID=%s urlID=%s\n",
-					r.URL.Path, referer, cookieName, cookie.Value, calleeID, urlID)
+					r.URL.Path, referer, cookieName, calleeIdFromCookie, calleeID, urlID)
 			}
-// TODO here we could use calleeIdFromCookie instead of cookie.Value
-			err = kvHashedPw.Get(dbHashedPwBucket,cookie.Value,&pwIdCombo)
+
+			err = kvHashedPw.Get(dbHashedPwBucket,calleeIdFromCookie,&pwIdCombo)
 			if err!=nil {
 				err = kvHashedPw.Get(dbHashedPwBucket,calleeIdFromCookie,&pwIdCombo)
 			}
 			if err!=nil {
 				// callee is using an unknown cookie
-				fmt.Printf("httpApi %v unknown cookie '%s' err=%v\n", r.URL, cookie.Value, err)
+				fmt.Printf("httpApi %v unknown cookie '%s' err=%v\n", r.URL, calleeIdFromCookie, err)
 				// delete clientside cookie
 				clearCookie(w, r, urlID, remoteAddr, "unknown cookie")
 				cookie = nil
@@ -582,7 +582,6 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 						pwIdCombo, calleeID)
 					cookie = nil
 				} else {
-					// get hashPw from dbHashedPw with cookie.Value
 					//fmt.Printf("httpApi cookie available for id=(%s) (%s)(%s) reqPath=%s ref=%s rip=%s\n",
 					//	pwIdCombo.CalleeId, calleeID, urlID, r.URL.Path, referer, remoteAddrWithPort)
 					hashPw = pwIdCombo.Pw

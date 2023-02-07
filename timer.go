@@ -496,8 +496,6 @@ func ticker20min() {
 		cleanupClientRequestsMap(os.Stdout, 10, "ticker20min")
 
 		if mastodonMgr != nil {
-// opsolte together with invite code
-//			mastodonMgr.cleanupMastodonInviter(os.Stdout)
 			mastodonMgr.cleanupMastodonMidMap(os.Stdout)
 		}
 
