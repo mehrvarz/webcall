@@ -1419,7 +1419,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 				if(xhrTimeout < 60*1000) {
 					xhrTimeout = 60*1000;
 				}
-				gLog("notifyCallee api="+api+" timeout="+xhrTimeout);
+				console.log("notifyCallee notavailtemp timeout="+xhrTimeout);
 				// in case caller aborts:
 				goodbyMissedCall = calleeID+"|"+callerName+"|"+callerId+
 					"|"+Math.floor(Date.now()/1000)+
