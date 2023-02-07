@@ -1412,14 +1412,14 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 					divspinnerframe.style.display = "block";
 				}
 				let api = apiPath+"/online?id="+calleeID+"&wait=true&callerId="+callerId;
-				xhrTimeout = 3*60*1000; // 15min
+				xhrTimeout = 3*60*1000; // max 3min
 				if(offlineFor>0) {
 					xhrTimeout = xhrTimeout - offlineFor*1000;
 				}
-				if(xhrTimeout < 5*1000) {
+				if(xhrTimeout < 5*1000) { // min 5s
 					xhrTimeout = 5*1000;
 				}
-				console.log("notifyCallee notavailtemp timeout="+xhrTimeout+" offlineFor="+(offlineFor*1000)+"s");
+				console.log("notifyCallee notavailtemp timeout="+xhrTimeout+" offlineFor="+(offlineFor*1000));
 				// in case caller aborts:
 				goodbyMissedCall = calleeID+"|"+callerName+"|"+callerId+
 					"|"+Math.floor(Date.now()/1000)+
@@ -1430,30 +1430,33 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 					if(divspinnerframe) {
 						divspinnerframe.style.display = "none";
 					}
-					if(xhr.responseText!=null && xhr.responseText.indexOf("?wsid=")>0) {
-						gLog('callee is now online. switching to call layout. '+xhr.responseText);
-						goodbyMissedCall = "";
-						lastOnlineStatus = xhr.responseText;
-						let tok = xhr.responseText.split("|");
-						wsAddr = tok[0];
-						wsAddrTime = Date.now();
-						// switch to callee-is-online layout
-						calleeOnlineElement.style.display = "block";
-						calleeOfflineElement.style.display = "none";
+					if(xhr.responseText!=null) {
+						console.log("xhr.responseText",xhr.responseText);
+						if(xhr.responseText.indexOf("?wsid=")>0) {
+							gLog('callee is now online. switching to call layout. '+xhr.responseText);
+							goodbyMissedCall = "";
+							lastOnlineStatus = xhr.responseText;
+							let tok = xhr.responseText.split("|");
+							wsAddr = tok[0];
+							wsAddrTime = Date.now();
+							// switch to callee-is-online layout
+							calleeOnlineElement.style.display = "block";
+							calleeOfflineElement.style.display = "none";
 
-						showStatus("Enter text message before the call (optional):",-1);
-						msgbox.style.display = "block";
-						haveBeenWaitingForCalleeOnline=true; // will cause notificationSound to play
+							showStatus("Enter text message before the call (optional):",-1);
+							msgbox.style.display = "block";
+							haveBeenWaitingForCalleeOnline=true; // will cause notificationSound to play
 
-						if(notificationSound) {
-							gLog('play notificationSound');
-							notificationSound.play().catch(function(error) { 
-								console.log('# notificationSound err='+error);
-							});
-						} else {
-							console.log("calleeOnlineAction no notificationSound");
+							if(notificationSound) {
+								gLog('play notificationSound');
+								notificationSound.play().catch(function(error) { 
+									console.log('# notificationSound err='+error);
+								});
+							} else {
+								console.log("calleeOnlineAction no notificationSound");
+							}
+							return;
 						}
-						return;
 					}
 /*
 					if(!goodbyDone) {
@@ -1474,6 +1477,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 					if(goodbyDone) {
 						return;
 					}
+					console.log("fall through to calleeNotificationAction");
 					calleeNotificationAction();
 
 				}, function(errString,errcode) {
