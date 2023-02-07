@@ -1412,9 +1412,12 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 					divspinnerframe.style.display = "block";
 				}
 				let api = apiPath+"/online?id="+calleeID+"&wait=true&callerId="+callerId;
-				xhrTimeout = 15*60*1000; // 15min
+				xhrTimeout = 3*60*1000; // 15min
 				if(offlineFor>0) {
 					xhrTimeout = xhrTimeout - offlineFor*1000;
+				}
+				if(xhrTimeout < 60*1000) {
+					xhrTimeout = 60*1000;
 				}
 				gLog("notifyCallee api="+api+" timeout="+xhrTimeout);
 				// in case caller aborts:
