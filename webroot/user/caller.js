@@ -1407,12 +1407,12 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 			if(onlineStatus.startsWith("notavailtemp")) {
 				// callee temporarily offline: have caller wait for callee
 				var offlineFor = parseInt(onlineStatus.substring(12),10);
-				showStatus("Trying to find "+calleeID+". This can take a while. Please wait...",-1);
+				showStatus("Trying to find "+calleeID+". This can take a moment. Please wait...",-1);
 				if(divspinnerframe) {
 					divspinnerframe.style.display = "block";
 				}
 				let api = apiPath+"/online?id="+calleeID+"&wait=true&callerId="+callerId;
-				xhrTimeout = 3*60*1000; // max 3min
+				xhrTimeout = 2*60*1000; // max 3min
 				if(offlineFor>0) {
 					xhrTimeout = xhrTimeout - offlineFor*1000;
 				}
