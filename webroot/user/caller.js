@@ -1416,8 +1416,8 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 				if(offlineFor>0) {
 					xhrTimeout = xhrTimeout - offlineFor*1000;
 				}
-				if(xhrTimeout < 10*1000) {
-					xhrTimeout = 10*1000;
+				if(xhrTimeout < 5*1000) {
+					xhrTimeout = 5*1000;
 				}
 				console.log("notifyCallee notavailtemp timeout="+xhrTimeout+" offlineFor="+offlineFor);
 				// in case caller aborts:
@@ -1455,6 +1455,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 						}
 						return;
 					}
+/*
 					if(!goodbyDone) {
 						gLog('online: callee could not be reached (%s)',xhr.responseText);
 						showStatus("Unable to reach "+calleeID+".<br>Please try again later.",-1);
@@ -1468,6 +1469,10 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 						}, function(errString,err) {
 							console.log('# /missedCall xhr error: '+errString+' '+err);
 						});
+					}
+*/
+					if(goodbyDone) {
+						return;
 					}
 				}, function(errString,errcode) {
 					// end spinner
@@ -1488,8 +1493,9 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 						});
 						goodbyMissedCall = "";
 					}
+					return;
 				});
-				return;
+				//return;
 			}
 
 			// calleeID is currently offline - check if calleeID can be notified (via twitter msg)
