@@ -144,7 +144,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		}
 		msg += " is WebCalling you"
 
-		// here we add /callee link
+		// adding /callee link
 		hostUrl := "https://"+hostname
 		if httpsPort>0 {
 			hostUrl += ":"+strconv.FormatInt(int64(httpsPort),10)

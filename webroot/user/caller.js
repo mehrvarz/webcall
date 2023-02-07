@@ -1412,7 +1412,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 					divspinnerframe.style.display = "block";
 				}
 				let api = apiPath+"/online?id="+calleeID+"&wait=true&callerId="+callerId;
-				xhrTimeout = 2*60*1000; // max 3min
+				xhrTimeout = 1*60*1000; // max 1min
 				if(offlineFor>0) {
 					xhrTimeout = xhrTimeout - offlineFor*1000;
 				}
@@ -1529,8 +1529,12 @@ function calleeNotificationAction() {
 //					if(calleeName=="" || calleeName.length<3) {
 //						calleeName = calleeID;
 //					}
+			let calleeName = xhr.responseText.substring(3);
+			if(calleeName=="") {
+				calleeName = "this user";
+			}
 			var msg = "This user is currently not available.<br><br>"+
-				"We can try to get this person on the phone. Can you wait a few minutes while we try to establish a connection?<br><br><a onclick='confirmNotifyConnect()'>Yes, please try</a>";
+				"We can try to get "+calleeName+" on the phone. Can you wait a few minutes while we try to establish a connection?<br><br><a onclick='confirmNotifyConnect()'>Yes, please try</a>";
 			if(window.self == window.top) {
 				// not running in iframe mode: no -> jump on directory up
 				msg += "<br><br><a href='..'>No, I have to go</a>";
