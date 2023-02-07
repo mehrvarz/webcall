@@ -1486,7 +1486,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 						divspinnerframe.style.display = "none";
 					}
 					// errcode 504 = timeout
-					gLog('online: callee could not be reached. xhr err',errString,errcode);
+					console.log('online: callee could not be reached. xhr err',errString,errcode);
 					// TODO if xhr /online failed, does it make sense to try xhr /missedCall ?
 					showStatus("Unable to reach "+calleeID+".<br>Please try again later.",-1);
 					//wsSend("missedcall|"+goodbyMissedCall); // this is not possible here
