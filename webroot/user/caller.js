@@ -1416,10 +1416,10 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 				if(offlineFor>0) {
 					xhrTimeout = xhrTimeout - offlineFor*1000;
 				}
-				if(xhrTimeout < 60*1000) {
-					xhrTimeout = 60*1000;
+				if(xhrTimeout < 10*1000) {
+					xhrTimeout = 10*1000;
 				}
-				console.log("notifyCallee notavailtemp timeout="+xhrTimeout);
+				console.log("notifyCallee notavailtemp timeout="+xhrTimeout+" offlineFor="+offlineFor);
 				// in case caller aborts:
 				goodbyMissedCall = calleeID+"|"+callerName+"|"+callerId+
 					"|"+Math.floor(Date.now()/1000)+
@@ -1458,6 +1458,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 					if(!goodbyDone) {
 						gLog('online: callee could not be reached (%s)',xhr.responseText);
 						showStatus("Unable to reach "+calleeID+".<br>Please try again later.",-1);
+// TODO we should ask to send a msg
 						//wsSend("missedcall|"+goodbyMissedCall); // this is not possible here
 
 						let api = apiPath+"/missedCall?id="+goodbyMissedCall;
