@@ -1499,9 +1499,8 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 						});
 						goodbyMissedCall = "";
 					}
-					return;
 				});
-				//return;
+				return;
 			}
 
 			calleeNotificationAction();
