@@ -860,7 +860,7 @@ function getSettingDone() {
 	links += "<a target='_blank' href='"+userLink+"'>"+userLink+"</a><br>";
 
 	if(mastodonID!="" && mastodonID!=calleeID) {
-		let userLinkAlt = userLink.replace(calleeID,mastodonID);
+		let userLinkAlt = userLink.replace("/user/"+calleeID,"/user/"+mastodonID);
 		links += "<a target='_blank' href='"+userLinkAlt+"'>"+userLinkAlt+"</a><br>";
 	}
 
