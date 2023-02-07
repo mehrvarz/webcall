@@ -1419,7 +1419,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 				if(xhrTimeout < 5*1000) {
 					xhrTimeout = 5*1000;
 				}
-				console.log("notifyCallee notavailtemp timeout="+xhrTimeout+" offlineFor="+offlineFor);
+				console.log("notifyCallee notavailtemp timeout="+xhrTimeout+" offlineFor="+(offlineFor*1000)+"s");
 				// in case caller aborts:
 				goodbyMissedCall = calleeID+"|"+callerName+"|"+callerId+
 					"|"+Math.floor(Date.now()/1000)+
@@ -1474,6 +1474,8 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 					if(goodbyDone) {
 						return;
 					}
+					calleeNotificationAction();
+
 				}, function(errString,errcode) {
 					// end spinner
 					if(divspinnerframe) {
@@ -1498,50 +1500,58 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 				//return;
 			}
 
-			// calleeID is currently offline - check if calleeID can be notified (via twitter msg)
-			// TODO: this causes a missedCall entry, but without txtmsg (since we don't send it here)
-			let api = apiPath+"/canbenotified?id="+calleeID + "&callerId="+callerId +
-				"&callerName="+callerName + "&callerHost="+callerHost;
-			gLog('canbenotified api',api);
-			xhrTimeout = 30*1000;
-			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-				if(xhr.responseText.startsWith("ok")) {
-					// calleeID can be notified (or is hidden)
-					// if caller is willing to wait, caller can invoke confirmNotifyConnect() to enter own name
-// TODO				let calleeName = xhr.responseText.substring(3);
-//					if(calleeName=="" || calleeName.length<3) {
-//						calleeName = calleeID;
-//					}
-					var msg = "This user is currently not available.<br><br>"+
-						"We can try to get this person on the phone. Can you wait a few minutes while we try to establish a connection?<br><br><a onclick='confirmNotifyConnect()'>Yes, please try</a>";
-					if(window.self == window.top) {
-						// not running in iframe mode: no -> jump on directory up
-						msg += "<br><br><a href='..'>No, I have to go</a>";
-					} else {
-						// running in iframe mode: no -> history.back()
-						msg += "<br><br><a onclick='history.back();'>No, I have to go</a>";
-					}
-
-					showStatus(msg,-1);
-					goodbyMissedCall = calleeID+"|"+callerName+"|"+callerId+
-						"|"+Math.floor(Date.now()/1000)+
-						"|"+cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen)+
-						"|"+location.host;
-					// goodbyMissedCall will be cleared by a successful call
-					// if it is still set in goodby(), we will ask server to store this as a missed call
-					return;
-				}
-				// calleeID can NOT be notified
-				showStatus(calleeID+" is not available at this time. Please try again a little later.",-1);
-			}, // xhr error
-				errorAction
-				// TODO errorAction will switch back
-				// if we don't want this we shd handle err like in notifyConnect()
-			);
+			calleeNotificationAction();
 		}
 	}
 
 	gLog('calleeOfflineAction done');
+}
+
+function calleeNotificationAction() {
+	// calleeID is currently offline - check if calleeID can be notified (via twitter msg)
+	// TODO: this causes a missedCall entry, but without txtmsg (since we don't send it here)
+	// end spinner
+	if(divspinnerframe) {
+		divspinnerframe.style.display = "none";
+	}
+	let api = apiPath+"/canbenotified?id="+calleeID + "&callerId="+callerId +
+		"&callerName="+callerName + "&callerHost="+callerHost;
+	gLog('canbenotified api',api);
+	xhrTimeout = 30*1000;
+	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+		if(xhr.responseText.startsWith("ok")) {
+			// calleeID can be notified (or is hidden)
+			// if caller is willing to wait, caller can invoke confirmNotifyConnect() to enter own name
+// TODO				let calleeName = xhr.responseText.substring(3);
+//					if(calleeName=="" || calleeName.length<3) {
+//						calleeName = calleeID;
+//					}
+			var msg = "This user is currently not available.<br><br>"+
+				"We can try to get this person on the phone. Can you wait a few minutes while we try to establish a connection?<br><br><a onclick='confirmNotifyConnect()'>Yes, please try</a>";
+			if(window.self == window.top) {
+				// not running in iframe mode: no -> jump on directory up
+				msg += "<br><br><a href='..'>No, I have to go</a>";
+			} else {
+				// running in iframe mode: no -> history.back()
+				msg += "<br><br><a onclick='history.back();'>No, I have to go</a>";
+			}
+
+			showStatus(msg,-1);
+			goodbyMissedCall = calleeID+"|"+callerName+"|"+callerId+
+				"|"+Math.floor(Date.now()/1000)+
+				"|"+cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen)+
+				"|"+location.host;
+			// goodbyMissedCall will be cleared by a successful call
+			// if it is still set in goodby(), we will ask server to store this as a missed call
+			return;
+		}
+		// calleeID can NOT be notified
+		showStatus(calleeID+" is not available at this time. Please try again a little later.",-1);
+	}, // xhr error
+		errorAction
+		// TODO errorAction will switch back
+		// if we don't want this we shd handle err like in notifyConnect()
+	);
 }
 
 function goodby() {
