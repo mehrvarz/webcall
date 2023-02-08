@@ -1745,7 +1745,7 @@ function cleanStringParameter(str, eliminateSpaces, comment) {
 }
 
 function clearcookie() {
-	console.log("clearcookie (id=%s)",calleeID);
+	console.log("clearcookie id=("+calleeID+")");
 	document.cookie = "webcallid=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
 	setTimeout(function() {
 		window.location.reload(false);

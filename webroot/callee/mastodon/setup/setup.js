@@ -134,7 +134,11 @@ function onload2() {
 	} else if(cookieName!="" && cookieName==mastodonUserID) {
 		dispMsg += "ID "+mastodonUserID+" is already your WebCall ID<br><br>";
 	} else if(cookieName!="" && cmappedCalleeID!="") {
-		dispMsg += "Your WebCall account "+cookieName+" is already associated with Mastodon ID "+cmappedCalleeID+"<br><br>";
+		if(cookieName!=cmappedCalleeID) {
+			dispMsg += "Your WebCall account "+cookieName+" is already associated with Mastodon ID "+cmappedCalleeID+"<br><br>";
+		} else {
+			dispMsg += "Your WebCall account "+cookieName+" is already associated<br><br>";
+		}
 	} else {
 		dispMsg += "➡️ <a onclick='pwForm(\""+mastodonUserID+"\",true,0); return false;'>Create new WebCall ID "+mastodonUserID+"</a><br>";
 		dispMsg += "(Your Mastodon ID will become your WebCall ID)<br><br>";
@@ -306,11 +310,26 @@ console.log('submitPw valuePw',valuePw);	// TODO remove
 				console.log("calleeLink="+calleeLink+" mid="+mid);
 				*/
 
+				let storedAndroid = false;
+				try {
+					if(typeof Android !== "undefined" && Android !== null) {
+						Android.storePreference("webcalldomain", location.host);
+						Android.storePreference("username", ID);
+						storedAndroid = true;
+					}
+				} catch(ex) {
+					console.log("# storedAndroid "+ex.message);
+				}
+
 				let dispMsg = "Success! You can now use Mastodon ID "+ID+" as your WebCall ID.";
 				dispMsg += " Do not lose your password.";
 				if(window.location !== window.parent.location) {
 					// runnung in an iframe (android), do not offer a calleeLink
 					dispMsg += "<br><br>This window can now be closed.";
+
+				} if(storedAndroid) {
+					dispMsg += "<br><br>Hit back key and login to WebCall.";
+
 				} else {
 					// NOT runnung in iframe, we don't offer a calleeLink
 					dispMsg += "<br><br>Your WebCall callee link is shown below. "+
