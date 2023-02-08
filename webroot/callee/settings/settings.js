@@ -457,8 +457,8 @@ function submitForm(autoclose) {
 			'"twid":"'+valueTwID+'",'+
 			'"storeContacts":"'+document.getElementById("storeContacts").checked+'",'+
 			'"storeMissedCalls":"'+document.getElementById("storeMissedCalls").checked+'",'+
-			'"tootOnCall":"'+document.getElementById("tootOnCall").checked+'",'+
-			'"acceptTootCalls":"'+document.getElementById("acceptTootCalls").checked+'"'+
+			'"tootOnCall":"'+document.getElementById("tootOnCall").checked+'"'+
+//			'"acceptTootCalls":"'+document.getElementById("acceptTootCalls").checked+'"'+
 //			'"webPushSubscription1":"'+encodeURI(serverSettings.webPushSubscription1)+'",'+
 //			'"webPushUA1":"'+encodeURI(serverSettings.webPushUA1)+'",'+
 //			'"webPushSubscription2":"'+encodeURI(serverSettings.webPushSubscription2)+'",'+

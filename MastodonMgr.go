@@ -491,10 +491,12 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 
 func (mMgr *MastodonMgr) commandSetup(mastodonUserId string, postback bool) {
 	mappingMutex.RLock()
-	_,ok := mapping[mastodonUserId]
+	mappingData,ok := mapping[mastodonUserId]
 	mappingMutex.RUnlock()
 	if ok {
 		// if mastodonUserId is already an alt-ID, then sending a register-link is useless
+		fmt.Printf("mastodon command setup (%s) already associated with (%s)\n",
+			mastodonUserId,mappingData.CalleeId)
 		sendmsg :="@"+mastodonUserId+" is already associated"
 		fmt.Printf("mastodon command setup post (%s)\n",sendmsg)
 		if postback {

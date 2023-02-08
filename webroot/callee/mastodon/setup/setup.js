@@ -307,7 +307,7 @@ console.log('submitPw valuePw',valuePw);	// TODO remove
 				*/
 
 				let dispMsg = "Success! You can now use Mastodon ID "+ID+" as your WebCall ID.";
-				dispMsg += "Do not lose your password.";
+				dispMsg += " Do not lose your password.";
 				if(window.location !== window.parent.location) {
 					// runnung in an iframe (android), do not offer a calleeLink
 					dispMsg += "<br><br>This window can now be closed.";
