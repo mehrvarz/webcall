@@ -309,7 +309,7 @@ window.onload = function() {
 			mainParent.removeChild(containerElement);
 			var msgElement = document.createElement("div");
 			msgElement.style = "margin-top:12%; padding:4%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; font-size:1.2em; line-height:1.5em;";
-			msgElement.innerHTML = "<div>cannot login "+calleeID+"<br>stop other session and clear the login-cookie<br><br><a onclick='clearcookie()'>clear login-cookie</a><br><br>you can run a 2nd callee session in a separate browser, or in incognito mode / private window</div>";
+			msgElement.innerHTML = "<div>cannot login "+calleeID+"<br>stop other session and clear the login-cookie<br><br><a onclick='clearcookie2()'>clear login-cookie</a><br><br>you can run a 2nd callee session in a separate browser, or in incognito mode / private window</div>";
 			mainParent.appendChild(msgElement);
 		}
 		return;
@@ -2749,50 +2749,19 @@ function wakeGoOnlineNoInit() {
 	goOnline(false,"wakeGoOnline");  // newPeerCon() but do NOT wsSend("init|!")
 	gLog("wakeGoOnline done");
 }
-/*
-function wakeShowOnline() {
-	console.log("wakeShowOnline start");
-	wsOnOpen(); // green led
-	goOnlineButton.disabled = false; // prevent goOnline() abort
-	goOnline(false,"wakeShowOnline");  // newPeerCon() but do NOT wsSend("init|!")
-	console.log("wakeShowOnline done");
-}
-*/
-
-function clearcookie() {
-	console.log("clearcookie (id=%s)",calleeID);
-	//history.back();
-	// wait for pulldown menu to close
-	setTimeout(function() {
-		// ask yes/no
-		//console.log("clearcookie cont (id=%s)",calleeID);
-		let yesNoInner = "<div style='position:absolute; z-index:110; background:#45dd; color:#fff; padding:20px 20px; line-height:1.6em; border-radius:3px; cursor:pointer; min-width:240px; top:40px; left:50%; transform:translate(-50%,0%);'><div style='font-weight:600'>Clear cookie?</div><br>"+
-		"You will be disconnected.<br>You will need to enter your password to reconnect.<br><br>"+
-		"<a onclick='clearcookie2();history.back();'>Clear cookie!</a> &nbsp; &nbsp; <a onclick='history.back();'>Cancel</a></div>";
-		menuDialogOpen(dynDialog,false,yesNoInner);
-	},300);
-}
 
 function clearcookie2() {
-	console.log("clearcookie2 (id=%s)",calleeID);
+	console.log("clearcookie2 id=("+calleeID+")");
 	containerElement.style.filter = "blur(0.8px) brightness(60%)";
 	goOffline();
 
-	if(iframeWindowOpenFlag /*|| menuDialogOpenElement*/) {
+//	if(iframeWindowOpenFlag || menuDialogOpenElement) {
+	if(iframeWindowOpenFlag) {
 		gLog("clearcookie2 history.back");
 		history.back();
 	}
 
-	document.cookie = "webcallid=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
-
-	setTimeout(function() {
-		if(typeof Android !== "undefined" && Android !== null &&
-				typeof Android.gotoBasepage !== "undefined" && Android.gotoBasepage !== null) {
-			Android.gotoBasepage();
-		} else {
-			gLog("exit reload");
-			window.location.reload(false);
-		}
-	},1000);
+	clearcookie();
 }
+
 

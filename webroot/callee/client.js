@@ -1748,7 +1748,12 @@ function clearcookie() {
 	console.log("clearcookie id=("+calleeID+")");
 	document.cookie = "webcallid=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
 	setTimeout(function() {
-		window.location.reload(false);
+		if(typeof Android !== "undefined" && Android !== null &&
+				typeof Android.gotoBasepage !== "undefined" && Android.gotoBasepage !== null) {
+			Android.gotoBasepage();
+		} else {
+			window.location.reload(false);
+		}
 	},1000);
 }
 

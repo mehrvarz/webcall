@@ -566,10 +566,13 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 			if err!=nil {
 				// callee is using an unknown cookie
 				fmt.Printf("# httpApi %v (%s) (%s) err=%v\n", r.URL, cookie.Value, calleeIdFromCookie, err)
+/*
 				// delete clientside cookie
-				// NOTE: doing this is a little dangerous if the error (with kvHashedPw.Get() above) is on us
+				// NOTE: doing this is a little dangerous if this is OUR error (with kvHashedPw.Get()
 				clearCookie(w, r, urlID, remoteAddr, "unknown cookie")
 				cookie = nil
+*/
+				time.Sleep(1 * time.Second)
 			} else {
 				pwIdComboCalleeId := pwIdCombo.CalleeId
 				argIdx := strings.Index(pwIdComboCalleeId,"&")
