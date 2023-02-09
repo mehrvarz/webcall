@@ -363,9 +363,11 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 				if hashPw != formPw {
 //fmt.Printf("# /login (%s) clear pw err (%s|%s) %s\n", urlID, hashPw, formPw, remoteAddr)
 					fmt.Printf("# /login (%s) clear pw err %s\n", urlID, remoteAddr)
+*/
 					// make pw guessing slow
 					time.Sleep(2000 * time.Millisecond)
 					fmt.Fprintf(w, "error")
+/*
 					return
 				}
 				fmt.Printf("/login (%s) clear pw success\n", urlID)
