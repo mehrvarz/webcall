@@ -310,30 +310,31 @@ console.log('submitPw valuePw',valuePw);	// TODO remove
 				console.log("calleeLink="+calleeLink+" mid="+mid);
 				*/
 
-				let storedAndroid = false;
-				try {
-					if(typeof Android !== "undefined" && Android !== null) {
-						Android.storePreference("webcalldomain", location.host);
-						Android.storePreference("username", ID);
-						storedAndroid = true;
+				let onWebCallAndroid = false;
+				if(typeof Android !== "undefined" && Android !== null) {
+					if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
+						onWebCallAndroid = true;
 					}
-				} catch(ex) {
-					console.log("# storedAndroid "+ex.message);
 				}
 
 				let dispMsg = "Success! You can now use Mastodon ID "+ID+" as your WebCall ID.";
 				dispMsg += " Do not lose your password.";
 				if(window.location !== window.parent.location) {
-					// runnung in an iframe (android), do not offer a calleeLink
+					// runnung in an iframe (android), do NOT offer a calleeLink
 					dispMsg += "<br><br>This window can now be closed.";
 
-				} if(storedAndroid) {
-					dispMsg += "<br><br>Hit back key and login to WebCall.";
-
+				} else if(onWebCallAndroid) {
+					try {
+						Android.setClipboard(ID+"@"+location.host);
+						dispMsg += "<br><br>Your ID and server address have been copied to the clipboard.";
+					} catch(ex) {
+						console.warn('cannot access setClipboard()',ex);
+					}
+					dispMsg += "<br><br>Close this window and login to WebCall with your new ID.";
 				} else {
-					// NOT runnung in iframe, we don't offer a calleeLink
+					// NOT runnung in iframe or Android: offer calleeLink to click
 					dispMsg += "<br><br>Your WebCall callee link is shown below. "+
-					"It lets you receive calls and should work in any web browser. "+
+					"It lets you receive web calls and should work in most web browsers. "+
 					"Click to start:<br><br>"+
 					"<a onclick='exelink(\""+calleeLink+"\"); return false;' href='"+calleeLink+"'>"+
 						calleeLink+"</a>"
