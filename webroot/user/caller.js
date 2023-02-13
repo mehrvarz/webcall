@@ -738,7 +738,8 @@ function onload2() {
 							d.setTime(d.getTime() + (31*24*60*60*1000));
 							let expires = "expires="+ d.toUTCString();
 							//console.log("create webcalluser=human cookie");
-							document.cookie = "webcalluser=human; SameSite; expires="+d.toUTCString();
+							document.cookie =
+								"webcalluser=human; SameSite=Strict; expires="+d.toUTCString();
 						}
 					}
 					document.addEventListener("keyup", keyupEventFkt);
