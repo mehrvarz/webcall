@@ -44,6 +44,8 @@ var mediaConnect = false;
 var connectionstatechangeCounter = 0;
 var playDialSounds = true;
 var pickupAfterLocalStream = false; // not used in caller
+var callStatsTitle = "Call Stats";
+var notAvailable = "Not available";
 
 var ICE_config = {
 	"iceServers": [
@@ -469,7 +471,7 @@ function getStatsPostCall(results) {
 function showStatsPostCall() {
 	var myStatsPostCallString = statsPostCallString.replaceAll("\n","<br>");
 	if(myStatsPostCallString=="") {
-		myStatsPostCallString = "No call stats available";
+		myStatsPostCallString = notAvailable;
 	}
 	if(typeof Android !== "undefined" && Android !== null) {
 		if(typeof Android.keepAwakeMS !== "undefined" && Android.keepAwakeMS !== null) {
@@ -483,25 +485,13 @@ function showStatsPostCall() {
 				String(awakeMins).padStart(2,'0')+"m&nbsp;"+
 				String(awakeSecs).padStart(2,'0')+"s";
 		}
-/*
-	} else {
-		var awakeSecs = 134; //40333;
-		var awakeMins = parseInt(awakeSecs/60);
-		var awakeHrs  = parseInt(awakeMins/60);
-		awakeMins = awakeMins - awakeHrs*60;
-		awakeSecs = awakeSecs - awakeHrs*60*60 - awakeMins*60;
-		myStatsPostCallString += "<br><br>KeepAwake today: "+
-			awakeHrs+"hr&nbsp;" +
-			String(awakeMins).padStart(2,'0')+"min&nbsp;"+
-			String(awakeSecs).padStart(2,'0')+"sec";
-*/
 	}
 	return myStatsPostCallString;
 }
 
 function openPostCallStats() {
 	gLog('openPostCallStats');
-	let str = "string:<h2>Call Statistics</h2>"+showStatsPostCall();
+	let str = "string:<h2>"+callStatsTitle+"</h2>"+showStatsPostCall();
 	iframeWindowOpen(str,false,"background:#33ad; color:#eee; padding:20px; max-width:400px; left:5.0%; top:3%; font-size:1.1em; line-height:1.4em;");
 }
 

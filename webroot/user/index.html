@@ -78,7 +78,7 @@ button[disabled] {
 	}
 }
 .menulabel {
-	margin-left:20px;
+	_margin-left:20px;
 	margin-right:20px;
 	cursor:pointer;
 }
@@ -128,6 +128,7 @@ a, a:link, a:visited, a:active {
 	background-color:#227;
 	border: 1px solid #cacece;
 	padding: 6px;
+	margin-left:20px;
 	margin-bottom:-1px;
 	border-radius: 3px;
 	display: inline-block;
@@ -143,7 +144,7 @@ a, a:link, a:visited, a:active {
 
 .status {
 	margin-top:18px;
-	margin-bottom:12px;
+	margin-bottom:8px;
 	padding-left:2px;
 	width:98%;
 	max-width:520px;
@@ -155,7 +156,7 @@ a, a:link, a:visited, a:active {
 
 .msgbox {
 	font-size:1.2em;
-	margin-top:6px;
+	margin-top:0px;
 	width:95%;
 	max-width:550px;
 	height:3.8em;
@@ -306,14 +307,14 @@ input[type=submit]:focus {
 
 <div id="menuDialog" style="position:relative; max-width:600px; user-select:none; display:none;">
 	<div style="position:absolute; right:0px; top:0px; z-index:110; background:#45dd; color:#fff; padding:10px 0px; line-height:2.6em; border-radius:3px; cursor:pointer;">
-		<div class="menuButton" onclick="openPostCallStats()">Call Stats</div>
+		<div class="menuButton" id="callstats" onclick="openPostCallStats()">Call Stats</div>
 		<label class="menulabel" id="fileselectlabel" style="display:none;">
 			Send File
 			<input id="fileselect" type="file" style="display:none"></input>
 		</label>
-		<label class="menulabel" id="fullscreenlabel">
-			<input type="checkbox" id="fullscreen" class="checkbox"> Full screen</label>
-		</label>
+
+		<input type="checkbox" id="fullscreen" class="checkbox" value="123" />
+		<label class="menulabel" id="fullscreenlabel" for="fullscreen">Full screen</label>
 	</div>
 </div>
 
@@ -360,7 +361,7 @@ input[type=submit]:focus {
 	<div id="calleeOnline" style="display:none">
 		<!-- code: visible only if no cookie avail -->
 		<div id="codeDiv" style="margin-bottom:12px;margin-left:2px;font-size:1.1em;color:#ff0;display:none;">
-			<label id="codeLabel" for="code" style="display:inline-block;_width:95px;">Enter xxx:</label>
+			<label id="codeLabel" for="code" style="display:inline-block;">Enter xxx:</label>
 			<input id="code" type="text" size='3' maxlength="3" value=""
 				style="background:#04e;border:none;outline:none;padding:0.3em;margin-right:4px;color:#ddd;font-size:1.0em;width:50px;">
 			to enable Call button
@@ -381,7 +382,7 @@ input[type=submit]:focus {
 
 		<!-- nickname: always visible -->
 		<div id="nicknameDiv" style="margin-top:12px;margin-left:2px;font-size:1.1em;display:none;">
-			<label for="nickname" style="display:inline-block;width:95px;">Nickname:</label>
+			<label for="nickname" id="nicknameLabel" style="display:inline-block;margin-right:3px;">Nickname:</label>
 			<input id='nickname' type='text' size='9' maxlength='9' value=''
 				style="background:#04e;border:none;outline:none;padding:0.3em;color:#ddd;font-size:1.0em;">
 		</div>
@@ -452,6 +453,7 @@ input[type=submit]:focus {
 	</form>
 </div>
 <script src="custom.js"></script>
+<script src="lang.js"></script>
 <script src="../callee/client.js"></script>
 <script src="../callee/prefercodec.js"></script>
 <script src="caller.js"></script>

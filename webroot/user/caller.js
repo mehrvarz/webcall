@@ -1,4 +1,4 @@
-// WebCall Copyright 2022 timur.mobi. All rights reserved.
+// WebCall Copyright 2023 timur.mobi. All rights reserved.
 'use strict';
 const dialButton = document.querySelector('button#callButton');
 const hangupButton = document.querySelector('button#hangupButton');
@@ -16,6 +16,8 @@ const msgBoxMaxLen = 137;
 
 var bitrate = 320000;
 var connectingText = "Connecting P2P...";
+var ringingText = "Ringing...";
+var hangingUpText = "Hanging up...";
 var singleButtonReadyText = "Click to make your order<br>Live operator";
 var singleButtonBusyText = "All lines are busy.<br>Please try again a little later.";
 var singleButtonConnectedText = "You are connected.<br>How can we help you?";
@@ -86,6 +88,7 @@ var contactAutoStore = false;
 var counter=0;
 var altIdCount = 0;
 var idSelectElement = null;
+var greetingMessage = "Greeting message (optional):";
 
 var extMessage = function(e) {
 	// prevent an error on split() below when extensions emit unrelated, non-string 'message' events to the window
@@ -113,6 +116,8 @@ gLog("caller now listening for extMessage");
 
 window.onload = function() {
 	gLog("caller onload");
+	switchLanguage(navigator.language || navigator.userLanguage);
+
 	if(!navigator.mediaDevices) {
 		console.warn("navigator.mediaDevices not available");
 		goOnlineButton.disabled = true;
@@ -534,7 +539,6 @@ window.onload = function() {
 	onload2();
 }
 
-
 function getContactFromForm() {
 	let contactID = cleanStringParameter(enterIdValElement.value,true);
 	if(contactID!="") {
@@ -905,7 +909,7 @@ function onload3(comment) {
 		hangupButton.onclick = function() {
 			dialButton.style.backgroundColor = "";
 			hangupButton.style.backgroundColor = "";
-			let msg = "Hanging up...";
+			let msg = hangingUpText;
 			//console.log(msg);
 			if(mediaConnect) {
 				if(playDialSounds) {
@@ -1342,7 +1346,7 @@ function calleeOnlineAction(comment) {
 							"and then immediately played back to you (green led).",-1);
 			} else {
 				if(!singlebutton) {
-					showStatus("Greeting message (optional):",-1)
+					showStatus(greetingMessage,-1)
 					msgbox.style.display = "block";
 					gLog('callerName='+callerName);
 					let placeholderText = "";
@@ -2480,7 +2484,7 @@ function dial2() {
 							}
 						}
 					}
-					showStatus("Ringing...",-1);
+					showStatus(ringingText,-1);
 				}
 				dialing = false;
 			}
