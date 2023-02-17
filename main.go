@@ -78,7 +78,7 @@ const dbContactsBucket = "contacts" // calleeID -> map[callerID]name
 var	kvHashedPw skv.KV
 const dbHashedPwName = "rtchashedpw.db"
 const dbHashedPwBucket = "hashedpwbucket"
-type PwIdCombo struct {
+type PwIdCombo struct { // key calleeID
 	Pw string
 	CalleeId string
 	Created int64

@@ -1010,6 +1010,7 @@ func clearCookie(w http.ResponseWriter, r *http.Request, urlID string, remoteAdd
 	if err == nil {
 		fmt.Printf("clrcookie (%s) cookie.Value=%s ip=%s '%s'\n",
 			urlID, cookie.Value, remoteAddr, comment)
+/*
 		err = kvHashedPw.Delete(dbHashedPwBucket, cookie.Value)
 		if err==nil {
 			//fmt.Printf("clrcookie (%s) dbHashedPw.Delete OK db=%s bucket=%s key=%s\n",
@@ -1021,6 +1022,7 @@ func clearCookie(w http.ResponseWriter, r *http.Request, urlID string, remoteAdd
 					urlID, dbHashedPwName, dbHashedPwBucket, cookie.Value, err)
 			}
 		}
+*/
 	} else {
 		if strings.Index(err.Error(),"named cookie not present")<0 {
 			fmt.Printf("# clrcookie (%s) ip=%s '%s' err=%s\n",
