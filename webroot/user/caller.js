@@ -89,7 +89,7 @@ var counter=0;
 var altIdCount = 0;
 var idSelectElement = null;
 var greetingMessage = "Greeting message (optional):";
-var digAnswMachine = "You are about to call a digital answering machine";
+var digAnswMachine = "About to call a digital answering machine";
 
 var extMessage = function(e) {
 	// prevent an error on split() below when extensions emit unrelated, non-string 'message' events to the window
