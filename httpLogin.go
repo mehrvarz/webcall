@@ -353,6 +353,9 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 
 			if hashPw=="" {
 				fmt.Printf("# /login (%s) hashPw=(%s) is empty\n", urlID, hashPw)
+				// make pw guessing slow
+				time.Sleep(2000 * time.Millisecond)
+				fmt.Fprintf(w, "error")
 				return
 			}
 			err := bcrypt.CompareHashAndPassword([]byte(hashPw), []byte(formPw))
