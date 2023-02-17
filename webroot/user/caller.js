@@ -89,6 +89,7 @@ var counter=0;
 var altIdCount = 0;
 var idSelectElement = null;
 var greetingMessage = "Greeting message (optional):";
+var digAnswMachine = "You are about to call a digital answering machine";
 
 var extMessage = function(e) {
 	// prevent an error on split() below when extensions emit unrelated, non-string 'message' events to the window
@@ -1336,7 +1337,7 @@ function calleeOnlineAction(comment) {
 				if(!singlebutton) {
 					msgbox.style.display = "none";
 				}
-				showStatus("You are about to call a digital answering machine",-1);
+				showStatus(digAnswMachine,-1);
 			} else if(calleeID.startsWith("talkback")) {
 				if(!singlebutton) {
 					msgbox.style.display = "none";

@@ -12,6 +12,7 @@ var langMap = {
 	"callstatsLabel"	: "Anruf Daten",
 	"fullscreenLabel"	: "Vollschirm",
 	"notAvailable"		: "Nicht verfügbar",
+	"digAnswMachine"	: "Verbindung mit einem digitalen Anrufbeantworter",
 },
 "fr": {
 	"dialButton"		: "Composer",
@@ -25,6 +26,7 @@ var langMap = {
 	"callstatsLabel"	: "Statistiques d'appels",
 	"fullscreenLabel"	: "Plein écran",
 	"notAvailable"		: "non disponible",
+	"digAnswMachine"	: "Vous allez appeler un répondeur numérique",
 },
 "pt-BR": {
 	"dialButton"		: "Chamar",
@@ -38,6 +40,7 @@ var langMap = {
 	"callstatsLabel"	: "Estatísticas de chamada",
 	"fullscreenLabel"	: "Tela cheia",
 	"notAvailable"		: "não Disponível",
+	"digAnswMachine"	: "Você está prestes a chamar um atendedor de chamadas digital",
 }};
 
 function switchLanguage(userLang) {
@@ -127,6 +130,11 @@ function switchLanguage(userLang) {
 	str = myLang["notAvailable"];
 	if(typeof str !== "undefined" && str!="") {
 		notAvailable = str;
+	}
+
+	str = myLang["digAnswMachine"];
+	if(typeof str !== "undefined" && str!="") {
+		digAnswMachine = str;
 	}
 }
 
