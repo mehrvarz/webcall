@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"unicode"
 	"encoding/gob"
+	"errors"
 	"sort"
 	"io"
 	"os"
