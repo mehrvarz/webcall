@@ -428,10 +428,12 @@ func dbHashedPwSearch(name string) (PwIdCombo,error) {
 		return pwIdComboNewest,err
 	}
 
-	/*if counterDeleted>0*/ {
-		fmt.Printf("dbHashedPwSearch userID=(%s) done\n",pwIdComboNewest.CalleeId)
-		return pwIdComboNewest,nil
+	if pwIdComboNewest.CalleeId=="" {
+		return pwIdComboNewest,errors.New("entry not found")
 	}
+
+	fmt.Printf("dbHashedPwSearch userID=(%s) done\n",pwIdComboNewest.CalleeId)
+	return pwIdComboNewest,nil
 }
 
 
