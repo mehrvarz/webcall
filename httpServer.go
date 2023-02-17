@@ -566,7 +566,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 			if err!=nil {
 				// cookie available but possibly "skv key not found"
 				// looks like an unknown cookie
-				fmt.Printf("# httpApi %v (%s) (%s) err=%v\n", r.URL, cookie.Value, calleeIdFromCookie, err)
+				fmt.Printf("# httpApi %v (%s) (%s) %s err=%v\n", r.URL, cookie.Value, calleeIdFromCookie, remoteAddr, err)
 /*
 				// delete clientside cookie
 				// NOTE: doing this is a little dangerous if this is OUR error (with kvHashedPw.Get()
