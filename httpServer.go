@@ -564,7 +564,8 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 			if err!=nil {
-				// callee is using an unknown cookie
+				// cookie available but possibly "skv key not found"
+				// looks like an unknown cookie
 				fmt.Printf("# httpApi %v (%s) (%s) err=%v\n", r.URL, cookie.Value, calleeIdFromCookie, err)
 /*
 				// delete clientside cookie
@@ -573,6 +574,8 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				cookie = nil
 */
 				time.Sleep(1 * time.Second)
+				fmt.Fprintf(w,"wrongcookie")
+				return
 			} else {
 				pwIdComboCalleeId := pwIdCombo.CalleeId
 				argIdx := strings.Index(pwIdComboCalleeId,"&")
