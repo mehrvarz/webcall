@@ -780,7 +780,10 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 
 		} else if dbUser.MastodonID!="" {
 			// has mastodon account
-			calleeHasPushChannel = true
+			if dbUser.MastodonSendTootOnCall==true {
+				// does want to be notified
+				calleeHasPushChannel = true
+			}
 		}
 	}
 

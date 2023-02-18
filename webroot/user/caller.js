@@ -1685,7 +1685,7 @@ function errorAction2(errString,err) {
 
 function notifyConnect(callerName,callerId,callerHost) {
 	// nickname form was valid
-	// the next xhr will freeze until hidden callee accepts the call
+	// the next xhr will freeze until offline or hidden callee accepts the call
 	showStatus("Trying to get "+calleeID+" on the phone. Please wait...",-1);
 	if(divspinnerframe) {
 		divspinnerframe.style.display = "block";
