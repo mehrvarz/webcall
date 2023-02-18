@@ -190,12 +190,11 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 */
 
 		if dbUser.MastodonID != "" {
-			// if mastodon handle exists and MastodonAcceptTootCalls==true:
+			// if mastodon handle exists and MastodonSendTootOnCall==true:
 			// notify dbUser.MastodonID via mastodon direct message
 
 			if mastodonMgr == nil {
 				// TODO log no mgr
-//			} else if dbUser.MastodonAcceptTootCalls==false {
 			} else if dbUser.MastodonSendTootOnCall==false {
 				// TODO log toot-calls not wanted
 			} else {
@@ -791,7 +790,11 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 		// yes, urlID can be notified
 		fmt.Printf("/canbenotified (%s) yes tw=%s onl=%v calleeName=%s <- %s (%s)\n",
 			urlID, dbUser.Email2, calleeIsHiddenOnline, calleeName, remoteAddr, callerIdLong)
-		fmt.Fprintf(w,"ok|"+calleeName)
+		if dbUser.AskCallerBeforeNotify==false {
+			fmt.Fprintf(w,"direct|"+calleeName)
+		} else {
+			fmt.Fprintf(w,"ok|"+calleeName)
+		}
 		return
 	}
 

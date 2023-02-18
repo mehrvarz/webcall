@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- WebCall Copyright 2022 timur.mobi. All rights reserved. -->
+<!-- WebCall Copyright 2023 timur.mobi. All rights reserved. -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1">
 <title>WebCall Settings</title>
@@ -138,15 +138,14 @@ input[type=submit]:focus {
 		<div style="margin-top:6px;font-size:0.90em;">Will be used to communicate with your callers when your WebCall account is offline.</div>
 
 		<div id="madiv" style="display:none;">
-			<div id="maid" style="margin-top:20px;"></div>
+			<div id="maid" style="margin-top:14px;"></div>
+			<div style="margin-top:12px;">On incoming calls, when I am offline:</div>
 			<label id="tootOnCallLabel" style="margin-left:-4px; display:block; margin-top:6px;">
-				<input type="checkbox" id="tootOnCall" class="checkbox">If I am offline on call, toot me on Mastodon</label>
+				<input type="checkbox" id="tootOnCall" class="checkbox"> Notify me via direct message</label>
 			</label>
-<!--
-			<label id="acceptTootCallsLabel" style="margin-left:-4px; display:block; margin-top:6px;">
-				<input type="checkbox" id="acceptTootCalls" class="checkbox"> Allow Mastodon users to WebCall me by toot</label>
+			<label id="askCallerBeforeNotifyLabel" style="margin-left:-4px; display:block; margin-top:6px;">
+				<input type="checkbox" id="askCallerBeforeNotify" class="checkbox"> Ask caller before sending</label>
 			</label>
--->
 		</div>
 
 		<br>

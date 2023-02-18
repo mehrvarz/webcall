@@ -1528,7 +1528,13 @@ function calleeNotificationAction() {
 	gLog('canbenotified api',api);
 	xhrTimeout = 30*1000;
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-		if(xhr.responseText.startsWith("ok")) {
+		if(xhr.responseText.startsWith("direct")) {
+			// calleeID can be notified (or is hidden)
+			// don't ask caller
+			confirmNotifyConnect();
+			return;
+
+		} else if(xhr.responseText.startsWith("ok")) {
 			// calleeID can be notified (or is hidden)
 			// if caller is willing to wait, caller can invoke confirmNotifyConnect() to enter own name
 			let calleeName = xhr.responseText.substring(3);

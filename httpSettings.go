@@ -64,7 +64,7 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		"nickname": dbUser.Name,
 		"mastodonID": dbUser.MastodonID,
 		"tootOnCall": strconv.FormatBool(dbUser.MastodonSendTootOnCall),
-		"acceptTootCalls": strconv.FormatBool(dbUser.MastodonAcceptTootCalls),
+		"askCallerBeforeNotify": strconv.FormatBool(dbUser.AskCallerBeforeNotify),
 		"twname": dbUser.Email2, // twitter handle (starting with @)
 		"twid": dbUser.Str1, // twitter user_id
 		"storeContacts": strconv.FormatBool(dbUser.StoreContacts),
@@ -116,7 +116,6 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		fmt.Printf("# /setsettings (%s) failed on io.ReadFull body %s\n",calleeID, remoteAddr)
 		return
 	}
-	//fmt.Printf("/setsettings (%s) len=%d rip=%s\n", calleeID, len(data), remoteAddr)
 
 	var newSettingsMap map[string]string
 	err := json.Unmarshal([]byte(data), &newSettingsMap)
@@ -141,6 +140,7 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		return
 	}
 
+	fmt.Printf("/setsettings (%s) len=%d rip=%s map=%v\n", calleeID, len(data), remoteAddr, newSettingsMap)
 	for key,val := range newSettingsMap {
 		switch(key) {
 		case "nickname":
@@ -168,18 +168,18 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 					dbUser.MastodonSendTootOnCall = false
 				}
 			}
-		case "acceptTootCalls":
+		case "askCallerBeforeNotify":
 			if(val=="true") {
-				if dbUser.MastodonAcceptTootCalls != true {
-					fmt.Printf("/setsettings (%s) new acceptTootCalls (%s) (old:%v) %s\n",
-						calleeID, val, dbUser.MastodonAcceptTootCalls, remoteAddr)
-					dbUser.MastodonAcceptTootCalls = true
+				if dbUser.AskCallerBeforeNotify != true {
+					fmt.Printf("/setsettings (%s) new askCallerBeforeNotify (%s) (old:%v) %s\n",
+						calleeID, val, dbUser.AskCallerBeforeNotify, remoteAddr)
+					dbUser.AskCallerBeforeNotify = true
 				}
 			} else {
-				if dbUser.MastodonAcceptTootCalls != false {
-					fmt.Printf("/setsettings (%s) new acceptTootCalls (%s) (old:%v) %s\n",
-						calleeID, val, dbUser.MastodonAcceptTootCalls, remoteAddr)
-					dbUser.MastodonAcceptTootCalls = false
+				if dbUser.AskCallerBeforeNotify != false {
+					fmt.Printf("/setsettings (%s) new askCallerBeforeNotify (%s) (old:%v) %s\n",
+						calleeID, val, dbUser.AskCallerBeforeNotify, remoteAddr)
+					dbUser.AskCallerBeforeNotify = false
 				}
 			}
 

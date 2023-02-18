@@ -29,7 +29,7 @@ type DbUser struct {
 	StoreContacts bool      // TODO could also be encoded in Int2
 	StoreMissedCalls bool	// TODO could also be encoded in Int2
 	MastodonSendTootOnCall bool
-	MastodonAcceptTootCalls bool
+	AskCallerBeforeNotify bool
 }
 
 type NotifTweet struct { // key = TweetID string

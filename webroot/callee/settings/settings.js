@@ -94,14 +94,15 @@ function prepareSettings(xhrresponse) {
 				document.getElementById("tootOnCall").checked = false;
 			}
 		}
-		if(typeof serverSettings.acceptTootCalls!=="undefined") {
-			if(!gentle) console.log('serverSettings.acceptTootCalls',serverSettings.acceptTootCalls);
-			let acceptTootCallsElement = document.getElementById("acceptTootCalls")
-			if(acceptTootCallsElement) {
-				if(serverSettings.acceptTootCalls=="true") {
-					acceptTootCallsElement.checked = true;
+		if(typeof serverSettings.askCallerBeforeNotify!=="undefined") {
+			if(!gentle) console.log('serverSettings.askCallerBeforeNotify',
+				serverSettings.askCallerBeforeNotify);
+			let askCallerBeforeNotifyElement = document.getElementById("askCallerBeforeNotify")
+			if(askCallerBeforeNotifyElement) {
+				if(serverSettings.askCallerBeforeNotify=="true") {
+					askCallerBeforeNotifyElement.checked = true;
 				} else {
-					acceptTootCallsElement.checked = false;
+					askCallerBeforeNotifyElement.checked = false;
 				}
 			}
 		}
@@ -457,8 +458,8 @@ function submitForm(autoclose) {
 			'"twid":"'+valueTwID+'",'+
 			'"storeContacts":"'+document.getElementById("storeContacts").checked+'",'+
 			'"storeMissedCalls":"'+document.getElementById("storeMissedCalls").checked+'",'+
-			'"tootOnCall":"'+document.getElementById("tootOnCall").checked+'"'+
-//			'"acceptTootCalls":"'+document.getElementById("acceptTootCalls").checked+'"'+
+			'"tootOnCall":"'+document.getElementById("tootOnCall").checked+'",'+
+			'"askCallerBeforeNotify":"'+document.getElementById("askCallerBeforeNotify").checked+'"'+
 //			'"webPushSubscription1":"'+encodeURI(serverSettings.webPushSubscription1)+'",'+
 //			'"webPushUA1":"'+encodeURI(serverSettings.webPushUA1)+'",'+
 //			'"webPushSubscription2":"'+encodeURI(serverSettings.webPushSubscription2)+'",'+

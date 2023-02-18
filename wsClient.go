@@ -53,7 +53,7 @@ type WsClient struct {
 	wsConn *websocket.Conn
 	mastodonID string
 	mastodonSendTootOnCall bool
-	mastodonAcceptTootCalls bool
+	askCallerBeforeNotify bool
 	isOnline atombool.AtomBool	// connected to signaling server
 	isConnectedToPeer atombool.AtomBool // before pickup
 	isMediaConnectedToPeer atombool.AtomBool // after pickup
@@ -488,7 +488,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		client.calleeInitReceived.Set(false)
 		client.mastodonID = wsClientData.dbUser.MastodonID
 		client.mastodonSendTootOnCall = wsClientData.dbUser.MastodonSendTootOnCall
-		client.mastodonAcceptTootCalls = wsClientData.dbUser.MastodonAcceptTootCalls
+		client.askCallerBeforeNotify = wsClientData.dbUser.AskCallerBeforeNotify
 		hub.IsCalleeHidden = wsClientData.dbUser.Int2&1!=0
 		hub.IsUnHiddenForCallerAddr = ""
 		hub.WsClientID = wsClientID64
