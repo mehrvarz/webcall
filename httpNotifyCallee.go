@@ -195,7 +195,8 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 
 			if mastodonMgr == nil {
 				// TODO log no mgr
-			} else if dbUser.MastodonAcceptTootCalls==false {
+//			} else if dbUser.MastodonAcceptTootCalls==false {
+			} else if dbUser.MastodonSendTootOnCall==false {
 				// TODO log toot-calls not wanted
 			} else {
 				// send a msg to dbUser.MastodonID:
