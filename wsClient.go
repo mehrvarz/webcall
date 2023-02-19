@@ -908,34 +908,36 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 
 	if cmd=="msg" {
 		// sent by caller on hangup without mediaconnect
-		cleanMsg := strings.Replace(payload, "\n", " ", -1)
-		cleanMsg = strings.Replace(cleanMsg, "\r", " ", -1)
-		cleanMsg = strings.TrimSpace(cleanMsg)
-		if cleanMsg == c.hub.CalleeClient.callerTextMsg {
-			// same text msg was already processed / forwarded
-			return
-		}
-
 		//logTxtMsg := cleanMsg
-		logTxtMsg := "(hidden)"
+		logTxtMsg := "(hidden)" // don't log actual cleanMsg
 		if c.hub==nil {
 			// don't log actual cleanMsg
 			fmt.Printf("# %s (%s) msg='%s' c.hub==nil callee=%v ip=%s ua=%s\n",
 				c.connType, c.calleeID, logTxtMsg, c.isCallee, c.RemoteAddr, c.userAgent)
 			return
 		}
+
 		c.hub.HubMutex.Lock()
 		if c.hub.CalleeClient==nil {
 			// don't log actual cleanMsg
+			c.hub.HubMutex.Unlock()
 			fmt.Printf("# %s (%s) msg='%s' c.hub.CalleeClient==nil callee=%v ip=%s ua=%s\n",
 				c.connType, c.calleeID, logTxtMsg, c.isCallee, c.RemoteAddr, c.userAgent)
-		} else {
-			// don't log actual cleanMsg
-			fmt.Printf("%s (%s) msg='%s' callee=%v ip=%s ua=%s\n",
-				c.connType, c.calleeID, logTxtMsg, c.isCallee, c.RemoteAddr, c.userAgent)
-
-			c.hub.CalleeClient.callerTextMsg = cleanMsg;
+			return
 		}
+
+		cleanMsg := strings.Replace(payload, "\n", " ", -1)
+		cleanMsg = strings.Replace(cleanMsg, "\r", " ", -1)
+		cleanMsg = strings.TrimSpace(cleanMsg)
+		if cleanMsg == c.hub.CalleeClient.callerTextMsg {
+			// same text msg was already processed / forwarded
+			c.hub.HubMutex.Unlock()
+			return
+		}
+
+		fmt.Printf("%s (%s) msg='%s' callee=%v ip=%s ua=%s\n",
+			c.connType, c.calleeID, logTxtMsg, c.isCallee, c.RemoteAddr, c.userAgent)
+		c.hub.CalleeClient.callerTextMsg = cleanMsg;
 		c.hub.HubMutex.Unlock()
 		//return	// let msg fall thru so it will be fw to other side
 	}
