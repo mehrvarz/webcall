@@ -499,6 +499,7 @@ func ticker20min() {
 		cleanupClientRequestsMap(os.Stdout, 10, "ticker20min")
 
 		if mastodonMgr != nil {
+// TODO both need to be called more often than 1x per 30min - maybe not
 			mastodonMgr.cleanupMastodonMidMap(os.Stdout)
 			mastodonMgr.cleanupPostedMsgEvents(os.Stdout)
 		}

@@ -842,23 +842,24 @@ func (mMgr *MastodonMgr) postMsgEx(sendmsg string, onBehalfOfUser string) (*mast
 	mMgr.cleanupPostedMsgEvents(nil)
 
 	// rate limit total number of posted msgs (100 per 30min)
-	msgsPostedInLast30Min := len(mMgr.postedMsgEventsSlice)
-	if msgsPostedInLast30Min >= 100 {
-		fmt.Printf("# postMsgEx # of msgs posted in the last 30 min =%d\n",msgsPostedInLast30Min)
+	msgsPostedTotalInLast30Min := len(mMgr.postedMsgEventsSlice)
+	if msgsPostedTotalInLast30Min >= 100 {
+		fmt.Printf("# postMsgEx # of msgs posted in the last 30min %d >= 100\n",
+			msgsPostedTotalInLast30Min)
 		return nil,ErrTotalPostMsgQuota
 	}
 
-	// rate limit # of msgs posted onBehalfOfUser (say, 5 per 30min)
-	mMgr.postedMsgEventsMutex.Lock()
-	msgsPostedInLast30Min = 0
+	// rate limit # of msgs posted onBehalfOfUser (5 per 30min)
+	mMgr.postedMsgEventsMutex.RLock()
+	msgsPostedInLast30Min := 0
 	for _,postedMsgEvent := range mMgr.postedMsgEventsSlice {
 		if postedMsgEvent.calleeID == onBehalfOfUser {
 			msgsPostedInLast30Min++
 		}
 	}
-	mMgr.postedMsgEventsMutex.Unlock()
+	mMgr.postedMsgEventsMutex.RUnlock()
 	if msgsPostedInLast30Min >= 5 {
-		fmt.Printf("# postMsgEx # of msgs posted for %s in the last 30 min =%d\n",
+		fmt.Printf("# postMsgEx # of msgs posted for %s in the last 30min %d >= 5\n",
 			onBehalfOfUser, msgsPostedInLast30Min)
 		return nil,ErrUserPostMsgQuota
 	}
@@ -876,7 +877,9 @@ func (mMgr *MastodonMgr) postMsgEx(sendmsg string, onBehalfOfUser string) (*mast
 		fmt.Printf("# postMsgEx PostStatus err=%v\n",err)
 		return nil,err
 	}
-	fmt.Printf("postMsgEx PostStatus sent id=%v\n",status.ID)
+
+	fmt.Printf("postMsgEx PostStatus sent id=%v (last 30min: total=%d, for %s =%d)\n",
+		status.ID, onBehalfOfUser, msgsPostedTotalInLast30Min, msgsPostedInLast30Min)
 	return status,nil
 }
 
@@ -1461,7 +1464,7 @@ func (mMgr *MastodonMgr) cleanupMastodonMidMap(w io.Writer) {
 }
 
 func (mMgr *MastodonMgr) cleanupPostedMsgEvents(w io.Writer) {
-	// remove all entries (from the beginning) that are 30min or older
+	// delete the oldes entries (at the beginning of the slice) if they are 30min old or older
 	mMgr.postedMsgEventsMutex.Lock()
 	for len(mMgr.postedMsgEventsSlice)>0 {
 		if time.Now().Sub(mMgr.postedMsgEventsSlice[0].timestamp) < 30 * time.Minute {
@@ -1472,6 +1475,7 @@ func (mMgr *MastodonMgr) cleanupPostedMsgEvents(w io.Writer) {
 			mMgr.postedMsgEventsSlice = mMgr.postedMsgEventsSlice[1:]
 		} else {
 			mMgr.postedMsgEventsSlice = mMgr.postedMsgEventsSlice[:0]
+			break
 		}
 	}
 	mMgr.postedMsgEventsMutex.Unlock()
