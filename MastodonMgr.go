@@ -22,19 +22,29 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-type MastodonMgr struct {
-	c *mastodon.Client
-	abortChan chan bool
-	hostUrl string
-	midMutex sync.RWMutex
-	kvMastodon skv.KV
-}
+var	ErrTotalPostMsgQuota = errors.New("TotalPostMsgQuota")
+var	ErrUserPostMsgQuota = errors.New("PostMsgQuota per user")
 
 const dbMastodon = "rtcmastodon.db"
 const dbMid = "dbMid"          // a map of all active mid's
 type MidEntry struct {         // key = mid
 	MastodonIdCallee string
 	Created int64
+}
+
+type PostMsgEvent struct {
+	calleeID string
+	timestamp time.Time
+}
+
+type MastodonMgr struct {
+	c *mastodon.Client
+	abortChan chan bool
+	hostUrl string
+	midMutex sync.RWMutex
+	kvMastodon skv.KV
+	postedMsgEventsSlice []PostMsgEvent
+	postedMsgEventsMutex sync.RWMutex
 }
 
 func NewMastodonMgr() *MastodonMgr {
@@ -98,6 +108,8 @@ func (mMgr *MastodonMgr) mastodonStart(config string) {
 		mMgr.kvMastodon.Close()
 		return
 	}
+
+	mMgr.postedMsgEventsSlice = nil //[]PostMsgEvent
 
 	mMgr.abortChan = make(chan bool)
 	fmt.Printf("mastodonStart reading StreamingUser...\n")
@@ -827,10 +839,35 @@ func (mMgr *MastodonMgr) makeSecretID() (string,error) {
 
 func (mMgr *MastodonMgr) postMsgEx(sendmsg string, onBehalfOfUser string) (*mastodon.Status,error) {
 	fmt.Printf("postMsgEx PostStatus (%s)\n",sendmsg)
+	mMgr.cleanupPostedMsgEvents(nil)
+
+	// rate limit total number of posted msgs (100 per 30min)
+	msgsPostedInLast30Min := len(mMgr.postedMsgEventsSlice)
+	if msgsPostedInLast30Min >= 100 {
+		fmt.Printf("# postMsgEx # of msgs posted in the last 30 min =%d\n",msgsPostedInLast30Min)
+		return nil,ErrTotalPostMsgQuota
+	}
+
+	// rate limit # of msgs posted onBehalfOfUser (say, 5 per 30min)
+	mMgr.postedMsgEventsMutex.Lock()
+	msgsPostedInLast30Min = 0
+	for _,postedMsgEvent := range mMgr.postedMsgEventsSlice {
+		if postedMsgEvent.calleeID == onBehalfOfUser {
+			msgsPostedInLast30Min++
+		}
+	}
+	mMgr.postedMsgEventsMutex.Unlock()
+	if msgsPostedInLast30Min >= 5 {
+		fmt.Printf("# postMsgEx # of msgs posted for %s in the last 30 min =%d\n",
+			onBehalfOfUser, msgsPostedInLast30Min)
+		return nil,ErrUserPostMsgQuota
+	}
+
+	mMgr.postedMsgEventsMutex.Lock()
+	mMgr.postedMsgEventsSlice = append(mMgr.postedMsgEventsSlice,PostMsgEvent{onBehalfOfUser,time.Now()})
+	mMgr.postedMsgEventsMutex.Unlock()
+
 	// NOTE PostStatus() stalls until msg is sent
-// TODO we need to rate limit the total number of msg we post (say, 50 per 15min)
-// so we need to store: onBehalfOfUser + timeNow 
-// postMsgEventsSlice = append(postMsgEventsSlice,PostMsgEvent{onBehalfOfUser,time.Now()})
 	status,err := mMgr.c.PostStatus(context.Background(), &mastodon.Toot{
 		Status:			sendmsg,
 		Visibility:		"direct",
@@ -1421,6 +1458,23 @@ func (mMgr *MastodonMgr) cleanupMastodonMidMap(w io.Writer) {
 		}
 	}
 	fmt.Printf("cleanupMastodonMidMap done\n")
+}
+
+func (mMgr *MastodonMgr) cleanupPostedMsgEvents(w io.Writer) {
+	// remove all entries (from the beginning) that are 30min or older
+	mMgr.postedMsgEventsMutex.Lock()
+	for len(mMgr.postedMsgEventsSlice)>0 {
+		if time.Now().Sub(mMgr.postedMsgEventsSlice[0].timestamp) < 30 * time.Minute {
+			// the oldest remaining entry is now less than 30min old
+			break
+		}
+		if len(mMgr.postedMsgEventsSlice)>1 {
+			mMgr.postedMsgEventsSlice = mMgr.postedMsgEventsSlice[1:]
+		} else {
+			mMgr.postedMsgEventsSlice = mMgr.postedMsgEventsSlice[:0]
+		}
+	}
+	mMgr.postedMsgEventsMutex.Unlock()
 }
 
 func (mMgr *MastodonMgr) mastodonStop() {

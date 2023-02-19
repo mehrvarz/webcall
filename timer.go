@@ -500,6 +500,7 @@ func ticker20min() {
 
 		if mastodonMgr != nil {
 			mastodonMgr.cleanupMastodonMidMap(os.Stdout)
+			mastodonMgr.cleanupPostedMsgEvents(os.Stdout)
 		}
 
 		<-twentyMinTicker.C
