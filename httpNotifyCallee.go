@@ -200,17 +200,20 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 			} else {
 				// send a msg to dbUser.MastodonID:
 				sendmsg :=	"@"+dbUser.MastodonID+" "+msg
-				err := mastodonMgr.postMsg(sendmsg)
-				if err!=nil {
-					// TODO log
-					fmt.Println("# PostStatus err=",err)
-				} else {
-					// TODO log
-//					fmt.Println("PostStatus sent OK")
-					// TODO at some point later we need to delete (from mastodon) all direct messages
-					// note: deleting a (direct) mastodon msg does NOT delete it on the receiver/caller side
-					notificationSent |= 4
-				}
+				// NOTE PostStatus() stalls until msg is sent
+				go func() {
+					err := mastodonMgr.postMsg(sendmsg)
+					if err!=nil {
+						// TODO log
+						fmt.Println("# PostStatus (%s) err=%v",sendmsg,err)
+					} else {
+						// TODO log
+//						fmt.Println("PostStatus sent OK")
+						// TODO at some point later we need to delete (from mastodon) all direct messages
+						// note: deleting a (direct) msg does NOT delete it on the receiver/caller side
+						notificationSent |= 4
+					}
+				}()
 			}
 		} else
 		if dbUser.Email2 != "" {

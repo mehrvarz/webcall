@@ -500,15 +500,18 @@ func (mMgr *MastodonMgr) commandSetup(mastodonUserId string, postback bool) {
 		sendmsg :="@"+mastodonUserId+" is already associated"
 		fmt.Printf("mastodon command setup post (%s)\n",sendmsg)
 		if postback {
-			status,err := mMgr.postMsgEx(sendmsg)
-			if err!=nil {
-				fmt.Printf("# mastodon command setup post err=%v (to=%v)\n",err,mastodonUserId)
-			} else {
-				fmt.Printf("mastodon command setup post sent to=%v\n", mastodonUserId)
-				if status!=nil {
-					// can be used to delete this msg
+			// NOTE PostStatus() stalls until msg is sent
+			go func() {
+				status,err := mMgr.postMsgEx(sendmsg)
+				if err!=nil {
+					fmt.Printf("# mastodon command setup post err=%v (to=%v)\n",err,mastodonUserId)
+				} else {
+					fmt.Printf("mastodon command setup post sent to=%v\n", mastodonUserId)
+					if status!=nil {
+						// can be used to delete this msg
+					}
 				}
-			}
+			}()
 		}
 		return
 	}
@@ -540,15 +543,18 @@ func (mMgr *MastodonMgr) commandSetup(mastodonUserId string, postback bool) {
 			sendmsg :="@"+mastodonUserId+" user exists"
 			fmt.Printf("mastodon command setup (%s)\n",sendmsg)
 			if postback {
-				status,err := mMgr.postMsgEx(sendmsg)
-				if err!=nil {
-					fmt.Printf("# mastodon command setup post err=%v (to=%v)\n",err,mastodonUserId)
-				} else {
-					fmt.Printf("mastodon command setup post sent to=%v\n", mastodonUserId)
-					if status!=nil {
-						// can be used to delete this msg
+				// NOTE PostStatus() stalls until msg is sent
+				go func() {
+					status,err := mMgr.postMsgEx(sendmsg)
+					if err!=nil {
+						fmt.Printf("# mastodon command setup post err=%v (to=%v)\n",err,mastodonUserId)
+					} else {
+						fmt.Printf("mastodon command setup post sent to=%v\n", mastodonUserId)
+						if status!=nil {
+							// can be used to delete this msg
+						}
 					}
-				}
+				}()
 			}
 			return
 		}
@@ -570,15 +576,17 @@ func (mMgr *MastodonMgr) commandSetup(mastodonUserId string, postback bool) {
 		// what makes responding here difficult is that offerRegisterLink() may fail on different things:
 		//   create secret, error on kvMastodon.Put(dbMid/dbInviter/dbCid), error on postMsgEx()
 		sendmsg :="@"+mastodonUserId+" sorry, I am not able to proceed with your request"
-		status,err := mMgr.postMsgEx(sendmsg)
-		if err!=nil {
-			fmt.Printf("# mastodon processMessage offerRegisterLink issue resp failed (%s)\n",sendmsg)
-		} else {
-			fmt.Printf("mastodon processMessage offerRegisterLink issue resp posted (%s)\n",sendmsg)
-		}
-		if status!=nil {
-			// can be used to delete posted msg at some point later
-		}
+		go func() {
+			status,err := mMgr.postMsgEx(sendmsg)
+			if err!=nil {
+				fmt.Printf("# mastodon processMessage offerRegisterLink post (%s) failed %v\n",sendmsg,err)
+			} else {
+				fmt.Printf("mastodon processMessage offerRegisterLink posted (%s)\n",sendmsg)
+			}
+			if status!=nil {
+				// can be used to delete posted msg at some point later
+			}
+		}()
 	}
 }
 
@@ -604,17 +612,19 @@ func (mMgr *MastodonMgr) commandRemove(mastodonUserId string, postback bool) {
 				sendmsg :="@"+mastodonUserId+" on your request your ID has been deactivated"
 				if err!=nil {
 					// post msg telling user that remove has failed
-					sendmsg ="@"+mastodonUserId+" sorry, I am not able to proceed with your request"
+					sendmsg ="@"+mastodonUserId+" sorry, I am unable to proceed with your request"
 				}
-				status,err := mMgr.postMsgEx(sendmsg)
-				if err!=nil {
-					fmt.Printf("# mastodon command remove: issue resp failed (%s)\n",sendmsg)
-				} else {
-					fmt.Printf("mastodon command remove: issue resp posted (%s)\n",sendmsg)
-				}
-				if status!=nil {
-					// may be used to later delete the m-msg
-				}
+				go func() {
+					status,err := mMgr.postMsgEx(sendmsg)
+					if err!=nil {
+						fmt.Printf("# mastodon command remove: post (%s) failed (%v)\n",sendmsg,err)
+					} else {
+						fmt.Printf("mastodon command remove: (%s) posted\n",sendmsg)
+					}
+					if status!=nil {
+						// may be used to later delete the m-msg
+					}
+				}()
 			}
 
 			// do NOT delete the user account of mappingData.CalleeId
@@ -686,15 +696,17 @@ func (mMgr *MastodonMgr) commandRemove(mastodonUserId string, postback bool) {
 			if postback {
 				// send msg telling user that remove has failed
 				sendmsg :="@"+mastodonUserId+" sorry, I am not able to proceed with your request"
-				status,err := mMgr.postMsgEx(sendmsg)
-				if err!=nil {
-					fmt.Printf("# mastodon command remove: issue resp failed (%s)\n",sendmsg)
-				} else {
-					fmt.Printf("mastodon command remove: issue resp posted (%s)\n",sendmsg)
-				}
-				if status!=nil {
-					// may be used later to delete this m-msg
-				}
+				go func() {
+					status,err := mMgr.postMsgEx(sendmsg)
+					if err!=nil {
+						fmt.Printf("# mastodon command remove: post (%s) failed (%v)\n",sendmsg,err)
+					} else {
+						fmt.Printf("mastodon command remove: posted (%s)\n",sendmsg)
+					}
+					if status!=nil {
+						// may be used later to delete this m-msg
+					}
+				}()
 			}
 			return
 		}
@@ -704,15 +716,17 @@ func (mMgr *MastodonMgr) commandRemove(mastodonUserId string, postback bool) {
 		// send msg telling user that their webcall account has been deactivated
 		if postback {
 			sendmsg :="@"+mastodonUserId+" on your request your ID has been deleted"
-			status,err := mMgr.postMsgEx(sendmsg)
-			if err!=nil {
-				fmt.Printf("# mastodon command remove: issue resp failed (%s)\n",sendmsg)
-			} else {
-				fmt.Printf("mastodon command remove: issue resp posted (%s)\n",sendmsg)
-			}
-			if status!=nil {
-				// may be used later to delete this m-msg
-			}
+			go func() {
+				status,err := mMgr.postMsgEx(sendmsg)
+				if err!=nil {
+					fmt.Printf("# mastodon command remove: post (%s) failed (%v)\n",sendmsg,err)
+				} else {
+					fmt.Printf("mastodon command remove: posted (%s)\n",sendmsg)
+				}
+				if status!=nil {
+					// may be used later to delete this m-msg
+				}
+			}()
 		}
 
 		// also delete missed calls
@@ -769,36 +783,18 @@ func (mMgr *MastodonMgr) offerRegisterLink(mastodonUserId string, mastodonCaller
 	sendmsg :="@"+mastodonUserId+" " + msg1 + mMgr.hostUrl + path + "?mid=" + mID + msg2
 	fmt.Printf("offerRegisterLink PostStatus (%s)\n",sendmsg)
 	if postback {
-		status,err := mMgr.postMsgEx(sendmsg)
-		if err!=nil {
-			fmt.Printf("# offerRegisterLink PostStatus err=%v (to=%v)\n",err,mastodonUserId)
-			return err
-		}
-		fmt.Printf("offerRegisterLink PostStatus sent to=%v\n", mastodonUserId)
-		if status!=nil {
-			// can be used to delete this msg
-		}
+		go func() {
+			status,err := mMgr.postMsgEx(sendmsg)
+			if err!=nil {
+				fmt.Printf("# offerRegisterLink post err=%v (to=%v)\n",err,mastodonUserId)
+				return //err
+			}
+			fmt.Printf("offerRegisterLink posted to=%v\n", mastodonUserId)
+			if status!=nil {
+				// can be used to delete this msg
+			}
+		}()
 	}
-
-/*
-	if inviter!=nil {
-		// store mid in inviter, so we can delete it later
-		inviter.MidString = mID
-		inviter.StatusID1 = status.ID
-		err = mMgr.kvMastodon.Put(dbInviter, msgID, inviter, false)
-		if err != nil {
-			fmt.Printf("# mastodon processMessage msgID=%v failed to store inviter\n", msgID)
-			return err
-		}
-		fmt.Printf("mastodon processMessage msgID=%v stored inviter with status.ID=%v\n", msgID, status.ID)
-
-		err = mMgr.kvMastodon.Put(dbCid, inviter.CalleeID, &CidEntry{msgID}, false)
-		if err!=nil {
-			fmt.Printf("# mastodon processMessage calleeID=%v failed to store dbCid\n", inviter.CalleeID)
-			return err
-		}
-	}
-*/
 	return nil
 }
 
@@ -831,22 +827,23 @@ func (mMgr *MastodonMgr) makeSecretID() (string,error) {
 
 func (mMgr *MastodonMgr) postMsgEx(sendmsg string) (*mastodon.Status,error) {
 	fmt.Printf("postMsgEx PostStatus (%s)\n",sendmsg)
+	// NOTE PostStatus() stalls until msg is sent
 	status,err := mMgr.c.PostStatus(context.Background(), &mastodon.Toot{
 		Status:			sendmsg,
 		Visibility:		"direct",
 	})
 	if err!=nil {
-		fmt.Println("# postMsgEx PostStatus err=",err)
+		fmt.Println("# postMsgEx PostStatus err=%v",err)
 		return nil,err
 	}
-	fmt.Println("postMsgEx PostStatus sent id=",status.ID)
+	fmt.Println("postMsgEx PostStatus sent id=%v",status.ID)
 	return status,nil
 }
 
 // called from httpNotifyCallee.go
 func (mMgr *MastodonMgr) postMsg(sendmsg string) error {
 	_,err := mMgr.postMsgEx(sendmsg)
-// TODO here we should also save status.ID
+// TODO here we should also save status.ID ?
 	return err
 }
 
