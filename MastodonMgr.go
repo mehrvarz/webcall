@@ -836,10 +836,10 @@ func (mMgr *MastodonMgr) postMsgEx(sendmsg string, onBehalfOfUser string) (*mast
 		Visibility:		"direct",
 	})
 	if err!=nil {
-		fmt.Println("# postMsgEx PostStatus err=%v",err)
+		fmt.Printf("# postMsgEx PostStatus err=%v\n",err)
 		return nil,err
 	}
-	fmt.Println("postMsgEx PostStatus sent id=%v",status.ID)
+	fmt.Printf("postMsgEx PostStatus sent id=%v\n",status.ID)
 	return status,nil
 }
 

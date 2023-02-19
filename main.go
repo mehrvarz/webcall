@@ -598,8 +598,9 @@ func readConfig(init bool) {
 				if s!="" {
 					tok := strings.Split(strings.TrimSpace(s), "=")
 					if len(tok)==2 {
-						mapping[strings.TrimSpace(tok[0])] =
-							MappingDataType{strings.TrimSpace(tok[1]),"none"}
+						key := strings.TrimSpace(tok[0])
+						// TODO don't do this is if mapping[key] is none-empty
+						mapping[key] = MappingDataType{strings.TrimSpace(tok[1]),"none"}
 					} else {
 						fmt.Printf("# readConfig mappings len(tok)=%d (%s)\n", len(tok), s)
 					}
