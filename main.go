@@ -235,6 +235,10 @@ func main() {
 	wsClientMap = make(map[uint64]wsClientDataType) // wsClientID -> wsClientData
 
 	readConfig(true) // need dbPath
+	// dump mapping[]
+	for key,mappingDataType := range mapping {
+		fmt.Printf("mapping %s -> %s %s\n", key, mappingDataType.CalleeId, mappingDataType.Assign)
+	}
 
 	var err error
 	kvMain,err = skv.DbOpen(dbMainName,dbPath)
@@ -583,10 +587,26 @@ func readConfig(init bool) {
 		twitterSecret = readIniString(configIni, "twitterSecret", twitterSecret, "")
 
 		// currently not used
-		vapidPublicKey = readIniString(configIni, "vapidPublicKey", vapidPublicKey, "")
-		vapidPrivateKey = readIniString(configIni, "vapidPrivateKey", vapidPrivateKey, "")
-//		readConfigLock.Unlock()
-//		return
+		//vapidPublicKey = readIniString(configIni, "vapidPublicKey", vapidPublicKey, "")
+		//vapidPrivateKey = readIniString(configIni, "vapidPrivateKey", vapidPrivateKey, "")
+
+		synonyms := readIniString(configIni, "mappings", "", "")
+		if synonyms!="" {
+			synonymsSlice := strings.Split(synonyms, ",")
+			mappingMutex.Lock()
+			for _, s := range synonymsSlice {
+				if s!="" {
+					tok := strings.Split(strings.TrimSpace(s), "=")
+					if len(tok)==2 {
+						mapping[strings.TrimSpace(tok[0])] =
+							MappingDataType{strings.TrimSpace(tok[1]),"none"}
+					} else {
+						fmt.Printf("# readConfig mappings len(tok)=%d (%s)\n", len(tok), s)
+					}
+				}
+			}
+			mappingMutex.Unlock()
+		}
 	}
 
 	maintenanceMode = readIniBoolean(configIni, "maintenanceMode", maintenanceMode, false)
