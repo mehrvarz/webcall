@@ -1698,6 +1698,7 @@ function notifyConnect(callerName,callerId,callerHost) {
 	}
 	goodbyMissedCall = "";
 	// notify calleeID (on behalf of callerId)
+	// NOTE this may take a while bc the server will have to post a direct msg
 	let api = apiPath+"/notifyCallee?id="+calleeID +
 		"&callerId="+callerId + "&callerName="+callerName + "&callerHost="+callerHost +
 		"&msg="+cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen);
