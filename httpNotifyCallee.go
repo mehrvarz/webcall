@@ -202,7 +202,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 				sendmsg :=	"@"+dbUser.MastodonID+" "+msg
 				// NOTE PostStatus() stalls until msg is sent (or not)
 				// TODO do we always have enough threads?
-				err := mastodonMgr.postMsg(sendmsg)
+				err := mastodonMgr.postMsg(sendmsg,dbUser.MastodonID)
 				if err!=nil {
 					// TODO log
 					fmt.Println("# PostStatus (%s) err=%v",sendmsg,err)

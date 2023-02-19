@@ -118,6 +118,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 	readConfigLock.RUnlock()
 	if maxLoginPer30minTmp>0 && remoteAddr!=outboundIP && remoteAddr!="127.0.0.1" {
 		if ok {
+			// remove all entries (from the beginning) that are 30min or older
 			for len(calleeLoginSlice)>0 {
 				if time.Now().Sub(calleeLoginSlice[0]) < 30 * time.Minute {
 					break
