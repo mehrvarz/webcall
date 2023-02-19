@@ -194,6 +194,9 @@ func locGetRandomCalleeID() (string,error) {
 	hubMapMutex.RLock()
 	defer hubMapMutex.RUnlock()
 
+	mappingMutex.RLock()
+	defer mappingMutex.RUnlock()
+
 	newCalleeId := ""
 	tries := 0
 	for {
@@ -206,6 +209,11 @@ func locGetRandomCalleeID() (string,error) {
 		newCalleeId = strconv.FormatInt(int64(intID),10)
 		hub := hubMap[newCalleeId]
 		if hub!=nil {
+			continue;
+		}
+
+		_,ok := mapping[newCalleeId]
+		if ok {
 			continue;
 		}
 
