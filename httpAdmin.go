@@ -382,6 +382,12 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		return true
 	}
 
+	if urlPath=="/dumpPostedMsgs" {
+		if mastodonMgr != nil {
+			mastodonMgr.dumpPostedMsgEvents(w)
+		}
+		return true
+	}
 	return false
 }
 

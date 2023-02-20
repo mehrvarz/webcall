@@ -170,11 +170,11 @@ loop:
 							break
 						}
 					case html.ErrorToken:
-						fmt.Printf("mastodonhandler ErrorToken re-loop\n")
+						//fmt.Printf("mastodonhandler ErrorToken re-loop\n")
 						break loop
 					}
 				}
-				fmt.Printf("mastodonhandler Notif-Type=(%v) done\n", event.Notification.Type)
+				//fmt.Printf("mastodonhandler Notif-Type=(%v) done\n", event.Notification.Type)
 				mMgr.processMessage(command,event,tokSlice[0])
 
 /*			case *mastodon.UpdateEvent:
@@ -255,13 +255,12 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 // TODO user needs to first enable command 'remove' in the web-app
 			mMgr.commandRemove(mastodonUserId,true)
 			return
-/*
+
 		case command=="ping":
+			// send pong msg back with 20s delay
 			sendmsg :="@"+mastodonUserId+" pong"
 			fmt.Printf("mastodon command ping post (%s)\n",sendmsg)
-			go func() {
-				time.Sleep(20 * time.Second)
-				status,err := mMgr.postMsgEx(sendmsg,mastodonUserId) // TODO or mappingData.CalleeId ?
+			mMgr.postMsgEx(sendmsg,mastodonUserId,20,func(err error, status *mastodon.Status) {
 				if err!=nil {
 					fmt.Printf("# mastodon command setup post err=%v (to=%v)\n",err,mastodonUserId)
 				} else {
@@ -270,9 +269,8 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 						// can be used to delete this msg
 					}
 				}
-			}()
+			})
 			return
-*/
 		}
 	}
 
@@ -530,9 +528,7 @@ func (mMgr *MastodonMgr) commandSetup(mastodonUserId string, postback bool) {
 		if postback {
 			sendmsg :="@"+mastodonUserId+" is already associated"
 			fmt.Printf("mastodon command setup post (%s)\n",sendmsg)
-			// NOTE PostStatus() stalls until msg is sent
-			go func() {
-				status,err := mMgr.postMsgEx(sendmsg,mastodonUserId) // TODO or mappingData.CalleeId ?
+			mMgr.postMsgEx(sendmsg, mastodonUserId, 0, func(err error, status *mastodon.Status) {
 				if err!=nil {
 					fmt.Printf("# mastodon command setup post err=%v (to=%v)\n",err,mastodonUserId)
 				} else {
@@ -541,7 +537,7 @@ func (mMgr *MastodonMgr) commandSetup(mastodonUserId string, postback bool) {
 						// can be used to delete this msg
 					}
 				}
-			}()
+			})
 		}
 		return
 	}
@@ -573,9 +569,7 @@ func (mMgr *MastodonMgr) commandSetup(mastodonUserId string, postback bool) {
 			sendmsg :="@"+mastodonUserId+" user exists"
 			fmt.Printf("mastodon command setup (%s)\n",sendmsg)
 			if postback {
-				// NOTE PostStatus() stalls until msg is sent
-				go func() {
-					status,err := mMgr.postMsgEx(sendmsg, mastodonUserId)
+				mMgr.postMsgEx(sendmsg, mastodonUserId, 0, func(err error, status *mastodon.Status) {
 					if err!=nil {
 						fmt.Printf("# mastodon command setup post err=%v (to=%v)\n",err,mastodonUserId)
 					} else {
@@ -584,7 +578,7 @@ func (mMgr *MastodonMgr) commandSetup(mastodonUserId string, postback bool) {
 							// can be used to delete this msg
 						}
 					}
-				}()
+				})
 			}
 			return
 		}
@@ -606,17 +600,16 @@ func (mMgr *MastodonMgr) commandSetup(mastodonUserId string, postback bool) {
 		// what makes responding here difficult is that offerRegisterLink() may fail on different things:
 		//   create secret, error on kvMastodon.Put(dbMid/dbInviter/dbCid), error on postMsgEx()
 		sendmsg :="@"+mastodonUserId+" sorry, I am not able to proceed with your request"
-		go func() {
-			status,err := mMgr.postMsgEx(sendmsg, mastodonUserId)
+		mMgr.postMsgEx(sendmsg, mastodonUserId, 0, func(err error, status *mastodon.Status) {
 			if err!=nil {
 				fmt.Printf("# mastodon processMessage offerRegisterLink post (%s) failed %v\n",sendmsg,err)
 			} else {
 				fmt.Printf("mastodon processMessage offerRegisterLink posted (%s)\n",sendmsg)
+				if status!=nil {
+					// can be used to delete posted msg at some point later
+				}
 			}
-			if status!=nil {
-				// can be used to delete posted msg at some point later
-			}
-		}()
+		})
 	}
 }
 
@@ -644,17 +637,16 @@ func (mMgr *MastodonMgr) commandRemove(mastodonUserId string, postback bool) {
 					// post msg telling user that remove has failed
 					sendmsg ="@"+mastodonUserId+" sorry, I am unable to proceed with your request"
 				}
-				go func() {
-					status,err := mMgr.postMsgEx(sendmsg, mastodonUserId)
+				mMgr.postMsgEx(sendmsg, mastodonUserId, 0, func(err error, status *mastodon.Status) {
 					if err!=nil {
 						fmt.Printf("# mastodon command remove: post (%s) failed (%v)\n",sendmsg,err)
 					} else {
 						fmt.Printf("mastodon command remove: (%s) posted\n",sendmsg)
+						if status!=nil {
+							// may be used to later delete the m-msg
+						}
 					}
-					if status!=nil {
-						// may be used to later delete the m-msg
-					}
-				}()
+				})
 			}
 
 			// do NOT delete the user account of mappingData.CalleeId
@@ -726,17 +718,16 @@ func (mMgr *MastodonMgr) commandRemove(mastodonUserId string, postback bool) {
 			if postback {
 				// send msg telling user that remove has failed
 				sendmsg :="@"+mastodonUserId+" sorry, I am not able to proceed with your request"
-				go func() {
-					status,err := mMgr.postMsgEx(sendmsg, mastodonUserId)
+				mMgr.postMsgEx(sendmsg, mastodonUserId, 0, func(err error, status *mastodon.Status) {
 					if err!=nil {
 						fmt.Printf("# mastodon command remove: post (%s) failed (%v)\n",sendmsg,err)
 					} else {
 						fmt.Printf("mastodon command remove: posted (%s)\n",sendmsg)
+						if status!=nil {
+							// may be used later to delete this m-msg
+						}
 					}
-					if status!=nil {
-						// may be used later to delete this m-msg
-					}
-				}()
+				})
 			}
 			return
 		}
@@ -746,17 +737,16 @@ func (mMgr *MastodonMgr) commandRemove(mastodonUserId string, postback bool) {
 		// send msg telling user that their webcall account has been deactivated
 		if postback {
 			sendmsg :="@"+mastodonUserId+" on your request your ID has been deleted"
-			go func() {
-				status,err := mMgr.postMsgEx(sendmsg, mastodonUserId)
+			mMgr.postMsgEx(sendmsg, mastodonUserId, 0, func(err error, status *mastodon.Status) {
 				if err!=nil {
 					fmt.Printf("# mastodon command remove: post (%s) failed (%v)\n",sendmsg,err)
 				} else {
 					fmt.Printf("mastodon command remove: posted (%s)\n",sendmsg)
+					if status!=nil {
+						// may be used later to delete this m-msg
+					}
 				}
-				if status!=nil {
-					// may be used later to delete this m-msg
-				}
-			}()
+			})
 		}
 
 		// also delete missed calls
@@ -813,17 +803,16 @@ func (mMgr *MastodonMgr) offerRegisterLink(mastodonUserId string, mastodonCaller
 	sendmsg :="@"+mastodonUserId+" " + msg1 + mMgr.hostUrl + path + "?mid=" + mID + msg2
 	fmt.Printf("offerRegisterLink PostStatus (%s)\n",sendmsg)
 	if postback {
-		go func() {
-			status,err := mMgr.postMsgEx(sendmsg, mastodonUserId)
+		mMgr.postMsgEx(sendmsg, mastodonUserId, 0, func(err error, status *mastodon.Status) {
 			if err!=nil {
 				fmt.Printf("# offerRegisterLink post err=%v (to=%v)\n",err,mastodonUserId)
-				return //err
+			} else {
+				fmt.Printf("offerRegisterLink posted to=%v\n", mastodonUserId)
+				if status!=nil {
+					// can be used to delete this msg
+				}
 			}
-			fmt.Printf("offerRegisterLink posted to=%v\n", mastodonUserId)
-			if status!=nil {
-				// can be used to delete this msg
-			}
-		}()
+		})
 	}
 	return nil
 }
@@ -855,7 +844,7 @@ func (mMgr *MastodonMgr) makeSecretID() (string,error) {
 	}
 }
 
-func (mMgr *MastodonMgr) postMsgEx(sendmsg string, onBehalfOfUser string) (*mastodon.Status,error) {
+func (mMgr *MastodonMgr) postMsgEx(sendmsg string, onBehalfOfUser string, delaySecs int, callback func(error,*mastodon.Status)) (*mastodon.Status, error) {
 	fmt.Printf("postMsgEx PostStatus (%s)\n",sendmsg)
 	mMgr.cleanupPostedMsgEvents(nil)
 
@@ -864,6 +853,7 @@ func (mMgr *MastodonMgr) postMsgEx(sendmsg string, onBehalfOfUser string) (*mast
 	if msgsPostedTotalInLast30Min >= 100 {
 		fmt.Printf("# postMsgEx # of msgs posted in the last 30min %d >= 100\n",
 			msgsPostedTotalInLast30Min)
+		if callback!=nil { callback(ErrTotalPostMsgQuota,nil) }
 		return nil,ErrTotalPostMsgQuota
 	}
 
@@ -879,6 +869,7 @@ func (mMgr *MastodonMgr) postMsgEx(sendmsg string, onBehalfOfUser string) (*mast
 	if msgsPostedInLast30Min >= 5 {
 		fmt.Printf("# postMsgEx # of msgs posted for %s in the last 30min %d >= 5\n",
 			onBehalfOfUser, msgsPostedInLast30Min)
+		if callback!=nil { callback(ErrUserPostMsgQuota,nil) }
 		return nil,ErrUserPostMsgQuota
 	}
 
@@ -887,23 +878,43 @@ func (mMgr *MastodonMgr) postMsgEx(sendmsg string, onBehalfOfUser string) (*mast
 	mMgr.postedMsgEventsMutex.Unlock()
 
 	// NOTE PostStatus() stalls until msg is sent
+	if delaySecs>0 {
+		go func() {
+			time.Sleep(time.Duration(delaySecs) * time.Second)
+			status,err := mMgr.c.PostStatus(context.Background(), &mastodon.Toot{
+				Status:			sendmsg,
+				Visibility:		"direct",
+			})
+			if err!=nil {
+				fmt.Printf("# postMsgEx PostStatus err=%v\n",err)
+			} else {
+				fmt.Printf("postMsgEx PostStatus sent id=%v (last 30min: total=%d, for %s =%d)\n",
+					status.ID, msgsPostedTotalInLast30Min, onBehalfOfUser, msgsPostedInLast30Min)
+			}
+			if callback!=nil { callback(err,status) }
+		}()
+		return nil,nil
+	}
+
 	status,err := mMgr.c.PostStatus(context.Background(), &mastodon.Toot{
 		Status:			sendmsg,
 		Visibility:		"direct",
 	})
 	if err!=nil {
 		fmt.Printf("# postMsgEx PostStatus err=%v\n",err)
-		return nil,err
+		if callback!=nil { callback(err,status) }
+		return status,err
 	}
 
 	fmt.Printf("postMsgEx PostStatus sent id=%v (last 30min: total=%d, for %s =%d)\n",
 		status.ID, msgsPostedTotalInLast30Min, onBehalfOfUser, msgsPostedInLast30Min)
+	if callback!=nil { callback(err,status) }
 	return status,nil
 }
 
 // called from httpNotifyCallee.go
 func (mMgr *MastodonMgr) postMsg(sendmsg string, onBehalfOfUser string) error {
-	_,err := mMgr.postMsgEx(sendmsg, onBehalfOfUser)
+	_,err := mMgr.postMsgEx(sendmsg, onBehalfOfUser, 0, nil)
 // TODO here we should also save status.ID ?
 	return err
 }
@@ -1481,8 +1492,20 @@ func (mMgr *MastodonMgr) cleanupMastodonMidMap(w io.Writer) {
 	fmt.Printf("cleanupMastodonMidMap done\n")
 }
 
+func (mMgr *MastodonMgr) dumpPostedMsgEvents(w io.Writer) {
+	fmt.Printf("dumpPostedMsgEvents\n")
+	fmt.Fprintf(w,"dumpPostedMsgEvents\n")
+	mMgr.postedMsgEventsMutex.RLock()
+	for idx,postedMsgEvent := range mMgr.postedMsgEventsSlice {
+		fmt.Fprintf(w,"postedMsg %d %v %s\n",
+			idx, postedMsgEvent.timestamp, postedMsgEvent.calleeID)
+	}
+	mMgr.postedMsgEventsMutex.RUnlock()
+}
+
 func (mMgr *MastodonMgr) cleanupPostedMsgEvents(w io.Writer) {
 	// delete the oldes entries (at the beginning of the slice) if they are 30min old or older
+	fmt.Printf("cleanupPostedMsgEvents\n")
 	mMgr.postedMsgEventsMutex.Lock()
 	for len(mMgr.postedMsgEventsSlice)>0 {
 		if time.Now().Sub(mMgr.postedMsgEventsSlice[0].timestamp) < 30 * time.Minute {
