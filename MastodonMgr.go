@@ -255,6 +255,24 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 // TODO user needs to first enable command 'remove' in the web-app
 			mMgr.commandRemove(mastodonUserId,true)
 			return
+/*
+		case command=="ping":
+			sendmsg :="@"+mastodonUserId+" pong"
+			fmt.Printf("mastodon command ping post (%s)\n",sendmsg)
+			go func() {
+				time.Sleep(20 * time.Second)
+				status,err := mMgr.postMsgEx(sendmsg,mastodonUserId) // TODO or mappingData.CalleeId ?
+				if err!=nil {
+					fmt.Printf("# mastodon command setup post err=%v (to=%v)\n",err,mastodonUserId)
+				} else {
+					fmt.Printf("mastodon command setup post sent to=%v\n", mastodonUserId)
+					if status!=nil {
+						// can be used to delete this msg
+					}
+				}
+			}()
+			return
+*/
 		}
 	}
 
@@ -509,9 +527,9 @@ func (mMgr *MastodonMgr) commandSetup(mastodonUserId string, postback bool) {
 		// if mastodonUserId is already an alt-ID, then sending a register-link is useless
 		fmt.Printf("mastodon command setup (%s) already associated with (%s)\n",
 			mastodonUserId,mappingData.CalleeId)
-		sendmsg :="@"+mastodonUserId+" is already associated"
-		fmt.Printf("mastodon command setup post (%s)\n",sendmsg)
 		if postback {
+			sendmsg :="@"+mastodonUserId+" is already associated"
+			fmt.Printf("mastodon command setup post (%s)\n",sendmsg)
 			// NOTE PostStatus() stalls until msg is sent
 			go func() {
 				status,err := mMgr.postMsgEx(sendmsg,mastodonUserId) // TODO or mappingData.CalleeId ?
@@ -879,7 +897,7 @@ func (mMgr *MastodonMgr) postMsgEx(sendmsg string, onBehalfOfUser string) (*mast
 	}
 
 	fmt.Printf("postMsgEx PostStatus sent id=%v (last 30min: total=%d, for %s =%d)\n",
-		status.ID, onBehalfOfUser, msgsPostedTotalInLast30Min, msgsPostedInLast30Min)
+		status.ID, msgsPostedTotalInLast30Min, onBehalfOfUser, msgsPostedInLast30Min)
 	return status,nil
 }
 

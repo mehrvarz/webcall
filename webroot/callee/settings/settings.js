@@ -83,26 +83,36 @@ function prepareSettings(xhrresponse) {
 			document.getElementById("madiv").style.display = "none";
 		} else {
 			document.getElementById("madiv").style.display = "block";
-			document.getElementById("maid").innerHTML = "Mastodon ID: "+serverSettings.mastodonID;
+			if(serverSettings.mastodonID!=calleeID) {
+				document.getElementById("maid").innerHTML = "Mastodon ID: <span style='color:#bff;font-weight:400;'>"+serverSettings.mastodonID+"</span>";
+			}
 		}
 
+		let tootOnCallCheckbox = document.getElementById("tootOnCall");
+		let skipUserSendImmediatelyCheckbox = document.getElementById("skipUserSendImmediately");
 		if(typeof serverSettings.tootOnCall!=="undefined") {
 			if(!gentle) console.log('serverSettings.tootOnCall',serverSettings.tootOnCall);
 			if(serverSettings.tootOnCall=="true") {
-				document.getElementById("tootOnCall").checked = true;
+				tootOnCallCheckbox.checked = true;
 			} else {
-				document.getElementById("tootOnCall").checked = false;
+				tootOnCallCheckbox.checked = false;
 			}
+
+			tootOnCallCheckbox.addEventListener('change', function() {
+				if(this.checked) {
+				} else {
+					skipUserSendImmediatelyCheckbox.checked = false;
+				}
+			});
 		}
 		if(typeof serverSettings.askCallerBeforeNotify!=="undefined") {
 			if(!gentle) console.log('serverSettings.askCallerBeforeNotify',
 				serverSettings.askCallerBeforeNotify);
-			let askCallerBeforeNotifyElement = document.getElementById("askCallerBeforeNotify")
-			if(askCallerBeforeNotifyElement) {
+			if(skipUserSendImmediatelyCheckbox) {
 				if(serverSettings.askCallerBeforeNotify=="true") {
-					askCallerBeforeNotifyElement.checked = true;
+					skipUserSendImmediatelyCheckbox.checked = false;
 				} else {
-					askCallerBeforeNotifyElement.checked = false;
+					skipUserSendImmediatelyCheckbox.checked = true;
 				}
 			}
 		}
@@ -459,7 +469,7 @@ function submitForm(autoclose) {
 			'"storeContacts":"'+document.getElementById("storeContacts").checked+'",'+
 			'"storeMissedCalls":"'+document.getElementById("storeMissedCalls").checked+'",'+
 			'"tootOnCall":"'+document.getElementById("tootOnCall").checked+'",'+
-			'"askCallerBeforeNotify":"'+document.getElementById("askCallerBeforeNotify").checked+'"'+
+			'"askCallerBeforeNotify":"'+!(document.getElementById("skipUserSendImmediately").checked)+'"'+
 //			'"webPushSubscription1":"'+encodeURI(serverSettings.webPushSubscription1)+'",'+
 //			'"webPushUA1":"'+encodeURI(serverSettings.webPushUA1)+'",'+
 //			'"webPushSubscription2":"'+encodeURI(serverSettings.webPushSubscription2)+'",'+
