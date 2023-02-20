@@ -832,50 +832,53 @@ function getSettings() {
 }
 
 function getSettingDone() {
-	// "You receive calls made by this link"
-	let calleeLink = window.location.href;
-	let userLink = "";
-	//console.log("showOnlineReadyMsg calleeLink="+calleeLink);
-	if(calleeLink.indexOf("callee/")>0) {
-		userLink = calleeLink.replace("callee/","user/");
-		//console.log("showOnlineReadyMsg a userLink="+userLink);
-	} else if(calleeLink.indexOf("calleelog/")>0) {
-		userLink = calleeLink.replace("calleelog/","user/");
-		//console.log("showOnlineReadyMsg b userLink="+userLink);
-	}
-	let idxParameter = userLink.indexOf("?");
-	if(idxParameter>=0) {
-		userLink = userLink.substring(0,idxParameter);
-	}
-	idxParameter = userLink.indexOf("#");
-	if(idxParameter>=0) {
-		userLink = userLink.substring(0,idxParameter);
-	}
-
-	let links = "";
-	links += "<div style='line-height:1.6em'>";
-
-	links += "<div class='callListTitle'>You can receive calls made by these links:</div>";
-
-	links += "<a target='_blank' href='"+userLink+"'>"+userLink+"</a><br>";
-
-	if(mastodonID!="" && mastodonID!=calleeID) {
-		let userLinkAlt = userLink.replace("/user/"+calleeID,"/user/"+mastodonID);
-		links += "<a target='_blank' href='"+userLinkAlt+"'>"+userLinkAlt+"</a><br>";
-	}
-
-	// add active mapping entries
-	console.log("showOnlineReadyMsg altIdArray.length",altIdArray.length);
-	if(altIdArray.length>0) {
-		for(let i = 0; i < altIdArray.length; i++) {
-			let userLinkMap = userLink.replace("/user/"+calleeID,"/user/"+altIdArray[i]);
-			links += "<a target='_blank' href='"+userLinkMap+"'>"+userLinkMap+"</a><br>";
+	//console.log("getSettingDone",wsConn);
+	if(wsConn) {
+		// "You receive calls made by this link"
+		let calleeLink = window.location.href;
+		let userLink = "";
+		//console.log("showOnlineReadyMsg calleeLink="+calleeLink);
+		if(calleeLink.indexOf("callee/")>0) {
+			userLink = calleeLink.replace("callee/","user/");
+			//console.log("showOnlineReadyMsg a userLink="+userLink);
+		} else if(calleeLink.indexOf("calleelog/")>0) {
+			userLink = calleeLink.replace("calleelog/","user/");
+			//console.log("showOnlineReadyMsg b userLink="+userLink);
 		}
+		let idxParameter = userLink.indexOf("?");
+		if(idxParameter>=0) {
+			userLink = userLink.substring(0,idxParameter);
+		}
+		idxParameter = userLink.indexOf("#");
+		if(idxParameter>=0) {
+			userLink = userLink.substring(0,idxParameter);
+		}
+
+		let links = "";
+		links += "<div style='line-height:1.6em'>";
+
+		links += "<div class='callListTitle'>You can receive calls made by these links:</div>";
+
+		links += "<a target='_blank' href='"+userLink+"'>"+userLink+"</a><br>";
+
+		if(mastodonID!="" && mastodonID!=calleeID) {
+			let userLinkAlt = userLink.replace("/user/"+calleeID,"/user/"+mastodonID);
+			links += "<a target='_blank' href='"+userLinkAlt+"'>"+userLinkAlt+"</a><br>";
+		}
+
+		// add active mapping entries
+		console.log("showOnlineReadyMsg altIdArray.length",altIdArray.length);
+		if(altIdArray.length>0) {
+			for(let i = 0; i < altIdArray.length; i++) {
+				let userLinkMap = userLink.replace("/user/"+calleeID,"/user/"+altIdArray[i]);
+				links += "<a target='_blank' href='"+userLinkMap+"'>"+userLinkMap+"</a><br>";
+			}
+		}
+
+		links += "</div>";
+
+		ownlinkElement.innerHTML = links;
 	}
-
-	links += "</div>";
-
-	ownlinkElement.innerHTML = links;
 }
 
 function offlineAction() {
