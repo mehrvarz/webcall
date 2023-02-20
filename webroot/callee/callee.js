@@ -2697,7 +2697,7 @@ function openIdMapping() {
 function openSettings() {
 	let url = "/callee/settings/?id="+calleeID;
 	gLog('openSettings='+url);
-	iframeWindowOpen(url);
+	iframeWindowOpen(url,false,"max-width:440px;");
 	// when iframe closes, client.js:iframeWindowClose() will call getSettings()
 }
 
