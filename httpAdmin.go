@@ -16,7 +16,6 @@ import (
 	"github.com/nxadm/tail" // https://pkg.go.dev/github.com/nxadm/tail
 	"github.com/mehrvarz/webcall/skv"
 	"github.com/mehrvarz/webcall/atombool"
-	"github.com/mattn/go-mastodon"
 )
 
 func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath string, urlID string, remoteAddr string) bool {
@@ -392,12 +391,16 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 	if urlPath=="/pingMsg" {
 		if mastodonMgr != nil {
 			id := "timurmobi@mastodon.social"
-			sendmsg :="@"+id+" test"
-			mastodonMgr.postMsgEx(sendmsg, id, 0, func(err error, status *mastodon.Status) {
+			url_arg_array, ok := r.URL.Query()["arg"]
+			sendmsg := "@"+id+" test"
+			if ok && len(url_arg_array[0])>0 {
+				sendmsg = "@"+id+" "+url_arg_array[0]
+			}
+			mastodonMgr.postMsgEx(sendmsg, id, 0, func(err error) {
 				if err!=nil {
-					fmt.Printf("# /pingMsg post to=%v err=%v\n", id, err)
+					fmt.Fprintf(w,"# /pingMsg post to=%v err=%v\n", id, err)
 				} else {
-					fmt.Printf("/pingMsg post sent to=%v\n", id)
+					fmt.Fprintf(w,"/pingMsg post sent to=%v\n", id)
 				}
 			})
 		}

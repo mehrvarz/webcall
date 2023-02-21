@@ -202,16 +202,21 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 				sendmsg :=	"@"+dbUser.MastodonID+" "+msg
 				// NOTE PostStatus() stalls until msg is sent (or not)
 				// TODO do we always have enough threads?
-				err := mastodonMgr.postMsg(sendmsg,dbUser.MastodonID)
+				err := mastodonMgr.postMsgEx(sendmsg, dbUser.MastodonID, 0, func(err error) {
+					if err!=nil {
+						fmt.Printf("# /notifyCallee PostStatus (%s) err=%v\n",sendmsg,err)
+						notificationSent &= ^4
+					}
+				})
 				if err!=nil {
-					// TODO log
-					fmt.Println("# PostStatus (%s) err=%v",sendmsg,err)
+					fmt.Printf("# /notifyCallee PostStatus (%s) err=%v\n",sendmsg,err)
 				} else {
-					// TODO log
-//					fmt.Println("PostStatus sent OK")
-					// TODO at some point later we need to delete (from mastodon) all direct messages
-					// note: deleting a (direct) msg does NOT delete it on the receiver/caller side
+					// we know now that there was no quota problem
+					// we do not yet know if mastodon has accepted the msg
 					notificationSent |= 4
+					// if an async err occurs within 2s, the notificationSent bit will be cleared (above)
+					// otherwise we act as if the msg was posted
+					time.Sleep(2 * time.Second)
 				}
 			}
 		} else
