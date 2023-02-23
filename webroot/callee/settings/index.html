@@ -133,9 +133,9 @@ input[type=submit]:focus {
 	<h1>WebCall Settings</h1>
 
 	<form action="javascript:;" onsubmit="submitForm(true)" style="display:none; width:100%;" id="settings">
-		<label for="nickname" style="display:inline-block; padding-bottom:4px; color:#1b1; font-weight:600;">Your WebCall nickname:</label><br>
+		<label for="nickname" style="display:inline-block; padding-bottom:4px; color:#1b1; font-weight:600;">WebCall nickname:</label><br>
 		<input name="nickname" id="nickname" type="text" class="formtext" size="14" maxlength="14" style="max-width:240px;" autofocus>&nbsp;<span onclick="clearForm(0)" style="_margin-left:5px; user-select:none;">X</span><br>
-		<div style="margin-top:6px;font-size:0.90em;">Will be used to communicate with your callers when your WebCall account is offline.</div>
+		<div style="margin-top:6px;font-size:0.90em;">Nickname will be used to communicate with my callers when I am offline.</div>
 
 		<div id="madiv" style="display:none;">
 			<div id="maid" style="margin-top:14px;"></div>
@@ -178,6 +178,8 @@ input[type=submit]:focus {
 		<div id="errstring" style="color:#ff0;"></div>
 
 		<input type="submit" name="Submit" id="submit" value="Save" style="width:100px; border-radius:3px;">
+
+		<div id="verstring" style="margin-top:16px; font-size:80%; opacity:0.85;"></div>
 	</form>
 	<br>
 <!--

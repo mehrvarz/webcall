@@ -1,4 +1,4 @@
-// WebCall Copyright 2022 timur.mobi. All rights reserved.
+// WebCall Copyright 2023 timur.mobi. All rights reserved.
 'use strict';
 const form = document.querySelector('form#settings');
 const formPw = document.querySelector('input#nickname');
@@ -12,6 +12,7 @@ var calleeID = "";
 var calleeLink = "";
 var vapidPublicKey = ""
 var xhrTwidActive = false;
+var serverVersion = "";
 
 window.onload = function() {
 	let id = getUrlParams("id");
@@ -21,6 +22,8 @@ window.onload = function() {
 	if(!gentle) console.log("calleeID="+calleeID);
 	// XHR to get current settings; server will use the cookie to authenticate us
 	requestSettings();
+
+	//document.getElementById("verstring").innerHTML = serverVersion;
 }
 
 function getUrlParams(param) {
@@ -74,18 +77,13 @@ function prepareSettings(xhrresponse) {
 		vapidPublicKey = serverSettings.vapidPublicKey
 	}
 
-	if(typeof serverSettings.mastodonID!=="undefined") {
-//TODO tmtmtm: only doing this bc my test-account does not have .mastodonID set
-//		serverSettings.mastodonID = "tm@mastodontech.de";
-
+	document.getElementById("madiv").style.display = "none";
+	if(typeof serverSettings.mastodonID!=="undefined" && serverSettings.mastodonID!="") {
 		console.log('serverSettings.mastodonID',serverSettings.mastodonID);
-		if(serverSettings.mastodonID=="") {
-			document.getElementById("madiv").style.display = "none";
-		} else {
-			document.getElementById("madiv").style.display = "block";
-			if(serverSettings.mastodonID!=calleeID) {
-				document.getElementById("maid").innerHTML = "Mastodon ID: <span style='color:#bff;font-weight:400;'>"+serverSettings.mastodonID+"</span>";
-			}
+		document.getElementById("madiv").style.display = "block";
+
+		if(serverSettings.mastodonID!=calleeID) {
+			document.getElementById("maid").innerHTML = "Mastodon ID: <span style='color:#bff;font-weight:400;'>"+serverSettings.mastodonID+"</span>";
 		}
 
 		let tootOnCallCheckbox = document.getElementById("tootOnCall");
@@ -234,6 +232,12 @@ function prepareSettings(xhrresponse) {
 		}
 	}
 */
+	if(typeof serverSettings.serverVersion!=="undefined") {
+		if(!gentle) console.log('serverSettings.serverVersion',serverSettings.serverVersion);
+		serverVersion = serverSettings.serverVersion;
+		document.getElementById("verstring").innerHTML = "WebCall Server: "+serverVersion;
+	}
+
 	form.style.display = "block";
 	setTimeout(function() {
 		formPw.focus();

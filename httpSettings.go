@@ -75,6 +75,7 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 //		"webPushUA2": dbUser.Str3ua,
 //		"vapidPublicKey": vapidPublicKey,
 		"dialSounds": strconv.FormatBool(!(dbUser.Int2&4==4)), // bit4 set for mute (bit4 clear = play dialsounds)
+		"serverVersion": codetag,
 	})
 
 	readConfigLock.RUnlock()
