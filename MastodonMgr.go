@@ -1228,29 +1228,30 @@ func (mMgr *MastodonMgr) cleanupPostedMsgEvents(w io.Writer) {
 	mMgr.postedMsgEventsMutex.Lock()
 	for len(mMgr.postedMsgEventsSlice)>0 {
 		if time.Now().Sub(mMgr.postedMsgEventsSlice[0].timestamp) < 30 * time.Minute {
-			// the oldest remaining entry is now less than 30min old
+			// the oldest remaining entry is less than 30min old: end cleanupPostedMsgEvents
 			break
 		}
-		if len(mMgr.postedMsgEventsSlice)>1 {
-			postedMsgEvent := mMgr.postedMsgEventsSlice[0]
-			fmt.Printf("cleanupPostedMsgEvents calleeID=%s msgID=%s\n",
-				postedMsgEvent.calleeID, postedMsgEvent.msgID)
-			mMgr.postedMsgEventsSlice = mMgr.postedMsgEventsSlice[1:]
+		postedMsgEvent := mMgr.postedMsgEventsSlice[0]
+		fmt.Printf("cleanupPostedMsgEvents calleeID=%s msgID=%s\n",
+			postedMsgEvent.calleeID, postedMsgEvent.msgID)
 
-			if postedMsgEvent.msgID!="" {
-				// delete postedMsgEvent.msgID
-				err := mMgr.c.DeleteStatus(context.Background(), postedMsgEvent.msgID)
-				if err!=nil {
-					fmt.Printf("# cleanupPostedMsgEvents DeleteStatus (%v) err=%v\n",
-						postedMsgEvent.msgID, err)
-				} else {
-					fmt.Printf("cleanupPostedMsgEvents DeleteStatus (%v) OK\n",
-						postedMsgEvent.msgID)
-				}
+		if postedMsgEvent.msgID!="" {
+			// delete postedMsgEvent.msgID
+			err := mMgr.c.DeleteStatus(context.Background(), postedMsgEvent.msgID)
+			if err!=nil {
+				fmt.Printf("# cleanupPostedMsgEvents DeleteStatus (%v) err=%v\n",
+					postedMsgEvent.msgID, err)
+			} else {
+				fmt.Printf("cleanupPostedMsgEvents DeleteStatus (%v) OK\n",
+					postedMsgEvent.msgID)
 			}
+		}
 
+		if len(mMgr.postedMsgEventsSlice)>1 {
+			mMgr.postedMsgEventsSlice = mMgr.postedMsgEventsSlice[1:]
 		} else {
-			mMgr.postedMsgEventsSlice = mMgr.postedMsgEventsSlice[:0]
+			mMgr.postedMsgEventsSlice = nil
+			// no more entries left: end cleanupPostedMsgEvents
 			break
 		}
 	}
