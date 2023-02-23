@@ -33,6 +33,7 @@ const progressRcvElement = document.getElementById('progressRcv');
 const progressRcvLabel = document.getElementById('progressRcvLabel');
 const progressRcvBar = document.getElementById('fileProgressRcv');
 
+var bitrate = 320000;
 var calleeID = "";
 var videoEnabled = false;
 var localVideoMonitorPaused = false;

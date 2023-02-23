@@ -32,7 +32,6 @@ const autoReconnectDelay = 15;
 const singlebutton = false;
 const calleeMode = true;
 
-var bitrate = 320000;
 var ringtoneSound = null;
 var ringtoneIsPlaying = false;
 var busySignalSound = null;

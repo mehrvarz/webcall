@@ -14,7 +14,6 @@ const numericIdCheckbox = document.querySelector('input#numericId');
 const calleeMode = false;
 const msgBoxMaxLen = 137;
 
-var bitrate = 320000;
 var connectingText = "Connecting P2P...";
 var ringingText = "Ringing...";
 var hangingUpText = "Hanging up...";
@@ -1891,7 +1890,7 @@ function signalingCommand(message) {
 	if(tok.length>=2) {
 		payload = tok[1];
 	}
-	gLog('signaling cmd',cmd);
+	console.log('signaling cmd',cmd);
 
 	if(cmd=="calleeAnswer") {
 		// callee.js has responded to our callerOffer
@@ -1910,6 +1909,8 @@ function signalingCommand(message) {
 			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 				gLog("xhr setcontact OK "+xhr.responseText);
 			}, errorAction2);
+		} else {
+			console.log('signalingCommand no store contact',contactAutoStore,cookieName,calleeID);
 		}
 
 		if(!peerCon || peerCon.iceConnectionState=="closed") {
