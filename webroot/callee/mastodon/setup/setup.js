@@ -149,7 +149,8 @@ function onload2() {
 		if(cookieName==mastodonUserID || (cookieName!=mastodonUserID && cmappedCalleeID!="")) {
 			// show nothing
 		} else {
-			dispMsg += "➡️ <a onclick='pwForm(\""+cookieName+"\",false,1); return false;'>Associate your Mastodon ID "+mastodonUserID+" with your exising ID "+cookieName+"</a><br>";
+//			dispMsg += "➡️ <a onclick='pwForm(\""+cookieName+"\",false,1); return false;'>Associate your Mastodon ID "+mastodonUserID+" with your exising ID "+cookieName+"</a><br>";
+			dispMsg += "➡️ <a onclick='pwForm(\""+cookieName+"\",false,1); return false;'>Associate your exising ID "+cookieName+" with your Mastodon ID "+mastodonUserID+"</a><br>";
 			dispMsg += "(This will let you receive calls with both ID's)<br><br>";
 		}
 	}
