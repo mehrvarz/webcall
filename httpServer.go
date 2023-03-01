@@ -574,19 +574,11 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 			if err!=nil {
-				// cookie available but possibly "skv key not found"
-				// looks like an unknown cookie
-				fmt.Printf("# httpApi %v (%s) (%s) %s err=%v\n", r.URL, cookie.Value, calleeIdFromCookie, remoteAddr, err)
-/*
-				// delete clientside cookie
-				// NOTE: doing this is a little dangerous if this is OUR error (with kvHashedPw.Get()
-				clearCookie(w, r, urlID, remoteAddr, "unknown cookie")
-*/
+				// client sent an unknown/invalid/outdated cookie
 				cookie = nil
+				// lets continue; a cookie may not be needed (e.g. /getmiduser)
 
-// TODO this happens on /rtcsig/getmiduser?mid=61566909984&cid=timur@literatur.social&_=1677676491518
-// from setup.js
-/*
+/* TODO but there are cases where wrongcookie needs to be sent (e.g. /login, /getsettings)
 				time.Sleep(1 * time.Second)
 				fmt.Fprintf(w,"wrongcookie")
 				return

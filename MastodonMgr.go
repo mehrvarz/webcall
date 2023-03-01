@@ -193,12 +193,16 @@ loop:
 
 			case *mastodon.ErrorEvent:
 				fmt.Printf("mastodonhandler ErrorEvent '%v'\n",event.Error())
-				// event.Error(): "bad request: 404 Not Found"
-				//   this was caused by an iptables issue with fastly (now fixed)
-				//   we slow down continuation to slow down repeated generation of same error
 				if strings.Index(event.Error(),"404 Not Found")>=0 {
-					time.Sleep(2 * time.Second)
+					// "bad request: 404 Not Found" was caused by an iptables issue with fastly
+					// slow down
+					time.Sleep(5 * time.Second)
+				} else if strings.Index(event.Error(),"unknown authority")>=0 {
+					// "x509: certificate signed by unknown authority" occasional Mastodon.social issue
+					// slow down
+					time.Sleep(60 * time.Second)
 				}
+
 				// "stream error: stream ID 1; INTERNAL_ERROR; received from peer"
 				//   ???
 
