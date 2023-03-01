@@ -132,6 +132,7 @@ function onload2() {
 	// mastodonUserID as a new account
 	if(isValidCalleeID) {
 		dispMsg += "ID "+mastodonUserID+" is already in use<br><br>";
+/* cookieName can be leftover
 	} else if(cookieName!="" && cookieName==mastodonUserID) {
 		dispMsg += "ID "+mastodonUserID+" is already your WebCall ID<br><br>";
 	} else if(cookieName!="" && cmappedCalleeID!="") {
@@ -140,6 +141,7 @@ function onload2() {
 		} else {
 			dispMsg += "Your WebCall account "+cookieName+" is already associated<br><br>";
 		}
+*/
 	} else {
 		dispMsg += "➡️ <a onclick='pwForm(\""+mastodonUserID+"\",true,0); return false;'>Create new WebCall ID "+mastodonUserID+"</a><br>";
 		dispMsg += "(Your Mastodon ID will become your WebCall ID)<br><br>";
