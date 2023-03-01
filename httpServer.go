@@ -581,11 +581,16 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				// delete clientside cookie
 				// NOTE: doing this is a little dangerous if this is OUR error (with kvHashedPw.Get()
 				clearCookie(w, r, urlID, remoteAddr, "unknown cookie")
-				cookie = nil
 */
+				cookie = nil
+
+// TODO this happens on /rtcsig/getmiduser?mid=61566909984&cid=timur@literatur.social&_=1677676491518
+// from setup.js
+/*
 				time.Sleep(1 * time.Second)
 				fmt.Fprintf(w,"wrongcookie")
 				return
+*/
 			} else {
 				pwIdComboCalleeId := pwIdCombo.CalleeId
 				argIdx := strings.Index(pwIdComboCalleeId,"&")
