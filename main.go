@@ -209,6 +209,8 @@ var clientBlockBelowVersion = ""
 var serverStartTime time.Time
 var adminLogPath1 = ""
 var adminLogPath2 = ""
+var blockrefererSlice []string = nil
+var blockuseragentSlice []string = nil
 
 
 func main() {
@@ -565,6 +567,7 @@ func readConfig(init bool) {
 
 	readConfigLock.Lock()
 	if init {
+// TODO init type keywords don't need currentVal (like hostname)
 		hostname = readIniString(configIni, "hostname", hostname, "127.0.0.1")
 		httpPort = readIniInt(configIni, "httpPort", httpPort, 8067, 1)
 		httpsPort = readIniInt(configIni, "httpsPort", httpsPort, 0, 1)
@@ -589,6 +592,16 @@ func readConfig(init bool) {
 		// currently not used
 		//vapidPublicKey = readIniString(configIni, "vapidPublicKey", vapidPublicKey, "")
 		//vapidPrivateKey = readIniString(configIni, "vapidPrivateKey", vapidPrivateKey, "")
+
+		blockreferer := readIniString(configIni, "blockreferer", "", "")
+		if blockreferer!="" {
+			blockrefererSlice = strings.Split(blockreferer, "|")
+		}
+
+		blockuseragent := readIniString(configIni, "blockuseragent", "", "")
+		if blockuseragent!="" {
+			blockuseragentSlice = strings.Split(blockuseragent, "|")
+		}
 
 		synonyms := readIniString(configIni, "mappings", "", "")
 		if synonyms!="" {
