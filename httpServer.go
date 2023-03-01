@@ -205,10 +205,15 @@ func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	remoteAddr := remoteAddrWithPort
 
-	// deny bot's
-	if isBot(r.UserAgent(),r.Referer()) {
-		fmt.Printf("# substitute bot denied path=(%s) userAgent=(%s) %s\n",
+	if isBlockedUA(r.UserAgent()) {
+		fmt.Printf("# substitute isBlockedUA path=(%s) userAgent=(%s) %s\n",
 			r.URL.Path, r.UserAgent(), remoteAddr)
+		return
+	}
+
+	if isBlockedReferer(r.Referer()) {
+		fmt.Printf("# substitute isBlockedReferer path=(%s) referer=(%s) %s\n",
+			r.URL.Path, r.Referer(), remoteAddr)
 		return
 	}
 
@@ -362,10 +367,15 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("httpApi (%v) tls=%v rip=%s\n", urlPath, r.TLS!=nil, remoteAddrWithPort)
 	}
 
-	// deny bot's
-	if isBot(r.UserAgent(),r.Referer()) {
-		fmt.Printf("# httpApi bot denied path=(%s) userAgent=(%s) rip=%s\n",
+	if isBlockedUA(r.UserAgent()) {
+		fmt.Printf("# httpApi isBlockedUA path=(%s) userAgent=(%s) %s\n",
 			r.URL.Path, r.UserAgent(), remoteAddr)
+		return
+	}
+
+	if isBlockedReferer(r.Referer()) {
+		fmt.Printf("# httpApi isBlockedReferer path=(%s) referer=(%s) %s\n",
+			r.URL.Path, r.Referer(), remoteAddr)
 		return
 	}
 
@@ -982,7 +992,8 @@ func clientRequestAdd(remoteAddr string, count int) bool {
 	return ret
 }
 
-func isBot(userAgent string, referer string) bool {
+//func isBot(userAgent string, referer string) bool {
+func isBlockedUA(userAgent string) bool {
 	if blockuseragentSlice != nil {
 		for _, s := range blockuseragentSlice {
 			if strings.Index(userAgent, s) >= 0 {
@@ -990,7 +1001,10 @@ func isBot(userAgent string, referer string) bool {
 			}
 		}
 	}
+	return false
+}
 
+func isBlockedReferer(referer string) bool {
 	if blockrefererSlice != nil {
 		for _, s := range blockrefererSlice {
 			if strings.Index(referer, s) >= 0 {
