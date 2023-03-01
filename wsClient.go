@@ -1697,6 +1697,8 @@ func (c *WsClient) Close(reason string) {
 
 	if c.isOnline.Get() {
 		// this client is still ws-connected to server
+		fmt.Printf("%s (%s) Close: force disconnect callee=%v '%s'\n",
+			c.connType, c.calleeID, c.isCallee, reason)
 		c.wsConn.WriteMessage(websocket.CloseMessage, nil) // ignore any error
 		c.wsConn.Close()
 	}

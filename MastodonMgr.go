@@ -372,7 +372,7 @@ func (mMgr *MastodonMgr) commandRemove(mastodonUserId string, postback bool) {
 		fmt.Printf("mastodon command remove: found mapping %s->%s\n",
 			mastodonUserId, mappingData.CalleeId)
 		if mappingData.CalleeId!="" && mappingData.CalleeId!=mastodonUserId {
-			// this is a calleeID with an alt-id
+			// this is a calleeID with an (associated) alt-id
 			mappingMutex.Lock()
 			delete(mapping,mastodonUserId)
 			mappingMutex.Unlock()

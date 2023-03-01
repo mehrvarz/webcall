@@ -109,6 +109,7 @@ function onload2() {
 	// cookieName                                  = now or previously logged-in calleeID, or ""
 	// mappedCalleeID                              = mastodonUserID or 11-digit ID or ""
 	// wsCliMastodonID (midEntry.mastodonIdCallee) = mastodonUserID or ""
+// timur@literatur.social|false|false|timur@literatur.social||||
 	console.log('onload2 mid cookie', mid, cookieName);
 	console.log('onload2 mastodonUserID', mastodonUserID);
 	console.log('onload2 flags', isValidCalleeID, isOnlineCalleeID);
@@ -149,8 +150,8 @@ function onload2() {
 		if(cookieName==mastodonUserID || (cookieName!=mastodonUserID && cmappedCalleeID!="")) {
 			// show nothing
 		} else {
-//			dispMsg += "➡️ <a onclick='pwForm(\""+cookieName+"\",false,1); return false;'>Associate your Mastodon ID "+mastodonUserID+" with your exising ID "+cookieName+"</a><br>";
-			dispMsg += "➡️ <a onclick='pwForm(\""+cookieName+"\",false,1); return false;'>Associate your exising ID "+cookieName+" with your Mastodon ID "+mastodonUserID+"</a><br>";
+			dispMsg += "➡️ <a onclick='pwForm(\""+cookieName+"\",false,1); return false;'>Associate your Mastodon ID "+mastodonUserID+" with your exising WebCall ID "+cookieName+"</a><br>";
+//			dispMsg += "➡️ <a onclick='pwForm(\""+cookieName+"\",false,1); return false;'>Associate your exising ID "+cookieName+" with your Mastodon ID "+mastodonUserID+"</a><br>";
 			dispMsg += "(This will let you receive calls with both ID's)<br><br>";
 		}
 	}
@@ -241,9 +242,9 @@ function addShadowID(calleeID) {
 function pwForm(ID,newpw,type) {
 	// let user register their ID as calleeID
 	// show the ID and ask for a password to register it as a new calleeID (via submitPw())
-	let info = "Enter password for existing account:<br>";
+	let info = "Enter your existing WebCall password:<br>";
 	if(newpw) {
-		info = "Enter password for new account:<br>";
+		info = "Enter password for new WebCall account:<br>";
 	}
 	showStatus("Username: "+ID+"<br>"+info+
 		"<form action='javascript:;' onsubmit='submitPw(\""+ID+"\","+type+")' id='pwf'>"+
@@ -377,6 +378,7 @@ console.log('submitPw valuePw',valuePw);	// TODO remove
 					" is now associated with your WebCall ID "+ID+"<br><br>";
 // TODO tmtmtm list all the benefits
 				if(window.location !== window.parent.location) {
+// TODO on Android we don't run this in an iframe anymore (therefore this will not be displayed)
 					// runnung in iframe, we don't offer a calleeLink
 					dispMsg += "You can close this window now.";
 				}
