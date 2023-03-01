@@ -87,6 +87,7 @@ type PwIdCombo struct { // key calleeID
 
 
 var version = flag.Bool("version", false, "show version")
+var mastodoninit = flag.Bool("mastodoninit", false, "init mastodon")
 var	builddate string
 var	codetag string
 const configFileName = "config.ini"
@@ -220,6 +221,12 @@ func main() {
 			fmt.Printf("version %s\n",codetag)
 		}
 		fmt.Printf("builddate %s\n",builddate)
+		return
+	}
+	
+	if *mastodoninit {
+		mastodonMgr = NewMastodonMgr()
+		mastodonMgr.mastodonInit()
 		return
 	}
 

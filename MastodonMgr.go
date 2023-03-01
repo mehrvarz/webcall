@@ -11,6 +11,7 @@ import (
 	"errors"
 	"sync"
 	"io"
+	"os"
 	"net/http"
 	"math/rand"
 	"golang.org/x/net/html"
@@ -55,6 +56,88 @@ func NewMastodonMgr() *MastodonMgr {
 	}
 }
 
+func (mMgr *MastodonMgr) mastodonInit() {
+// TODO get from outside
+	server := "https://mastodon.social"
+
+	srv, err := mastodon.RegisterApp(context.Background(), &mastodon.AppConfig{
+		Server:       server,
+		ClientName:   "WebCall-Telephony",
+		Scopes:       "read write follow push",
+		RedirectURIs: "urn:ietf:wg:oauth:2.0:oob",
+		Website:      "https://timur.mobi/webcall",
+	})
+	if err != nil {
+		fmt.Printf("Couldn't register the app. Error: %v\n\nExiting...\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("You need to autorize webcall to use your account.")
+	fmt.Println("Open your browser with the URL below.")
+	fmt.Printf("\n%s\n\n", srv.AuthURI)
+
+	var client *mastodon.Client
+	for {
+		var err error
+		fmt.Print("Authorization code: ")
+
+		var codeStr string
+		n, err := fmt.Scanln(&codeStr)
+		if err != nil {
+			fmt.Printf("Scanln error: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Printf("number of items read: %d\n", n)
+		fmt.Printf("read line: %s\n", codeStr)
+		fmt.Printf("srv.ClientID: %s\n", srv.ClientID)
+		fmt.Printf("srv.ClientSecret: %s\n", srv.ClientSecret)
+
+		client = mastodon.NewClient(&mastodon.Config{
+			Server:       server,
+			ClientID:     srv.ClientID,
+			ClientSecret: srv.ClientSecret,
+		})
+
+		err = client.AuthenticateToken(context.Background(), codeStr, "urn:ietf:wg:oauth:2.0:oob")
+		if err != nil {
+			fmt.Printf("\nError: %v\nTry again or press ^C.\n", err)
+			fmt.Println("--------------------------------------------------------------")
+		} else {
+			break
+		}
+	}
+	fmt.Printf("client.Config.AccessToken=%s\n", client.Config.AccessToken)
+/*
+	me, err := client.GetAccountCurrentUser(context.Background())
+	if err != nil {
+		fmt.Printf("\nCouldn't get user. Error: %v\nExiting...\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("me.Username=%s\n", me.Username)
+	//fmt.Printf("me=%v\n", me)
+*/
+	// generate + print config-key 'mastodonhandler'
+	fmt.Printf("mastodonhandler = (name)|%s|%s|%s|%s\n", server, srv.ClientID, srv.ClientSecret,
+		client.Config.AccessToken)
+
+/*
+	acc := Account{
+		Name:         me.Username,
+		Server:       client.Config.Server,
+		ClientID:     client.Config.ClientID,
+		ClientSecret: client.Config.ClientSecret,
+		AccessToken:  client.Config.AccessToken,
+	}
+	if ad == nil {
+		ad = &AccountData{
+			Accounts: []Account{acc},
+		}
+	} else {
+		ad.Accounts = append(ad.Accounts, acc)
+	}
+*/
+}
+
 func (mMgr *MastodonMgr) mastodonStart(config string) {
 	// only start if not already running
 	if mMgr.abortChan != nil {
@@ -63,8 +146,8 @@ func (mMgr *MastodonMgr) mastodonStart(config string) {
 	}
 	// config format: 'mastodon-domain|server-url|ClientID|ClientSecret|username|password'
 	tokSlice := strings.Split(config, "|")
-	if len(tokSlice)!=6 {
-		fmt.Printf("# mastodonStart config should have 6 tokens, has %d (%s)\n",len(tokSlice),config)
+	if len(tokSlice)!=5 {
+		fmt.Printf("# mastodonStart config should have 5 tokens, has %d (%s)\n",len(tokSlice),config)
 		return
 	}
 
@@ -76,18 +159,38 @@ func (mMgr *MastodonMgr) mastodonStart(config string) {
 	if httpsPort>0 {
 		mMgr.hostUrl += ":"+strconv.FormatInt(int64(httpsPort),10)
 	}
+	fmt.Printf("mastodonStart mMgr.hostUrl=(%s)\n",mMgr.hostUrl)
 
+	fmt.Printf("mastodonStart mastodon.NewClient (%s) (%s) (%s) (%s)\n",
+		tokSlice[1],tokSlice[2],tokSlice[3],tokSlice[4])
 	mMgr.c = mastodon.NewClient(&mastodon.Config{
 		Server:       tokSlice[1],
 		ClientID:     tokSlice[2],
 		ClientSecret: tokSlice[3],
+		AccessToken:  tokSlice[4],
 	})
-	err := mMgr.c.Authenticate(context.Background(), tokSlice[4], tokSlice[5])
+/*
+	err := mMgr.c.AuthenticateToken(context.Background(),tokSlice[4],"urn:ietf:wg:oauth:2.0:oob")
+	if err != nil {
+		fmt.Printf("# Error AuthenticateToken: %v\n", err)
+		return
+	} 
+
+	err := mMgr.c.Authenticate(context.Background(), tokSlice[5], tokSlice[6])
 	if err != nil {
 		fmt.Printf("# mastodonStart fail Authenticate (%v)\n",err)
 // TODO must retry after pause?
 		return
 	}
+*/
+
+	err := mMgr.c.AuthenticateApp(context.Background())
+	if err != nil {
+		fmt.Printf("# mastodonStart fail Authenticate (%v)\n",err)
+// TODO must retry after pause?
+		return
+	}
+
 	fmt.Printf("mastodonStart authenticated\n")
 
 	chl,err := mMgr.c.StreamingUser(context.Background())
@@ -192,7 +295,7 @@ loop:
 				fmt.Printf("mastodonhandler DeleteEvent id=(%v)\n",event.ID)
 
 			case *mastodon.ErrorEvent:
-				fmt.Printf("mastodonhandler ErrorEvent '%v'\n",event.Error())
+				fmt.Printf("# mastodonhandler ErrorEvent '%v'\n",event.Error())
 				if strings.Index(event.Error(),"404 Not Found")>=0 {
 					// "bad request: 404 Not Found" 
 					// caused by an iptables issue with fastly?
