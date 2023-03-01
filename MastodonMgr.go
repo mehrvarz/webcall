@@ -58,7 +58,8 @@ func NewMastodonMgr() *MastodonMgr {
 
 func (mMgr *MastodonMgr) mastodonInit() {
 // TODO get from outside
-	server := "https://mastodon.social"
+	hostname := "mastodon.social"
+	server := "https://"+hostname
 
 	srv, err := mastodon.RegisterApp(context.Background(), &mastodon.AppConfig{
 		Server:       server,
@@ -117,8 +118,8 @@ func (mMgr *MastodonMgr) mastodonInit() {
 	//fmt.Printf("me=%v\n", me)
 */
 	// generate + print config-key 'mastodonhandler'
-	fmt.Printf("mastodonhandler = (name)|%s|%s|%s|%s\n", server, srv.ClientID, srv.ClientSecret,
-		client.Config.AccessToken)
+	fmt.Printf("mastodonhandler = %s|%s|%s|%s|%s\n", hostname, server,
+		srv.ClientID, srv.ClientSecret, client.Config.AccessToken)
 
 /*
 	acc := Account{
