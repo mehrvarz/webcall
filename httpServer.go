@@ -983,20 +983,6 @@ func clientRequestAdd(remoteAddr string, count int) bool {
 }
 
 func isBot(userAgent string, referer string) bool {
-	// detect bot's
-/*
-	if  strings.Index(userAgent, "bot") >= 0 ||
-		strings.Index(userAgent, "spider") >= 0 ||
-		strings.Index(userAgent, "scan") >= 0 ||
-		strings.Index(userAgent, "search") >= 0 ||
-		strings.Index(userAgent, "acebook") >= 0 ||
-		strings.Index(userAgent, "WhatsApp") >= 0 ||
-		strings.Index(userAgent, "Telegram") >= 0 ||
-		strings.Index(userAgent, "node-fetch") >= 0 ||
-		strings.Index(userAgent, "Twitter") >= 0 {
-		return true
-	}
-*/
 	if blockuseragentSlice != nil {
 		for _, s := range blockuseragentSlice {
 			if strings.Index(userAgent, s) >= 0 {
@@ -1005,9 +991,6 @@ func isBot(userAgent string, referer string) bool {
 		}
 	}
 
-//	if  strings.Index(referer, "1gb.at") >= 0 {
-//		return true
-//	}
 	if blockrefererSlice != nil {
 		for _, s := range blockrefererSlice {
 			if strings.Index(referer, s) >= 0 {
