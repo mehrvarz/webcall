@@ -165,6 +165,9 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 		ClientSecret: tokSlice[3],
 		AccessToken:  tokSlice[4],
 	})
+
+	fmt.Printf("mastodonStart c.Config.AccessToken1=(%s)\n",mMgr.c.Config.AccessToken)
+
 /*
 	err := mMgr.c.AuthenticateToken(context.Background(),tokSlice[4],"urn:ietf:wg:oauth:2.0:oob")
 	if err != nil {
@@ -184,6 +187,9 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 		return ErrAuthenticate
 	}
 	fmt.Printf("mastodonStart authenticated\n")
+	fmt.Printf("mastodonStart c.Config.AccessToken2=(%s)\n",mMgr.c.Config.AccessToken)
+	mMgr.c.Config.AccessToken = tokSlice[4]
+	fmt.Printf("mastodonStart c.Config.AccessToken2=(%s)\n",mMgr.c.Config.AccessToken)
 
 	chl,err := mMgr.c.StreamingUser(context.Background())
 	if err != nil {
@@ -191,6 +197,7 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 		return ErrStreamingUser
 	}
 	fmt.Printf("mastodonStart got StreamingUser\n")
+	fmt.Printf("mastodonStart c.Config.AccessToken3=(%s)\n",mMgr.c.Config.AccessToken)
 
 	mMgr.kvMastodon,err = skv.DbOpen(dbMastodon,dbPath)
 	if err!=nil {
