@@ -462,6 +462,12 @@ func main() {
 	fmt.Printf("received os.Interrupt/SIGTERM signal: shutting down...\n")
 	// shutdownStarted.Set(true) will end all timer routines
 	// but it will not end ListenAndServe() servers; this is why we call os.Exit() below
+	if mastodonMgr != nil {
+		//fmt.Printf("mastodonStop\n")
+		mastodonMgr.mastodonStop()
+		mastodonMgr = nil
+	}
+
 	shutdownStarted.Set(true)
 	writeStatsFile()
 	time.Sleep(2 * time.Second)
@@ -691,7 +697,11 @@ func readConfig(init bool) {
 				if mastodonMgr == nil {
 					//fmt.Printf("mastodonStart...\n")
 					mastodonMgr = NewMastodonMgr()
-					go mastodonMgr.mastodonStart(mastodonhandler)
+					err := mastodonMgr.mastodonStart(mastodonhandler)
+					if err!=nil {
+						mastodonMgr.mastodonStop()
+						mastodonMgr = nil
+					}
 				}
 			}
 		}

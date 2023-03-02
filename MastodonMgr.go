@@ -25,6 +25,10 @@ import (
 
 var	ErrTotalPostMsgQuota = errors.New("TotalPostMsgQuota")
 var	ErrUserPostMsgQuota = errors.New("PostMsgQuota per user")
+var	ErrConfigFormat = errors.New("Error config format")
+var	ErrAuthenticate = errors.New("Error Authenticate")
+var	ErrStreamingUser = errors.New("Error StreamingUser")
+var	ErrDb = errors.New("Error db")
 
 const dbMastodon = "rtcmastodon.db"
 const dbMid = "dbMid"          // a map of all active mid's
@@ -57,41 +61,46 @@ func NewMastodonMgr() *MastodonMgr {
 }
 
 func (mMgr *MastodonMgr) mastodonInit() {
-// TODO get from outside
-	hostname := "mastodon.social"
-	server := "https://"+hostname
+	fmt.Print("mastodonInit Enter Mastodon target domain name: ")
+	var domainname string
+	_, err := fmt.Scanln(&domainname)
+	if err != nil {
+		fmt.Printf("# mastodonInit Scanln error: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("Mastodon domain name: %s\n", domainname)
 
+	server := "https://"+domainname
 	srv, err := mastodon.RegisterApp(context.Background(), &mastodon.AppConfig{
 		Server:       server,
 		ClientName:   "WebCall-Telephony",
-		Scopes:       "read write follow push",
+		Scopes:       "read write", // follow push",
 		RedirectURIs: "urn:ietf:wg:oauth:2.0:oob",
 		Website:      "https://timur.mobi/webcall",
 	})
 	if err != nil {
-		fmt.Printf("Couldn't register the app. Error: %v\n\nExiting...\n", err)
+		fmt.Printf("# mastodonInit Couldn't register app. Error: %v\n", err)
 		os.Exit(1)
 	}
 
-	fmt.Println("You need to autorize webcall to use your account.")
-	fmt.Println("Open your browser with the URL below.")
-	fmt.Printf("\n%s\n\n", srv.AuthURI)
+	fmt.Println("Please autorize webcall to use your account.")
+	fmt.Println("Open browser with this URL:")
+	fmt.Printf("%s\n", srv.AuthURI)
 
 	var client *mastodon.Client
 	for {
+		fmt.Print("Enter authorization code: ")
 		var err error
-		fmt.Print("Authorization code: ")
-
 		var codeStr string
-		n, err := fmt.Scanln(&codeStr)
+		_, err = fmt.Scanln(&codeStr)
 		if err != nil {
-			fmt.Printf("Scanln error: %v\n", err)
+			fmt.Printf("# mastodonInit Scanln error: %v\n", err)
 			os.Exit(1)
 		}
-		fmt.Printf("number of items read: %d\n", n)
-		fmt.Printf("read line: %s\n", codeStr)
-		fmt.Printf("srv.ClientID: %s\n", srv.ClientID)
-		fmt.Printf("srv.ClientSecret: %s\n", srv.ClientSecret)
+		//fmt.Printf("number of items read: %d\n", n)
+		fmt.Printf("authorization code: %s\n", codeStr)
+		fmt.Printf("ClientID: %s\n", srv.ClientID)
+		fmt.Printf("ClientSecret: %s\n", srv.ClientSecret)
 
 		client = mastodon.NewClient(&mastodon.Config{
 			Server:       server,
@@ -101,55 +110,40 @@ func (mMgr *MastodonMgr) mastodonInit() {
 
 		err = client.AuthenticateToken(context.Background(), codeStr, "urn:ietf:wg:oauth:2.0:oob")
 		if err != nil {
-			fmt.Printf("\nError: %v\nTry again or press ^C.\n", err)
+			fmt.Printf("# mastodonInit AuthenticateToken Error: %v\nTry again or press ^C.\n", err)
 			fmt.Println("--------------------------------------------------------------")
 		} else {
 			break
 		}
 	}
-	fmt.Printf("client.Config.AccessToken=%s\n", client.Config.AccessToken)
-/*
+	fmt.Printf("mastodonInit generated AccessToken=%s\n", client.Config.AccessToken)
+
 	me, err := client.GetAccountCurrentUser(context.Background())
 	if err != nil {
-		fmt.Printf("\nCouldn't get user. Error: %v\nExiting...\n", err)
+		fmt.Printf("# mastodonInit Couldn't get user. Error: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Printf("me.Username=%s\n", me.Username)
+	fmt.Printf("mastodonInit account username=%s\n", me.Username)
 	//fmt.Printf("me=%v\n", me)
-*/
-	// generate + print config-key 'mastodonhandler'
-	fmt.Printf("mastodonhandler = %s|%s|%s|%s|%s\n", hostname, server,
-		srv.ClientID, srv.ClientSecret, client.Config.AccessToken)
 
-/*
-	acc := Account{
-		Name:         me.Username,
-		Server:       client.Config.Server,
-		ClientID:     client.Config.ClientID,
-		ClientSecret: client.Config.ClientSecret,
-		AccessToken:  client.Config.AccessToken,
-	}
-	if ad == nil {
-		ad = &AccountData{
-			Accounts: []Account{acc},
-		}
-	} else {
-		ad.Accounts = append(ad.Accounts, acc)
-	}
-*/
+	// generate + print config-key 'mastodonhandler'
+	fmt.Printf("mastodonInit config.ini entry:\n")
+	fmt.Printf("mastodonhandler = %s|%s|%s|%s|%s\n",
+		domainname, client.Config.Server, client.Config.ClientID, client.Config.ClientSecret,
+		client.Config.AccessToken)
 }
 
-func (mMgr *MastodonMgr) mastodonStart(config string) {
+func (mMgr *MastodonMgr) mastodonStart(config string) error {
 	// only start if not already running
 	if mMgr.abortChan != nil {
 		fmt.Printf("# mastodonStart already running\n")
-		return
+		return nil
 	}
 	// config format: 'mastodon-domain|server-url|ClientID|ClientSecret|username|password'
 	tokSlice := strings.Split(config, "|")
 	if len(tokSlice)!=5 {
-		fmt.Printf("# mastodonStart config should have 5 tokens, has %d (%s)\n",len(tokSlice),config)
-		return
+		fmt.Printf("# mastodonStart config must have 5 tokens, has %d (%s)\n",len(tokSlice),config)
+		return ErrConfigFormat
 	}
 
 	fmt.Printf("mastodonStart (%s) ...\n",tokSlice[0])
@@ -165,6 +159,7 @@ func (mMgr *MastodonMgr) mastodonStart(config string) {
 	fmt.Printf("mastodonStart mastodon.NewClient (%s) (%s) (%s) (%s)\n",
 		tokSlice[1],tokSlice[2],tokSlice[3],tokSlice[4])
 	mMgr.c = mastodon.NewClient(&mastodon.Config{
+//		Name:         "tm",
 		Server:       tokSlice[1],
 		ClientID:     tokSlice[2],
 		ClientSecret: tokSlice[3],
@@ -180,146 +175,157 @@ func (mMgr *MastodonMgr) mastodonStart(config string) {
 	err := mMgr.c.Authenticate(context.Background(), tokSlice[5], tokSlice[6])
 	if err != nil {
 		fmt.Printf("# mastodonStart fail Authenticate (%v)\n",err)
-// TODO must retry after pause?
 		return
 	}
 */
-
 	err := mMgr.c.AuthenticateApp(context.Background())
 	if err != nil {
 		fmt.Printf("# mastodonStart fail Authenticate (%v)\n",err)
-// TODO must retry after pause?
-		return
+		return ErrAuthenticate
 	}
-
 	fmt.Printf("mastodonStart authenticated\n")
 
 	chl,err := mMgr.c.StreamingUser(context.Background())
 	if err != nil {
 		fmt.Printf("# mastodonStart fail StreamingUser (%v)\n",err)
-// TODO must retry after pause?
-		return
+		return ErrStreamingUser
 	}
 	fmt.Printf("mastodonStart got StreamingUser\n")
 
 	mMgr.kvMastodon,err = skv.DbOpen(dbMastodon,dbPath)
 	if err!=nil {
 		fmt.Printf("# error DbOpen %s path %s err=%v\n",dbMastodon,dbPath,err)
-		return
+		return ErrDb
 	}
 	err = mMgr.kvMastodon.CreateBucket(dbMid)
 	if err!=nil {
 		fmt.Printf("# error db %s CreateBucket %s err=%v\n",dbMastodon,dbMid,err)
 		mMgr.kvMastodon.Close()
-		return
+		return ErrDb
 	}
 
 	mMgr.postedMsgEventsSlice = nil //[]PostMsgEvent
-
 	mMgr.abortChan = make(chan bool)
-	fmt.Printf("mastodonStart reading StreamingUser...\n")
-	for {
-		select {
-		case <-context.Background().Done():
-			fmt.Printf("mastodonhandler abort on context.Background\n")
-			mMgr.abortChan = nil
-			return
-		case <-mMgr.abortChan:
-			fmt.Printf("mastodonhandler abort on abortChan\n")
-			mMgr.abortChan = nil
-			return
-		case evt := <-chl:
-			//fmt.Println(evt)
-			switch event := evt.(type) {
-			case *mastodon.NotificationEvent:
-				// direct msgs
-				fmt.Printf("mastodonhandler Notif-Type=(%v) Acct=(%v)\n",
-					event.Notification.Type, event.Notification.Account.Acct)
-				content := event.Notification.Status.Content
-				//fmt.Printf("mastodonhandler Content=(%v)\n",content)
-				// sample html-notification with textMessage ' setup':
-				//<p><span class="h-card"><a href="https://mastodon.social/@timurmobi" class="u-url mention" rel="nofollow noopener noreferrer" target="_blank">@<span>timurmobi</span></a></span> setup</p>
-				// to get the textMessage we first remove the <p> tag at start and end
-				// then we html-parse the remaining content and ignore all html-tages
-				if strings.HasPrefix(content,"<p>") {
-					content = content[3:]
-					if strings.HasSuffix(content,"</p>") {
-						content = content[0:len(content)-4]
-					}
-					fmt.Printf("mastodonhandler stripped p Content=(%v)\n",content)
-				}
 
-				command := ""
-				htmlTokens := html.NewTokenizer(strings.NewReader(content))
-				depth := 0
-loop:
-				for {
-					tt := htmlTokens.Next()
-					switch tt {
-					case html.StartTagToken:
-						//t := htmlTokens.Token()
-						//fmt.Println("StartTagToken",t.Data)
-						depth++
-					case html.EndTagToken:
-						//t := htmlTokens.Token()
-						//fmt.Println("EndTagToken",t.Data)
-						depth--
-					case html.TextToken:
-						if depth==0 {
-							t := htmlTokens.Token()
-							textMessage := t.Data
-							if textMessage!="" {
-								fmt.Printf("mastodonhandler TextToken=(%v)\n",textMessage) // ' test2'
-								command += textMessage + " "
-							}
-							break
+	go func() {
+		time.Sleep(5 * time.Second)
+		fmt.Printf("mastodonStart reading StreamingUser...\n")
+		for {
+			select {
+			case <-context.Background().Done():
+				fmt.Printf("mastodonhandler abort on context.Background\n")
+				mMgr.abortChan = nil
+				return
+			case <-mMgr.abortChan:
+				fmt.Printf("mastodonhandler abort on abortChan\n")
+				mMgr.abortChan = nil
+				return
+			case evt := <-chl:
+				//fmt.Println(evt)
+				switch event := evt.(type) {
+				case *mastodon.NotificationEvent:
+					// direct msgs
+					fmt.Printf("mastodonhandler Notif-Type=(%v) Acct=(%v)\n",
+						event.Notification.Type, event.Notification.Account.Acct)
+					content := event.Notification.Status.Content
+					//fmt.Printf("mastodonhandler Content=(%v)\n",content)
+					// sample html-notification with textMessage ' setup':
+					//<p><span class="h-card"><a href="https://mastodon.social/@timurmobi" class="u-url mention" rel="nofollow noopener noreferrer" target="_blank">@<span>timurmobi</span></a></span> setup</p>
+					// to get the textMessage we first remove the <p> tag at start and end
+					// then we html-parse the remaining content and ignore all html-tages
+					if strings.HasPrefix(content,"<p>") {
+						content = content[3:]
+						if strings.HasSuffix(content,"</p>") {
+							content = content[0:len(content)-4]
 						}
-					case html.ErrorToken:
-						//fmt.Printf("mastodonhandler ErrorToken re-loop\n")
-						break loop
+						fmt.Printf("mastodonhandler stripped p Content=(%v)\n",content)
 					}
+
+					command := ""
+					htmlTokens := html.NewTokenizer(strings.NewReader(content))
+					depth := 0
+					loop:
+					for {
+						tt := htmlTokens.Next()
+						switch tt {
+						case html.StartTagToken:
+							//t := htmlTokens.Token()
+							//fmt.Println("StartTagToken",t.Data)
+							depth++
+						case html.EndTagToken:
+							//t := htmlTokens.Token()
+							//fmt.Println("EndTagToken",t.Data)
+							depth--
+						case html.TextToken:
+							if depth==0 {
+								t := htmlTokens.Token()
+								textMessage := t.Data
+								if textMessage!="" {
+									fmt.Printf("mastodonhandler TextToken=(%v)\n",textMessage) // ' test2'
+									command += textMessage + " "
+								}
+								break
+							}
+						case html.ErrorToken:
+							//fmt.Printf("mastodonhandler ErrorToken re-loop\n")
+							break loop
+						}
+					}
+					//fmt.Printf("mastodonhandler Notif-Type=(%v) done\n", event.Notification.Type)
+					mMgr.processMessage(command,event,tokSlice[0])
+
+				/*case *mastodon.UpdateEvent:
+					// none-direct msgs
+					if event.Status.Content!="" {
+						fmt.Printf("mastodonhandler UpdateEvent content=(%v)\n",event.Status.Content)
+					} else {
+						fmt.Printf("mastodonhandler UpdateEvent reblog=(%v)\n",event.Status.Reblog)
+					}
+				*/
+				case *mastodon.DeleteEvent:
+					// interesting: when an inviter deletes his 'please reply' msg
+					// webcall gets a notification here (or maybe I misunderstood something)
+					fmt.Printf("mastodonhandler DeleteEvent id=(%v)\n",event.ID)
+
+				case *mastodon.ErrorEvent:
+					fmt.Printf("# mastodonhandler ErrorEvent '%v'\n",event.Error())
+					if mMgr.abortChan==nil {
+						break
+					}
+					if strings.Index(event.Error(),"404 Not Found")>=0 {
+						// "bad request: 404 Not Found" 
+						// iptables issue with fastly?
+						// slow down
+						time.Sleep(20 * time.Second)
+					} else if strings.Index(event.Error(),"Invalid access token")>=0 {
+						// "bad request: 401 Unauthorized: Error: Invalid access token"
+						// slow down
+						time.Sleep(3 * time.Second)
+					} else if strings.Index(event.Error(),"403 Forbidden")>=0 {
+						// slow down
+						time.Sleep(20 * time.Second)
+					} else if strings.Index(event.Error(),"unknown authority")>=0 {
+						// "x509: certificate signed by unknown authority"
+						// slow down
+						time.Sleep(20 * time.Second)
+					}
+					if mMgr.abortChan==nil {
+						break
+					}
+
+					// "stream error: stream ID 1; INTERNAL_ERROR; received from peer"
+					//   ???
+
+				/*default:
+					fmt.Printf("mastodonhandler default\n")
+				*/
 				}
-				//fmt.Printf("mastodonhandler Notif-Type=(%v) done\n", event.Notification.Type)
-				mMgr.processMessage(command,event,tokSlice[0])
-
-/*			case *mastodon.UpdateEvent:
-				// none-direct msgs
-				if event.Status.Content!="" {
-					fmt.Printf("mastodonhandler UpdateEvent content=(%v)\n",event.Status.Content)
-				} else {
-					fmt.Printf("mastodonhandler UpdateEvent reblog=(%v)\n",event.Status.Reblog)
-				}
-*/
-			case *mastodon.DeleteEvent:
-				// interesting: when an inviter deletes his 'please reply' msg
-				// webcall gets a notification here (or maybe I misunderstood something)
-				fmt.Printf("mastodonhandler DeleteEvent id=(%v)\n",event.ID)
-
-			case *mastodon.ErrorEvent:
-				fmt.Printf("# mastodonhandler ErrorEvent '%v'\n",event.Error())
-				if strings.Index(event.Error(),"404 Not Found")>=0 {
-					// "bad request: 404 Not Found" 
-					// caused by an iptables issue with fastly?
-					// slow down
-					time.Sleep(20 * time.Second)
-				} else if strings.Index(event.Error(),"unknown authority")>=0 {
-					// "x509: certificate signed by unknown authority" occasional Mastodon.social issue
-					// slow down
-					time.Sleep(20 * time.Second)
-				}
-
-				// "stream error: stream ID 1; INTERNAL_ERROR; received from peer"
-				//   ???
-
-/*			default:
-				fmt.Printf("mastodonhandler default\n")
-*/
 			}
 		}
-	}
 
-	mMgr.abortChan = nil
-	return
+		mMgr.abortChan = nil
+	}()
+	return nil
 }
 
 func (mMgr *MastodonMgr) dbSync() {
