@@ -51,6 +51,8 @@ type MastodonMgr struct {
 	kvMastodon skv.KV
 	postedMsgEventsSlice []*PostMsgEvent
 	postedMsgEventsMutex sync.RWMutex
+	ctx context.Context
+	cancel context.CancelFunc
 }
 
 func NewMastodonMgr() *MastodonMgr {
@@ -168,6 +170,7 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 
 	fmt.Printf("mastodonStart c.Config.AccessToken1=(%s)\n",mMgr.c.Config.AccessToken)
 
+	mMgr.ctx, mMgr.cancel = context.WithCancel(context.Background())
 /*
 	err := mMgr.c.AuthenticateToken(context.Background(),tokSlice[4],"urn:ietf:wg:oauth:2.0:oob")
 	if err != nil {
@@ -181,7 +184,7 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 		return
 	}
 */
-	err := mMgr.c.AuthenticateApp(context.Background())
+	err := mMgr.c.AuthenticateApp(mMgr.ctx)
 	if err != nil {
 		fmt.Printf("# mastodonStart fail Authenticate (%v)\n",err)
 		return ErrAuthenticate
@@ -191,7 +194,7 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 	mMgr.c.Config.AccessToken = tokSlice[4]
 	fmt.Printf("mastodonStart c.Config.AccessToken2=(%s)\n",mMgr.c.Config.AccessToken)
 
-	chl,err := mMgr.c.StreamingUser(context.Background())
+	chl,err := mMgr.c.StreamingUser(mMgr.ctx)
 	if err != nil {
 		fmt.Printf("# mastodonStart fail StreamingUser (%v)\n",err)
 		return ErrStreamingUser
@@ -219,12 +222,12 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 		fmt.Printf("mastodonStart reading StreamingUser...\n")
 		for {
 			select {
-			case <-context.Background().Done():
-				fmt.Printf("mastodonhandler abort on context.Background\n")
+			case <-mMgr.ctx.Done():
+				fmt.Printf("mastodonhandler abort on context.Done\n")
 				mMgr.abortChan = nil
 				return
 			case <-mMgr.abortChan:
-				fmt.Printf("mastodonhandler abort on abortChan\n")
+				fmt.Printf("mastodonhandler quit on abortChan\n")
 				mMgr.abortChan = nil
 				return
 			case evt := <-chl:
@@ -744,7 +747,7 @@ func (mMgr *MastodonMgr) postMsgEx(sendmsg string, onBehalfOfUser string, delayS
 			time.Sleep(time.Duration(delaySecs) * time.Second)
 		}
 		// NOTE PostStatus() stalls until msg is sent, which can take a random amount of time (say 27s)
-		status,err := mMgr.c.PostStatus(context.Background(), &mastodon.Toot{
+		status,err := mMgr.c.PostStatus(mMgr.ctx, &mastodon.Toot{
 			Status:			sendmsg,
 			Visibility:		"direct",
 		})
@@ -1359,7 +1362,7 @@ func (mMgr *MastodonMgr) cleanupPostedMsgEvents(w io.Writer) {
 
 		if postedMsgEvent.msgID!="" {
 			// delete postedMsgEvent.msgID
-			err := mMgr.c.DeleteStatus(context.Background(), postedMsgEvent.msgID)
+			err := mMgr.c.DeleteStatus(mMgr.ctx, postedMsgEvent.msgID)
 			if err!=nil {
 				fmt.Printf("# cleanupPostedMsgEvents DeleteStatus (%v) err=%v\n",
 					postedMsgEvent.msgID, err)
@@ -1404,6 +1407,7 @@ func (mMgr *MastodonMgr) mastodonStop() {
 		return
 	}
 	mMgr.abortChan <- true
+	mMgr.cancel()
 	return
 }
 
