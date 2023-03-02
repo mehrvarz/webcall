@@ -45,12 +45,12 @@ type PostMsgEvent struct {
 
 type MastodonMgr struct {
 	c *mastodon.Client
-	abortChan chan bool
 	hostUrl string
 	midMutex sync.RWMutex
 	kvMastodon skv.KV
 	postedMsgEventsSlice []*PostMsgEvent
 	postedMsgEventsMutex sync.RWMutex
+	running bool
 	ctx context.Context
 	cancel context.CancelFunc
 }
@@ -137,7 +137,7 @@ func (mMgr *MastodonMgr) mastodonInit() {
 
 func (mMgr *MastodonMgr) mastodonStart(config string) error {
 	// only start if not already running
-	if mMgr.abortChan != nil {
+	if mMgr.running {
 		fmt.Printf("# mastodonStart already running\n")
 		return nil
 	}
@@ -215,7 +215,7 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 	}
 
 	mMgr.postedMsgEventsSlice = nil //[]PostMsgEvent
-	mMgr.abortChan = make(chan bool)
+	mMgr.running = true
 
 	go func() {
 		time.Sleep(5 * time.Second)
@@ -224,11 +224,7 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 			select {
 			case <-mMgr.ctx.Done():
 				fmt.Printf("mastodonhandler abort on context.Done\n")
-				mMgr.abortChan = nil
-				return
-			case <-mMgr.abortChan:
-				fmt.Printf("mastodonhandler quit on abortChan\n")
-				mMgr.abortChan = nil
+				mMgr.running = false
 				return
 			case evt := <-chl:
 				//fmt.Println(evt)
@@ -299,7 +295,7 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 
 				case *mastodon.ErrorEvent:
 					fmt.Printf("# mastodonhandler ErrorEvent '%v'\n",event.Error())
-					if mMgr.abortChan==nil {
+					if !mMgr.running {
 						break
 					}
 					if strings.Index(event.Error(),"404 Not Found")>=0 {
@@ -319,7 +315,7 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 						// slow down
 						time.Sleep(20 * time.Second)
 					}
-					if mMgr.abortChan==nil {
+					if !mMgr.running {
 						break
 					}
 
@@ -333,16 +329,18 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 			}
 		}
 
-		mMgr.abortChan = nil
+		mMgr.running = false
 	}()
 	return nil
 }
 
 func (mMgr *MastodonMgr) dbSync() {
 	// called by timer.go callBackupScript()
-	kv := mMgr.kvMastodon.(skv.SKV)
-	if err := kv.Db.Sync(); err != nil {
-		fmt.Printf("# mastodon dbSync error: %s\n", err)
+	if mMgr.kvMastodon!=nil {
+		kv := mMgr.kvMastodon.(skv.SKV)
+		if err := kv.Db.Sync(); err != nil {
+			fmt.Printf("# mastodon dbSync error: %s\n", err)
+		}
 	}
 }
 
@@ -654,10 +652,11 @@ func (mMgr *MastodonMgr) offerRegisterLink(mastodonUserId string, mastodonCaller
 	midEntry := &MidEntry{}
 	midEntry.MastodonIdCallee = mastodonUserId
 	midEntry.Created = time.Now().Unix()
-//	if mastodonCallerUserId!="" {
-//		midEntry.MastodonIdCaller = mastodonCallerUserId
-//	}
-//	midEntry.MsgID = msgID
+
+	if mMgr.kvMastodon==nil {
+		fmt.Printf("# offerRegisterLink mMgr.kvMastodon==nil\n")
+		return errors.New("no mMgr.kvMastodon")
+	}
 	err = mMgr.kvMastodon.Put(dbMid, mID, midEntry, false)
 	if err != nil {
 		fmt.Printf("# offerRegisterLink mID=%v failed to store midEntry\n", mID)
@@ -692,6 +691,10 @@ func (mMgr *MastodonMgr) makeSecretID() (string,error) {
 		}
 		newSecretId := strconv.FormatInt(int64(intID),10)
 
+		if mMgr.kvMastodon==nil {
+			fmt.Printf("# offerRegisterLink mMgr.kvMastodon==nil\n")
+			return "",errors.New("no mMgr.kvMastodon")
+		}
 		midEntry := &MidEntry{}
 		err := mMgr.kvMastodon.Get(dbMid, newSecretId, midEntry)
 		if err == nil {
@@ -1398,16 +1401,15 @@ func (mMgr *MastodonMgr) mastodonStop() {
 		err := mMgr.kvMastodon.Close()
 		if err!=nil {
 			fmt.Printf("# mastodonStop error dbName %s close err=%v\n",dbMastodon,err)
+		} else {
+			fmt.Printf("mastodonStop mMgr.kvMastodon.Close done\n")
 		}
 	}
 
-	if mMgr.abortChan==nil {
-		// mastodon login failed?
-		fmt.Printf("# mastodonStop abort on mMgr.abortChan==nil\n")
-		return
-	}
-	mMgr.abortChan <- true
+	mMgr.running = false
+	fmt.Printf("mastodonStop context.cancel()...\n")
 	mMgr.cancel()
+	fmt.Printf("mastodonStop done\n")
 	return
 }
 
