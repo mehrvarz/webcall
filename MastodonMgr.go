@@ -161,46 +161,50 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 	fmt.Printf("mastodonStart mastodon.NewClient (%s) (%s) (%s) (%s)\n",
 		tokSlice[1],tokSlice[2],tokSlice[3],tokSlice[4])
 	mMgr.c = mastodon.NewClient(&mastodon.Config{
-//		Name:         "tm",
 		Server:       tokSlice[1],
 		ClientID:     tokSlice[2],
 		ClientSecret: tokSlice[3],
 		AccessToken:  tokSlice[4],
 	})
 
-	fmt.Printf("mastodonStart c.Config.AccessToken1=(%s)\n",mMgr.c.Config.AccessToken)
+//	fmt.Printf("mastodonStart c.Config.AccessToken1=(%s)\n",mMgr.c.Config.AccessToken)
+	fmt.Printf("mastodonStart c.Config1=(%s)\n",mMgr.c.Config)
 
 	mMgr.ctx, mMgr.cancel = context.WithCancel(context.Background())
 /*
-	err := mMgr.c.AuthenticateToken(context.Background(),tokSlice[4],"urn:ietf:wg:oauth:2.0:oob")
-	if err != nil {
-		fmt.Printf("# Error AuthenticateToken: %v\n", err)
-		return
-	} 
-
-	err := mMgr.c.Authenticate(context.Background(), tokSlice[5], tokSlice[6])
-	if err != nil {
-		fmt.Printf("# mastodonStart fail Authenticate (%v)\n",err)
-		return
-	}
-*/
 	err := mMgr.c.AuthenticateApp(mMgr.ctx)
 	if err != nil {
 		fmt.Printf("# mastodonStart fail Authenticate (%v)\n",err)
 		return ErrAuthenticate
 	}
-	fmt.Printf("mastodonStart authenticated\n")
-	fmt.Printf("mastodonStart c.Config.AccessToken2=(%s)\n",mMgr.c.Config.AccessToken)
-	mMgr.c.Config.AccessToken = tokSlice[4]
-	fmt.Printf("mastodonStart c.Config.AccessToken2=(%s)\n",mMgr.c.Config.AccessToken)
 
+	err := mMgr.c.Authenticate(context.Background(), tokSlice[5], tokSlice[6])
+	if err != nil {
+		fmt.Printf("# mastodonStart fail Authenticate (%v)\n",err)
+		return ErrAuthenticate
+	}
+
+	err := mMgr.c.AuthenticateToken(context.Background(),mMgr.c.Config.AccessToken,"urn:ietf:wg:oauth:2.0:oob")
+	if err != nil {
+		fmt.Printf("# Error AuthenticateToken: %v\n", err)
+		return ErrAuthenticate
+	} 
+
+	fmt.Printf("mastodonStart authenticated\n")
+//	fmt.Printf("mastodonStart c.Config.AccessToken2=(%s)\n",mMgr.c.Config.AccessToken)
+	fmt.Printf("mastodonStart c.Config2=(%s)\n",mMgr.c.Config)
+//	mMgr.c.Config.AccessToken = tokSlice[4]
+//	fmt.Printf("mastodonStart c.Config.AccessToken2=(%s)\n",mMgr.c.Config.AccessToken)
+//	fmt.Printf("mastodonStart c.Config2b=(%s)\n",mMgr.c.Config)
+*/
 	chl,err := mMgr.c.StreamingUser(mMgr.ctx)
 	if err != nil {
 		fmt.Printf("# mastodonStart fail StreamingUser (%v)\n",err)
 		return ErrStreamingUser
 	}
 	fmt.Printf("mastodonStart got StreamingUser\n")
-	fmt.Printf("mastodonStart c.Config.AccessToken3=(%s)\n",mMgr.c.Config.AccessToken)
+//	fmt.Printf("mastodonStart c.Config.AccessToken3=(%s)\n",mMgr.c.Config.AccessToken)
+	fmt.Printf("mastodonStart c.Config3=(%s)\n",mMgr.c.Config)
 
 	mMgr.kvMastodon,err = skv.DbOpen(dbMastodon,dbPath)
 	if err!=nil {

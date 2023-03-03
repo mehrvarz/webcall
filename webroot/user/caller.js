@@ -1619,9 +1619,9 @@ function confirmNotifyConnect() {
 function submitForm(theForm) {
 	// DialID: switch back to default container
 	calleeID = cleanStringParameter(enterIdValElement.value,true); // remove all white spaces
-	if(!calleeID.startsWith("#")) {
-		if(calleeID.length>11) calleeID = calleeID.substring(0,11);
-	}
+//	if(!calleeID.startsWith("#")) {
+//		if(calleeID.length>11) calleeID = calleeID.substring(0,11);
+//	}
 	gLog("submitForm calleeID="+calleeID);
 	// TODO ACHTUNG .host may have :443 set, while DomainVal may not
 	gLog("submitForm targetDomain="+enterDomainValElement.value+" location.host="+location.host);
