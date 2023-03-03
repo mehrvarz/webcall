@@ -2750,7 +2750,7 @@ function wakeGoOnlineNoInit() {
 	wsOnOpen(); // green led
 	goOnlineButton.disabled = false; // prevent goOnline() abort
 	goOnline(false,"wakeGoOnline");  // newPeerCon() but do NOT wsSend("init|!")
-	gLog("wakeGoOnline done");
+	gLog("wakeGoOnlineNoInit done");
 }
 
 function clearcookie2() {
