@@ -146,16 +146,20 @@ function processContacts(xhrresponse) {
 		dataBoxContent += "<tr><td><a onclick='edit(this,event,\""+id+"\",\""+name+"\")'>"+name+"</a></td>";
 
 		// right column: ID (call)
-		let idxAt = id.indexOf("@");
-		if(idxAt>=0) {
+		var parts = id.split("@");
+		if(parts.length>=2) {
 			// right column: remote user
 			// if we go straight to a new tab for the remote-host caller-widget (as we do here),
 			// the caller will have no chance to select a callerId
 			// so instead, we open dial-ID for remote host
-			let callerHost = id.substring(idxAt+1);
-			let idOnly = id.substring(0,idxAt); // without callerHost
+			let callerHost = parts[2];
+			let idOnly = parts[0];
+			if(parts[1]!="") {
+				idOnly = idOnly+"@"+parts[1];
+			}
 			let idDisplay = id;
-			//gLog("id="+id+" idDisplay="+idDisplay+" callerHost="+callerHost+" location.host="+location.host);
+			console.log("idDisplay="+idDisplay+" idOnly="+idOnly+" callerHost="+callerHost+
+						" location.host="+location.host);
 			if(callerHost==location.host) {
 				idDisplay = idOnly;
 			}
