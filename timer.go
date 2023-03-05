@@ -328,10 +328,10 @@ func dbHashedPwLoop(w http.ResponseWriter) {
 				}
 				// NOTE userID ("19308086837&39426508334") is seen as OnlyNumeric
 				if timeNowUnix - pwIdCombo.Expiration >= 0 || pwIdCombo.Pw=="" {
-					fmt.Printf("dbHashedPwLoop del %s %-20s secs=%d\n",
+					fmt.Printf("dbHashedPwLoop del %s %-20s %ds\n",
 						userID, pwIdCombo.Pw, timeNowUnix - pwIdCombo.Expiration)
 					if w!=nil {
-						fmt.Fprintf(w,"dbHashedPwLoop del %s %-20s secs=%d\n",
+						fmt.Fprintf(w,"dbHashedPwLoop del %s %-20s %ds\n",
 							userID, pwIdCombo.Pw, timeNowUnix - pwIdCombo.Expiration)
 					}
 					deleteKeyArray = append(deleteKeyArray,userID)
