@@ -896,7 +896,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				}
 
 				calleeID := hubSlice[idx].CalleeClient.calleeID // or globalCalleeID
-				boldString, _ := strconv.Unquote(`"\033[1m` + fmt.Sprintf("%-18s",calleeID) + `\033[0m"`)
+				boldString, _ := strconv.Unquote(`"\033[1m` + fmt.Sprintf("%-22s",calleeID) + `\033[0m"`)
 				fmt.Fprintf(w,"%s %-15s %-21s %s %s\n",
 					boldString,
 					hubSlice[idx].CalleeClient.RemoteAddrNoPort,
