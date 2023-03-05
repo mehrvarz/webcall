@@ -1,4 +1,4 @@
-// WebCall Copyright 2022 timur.mobi. All rights reserved.
+// WebCall Copyright 2023 timur.mobi. All rights reserved.
 'use strict';
 const databoxElement = document.getElementById('databox');
 const calleeMode = false;

@@ -1,5 +1,28 @@
 // WebCall Copyright 2023 timur.mobi. All rights reserved.
 var langMap = {
+"enx": {
+	"dialButton"			: "Anwählen",
+	"hangupButton"			: "Auflegen",
+	"greetingMessage"		: "Gruß-Nachricht (optional):",
+	"connectingText"		: "Verbinde P2P...",
+	"ringingText"			: "Klingeln...",
+	"hangingUpText"			: "Auflegen...",
+	"msgbox"				: "(Deine Nachricht)",
+	"nicknameLabel"			: "Rufname:",
+	"callstatsLabel"		: "Anruf Daten",
+	"fullscreenLabel"		: "Vollschirm",
+	"notAvailable"			: "Nicht verfügbar",
+	"digAnswMachine"		: "Verbindung mit einem digitalen Anrufbeantworter",
+
+	"tryingToFind"			: "Trying to find",
+	"thisCanTakeSomeTime"	: "This can take some time. Please wait...",
+	"isCurrentlyNot"		: "is currently not available.",
+	"canYouWaitSomeTime"	: "Can you wait some time while we try to establish a connection?",
+	"yesPleaseTry"			: "Yes, please try",
+	"noIHaveToGo"			: "No, I have to go",
+	"TryingToGet"			: "Trying to get",
+	"onThePhonePleaseWait"	: "on the phone. Please wait...",
+},
 "de": {
 	"dialButton"		: "Anwählen",
 	"hangupButton"		: "Auflegen",
@@ -13,6 +36,15 @@ var langMap = {
 	"fullscreenLabel"	: "Vollschirm",
 	"notAvailable"		: "Nicht verfügbar",
 	"digAnswMachine"	: "Verbindung mit einem digitalen Anrufbeantworter",
+
+	"tryingToFind"			: "Wird gesucht:",
+	"thisCanTakeSomeTime"	: "Das kann einen Moment dauern. Bitte warten...",
+	"isCurrentlyNot"		: "ist z.Z. nicht verbunden.",
+	"canYouWaitSomeTime"	: "Können Sie einen Moment warten während eine Verbinding hergestellt wird?",
+	"yesPleaseTry"			: "Ja, bitte versuchen",
+	"noIHaveToGo"			: "Nein, keine Zeit",
+	"TryingToGet"			: "Versuche mit",
+	"onThePhonePleaseWait"	: "zu verbinden. Bitte warten...",
 },
 "it": {
 	"dialButton"		: "Chiamata",
@@ -86,6 +118,9 @@ var langMap = {
 }};
 
 function switchLanguage(userLang) {
+	if(userLang=="en") {
+		return;
+	}
 	console.log("switchLanguage: "+userLang);
 	let shortLang = userLang;
 	let mainLang = shortLang;

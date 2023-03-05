@@ -1,3 +1,3 @@
 const apiPath = "/rtcsig";
-const gentle = true;
+const gentle = false;
 

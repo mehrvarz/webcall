@@ -1412,7 +1412,10 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 			if(onlineStatus.startsWith("notavailtemp")) {
 				// callee temporarily offline: have caller wait for callee
 				var offlineFor = parseInt(onlineStatus.substring(12),10);
-				showStatus("Trying to find "+calleeID+". This can take a moment. Please wait...",-1);
+
+				showStatus("Trying to find"+" "+calleeID+". "+"This can take a moment. Please wait...",-1);
+//TODO			showStatus(myLang["tryingToFind"]+" "+calleeID+". "+myLang["thisCanTakeSomeTime"],-1);
+
 				if(divspinnerframe) {
 					divspinnerframe.style.display = "block";
 				}
@@ -1540,14 +1543,14 @@ function calleeNotificationAction() {
 			if(calleeName=="" || calleeName.length<3) {
 				calleeName = "this user";
 			}
-			var msg = "This user is currently not available.<br><br>"+
-				"We can try to get "+calleeName+" on the phone. Can you wait a few minutes while we try to establish a connection?<br><br><a onclick='confirmNotifyConnect()'>Yes, please try</a>";
+			var msg = calleeName+" "+"is currently not available."+"<br><br>"+
+				"Can you wait some time while we try to establish a connection?"+"<br><br><a onclick='confirmNotifyConnect()'>"+"Yes, please try"+"</a>";
 			if(window.self == window.top) {
 				// not running in iframe mode: no -> jump on directory up
-				msg += "<br><br><a href='..'>No, I have to go</a>";
+				msg += "<br><br><a href='..'>"+"No, I have to go"+"</a>";
 			} else {
 				// running in iframe mode: no -> history.back()
-				msg += "<br><br><a onclick='history.back();'>No, I have to go</a>";
+				msg += "<br><br><a onclick='history.back();'>"+"No, I have to go"+"</a>";
 			}
 
 			showStatus(msg,-1);
@@ -1691,7 +1694,7 @@ function errorAction2(errString,err) {
 function notifyConnect(callerName,callerId,callerHost) {
 	// nickname form was valid
 	// the next xhr will freeze until offline or hidden callee accepts the call
-	showStatus("Trying to get "+calleeID+" on the phone. Please wait...",-1);
+	showStatus("Trying to get"+" "+calleeID+" "+"on the phone. Please wait...",-1);
 	if(divspinnerframe) {
 		divspinnerframe.style.display = "block";
 	}
@@ -2741,7 +2744,10 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 		if(callerId!="" && calleeID!="" && callerHost!="" && callerHost!=location.host) {
 			let storeContactElement = document.getElementById("storeContact");
 			if(storeContactElement) {
-				let fullContactId = calleeID+"@"+location.host;
+				let fullContactId = calleeID+"@@"+location.host;
+				if(calleeID.indexOf("@")>=0) {
+					fullContactId = calleeID+"@"+location.host;
+				}
 				//console.log("contactName (for storeContactLink)=("+contactName+")");
 				let storeContactLink = "https://"+callerHost+"/callee/contacts/store/?id="+callerId+
 					"&contactId="+fullContactId+"&contactName="+contactName+"&callerName="+callerName;

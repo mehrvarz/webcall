@@ -129,6 +129,7 @@ func (mMgr *MastodonMgr) mastodonInit() {
 	//fmt.Printf("me=%v\n", me)
 
 	// generate + print config-key 'mastodonhandler'
+// TODO store me.Username as 2nd arg (between domainname and client.Config.Server)
 	fmt.Printf("mastodonInit config.ini entry:\n")
 	fmt.Printf("mastodonhandler = %s|%s|%s|%s|%s\n",
 		domainname, client.Config.Server, client.Config.ClientID, client.Config.ClientSecret,
@@ -167,44 +168,19 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 		AccessToken:  tokSlice[4],
 	})
 
-//	fmt.Printf("mastodonStart c.Config.AccessToken1=(%s)\n",mMgr.c.Config.AccessToken)
-	fmt.Printf("mastodonStart c.Config1=(%s)\n",mMgr.c.Config)
-
+	fmt.Printf("mastodonStart c.Config=(%s)\n",mMgr.c.Config)
 	mMgr.ctx, mMgr.cancel = context.WithCancel(context.Background())
-/*
-	err := mMgr.c.AuthenticateApp(mMgr.ctx)
-	if err != nil {
-		fmt.Printf("# mastodonStart fail Authenticate (%v)\n",err)
-		return ErrAuthenticate
-	}
-
-	err := mMgr.c.Authenticate(context.Background(), tokSlice[5], tokSlice[6])
-	if err != nil {
-		fmt.Printf("# mastodonStart fail Authenticate (%v)\n",err)
-		return ErrAuthenticate
-	}
-
-	err := mMgr.c.AuthenticateToken(context.Background(),mMgr.c.Config.AccessToken,"urn:ietf:wg:oauth:2.0:oob")
-	if err != nil {
-		fmt.Printf("# Error AuthenticateToken: %v\n", err)
-		return ErrAuthenticate
-	} 
-
 	fmt.Printf("mastodonStart authenticated\n")
-//	fmt.Printf("mastodonStart c.Config.AccessToken2=(%s)\n",mMgr.c.Config.AccessToken)
-	fmt.Printf("mastodonStart c.Config2=(%s)\n",mMgr.c.Config)
-//	mMgr.c.Config.AccessToken = tokSlice[4]
-//	fmt.Printf("mastodonStart c.Config.AccessToken2=(%s)\n",mMgr.c.Config.AccessToken)
-//	fmt.Printf("mastodonStart c.Config2b=(%s)\n",mMgr.c.Config)
-*/
 	chl,err := mMgr.c.StreamingUser(mMgr.ctx)
 	if err != nil {
 		fmt.Printf("# mastodonStart fail StreamingUser (%v)\n",err)
+		return err
+	}
+	if chl == nil {
+		fmt.Printf("# mastodonStart fail StreamingUser no chl\n")
 		return ErrStreamingUser
 	}
 	fmt.Printf("mastodonStart got StreamingUser\n")
-//	fmt.Printf("mastodonStart c.Config.AccessToken3=(%s)\n",mMgr.c.Config.AccessToken)
-	fmt.Printf("mastodonStart c.Config3=(%s)\n",mMgr.c.Config)
 
 	mMgr.kvMastodon,err = skv.DbOpen(dbMastodon,dbPath)
 	if err!=nil {
@@ -230,8 +206,9 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 				fmt.Printf("mastodonhandler abort on context.Done\n")
 				mMgr.running = false
 				return
+
 			case evt := <-chl:
-				//fmt.Println(evt)
+				fmt.Printf("mastodonhandler chl evt: %v\n",evt)
 				switch event := evt.(type) {
 				case *mastodon.NotificationEvent:
 					// direct msgs
@@ -284,14 +261,14 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 					//fmt.Printf("mastodonhandler Notif-Type=(%v) done\n", event.Notification.Type)
 					mMgr.processMessage(command,event,tokSlice[0])
 
-				/*case *mastodon.UpdateEvent:
-					// none-direct msgs
-					if event.Status.Content!="" {
-						fmt.Printf("mastodonhandler UpdateEvent content=(%v)\n",event.Status.Content)
-					} else {
-						fmt.Printf("mastodonhandler UpdateEvent reblog=(%v)\n",event.Status.Reblog)
-					}
-				*/
+				//case *mastodon.UpdateEvent:
+				//	// none-direct msgs
+				//	if event.Status.Content!="" {
+				//		fmt.Printf("mastodonhandler UpdateEvent content=(%v)\n",event.Status.Content)
+				//	} else {
+				//		fmt.Printf("mastodonhandler UpdateEvent reblog=(%v)\n",event.Status.Reblog)
+				//	}
+
 				case *mastodon.DeleteEvent:
 					// interesting: when an inviter deletes his 'please reply' msg
 					// webcall gets a notification here (or maybe I misunderstood something)
@@ -303,7 +280,7 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 						break
 					}
 					if strings.Index(event.Error(),"404 Not Found")>=0 {
-						// "bad request: 404 Not Found" 
+						// "bad request: 404 Not Found"
 						// iptables issue with fastly?
 						// slow down
 						time.Sleep(20 * time.Second)
@@ -326,10 +303,10 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 					// "stream error: stream ID 1; INTERNAL_ERROR; received from peer"
 					//   ???
 
-				/*default:
-					fmt.Printf("mastodonhandler default\n")
-				*/
+				//default:
+				//	fmt.Printf("mastodonhandler default\n")
 				}
+
 			}
 		}
 
@@ -1349,14 +1326,18 @@ func (mMgr *MastodonMgr) dumpPostedMsgEvents(w io.Writer) {
 	mMgr.postedMsgEventsMutex.RLock()
 	for idx,postedMsgEvent := range mMgr.postedMsgEventsSlice {
 		fmt.Fprintf(w,"postedMsg %d %v calleeID=%s msgID=%v\n",
-			idx, postedMsgEvent.timestamp, postedMsgEvent.calleeID, postedMsgEvent.msgID)
+			idx, postedMsgEvent.timestamp.Format("20060102150405"),
+			postedMsgEvent.calleeID, postedMsgEvent.msgID)
 	}
 	mMgr.postedMsgEventsMutex.RUnlock()
 }
 
 func (mMgr *MastodonMgr) cleanupPostedMsgEvents(w io.Writer) {
 	// delete the oldest entries (at the beginning of the slice) if they are 30min old or older
-	//fmt.Printf("cleanupPostedMsgEvents\n")
+	if w!=nil {
+		// called from timer
+		fmt.Printf("cleanupPostedMsgEvents\n")
+	}
 	mMgr.postedMsgEventsMutex.Lock()
 	for len(mMgr.postedMsgEventsSlice)>0 {
 		if time.Now().Sub(mMgr.postedMsgEventsSlice[0].timestamp) < 30 * time.Minute {
