@@ -327,6 +327,7 @@ func dbHashedPwLoop(w http.ResponseWriter) {
 					continue
 				}
 				// NOTE userID ("19308086837&39426508334") is seen as OnlyNumeric
+// TODO %-20s (for pwIdCombo.Pw) does not seem to work
 				if timeNowUnix - pwIdCombo.Expiration >= 0 || pwIdCombo.Pw=="" {
 					fmt.Printf("dbHashedPwLoop del %s %-20s %ds\n",
 						userID, pwIdCombo.Pw, timeNowUnix - pwIdCombo.Expiration)

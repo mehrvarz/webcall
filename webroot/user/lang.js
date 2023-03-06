@@ -115,10 +115,25 @@ var langMap = {
 	"fullscreenLabel"	: "Tela cheia",
 	"notAvailable"		: "não Disponível",
 	"digAnswMachine"	: "Você está prestes a chamar um atendedor de chamadas digital",
+},
+"cs-CS": {
+	"dialButton"		: "Vytočit",
+	"hangupButton"		: "Položit",
+	"greetingMessage"	: "Pozdrav (nepovinné):",
+	"connectingText"	: "Vytáčení...",
+	"ringingText"		: "Vyzvánění...",
+	"hangingUpText"		: "Pokládání...",
+	"msgbox"			: "(Zpráva)",
+	"nicknameLabel"		: "Jméno:",
+	"callstatsLabel"	: "Přehled hovorů",
+	"fullscreenLabel"	: "Celá obrazovka",
+	"notAvailable"		: "Nedostupný",
+	"digAnswMachine"	: "Probíhá připojení k záznamníku",
 }};
 
 function switchLanguage(userLang) {
 	if(userLang=="en") {
+		console.log("switchLanguage abort en");
 		return;
 	}
 	console.log("switchLanguage: "+userLang);
