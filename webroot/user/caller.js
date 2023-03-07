@@ -1701,9 +1701,13 @@ function errorAction2(errString,err) {
 function notifyConnect(callerName,callerId,callerHost) {
 	// nickname form was valid
 	// the next xhr will freeze until offline or hidden callee accepts the call
-// TODO should we not use contactName (instead of calleeID) if available?
-//	showStatus("Trying to get"+" "+calleeID+" "+"on the phone. Please wait...",-1);
-	showStatus(lg("TryingToGet")+" "+calleeID+" "+lg("onThePhonePleaseWait"),-1);
+	//showStatus("Trying to get"+" "+calleeID+" "+"on the phone. Please wait...",-1);
+	let name = calleeID;
+	if(contactName!="") {
+		name = contactName+" ("+calleeID+")";
+	}
+	showStatus(lg("TryingToGet")+" "+name+" "+lg("onThePhonePleaseWait"),-1);
+
 	if(divspinnerframe) {
 		divspinnerframe.style.display = "block";
 	}
@@ -1729,16 +1733,24 @@ function notifyConnect(callerName,callerId,callerHost) {
 			return;
 		}
 		gLog('notify: callee could not be reached (%s)',xhr.responseText);
-//		showStatus("Sorry! Unable to reach "+calleeID+".<br>Please try again a little later.",-1);
-		showStatus(lg("sorryUnableToReach")+" "+calleeID+".<br>"+lg("PleaseTryAgainALittle"),-1);
+		//showStatus("Sorry! Unable to reach "+calleeID+".<br>Please try again a little later.",-1);
+		let name = calleeID;
+		if(contactName!="") {
+			name = contactName+" ("+calleeID+")";
+		}
+		showStatus(lg("sorryUnableToReach")+" "+name+"<br>"+lg("PleaseTryAgainALittle"),-1);
 	}, function(errString,errcode) {
 		if(divspinnerframe) {
 			divspinnerframe.style.display = "none";
 		}
 		//errorAction(errString)
 		gLog('notify: callee could not be reached. xhr err',errString,errcode);
-//		showStatus("Sorry! Unable to reach "+calleeID+".<br>Please try again a little later.",-1);
-		showStatus(lg("sorryUnableToReach")+" "+calleeID+".<br>"+lg("PleaseTryAgainALittle"),-1);
+		//showStatus("Sorry! Unable to reach "+calleeID+".<br>Please try again a little later.",-1);
+		let name = calleeID;
+		if(contactName!="") {
+			name = contactName+" ("+calleeID+")";
+		}
+		showStatus(lg("sorryUnableToReach")+" "+name+"<br>"+lg("PleaseTryAgainALittle"),-1);
 	});
 }
 
