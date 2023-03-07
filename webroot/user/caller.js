@@ -565,7 +565,7 @@ function getContact(contactID) {
 				if(tok.length>0 && tok[0]!="") {
 					contactName = cleanStringParameter(tok[0],true);
 					gLog("/getcontact contactName=("+contactName+")");
-					if(contactName!="") {
+					if(contactName!="" && contactName!="unknown") {
 						// show contact nickname (for dial-id dialog)
 						var contactNameElement = document.getElementById("contactName");
 						if(contactNameElement) {
@@ -1706,7 +1706,7 @@ function notifyConnect(callerName,callerId,callerHost) {
 	// the next xhr will freeze until offline or hidden callee accepts the call
 	//showStatus("Trying to get"+" "+calleeID+" "+"on the phone. Please wait...",-1);
 	let name = calleeID;
-	if(contactName!="") {
+	if(contactName!="" && contactName!="unknown") {
 		name = contactName+" ("+calleeID+")";
 	}
 	showStatus(lg("TryingToGet")+" "+name+" "+lg("onThePhonePleaseWait"),-1);
@@ -1738,7 +1738,7 @@ function notifyConnect(callerName,callerId,callerHost) {
 		gLog('notify: callee could not be reached (%s)',xhr.responseText);
 		//showStatus("Sorry! Unable to reach "+calleeID+".<br>Please try again a little later.",-1);
 		let name = calleeID;
-		if(contactName!="") {
+		if(contactName!="" && contactName!="unknown") {
 			name = contactName+" ("+calleeID+")";
 		}
 		showStatus(lg("sorryUnableToReach")+" "+name+"<br>"+lg("PleaseTryAgainALittle"),-1);
@@ -1750,7 +1750,7 @@ function notifyConnect(callerName,callerId,callerHost) {
 		gLog('notify: callee could not be reached. xhr err',errString,errcode);
 		//showStatus("Sorry! Unable to reach "+calleeID+".<br>Please try again a little later.",-1);
 		let name = calleeID;
-		if(contactName!="") {
+		if(contactName!="" && contactName!="unknown") {
 			name = contactName+" ("+calleeID+")";
 		}
 		showStatus(lg("sorryUnableToReach")+" "+name+"<br>"+lg("PleaseTryAgainALittle"),-1);
