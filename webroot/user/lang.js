@@ -1,4 +1,8 @@
 // WebCall Copyright 2023 timur.mobi. All rights reserved.
+var shortLang;
+var mainLang;
+var myLang;
+
 var langMap = {
 "enx": {
 	"dialButton"			: "Anwählen",
@@ -22,6 +26,8 @@ var langMap = {
 	"noIHaveToGo"			: "No, I have to go",
 	"TryingToGet"			: "Trying to get",
 	"onThePhonePleaseWait"	: "on the phone. Please wait...",
+	"sorryUnableToReach"	: "Unable to contact",
+	"PleaseTryAgainALittle"	: "Please try again a little later.",
 },
 "de": {
 	"dialButton"			: "Anwählen",
@@ -37,37 +43,16 @@ var langMap = {
 	"notAvailable"			: "Nicht verfügbar",
 	"digAnswMachine"		: "Verbindung mit einem digitalen Anrufbeantworter",
 
-	"tryingToFind"			: "Wird gesucht:",
-	"thisCanTakeSomeTime"	: "Das kann einen Moment dauern. Bitte warten...",
-	"isCurrentlyNot"		: "ist z.Z. nicht verbunden.",
-	"canYouWaitSomeTime"	: "Können Sie einen Moment warten während eine Verbinding hergestellt wird?",
-	"yesPleaseTry"			: "Ja, bitte versuchen",
+	"tryingToFind"			: "Nutzer wird gesucht:",
+	"thisCanTakeSomeTime"	: "Das kann etwas dauern. Bitte warten...",
+	"isCurrentlyNot"		: "ist derzeit nicht erreichbar.",
+	"canYouWaitSomeTime"	: "Können Sie etwas warten, während eine Verbinding hergestellt wird?",
+	"yesPleaseTry"			: "Ja, bitte verbinden",
 	"noIHaveToGo"			: "Nein, keine Zeit",
 	"TryingToGet"			: "Versuche mit",
 	"onThePhonePleaseWait"	: "zu verbinden. Bitte warten...",
-},
-"it": {
-	"dialButton"			: "Chiamata",
-	"hangupButton"			: "Riattacca",
-	"greetingMessage"		: "Messaggio di saluto (opzionale):",
-	"connectingText"		: "Collegamento P2P...",
-	"ringingText"			: "Suoneria...",
-	"hangingUpText"			: "Appendere...",
-	"msgbox"				: "(Il vostro messaggio)",
-	"nicknameLabel"			: "Soprannome:",
-	"callstatsLabel"		: "Statistiche di chiamata",
-	"fullscreenLabel"		: "Schermo intero",
-	"notAvailable"			: "Non disponibile",
-	"digAnswMachine"		: "In procinto di chiamare una segreteria telefonica digitale",
-
-	"tryingToFind"			: "",
-	"thisCanTakeSomeTime"	: "",
-	"isCurrentlyNot"		: "",
-	"canYouWaitSomeTime"	: "",
-	"yesPleaseTry"			: "",
-	"noIHaveToGo"			: "",
-	"TryingToGet"			: "",
-	"onThePhonePleaseWait"	: "",
+	"sorryUnableToReach"	: "Nutzer nicht erreichbar:",
+	"PleaseTryAgainALittle"	: "Bitte versuchen Sie es etwas später erneut.",
 },
 "es": {
 	"dialButton"			: "Llame a",
@@ -83,14 +68,41 @@ var langMap = {
 	"notAvailable"			: "No disponible",
 	"digAnswMachine"		: "A punto de llamar a un contestador automático digital",
 
-	"tryingToFind"			: "",
-	"thisCanTakeSomeTime"	: "",
-	"isCurrentlyNot"		: "",
-	"canYouWaitSomeTime"	: "",
-	"yesPleaseTry"			: "",
-	"noIHaveToGo"			: "",
-	"TryingToGet"			: "",
-	"onThePhonePleaseWait"	: "",
+	"tryingToFind"			: "Se busca usuario:",
+	"thisCanTakeSomeTime"	: "Esto puede llevar algún tiempo. Por favor, espere.",
+	"isCurrentlyNot"		: "no está disponible actualmente.",
+	"canYouWaitSomeTime"	: "¿Puede esperar un poco mientras se establece la conexión?",
+	"yesPleaseTry"			: "Sí, conéctese",
+	"noIHaveToGo"			: "No, no hay tiempo",
+	"TryingToGet"			: "Intenta conectar con",
+	"onThePhonePleaseWait"	: "Por favor, espere.",
+	"sorryUnableToReach"	: "Usuario no localizable:",
+	"PleaseTryAgainALittle"	: "Por favor, inténtelo de nuevo un poco más tarde.",
+},
+"it": {
+	"dialButton"			: "Chiamata",
+	"hangupButton"			: "Riattacca",
+	"greetingMessage"		: "Messaggio di saluto (opzionale):",
+	"connectingText"		: "Collegamento P2P...",
+	"ringingText"			: "Suoneria...",
+	"hangingUpText"			: "Appendere...",
+	"msgbox"				: "(Il vostro messaggio)",
+	"nicknameLabel"			: "Soprannome:",
+	"callstatsLabel"		: "Statistiche di chiamata",
+	"fullscreenLabel"		: "Schermo intero",
+	"notAvailable"			: "Non disponibile",
+	"digAnswMachine"		: "In procinto di chiamare una segreteria telefonica digitale",
+
+	"tryingToFind"			: "L'utente è desiderato:",
+	"thisCanTakeSomeTime"	: "L'operazione potrebbe richiedere del tempo. Si prega di attendere...",
+	"isCurrentlyNot"		: "non è attualmente disponibile",
+	"canYouWaitSomeTime"	: "Potete aspettare un po' mentre viene stabilita la connessione?",
+	"yesPleaseTry"			: "Sì, si prega di collegare",
+	"noIHaveToGo"			: "No, non c'è tempo",
+	"TryingToGet"			: "Prova a connetterti con",
+	"onThePhonePleaseWait"	: "Attendere prego.",
+	"sorryUnableToReach"	: "Utente non raggiungibile:",
+	"PleaseTryAgainALittle"	: "Riprovare un po' più tardi.",
 },
 "fr": {
 	"dialButton"			: "Composer",
@@ -106,14 +118,16 @@ var langMap = {
 	"notAvailable"			: "non disponible",
 	"digAnswMachine"		: "Vous allez appeler un répondeur numérique",
 
-	"tryingToFind"			: "",
-	"thisCanTakeSomeTime"	: "",
-	"isCurrentlyNot"		: "",
-	"canYouWaitSomeTime"	: "",
-	"yesPleaseTry"			: "",
-	"noIHaveToGo"			: "",
-	"TryingToGet"			: "",
-	"onThePhonePleaseWait"	: "",
+	"tryingToFind"			: "Utilisateur recherché",
+	"thisCanTakeSomeTime"	: "Cela peut prendre un certain temps. Veuillez patienter...",
+	"isCurrentlyNot"		: "n'est pas disponible pour le moment",
+	"canYouWaitSomeTime"	: "Pouvez-vous attendre un peu pendant qu'une connexion est établie ?",
+	"yesPleaseTry"			: "Oui, veuillez vous connecter",
+	"noIHaveToGo"			: "Non, pas le temps",
+	"TryingToGet"			: "Essayez de vous connecter à",
+	"onThePhonePleaseWait"	: "Veuillez patienter...",
+	"sorryUnableToReach"	: "Utilisateur injoignable:",
+	"PleaseTryAgainALittle"	: "Veuillez réessayer un peu plus tard.",
 },
 "pt-PT": {
 	"dialButton"			: "Chamada",
@@ -137,6 +151,8 @@ var langMap = {
 	"noIHaveToGo"			: "",
 	"TryingToGet"			: "",
 	"onThePhonePleaseWait"	: "",
+	"sorryUnableToReach"	: "",
+	"PleaseTryAgainALittle"	: "",
 },
 "pt-BR": {
 	"dialButton"			: "Chamar",
@@ -160,6 +176,8 @@ var langMap = {
 	"noIHaveToGo"			: "",
 	"TryingToGet"			: "",
 	"onThePhonePleaseWait"	: "",
+	"sorryUnableToReach"	: "",
+	"PleaseTryAgainALittle"	: "",
 },
 "cs-CS": {
 	"dialButton"			: "Vytočit",
@@ -183,6 +201,8 @@ var langMap = {
 	"noIHaveToGo"			: "",
 	"TryingToGet"			: "",
 	"onThePhonePleaseWait"	: "",
+	"sorryUnableToReach"	: "",
+	"PleaseTryAgainALittle"	: "",
 }};
 
 function switchLanguage(userLang) {
@@ -191,9 +211,9 @@ function switchLanguage(userLang) {
 		return;
 	}
 	console.log("switchLanguage: "+userLang);
-	let shortLang = userLang;
-	let mainLang = shortLang;
-	let myLang = langMap[userLang];
+	shortLang = userLang;
+	mainLang = shortLang;
+	myLang = langMap[userLang];
 	if(typeof myLang == "undefined" || myLang==null) {
 		let idxDash = userLang.indexOf("-");
 		if(idxDash>0) {
@@ -284,4 +304,14 @@ function switchLanguage(userLang) {
 	}
 }
 
+function lg(idStr) {
+	if(typeof myLang == "undefined" || myLang==null) {
+		myLang = langMap["enx"];
+	}
+	let str = myLang[idStr];
+	if(str=="") {
+		str = myLang["enx"];
+	}
+	return str;
+}
 

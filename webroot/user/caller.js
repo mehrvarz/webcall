@@ -44,7 +44,7 @@ var wsAddrTime;
 // note that the one making the call may also be a callee (is awaiting calls in parallel and has a cookie!)
 var callerId = "";    // this is the callers callback ID (from urlArg, cookie, or idSelect)
 var callerIdArg = ""  // this is the callers callback ID (from urlArg only)
-var cookieName = "";  // this is the callers nickname
+var cookieName = "";  // this is the callers ID
 var callerHost = "";  // this is the callers home webcall server
 var callerName = "";  // this is the callers nickname
 var contactName = ""; // this is the callees nickname (from caller contacts or from dial-id form)
@@ -1413,8 +1413,9 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 				// callee temporarily offline: have caller wait for callee
 				var offlineFor = parseInt(onlineStatus.substring(12),10);
 
-				showStatus("Trying to find"+" "+calleeID+". "+"This can take a moment. Please wait...",-1);
-//TODO			showStatus(myLang["tryingToFind"]+" "+calleeID+". "+myLang["thisCanTakeSomeTime"],-1);
+//				showStatus("Trying to find"+" "+calleeID+". "+
+//				"This can take some time. Please wait...",-1);
+				showStatus(lg("tryingToFind")+" "+calleeID+". "+lg("thisCanTakeSomeTime"),-1);
 
 				if(divspinnerframe) {
 					divspinnerframe.style.display = "block";
@@ -1543,14 +1544,20 @@ function calleeNotificationAction() {
 			if(calleeName=="" || calleeName.length<3) {
 				calleeName = "this user";
 			}
-			var msg = calleeName+" "+"is currently not available."+"<br><br>"+
-				"Can you wait some time while we try to establish a connection?"+"<br><br><a onclick='confirmNotifyConnect()'>"+"Yes, please try"+"</a>";
+
+//			var msg = calleeName+" "+"is currently not available."+"<br><br>"+
+//				"Can you wait some time while we try to establish a connection?"+
+//				"<br><br><a onclick='confirmNotifyConnect()'>"+"Yes, please try"+"</a>";
+			var msg = calleeName+" "+lg("isCurrentlyNot")+"<br><br>"+
+				lg("canYouWaitSomeTime")+"<br><br><a onclick='confirmNotifyConnect()'>"+
+				lg("yesPleaseTry")+"</a>";
+
 			if(window.self == window.top) {
 				// not running in iframe mode: no -> jump on directory up
-				msg += "<br><br><a href='..'>"+"No, I have to go"+"</a>";
+				msg += "<br><br><a href='..'>"+lg("noIHaveToGo")+"</a>";
 			} else {
 				// running in iframe mode: no -> history.back()
-				msg += "<br><br><a onclick='history.back();'>"+"No, I have to go"+"</a>";
+				msg += "<br><br><a onclick='history.back();'>"+lg("noIHaveToGo")+"</a>";
 			}
 
 			showStatus(msg,-1);
@@ -1694,7 +1701,9 @@ function errorAction2(errString,err) {
 function notifyConnect(callerName,callerId,callerHost) {
 	// nickname form was valid
 	// the next xhr will freeze until offline or hidden callee accepts the call
-	showStatus("Trying to get"+" "+calleeID+" "+"on the phone. Please wait...",-1);
+// TODO should we not use contactName (instead of calleeID) if available?
+//	showStatus("Trying to get"+" "+calleeID+" "+"on the phone. Please wait...",-1);
+	showStatus(lg("TryingToGet")+" "+calleeID+" "+lg("onThePhonePleaseWait"),-1);
 	if(divspinnerframe) {
 		divspinnerframe.style.display = "block";
 	}
@@ -1720,14 +1729,16 @@ function notifyConnect(callerName,callerId,callerHost) {
 			return;
 		}
 		gLog('notify: callee could not be reached (%s)',xhr.responseText);
-		showStatus("Sorry! Unable to reach "+calleeID+".<br>Please try again a little later.",-1);
+//		showStatus("Sorry! Unable to reach "+calleeID+".<br>Please try again a little later.",-1);
+		showStatus(lg("sorryUnableToReach")+" "+calleeID+".<br>"+lg("PleaseTryAgainALittle"),-1);
 	}, function(errString,errcode) {
 		if(divspinnerframe) {
 			divspinnerframe.style.display = "none";
 		}
 		//errorAction(errString)
 		gLog('notify: callee could not be reached. xhr err',errString,errcode);
-		showStatus("Sorry! Unable to reach "+calleeID+".<br>Please try again a little later.",-1);
+//		showStatus("Sorry! Unable to reach "+calleeID+".<br>Please try again a little later.",-1);
+		showStatus(lg("sorryUnableToReach")+" "+calleeID+".<br>"+lg("PleaseTryAgainALittle"),-1);
 	});
 }
 
