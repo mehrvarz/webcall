@@ -59,7 +59,9 @@ func getMapping(calleeID string, remoteAddr string) (int,string) {
 	}
 
 	if dbUser.AltIDs!="" {
-		fmt.Printf("getmapping (%s) altIDs=(%s) rip=%s\n", calleeID, dbUser.AltIDs, remoteAddr)
+		if logWantedFor("mapping") {
+			fmt.Printf("getmapping (%s) altIDs=(%s) rip=%s\n", calleeID, dbUser.AltIDs, remoteAddr)
+		}
 	}
 	return 0,dbUser.AltIDs
 }
