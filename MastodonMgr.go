@@ -301,6 +301,7 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 						time.Sleep(20 * time.Second)
 					} else if strings.Index(event.Error(),"GOAWAY")>=0 {
 						// wtf? "http2: server sent GOAWAY and closed the connection..."
+						// looks like go-mastodon reconnects automatically?
 						// slow down
 						time.Sleep(3 * time.Second)
 					}

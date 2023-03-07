@@ -1545,12 +1545,11 @@ function calleeNotificationAction() {
 			// if caller is willing to wait, caller can invoke confirmNotifyConnect() to enter own name
 			let calleeName = xhr.responseText.substring(3);
 			if(calleeName=="" || calleeName.length<3) {
-				calleeName = "this user";
+				calleeName = calleeID;
+			} else {
+				calleeName = calleeName + " ("+calleeID+")";
 			}
 
-//			var msg = calleeName+" "+"is currently not available."+"<br><br>"+
-//				"Can you wait some time while we try to establish a connection?"+
-//				"<br><br><a onclick='confirmNotifyConnect()'>"+"Yes, please try"+"</a>";
 			var msg = calleeName+" "+lg("isCurrentlyNot")+"<br><br>"+
 				lg("canYouWaitSomeTime")+"<br><br><a onclick='confirmNotifyConnect()'>"+
 				lg("yesPleaseTry")+"</a>";
