@@ -209,6 +209,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 					}
 				})
 				if err!=nil {
+					// likely quota error
 					fmt.Printf("# /notifyCallee PostStatus (%s) err=%v\n",sendmsg,err)
 				} else {
 					// we know now that there was no quota problem

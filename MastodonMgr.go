@@ -30,6 +30,10 @@ var	ErrAuthenticate = errors.New("Error Authenticate")
 var	ErrStreamingUser = errors.New("Error StreamingUser")
 var	ErrDb = errors.New("Error db")
 
+const quotaMsgsPostedInLast30Min = 100
+const quotaMsgsPostedPerUserInLast30Min = 5
+
+
 const dbMastodon = "rtcmastodon.db"
 const dbMid = "dbMid"          // a map of all active mid's
 type MidEntry struct {         // key = mid
@@ -208,7 +212,7 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 				return
 
 			case evt := <-chl:
-				fmt.Printf("mastodonhandler chl evt: %v\n",evt)
+				//fmt.Printf("mastodonhandler chl evt: %v\n",evt)
 				switch event := evt.(type) {
 				case *mastodon.NotificationEvent:
 					// direct msgs
@@ -698,9 +702,9 @@ func (mMgr *MastodonMgr) postMsgEx(sendmsg string, onBehalfOfUser string, delayS
 // TODO move constants 100 and 5 (per 30m) to top
 	// rate limit total number of posted msgs (100 per 30min)
 	msgsPostedTotalInLast30Min := len(mMgr.postedMsgEventsSlice)
-	if msgsPostedTotalInLast30Min >= 100 {
-		fmt.Printf("# postMsgEx # of msgs posted in the last 30min %d >= 100\n",
-			msgsPostedTotalInLast30Min)
+	if msgsPostedTotalInLast30Min >= quotaMsgsPostedInLast30Min {
+		fmt.Printf("# postMsgEx quota # of msgs posted in the last 30min %d >= %d\n",
+			msgsPostedTotalInLast30Min, quotaMsgsPostedInLast30Min)
 		if callback!=nil { callback(ErrTotalPostMsgQuota) }
 		return ErrTotalPostMsgQuota
 	}
@@ -714,9 +718,9 @@ func (mMgr *MastodonMgr) postMsgEx(sendmsg string, onBehalfOfUser string, delayS
 		}
 	}
 	mMgr.postedMsgEventsMutex.RUnlock()
-	if msgsPostedInLast30Min >= 5 {
-		fmt.Printf("# postMsgEx # of msgs posted for %s in the last 30min %d >= 5\n",
-			onBehalfOfUser, msgsPostedInLast30Min)
+	if msgsPostedInLast30Min >= quotaMsgsPostedPerUserInLast30Min {
+		fmt.Printf("# postMsgEx quota # of msgs posted for %s in the last 30min %d >= %d\n",
+			onBehalfOfUser, msgsPostedInLast30Min, quotaMsgsPostedPerUserInLast30Min)
 		if callback!=nil { callback(ErrUserPostMsgQuota) }
 		return ErrUserPostMsgQuota
 	}
