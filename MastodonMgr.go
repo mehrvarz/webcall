@@ -285,7 +285,7 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 					}
 					if strings.Index(event.Error(),"404 Not Found")>=0 {
 						// "bad request: 404 Not Found"
-						// iptables issue with fastly?
+						// this was caused by go-mastodon not supporting dedicated streaming endpoint
 						// slow down
 						time.Sleep(20 * time.Second)
 					} else if strings.Index(event.Error(),"Invalid access token")>=0 {
@@ -299,6 +299,10 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 						// "x509: certificate signed by unknown authority"
 						// slow down
 						time.Sleep(20 * time.Second)
+					} else if strings.Index(event.Error(),"GOAWAY")>=0 {
+						// wtf? "http2: server sent GOAWAY and closed the connection..."
+						// slow down
+						time.Sleep(3 * time.Second)
 					}
 					if !mMgr.running {
 						break
@@ -370,12 +374,12 @@ func (mMgr *MastodonMgr) processMessage(msg string, event *mastodon.Notification
 		case command=="ping":
 			// send pong msg back with 20s delay
 			sendmsg :="@"+mastodonUserId+" pong"
-			fmt.Printf("mastodon command ping post (%s)\n",sendmsg)
+			fmt.Printf("mastodon command pong reply (%s)\n",sendmsg)
 			mMgr.postMsgEx(sendmsg,mastodonUserId,20,func(err error) {
 				if err!=nil {
-					fmt.Printf("# mastodon command ping reply err=%v (to=%v)\n",err,mastodonUserId)
+					fmt.Printf("# mastodon command pong reply err=%v (to=%v)\n",err,mastodonUserId)
 				} else {
-					fmt.Printf("mastodon command ping reply to=%v\n", mastodonUserId)
+					fmt.Printf("mastodon command pong reply to=%v\n", mastodonUserId)
 				}
 			})
 			return
