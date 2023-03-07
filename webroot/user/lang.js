@@ -4,19 +4,19 @@ var mainLang;
 var myLang;
 
 var langMap = {
-"enx": {
-	"dialButton"			: "Anwählen",
-	"hangupButton"			: "Auflegen",
-	"greetingMessage"		: "Gruß-Nachricht (optional):",
-	"connectingText"		: "Verbinde P2P...",
-	"ringingText"			: "Klingeln...",
-	"hangingUpText"			: "Auflegen...",
-	"msgbox"				: "(Deine Nachricht)",
-	"nicknameLabel"			: "Rufname:",
-	"callstatsLabel"		: "Anruf Daten",
-	"fullscreenLabel"		: "Vollschirm",
-	"notAvailable"			: "Nicht verfügbar",
-	"digAnswMachine"		: "Verbindung mit einem digitalen Anrufbeantworter",
+"en": {
+	"dialButton"			: "Dial",
+	"hangupButton"			: "Hangup",
+	"greetingMessage"		: "Greeting message (optional):",
+	"connectingText"		: "Connecting P2P...",
+	"ringingText"			: "Ringing...",
+	"hangingUpText"			: "Hanging up...",
+	"msgbox"				: "(Your message)",
+	"nicknameLabel"			: "Nickname:",
+	"callstatsLabel"		: "Call stats",
+	"fullscreenLabel"		: "Fullscreen",
+	"notAvailable"			: "Not available",
+	"digAnswMachine"		: "About to call a digital answering machine",
 
 	"tryingToFind"			: "Trying to find",
 	"thisCanTakeSomeTime"	: "This can take some time. Please wait...",
@@ -245,11 +245,6 @@ function switchLanguage(userLang) {
 		hangupButton.innerHTML = str;
 	}
 
-	str = myLang["greetingMessage"];
-	if(typeof str !== "undefined" && str!="") {
-		greetingMessage = str;
-	}
-
 	str = myLang["connectingText"];
 	if(typeof str !== "undefined" && str!="") {
 		connectingText = str;
@@ -258,11 +253,6 @@ function switchLanguage(userLang) {
 	str = myLang["ringingText"];
 	if(typeof str !== "undefined" && str!="") {
 		ringingText = str;
-	}
-
-	str = myLang["hangingUpText"];
-	if(typeof str !== "undefined" && str!="") {
-		hangingUpText = str;
 	}
 
 	str = myLang["msgbox"];
@@ -293,24 +283,34 @@ function switchLanguage(userLang) {
 		if(fullscreenLabel) fullscreenLabel.labels[0].innerText = str;
 	}
 
-	str = myLang["notAvailable"];
+	str = myLang["notAvailable"]; // client.js
 	if(typeof str !== "undefined" && str!="") {
 		notAvailable = str;
 	}
 
-	str = myLang["digAnswMachine"];
-	if(typeof str !== "undefined" && str!="") {
-		digAnswMachine = str;
-	}
+//	str = myLang["hangingUpText"];
+//	if(typeof str !== "undefined" && str!="") {
+//		hangingUpText = str;
+//	}
+
+//	str = myLang["greetingMessage"];
+//	if(typeof str !== "undefined" && str!="") {
+//		greetingMessage = str;
+//	}
+
+//	str = myLang["digAnswMachine"];
+//	if(typeof str !== "undefined" && str!="") {
+//		digAnswMachine = str;
+//	}
 }
 
 function lg(idStr) {
 	if(typeof myLang == "undefined" || myLang==null) {
-		myLang = langMap["enx"];
+		myLang = langMap["en"];
 	}
 	let str = myLang[idStr];
 	if(str=="") {
-		str = myLang["enx"];
+		str = myLang["en"];
 	}
 	return str;
 }

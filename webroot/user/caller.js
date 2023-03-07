@@ -15,8 +15,8 @@ const calleeMode = false;
 const msgBoxMaxLen = 137;
 
 var connectingText = "Connecting P2P...";
-var ringingText = "Ringing...";
-var hangingUpText = "Hanging up...";
+//var ringingText = "Ringing...";
+//var hangingUpText = "Hanging up...";
 var singleButtonReadyText = "Click to make your order<br>Live operator";
 var singleButtonBusyText = "All lines are busy.<br>Please try again a little later.";
 var singleButtonConnectedText = "You are connected.<br>How can we help you?";
@@ -87,8 +87,8 @@ var contactAutoStore = false;
 var counter=0;
 var altIdCount = 0;
 var idSelectElement = null;
-var greetingMessage = "Greeting message (optional):";
-var digAnswMachine = "About to call a digital answering machine";
+//var greetingMessage = "Greeting message (optional):";
+//var digAnswMachine = "About to call a digital answering machine";
 
 var extMessage = function(e) {
 	// prevent an error on split() below when extensions emit unrelated, non-string 'message' events to the window
@@ -909,7 +909,8 @@ function onload3(comment) {
 		hangupButton.onclick = function() {
 			dialButton.style.backgroundColor = "";
 			hangupButton.style.backgroundColor = "";
-			let msg = hangingUpText;
+//			let msg = hangingUpText;
+			let msg = lg("hangingUpText");
 			//console.log(msg);
 			if(mediaConnect) {
 				if(playDialSounds) {
@@ -1336,7 +1337,8 @@ function calleeOnlineAction(comment) {
 				if(!singlebutton) {
 					msgbox.style.display = "none";
 				}
-				showStatus(digAnswMachine,-1);
+//				showStatus(digAnswMachine,-1);
+				showStatus(lg("digAnswMachine"),-1);
 			} else if(calleeID.startsWith("talkback")) {
 				if(!singlebutton) {
 					msgbox.style.display = "none";
@@ -1346,7 +1348,8 @@ function calleeOnlineAction(comment) {
 							"and then immediately played back to you (green led).",-1);
 			} else {
 				if(!singlebutton) {
-					showStatus(greetingMessage,-1)
+//					showStatus(greetingMessage,-1);
+					showStatus(lg("greetingMessage"),-1);
 					msgbox.style.display = "block";
 					gLog('callerName='+callerName);
 					let placeholderText = "";
@@ -2425,7 +2428,7 @@ function dial2() {
 					// if msgboxText exists, send it before callerOffer
 
 					if(!singlebutton) {
-						let msgboxText = cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen);
+					   let msgboxText = cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen);
 						//gLog('msgboxText=('+msgboxText+')');
 						if(msgboxText!="") {
 							gLog('msg=('+msgboxText+')');
@@ -2519,7 +2522,8 @@ function dial2() {
 							}
 						}
 					}
-					showStatus(ringingText,-1);
+//					showStatus(ringingText,-1);
+					showStatus(lg("ringingText"),-1);
 				}
 				dialing = false;
 			}

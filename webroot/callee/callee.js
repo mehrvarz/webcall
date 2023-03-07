@@ -1131,8 +1131,8 @@ function wsOnClose2() {
 	buttonBlinking=false; // will abort blinkButtonFunc()
 	stopAllAudioEffects("wsOnClose");
 	showStatus("disconnected from signaling server");
-	//onlineIndicator.src="";
-	offlineAction();
+	onlineIndicator.src="";
+	//offlineAction();
 	// clear "You receive calls made by this link"
 	ownlinkElement.innerHTML = "";
 }
