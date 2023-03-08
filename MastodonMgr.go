@@ -287,30 +287,35 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 						// "bad request: 404 Not Found"
 						// this was caused by go-mastodon not supporting dedicated streaming endpoint
 						// slow down
-						time.Sleep(20 * time.Second)
+						time.Sleep(15 * time.Second)
 					} else if strings.Index(event.Error(),"Invalid access token")>=0 {
 						// "bad request: 401 Unauthorized: Error: Invalid access token"
-						// slow down
-						time.Sleep(3 * time.Second)
 					} else if strings.Index(event.Error(),"403 Forbidden")>=0 {
 						// slow down
-						time.Sleep(20 * time.Second)
+						time.Sleep(15 * time.Second)
 					} else if strings.Index(event.Error(),"unknown authority")>=0 {
 						// "x509: certificate signed by unknown authority"
 						// slow down
-						time.Sleep(20 * time.Second)
+						time.Sleep(15 * time.Second)
 					} else if strings.Index(event.Error(),"GOAWAY")>=0 {
-						// wtf? "http2: server sent GOAWAY and closed the connection..."
-						// looks like go-mastodon reconnects automatically?
-						// slow down
-						time.Sleep(3 * time.Second)
+						// "http2: server sent GOAWAY and closed the connection..."
+						// looks like reconnects happens automatically
 					}
+
+					// "stream error: stream ID (int); INTERNAL_ERROR; received from peer"
+					// "bad request: 502 Bad Gateway"
+					// "bad request: 503 Service Unavailable"                                          x
+					// "Get "https://streaming.mastodon.social/api/v1/streaming/user": EOF"            x
+					// "Get "https://streaming.mastodon.social/api/v1/streaming/user": read tcp [2600:3c03::f03c:91ff:fea0:a854]:46208->[2a01:4f8:c01e:e5::1]:443: read: connection reset by peer"
+					// "unexpected EOF"
+
+					// slow down
+					time.Sleep(5 * time.Second)
+
 					if !mMgr.running {
 						break
 					}
 
-					// "stream error: stream ID 1; INTERNAL_ERROR; received from peer"
-					//   ???
 
 				//default:
 				//	fmt.Printf("mastodonhandler default\n")
