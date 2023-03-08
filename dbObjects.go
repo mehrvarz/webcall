@@ -4,7 +4,6 @@ package main
 type DbEntry struct {
 	StartTime int64
 	Ip string
-//	Paassword string        // not used
 }
 
 type DbUser struct {
@@ -32,8 +31,10 @@ type DbUser struct {
 	AskCallerBeforeNotify bool
 }
 
+/*
 type NotifTweet struct { // key = TweetID string
 	TweetTime int64
 	Comment string
 }
+*/
 

@@ -956,7 +956,7 @@ func (mMgr *MastodonMgr) storeAltId(calleeID string, mastodonUserID string, remo
 		}
 
 		dbUser.MastodonID = mastodonUserID
-		dbUser.MastodonSendTootOnCall = true
+		dbUser.MastodonSendTootOnCall = false
 		dbUser.AskCallerBeforeNotify = false
 
 		// if mapping[mastodonUserID] != calleeID, set it
@@ -1213,8 +1213,8 @@ func (mMgr *MastodonMgr) httpRegisterMid(w http.ResponseWriter, r *http.Request,
 			dbUser.StoreContacts = true
 			dbUser.StoreMissedCalls = true
 			dbUser.MastodonID = registerID // wsClient.go uses this to set client.mastodonID
-			dbUser.MastodonSendTootOnCall = true
-			dbUser.AskCallerBeforeNotify = true
+			dbUser.MastodonSendTootOnCall = false
+			dbUser.AskCallerBeforeNotify = false
 			err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
 			if err!=nil {
 				fmt.Printf("# /registermid (%s) error db=%s bucket=%s put err=%v\n",
