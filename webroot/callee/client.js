@@ -340,10 +340,14 @@ function ajaxFetch(xhr, type, api, processData, errorFkt, postData, sync) {
 	//gLog('xhr '+api);
 	xhr.open(type, api, !sync);
 	xhr.setRequestHeader("Content-type", "text/plain; charset=utf-8");
-	if(postData) {
-		xhr.send(postData);
-	} else {
-		xhr.send();
+	try {
+		if(postData) {
+			xhr.send(postData);
+		} else {
+			xhr.send();
+		}
+	} catch(ex) {
+		console.log("# xhr send ex="+ex);
 	}
 }
 

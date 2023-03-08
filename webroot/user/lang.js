@@ -309,8 +309,9 @@ function lg(idStr) {
 		myLang = langMap["en"];
 	}
 	let str = myLang[idStr];
-	if(str=="") {
-		str = myLang["en"];
+	if(typeof str == "undefined" || str=="") {
+		let myLang = langMap["en"];
+		str = myLang[idStr];
 	}
 	return str;
 }
