@@ -193,16 +193,16 @@ var langMap = {
 	"notAvailable"			: "Nedostupný",
 	"digAnswMachine"		: "Probíhá připojení k záznamníku",
 
-	"tryingToFind"			: "",
-	"thisCanTakeSomeTime"	: "",
-	"isCurrentlyNot"		: "",
-	"canYouWaitSomeTime"	: "",
-	"yesPleaseTry"			: "",
-	"noIHaveToGo"			: "",
-	"TryingToGet"			: "",
-	"onThePhonePleaseWait"	: "",
-	"sorryUnableToReach"	: "",
-	"PleaseTryAgainALittle"	: "",
+	"tryingToFind"			: "Hledám",
+	"thisCanTakeSomeTime"	: "Může to chvíli trvat. Prosím čekejte...",
+	"isCurrentlyNot"		: "není právě dostupný.",
+	"canYouWaitSomeTime"	: "Můžete chvíli počkat, než se spojení povede?",
+	"yesPleaseTry"			: "Ano, počkám",
+	"noIHaveToGo"			: "Ne, musím jít",
+	"TryingToGet"			: "Zkouším se spojit s",
+	"onThePhonePleaseWait"	: "Prosím čekejte...",
+	"sorryUnableToReach"	: "Nemohu se spojit s",
+	"PleaseTryAgainALittle"	: "Zkuste to prosím později.",
 }};
 
 function switchLanguage(userLang) {
