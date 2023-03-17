@@ -300,6 +300,9 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 					} else if strings.Index(event.Error(),"GOAWAY")>=0 {
 						// "http2: server sent GOAWAY and closed the connection..."
 						// looks like reconnects happens automatically
+					} else if strings.Index(event.Error(),"Internal Server Error")>=0 {
+						// bad request: 500 Internal Server Error: An unexpected error occurred
+						time.Sleep(15 * time.Second)
 					}
 
 					// "stream error: stream ID (int); INTERNAL_ERROR; received from peer"
