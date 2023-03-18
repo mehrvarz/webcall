@@ -275,8 +275,9 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 	}
 
 	if hashPw == "" && len(formPw) < 6 {
-		// delay guessing
-		fmt.Printf("# /login (%s) formPw too short %d %s v=%s\n", urlID, len(formPw), remoteAddr, clientVersion)
+		fmt.Printf("# /login (%s) formPw too short %d %s v=%s rip=%s\n",
+			urlID, len(formPw), remoteAddr, clientVersion, remoteAddr)
+		// make pw guessing slow
 		time.Sleep(3000 * time.Millisecond)
 		fmt.Fprintf(w, "error")
 		return
@@ -284,7 +285,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 
 	if formPw!="" {
 		// pw form-input is given
-//fmt.Printf("/login (%s) nocookie=%v\n", urlID, nocookie)
+		//fmt.Printf("/login (%s) nocookie=%v\n", urlID, nocookie)
 		if nocookie && (strings.HasPrefix(urlID,"answie") || strings.HasPrefix(urlID,"talkback")) {
 			// accept
 		} else {
@@ -304,13 +305,13 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 							hashPw = pwIdCombo.Pw
 							// if hashPw is empty and formPw exists, createCookie
 							if hashPw=="" {
-								fmt.Printf("# /login (%s) hashPw empty after dbHashedPwSearch createCookie(%s)\n",
-									urlID, formPw)
+								fmt.Printf("# /login (%s) hashPw empty after dbHashedPwSearch createCookie(%s) rip=%s\n",
+									urlID, formPw, remoteAddr)
 								if formPw!="" {
 									err,cookieValue := createCookie(w, urlID, formPw, &pwIdCombo)
 									if err != nil {
-										fmt.Printf("# /login (%s) persist PwIdCombo bucket=%s cookie=%s err=%v\n",
-											urlID, dbHashedPwBucket, cookieValue, err)
+										fmt.Printf("# /login (%s) persist PwIdCombo bucket=%s cookie=%s err=%v rip=%s\n",
+											urlID, dbHashedPwBucket, cookieValue, err, remoteAddr)
 										fmt.Fprintf(w, "noservice")
 										return
 									}
@@ -334,26 +335,24 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 
 					if err!=nil {
 						if strings.Index(err.Error(),"key not found")>=0 {
-							fmt.Printf("# /login (%s) ID not found\n", urlID)
+							fmt.Printf("# /login (%s) ID not found rip=%s\n", urlID, remoteAddr)
 							fmt.Fprintf(w, "notregistered")
 							return
 						}
 						// some other error;
-						fmt.Printf("# /login (%s) got formPw, no cookiePw err=%v\n", urlID, err)
+						fmt.Printf("# /login (%s) got formPw, no cookiePw err=%v rip=%s\n", urlID, err, remoteAddr)
 					}
 				} else {
 					hashPw = pwIdCombo.Pw
-//fmt.Printf("/login (%s) got formPw, no cookiePw, pwIdCombo.Pw=%s\n", urlID, pwIdCombo.Pw) // TODO remove
 				}
 			} else {
-//				fmt.Printf("/login (%s) got formPw, cookiePw=(%s)\n", urlID, hashPw)
+				//fmt.Printf("/login (%s) got formPw, cookiePw=(%s)\n", urlID, hashPw)
 			}
 			// this gets executed after form-field submit
 			// compare form-cleartext-formPw vs. hashPw-dbHashedPw-plus-cookie (if empty: hashPw-dbEntry.Password)
-//fmt.Printf("/login (%s) compare hash(%s) form(%s)\n", urlID, hashPw, formPw) // TODO remove
 
 			if hashPw=="" {
-				fmt.Printf("# /login (%s) hashPw=(%s) is empty\n", urlID, hashPw)
+				fmt.Printf("# /login (%s) hashPw is empty rip=%s\n", urlID, remoteAddr)
 				// make pw guessing slow
 				time.Sleep(2000 * time.Millisecond)
 				fmt.Fprintf(w, "error")
@@ -361,7 +360,8 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 			}
 			err := bcrypt.CompareHashAndPassword([]byte(hashPw), []byte(formPw))
 			if err != nil {
-				fmt.Printf("# /login (%s) (%s) bcrypt.CompareHashAndPassword err=%v\n", urlID, hashPw, err)
+				fmt.Printf("# /login (%s) (%s) bcrypt.CompareHashAndPassword err=%v rip=%s\n",
+					urlID, hashPw, err, remoteAddr)
 /*
 				// in case hashPw was not crypted:
 				if hashPw != formPw {
@@ -378,7 +378,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 */
 				return
 			}
-//			fmt.Printf("/login (%s) bcrypt.CompareHashAndPassword success\n", urlID)
+			//fmt.Printf("/login (%s) bcrypt.CompareHashAndPassword success\n", urlID)
 		}
 	} else {
 		// no pw form-input is given
