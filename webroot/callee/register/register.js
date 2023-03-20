@@ -56,7 +56,7 @@ function makeNewId() {
 }
 
 function isAvailAction() {
-	showStatus("Anybody with a web browser will be able to give you telephony calls. This is your phone number for the web:<br><br><b>"+myCalleeID+"</b><br><br>Enter a password so only you can receive these calls.",-1);
+	showStatus("Anybody with a web browser will be able to give you telephony calls. Your phone number for the web:<br><br><b>"+myCalleeID+"</b><br><br>Enter a password so only you can receive these calls.",-1);
 	// show form and clear pw input field
 	document.getElementById("pw").value = "";
 	document.getElementById("username").value = myCalleeID;
