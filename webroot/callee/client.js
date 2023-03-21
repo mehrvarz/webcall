@@ -1731,6 +1731,8 @@ function gLog(...args) {
 
 function cleanStringParameter(str, eliminateSpaces, comment) {
 	//console.log("cleanStringParameter1="+str+" "+comment);
+	if(typeof str=="undefined") str="";
+	if(str=="undefined") str="";
 	let ret = str.replace('|','').trim();
 	//console.log("cleanStringParameter ret="+ret);
 	if(eliminateSpaces) {

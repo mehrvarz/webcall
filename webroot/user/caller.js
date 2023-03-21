@@ -132,7 +132,7 @@ window.onload = function() {
 	goodbyTextMsg = "";
 
 	let id = getUrlParams("id");
-	if(typeof id!=="undefined" && id!="") {
+	if(typeof id!=="undefined" && id!="" && id!="undefined") {
 		calleeID = cleanStringParameter(id,true);
 	}
 	// if on start there is a fragment/hash ('#') in the URL, remove it
@@ -143,30 +143,30 @@ window.onload = function() {
 	}
 
 	let text = getUrlParams("readyText");
-	if(typeof text!=="undefined" && text!="") {
+	if(typeof text!=="undefined" && text!="" && text!="undefined") {
 		singleButtonReadyText = decodeURI(text);
 		gLog("onload url arg readyText",singleButtonReadyText);
 		dialButton.innerHTML = "<b>W E B C A L L</b><br>"+singleButtonReadyText;
 	}
 	text = getUrlParams("connectingText");
-	if(typeof text!=="undefined" && text!="") {
+	if(typeof text!=="undefined" && text!="" && text!="undefined") {
 		connectingText = decodeURI(text);
 		gLog("onload url arg connectingText",connectingText);
 	}
 	text = getUrlParams("busyText");
-	if(typeof text!=="undefined" && text!="") {
+	if(typeof text!=="undefined" && text!="" && text!="undefined") {
 		singleButtonBusyText = decodeURI(text);
 		gLog("onload url arg busyText",singleButtonBusyText);
 	}
 	text = getUrlParams("connectedText");
-	if(typeof text!=="undefined" && text!="") {
+	if(typeof text!=="undefined" && text!="" && text!="undefined") {
 		singleButtonConnectedText = decodeURI(text);
 		gLog("onload url arg connectedText",singleButtonConnectedText);
 	}
 	// dialsounds
 	playDialSounds = true;
 	text = getUrlParams("ds");
-	if(typeof text!=="undefined" && text!="") {
+	if(typeof text!=="undefined" && text!="" && text!="undefined") {
 		if(text=="false") {
 			playDialSounds = false;
 		}
@@ -265,7 +265,7 @@ window.onload = function() {
 
 	callerId = "";
 	let str = getUrlParams("callerId");
-	if(typeof str!=="undefined" && str!="") {
+	if(typeof str!=="undefined" && str!="" && str!="undefined") {
 		callerId = str;
 	}
 	callerIdArg = callerId;
@@ -274,7 +274,7 @@ window.onload = function() {
 	// showMissedCalls() hands over the default webcall nickname with this
 	callerName = "";
 	str = getUrlParams("callerName");
-	if(typeof str!=="undefined" && str!==null && str!=="" && str!=="null") {
+	if(typeof str!=="undefined" && str!==null && str!=="" && str!="undefined" && str!=="null") {
 		// this urlArg has a low priority
 		// will be overwritten by the contacts-entry for enterIdValElement.value (calleeID)
 		callerName = cleanStringParameter(str,true,"c1");
@@ -282,7 +282,7 @@ window.onload = function() {
 
 	callerHost = location.host;
 	str = getUrlParams("callerHost");
-	if(typeof str!=="undefined" && str!="") {
+	if(typeof str!=="undefined" && str!="" && str!="undefined") {
 		// if this is coming from the android client, it will be correct data
 		// if this comes directly from a 3rd party source, it may be false data
 		//    in such a case the party being called will not be able to call back this caller
@@ -292,7 +292,7 @@ window.onload = function() {
 
 	contactName = "";
 	str = getUrlParams("contactName");
-	if(typeof str!=="undefined" && str!==null && str!=="" && str!=="null") {
+	if(typeof str!=="undefined" && str!==null && str!=="" && str!="undefined" && str!=="null") {
 		// this urlArg has a low priority
 		// will be overwritten by the contacts-entry for enterIdValElement.value (calleeID)
 		contactName = cleanStringParameter(str,true,"c1");

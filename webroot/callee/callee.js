@@ -101,11 +101,11 @@ window.onload = function() {
 
 	//console.log("callee.js onload getUrlParams('id') search="+window.location.search);
 	let id = getUrlParams("id");
-	if(typeof id!=="undefined" && id!="") {
+	if(typeof id!=="undefined" && id!="" && id!="undefined") {
 		calleeID = cleanStringParameter(id,true,"id");
 	}
 	id = getUrlParams("mid");
-	if(typeof id!=="undefined" && id!="") {
+	if(typeof id!=="undefined" && id!="" && id!="undefined") {
 		mid = cleanStringParameter(id,true,"mid");
 		// TODO if given, send msg to caller (mastodon user) when this callee has logged in (see "login success")
 	}
