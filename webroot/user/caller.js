@@ -428,7 +428,7 @@ window.onload = function() {
 		let targetHost = location.host;
 		// andr activity hands over the target domain with this when sending callerIdArg='select'
 		str = getUrlParams("targetHost");
-		if(typeof str!=="undefined" && str!="") {
+		if(typeof str!=="undefined" && str!="" && str!="undefined") {
 			targetHost = str;
 		}
 		enterDomainValElement.value = targetHost;
