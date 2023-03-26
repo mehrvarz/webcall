@@ -1,4 +1,4 @@
-// WebCall Copyright 2022 timur.mobi. All rights reserved.
+// WebCall Copyright 2023 timur.mobi. All rights reserved.
 //
 // httpLogin() is called by callees via XHR "/rtcsig/login". 
 // httpLogin() makes sure that the given urlID and password 

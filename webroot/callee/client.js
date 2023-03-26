@@ -1686,6 +1686,7 @@ function onkeydownFunc(evt) {
 	} else {
 		isEscape = (evt.keyCode === 27);
 	}
+	//console.log("onkeydownFunc %d %s isEscape=%d", evt.keyCode, evt.key, isEscape);
 	if(isEscape) {
 		if(iframeWindowOpenFlag || menuDialogOpenElement) {
 			gLog("client.js: esc key -> back");

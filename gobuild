@@ -1,4 +1,4 @@
-# build script for webcall server copyright 2021 timur.mobi
+# build script for webcall server copyright 2023 timur.mobi
 rm -f webcall.prev
 mv webcall webcall.prev
 export BUILDDATE=`date --rfc-3339=date`
