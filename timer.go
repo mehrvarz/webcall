@@ -14,17 +14,17 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"sync"
+//	"sync"
 	"sync/atomic"
 	"net/http"
 	"github.com/mehrvarz/webcall/skv"
-	"github.com/mehrvarz/webcall/twitter"
+//	"github.com/mehrvarz/webcall/twitter"
 	"gopkg.in/ini.v1"
 	bolt "go.etcd.io/bbolt"
 )
 
-var followerIDs twitter.FollowerIDs
-var followerIDsLock sync.RWMutex
+//var followerIDs twitter.FollowerIDs
+//var followerIDsLock sync.RWMutex
 
 func ticker3hours() {
 	if logWantedFor("timer") {
@@ -450,7 +450,7 @@ func isOnlyNumericString(s string) bool {
 
 func ticker20min() {
 	readConfigLock.RLock()
-	mytwitterKey := twitterKey
+//	mytwitterKey := twitterKey
 	//mytwitterSecret := twitterSecret
 	readConfigLock.RUnlock()
 
@@ -460,7 +460,7 @@ func ticker20min() {
 		if shutdownStarted.Get() {
 			break
 		}
-
+/*
 		if mytwitterKey!="" && queryFollowerIDsNeeded.Get() {
 			// fetch list of all twitter followers
 			twitterClientLock.Lock()
@@ -495,6 +495,7 @@ func ticker20min() {
 			twitterClientLock.Unlock()
 			queryFollowerIDsNeeded.Set(false)
 		}
+*/
 
 		cleanupCalleeLoginMap(os.Stdout, 3, "ticker20min")
 		cleanupClientRequestsMap(os.Stdout, 10, "ticker20min")

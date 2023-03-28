@@ -27,16 +27,16 @@ import (
 	"strconv"
 	"fmt"
 	"encoding/json"
-	"io/ioutil"
-	"sync"
-	"github.com/mehrvarz/webcall/twitter"
-	"github.com/mrjones/oauth"
+//	"io/ioutil"
+//	"sync"
+//	"github.com/mehrvarz/webcall/twitter"
+//	"github.com/mrjones/oauth"
 //	webpush "github.com/SherClockHolmes/webpush-go"
 )
 
-var twitterClient *twitter.DesktopClient = nil
-var twitterClientLock sync.RWMutex
-var twitterAuthFailedCount = 0
+//var twitterClient *twitter.DesktopClient = nil
+//var twitterClientLock sync.RWMutex
+//var twitterAuthFailedCount = 0
 
 func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr string, remoteAddrWithPort string) {
 	// called by caller.js /notifyCallee (via httpServer.go) if caller requests callee notification 
@@ -220,6 +220,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 					time.Sleep(2 * time.Second)
 				}
 			}
+/*
 		} else
 		if dbUser.Email2 != "" {
 			// twitter handle exists: notify urlID via twitter message
@@ -294,15 +295,15 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 					}
 					fmt.Printf("/notifyCallee (%s) SendTweet🐦  %s msg=%s\n",
 						urlID, dbUser.Email2[:maxlen], msg)
-/*
-					if strings.HasPrefix(dbUser.Email2, "@") {
-						msg = dbUser.Email2 + " " + msg
-					} else {
-						msg = "@" + dbUser.Email2 + " " + msg
-					}
-					msg = msg + " " + operationalNow().Format("2006-01-02 15:04:05")
-					respdata, err := twitterClient.SendTweet(msg)
-*/
+
+//					if strings.HasPrefix(dbUser.Email2, "@") {
+//						msg = dbUser.Email2 + " " + msg
+//					} else {
+//						msg = "@" + dbUser.Email2 + " " + msg
+//					}
+//					msg = msg + " " + operationalNow().Format("2006-01-02 15:04:05")
+//					respdata, err := twitterClient.SendTweet(msg)
+
 					respdata, err := twitterClient.SendDirect(dbUser.Str1, msg)
 					if err != nil {
 						// failed to send tweet
@@ -344,6 +345,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 					}
 				}
 			}
+*/
 		}
 
 		if notificationSent==0 {
@@ -762,6 +764,7 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 
 	calleeHasPushChannel := false
 	if !calleeIsHiddenOnline {
+/*
 		if dbUser.Email2!="" && dbUser.Str1!="" {
 			// has twitter account
 			// if a twitter follower?
@@ -785,7 +788,9 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 				}
 			}
 
-		} else if dbUser.MastodonID!="" {
+		} else 
+*/
+		if dbUser.MastodonID!="" {
 			// has mastodon account
 			if dbUser.MastodonSendTootOnCall==true {
 				// does want to be notified
@@ -917,6 +922,7 @@ func webpushSend(subscription string, msg string, urlID string) (error,int) {
 }
 */
 
+/*
 func twitterAuth() {
 	// twitterClientLock must be set outside
 	if twitterAuthFailedCount>3 {
@@ -962,4 +968,4 @@ func twitterAuth() {
 		}
 	}
 }
-
+*/

@@ -683,6 +683,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		httpSetAssign(w, r, urlID, calleeID, cookie, remoteAddr)
 		return
 	}
+/*
 	if strings.HasPrefix(urlPath,"/twid") {
 		httpTwId(w, r, urlID, calleeID, cookie, remoteAddr)
 		return
@@ -691,6 +692,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		httpTwFollower(w, r, urlID, calleeID, cookie, remoteAddr)
 		return
 	}
+*/
 	if strings.HasPrefix(urlPath,"/register/") {
 		httpRegister(w, r, urlID, urlPath, remoteAddr, startRequestTime)
 		return

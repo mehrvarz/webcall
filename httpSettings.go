@@ -65,8 +65,8 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		"mastodonID": dbUser.MastodonID,
 		"tootOnCall": strconv.FormatBool(dbUser.MastodonSendTootOnCall),
 		"askCallerBeforeNotify": strconv.FormatBool(dbUser.AskCallerBeforeNotify),
-		"twname": dbUser.Email2, // twitter handle (starting with @)
-		"twid": dbUser.Str1, // twitter user_id
+//		"twname": dbUser.Email2, // twitter handle (starting with @)
+//		"twid": dbUser.Str1, // twitter user_id
 		"storeContacts": strconv.FormatBool(dbUser.StoreContacts),
 		"storeMissedCalls": strconv.FormatBool(dbUser.StoreMissedCalls),
 //		"webPushSubscription1": dbUser.Str2,
@@ -183,7 +183,7 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 					dbUser.AskCallerBeforeNotify = false
 				}
 			}
-
+/*
 		case "twname":
 			if val != dbUser.Email2 {
 				fmt.Printf("/setsettings (%s) new twname (%s) (old:%s) %s\n",calleeID,val,dbUser.Email2,remoteAddr)
@@ -195,6 +195,7 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 				dbUser.Str1 = val
 				queryFollowerIDsNeeded.Set(true)
 			}
+*/
 		case "storeContacts":
 			if(val=="true") {
 				if dbUser.StoreContacts != true {
@@ -695,6 +696,7 @@ func httpDeleteContact(w http.ResponseWriter, r *http.Request, urlID string, cal
 	return
 }
 
+/*
 func httpTwId(w http.ResponseWriter, r *http.Request, twHandle string, calleeID string, cookie *http.Cookie, remoteAddr string) {
 	// /twid returns twitter-Id for a twHandle
 	if(cookie==nil) {
@@ -775,4 +777,4 @@ func httpTwFollower(w http.ResponseWriter, r *http.Request, twId string, calleeI
 		}
 	}
 }
-
+*/
