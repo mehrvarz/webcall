@@ -131,6 +131,11 @@ window.onload = function() {
 	goodbyMissedCall = "";
 	goodbyTextMsg = "";
 
+	let dbg = getUrlParams("dbg");
+	if(typeof dbg!=="undefined" && dbg!="" && dbg!="undefined") {
+		gentle = false;
+	}
+
 	let id = getUrlParams("id");
 	if(typeof id!=="undefined" && id!="" && id!="undefined") {
 		calleeID = cleanStringParameter(id,true);

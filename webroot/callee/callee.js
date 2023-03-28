@@ -99,6 +99,11 @@ window.onload = function() {
 	fileSelectInit();
 	window.onhashchange = hashchange;
 
+	let dbg = getUrlParams("dbg");
+	if(typeof dbg!=="undefined" && dbg!="" && dbg!="undefined") {
+		gentle = false;
+	}
+
 	//console.log("callee.js onload getUrlParams('id') search="+window.location.search);
 	let id = getUrlParams("id");
 	if(typeof id!=="undefined" && id!="" && id!="undefined") {
