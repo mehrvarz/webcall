@@ -668,7 +668,7 @@ func broadcastNewsLink(date string, url string) {
 			hub.HubMutex.RLock()
 			// we make sure to send each news with a particular date string only once
 			if hub.CalleeClient==nil {
-				fmt.Printf("# newsLink hub.CalleeClient==nil to=%s sendData=%s\n",calleeID,sendData)
+				//fmt.Printf("# newsLink hub.CalleeClient==nil to=%s sendData=%s\n",calleeID,sendData)
 			} else {
 				// the callee in this hub is online
 				lastNewsCallee := newsDateMap[calleeID]
@@ -690,7 +690,7 @@ func broadcastNewsLink(date string, url string) {
 			}
 			hub.HubMutex.RUnlock()
 		} else {
-			fmt.Printf("# newsLink hub==nil to=%s sendData=%s\n",calleeID,sendData)
+			//fmt.Printf("# newsLink hub==nil to=%s sendData=%s\n",calleeID,sendData)
 		}
 	}
 	if countSent>0 {
