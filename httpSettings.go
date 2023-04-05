@@ -65,8 +65,6 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		"mastodonID": dbUser.MastodonID,
 		"tootOnCall": strconv.FormatBool(dbUser.MastodonSendTootOnCall),
 		"askCallerBeforeNotify": strconv.FormatBool(dbUser.AskCallerBeforeNotify),
-//		"twname": dbUser.Email2, // twitter handle (starting with @)
-//		"twid": dbUser.Str1, // twitter user_id
 		"storeContacts": strconv.FormatBool(dbUser.StoreContacts),
 		"storeMissedCalls": strconv.FormatBool(dbUser.StoreMissedCalls),
 //		"webPushSubscription1": dbUser.Str2,
@@ -183,19 +181,6 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 					dbUser.AskCallerBeforeNotify = false
 				}
 			}
-/*
-		case "twname":
-			if val != dbUser.Email2 {
-				fmt.Printf("/setsettings (%s) new twname (%s) (old:%s) %s\n",calleeID,val,dbUser.Email2,remoteAddr)
-				dbUser.Email2 = val
-			}
-		case "twid":
-			if val != dbUser.Str1 {
-				fmt.Printf("/setsettings (%s) new twid (%s) (old:%s) %s\n", calleeID, val, dbUser.Str1, remoteAddr)
-				dbUser.Str1 = val
-				queryFollowerIDsNeeded.Set(true)
-			}
-*/
 		case "storeContacts":
 			if(val=="true") {
 				if dbUser.StoreContacts != true {
@@ -696,85 +681,3 @@ func httpDeleteContact(w http.ResponseWriter, r *http.Request, urlID string, cal
 	return
 }
 
-/*
-func httpTwId(w http.ResponseWriter, r *http.Request, twHandle string, calleeID string, cookie *http.Cookie, remoteAddr string) {
-	// /twid returns twitter-Id for a twHandle
-	if(cookie==nil) {
-		fmt.Printf("# /twid (%s) cookie==nil twHandle=%s %s\n", calleeID, twHandle, remoteAddr)
-		return
-	}
-	if calleeID=="" {
-		fmt.Printf("# /twid fail no calleeID %s\n", remoteAddr)
-		return
-	}
-
-	twitterClientLock.Lock()
-	if twitterClient == nil {
-		fmt.Printf("/twid (%s) twitterAuth... twHandle=%s %s\n", calleeID, twHandle, remoteAddr)
-		twitterAuth()
-	}
-	twitterClientLock.Unlock()
-
-	if(twitterClient==nil) {
-		fmt.Printf("# /twid (%s) twitterClient==nil twHandle=%s %s\n", calleeID, twHandle, remoteAddr)
-		fmt.Fprintf(w,"errorauth")
-	} else {
-		if strings.HasPrefix(twHandle,"@") {
-			twHandle = twHandle[1:]
-		}
-		twitterClientLock.Lock()
-		userDetail, _, err := twitterClient.QueryFollowerByName(twHandle)
-		twitterClientLock.Unlock()
-		if err!=nil {
-			fmt.Printf("# /twid (%s) twHandle=(%s) %s err=%v\n", calleeID, twHandle, remoteAddr, err)
-			fmt.Fprintf(w,"errorquery")
-		} else {
-			fmt.Printf("/twid (%s) twHandle=(%s) fetched id=%v %s\n",
-				calleeID, twHandle, userDetail.ID, remoteAddr)
-			// "0" = twHandle not found
-			fmt.Fprintf(w,fmt.Sprintf("%d",userDetail.ID))
-		}
-	}
-	return
-}
-
-func httpTwFollower(w http.ResponseWriter, r *http.Request, twId string, calleeID string, cookie *http.Cookie, remoteAddr string) {
-	// return twId for twHandle
-	if(cookie==nil) {
-		fmt.Printf("# /twfollower (%s) cookie==nil twId=%s %s\n", calleeID, twId, remoteAddr)
-		fmt.Fprintf(w,"error denied")
-		return
-	}
-	if calleeID=="" {
-		fmt.Printf("# /twid fail no calleeID %s\n", remoteAddr)
-		return
-	}
-
-	twid, err := strconv.ParseInt(twId, 10, 64)
-	if err!=nil {
-		fmt.Printf("# /twfollower (%s) ParseInt64 fail twid=(%s) %s err=%v\n", calleeID, twid, remoteAddr, err)
-		fmt.Fprintf(w,"error format "+err.Error())
-	} else {
-		foundId := false
-		if twid>0 {
-			// check if twid exist in followerIDs
-			followerIDsLock.RLock()
-			for _,id := range followerIDs.Ids {
-				if id == twid {
-					foundId = true
-				}
-			}
-			followerIDsLock.RUnlock()
-		}
-		if foundId {
-			// this twid is a follower
-			//fmt.Printf("/twfollower (%s) found twHandle=%s twId=%d\n", calleeID, dbUser.Email2, twid)
-			fmt.Fprintf(w,"OK")
-		} else {
-			// this twid is NOT a follower
-			fmt.Printf("# /twfollower (%s) twId=%d not found %s\n", calleeID, twid, remoteAddr)
-			fmt.Fprintf(w,"error id not found")
-		}
-	}
-}
-*/

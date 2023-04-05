@@ -1,9 +1,8 @@
-// WebCall Copyright 2022 timur.mobi. All rights reserved.
+// WebCall Copyright 2023 timur.mobi. All rights reserved.
 //
 // WebCall server will send push notifications to callees
 // if they have specified such channels and if they are not online 
-// at the time of a call (or are hidden). Push notifications can be 
-// sent via WebPush and/or Twitter.
+// at the time of a call (or are hidden).
 //
 // httpCanbenotified() is called via XHR "/rtcsig/canbenotified".
 // This method checks if the specified callee has at least one 
@@ -27,16 +26,8 @@ import (
 	"strconv"
 	"fmt"
 	"encoding/json"
-//	"io/ioutil"
-//	"sync"
-//	"github.com/mehrvarz/webcall/twitter"
-//	"github.com/mrjones/oauth"
-//	webpush "github.com/SherClockHolmes/webpush-go"
+	//webpush "github.com/SherClockHolmes/webpush-go"
 )
-
-//var twitterClient *twitter.DesktopClient = nil
-//var twitterClientLock sync.RWMutex
-//var twitterAuthFailedCount = 0
 
 func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr string, remoteAddrWithPort string) {
 	// called by caller.js /notifyCallee (via httpServer.go) if caller requests callee notification 
@@ -220,132 +211,6 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 					time.Sleep(2 * time.Second)
 				}
 			}
-/*
-		} else
-		if dbUser.Email2 != "" {
-			// twitter handle exists: notify urlID via twitter message
-			// here we use twitter message (or twitter direct message) to send a notification
-			twitterClientLock.Lock()
-			if twitterClient == nil {
-				twitterAuth()
-			}
-			twitterClientLock.Unlock()
-			if twitterClient == nil {
-				fmt.Printf("# /notifyCallee (%s) failed no twitterClient\n", urlID)
-				// script will tell caller: could not reach urlID
-			} else {
-				// we are authenticated to twitter, does this user have a twid?
-				var twid int64 = 0
-				if dbUser.Str1 == "" {
-					// if twitter-id (dbUser.Str1) is NOT given, get it via twitter handle (dbUser.Email2)
-					twitterClientLock.Lock()
-					userDetail, _, err := twitterClient.QueryFollowerByName(dbUser.Email2)
-					twitterClientLock.Unlock()
-					if err!=nil {
-						fmt.Printf("# /notifyCallee (%s) twhandle=(%s) err=%v (%s)\n",
-							urlID, dbUser.Email2, err, msg)
-					} else {
-						fmt.Printf("/notifyCallee (%s) twhandle=(%s) fetched id=%v\n",
-							urlID, dbUser.Email2, userDetail.ID)
-						if userDetail.ID > 0 {
-							// dbUser.Email2 is a real twitter handle
-							twid = userDetail.ID
-							dbUser.Str1 = fmt.Sprintf("%d",twid)
-							// store this modified dbUser
-							err2 := kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
-							if err2!=nil {
-								fmt.Printf("# /notifyCallee (%s) kvMain.Put fail err=%v\n", urlID, err2)
-							}
-						}
-					}
-				} else {
-					fmt.Printf("/notifyCallee (%s) twhandle=(%s) stored Str1=%s\n",
-						urlID, dbUser.Email2, dbUser.Str1)
-					// tw-id is given
-					i64, err := strconv.ParseInt(dbUser.Str1, 10, 64)
-					if err!=nil {
-						fmt.Printf("# /notifyCallee (%s) ParseInt64 Str1=(%s) err=%v\n",
-							urlID, dbUser.Str1, err)
-					} else {
-						twid = i64
-					}
-				}
-
-				// check if dbUser.Email2 is a follower
-				isFollower := false
-				if twid>0 {
-					// check if twid exist in followerIDs
-					followerIDsLock.RLock()
-					for _,id := range followerIDs.Ids {
-						if id == twid {
-							isFollower = true
-							break
-						}
-					}
-					followerIDsLock.RUnlock()
-				}
-
-				// send tweet only if user is a follower
-				if isFollower {
-					// twid is a follower
-
-					maxlen := 30
-					if len(dbUser.Email2) < 30 {
-						maxlen = len(dbUser.Email2)
-					}
-					fmt.Printf("/notifyCallee (%s) SendTweet🐦  %s msg=%s\n",
-						urlID, dbUser.Email2[:maxlen], msg)
-
-//					if strings.HasPrefix(dbUser.Email2, "@") {
-//						msg = dbUser.Email2 + " " + msg
-//					} else {
-//						msg = "@" + dbUser.Email2 + " " + msg
-//					}
-//					msg = msg + " " + operationalNow().Format("2006-01-02 15:04:05")
-//					respdata, err := twitterClient.SendTweet(msg)
-
-					respdata, err := twitterClient.SendDirect(dbUser.Str1, msg)
-					if err != nil {
-						// failed to send tweet
-						fmt.Printf("# /notifyCallee (%s) %s SendTweet err=%v msg=%s\n",
-							urlID, dbUser.Email2[:maxlen], err, msg)
-						// something is wrong with tw-handle (dbUser.Email2) clear the twid (dbUser.Str1)
-						dbUser.Str1 = ""
-						err2 := kvMain.Put(dbUserBucket, dbUserKey, dbUser, false)
-						if err2!=nil {
-							fmt.Printf("# /notifyCallee (%s) kvMain.Put fail err=%v\n", urlID, err2)
-						}
-					} else {
-// TODO twitter.TimelineTweet is the wrong struct for direct messages 
-// therefor tweet.IdStr is empty
-						tweet := twitter.TimelineTweet{}
-						err = json.Unmarshal(respdata, &tweet)
-						if err != nil {
-							fmt.Printf("# SendTweet (%s) cannot parse respdata err=%v\n", urlID, err)
-						} else {
-							// twitter notification succesfully sent
-							notificationSent |= 4
-							maxlen := 30
-							if len(dbUser.Email2) < 30 {
-								maxlen = len(dbUser.Email2)
-							}
-							fmt.Printf("SendTweet (%s) OK twHandle=%s tweetId=%s\n",
-								urlID, dbUser.Email2[:maxlen], tweet.IdStr)
-
-//							// in 1hr we want to delete this tweet in ticker3min() via tweet.Id
-//							// so we store tweet.Id dbSentNotifTweets
-//							notifTweet := NotifTweet{time.Now().Unix(), msg}
-//							err = kvNotif.Put(dbSentNotifTweets, tweet.IdStr, notifTweet, false)
-//							if err != nil {
-//								fmt.Printf("# /notifyCallee (%s) failed to store dbSentNotifTweets (%s)\n",
-//									urlID, tweet.IdStr)
-//							}
-
-						}
-					}
-				}
-			}
-*/
 		}
 
 		if notificationSent==0 {
@@ -693,7 +558,6 @@ func missedCall(callerInfo string, remoteAddr string, cause string) {
 
 func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, remoteAddr string, remoteAddrWithPort string) {
 	// checks if urlID can be notified (of incoming call)
-	// (via twitter - or directly, while callee is hidden online)
 	// usually called after /online reports a callee being offline
 	if urlID=="" {
 		fmt.Printf("# /canbenotified failed on empty urlID rip=%s\n",remoteAddr)
@@ -764,32 +628,6 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 
 	calleeHasPushChannel := false
 	if !calleeIsHiddenOnline {
-/*
-		if dbUser.Email2!="" && dbUser.Str1!="" {
-			// has twitter account
-			// if a twitter follower?
-			twid, err := strconv.ParseInt(dbUser.Str1, 10, 64)
-			if err!=nil {
-				fmt.Printf("# /notifyCallee (%s) ParseInt64 Str1=(%s) err=%v\n",
-					urlID, dbUser.Str1, err)
-			} else if twid>0 {
-				// check if twid exist in followerIDs
-				isFollower := false
-				followerIDsLock.RLock()
-				for _,id := range followerIDs.Ids {
-					if id == twid {
-						isFollower = true
-						break
-					}
-				}
-				followerIDsLock.RUnlock()
-				if isFollower {
-					calleeHasPushChannel = true
-				}
-			}
-
-		} else 
-*/
 		if dbUser.MastodonID!="" {
 			// has mastodon account
 			if dbUser.MastodonSendTootOnCall==true {
@@ -922,50 +760,4 @@ func webpushSend(subscription string, msg string, urlID string) (error,int) {
 }
 */
 
-/*
-func twitterAuth() {
-	// twitterClientLock must be set outside
-	if twitterAuthFailedCount>3 {
-		return
-	}
-	readConfigLock.RLock()
-	mytwitterKey := twitterKey
-	mytwitterSecret := twitterSecret
-	readConfigLock.RUnlock()
-	if mytwitterKey=="" || mytwitterSecret=="" {
-		return
-	}
 
-	twitterClient = twitter.NewDesktopClient(mytwitterKey, mytwitterSecret)
-	basepath := "."
-	accessTokenFile := basepath+"/accessToken.txt"
-	b, err := ioutil.ReadFile(accessTokenFile)
-	if err != nil {
-		fmt.Printf("# twitter auth cannot read accessTokenFile=%s\n", accessTokenFile)
-		twitterClient = nil
-	} else {
-		//fmt.Printf("twitter auth using accessToken.txt (%s)\n",accessTokenFile)
-		accessTokenContent := string(b)
-		linetokens := strings.SplitN(accessTokenContent, "\n", 4)
-		//log.Println("linetokens[0]="+linetokens[0])
-		//log.Println("linetokens[1]="+linetokens[1])
-		//fmt.Printf("twitter auth linetokens[2]=%s\n", linetokens[2])
-		//log.Println("linetokens[3]="+linetokens[3])
-		var accessToken oauth.AccessToken
-		accessToken.Token = linetokens[0]
-		accessToken.Secret = linetokens[1]
-		accessToken.AdditionalData = make(map[string]string)
-		accessToken.AdditionalData["screen_name"] = linetokens[2]
-		accessToken.AdditionalData["user_id"] = linetokens[3]
-		accessTokenPtr, err := twitterClient.DoAuth(&accessToken)
-		//fmt.Printf("twitter auth accessToken=%v err=%v\n", accessTokenPtr, err)
-		if err != nil {
-			fmt.Printf("# twitter auth %v err=%v\n", accessTokenPtr, err)
-			twitterClient = nil
-			twitterAuthFailedCount++
-		} else {
-			//fmt.Printf("OAuth twitterClient ready\n")
-		}
-	}
-}
-*/

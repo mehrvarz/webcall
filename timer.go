@@ -14,17 +14,12 @@ import (
 	"io"
 	"os"
 	"os/exec"
-//	"sync"
 	"sync/atomic"
 	"net/http"
 	"github.com/mehrvarz/webcall/skv"
-//	"github.com/mehrvarz/webcall/twitter"
 	"gopkg.in/ini.v1"
 	bolt "go.etcd.io/bbolt"
 )
-
-//var followerIDs twitter.FollowerIDs
-//var followerIDsLock sync.RWMutex
 
 func ticker3hours() {
 	if logWantedFor("timer") {
@@ -450,8 +445,6 @@ func isOnlyNumericString(s string) bool {
 
 func ticker20min() {
 	readConfigLock.RLock()
-//	mytwitterKey := twitterKey
-	//mytwitterSecret := twitterSecret
 	readConfigLock.RUnlock()
 
 	twentyMinTicker := time.NewTicker(20*60*time.Second)
@@ -460,42 +453,6 @@ func ticker20min() {
 		if shutdownStarted.Get() {
 			break
 		}
-/*
-		if mytwitterKey!="" && queryFollowerIDsNeeded.Get() {
-			// fetch list of all twitter followers
-			twitterClientLock.Lock()
-			if twitterClient==nil {
-				twitterAuth()
-			}
-			if twitterClient==nil {
-				fmt.Printf("# ticker20min no twitterClient\n")
-			} else {
-				if logWantedFor("timer") {
-					fmt.Printf("ticker20min fetch list of twitter followers...\n")
-				}
-				// TODO we must later support more than 5000 followers
-				var err error
-				followerIDsLock.Lock()
-				var data []byte
-				followerIDs, data, err = twitterClient.QueryFollowerIDs(5000)
-				if err!=nil {
-					fmt.Printf("# ticker20min QueryFollowerIDs err=%v [%v]\n", err, data)
-				} else {
-					if logWantedFor("timer") {
-						fmt.Printf("ticker20min QueryFollowerIDs count=%d\n", len(followerIDs.Ids))
-						if logWantedFor("twitter") {
-							for idx,id := range followerIDs.Ids {
-								fmt.Printf("ticker20min %d followerIDs.Id=%v\n", idx+1, int64(id))
-							}
-						}
-					}
-				}
-				followerIDsLock.Unlock()
-			}
-			twitterClientLock.Unlock()
-			queryFollowerIDsNeeded.Set(false)
-		}
-*/
 
 		cleanupCalleeLoginMap(os.Stdout, 3, "ticker20min")
 		cleanupClientRequestsMap(os.Stdout, 10, "ticker20min")
@@ -714,76 +671,6 @@ func ticker3min() {
 		}
 
 		if isLocalDb() {
-/*
-			// delete old twitter notifications
-			readConfigLock.RLock()
-			mytwitterKey := twitterKey
-			mytwitterSecret := twitterSecret
-			readConfigLock.RUnlock()
-			if mytwitterKey!="" && mytwitterSecret!="" {
-				kv := kvNotif.(skv.SKV)
-
-				skv.DbMutex.Lock()
-				kv.Db.Update(func(tx *bolt.Tx) error {
-					unixNow := time.Now().Unix()
-					//fmt.Printf("ticker3min release outdated entries from db=%s bucket=%s\n",
-					//	dbNotifName, dbSentNotifTweets)
-					b := tx.Bucket([]byte(dbSentNotifTweets))
-					if b==nil {
-						fmt.Printf("# ticker3min bucket=(%s) no tx\n",dbSentNotifTweets)
-						return nil
-					}
-					c := b.Cursor()
-					deleteCount := 0
-					for k, v := c.First(); k != nil; k, v = c.Next() {
-						idStr := string(k)
-						d := gob.NewDecoder(bytes.NewReader(v))
-						var notifTweet NotifTweet
-						d.Decode(&notifTweet)
-						ageSecs := unixNow - notifTweet.TweetTime
-						if ageSecs >= 60*60 {
-							if logWantedFor("timer") {
-								fmt.Printf("ticker3min outdated ID=%s ageSecs=%d > 1h (%s) deleting\n",
-									idStr, ageSecs, notifTweet.Comment)
-							}
-// kvNotif is currently not fed from httpNotifyCallee.go
-//							twitterClientLock.Lock()
-//							if twitterClient==nil {
-//								twitterAuth()
-//							}
-//							if twitterClient==nil {
-//								fmt.Printf("# ticker3min failed on no twitterClient\n")
-//								twitterClientLock.Unlock()
-//								break
-//							}
-//							respdata,err := twitterClient.DeleteTweet(idStr)
-//							twitterClientLock.Unlock()
-//							if err!=nil {
-//								fmt.Printf("# ticker3min DeleteTweet %s err=%v (%s)\n", idStr, err, respdata)
-//							} else 
-
-							{
-								//fmt.Printf("ticker3min DeleteTweet %s OK\n", idStr)
-								err := c.Delete()
-								if err!=nil {
-									fmt.Printf("# ticker3min error db=%s bucket=%s delete id=%s err=%v\n",
-										dbMainName, dbSentNotifTweets, idStr, err)
-								} else {
-									deleteCount++
-								}
-							}
-						}
-					}
-					if deleteCount>0 {
-						//fmt.Printf("ticker3min db=%s bucket=%s deleted %d entries\n",
-						//	dbNotifName, dbSentNotifTweets, deleteCount)
-					}
-					return nil
-				})
-				skv.DbMutex.Unlock()
-			}
-*/
-
 			// call backupScript
 			readConfigLock.RLock()
 			mybackupScript := backupScript

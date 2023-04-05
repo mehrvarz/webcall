@@ -182,8 +182,6 @@ var dbPath = ""
 var wsUrl = ""
 var wssUrl = ""
 var mastodonhandler = ""
-//var twitterKey = ""
-//var twitterSecret = ""
 var vapidPublicKey = ""
 var vapidPrivateKey = ""
 var timeLocationString = ""
@@ -598,9 +596,6 @@ func readConfig(init bool) {
 		timeLocationString = readIniString(configIni, "timeLocation", timeLocationString, "")
 		wsUrl = readIniString(configIni, "wsUrl", wsUrl, "")
 		wssUrl = readIniString(configIni, "wssUrl", wssUrl, "")
-
-//		twitterKey = readIniString(configIni, "twitterKey", twitterKey, "")
-//		twitterSecret = readIniString(configIni, "twitterSecret", twitterSecret, "")
 
 		// currently not used
 		//vapidPublicKey = readIniString(configIni, "vapidPublicKey", vapidPublicKey, "")
