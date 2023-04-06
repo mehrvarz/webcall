@@ -275,7 +275,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 	}
 
 	if hashPw == "" && len(formPw) < 6 {
-		fmt.Printf("# /login (%s) formPw too short %s v=%s rip=%s\n",
+		fmt.Printf("# /login (%s) formPw too short %d v=%s rip=%s\n",
 			urlID, len(formPw), clientVersion, remoteAddr)
 		// make pw guessing slow
 		time.Sleep(3000 * time.Millisecond)
