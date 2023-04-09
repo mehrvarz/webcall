@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"fmt"
 	"time"
-	"strconv"
 	"errors"
 	"bytes"
 	"strings"
 	"io"
 	"os"
+	//"strconv"
 	"encoding/gob"
 	bolt "go.etcd.io/bbolt"
 	"github.com/nxadm/tail" // https://pkg.go.dev/github.com/nxadm/tail
@@ -115,6 +115,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		return true
 	}
 
+	/* developer tools below
 	if urlPath=="/deluserid" {
 		// get time from url-arg
 		url_arg_array, ok := r.URL.Query()["time"]
@@ -205,41 +206,6 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 	if urlPath=="/makeregistered" {
 		// show the list of callee-IDs that have been registered and are not yet outdated
 		// ".../makeregistered?id=answie&days=xx&pw=123456"
-
-/*
-		// get service days from url-arg
-		url_arg_array, ok := r.URL.Query()["sdays"]
-		if !ok || len(url_arg_array[0]) < 1 {
-			printFunc(w,"# /makeregistered url arg 'days' not given\n")
-			return true
-		}
-		urlSDaysStr := url_arg_array[0]
-		urlSDaysI64, err := strconv.ParseInt(urlSDaysStr, 10, 64)
-		if err!=nil {
-			printFunc(w,"# /makeregistered error converting 'days'=%s to int %v\n",urlSDaysStr,err)
-			return true
-		}
-		urlSDays := int(urlSDaysI64)
-
-		// service minutes (optional)
-		urlSMinutes := 0
-		url_arg_array, ok = r.URL.Query()["smin"]
-		if !ok || len(url_arg_array[0]) < 1 {
-			// ignore
-		} else {
-			urlSMinutesI64, err := strconv.ParseInt(url_arg_array[0], 10, 64)
-			if err!=nil {
-				// ignore
-			} else {
-				urlSMinutes = int(urlSMinutesI64)
-			}
-		}
-		if (urlSDays<=0 && urlSMinutes<=0) {
-			printFunc(w,"# /makeregistered error both 'sdays' and 'smin' or 'tmin' <0\n")
-			return true
-		}
-*/
-
 		// get pw from url-arg
 		url_arg_array, ok := r.URL.Query()["pw"]
 		if !ok || len(url_arg_array[0]) < 1 {
@@ -319,6 +285,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		}
 		return true
 	}
+	*/
 
 	if urlPath=="/dumpturn" {
 		timeNow := time.Now()
