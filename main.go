@@ -39,13 +39,12 @@ import (
 	"bufio"
 	"runtime"
 	"math/rand"
-	"gopkg.in/ini.v1"
-
 	"bytes"
 	"encoding/gob"
-	bolt "go.etcd.io/bbolt"
-
 	_ "net/http/pprof"
+	"gopkg.in/ini.v1"
+	"golang.org/x/crypto/bcrypt"
+	bolt "go.etcd.io/bbolt"
 	"github.com/mehrvarz/webcall/atombool"
 	"github.com/mehrvarz/webcall/iptools"
 	"github.com/mehrvarz/webcall/skv"
@@ -88,13 +87,13 @@ type PwIdCombo struct { // key calleeID
 
 var version = flag.Bool("version", false, "show version")
 var mastodoninit = flag.Bool("mastodoninit", false, "init mastodon")
+var pwconvert = flag.Bool("pwconvert", false, "pw convert")
 var	builddate string
 var	codetag string
 const configFileName = "config.ini"
 const statsFileName = "stats.ini"
 var readConfigLock sync.RWMutex
 var	shutdownStarted atombool.AtomBool
-var queryFollowerIDsNeeded atombool.AtomBool
 
 var hubMap map[string]*Hub
 var hubMapMutex sync.RWMutex
@@ -228,7 +227,6 @@ func main() {
 		return
 	}
 
-	fmt.Printf("----- webcall %s %s startup -----\n", codetag, builddate)
 	serverStartTime = time.Now()
 	hubMap = make(map[string]*Hub) // calleeID -> *Hub
 	blockMap = make(map[string]time.Time)
@@ -238,16 +236,24 @@ func main() {
 	waitingCallerChanMap = make(map[string]chan int)
 	mapping = make(map[string]MappingDataType)
 	newsDateMap = make(map[string]string)
-
 	wsClientMap = make(map[uint64]wsClientDataType) // wsClientID -> wsClientData
+	readConfig(true) // for dbPath
+	rand.Seed(time.Now().UnixNano())
+	outboundIP,err := iptools.GetOutboundIP()
 
-	readConfig(true) // need dbPath
+	if *pwconvert {
+		pwconvertfunc()
+		return
+	}
+
+	fmt.Printf("----- webcall %s %s startup -----\n", codetag, builddate)
+	fmt.Printf("outboundIP %s\n",outboundIP)
+
 	// dump mapping[]
 	for key,mappingDataType := range mapping {
 		fmt.Printf("mapping %s -> %s %s\n", key, mappingDataType.CalleeId, mappingDataType.Assign)
 	}
 
-	var err error
 	kvMain,err = skv.DbOpen(dbMainName,dbPath)
 	if err!=nil {
 		fmt.Printf("# error DbOpen %s path %s err=%v\n",dbMainName,dbPath,err)
@@ -311,12 +317,6 @@ func main() {
 		kvContacts.Close()
 		return
 	}
-
-	rand.Seed(time.Now().UnixNano())
-	queryFollowerIDsNeeded.Set(true)
-
-	outboundIP,err = iptools.GetOutboundIP()
-	fmt.Printf("outboundIP %s\n",outboundIP)
 
 	// init mapping from dbUserBucket
 	kv := kvMain.(skv.SKV)
@@ -807,5 +807,107 @@ func writeStatsFile() {
 	}
 	fmt.Printf("statsFile written (%s) dlen=%d wrlen=%d\n", filename, len(data), wrlen)
 	fwr.Flush()
+}
+
+func pwconvertfunc() {
+	var err error
+	kvHashedPw,err = skv.DbOpen(dbHashedPwName,dbPath)
+	if err!=nil {
+		fmt.Printf("# error DbOpen %s path %s err=%v\n",dbHashedPwName,dbPath,err)
+		return
+	}
+	err = kvHashedPw.CreateBucket(dbHashedPwBucket)
+	if err!=nil {
+		fmt.Printf("# error db %s CreateBucket %s err=%v\n",dbHashedPwName,dbHashedPwBucket,err)
+		kvHashedPw.Close()
+		return
+	}
+
+	dbHashedPw2Name := "rtchashedpw2.db"
+// TODO must fully clear this
+	kvHashedPw2,err := skv.DbOpen(dbHashedPw2Name,dbPath)
+	if err!=nil {
+		fmt.Printf("# error DbOpen %s path %s err=%v\n",dbHashedPw2Name,dbPath,err)
+		return
+	}
+	err = kvHashedPw2.CreateBucket(dbHashedPwBucket)
+	if err!=nil {
+		fmt.Printf("# error db %s CreateBucket %s err=%v\n",dbHashedPw2Name,dbHashedPwBucket,err)
+		kvHashedPw2.Close()
+		return
+	}
+
+	kv := kvHashedPw.(skv.SKV)
+	db := kv.Db
+	count := 0
+	count2 := 0
+
+	err = db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(dbHashedPwBucket))
+		if b==nil {
+			fmt.Printf("# pwconvert tx.Bucket==nil\n")
+		} else {
+			//fmt.Printf("pwconvert set Cursor\n")
+			c := b.Cursor()
+			for k, v := c.First(); k != nil; k, v = c.Next() {
+				userID := string(k)
+				count++
+				//fmt.Printf("pwconvert %d userID=%v\n",count,userID)
+
+				var pwIdCombo PwIdCombo
+
+				d := gob.NewDecoder(bytes.NewReader(v))
+				d.Decode(&pwIdCombo)
+				//fmt.Printf("pwconvert get %d %s\n",count,pwIdCombo.CalleeId)
+
+				if !strings.HasPrefix(pwIdCombo.Pw,"$2") && len(pwIdCombo.Pw)<50 {
+					// encrypt pwIdCombo.Pw
+					hash, err := bcrypt.GenerateFromPassword([]byte(pwIdCombo.Pw), bcrypt.MinCost)
+					if err != nil {
+						fmt.Printf("# pwconvert createHashPw bcrypt err=%v\n", err)
+						continue
+					}
+
+					//fmt.Printf("pwconvert (%s) createHashPw bcrypt store (%v)\n", userID, string(hash))
+					pwIdCombo.Pw = string(hash)
+					err = kvHashedPw2.Put(dbHashedPwBucket, userID, pwIdCombo, true)
+					if err!=nil {
+						fmt.Printf("# pwconvert (%s) put convert err=%v\n",userID,err)
+					} else {
+						count2++
+						fmt.Printf("pwconvert (%s) put convert %d data=%v\n",userID,count2,pwIdCombo)
+					}
+				} else {
+					err = kvHashedPw2.Put(dbHashedPwBucket, userID, pwIdCombo, true)
+					if err!=nil {
+						fmt.Printf("# pwconvert (%s) put unmod err=%v\n",userID,err)
+					} else {
+						//fmt.Printf("pwconvert (%s) put unmod data=%v\n",userID,pwIdCombo)
+					}
+				}
+			}
+			//fmt.Printf("pwconvert done Cursor loop\n")
+		}
+		return nil
+	})
+
+	if err!=nil {
+		// this is bad
+		fmt.Printf("# pwconvert done err=%v\n", err)
+	} else {
+		fmt.Printf("pwconvert done no err\n")
+	}
+
+	err = kvHashedPw2.Close()
+	if err!=nil {
+		fmt.Printf("# error dbName %s close err=%v\n",dbHashedPw2Name,err)
+	}
+
+	err = kvHashedPw.Close()
+	if err!=nil {
+		fmt.Printf("# error dbName %s close err=%v\n",dbHashedPwName,err)
+	}
+
+	fmt.Printf("pwconvert readCount=%d convertCount=%d\n",count,count2)
 }
 
