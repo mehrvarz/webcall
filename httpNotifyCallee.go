@@ -639,8 +639,8 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 
 	if calleeIsHiddenOnline || calleeHasPushChannel {
 		// yes, urlID can be notified
-		fmt.Printf("/canbenotified (%s) yes tw=%s onl=%v calleeName=%s <- %s (%s)\n",
-			urlID, dbUser.Email2, calleeIsHiddenOnline, calleeName, remoteAddr, callerIdLong)
+		fmt.Printf("/canbenotified (%s) yes onl=%v calleeName=%s <- %s (%s)\n",
+			urlID, calleeIsHiddenOnline, calleeName, remoteAddr, callerIdLong)
 		if dbUser.AskCallerBeforeNotify==false {
 			fmt.Fprintf(w,"direct|"+calleeName)
 		} else {

@@ -1,4 +1,4 @@
-// WebCall Copyright 2022 timur.mobi. All rights reserved.
+// WebCall Copyright 2023 timur.mobi. All rights reserved.
 //
 // These methods enable callees to read and modify their 
 // callee specific settings. As well as read and modify their

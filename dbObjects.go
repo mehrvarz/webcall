@@ -1,4 +1,4 @@
-// WebCall Copyright 2022 timur.mobi. All rights reserved.
+// WebCall Copyright 2023 timur.mobi. All rights reserved.
 package main
 
 type DbEntry struct {
@@ -11,12 +11,10 @@ type DbUser struct {
 	Ip1 string              // used for httpRegister
 	UserAgent string        // used for httpRegister
 	MastodonID string
-	Email2 string           // now used as tw_handle
-	Str1 string             // now used as tw_user_id
-	Str2 string             //  web push device 1 subscription
-	Str2ua string           //  web push device 1 user agent
-	Str3 string             //  web push device 2 subscription
-	Str3ua string           //  web push device 2 user agent
+	Str2 string             // web push device 1 subscription
+	Str2ua string           // web push device 1 user agent
+	Str3 string             // web push device 2 subscription
+	Str3ua string           // web push device 2 user agent
 	AltIDs string
 	LastLoginTime int64
 	LastLogoffTime int64
@@ -25,16 +23,9 @@ type DbUser struct {
 	ConnectedToPeerSecs int // incremented by wsHub processTimeValues()
 	LocalP2pCounter int     // incremented by wsHub processTimeValues()
 	RemoteP2pCounter int    // incremented by wsHub processTimeValues()
-	StoreContacts bool      // TODO could also be encoded in Int2
-	StoreMissedCalls bool	// TODO could also be encoded in Int2
+	StoreContacts bool      // may also be encoded in Int2
+	StoreMissedCalls bool	// may also be encoded in Int2
 	MastodonSendTootOnCall bool
 	AskCallerBeforeNotify bool
 }
-
-/*
-type NotifTweet struct { // key = TweetID string
-	TweetTime int64
-	Comment string
-}
-*/
 

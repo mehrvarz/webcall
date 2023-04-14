@@ -1,4 +1,4 @@
-// WebCall Copyright 2022 timur.mobi. All rights reserved.
+// WebCall Copyright 2023 timur.mobi. All rights reserved.
 //
 // httpOnline() is called by callers via XHR "/rtcsig/online". 
 // httpAvail() is called via XHR "/rtcsig/avail".

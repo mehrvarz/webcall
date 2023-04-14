@@ -1,4 +1,4 @@
-// WebCall Copyright 2022 timur.mobi. All rights reserved.
+// WebCall Copyright 2023 timur.mobi. All rights reserved.
 //
 // WebCall server is a signaling server for WebRTC clients.
 // It's main task is to connect two clients, so that they
@@ -830,7 +830,7 @@ func dbconvertfunc() {
 		}
 	}()
 
-	dbHashedPw2Name := "rtchashedpw.db-conv"
+	dbHashedPw2Name := dbHashedPwName+"-conv"
 	kvHashedPw2,err := skv.DbOpen(dbHashedPw2Name,dbPath)
 	if err!=nil {
 		fmt.Printf("# dbconvert DbOpen %s path %s err=%v\n",dbHashedPw2Name,dbPath,err)
@@ -871,13 +871,10 @@ func dbconvertfunc() {
 			for k, v := c.First(); k != nil; k, v = c.Next() {
 				userID := string(k)
 				count++
-				//fmt.Printf("dbconvert %d userID=%v\n",count,userID)
-
 				var pwIdCombo PwIdCombo
-
 				d := gob.NewDecoder(bytes.NewReader(v))
 				d.Decode(&pwIdCombo)
-				//fmt.Printf("dbconvert get %d %s\n",count,pwIdCombo.CalleeId)
+				//fmt.Printf("dbconvert get %d %s %s\n",count,userID,pwIdCombo.CalleeId)
 
 				if !strings.HasPrefix(pwIdCombo.Pw,"$2") && len(pwIdCombo.Pw)<50 {
 					// encrypt pwIdCombo.Pw
@@ -900,12 +897,9 @@ func dbconvertfunc() {
 					err = kvHashedPw2.Put(dbHashedPwBucket, userID, pwIdCombo, true)
 					if err!=nil {
 						fmt.Printf("# dbconvert (%s) put unmod err=%v\n",userID,err)
-					} else {
-						//fmt.Printf("dbconvert (%s) put unmod data=%v\n",userID,pwIdCombo)
 					}
 				}
 			}
-			//fmt.Printf("dbconvert done Cursor loop\n")
 		}
 		return nil
 	})
