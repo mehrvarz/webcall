@@ -87,7 +87,7 @@ type PwIdCombo struct { // key calleeID
 
 var version = flag.Bool("version", false, "show version")
 var mastodoninit = flag.Bool("mastodoninit", false, "init mastodon")
-var pwconvert = flag.Bool("pwconvert", false, "pw convert")
+var dbconvert = flag.Bool("dbconvert", false, "db convert")
 var	builddate string
 var	codetag string
 const configFileName = "config.ini"
@@ -241,8 +241,8 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 	outboundIP,err := iptools.GetOutboundIP()
 
-	if *pwconvert {
-		pwconvertfunc()
+	if *dbconvert {
+		dbconvertfunc()
 		return
 	}
 
@@ -809,33 +809,52 @@ func writeStatsFile() {
 	fwr.Flush()
 }
 
-func pwconvertfunc() {
+func dbconvertfunc() {
 	var err error
 	kvHashedPw,err = skv.DbOpen(dbHashedPwName,dbPath)
 	if err!=nil {
-		fmt.Printf("# error DbOpen %s path %s err=%v\n",dbHashedPwName,dbPath,err)
+		fmt.Printf("# dbconvert DbOpen %s path %s err=%v\n",dbHashedPwName,dbPath,err)
 		return
 	}
 	err = kvHashedPw.CreateBucket(dbHashedPwBucket)
 	if err!=nil {
-		fmt.Printf("# error db %s CreateBucket %s err=%v\n",dbHashedPwName,dbHashedPwBucket,err)
+		fmt.Printf("# dbconvert db %s CreateBucket %s err=%v\n",dbHashedPwName,dbHashedPwBucket,err)
 		kvHashedPw.Close()
 		return
 	}
 
-	dbHashedPw2Name := "rtchashedpw2.db"
-// TODO must fully clear this
+	defer func() {
+		err = kvHashedPw.Close()
+		if err!=nil {
+			fmt.Printf("# dbconvert dbName %s close err=%v\n",dbHashedPwName,err)
+		}
+	}()
+
+	dbHashedPw2Name := "rtchashedpw.db-conv"
 	kvHashedPw2,err := skv.DbOpen(dbHashedPw2Name,dbPath)
 	if err!=nil {
-		fmt.Printf("# error DbOpen %s path %s err=%v\n",dbHashedPw2Name,dbPath,err)
+		fmt.Printf("# dbconvert DbOpen %s path %s err=%v\n",dbHashedPw2Name,dbPath,err)
 		return
+	}
+	err = kvHashedPw2.Db.Update(func(tx *bolt.Tx) error {
+		return tx.DeleteBucket([]byte(dbHashedPwBucket))
+	})
+	if err!=nil && strings.Index(err.Error(),"bucket not found")>=0 {
+		//fmt.Printf("# dbconvert DeleteBucket %s path %s err=%v\n",dbHashedPw2Name,dbPath,err)
 	}
 	err = kvHashedPw2.CreateBucket(dbHashedPwBucket)
 	if err!=nil {
-		fmt.Printf("# error db %s CreateBucket %s err=%v\n",dbHashedPw2Name,dbHashedPwBucket,err)
+		fmt.Printf("# dbconvert CreateBucket %s %s err=%v\n",dbHashedPw2Name,dbHashedPwBucket,err)
 		kvHashedPw2.Close()
 		return
 	}
+
+	defer func() {
+		err = kvHashedPw2.Close()
+		if err!=nil {
+			fmt.Printf("# dbconvert dbName %s close err=%v\n",dbHashedPw2Name,err)
+		}
+	}()
 
 	kv := kvHashedPw.(skv.SKV)
 	db := kv.Db
@@ -845,69 +864,59 @@ func pwconvertfunc() {
 	err = db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(dbHashedPwBucket))
 		if b==nil {
-			fmt.Printf("# pwconvert tx.Bucket==nil\n")
+			fmt.Printf("# dbconvert tx.Bucket==nil\n")
 		} else {
-			//fmt.Printf("pwconvert set Cursor\n")
+			//fmt.Printf("dbconvert set Cursor\n")
 			c := b.Cursor()
 			for k, v := c.First(); k != nil; k, v = c.Next() {
 				userID := string(k)
 				count++
-				//fmt.Printf("pwconvert %d userID=%v\n",count,userID)
+				//fmt.Printf("dbconvert %d userID=%v\n",count,userID)
 
 				var pwIdCombo PwIdCombo
 
 				d := gob.NewDecoder(bytes.NewReader(v))
 				d.Decode(&pwIdCombo)
-				//fmt.Printf("pwconvert get %d %s\n",count,pwIdCombo.CalleeId)
+				//fmt.Printf("dbconvert get %d %s\n",count,pwIdCombo.CalleeId)
 
 				if !strings.HasPrefix(pwIdCombo.Pw,"$2") && len(pwIdCombo.Pw)<50 {
 					// encrypt pwIdCombo.Pw
 					hash, err := bcrypt.GenerateFromPassword([]byte(pwIdCombo.Pw), bcrypt.MinCost)
 					if err != nil {
-						fmt.Printf("# pwconvert createHashPw bcrypt err=%v\n", err)
+						fmt.Printf("# dbconvert createHashPw bcrypt err=%v\n", err)
 						continue
 					}
 
-					//fmt.Printf("pwconvert (%s) createHashPw bcrypt store (%v)\n", userID, string(hash))
+					//fmt.Printf("dbconvert (%s) createHashPw bcrypt store (%v)\n", userID, string(hash))
 					pwIdCombo.Pw = string(hash)
 					err = kvHashedPw2.Put(dbHashedPwBucket, userID, pwIdCombo, true)
 					if err!=nil {
-						fmt.Printf("# pwconvert (%s) put convert err=%v\n",userID,err)
+						fmt.Printf("# dbconvert (%s) put convert err=%v\n",userID,err)
 					} else {
 						count2++
-						fmt.Printf("pwconvert (%s) put convert %d data=%v\n",userID,count2,pwIdCombo)
+						fmt.Printf("dbconvert (%s) put convert %d data=%v\n",userID,count2,pwIdCombo)
 					}
 				} else {
 					err = kvHashedPw2.Put(dbHashedPwBucket, userID, pwIdCombo, true)
 					if err!=nil {
-						fmt.Printf("# pwconvert (%s) put unmod err=%v\n",userID,err)
+						fmt.Printf("# dbconvert (%s) put unmod err=%v\n",userID,err)
 					} else {
-						//fmt.Printf("pwconvert (%s) put unmod data=%v\n",userID,pwIdCombo)
+						//fmt.Printf("dbconvert (%s) put unmod data=%v\n",userID,pwIdCombo)
 					}
 				}
 			}
-			//fmt.Printf("pwconvert done Cursor loop\n")
+			//fmt.Printf("dbconvert done Cursor loop\n")
 		}
 		return nil
 	})
 
 	if err!=nil {
 		// this is bad
-		fmt.Printf("# pwconvert done err=%v\n", err)
+		fmt.Printf("# dbconvert done err=%v\n", err)
 	} else {
-		fmt.Printf("pwconvert done no err\n")
+		fmt.Printf("dbconvert done no err\n")
 	}
 
-	err = kvHashedPw2.Close()
-	if err!=nil {
-		fmt.Printf("# error dbName %s close err=%v\n",dbHashedPw2Name,err)
-	}
-
-	err = kvHashedPw.Close()
-	if err!=nil {
-		fmt.Printf("# error dbName %s close err=%v\n",dbHashedPwName,err)
-	}
-
-	fmt.Printf("pwconvert readCount=%d convertCount=%d\n",count,count2)
+	fmt.Printf("dbconvert readCount=%d convertCount=%d\n",count,count2)
 }
 
