@@ -299,7 +299,6 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 
 					// "stream error: stream ID (int); INTERNAL_ERROR; received from peer"
 					// "bad request: 502 Bad Gateway"
-					// "bad request: 503 Service Unavailable"                                          x
 					// "Get "https://streaming.mastodon.social/api/v1/streaming/user": EOF"            x
 					// "Get "https://streaming.mastodon.social/api/v1/streaming/user": read tcp [2600:3c03::f03c:91ff:fea0:a854]:46208->[2a01:4f8:c01e:e5::1]:443: read: connection reset by peer"
 					// "unexpected EOF"
