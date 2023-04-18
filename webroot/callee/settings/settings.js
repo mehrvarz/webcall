@@ -68,7 +68,7 @@ function prepareSettings(xhrresponse) {
 		return;
 	}
 
-	document.getElementById("twnameWithId").style.display = "none";
+//	document.getElementById("twnameWithId").style.display = "none";
 
 	// json parse xhrresponse
 	serverSettings = JSON.parse(xhrresponse);
@@ -120,6 +120,7 @@ function prepareSettings(xhrresponse) {
 		if(!gentle) console.log('serverSettings.nickname',serverSettings.nickname);
 		document.getElementById("nickname").value = serverSettings.nickname;
 	}
+/*
 	if(typeof serverSettings.twname!=="undefined") {
 		if(!gentle) console.log('serverSettings.twname',serverSettings.twname);
 		if(serverSettings.twname=="") {
@@ -130,7 +131,6 @@ function prepareSettings(xhrresponse) {
 		}
 	}
 
-
 	if(typeof serverSettings.twid!=="undefined") {
 		if(!gentle) console.log('serverSettings.twid',serverSettings.twid);
 		document.getElementById("twid").value = serverSettings.twid;	  // not being displayed
@@ -138,6 +138,7 @@ function prepareSettings(xhrresponse) {
 			document.getElementById("twnameWithId").style.display = "inline";
 		}
 	}
+*/
 	if(typeof serverSettings.storeContacts!=="undefined") {
 		if(!gentle) console.log('serverSettings.storeContacts',serverSettings.storeContacts);
 		if(serverSettings.storeContacts=="true") {
@@ -449,6 +450,7 @@ function ajaxFetch(xhr, type, apiPath, processData, errorFkt, postData) {
 }
 
 function submitForm(autoclose) {
+/*
 	var valueTwName = document.getElementById("twname").value.replace(/ /g,''); // remove all white spaces
 	var valueTwName2 = document.getElementById("twname2").value; // the unmodified orig value
 	var valueTwID = document.getElementById("twid").value;
@@ -460,16 +462,16 @@ function submitForm(autoclose) {
 		valueTwName = valueTwName.substring(1);
 	}
 	if(!gentle) console.log('submitForm twName='+valueTwName+" twID="+valueTwID);
-
+*/
 
 	var store = function() {
-		if(!gentle) console.log('submitForm store twName='+valueTwName+" twID="+valueTwID);
+//		if(!gentle) console.log('submitForm store twName='+valueTwName+" twID="+valueTwID);
 		// we use encodeURI to encode the subscr-strings bc these strings are themselves json 
 		// and cannot just be packaged inside json
 		var newSettings = 
 		   '{"nickname":"'+document.getElementById("nickname").value.trim()+'",'+
-			'"twname":"'+valueTwName+'",'+
-			'"twid":"'+valueTwID+'",'+
+//			'"twname":"'+valueTwName+'",'+
+//			'"twid":"'+valueTwID+'",'+
 			'"storeContacts":"'+document.getElementById("storeContacts").checked+'",'+
 			'"storeMissedCalls":"'+document.getElementById("storeMissedCalls").checked+'",'+
 			'"tootOnCall":"'+document.getElementById("tootOnCall").checked+'",'+
@@ -496,6 +498,7 @@ function submitForm(autoclose) {
 		}, newSettings);
 	}
 
+/*
 	if(valueTwName=="") {
 		// no need to fetch twid
 		store();
@@ -539,6 +542,8 @@ function submitForm(autoclose) {
 			store();
 		});
 	}
+*/
+	store();
 }
 
 function clearForm(idx) {
