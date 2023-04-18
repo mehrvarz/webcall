@@ -283,26 +283,18 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 					if !mMgr.running {
 						break
 					}
-					if strings.Index(event.Error(),"404 Not Found")>=0 {
-						// "bad request: 404 Not Found"
-						// this was caused by go-mastodon not supporting dedicated streaming endpoint
+					if strings.Index(event.Error(),"404 Not Found")>=0 ||
+					   strings.Index(event.Error(),"403 Forbidden")>=0 ||
+					   strings.Index(event.Error(),"503 Service Unavailable")>=0 ||
+					   strings.Index(event.Error(),"unknown authority")>=0 ||
+					   strings.Index(event.Error(),"Internal Server Error")>=0 {
 						// slow down
 						time.Sleep(15 * time.Second)
 					} else if strings.Index(event.Error(),"Invalid access token")>=0 {
 						// "bad request: 401 Unauthorized: Error: Invalid access token"
-					} else if strings.Index(event.Error(),"403 Forbidden")>=0 {
-						// slow down
-						time.Sleep(15 * time.Second)
-					} else if strings.Index(event.Error(),"unknown authority")>=0 {
-						// "x509: certificate signed by unknown authority"
-						// slow down
-						time.Sleep(15 * time.Second)
 					} else if strings.Index(event.Error(),"GOAWAY")>=0 {
 						// "http2: server sent GOAWAY and closed the connection..."
 						// looks like reconnects happens automatically
-					} else if strings.Index(event.Error(),"Internal Server Error")>=0 {
-						// bad request: 500 Internal Server Error: An unexpected error occurred
-						time.Sleep(15 * time.Second)
 					}
 
 					// "stream error: stream ID (int); INTERNAL_ERROR; received from peer"
