@@ -90,6 +90,21 @@ func httpSetMapping(w http.ResponseWriter, r *http.Request, urlID string, callee
 		data = string(postBuf[:length])
 	}
 
+	// NOTE: one mistake and the current .AltIDs are gone
+	// TODO: plausibility check on data: id must be numerical, must not contain blanks, max len of id and assign
+	//       must not contain linefeeds, '<' and '>'
+	// /setmapping (98597153158) done data=(93489236986,true,|77728892315,true,|48849331002,true,|94042933561,true,)
+	if strings.HasPrefix(data,"<") {
+		fmt.Printf("# /setmapping (%s) format error '<' data=(%s)\n",calleeID, data)
+		fmt.Fprintf(w,"errorFormat")
+		return
+	}
+	if strings.Contains(data,"\n") {
+		fmt.Printf("# /setmapping (%s) format error 'lf' data=(%s)\n",calleeID, data)
+		fmt.Fprintf(w,"errorFormat")
+		return
+	}
+
 	var dbEntry DbEntry
 	err := kvMain.Get(dbRegisteredIDs, calleeID, &dbEntry)
 	if err != nil {
@@ -106,8 +121,6 @@ func httpSetMapping(w http.ResponseWriter, r *http.Request, urlID string, callee
 		return
 	}
 
-	// NOTE: one mistake and the current .AltIDs are gone
-	// TODO: plausibility check on data: id must be numerical, must not contain blanks, max len of id and assign
 	dbUser.AltIDs = data
 	err = kvMain.Put(dbUserBucket, dbUserKey, dbUser, true)
 	if err != nil {
