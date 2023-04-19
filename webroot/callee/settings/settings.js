@@ -68,8 +68,6 @@ function prepareSettings(xhrresponse) {
 		return;
 	}
 
-//	document.getElementById("twnameWithId").style.display = "none";
-
 	// json parse xhrresponse
 	serverSettings = JSON.parse(xhrresponse);
 	if(typeof serverSettings.vapidPublicKey!=="undefined") {
@@ -120,25 +118,7 @@ function prepareSettings(xhrresponse) {
 		if(!gentle) console.log('serverSettings.nickname',serverSettings.nickname);
 		document.getElementById("nickname").value = serverSettings.nickname;
 	}
-/*
-	if(typeof serverSettings.twname!=="undefined") {
-		if(!gentle) console.log('serverSettings.twname',serverSettings.twname);
-		if(serverSettings.twname=="") {
-			document.getElementById("twdiv").style.display = "none";
-		} else {
-			document.getElementById("twname").value = serverSettings.twname;
-			document.getElementById("twname2").value = serverSettings.twname; // backup of twname to detect change
-		}
-	}
 
-	if(typeof serverSettings.twid!=="undefined") {
-		if(!gentle) console.log('serverSettings.twid',serverSettings.twid);
-		document.getElementById("twid").value = serverSettings.twid;	  // not being displayed
-		if(serverSettings.twid!="" && serverSettings.twid!="0" && serverSettings.twname!="") {
-			document.getElementById("twnameWithId").style.display = "inline";
-		}
-	}
-*/
 	if(typeof serverSettings.storeContacts!=="undefined") {
 		if(!gentle) console.log('serverSettings.storeContacts',serverSettings.storeContacts);
 		if(serverSettings.storeContacts=="true") {
@@ -450,28 +430,11 @@ function ajaxFetch(xhr, type, apiPath, processData, errorFkt, postData) {
 }
 
 function submitForm(autoclose) {
-/*
-	var valueTwName = document.getElementById("twname").value.replace(/ /g,''); // remove all white spaces
-	var valueTwName2 = document.getElementById("twname2").value; // the unmodified orig value
-	var valueTwID = document.getElementById("twid").value;
-	if(valueTwName=="" || valueTwName!=valueTwName2) {
-		document.getElementById("twnameWithId").style.display = "none";
-		valueTwID = "";
-	}
-	if(valueTwName.startsWith("@")) {
-		valueTwName = valueTwName.substring(1);
-	}
-	if(!gentle) console.log('submitForm twName='+valueTwName+" twID="+valueTwID);
-*/
-
 	var store = function() {
-//		if(!gentle) console.log('submitForm store twName='+valueTwName+" twID="+valueTwID);
 		// we use encodeURI to encode the subscr-strings bc these strings are themselves json 
 		// and cannot just be packaged inside json
 		var newSettings = 
 		   '{"nickname":"'+document.getElementById("nickname").value.trim()+'",'+
-//			'"twname":"'+valueTwName+'",'+
-//			'"twid":"'+valueTwID+'",'+
 			'"storeContacts":"'+document.getElementById("storeContacts").checked+'",'+
 			'"storeMissedCalls":"'+document.getElementById("storeMissedCalls").checked+'",'+
 			'"tootOnCall":"'+document.getElementById("tootOnCall").checked+'",'+
@@ -498,61 +461,16 @@ function submitForm(autoclose) {
 		}, newSettings);
 	}
 
-/*
-	if(valueTwName=="") {
-		// no need to fetch twid
-		store();
-	} else if(valueTwName==valueTwName2 && valueTwID!="" && valueTwID!="0") {
-		// no need to fetch twid
-		store();
-	} else {
-		// verify that twName is a real twitter handle
-		// if it is, store the returned ID, so we can check if it follows us
-		// if twName is a real twitter handle, we store valueTwName and the ID and exit settings
-		// otherwise we deny to store settings and we don't exit
-		if(xhrTwidActive) return;
-		xhrTwidActive = true;
-		let api = apiPath+"/twid?id="+valueTwName;
-		if(!gentle) console.log('request twid for twName '+api);
-		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-			// store the twid
-			xhrTwidActive = false;
-			valueTwID = xhr.responseText;
-			document.activeElement.blur();
-			if(!gentle) console.log('xhr response valueTwID='+valueTwID);
-			if(valueTwID.startsWith("error")) {
-				// valueTwName cannot be verified/stored
-				document.getElementById("errstring").innerHTML = "Twitter handle error: "+valueTwID;
-			} else if(valueTwID=="" || valueTwID=="0") {
-				// valueTwName cannot be stored
-				document.getElementById("errstring").innerHTML = "Twitter handle not found";
-			} else {
-				// Twitter handle exists and valueTwID now contains the twID
-				// TODO: here we could use /twfollower to find out if valueTwID is following us
-				//       but /twfollower may be 20m old
-				store();
-			}
-		}, function(errString,err) {
-			// twName cannot be changed (bc it cannot be verified)
-			xhrTwidActive = false;
-			console.log('xhr error='+errString);
-			document.activeElement.blur();
-			alert("xhr error\n"+errString+"\nTwitter handle cannot be verified");
-			valueTwName = valueTwName2;
-			store();
-		});
-	}
-*/
 	store();
 }
 
 function clearForm(idx) {
 	if(idx==0)
 		document.getElementById("nickname").value = "";
-	else if(idx==1)
-		document.getElementById("twname").value = "";
-	else if(idx==2)
-		document.getElementById("twid").value = "";
+//	else if(idx==1)
+//		document.getElementById("twname").value = "";
+//	else if(idx==2)
+//		document.getElementById("twid").value = "";
 	formPw.focus();
 }
 
