@@ -384,42 +384,11 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	maxClientRequestsPer30minTmp := maxClientRequestsPer30min
 	readConfigLock.RUnlock()
 	if maxClientRequestsPer30minTmp>0 && remoteAddr!=outboundIP && remoteAddr!="127.0.0.1" {
-/*
-		clientRequestsMutex.RLock()
-		clientRequestsSlice,ok := clientRequestsMap[remoteAddr]
-		clientRequestsMutex.RUnlock()
-		if ok {
-			for len(clientRequestsSlice)>0 {
-				if time.Now().Sub(clientRequestsSlice[0]) < 30 * time.Minute {
-					break
-				}
-				if len(clientRequestsSlice)>1 {
-					clientRequestsSlice = clientRequestsSlice[1:]
-				} else {
-					clientRequestsSlice = clientRequestsSlice[:0]
-				}
-			}
-			if len(clientRequestsSlice) >= maxClientRequestsPer30minTmp {
-				if logWantedFor("overload") {
-					fmt.Printf("httpApi rip=%s %d >= %d requests/30m (%s)\n",
-						remoteAddr, len(clientRequestsSlice), maxClientRequestsPer30minTmp, urlPath)
-				}
-				fmt.Fprintf(w,"Too many requests in short order. Please take a pause.")
-				clientRequestsMutex.Lock()
-				clientRequestsMap[remoteAddr] = clientRequestsSlice
-				clientRequestsMutex.Unlock()
-				return
-			}
-		}
-		clientRequestsSlice = append(clientRequestsSlice,time.Now())
-		clientRequestsMutex.Lock()
-		clientRequestsMap[remoteAddr] = clientRequestsSlice
-		clientRequestsMutex.Unlock()
-*/
-		if clientRequestAdd(remoteAddr,1) {
+		clientRequestCount := clientRequestAdd(remoteAddr,1)
+		if clientRequestCount >= maxClientRequestsPer30min {
 			if logWantedFor("overload") {
-				fmt.Printf("httpApi rip=%s >=%d requests/30m (%s)\n",
-					remoteAddr, maxClientRequestsPer30minTmp, urlPath)
+				fmt.Printf("httpApi rip=%s %d>=%d requests/30m (%s)\n",
+					remoteAddr, clientRequestCount, maxClientRequestsPer30minTmp, urlPath)
 			}
 			fmt.Fprintf(w,"Too many requests in short order. Please take a pause.")
 			return
@@ -961,8 +930,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 
-func clientRequestAdd(remoteAddr string, count int) bool {
-	ret := false
+func clientRequestAdd(remoteAddr string, count int) int {
 	clientRequestsMutex.Lock()
 	defer clientRequestsMutex.Unlock()
 	clientRequestsSlice,ok := clientRequestsMap[remoteAddr]
@@ -982,16 +950,9 @@ func clientRequestAdd(remoteAddr string, count int) bool {
 		clientRequestsSlice = append(clientRequestsSlice,time.Now())
 	}
 	clientRequestsMap[remoteAddr] = clientRequestsSlice
-
-	if len(clientRequestsSlice) >= maxClientRequestsPer30min {
-		ret = true
-	}
-
-	//clientRequestsMutex.Unlock()
-	return ret
+	return len(clientRequestsSlice)
 }
 
-//func isBot(userAgent string, referer string) bool {
 func isBlockedUA(userAgent string) bool {
 	if blockuseragentSlice != nil {
 		for _, s := range blockuseragentSlice {
