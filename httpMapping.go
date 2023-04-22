@@ -277,7 +277,7 @@ func deleteMapping(calleeID string, delID string, remoteAddr string) int {
 	// unregister delID from dbRegisteredIDs
 	err := kvMain.Delete(dbRegisteredIDs, delID)
 	if err!=nil {
-		fmt.Printf("# deletemapping fail to delete id=%s\n", delID)
+		fmt.Printf("# deletemapping fail to delete id=%s err=%s\n", delID, err)
 		return 1
 	}
 

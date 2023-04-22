@@ -462,7 +462,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		} else if strings.Index(urlID,"@")>=0 {
 			// don't log id's containing @
 		} else {
-			fmt.Printf("# httpApi (%s) long urlID=(%s) %s (%s)\n", calleeID, urlID, remoteAddr, urlPath)
+			fmt.Printf("! httpApi (%s) long urlID=(%s) %s (%s)\n", calleeID, urlID, remoteAddr, urlPath)
 			clientRequestAdd(remoteAddr,3)
 		}
 	} else if logWantedFor("http") {
