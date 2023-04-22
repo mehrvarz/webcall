@@ -450,7 +450,7 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 				//	registerID, dbMainName, dbRegisteredIDs)
 				// registerID is now available for use
 				var pwIdCombo PwIdCombo
-				err,cookieValue := createCookie(w, registerID, pw, &pwIdCombo)
+				err,cookieValue := createCookie(w, registerID, pw, &pwIdCombo, "/register")
 				if err!=nil {
 					// fatal
 					fmt.Printf("# /register (%s) create cookie error cookie=%s err=%v\n",
@@ -478,7 +478,7 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 					// tell caller that callee is ready to receive a call (and maybe other related tasks)
 
 					if logWantedFor("login") {
-						fmt.Printf("/login (%s) mastodonMgr.calleeLoginSuccess mid=%s\n", urlID, mid)
+						fmt.Printf("/register (%s) mastodonMgr.calleeLoginSuccess mid=%s\n", urlID, mid)
 					}
 					mastodonMgr.sendCallerLink(mid,registerID,remoteAddr)
 				}

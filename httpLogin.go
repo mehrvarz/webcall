@@ -308,7 +308,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 								fmt.Printf("# /login (%s) hashPw empty after dbHashedPwSearch createCookie(%s) rip=%s\n",
 									urlID, formPw, remoteAddr)
 								if formPw!="" {
-									err,cookieValue := createCookie(w, urlID, formPw, &pwIdCombo)
+									err,cookieValue := createCookie(w, urlID, formPw, &pwIdCombo, "/login")
 									if err != nil {
 										fmt.Printf("# /login (%s) persist PwIdCombo bucket=%s cookie=%s err=%v rip=%s\n",
 											urlID, dbHashedPwBucket, cookieValue, err, remoteAddr)
@@ -362,7 +362,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 			if err != nil {
 				fmt.Printf("# /login (%s) (%s) bcrypt.CompareHashAndPassword err=%v rip=%s\n",
 					urlID, hashPw, err, remoteAddr)
-/*
+/* TODO remove
 				// in case hashPw was not crypted:
 				if hashPw != formPw {
 //fmt.Printf("# /login (%s) clear pw err (%s|%s) %s\n", urlID, hashPw, formPw, remoteAddr)
@@ -474,7 +474,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 
 	var lenGlobalHubMap int64
 	if cookie == nil && !nocookie && formPw!="" {
-		err,cookieValue := createCookie(w, urlID, formPw, &pwIdCombo)
+		err,cookieValue := createCookie(w, urlID, formPw, &pwIdCombo, "/login")
 		if err != nil {
 			if globalID != "" {
 				_,lenGlobalHubMap = DeleteFromHubMap(globalID)
@@ -769,7 +769,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 	return
 }
 
-func createCookie(w http.ResponseWriter, urlID string, pw string, pwIdCombo *PwIdCombo) (error,string) {
+func createCookie(w http.ResponseWriter, urlID string, pw string, pwIdCombo *PwIdCombo, contextStr string) (error,string) {
 	// create new cookie with name=webcallid value=urlID
 	// store only if url parameter nocookie is NOT set
 	expiration := time.Now().Add(6 * 31 * 24 * time.Hour) // same as in createHashPw()
@@ -789,20 +789,20 @@ func createCookie(w http.ResponseWriter, urlID string, pw string, pwIdCombo *PwI
 	cookie := &cookieObj
 	http.SetCookie(w, cookie)
 	if logWantedFor("cookie") {
-		fmt.Printf("/login cookie created (%v)\n", cookieValue)
+		fmt.Printf("%s cookie created (%v)\n", contextStr, cookieValue)
 	}
-	err := createHashPw(urlID, pw, pwIdCombo)
+	err := createHashPw(urlID, pw, pwIdCombo, contextStr)
 	return err, cookieValue
 }
 
-func createHashPw(urlID string, pw string, pwIdCombo *PwIdCombo) error {
+func createHashPw(urlID string, pw string, pwIdCombo *PwIdCombo, contextStr string) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.MinCost)
 	if err != nil {
-		fmt.Printf("# /login createHashPw bcrypt err=%v\n", err)
+		fmt.Printf("# %s createHashPw bcrypt err=%v\n", contextStr, err)
 		return err
 	}
 
-	fmt.Printf("/login (%s) createHashPw bcrypt store (%v)\n", urlID, string(hash))
+	fmt.Printf("%s (%s) createHashPw bcrypt store (%v)\n", contextStr, urlID, string(hash))
 	pwIdCombo.Pw = string(hash)
 	pwIdCombo.CalleeId = urlID
 	pwIdCombo.Created = time.Now().Unix()

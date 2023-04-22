@@ -1228,7 +1228,7 @@ func (mMgr *MastodonMgr) httpRegisterMid(w http.ResponseWriter, r *http.Request,
 					// registerID is now available for use
 
 					var pwIdCombo PwIdCombo
-					err,cookieValue := createCookie(w, registerID, pw, &pwIdCombo)
+					err,cookieValue := createCookie(w, registerID, pw, &pwIdCombo, "/registermid")
 					if err!=nil {
 						fmt.Printf("/registermid (%s) create cookie error cookie=%s err=%v\n",
 							registerID, cookieValue, err)
