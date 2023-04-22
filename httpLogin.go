@@ -240,7 +240,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 					// abort login attempt: urlID/key is "already/still logged in"
 					// note: user may have used a different urlID (now dialID) (say, timurmobi@mastodon.social)
 					// mapped to the current urlID
-// TODO if urlID!=dialID: let user know dialID
+					// TODO if urlID!=dialID: let user know dialID
 					fmt.Printf("/login (%s) already/still logged in (%s) %v %s<-%s v=%s ua=%s\n",
 						key, dialID, time.Since(startRequestTime),
 						calleeIP, remoteAddrWithPort, clientVersion, userAgent)
@@ -294,11 +294,11 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 				var pwIdCombo PwIdCombo
 				err := kvHashedPw.Get(dbHashedPwBucket,urlID,&pwIdCombo)
 				if err!=nil {
-/************* START ***************/
-					var pwIdComboSearch PwIdCombo
+					/************* TODO START ***************/
 					if strings.Index(err.Error(),"key not found")>=0 {
 						// search the newest
 						// NOTE: expensive operation
+						var pwIdComboSearch PwIdCombo
 						pwIdComboSearch,err = dbHashedPwSearch(urlID)
 						if err==nil {
 							pwIdCombo = pwIdComboSearch
@@ -331,7 +331,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 							// all oder entries (urlkey)+"&nnnnnnnnnnn" could now be deleted
 						}
 					}
-/************* END ***************/
+					/************* END ***************/
 
 					if err!=nil {
 						if strings.Index(err.Error(),"key not found")>=0 {
@@ -362,20 +362,9 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 			if err != nil {
 				fmt.Printf("# /login (%s) (%s) bcrypt.CompareHashAndPassword err=%v rip=%s\n",
 					urlID, hashPw, err, remoteAddr)
-/* TODO remove
-				// in case hashPw was not crypted:
-				if hashPw != formPw {
-//fmt.Printf("# /login (%s) clear pw err (%s|%s) %s\n", urlID, hashPw, formPw, remoteAddr)
-					fmt.Printf("# /login (%s) clear pw err %s\n", urlID, remoteAddr)
-*/
-					// make pw guessing slow
-					time.Sleep(2000 * time.Millisecond)
-					fmt.Fprintf(w, "error")
-/*
-					return
-				}
-				fmt.Printf("/login (%s) clear pw success\n", urlID)
-*/
+				// make pw guessing slow
+				time.Sleep(2000 * time.Millisecond)
+				fmt.Fprintf(w, "error")
 				return
 			}
 			//fmt.Printf("/login (%s) bcrypt.CompareHashAndPassword success\n", urlID)
