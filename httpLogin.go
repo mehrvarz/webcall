@@ -131,7 +131,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 			}
 			if len(calleeLoginSlice) >= maxLoginPer30minTmp {
 				if logWantedFor("overload") {
-					fmt.Printf("/login (%s) %d >= %d logins/30m rip=%s v=%s\n",
+					fmt.Printf("! /login (%s) %d >= %d logins/30m rip=%s v=%s\n",
 						urlID, len(calleeLoginSlice), maxLoginPer30minTmp, remoteAddr, clientVersion)
 				}
 				fmt.Fprintf(w,"Too many reconnects / login attempts in short order. "+
