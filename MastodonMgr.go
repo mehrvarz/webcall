@@ -220,7 +220,7 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 						event.Notification.Type, event.Notification.Account.Acct)
 					// event.Notification.Type "mention" or "follow"
 					// "follow" causes panic "nil pointer dereference"
-					if event.Notification.Type=="follow" {
+					if event.Notification.Type!="mention" {
 						continue
 					}
 
