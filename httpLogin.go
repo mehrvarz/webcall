@@ -717,17 +717,17 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 						fmt.Printf("/login (%s) has no CalleeLogin.Get\n", urlID)
 					}
 
-					unregisterNeeded := false
+					disconnectNeeded := false
 					if hub.CalleeClient != nil {
-						unregisterNeeded = true
+						disconnectNeeded = true
 					}
 					hub.HubMutex.RUnlock()
 					myHubMutex.RUnlock()
 
-					if unregisterNeeded {
+					if disconnectNeeded {
 						// this looks like a ws-(re)connect problem
 						// the next login attempt of urlID/globalID will be denied to break it's reconnecter loop
-						fmt.Printf("/login (%s) timeout26s unregisterNeeded\n", urlID)
+						fmt.Printf("/login (%s) timeout26s disconnectNeeded\n", urlID)
 						blockMapMutex.Lock()
 						blockMap[urlID] = time.Now()
 						blockMapMutex.Unlock()
