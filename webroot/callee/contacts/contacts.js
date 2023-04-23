@@ -168,7 +168,10 @@ function processContacts(xhrresponse) {
 				//gLog("idDisplay="+idDisplay+" "+idDisplay.length);
 			}
 
-			let args = "?callerId=select&targetHost="+callerHost;
+			let args = "?callerId=select";
+			if(callerHost!="" && callerHost!="undefined") {
+				args += "&targetHost="+callerHost;
+			}
 			if(ourNickname!="") {
 				if(args=="") args = "?callerName="+ourNickname;
 				else args += "&callerName="+ourNickname;
