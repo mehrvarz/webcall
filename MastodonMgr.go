@@ -218,6 +218,12 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 					// direct msgs
 					fmt.Printf("mastodonhandler Notif-Type=(%v) Acct=(%v)\n",
 						event.Notification.Type, event.Notification.Account.Acct)
+					// event.Notification.Type "mention" or "follow"
+					// "follow" causes panic "nil pointer dereference"
+					if event.Notification.Type=="follow" {
+						continue
+					}
+
 					content := event.Notification.Status.Content
 					//fmt.Printf("mastodonhandler Content=(%v)\n",content)
 					// sample html-notification with textMessage ' setup':
