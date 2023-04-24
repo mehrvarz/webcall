@@ -235,7 +235,7 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 						if strings.HasSuffix(content,"</p>") {
 							content = content[0:len(content)-4]
 						}
-						fmt.Printf("mastodonhandler stripped p Content=(%v)\n",content)
+						//fmt.Printf("mastodonhandler stripped p Content=(%v)\n",content)
 					}
 
 					command := ""
@@ -304,6 +304,7 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 					}
 
 					// "stream error: stream ID (int); INTERNAL_ERROR; received from peer"
+					//	stream error: stream ID 1; INTERNAL_ERROR; received from peer'
 					// "bad request: 502 Bad Gateway"
 					// "Get "https://streaming.mastodon.social/api/v1/streaming/user": EOF"            x
 					// "Get "https://streaming.mastodon.social/api/v1/streaming/user": read tcp [2600:3c03::f03c:91ff:fea0:a854]:46208->[2a01:4f8:c01e:e5::1]:443: read: connection reset by peer"

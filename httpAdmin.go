@@ -284,6 +284,25 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		}
 		return true
 	}
+
+	if urlPath=="/pingMsg" {
+		if mastodonMgr != nil {
+			id := "timurmobi@mastodon.social"
+			url_arg_array, ok := r.URL.Query()["arg"]
+			sendmsg := "@"+id+" test"
+			if ok && len(url_arg_array[0])>0 {
+				sendmsg = "@"+id+" "+url_arg_array[0]
+			}
+			mastodonMgr.postMsgEx(sendmsg, id, 0, func(err error) {
+				if err!=nil {
+					fmt.Fprintf(w,"# /pingMsg post to=%v err=%v\n", id, err)
+				} else {
+					fmt.Fprintf(w,"/pingMsg post sent to=%v\n", id)
+				}
+			})
+		}
+		return true
+	}
 	*/
 
 	if urlPath=="/dumpturn" {
@@ -306,12 +325,14 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		hubMapMutex.RLock()
 		defer hubMapMutex.RUnlock()
 		for calleeID := range hubMap {
-			fmt.Fprintf(w,"/dumpping %-20s pingSent/pongReceived pingReceived/pongSent %v/%v %v/%v\n",
-				calleeID,
-				hubMap[calleeID].CalleeClient.pingSent,
-				hubMap[calleeID].CalleeClient.pongReceived,
-				hubMap[calleeID].CalleeClient.pingReceived,
-				hubMap[calleeID].CalleeClient.pongSent)
+			if hubMap[calleeID]!=nil && hubMap[calleeID].CalleeClient!=nil {
+				fmt.Fprintf(w,"/dumpping %-20s pingSent/pongReceived pingReceived/pongSent %v/%v %v/%v\n",
+					calleeID,
+					hubMap[calleeID].CalleeClient.pingSent,
+					hubMap[calleeID].CalleeClient.pongReceived,
+					hubMap[calleeID].CalleeClient.pingReceived,
+					hubMap[calleeID].CalleeClient.pongSent)
+			}
 		}
 		return true
 	}
@@ -351,24 +372,6 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 	if urlPath=="/dumpPostedMsgs" {
 		if mastodonMgr != nil {
 			mastodonMgr.dumpPostedMsgEvents(w)
-		}
-		return true
-	}
-	if urlPath=="/pingMsg" {
-		if mastodonMgr != nil {
-			id := "timurmobi@mastodon.social"
-			url_arg_array, ok := r.URL.Query()["arg"]
-			sendmsg := "@"+id+" test"
-			if ok && len(url_arg_array[0])>0 {
-				sendmsg = "@"+id+" "+url_arg_array[0]
-			}
-			mastodonMgr.postMsgEx(sendmsg, id, 0, func(err error) {
-				if err!=nil {
-					fmt.Fprintf(w,"# /pingMsg post to=%v err=%v\n", id, err)
-				} else {
-					fmt.Fprintf(w,"/pingMsg post sent to=%v\n", id)
-				}
-			})
 		}
 		return true
 	}
