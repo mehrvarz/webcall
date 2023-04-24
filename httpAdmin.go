@@ -326,7 +326,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		defer hubMapMutex.RUnlock()
 		for calleeID := range hubMap {
 			if hubMap[calleeID]!=nil && hubMap[calleeID].CalleeClient!=nil {
-				fmt.Fprintf(w,"/dumpping %-20s pingSent/pongReceived pingReceived/pongSent %v/%v %v/%v\n",
+				fmt.Fprintf(w,"/dumpping %-25s pingSent/pongReceived pingReceived/pongSent %v/%v %v/%v\n",
 					calleeID,
 					hubMap[calleeID].CalleeClient.pingSent,
 					hubMap[calleeID].CalleeClient.pongReceived,

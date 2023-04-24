@@ -293,7 +293,8 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 					   strings.Index(event.Error(),"403 Forbidden")>=0 ||
 					   strings.Index(event.Error(),"503 Service Unavailable")>=0 ||
 					   strings.Index(event.Error(),"unknown authority")>=0 ||
-					   strings.Index(event.Error(),"Internal Server Error")>=0 {
+					   strings.Index(event.Error(),"Internal Server Error")>=0 ||
+					   strings.Index(event.Error(),"INTERNAL_ERROR")>=0 {
 						// slow down
 						time.Sleep(15 * time.Second)
 					} else if strings.Index(event.Error(),"Invalid access token")>=0 {
