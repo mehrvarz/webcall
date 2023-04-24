@@ -219,7 +219,7 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 					fmt.Printf("mastodonhandler Notif-Type=(%v) Acct=(%v)\n",
 						event.Notification.Type, event.Notification.Account.Acct)
 					// event.Notification.Type "mention" or "follow"
-					// "follow" causes panic "nil pointer dereference"
+					// Notification.Type=="follow" causes nil pointer panic on event.Notification.Status
 					if event.Notification.Type!="mention" {
 						continue
 					}
@@ -315,7 +315,6 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 					if !mMgr.running {
 						break
 					}
-
 
 				//default:
 				//	fmt.Printf("mastodonhandler default\n")

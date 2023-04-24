@@ -334,7 +334,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 					/************* END ***************/
 
 					if err!=nil {
-						if strings.Index(err.Error(),"key not found")>=0 {
+						if strings.Index(err.Error(),"not found")>=0 {
 							fmt.Printf("# /login (%s) ID not found rip=%s\n", urlID, remoteAddr)
 							fmt.Fprintf(w, "notregistered")
 							return
