@@ -1544,13 +1544,13 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 							delete(clientRequestsMap,c.RemoteAddrNoPort)
 							delete(clientRequestsMap,c.hub.CallerIpNoPort)
 							clientRequestsMutex.Unlock()
-						}
 
-						// clear calleeLoginMap[c.calleeID] (to prevent '/login (id) 12 >= 12 logins/30m')
-						calleeLoginMutex.Lock()
-						//calleeLoginMap[c.calleeID] = nil
-						delete(calleeLoginMap,c.calleeID)
-						calleeLoginMutex.Unlock()
+							// clear calleeLoginMap[c.calleeID] (to prevent '/login (id) 12 >= 12 logins/30m')
+							calleeLoginMutex.Lock()
+							//calleeLoginMap[c.calleeID] = nil
+							delete(calleeLoginMap,c.calleeID)
+							calleeLoginMutex.Unlock()
+						}
 
 						// store the caller (c.hub.CallerID)
 						// into contacts of user being called (c.calleeID)

@@ -216,7 +216,7 @@ func (mMgr *MastodonMgr) mastodonStart(config string) error {
 				switch event := evt.(type) {
 				case *mastodon.NotificationEvent:
 					// direct msgs
-					fmt.Printf("mastodonhandler Notif-Type=(%v) Acct=(%v)\n",
+					fmt.Printf("* mastodonhandler Notif-Type=(%v) Acct=(%v)\n",
 						event.Notification.Type, event.Notification.Account.Acct)
 					// event.Notification.Type "mention" or "follow"
 					// Notification.Type=="follow" causes nil pointer panic on event.Notification.Status

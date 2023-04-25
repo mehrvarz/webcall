@@ -36,7 +36,6 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 		mid = url_arg_array[0]
 	}
 
-//	if logWantedFor("loginex") {
 	if logWantedFor("login") {
 		if dialID!="" && dialID!=urlID {
 			fmt.Printf("/login (%s) (%s) mid=%s ip=%s rt=%v\n",
@@ -49,7 +48,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 
 	if dialID!="" && dialID!=urlID {
 		// a callee MUST use it's main-id to login (not alt-id or mapping-id's)
-		fmt.Printf("/login (%s) dialID=(%s) deny\n", urlID, dialID)
+		fmt.Printf("! /login (%s) dialID=(%s) deny %s\n", urlID, dialID, remoteAddr)
 		time.Sleep(1000 * time.Millisecond)
 		fmt.Fprintf(w, "error")
 		return
@@ -89,7 +88,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 		if time.Now().Sub(blockedTime) <= 10 * 60 * time.Minute {
 			// urlID was blocked in the last 10h
 			if logWantedFor("overload") {
-				fmt.Printf("/login (%s) block recon (%v) rip=%s v=%s ua=%s\n",
+				fmt.Printf("! /login (%s) block recon (%v) rip=%s v=%s ua=%s\n",
 					urlID, time.Now().Sub(blockedTime), remoteAddr, clientVersion, userAgent)
 			}
 			// this error response string is formated so that callee.js will show it via showStatus()
@@ -389,6 +388,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 	}
 
 	// pw is accepted, get dbEntry and dbUser based on urlID
+	// note: calleeLoginMap[urlID] will be reset on constate=="Connected" in wsClient.go
 
 	//fmt.Printf("/login (%s) rip=%s rt=%v\n",
 	//	urlID, remoteAddr, time.Since(startRequestTime)) // rt=23.184µs
@@ -728,7 +728,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 					if disconnectNeeded {
 						// this looks like a ws-(re)connect problem
 						// the next login attempt of urlID/globalID will be denied to break it's reconnecter loop
-						fmt.Printf("/login (%s) timeout26s disconnectNeeded\n", urlID)
+						fmt.Printf("! /login (%s) timeout26s disconnectNeeded\n", urlID)
 						blockMapMutex.Lock()
 						blockMap[urlID] = time.Now()
 						blockMapMutex.Unlock()

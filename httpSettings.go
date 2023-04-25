@@ -121,13 +121,14 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 	if err!=nil {
 		fmt.Printf("# /setsettings (%s) failed on json.Unmarshal (%v) %s err=%v\n",
 			calleeID, data, remoteAddr, err)
+		// if there is a decoding issue in r.Body, ignore it
 		return
 	}
 
 	var dbEntry DbEntry
 	err = kvMain.Get(dbRegisteredIDs,calleeID,&dbEntry)
 	if err!=nil {
-		fmt.Printf("# /setsettings (%s) failed on dbRegisteredIDs %s\n", calleeID, remoteAddr)
+		fmt.Printf("# /setsettings (%s) failed on get dbRegisteredIDs dbEntry %s\n", calleeID, remoteAddr)
 		return
 	}
 
@@ -135,7 +136,7 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 	var dbUser DbUser
 	err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 	if err!=nil {
-		fmt.Printf("# /setsettings (%s) failed on dbUserBucket %s\n", calleeID, remoteAddr)
+		fmt.Printf("# /setsettings (%s) failed on get dbUserBucket dbUser key=%s %s\n", calleeID, dbUserKey, remoteAddr)
 		return
 	}
 
