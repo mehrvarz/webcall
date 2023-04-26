@@ -84,7 +84,15 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 	if urlPath=="/dumpregistered" {
 		// show the list of callee-IDs that have been registered and are not yet outdated
 		bucketName := dbRegisteredIDs
-		printFunc(w,"/dumpregistered dbName=%s bucketName=%s\n", dbMainName, bucketName)
+		printFunc(w,"/dumpregistered bucketName=%s\n", bucketName)
+
+		showAll := false
+		url_arg_array, ok := r.URL.Query()["all"]
+		if ok && len(url_arg_array[0]) > 0 {
+			showAll = true
+			printFunc(w,"/dumpregistered showall\n")
+		}
+
 		db := kv.Db
 		nowTimeUnix := time.Now().Unix()
 		err := db.Update(func(tx *bolt.Tx) error {
@@ -99,10 +107,12 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 				var dbUser DbUser
 				err := kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 				if err != nil {
-					fmt.Fprintf(w,"%-40s %d=%s err=%s\n",
-						k, dbEntry.StartTime,
-						time.Unix(dbEntry.StartTime,0).Format("2006-01-02 15:04:05"), err)
-// TODO delete this key?
+					if /*strings.Index(err.Error(), "key not found")<0 ||*/ showAll {
+						fmt.Fprintf(w,"%-40s %d=%s err=%s\n",
+							k, dbEntry.StartTime,
+							time.Unix(dbEntry.StartTime,0).Format("2006-01-02 15:04:05"), err)
+					}
+					// TODO delete this key?
 				} else {
 					userId := string(k)
 
