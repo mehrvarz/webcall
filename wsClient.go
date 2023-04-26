@@ -501,12 +501,15 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			// get values related to talk- and service-time for this callee from the db
 			// so that 1s-ticker can calculate the live remaining time
 			hub.ServiceStartTime = wsClientData.dbEntry.StartTime // race?
-			hub.ConnectedToPeerSecs = int64(wsClientData.dbUser.ConnectedToPeerSecs)
+//			hub.ConnectedToPeerSecs = int64(wsClientData.dbUser.ConnectedToPeerSecs)
+		}
+		if logWantedFor("attach") {
+			fmt.Printf("%s (%s) talkSecs=%d startTime=%d\n",
+				client.connType, client.calleeID,
+				hub.ConnectedToPeerSecs, hub.ServiceStartTime)
 		}
 		hub.CallDurationSecs = 0
 		hub.HubMutex.Unlock()
-		//fmt.Printf("%s talkSecs=%d startTime=%d serviceSecs=%d\n",
-		//	client.connType, hub.ConnectedToPeerSecs, hub.ServiceStartTime, hub.ServiceDurationSecs)
 
 		keepAliveMgr.Add(wsConn)
 		// set the time for sending the next ping

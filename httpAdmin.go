@@ -59,12 +59,13 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 						askCallerBeforeNotify = "A"
 					}
 				}
-				fmt.Fprintf(w, "%-40s %s%s%s %5d%5d%5d%7d %d %s %s %s\n",
+//				fmt.Fprintf(w, "%-40s %s%s%s %5d%5d%5d%7d %d %s %s %s\n",
+				fmt.Fprintf(w, "%-40s %s%s%s %d %s %s %s\n",
 					k,
 					hasMastodonID, mastodonSendTootOnCall, askCallerBeforeNotify,
-					dbUser.CallCounter,
-					dbUser.LocalP2pCounter, dbUser.RemoteP2pCounter,
-					dbUser.ConnectedToPeerSecs,
+//					dbUser.CallCounter,
+//					dbUser.LocalP2pCounter, dbUser.RemoteP2pCounter,
+//					dbUser.ConnectedToPeerSecs,
 					dbUser.Int2,
 					time.Unix(dbUser.LastLoginTime,0).Format("2006-01-02 15:04:05"),
 					time.Unix(dbUser.LastLogoffTime,0).Format("2006-01-02 15:04:05"),
@@ -170,12 +171,13 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 					}
 
 					// id 'NA' means: N=notifications on, A=AskUserDialog
-					fmt.Fprintf(w, "%-40s %s%s%s%s %5d%5d%5d%7d %d %s %s %4d %3d %3d\n",
+//					fmt.Fprintf(w, "%-40s %s%s%s%s %5d%5d%5d%7d %d %s %s %4d %3d %3d\n",
+					fmt.Fprintf(w, "%-40s %s%s%s%s %d %s %s %4d %3d %3d\n",
 						userId,
 						isOnline, mastodonId, mastodonSendTootOnCall, askCallerBeforeNotify,
-						dbUser.CallCounter,
-						dbUser.LocalP2pCounter, dbUser.RemoteP2pCounter,
-						dbUser.ConnectedToPeerSecs,
+//						dbUser.CallCounter,
+//						dbUser.LocalP2pCounter, dbUser.RemoteP2pCounter,
+//						dbUser.ConnectedToPeerSecs,
 						dbUser.Int2,
 						time.Unix(dbUser.LastLoginTime,0).Format("2006-01-02 15:04:05"),
 						time.Unix(dbUser.LastLogoffTime,0).Format("2006-01-02 15:04:05"),

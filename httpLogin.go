@@ -607,7 +607,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 	serviceSecs := 0
 	responseString := fmt.Sprintf("%s|%d|%s|%d|%v|%v",
 		wsAddr,                     // 0
-		dbUser.ConnectedToPeerSecs, // 1
+		0, //dbUser.ConnectedToPeerSecs, // 1
 		outboundIP,                 // 2
 		serviceSecs,                // 3
 		dbUser.Int2&1 != 0,         // 4 isHiddenCallee
