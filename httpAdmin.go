@@ -47,8 +47,22 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 				if lastActivity > 0 {
 					secsSinceLastActivity = fmt.Sprintf("%d",nowTimeUnix-lastActivity)
 				}
-				fmt.Fprintf(w, "user %22s calls=%4d p2p=%4d/%4d talk=%6d %d %s %s %s\n",
+
+				hasMastodonID := "-"
+				if dbUser.MastodonID!="" {
+					hasMastodonID = "M"
+				}
+				mastodonSendTootOnCall := "-"
+				if dbUser.MastodonSendTootOnCall {
+					mastodonSendTootOnCall = "N"
+				}
+				askCallerBeforeNotify := "-"
+				if dbUser.AskCallerBeforeNotify {
+					askCallerBeforeNotify = "A"
+				}
+				fmt.Fprintf(w, "%-40s %s%s%s %5d%5d%5d%7d %d %s %s %s\n",
 					k,
+					hasMastodonID, mastodonSendTootOnCall, askCallerBeforeNotify,
 					dbUser.CallCounter,
 					dbUser.LocalP2pCounter, dbUser.RemoteP2pCounter,
 					dbUser.ConnectedToPeerSecs,

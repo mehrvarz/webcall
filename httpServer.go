@@ -824,11 +824,9 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 			var hubSlice []*Hub
 			for _,hub := range hubMap {
 				if hub!=nil {
-					//hub.HubMutex.RLock()
 					if hub.CalleeClient != nil {
 						hubSlice = append(hubSlice,hub)
 					}
-					//hub.HubMutex.RUnlock()
 				}
 			}
 			//hubMapMutex.RUnlock()
