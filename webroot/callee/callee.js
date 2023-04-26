@@ -845,9 +845,6 @@ function getSettingDone() {
 		if(calleeLink.indexOf("callee/")>0) {
 			userLink = calleeLink.replace("callee/","user/");
 			//console.log("showOnlineReadyMsg a userLink="+userLink);
-		} else if(calleeLink.indexOf("calleelog/")>0) {
-			userLink = calleeLink.replace("calleelog/","user/");
-			//console.log("showOnlineReadyMsg b userLink="+userLink);
 		}
 		let idxParameter = userLink.indexOf("?");
 		if(idxParameter>=0) {
