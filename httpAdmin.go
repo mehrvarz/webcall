@@ -112,7 +112,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 							k, dbEntry.StartTime,
 							time.Unix(dbEntry.StartTime,0).Format("2006-01-02 15:04:05"), err)
 					}
-// TODO delete this key?
+// TODO on err delete this key in dbRegisteredIDs?
 
 				} else if dbUser.LastLoginTime==0 && dbUser.LastLogoffTime==0 {
 					if showAll {
@@ -120,14 +120,16 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 							k, dbEntry.StartTime,
 							time.Unix(dbEntry.StartTime,0).Format("2006-01-02 15:04:05"))
 					}
-// TODO delete this key?
+// TODO on zero time delete this key in dbRegisteredIDs + dbUserBucket ?
 
 				} else {
 					userId := string(k)
 
+					mastodonId := "-"
 					mastodonSendTootOnCall := "-"
 					askCallerBeforeNotify := "-"
 					if dbUser.MastodonID!="" {
+						mastodonId = "M"
 						if dbUser.MastodonID!=userId {
 							userId = userId + " " + dbUser.MastodonID
 						}
@@ -159,18 +161,22 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 					if lastActivity > 0 {
 						daysSinceLastActivity = (nowTimeUnix-lastActivity)/int64(60*60*24)
 					}
+					var daysUsage int64 = 0
+					if lastActivity > 0 {
+						daysUsage = (lastActivity-dbEntry.StartTime)/int64(60*60*24)
+					}
 
 					// id 'NA' means: N=notifications on, A=AskUserDialog
-					fmt.Fprintf(w, "%-40s %s%s%s %5d%5d%5d%7d %d %s %s %d\n",
+					fmt.Fprintf(w, "%-40s %s%s%s%s %5d%5d%5d%7d %d %s %s %3d %3d\n",
 						userId,
-						isOnline, mastodonSendTootOnCall, askCallerBeforeNotify,
+						isOnline, mastodonId, mastodonSendTootOnCall, askCallerBeforeNotify,
 						dbUser.CallCounter,
 						dbUser.LocalP2pCounter, dbUser.RemoteP2pCounter,
 						dbUser.ConnectedToPeerSecs,
 						dbUser.Int2,
 						time.Unix(dbUser.LastLoginTime,0).Format("2006-01-02 15:04:05"),
 						time.Unix(dbUser.LastLogoffTime,0).Format("2006-01-02 15:04:05"),
-						daysSinceLastActivity)
+						daysUsage, daysSinceLastActivity)
 				}
 			}
 			return nil
