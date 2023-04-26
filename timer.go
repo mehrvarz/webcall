@@ -78,13 +78,13 @@ func ticker3hours() {
 						lastActivity = dbUser.LastLoginTime
 					}
 					if(lastActivity==0) {
-						if logWantedFor("timer") {
-							fmt.Printf("ticker3hours %d id=%s lastActivity==0 (%s) %d\n",
-								counter, k, dbUser.MastodonID, daysAge)
-						}
-						// delete this key in dbRegisteredIDs + dbUserBucket
-						// if lastActivity==0 && no mastodon-ID && daysAge>maxDaysOffline
 						if dbUser.MastodonID=="" && daysAge>maxDaysOffline {
+							// delete this key in dbRegisteredIDs + dbUserBucket
+							// if lastActivity==0 && no mastodon-ID && daysAge>maxDaysOffline
+							if logWantedFor("timer") {
+								fmt.Printf("ticker3hours %d delete id=%s lastActivity==0 (%s) %d\n",
+									counter, k, dbUser.MastodonID, daysAge)
+							}
 							deleteKeyArray = append(deleteKeyArray,dbUserKey)
 						}
 					} else {
