@@ -495,7 +495,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		hub.CalleeClient = client // only hub.closeCallee() sets CalleeClient = nil
 		hub.CallerClient = nil
 		hub.ServiceStartTime = time.Now().Unix()
-		hub.ConnectedToPeerSecs = 0
+//		hub.ConnectedToPeerSecs = 0
 
 		if !strings.HasPrefix(client.calleeID,"random") {
 			// get values related to talk- and service-time for this callee from the db
@@ -506,7 +506,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		if logWantedFor("attach") {
 			fmt.Printf("%s (%s) talkSecs=%d startTime=%d\n",
 				client.connType, client.calleeID,
-				hub.ConnectedToPeerSecs, hub.ServiceStartTime)
+				0, //hub.ConnectedToPeerSecs,
+				hub.ServiceStartTime)
 		}
 		hub.CallDurationSecs = 0
 		hub.HubMutex.Unlock()

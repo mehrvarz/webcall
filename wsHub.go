@@ -32,7 +32,7 @@ type Hub struct {
 	lastCallStartTime int64
 	lastCallerContactTime int64
 	ServiceStartTime int64
-	ConnectedToPeerSecs int64 // total secs
+//	ConnectedToPeerSecs int64 // total secs
 	CallDurationSecs int64 // single call secs
 	maxRingSecs int //durationSecs1 int // max wait secs till caller arrives
 	maxTalkSecsIfNoP2p int // durationSecs2
