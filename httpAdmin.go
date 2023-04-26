@@ -87,8 +87,8 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		printFunc(w,"/dumpregistered bucketName=%s\n", bucketName)
 
 		showAll := false
-		url_arg_array, ok := r.URL.Query()["all"]
-		if ok && len(url_arg_array[0]) > 0 {
+		_, ok := r.URL.Query()["all"]
+		if ok {
 			showAll = true
 			printFunc(w,"/dumpregistered showall\n")
 		}
@@ -112,7 +112,16 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 							k, dbEntry.StartTime,
 							time.Unix(dbEntry.StartTime,0).Format("2006-01-02 15:04:05"), err)
 					}
-					// TODO delete this key?
+// TODO delete this key?
+
+				} else if dbUser.LastLoginTime==0 && dbUser.LastLogoffTime==0 {
+					if showAll {
+						fmt.Fprintf(w,"%-40s %d=%s zerodate\n",
+							k, dbEntry.StartTime,
+							time.Unix(dbEntry.StartTime,0).Format("2006-01-02 15:04:05"))
+					}
+// TODO delete this key?
+
 				} else {
 					userId := string(k)
 
@@ -134,12 +143,12 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 					if dbUser.LastLoginTime > dbUser.LastLogoffTime {
 						lastActivity = dbUser.LastLoginTime
 					}
-					secsSinceLastActivity := "-"
+					var daysSinceLastActivity int64 = 0
 					if lastActivity > 0 {
-						secsSinceLastActivity = fmt.Sprintf("%d",nowTimeUnix-lastActivity)
+						daysSinceLastActivity = (nowTimeUnix-lastActivity)/int64(60*60*24)
 					}
 
-					fmt.Fprintf(w, "%-40s %s%s %5d%5d%5d%7d %d %s %s %s\n",
+					fmt.Fprintf(w, "%-40s %s%s %5d%5d%5d%7d %d %s %s %d\n",
 						userId,
 						mastodonSendTootOnCall, askCallerBeforeNotify,
 						dbUser.CallCounter,
@@ -148,7 +157,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 						dbUser.Int2,
 						time.Unix(dbUser.LastLoginTime,0).Format("2006-01-02 15:04:05"),
 						time.Unix(dbUser.LastLogoffTime,0).Format("2006-01-02 15:04:05"),
-						secsSinceLastActivity)
+						daysSinceLastActivity)
 				}
 			}
 			return nil
