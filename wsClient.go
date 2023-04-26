@@ -503,12 +503,14 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			hub.ServiceStartTime = wsClientData.dbEntry.StartTime // race?
 //			hub.ConnectedToPeerSecs = int64(wsClientData.dbUser.ConnectedToPeerSecs)
 		}
+/*
 		if logWantedFor("attach") {
 			fmt.Printf("%s (%s) talkSecs=%d startTime=%d\n",
 				client.connType, client.calleeID,
 				0, //hub.ConnectedToPeerSecs,
 				hub.ServiceStartTime)
 		}
+*/
 		hub.CallDurationSecs = 0
 		hub.HubMutex.Unlock()
 
