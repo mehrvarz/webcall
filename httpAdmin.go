@@ -139,6 +139,18 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 						}
 					}
 
+					isOnline := "-"
+					ejectOn1stFound := true
+					reportBusyCallee := true
+					reportHiddenCallee := true
+					key, _, _, err := GetOnlineCallee(userId, ejectOn1stFound, reportBusyCallee, 
+						reportHiddenCallee, remoteAddr, "/login")
+					if err != nil {
+						isOnline = "E"
+					} else if key != "" {
+						isOnline = "O"
+					}
+
 					lastActivity := dbUser.LastLogoffTime;
 					if dbUser.LastLoginTime > dbUser.LastLogoffTime {
 						lastActivity = dbUser.LastLoginTime
@@ -148,9 +160,10 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 						daysSinceLastActivity = (nowTimeUnix-lastActivity)/int64(60*60*24)
 					}
 
-					fmt.Fprintf(w, "%-40s %s%s %5d%5d%5d%7d %d %s %s %d\n",
+					// id 'NA' means: N=notifications on, A=AskUserDialog
+					fmt.Fprintf(w, "%-40s %s%s%s %5d%5d%5d%7d %d %s %s %d\n",
 						userId,
-						mastodonSendTootOnCall, askCallerBeforeNotify,
+						isOnline, mastodonSendTootOnCall, askCallerBeforeNotify,
 						dbUser.CallCounter,
 						dbUser.LocalP2pCounter, dbUser.RemoteP2pCounter,
 						dbUser.ConnectedToPeerSecs,
