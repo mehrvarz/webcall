@@ -466,35 +466,6 @@ function checkServerMode(callback) {
 	});
 }
 
-/*
-function getUrlParams(param) {
-	if(window.location.search!="") {
-		//gLog("getUrlParams search=%s",window.location.search);
-		var query = window.location.search.substring(1);
-		var parts = query.split("&");
-		for (var i=0;i<parts.length;i++) {
-			//gLog("getUrlParams part(%d)=%s",i,parts[i]);
-			var seg = parts[i].split("=");
-			if (seg[0] == param) {
-				//gLog("getUrlParams found=(%s)",seg[1]);
-				if(typeof seg[1]!=="undefined" && seg[1]!="" && seg[1]!="undefined") {
-					return decodeURI(seg[1]);
-				}
-				return true;
-			}
-		}
-	}
-	if(param=="id") {
-		let path = window.location.pathname;
-		let lastSlash = path.lastIndexOf("/");
-		let value = path.substring(lastSlash+1);
-		gLog("getUrlParams id val="+value);
-		return value;
-	}
-	return false;
-}
-*/
-
 function showPw() {
 	if(formPw.type=="password") {
 		formPw.type="text";
