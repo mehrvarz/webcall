@@ -76,7 +76,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		if err!=nil {
 			printFunc(w,"/dumpuser err=%v\n", err)
 		} else {
-			fmt.Fprintf(w,"/dumpuser no err\n")
+			//fmt.Fprintf(w,"/dumpuser no err\n")
 		}
 		return true
 	}
@@ -86,6 +86,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		bucketName := dbRegisteredIDs
 		printFunc(w,"/dumpregistered dbName=%s bucketName=%s\n", dbMainName, bucketName)
 		db := kv.Db
+		nowTimeUnix := time.Now().Unix()
 		err := db.Update(func(tx *bolt.Tx) error {
 			b := tx.Bucket([]byte(bucketName))
 			c := b.Cursor()
@@ -93,31 +94,56 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 				var dbEntry DbEntry
 				d := gob.NewDecoder(bytes.NewReader(v))
 				d.Decode(&dbEntry)
-/*
-				hasMastodonID := "-"
-				mastodonSendTootOnCall := "-"
-				askCallerBeforeNotify := "-"
-				if dbUser.MastodonID!="" {
-					hasMastodonID = "M"
-					if dbUser.MastodonSendTootOnCall {
-						mastodonSendTootOnCall = "N"
+
+				dbUserKey := fmt.Sprintf("%s_%d", k, dbEntry.StartTime)
+				var dbUser DbUser
+				err := kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
+				if err != nil {
+					fmt.Fprintf(w,"%-40s %d=%s err=%s\n",
+						k, dbEntry.StartTime,
+						time.Unix(dbEntry.StartTime,0).Format("2006-01-02 15:04:05"), err)
+// TODO delete this key?
+				} else {
+					userId := string(k)
+
+					mastodonSendTootOnCall := "-"
+					askCallerBeforeNotify := "-"
+					if dbUser.MastodonID!="" {
+						if dbUser.MastodonID!=userId {
+							userId = userId + " " + dbUser.MastodonID
+						}
+						if dbUser.AskCallerBeforeNotify {
+							askCallerBeforeNotify = "A"
+						}
 					}
-					if dbUser.AskCallerBeforeNotify {
-						askCallerBeforeNotify = "A"
+
+					lastActivity := dbUser.LastLogoffTime;
+					if dbUser.LastLoginTime > dbUser.LastLogoffTime {
+						lastActivity = dbUser.LastLoginTime
 					}
+					secsSinceLastActivity := "-"
+					if lastActivity > 0 {
+						secsSinceLastActivity = fmt.Sprintf("%d",nowTimeUnix-lastActivity)
+					}
+
+					fmt.Fprintf(w, "%-40s %s%s %5d%5d%5d%7d %d %s %s %s\n",
+						userId,
+						mastodonSendTootOnCall, askCallerBeforeNotify,
+						dbUser.CallCounter,
+						dbUser.LocalP2pCounter, dbUser.RemoteP2pCounter,
+						dbUser.ConnectedToPeerSecs,
+						dbUser.Int2,
+						time.Unix(dbUser.LastLoginTime,0).Format("2006-01-02 15:04:05"),
+						time.Unix(dbUser.LastLogoffTime,0).Format("2006-01-02 15:04:05"),
+						secsSinceLastActivity)
 				}
-				// hasMastodonID, mastodonSendTootOnCall, askCallerBeforeNotify,
-*/
-				fmt.Fprintf(w,"%-40s %d=%s\n",
-					k,
-					dbEntry.StartTime, time.Unix(dbEntry.StartTime,0).Format("2006-01-02 15:04:05"))
 			}
 			return nil
 		})
 		if err!=nil {
 			printFunc(w,"/dumpregistered err=%v\n", err)
 		} else {
-			fmt.Fprintf(w,"/dumpregistered no err\n")
+			//fmt.Fprintf(w,"/dumpregistered no err\n")
 		}
 		return true
 	}
@@ -140,6 +166,77 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 			printFunc(w,"/dumpblocked err=%v\n", err)
 		} else {
 			//fmt.Fprintf(w,"/dumpblocked no err\n")
+		}
+		return true
+	}
+
+	if urlPath=="/dumpturn" {
+		timeNow := time.Now()
+
+		recentTurnCalleeIpMutex.Lock()
+		for ipAddr := range recentTurnCalleeIps {
+			turnCallee, ok := recentTurnCalleeIps[ipAddr]
+			if ok {
+				timeSinceCallerDisconnect := timeNow.Sub(turnCallee.TimeStored)
+				printFunc(w,"/dumpturn calleeID=%s since caller disconnect %v\n",
+					turnCallee.CalleeID, timeSinceCallerDisconnect.Seconds())
+			}
+		}
+		recentTurnCalleeIpMutex.Unlock()
+		return true
+	}
+
+	if urlPath=="/dumpping" {
+		hubMapMutex.RLock()
+		defer hubMapMutex.RUnlock()
+		for calleeID := range hubMap {
+			if hubMap[calleeID]!=nil && hubMap[calleeID].CalleeClient!=nil {
+				fmt.Fprintf(w,"/dumpping %-25s pingSent/pongReceived pingReceived/pongSent %v/%v %v/%v\n",
+					calleeID,
+					hubMap[calleeID].CalleeClient.pingSent,
+					hubMap[calleeID].CalleeClient.pongReceived,
+					hubMap[calleeID].CalleeClient.pingReceived,
+					hubMap[calleeID].CalleeClient.pongSent)
+			}
+		}
+		return true
+	}
+
+	if urlPath=="/dumpHashedPw" {
+		dbHashedPwLoop(w)
+		return true
+	}
+
+	if urlPath=="/m-setup" {
+		// get time from url-arg
+		url_arg_array, ok := r.URL.Query()["id"]
+		if !ok || len(url_arg_array[0]) < 1 {
+			printFunc(w,"# /m-setup url arg 'id' not given\n")
+			return true
+		}
+		id := url_arg_array[0]
+		if mastodonMgr != nil {
+			mastodonMgr.commandSetup(id,false)
+		}
+		return true
+	}
+	if urlPath=="/m-remove" {
+		// get time from url-arg
+		url_arg_array, ok := r.URL.Query()["id"]
+		if !ok || len(url_arg_array[0]) < 1 {
+			printFunc(w,"# /m-remove url arg 'id' not given\n")
+			return true
+		}
+		id := url_arg_array[0]
+		if mastodonMgr != nil {
+			mastodonMgr.commandRemove(id,false)
+		}
+		return true
+	}
+
+	if urlPath=="/dumpPostedMsgs" {
+		if mastodonMgr != nil {
+			mastodonMgr.dumpPostedMsgEvents(w)
 		}
 		return true
 	}
@@ -334,77 +431,6 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		return true
 	}
 	*/
-
-	if urlPath=="/dumpturn" {
-		timeNow := time.Now()
-
-		recentTurnCalleeIpMutex.Lock()
-		for ipAddr := range recentTurnCalleeIps {
-			turnCallee, ok := recentTurnCalleeIps[ipAddr]
-			if ok {
-				timeSinceCallerDisconnect := timeNow.Sub(turnCallee.TimeStored)
-				printFunc(w,"/dumpturn calleeID=%s since caller disconnect %v\n",
-					turnCallee.CalleeID, timeSinceCallerDisconnect.Seconds())
-			}
-		}
-		recentTurnCalleeIpMutex.Unlock()
-		return true
-	}
-
-	if urlPath=="/dumpping" {
-		hubMapMutex.RLock()
-		defer hubMapMutex.RUnlock()
-		for calleeID := range hubMap {
-			if hubMap[calleeID]!=nil && hubMap[calleeID].CalleeClient!=nil {
-				fmt.Fprintf(w,"/dumpping %-25s pingSent/pongReceived pingReceived/pongSent %v/%v %v/%v\n",
-					calleeID,
-					hubMap[calleeID].CalleeClient.pingSent,
-					hubMap[calleeID].CalleeClient.pongReceived,
-					hubMap[calleeID].CalleeClient.pingReceived,
-					hubMap[calleeID].CalleeClient.pongSent)
-			}
-		}
-		return true
-	}
-
-	if urlPath=="/dumpHashedPw" {
-		dbHashedPwLoop(w)
-		return true
-	}
-
-	if urlPath=="/m-setup" {
-		// get time from url-arg
-		url_arg_array, ok := r.URL.Query()["id"]
-		if !ok || len(url_arg_array[0]) < 1 {
-			printFunc(w,"# /m-setup url arg 'id' not given\n")
-			return true
-		}
-		id := url_arg_array[0]
-		if mastodonMgr != nil {
-			mastodonMgr.commandSetup(id,false)
-		}
-		return true
-	}
-	if urlPath=="/m-remove" {
-		// get time from url-arg
-		url_arg_array, ok := r.URL.Query()["id"]
-		if !ok || len(url_arg_array[0]) < 1 {
-			printFunc(w,"# /m-remove url arg 'id' not given\n")
-			return true
-		}
-		id := url_arg_array[0]
-		if mastodonMgr != nil {
-			mastodonMgr.commandRemove(id,false)
-		}
-		return true
-	}
-
-	if urlPath=="/dumpPostedMsgs" {
-		if mastodonMgr != nil {
-			mastodonMgr.dumpPostedMsgEvents(w)
-		}
-		return true
-	}
 
 	return false
 }
