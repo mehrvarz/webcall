@@ -100,8 +100,9 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 			}
 		}
 
-		entries:=0
-		entriesOnline:=0
+		countEntries:=0
+		countEntriesOnline:=0
+		countEntriesNotification:=0
 		db := kv.Db
 		nowTimeUnix := time.Now().Unix()
 		err := db.Update(func(tx *bolt.Tx) error {
@@ -124,7 +125,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 				} else {
 					userId := string(k)
 
-					entries++
+					countEntries++
 					isOnline := "-"
 					ejectOn1stFound := true
 					reportBusyCallee := true
@@ -135,7 +136,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 						isOnline = "E"
 					} else if key != "" {
 						isOnline = "O"
-						entriesOnline++
+						countEntriesOnline++
 					} else if(showOnline) {
 						continue
 					}
@@ -153,6 +154,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 							if dbUser.AskCallerBeforeNotify {
 								askCallerBeforeNotify = "A"
 							}
+							countEntriesNotification++
 						}
 					}
 
@@ -172,8 +174,9 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 
 					// id 'NA' means: N=notifications on, A=AskUserDialog
 //					fmt.Fprintf(w, "%-40s %s%s%s%s %5d%5d%5d%7d %d %s %s %4d %3d %3d\n",
-					fmt.Fprintf(w, "%-40s %s%s%s%s %d %s %s %4d %3d %3d\n",
+					fmt.Fprintf(w, "%-40s %d %s%s%s%s %d %s %s %4d %3d %3d\n",
 						userId,
+						dbEntry.StartTime,
 						isOnline, mastodonId, mastodonSendTootOnCall, askCallerBeforeNotify,
 //						dbUser.CallCounter,
 //						dbUser.LocalP2pCounter, dbUser.RemoteP2pCounter,
@@ -191,7 +194,8 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		} else {
 			//fmt.Fprintf(w,"/dumpregistered no err\n")
 		}
-		fmt.Fprintf(w,"/dumpregistered entries=%d entriesOnline=%d\n",entries,entriesOnline)
+		fmt.Fprintf(w,"/dumpregistered entries=%d online=%d entriesNotification=%d\n",
+			countEntries,countEntriesOnline, countEntriesNotification)
 		return true
 	}
 
@@ -288,40 +292,6 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		return true
 	}
 
-	/* developer tools below
-	if urlPath=="/deluserid" {
-		// get time from url-arg
-		url_arg_array, ok := r.URL.Query()["time"]
-		if !ok || len(url_arg_array[0]) < 1 {
-			printFunc(w,"# /deluserid url arg 'time' not given\n")
-			return true
-		}
-		urlTime := url_arg_array[0]
-		urlTimei64, err := strconv.ParseInt(urlTime, 10, 64)
-		if err!=nil {
-			printFunc(w,"# /deluserid error converting arg 'time'=%d to int64 %v\n",urlTime,err)
-			return true
-		}
-		userKey := fmt.Sprintf("%s_%d",urlID, urlTimei64)
-		bucketName := dbUserBucket
-		fmt.Printf("/deluserid dbName=%s bucketName=%s\n", dbMainName, bucketName)
-		err = kv.Delete(dbUserBucket, userKey)
-		if err!=nil {
-			printFunc(w,"# /deluserid fail to delete user key=%v %v\n", userKey, err)
-		} else {
-			printFunc(w,"/deluserid deleted user key=%v\n", userKey)
-		}
-
-		// delete hashedPW
-		err = kvHashedPw.(skv.SKV).Delete(dbHashedPwBucket, urlID)
-		if err!=nil {
-			fmt.Printf("# /deluserid delete dbHashedPwBucket urlID=%s err=%v\n", urlID, err)
-		} else {
-			// all is well
-		}
-		return true
-	}
-
 	if urlPath=="/delregisteredid" {
 		// get time from url-arg
 		url_arg_array, ok := r.URL.Query()["time"]
@@ -354,6 +324,40 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		}
 
 		// TODO delete hashedPW ?
+		return true
+	}
+
+	/* developer tools below
+	if urlPath=="/deluserid" {
+		// get time from url-arg
+		url_arg_array, ok := r.URL.Query()["time"]
+		if !ok || len(url_arg_array[0]) < 1 {
+			printFunc(w,"# /deluserid url arg 'time' not given\n")
+			return true
+		}
+		urlTime := url_arg_array[0]
+		urlTimei64, err := strconv.ParseInt(urlTime, 10, 64)
+		if err!=nil {
+			printFunc(w,"# /deluserid error converting arg 'time'=%d to int64 %v\n",urlTime,err)
+			return true
+		}
+		userKey := fmt.Sprintf("%s_%d",urlID, urlTimei64)
+		bucketName := dbUserBucket
+		fmt.Printf("/deluserid dbName=%s bucketName=%s\n", dbMainName, bucketName)
+		err = kv.Delete(dbUserBucket, userKey)
+		if err!=nil {
+			printFunc(w,"# /deluserid fail to delete user key=%v %v\n", userKey, err)
+		} else {
+			printFunc(w,"/deluserid deleted user key=%v\n", userKey)
+		}
+
+		// delete hashedPW
+		err = kvHashedPw.(skv.SKV).Delete(dbHashedPwBucket, urlID)
+		if err!=nil {
+			fmt.Printf("# /deluserid delete dbHashedPwBucket urlID=%s err=%v\n", urlID, err)
+		} else {
+			// all is well
+		}
 		return true
 	}
 
