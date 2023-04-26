@@ -112,8 +112,11 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 						if dbUser.MastodonID!=userId {
 							userId = userId + " " + dbUser.MastodonID
 						}
-						if dbUser.AskCallerBeforeNotify {
-							askCallerBeforeNotify = "A"
+						if dbUser.MastodonSendTootOnCall {
+							mastodonSendTootOnCall = "N"
+							if dbUser.AskCallerBeforeNotify {
+								askCallerBeforeNotify = "A"
+							}
 						}
 					}
 
