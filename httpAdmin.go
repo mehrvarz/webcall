@@ -25,14 +25,13 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 	}
 
 	if urlPath=="/dumpuser" {
-		bucketName := dbUserBucket
-		printFunc(w,"/dumpuser dbName=%s bucketName=%s\n", dbMainName, bucketName)
+		printFunc(w,"/dumpuser\n")
 		db := kv.Db
 		nowTimeUnix := time.Now().Unix()
 		err := db.Update(func(tx *bolt.Tx) error {
-			b := tx.Bucket([]byte(bucketName))
+			b := tx.Bucket([]byte(dbUserBucket))
 			if b==nil {
-				return errors.New("read bucket error "+bucketName)
+				return errors.New("read bucket error")
 			}
 			c := b.Cursor()
 			for k, v := c.First(); k != nil; k, v = c.Next() {
@@ -83,13 +82,21 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 
 	if urlPath=="/dumpregistered" {
 		// show the list of callee-IDs that have been registered and are not yet outdated
-		printFunc(w,"/dumpregistered\n")
 
 		showAll := false
+		showOnline := false
 		_, ok := r.URL.Query()["all"]
 		if ok {
 			showAll = true
 			printFunc(w,"/dumpregistered showall\n")
+		} else {
+			_, ok := r.URL.Query()["online"]
+			if ok {
+				showOnline = true
+				printFunc(w,"/dumpregistered showOnline\n")
+			} else {
+				printFunc(w,"/dumpregistered\n")
+			}
 		}
 
 		db := kv.Db
@@ -124,6 +131,8 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 						isOnline = "E"
 					} else if key != "" {
 						isOnline = "O"
+					} else if(showOnline) {
+						continue
 					}
 
 					mastodonId := "-"
