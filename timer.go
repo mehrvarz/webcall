@@ -153,10 +153,16 @@ func ticker3hours() {
 				fmt.Printf("# ticker3hours delete contacts of id=%s err=%v\n", userID, err)
 			}
 
+			err = kv.Delete(dbRegisteredIDs, userID)
+			if err!=nil {
+				// this is bad
+				fmt.Printf("# ticker3hours delete dbRegisteredIDs id=%s err=%v\n", userID, err)
+			}
+
 			err = kv.Delete(dbUserBucket, key)
 			if err!=nil {
 				// this is bad
-				fmt.Printf("# ticker3hours delete user-id=%s err=%v\n", key, err)
+				fmt.Printf("# ticker3hours delete dbUserBucket id=%s err=%v\n", key, err)
 			} else {
 				// all is well: create a dbBlockedIDs entry (will be deleted after 60 days)
 				//fmt.Printf("ticker3hours key=%s user deleted\n", key)
