@@ -49,16 +49,16 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 				}
 
 				hasMastodonID := "-"
+				mastodonSendTootOnCall := "-"
+				askCallerBeforeNotify := "-"
 				if dbUser.MastodonID!="" {
 					hasMastodonID = "M"
-				}
-				mastodonSendTootOnCall := "-"
-				if dbUser.MastodonSendTootOnCall {
-					mastodonSendTootOnCall = "N"
-				}
-				askCallerBeforeNotify := "-"
-				if dbUser.AskCallerBeforeNotify {
-					askCallerBeforeNotify = "A"
+					if dbUser.MastodonSendTootOnCall {
+						mastodonSendTootOnCall = "N"
+					}
+					if dbUser.AskCallerBeforeNotify {
+						askCallerBeforeNotify = "A"
+					}
 				}
 				fmt.Fprintf(w, "%-40s %s%s%s %5d%5d%5d%7d %d %s %s %s\n",
 					k,
