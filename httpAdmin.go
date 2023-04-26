@@ -99,6 +99,8 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 			}
 		}
 
+		entries:=0
+		entriesOnline:=0
 		db := kv.Db
 		nowTimeUnix := time.Now().Unix()
 		err := db.Update(func(tx *bolt.Tx) error {
@@ -121,6 +123,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 				} else {
 					userId := string(k)
 
+					entries++
 					isOnline := "-"
 					ejectOn1stFound := true
 					reportBusyCallee := true
@@ -131,6 +134,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 						isOnline = "E"
 					} else if key != "" {
 						isOnline = "O"
+						entriesOnline++
 					} else if(showOnline) {
 						continue
 					}
@@ -185,6 +189,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		} else {
 			//fmt.Fprintf(w,"/dumpregistered no err\n")
 		}
+		fmt.Fprintf(w,"/dumpregistered entries=%d entriesOnline=%d\n",entries,entriesOnline)
 		return true
 	}
 
