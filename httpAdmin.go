@@ -93,8 +93,24 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 				var dbEntry DbEntry
 				d := gob.NewDecoder(bytes.NewReader(v))
 				d.Decode(&dbEntry)
-				fmt.Fprintf(w,"registered id=%s %d=%s\n",
-					k, dbEntry.StartTime, time.Unix(dbEntry.StartTime,0).Format("2006-01-02 15:04:05"))
+/*
+				hasMastodonID := "-"
+				mastodonSendTootOnCall := "-"
+				askCallerBeforeNotify := "-"
+				if dbUser.MastodonID!="" {
+					hasMastodonID = "M"
+					if dbUser.MastodonSendTootOnCall {
+						mastodonSendTootOnCall = "N"
+					}
+					if dbUser.AskCallerBeforeNotify {
+						askCallerBeforeNotify = "A"
+					}
+				}
+				// hasMastodonID, mastodonSendTootOnCall, askCallerBeforeNotify,
+*/
+				fmt.Fprintf(w,"%-40s %d=%s\n",
+					k,
+					dbEntry.StartTime, time.Unix(dbEntry.StartTime,0).Format("2006-01-02 15:04:05"))
 			}
 			return nil
 		})
