@@ -83,8 +83,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 
 	if urlPath=="/dumpregistered" {
 		// show the list of callee-IDs that have been registered and are not yet outdated
-		bucketName := dbRegisteredIDs
-		printFunc(w,"/dumpregistered bucketName=%s\n", bucketName)
+		printFunc(w,"/dumpregistered\n")
 
 		showAll := false
 		_, ok := r.URL.Query()["all"]
@@ -96,7 +95,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		db := kv.Db
 		nowTimeUnix := time.Now().Unix()
 		err := db.Update(func(tx *bolt.Tx) error {
-			b := tx.Bucket([]byte(bucketName))
+			b := tx.Bucket([]byte(dbRegisteredIDs))
 			c := b.Cursor()
 			for k, v := c.First(); k != nil; k, v = c.Next() {
 				var dbEntry DbEntry
@@ -112,18 +111,20 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 							k, dbEntry.StartTime,
 							time.Unix(dbEntry.StartTime,0).Format("2006-01-02 15:04:05"), err)
 					}
-// TODO on err delete this key in dbRegisteredIDs?
-
-				} else if dbUser.LastLoginTime==0 && dbUser.LastLogoffTime==0 {
-					if showAll {
-						fmt.Fprintf(w,"%-40s %d=%s zerodate\n",
-							k, dbEntry.StartTime,
-							time.Unix(dbEntry.StartTime,0).Format("2006-01-02 15:04:05"))
-					}
-// TODO on zero time delete this key in dbRegisteredIDs + dbUserBucket ?
-
 				} else {
 					userId := string(k)
+
+					isOnline := "-"
+					ejectOn1stFound := true
+					reportBusyCallee := true
+					reportHiddenCallee := true
+					key, _, _, err := GetOnlineCallee(userId, ejectOn1stFound, reportBusyCallee,
+						reportHiddenCallee, remoteAddr, "/login")
+					if err != nil {
+						isOnline = "E"
+					} else if key != "" {
+						isOnline = "O"
+					}
 
 					mastodonId := "-"
 					mastodonSendTootOnCall := "-"
@@ -141,18 +142,6 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 						}
 					}
 
-					isOnline := "-"
-					ejectOn1stFound := true
-					reportBusyCallee := true
-					reportHiddenCallee := true
-					key, _, _, err := GetOnlineCallee(userId, ejectOn1stFound, reportBusyCallee, 
-						reportHiddenCallee, remoteAddr, "/login")
-					if err != nil {
-						isOnline = "E"
-					} else if key != "" {
-						isOnline = "O"
-					}
-
 					lastActivity := dbUser.LastLogoffTime;
 					if dbUser.LastLoginTime > dbUser.LastLogoffTime {
 						lastActivity = dbUser.LastLoginTime
@@ -161,13 +150,14 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 					if lastActivity > 0 {
 						daysSinceLastActivity = (nowTimeUnix-lastActivity)/int64(60*60*24)
 					}
+					daysAge := (nowTimeUnix-dbEntry.StartTime)/int64(60*60*24)
 					var daysUsage int64 = 0
 					if lastActivity > 0 {
 						daysUsage = (lastActivity-dbEntry.StartTime)/int64(60*60*24)
 					}
 
 					// id 'NA' means: N=notifications on, A=AskUserDialog
-					fmt.Fprintf(w, "%-40s %s%s%s%s %5d%5d%5d%7d %d %s %s %3d %3d\n",
+					fmt.Fprintf(w, "%-40s %s%s%s%s %5d%5d%5d%7d %d %s %s %4d %3d %3d\n",
 						userId,
 						isOnline, mastodonId, mastodonSendTootOnCall, askCallerBeforeNotify,
 						dbUser.CallCounter,
@@ -176,7 +166,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 						dbUser.Int2,
 						time.Unix(dbUser.LastLoginTime,0).Format("2006-01-02 15:04:05"),
 						time.Unix(dbUser.LastLogoffTime,0).Format("2006-01-02 15:04:05"),
-						daysUsage, daysSinceLastActivity)
+						daysAge, daysUsage, daysSinceLastActivity)
 				}
 			}
 			return nil

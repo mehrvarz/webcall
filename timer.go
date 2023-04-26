@@ -68,18 +68,26 @@ func ticker3hours() {
 					// this occurs with mapping tmpID's - is not an error
 					//fmt.Printf("# ticker3hours %d error read db=%s bucket=%s get key=%v err=%v\n",
 					//	counter, dbMainName, dbUserBucket, dbUserKey, err2)
+					// on err delete this key in dbRegisteredIDs?
+					deleteKeyArray = append(deleteKeyArray,dbUserKey)
 				} else {
 					counter++
-					lastLoginTime := dbUser.LastLoginTime
-					if(lastLoginTime==0) {
-						lastLoginTime = dbEntry.StartTime // created by httpRegister()
+					daysAge := (timeNowUnix - dbEntry.StartTime)/int64(60*60*24)
+					lastActivity := dbUser.LastLogoffTime;
+					if dbUser.LastLoginTime > dbUser.LastLogoffTime {
+						lastActivity = dbUser.LastLoginTime
 					}
-					if(lastLoginTime==0) {
+					if(lastActivity==0) {
 						if logWantedFor("timer") {
-							fmt.Printf("ticker3hours %d id=%s sinceLastLogin=0 StartTime=0\n", counter, k)
+							fmt.Printf("ticker3hours %d id=%s lastActivity==0\n", counter, k)
+						}
+						// delete this key in dbRegisteredIDs + dbUserBucket
+						// if lastActivity==0 && no mastodon-ID && daysAge>maxDaysOffline
+						if dbUser.MastodonID=="" && daysAge>maxDaysOffline {
+							deleteKeyArray = append(deleteKeyArray,dbUserKey)
 						}
 					} else {
-						sinceLastLoginSecs := timeNowUnix - lastLoginTime
+						sinceLastLoginSecs := timeNowUnix - lastActivity
 						sinceLastLoginDays := sinceLastLoginSecs/(24*60*60)
 						if sinceLastLoginDays > maxDaysOffline {
 							// account is outdated, delete this entry
