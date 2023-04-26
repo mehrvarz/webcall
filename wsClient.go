@@ -785,7 +785,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 
 		if !c.calleeInitReceived.Get() {
 			// on first init only
-			//fmt.Printf("%s (%s) callee init %s\n", c.connType, c.calleeID, c.RemoteAddr)
+			//fmt.Printf("%s (%s) init %s\n", c.connType, c.calleeID, c.RemoteAddr)
 			c.hub.HubMutex.Lock()
 			c.hub.CallerClient = nil
 			c.hub.HubMutex.Unlock()
@@ -805,7 +805,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 				if ok {
 					loginCount = len(calleeLoginSlice)
 				}
-				fmt.Printf("%s (%s) callee init %d ws=%d %s v=%s\n",
+				fmt.Printf("%s (%s) init %d ws=%d %s v=%s\n",
 					c.connType, c.calleeID, loginCount, c.hub.WsClientID, c.RemoteAddr, c.clientVersion)
 			}
 
@@ -818,7 +818,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 		// deliver the webcall codetag version string to callee
 		err := c.Write([]byte("sessionId|"+codetag))
 		if err != nil {
-			fmt.Printf("# %s (%s) send sessionId %s  <- to callee err=%v\n",
+			fmt.Printf("# %s (%s) init send sessionId %s  <- to callee err=%v\n",
 				c.connType, c.calleeID, c.RemoteAddr, err)
 			c.hub.closeCallee("init, send sessionId to callee: "+err.Error())
 			return
@@ -828,17 +828,17 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			// send "newer client available"
 			if clientUpdateBelowVersion!="" && !c.autologin {
 				if c.clientVersion < clientUpdateBelowVersion {
-					//fmt.Printf("%s (%s) v=%s\n",c.connType,c.calleeID,c.clientVersion)
+					//fmt.Printf("%s (%s) init v=%s\n",c.connType,c.calleeID,c.clientVersion)
 					// NOTE: msg MUST NOT contain apostroph (') characters
 					msg := "Please upgrade WebCall client to "+
 						   "<a href=\"/webcall/update/\">v"+clientUpdateBelowVersion+"&nbsp;or&nbsp;higher</a>"
 					if logWantedFor("attach") {
-						fmt.Printf("%s (%s) %s %s send status %s\n",
+						fmt.Printf("%s (%s) init %s %s send status %s\n",
 							c.connType, c.calleeID, c.RemoteAddr, c.clientVersion, msg)
 					}
 					err = c.Write([]byte("status|"+msg))
 					if err != nil {
-						fmt.Printf("# %s (%s) send status (%s) %s <- to callee err=%v\n",
+						fmt.Printf("# %s (%s) init send status (%s) %s <- to callee err=%v\n",
 							c.connType, c.calleeID, c.RemoteAddr, err)
 						//c.hub.doUnregister(c, "init, send status to callee: "+err.Error())
 						//return
@@ -867,11 +867,11 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			}
 			var err error
 			if countOutdated>0 {
-				fmt.Printf("%s (%s) deleted %d outdated from waitingCallerSlice\n",
+				fmt.Printf("%s (%s) init deleted %d outdated from waitingCallerSlice\n",
 					c.connType, c.calleeID, countOutdated)
 				err = kvCalls.Put(dbWaitingCaller, c.calleeID, waitingCallerSlice, true) // skipConfirm
 				if err!=nil {
-					fmt.Printf("# %s (%s) failed to store dbWaitingCaller\n",c.connType,c.calleeID)
+					fmt.Printf("# %s (%s) init failed to store dbWaitingCaller\n",c.connType,c.calleeID)
 				}
 			}
 
@@ -884,7 +884,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 
 			if len(waitingCallerSlice)>0 || len(missedCallsSlice)>0 {
 				if logWantedFor("waitingCaller") {
-					fmt.Printf("%s (%s) waitingCaller=%d missedCalls=%d\n",c.connType,c.calleeID,
+					fmt.Printf("%s (%s) init waitingCaller=%d missedCalls=%d\n",c.connType,c.calleeID,
 						len(waitingCallerSlice),len(missedCallsSlice))
 				}
 				// -> httpServer c.Write()
