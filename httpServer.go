@@ -410,6 +410,11 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	if idxCalleeID>=0 && !strings.HasSuffix(referer,"/") {
 		calleeID = strings.ToLower(referer[idxCalleeID+8:])
 		if calleeID=="register" || calleeID=="settings" || calleeID=="contacts" {
+			fmt.Printf("! httpApi clear calleeID=(%s)\n",calleeID)
+			calleeID = ""
+		}
+		if strings.Contains(calleeID,"%") {
+			fmt.Printf("! httpApi clear calleeID=(%s)\n",calleeID)
 			calleeID = ""
 		}
 	}
