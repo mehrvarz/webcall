@@ -153,13 +153,13 @@ func ticker3hours() {
 			if err!=nil {
 				fmt.Printf("# ticker3hours delete contacts of id=%s err=%v\n", userID, err)
 			}
-
+			/* already done by c.Delete()
 			err = kv.Delete(dbRegisteredIDs, userID)
 			if err!=nil {
 				// this is bad
 				fmt.Printf("# ticker3hours delete dbRegisteredIDs id=%s err=%v\n", userID, err)
 			}
-
+			*/
 			err = kv.Delete(dbUserBucket, key)
 			if err!=nil {
 				// this is bad
