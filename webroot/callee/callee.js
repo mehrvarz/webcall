@@ -993,7 +993,7 @@ function showOnlineReadyMsg() {
 let tryingToOpenWebSocket = false;
 let wsSendMessage = "";
 function connectSignaling(message,comment) {
-	console.log("connect to signaling server "+comment);
+	console.log("connect to signaling server '"+comment+"' '"+message+"'");
     var wsUrl = wsAddr;
 
 	tryingToOpenWebSocket = true;
@@ -1018,7 +1018,12 @@ function connectSignaling(message,comment) {
 			}
 			return;
 		}
-	    gLog('connectSig: open ws connection... '+calleeID+' '+wsUrl);
+	    console.log('connectSig: open ws connection... '+calleeID+' '+wsUrl);
+		if(peerCon==null || peerCon.signalingState=="closed") {
+		    console.log('connectSig: peercon is gone');
+			newPeerCon();
+		}
+
 		wsConn = new WebSocket(wsUrl);
 		wsConn.onopen = wsOnOpen;
 		wsConn.onerror = wsOnError;
