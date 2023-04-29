@@ -133,7 +133,8 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		} else if callerIdLong!="" {
 			msg = callerIdLong
 		}
-		msg += "incoming. Answer: "
+		// space as 1st char is required
+		msg += " incoming. Answer: "
 
 		// adding /callee link
 		hostUrl := "https://"+hostname
