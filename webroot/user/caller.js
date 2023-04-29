@@ -2498,7 +2498,7 @@ function dataChannelOnmessage(event) {
 				gLog("dataChannel.close on 'disconnect'");
 				dataChannel.close();
 				dataChannel = null;
-				hangupWithBusySound(false,"by peer via datachl");
+				hangupWithBusySound(false,"disconnect by peer via datachl");
 			} else if(event.data.startsWith("cmd|")) {
 				let subCmd = event.data.substring(4);
 				//gLog("subCmd="+subCmd);
