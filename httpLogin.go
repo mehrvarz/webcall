@@ -788,11 +788,11 @@ func createCookie(w http.ResponseWriter, urlID string, pw string, pwIdCombo *PwI
 func createHashPw(urlID string, pw string, pwIdCombo *PwIdCombo, contextStr string) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.MinCost)
 	if err != nil {
-		fmt.Printf("# %s createHashPw bcrypt err=%v\n", contextStr, err)
+		fmt.Printf("# %s createHashPw err=%v\n", contextStr, err)
 		return err
 	}
 
-	fmt.Printf("%s (%s) createHashPw bcrypt store (%v)\n", contextStr, urlID, string(hash))
+	fmt.Printf("%s (%s) createHashPw store (%v)\n", contextStr, urlID, string(hash))
 	pwIdCombo.Pw = string(hash)
 	pwIdCombo.CalleeId = urlID
 	pwIdCombo.Created = time.Now().Unix()
