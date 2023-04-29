@@ -495,22 +495,14 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		hub.CalleeClient = client // only hub.closeCallee() sets CalleeClient = nil
 		hub.CallerClient = nil
 		hub.ServiceStartTime = time.Now().Unix()
-//		hub.ConnectedToPeerSecs = 0
 
 		if !strings.HasPrefix(client.calleeID,"random") {
 			// get values related to talk- and service-time for this callee from the db
 			// so that 1s-ticker can calculate the live remaining time
 			hub.ServiceStartTime = wsClientData.dbEntry.StartTime // race?
-//			hub.ConnectedToPeerSecs = int64(wsClientData.dbUser.ConnectedToPeerSecs)
+			//hub.ConnectedToPeerSecs = int64(wsClientData.dbUser.ConnectedToPeerSecs)
 		}
-/*
-		if logWantedFor("attach") {
-			fmt.Printf("%s (%s) talkSecs=%d startTime=%d\n",
-				client.connType, client.calleeID,
-				0, //hub.ConnectedToPeerSecs,
-				hub.ServiceStartTime)
-		}
-*/
+
 		hub.CallDurationSecs = 0
 		hub.HubMutex.Unlock()
 
