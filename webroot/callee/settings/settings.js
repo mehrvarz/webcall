@@ -213,11 +213,18 @@ function prepareSettings(xhrresponse) {
 		}
 	}
 */
+
+	let displayVersion = "";
+/*
 	if(typeof serverSettings.serverVersion!=="undefined") {
 		if(!gentle) console.log('serverSettings.serverVersion',serverSettings.serverVersion);
 		serverVersion = serverSettings.serverVersion;
-		document.getElementById("verstring").innerHTML = "WebCall Server: "+serverVersion;
+		//document.getElementById("verstring").innerHTML = "WebCall Server: "+serverVersion;
+		displayVersion = "WebCall server: "+serverVersion+"<br>";
 	}
+*/
+	displayVersion += "WebCall client: v"+clientVersion;
+	document.getElementById("verstring").innerHTML = displayVersion;
 
 	form.style.display = "block";
 	setTimeout(function() {
