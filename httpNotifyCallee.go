@@ -133,7 +133,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		} else if callerIdLong!="" {
 			msg = callerIdLong
 		}
-		msg += " is WebCalling you"
+		msg += "incoming. Answer: "
 
 		// adding /callee link
 		hostUrl := "https://"+hostname
