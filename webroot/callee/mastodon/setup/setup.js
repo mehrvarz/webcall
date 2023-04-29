@@ -4,7 +4,6 @@ const registerButton = document.querySelector('button#register');
 const statusLine = document.getElementById('status');
 const idLine = document.getElementById('id');
 const form = document.querySelector('form#password');
-const singlebutton = false;
 var calleeLink = "";
 var mid = "";
 var cookieName = "";

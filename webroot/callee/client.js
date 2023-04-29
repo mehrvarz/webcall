@@ -1600,28 +1600,27 @@ function showStatus(msg,timeoutMs) {
 			console.log("status: "+msg);
 		}
 	}
-	if(/*msg!="" &&*/ !singlebutton) {
-		statusLine.style.display = "none";
-		statusLine.style.opacity = 0;
-		statusLine.innerHTML = msg;
-		statusLine.style.opacity = 1;
-		statusLine.style.display = "block";
-		if(msg!="" && sleepMs>=0) {
-			// msg bleibt für sleepMs stehen
-			// und dann transitioned to opacity für 600ms zu 0
-			// TODO would be nice to transition also the height
-			setTimeout(function(oldMsg) {
-				if(statusLine.innerHTML==oldMsg) {
-					let opacityTransitioned = function() {
-						statusLine.innerHTML = "";
-						statusLine.removeEventListener('transitionend',opacityTransitioned);
-					}
-					statusLine.addEventListener('transitionend', opacityTransitioned);
 
-					statusLine.style.opacity = 0;
+	statusLine.style.display = "none";
+	statusLine.style.opacity = 0;
+	statusLine.innerHTML = msg;
+	statusLine.style.opacity = 1;
+	statusLine.style.display = "block";
+	if(msg!="" && sleepMs>=0) {
+		// msg bleibt für sleepMs stehen
+		// und dann transitioned to opacity für 600ms zu 0
+		// TODO would be nice to transition also the height
+		setTimeout(function(oldMsg) {
+			if(statusLine.innerHTML==oldMsg) {
+				let opacityTransitioned = function() {
+					statusLine.innerHTML = "";
+					statusLine.removeEventListener('transitionend',opacityTransitioned);
 				}
-			},sleepMs,msg);
-		}
+				statusLine.addEventListener('transitionend', opacityTransitioned);
+
+				statusLine.style.opacity = 0;
+			}
+		},sleepMs,msg);
 	}
 }
 

@@ -17,9 +17,6 @@ const msgBoxMaxLen = 137;
 var connectingText = "Connecting P2P...";
 //var ringingText = "Ringing...";
 //var hangingUpText = "Hanging up...";
-var singleButtonReadyText = "Click to make your order<br>Live operator";
-var singleButtonBusyText = "All lines are busy.<br>Please try again a little later.";
-var singleButtonConnectedText = "You are connected.<br>How can we help you?";
 var notificationSound = null;
 var dtmfDialingSound = null;
 var busySignalSound = null;
@@ -60,7 +57,6 @@ var msgbox;
 var timerElement;
 var calleeOfflineElement;
 var onlineIndicator;
-if(!singlebutton) {
 	codecPreferences = document.querySelector('#codecPreferences');
 	titleElement = document.getElementById('title');
 	statusLine = document.getElementById('status');
@@ -68,7 +64,6 @@ if(!singlebutton) {
 	timerElement = document.querySelector('div#timer');
 	calleeOfflineElement = document.getElementById("calleeOffline");
 	onlineIndicator = document.querySelector('img#onlineIndicator');
-}
 var microphoneIsNeeded = true;
 var fileReceiveBuffer = [];
 var fileReceivedSize = 0;
@@ -146,31 +141,9 @@ window.onload = function() {
 		window.location.replace("/user/"+calleeID);
 		return;
 	}
-
-	let text = getUrlParams("readyText");
-	if(typeof text!=="undefined" && text!="" && text!="undefined") {
-		singleButtonReadyText = decodeURI(text);
-		gLog("onload url arg readyText",singleButtonReadyText);
-		dialButton.innerHTML = "<b>W E B C A L L</b><br>"+singleButtonReadyText;
-	}
-	text = getUrlParams("connectingText");
-	if(typeof text!=="undefined" && text!="" && text!="undefined") {
-		connectingText = decodeURI(text);
-		gLog("onload url arg connectingText",connectingText);
-	}
-	text = getUrlParams("busyText");
-	if(typeof text!=="undefined" && text!="" && text!="undefined") {
-		singleButtonBusyText = decodeURI(text);
-		gLog("onload url arg busyText",singleButtonBusyText);
-	}
-	text = getUrlParams("connectedText");
-	if(typeof text!=="undefined" && text!="" && text!="undefined") {
-		singleButtonConnectedText = decodeURI(text);
-		gLog("onload url arg connectedText",singleButtonConnectedText);
-	}
 	// dialsounds
 	playDialSounds = true;
-	text = getUrlParams("ds");
+	let text = getUrlParams("ds");
 	if(typeof text!=="undefined" && text!="" && text!="undefined") {
 		if(text=="false") {
 			playDialSounds = false;
@@ -898,16 +871,11 @@ function onload3(comment) {
 	calleeOnlineAction("init");
 
 	if(dialButton) {
-		if(singlebutton) {
-			dialButton.innerHTML = "<b>W E B C A L L</b><br>"+singleButtonReadyText;
+		if(calleeID.match(/^[0-9]*$/) != null) {
+			// calleeID is pure numeric - don't show
 		} else {
-			if(calleeID.match(/^[0-9]*$/) != null) {
-				// calleeID is pure numeric - don't show
-			} else {
-				//dialButton.innerHTML = "Call "+calleeIdTitle;
-			}
+			//dialButton.innerHTML = "Call "+calleeIdTitle;
 		}
-
 		dialButton.onclick = dialButtonClick;
 	}
 	if(hangupButton) {
@@ -976,36 +944,24 @@ function dialButtonClick() {
 		busySignalSound = new Audio('busy-signal.mp3');
 	}
 
-	if(singlebutton) {
-		// switch from dialButton to hangupButton "Connecting..."
-		hangupButton.innerHTML = "Connecting...";
-		dialButton.style.display = "none";
-		hangupButton.style.display = "inline-block";
-		// animate hangupButton background
-		hangupButton.style.background = 'url("bg-anim.jpg"), linear-gradient(-45deg, #002c22, #102070, #2613c5, #1503ab)';
-		hangupButton.style.backgroundSize = "400% 400%";
-		hangupButton.style.animation = "gradientBG 30s ease infinite";
-		//gLog("hangupButton.style",hangupButton.style);
-	} else {
-		if(dialButton.disabled) {
-			// prevent multiple checkCalleeOnline()
-			return;
-		}
-		dialButton.disabled = true;
-		//hangupButton.disabled = false;
-		msgbox.style.display = "none";
+	if(dialButton.disabled) {
+		// prevent multiple checkCalleeOnline()
+		return;
+	}
+	dialButton.disabled = true;
+	//hangupButton.disabled = false;
+	msgbox.style.display = "none";
 
-		// hide 'store contact' button
-		let storeContactElement = document.getElementById("storeContact");
-		if(storeContactElement) {
-			storeContactElement.innerHTML = "";
-		}
+	// hide 'store contact' button
+	let storeContactElement = document.getElementById("storeContact");
+	if(storeContactElement) {
+		storeContactElement.innerHTML = "";
+	}
 
-		// disable nicknameElement input form
-		let nicknameElement = document.getElementById("nickname");
-		if(nicknameElement) {
-			nicknameElement.disabled = true;
-		}
+	// disable nicknameElement input form
+	//let nicknameElement = document.getElementById("nickname");
+	if(nicknameElement) {
+		nicknameElement.disabled = true;
 	}
 
 	// focus back to background, so that esc-key via onkeydown works
@@ -1220,38 +1176,12 @@ function calleeOnlineStatus(onlineStatus,waitForCallee) {
 		wsAddr = tok[0];
 		wsAddrTime = Date.now();
 
-		if(singlebutton) {
-			// enable parent iframe (height)
-			if(iframeParent) {
-				gLog('calleeOnlineStatus singlebutton iframeParent');
-				iframeParent.postMessage("activeNotification:"+iframeParentArg);
-			} else {
-				// onlineStatus arrived before iframeParent was set (before action=="reqActiveNotification")
-				iframeParentArg = "occured";
-			}
-		}
 		calleeOnlineAction("calleeOnlineStatus");
 		return;
 	}
 
 	// callee is not available
 	// TODO here we could act on "busy" and "notavail"
-
-	if(singlebutton) {
-		// no free callee available (aka "all lines busy")
-		gLog('singlebutton no free callee available');
-		setTimeout(function() {
-			hangupButton.style.backgroundColor = "";
-			hangupButton.style.display = "none";
-			dialButton.innerHTML = singleButtonBusyText;
-			dialButton.style.backgroundColor = "";
-			dialButton.style.display = "inline-block";
-			setTimeout(function() {
-				dialButton.innerHTML = "<b>W E B C A L L</b><br>"+singleButtonReadyText;
-			},9000);
-		},700);
-		return;
-	}
 
 	dialButton.disabled = false;
 	hangupButton.disabled = true;
@@ -1260,7 +1190,7 @@ function calleeOnlineStatus(onlineStatus,waitForCallee) {
 		loadJS("adapter-latest.js",function() {
 			if(!navigator.mediaDevices) {
 				console.warn("navigator.mediaDevices not available");
-				// TODO no visible warning? also not in singlebutton mode? 
+				// TODO no visible warning?
 			} else {
 				getStream().then(() => navigator.mediaDevices.enumerateDevices()).then(gotDevices);
 				// -> getUserMedia -> gotStream -> checkCalleeOnline -> ajax -> calleeOnlineStatus
@@ -1289,9 +1219,7 @@ function calleeOnlineAction(comment) {
 
 	// switch to callee-is-online layout (call and hangupButton)
 	calleeOnlineElement.style.display = "block";
-	if(!singlebutton) {
-		calleeOfflineElement.style.display = "none";
-	}
+	calleeOfflineElement.style.display = "none";
 
 	// now that we know callee is online, we load adapter-latest.js
 	loadJS("adapter-latest.js",function(){
@@ -1301,7 +1229,6 @@ function calleeOnlineAction(comment) {
 			if(calleeOnlineElement) {
 				showStatus("navigator.mediaDevices not available",-1);
 			} else {
-				// TODO is this the correct action also for singlebutton?
 				alert("navigator.mediaDevices not available");
 			}
 			return;
@@ -1339,36 +1266,30 @@ function calleeOnlineAction(comment) {
 
 			// so we display a message to prepare the caller hitting the call button manually
 			if(calleeID.startsWith("answie"))  {
-				if(!singlebutton) {
-					msgbox.style.display = "none";
-				}
+				msgbox.style.display = "none";
 //				showStatus(digAnswMachine,-1);
 				showStatus(lg("digAnswMachine"),-1);
 			} else if(calleeID.startsWith("talkback")) {
-				if(!singlebutton) {
-					msgbox.style.display = "none";
-				}
+				msgbox.style.display = "none";
 				showStatus( "Talkback service let's you test your microphone audio quality. "+
 							"The first six seconds of the call will be recorded (red led) "+
 							"and then immediately played back to you (green led).",-1);
 			} else {
-				if(!singlebutton) {
-//					showStatus(greetingMessage,-1);
-					showStatus(lg("greetingMessage"),-1);
-					msgbox.style.display = "block";
-					gLog('callerName='+callerName);
-					let placeholderText = "";
-					msgbox.onfocus = function() {
-						placeholderText = msgbox.placeholder;
-						msgbox.placeholder = "";
-					};
-					msgbox.onblur = function() {
-						// caller leaving the msgbox
-						if(placeholderText!="") {
-							msgbox.placeholder = placeholderText;
-						}
-					};
-				}
+//				showStatus(greetingMessage,-1);
+				showStatus(lg("greetingMessage"),-1);
+				msgbox.style.display = "block";
+				gLog('callerName='+callerName);
+				let placeholderText = "";
+				msgbox.onfocus = function() {
+					placeholderText = msgbox.placeholder;
+					msgbox.placeholder = "";
+				};
+				msgbox.onblur = function() {
+					// caller leaving the msgbox
+					if(placeholderText!="") {
+						msgbox.placeholder = placeholderText;
+					}
+				};
 			}
 		}
 	});
@@ -1410,118 +1331,116 @@ function loadJS(jsFile,callback) {
 }
 
 function calleeOfflineAction(onlineStatus,waitForCallee) {
-	if(!singlebutton) {
-		// switch to callee-is-offline layout
-		gLog('calleeOfflineAction !singlebutton callee is not avail '+waitForCallee);
-		calleeOnlineElement.style.display = "none";
-		calleeOfflineElement.style.display = "block";
+	// switch to callee-is-offline layout
+	gLog('calleeOfflineAction callee is not avail '+waitForCallee);
+	calleeOnlineElement.style.display = "none";
+	calleeOfflineElement.style.display = "block";
 
-		if(waitForCallee) {
-			if(onlineStatus.startsWith("notavailtemp")) {
-				// callee temporarily offline: have caller wait for callee
-				var offlineFor = parseInt(onlineStatus.substring(12),10);
+	if(waitForCallee) {
+		if(onlineStatus.startsWith("notavailtemp")) {
+			// callee temporarily offline: have caller wait for callee
+			var offlineFor = parseInt(onlineStatus.substring(12),10);
 
-//				showStatus("Trying to find"+" "+calleeID+". "+
-//				"This can take some time. Please wait...",-1);
-				showStatus(lg("tryingToFind")+" "+calleeID+". "+lg("thisCanTakeSomeTime"),-1);
+//			showStatus("Trying to find"+" "+calleeID+". "+
+//			"This can take some time. Please wait...",-1);
+			showStatus(lg("tryingToFind")+" "+calleeID+". "+lg("thisCanTakeSomeTime"),-1);
 
+			if(divspinnerframe) {
+				divspinnerframe.style.display = "block";
+			}
+			let api = apiPath+"/online?id="+calleeID+"&wait=true&callerId="+callerId;
+			xhrTimeout = 1*60*1000; // max 1min
+			if(offlineFor>0) {
+				xhrTimeout = xhrTimeout - offlineFor*1000;
+			}
+			if(xhrTimeout < 5*1000) { // min 5s
+				xhrTimeout = 5*1000;
+			}
+			console.log("notifyCallee notavailtemp timeout="+xhrTimeout+" offlineFor="+(offlineFor*1000));
+			// in case caller aborts:
+			goodbyMissedCall = calleeID+"|"+callerName+"|"+callerId+
+				"|"+Math.floor(Date.now()/1000)+
+				"|"+cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen)+
+				"|"+location.host;
+			ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+				// end spinner
 				if(divspinnerframe) {
-					divspinnerframe.style.display = "block";
+					divspinnerframe.style.display = "none";
 				}
-				let api = apiPath+"/online?id="+calleeID+"&wait=true&callerId="+callerId;
-				xhrTimeout = 1*60*1000; // max 1min
-				if(offlineFor>0) {
-					xhrTimeout = xhrTimeout - offlineFor*1000;
-				}
-				if(xhrTimeout < 5*1000) { // min 5s
-					xhrTimeout = 5*1000;
-				}
-				console.log("notifyCallee notavailtemp timeout="+xhrTimeout+" offlineFor="+(offlineFor*1000));
-				// in case caller aborts:
-				goodbyMissedCall = calleeID+"|"+callerName+"|"+callerId+
-					"|"+Math.floor(Date.now()/1000)+
-					"|"+cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen)+
-					"|"+location.host;
-				ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-					// end spinner
-					if(divspinnerframe) {
-						divspinnerframe.style.display = "none";
-					}
-					if(xhr.responseText!=null) {
-						console.log("xhr.responseText",xhr.responseText);
-						if(xhr.responseText.indexOf("?wsid=")>0) {
-							gLog('callee is now online. switching to call layout. '+xhr.responseText);
-							goodbyMissedCall = "";
-							lastOnlineStatus = xhr.responseText;
-							let tok = xhr.responseText.split("|");
-							wsAddr = tok[0];
-							wsAddrTime = Date.now();
-							// switch to callee-is-online layout
-							calleeOnlineElement.style.display = "block";
-							calleeOfflineElement.style.display = "none";
-
-							showStatus("Enter text message before the call (optional):",-1);
-							msgbox.style.display = "block";
-							haveBeenWaitingForCalleeOnline=true; // will cause notificationSound to play
-
-							if(notificationSound) {
-								gLog('play notificationSound');
-								notificationSound.play().catch(function(error) { 
-									console.log('# notificationSound err='+error);
-								});
-							} else {
-								console.log("calleeOnlineAction no notificationSound");
-							}
-							return;
-						}
-					}
-/*
-					if(!goodbyDone) {
-						gLog('online: callee could not be reached (%s)',xhr.responseText);
-						showStatus("Unable to reach "+calleeID+".<br>Please try again later.",-1);
-// TODO we should ask to send a msg
-						//wsSend("missedcall|"+goodbyMissedCall); // this is not possible here
-
-						let api = apiPath+"/missedCall?id="+goodbyMissedCall;
+				if(xhr.responseText!=null) {
+					console.log("xhr.responseText",xhr.responseText);
+					if(xhr.responseText.indexOf("?wsid=")>0) {
+						gLog('callee is now online. switching to call layout. '+xhr.responseText);
 						goodbyMissedCall = "";
-						ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-							gLog('/missedCall success');
-						}, function(errString,err) {
-							console.log('# /missedCall xhr error: '+errString+' '+err);
-						});
-					}
-*/
-					if(goodbyDone) {
+						lastOnlineStatus = xhr.responseText;
+						let tok = xhr.responseText.split("|");
+						wsAddr = tok[0];
+						wsAddrTime = Date.now();
+						// switch to callee-is-online layout
+						calleeOnlineElement.style.display = "block";
+						calleeOfflineElement.style.display = "none";
+
+						showStatus("Enter text message before the call (optional):",-1);
+						msgbox.style.display = "block";
+						haveBeenWaitingForCalleeOnline=true; // will cause notificationSound to play
+
+						if(notificationSound) {
+							gLog('play notificationSound');
+							notificationSound.play().catch(function(error) { 
+								console.log('# notificationSound err='+error);
+							});
+						} else {
+							console.log("calleeOnlineAction no notificationSound");
+						}
 						return;
 					}
-					console.log("fall through to calleeNotificationAction");
-					calleeNotificationAction();
-
-				}, function(errString,errcode) {
-					// end spinner
-					if(divspinnerframe) {
-						divspinnerframe.style.display = "none";
-					}
-					// errcode 504 = timeout
-					console.log('online: callee could not be reached. xhr err',errString,errcode);
-					// TODO if xhr /online failed, does it make sense to try xhr /missedCall ?
+				}
+/*
+				if(!goodbyDone) {
+					gLog('online: callee could not be reached (%s)',xhr.responseText);
 					showStatus("Unable to reach "+calleeID+".<br>Please try again later.",-1);
+// TODO we should ask to send a msg
 					//wsSend("missedcall|"+goodbyMissedCall); // this is not possible here
-					if(goodbyMissedCall!="") {
-						let api = apiPath+"/missedCall?id="+goodbyMissedCall;
-						ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-							gLog('/missedCall success');
-						}, function(errString,err) {
-							console.log('# /missedCall xhr error: '+errString+' '+err);
-						});
-						goodbyMissedCall = "";
-					}
-				});
-				return;
-			}
 
-			calleeNotificationAction();
+					let api = apiPath+"/missedCall?id="+goodbyMissedCall;
+					goodbyMissedCall = "";
+					ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+						gLog('/missedCall success');
+					}, function(errString,err) {
+						console.log('# /missedCall xhr error: '+errString+' '+err);
+					});
+				}
+*/
+				if(goodbyDone) {
+					return;
+				}
+				console.log("fall through to calleeNotificationAction");
+				calleeNotificationAction();
+
+			}, function(errString,errcode) {
+				// end spinner
+				if(divspinnerframe) {
+					divspinnerframe.style.display = "none";
+				}
+				// errcode 504 = timeout
+				console.log('online: callee could not be reached. xhr err',errString,errcode);
+				// TODO if xhr /online failed, does it make sense to try xhr /missedCall ?
+				showStatus("Unable to reach "+calleeID+".<br>Please try again later.",-1);
+				//wsSend("missedcall|"+goodbyMissedCall); // this is not possible here
+				if(goodbyMissedCall!="") {
+					let api = apiPath+"/missedCall?id="+goodbyMissedCall;
+					ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
+						gLog('/missedCall success');
+					}, function(errString,err) {
+						console.log('# /missedCall xhr error: '+errString+' '+err);
+					});
+					goodbyMissedCall = "";
+				}
+			});
+			return;
 		}
+
+		calleeNotificationAction();
 	}
 
 	gLog('calleeOfflineAction done');
@@ -2106,10 +2025,8 @@ function signalingCommand(message) {
 			return;
 		}
 
-		if(!singlebutton) {
-			// hide msgbox
-			msgbox.style.display = "none";
-		}
+		// hide msgbox
+		msgbox.style.display = "none";
 
 		if(typeof Android !== "undefined" && Android !== null) {
 			// on smartphones this is supposed to disable speakerphone
@@ -2124,21 +2041,13 @@ function signalingCommand(message) {
 
 			// on peer connect at least an audio stream should arrive
 			let micStatus = "";
-			if(singlebutton) {
-				hangupButton.innerHTML = singleButtonConnectedText;
-				hangupButton.style.boxShadow = "0px 0px 10px #f00";
-				hangupButton.style.background = 'url("")'; 
-				dialButton.style.backgroundColor = "";
-				hangupButton.style.backgroundColor = "";
+			if(microphoneIsNeeded) {
+				onlineIndicator.src="red-gradient.svg";
+				micStatus = "Mic is open";
 			} else {
-				if(microphoneIsNeeded) {
-					onlineIndicator.src="red-gradient.svg";
-					micStatus = "Mic is open";
-				} else {
-					// mic NOT open
-					dialButton.style.boxShadow = "";
-					onlineIndicator.src="green-gradient.svg";
-				}
+				// mic NOT open
+				dialButton.style.boxShadow = "";
+				onlineIndicator.src="green-gradient.svg";
 			}
 
 			if(remoteVideoFrame) {
@@ -2352,11 +2261,7 @@ function dial2() {
 		progressRcvElement.style.display = "none";
 	}
 
-	if(singlebutton) {
-		dialButton.style.boxShadow = "";
-	} else {
-		onlineIndicator.src="";
-	}
+	onlineIndicator.src="";
 	doneHangup = false;
 	candidateResultGenerated = false;
 	candidateArray = [];
@@ -2431,13 +2336,11 @@ function dial2() {
 					// when server receives our callerOffer, it sends 'callerInfo|' to the callee
 					// if msgboxText exists, send it before callerOffer
 
-					if(!singlebutton) {
-					   let msgboxText = cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen);
-						//gLog('msgboxText=('+msgboxText+')');
-						if(msgboxText!="") {
-							gLog('msg=('+msgboxText+')');
-							wsSend("msg|"+msgboxText);
-						}
+				   let msgboxText = cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen);
+					//gLog('msgboxText=('+msgboxText+')');
+					if(msgboxText!="") {
+						gLog('msg=('+msgboxText+')');
+						wsSend("msg|"+msgboxText);
 					}
 
 					wsSend("callerOffer|"+JSON.stringify(localDescription));
@@ -2505,27 +2408,26 @@ function dial2() {
 					rtcConnectStartDate = Date.now();
 					mediaConnectStartDate = 0;
 
-					if(!singlebutton) {
-						// set goodbyTextMsg (including msgbox text) to be evaluated in goodby
-//						goodbyTextMsg = calleeID+"|"+callerName+"|"+callerId+
+					// set goodbyTextMsg (including msgbox text) to be evaluated in goodby
+//					goodbyTextMsg = calleeID+"|"+callerName+"|"+callerId+
 //							"|"+Math.floor(Date.now()/1000)+"|"+msgbox.value.substring(0,300)
-						goodbyTextMsg = cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen)
-						gLog('set goodbyTextMsg='+goodbyTextMsg);
+					goodbyTextMsg = cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen)
+					gLog('set goodbyTextMsg='+goodbyTextMsg);
 
-						let msgboxText = cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen);
-						if(msgboxText!="") {
-							if(dataChannel) {
-								if(dataChannel.readyState=="open") {
-									gLog('send msgbox',msgboxText);
-									dataChannel.send("msg|"+msgboxText);
-								} else {
-									dataChannelSendMsg = msgboxText;
-								}
+					let msgboxText = cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen);
+					if(msgboxText!="") {
+						if(dataChannel) {
+							if(dataChannel.readyState=="open") {
+								gLog('send msgbox',msgboxText);
+								dataChannel.send("msg|"+msgboxText);
 							} else {
-								console.warn('no dataChannel, cannot send msgbox (%s)'+msgboxText);
+								dataChannelSendMsg = msgboxText;
 							}
+						} else {
+							console.warn('no dataChannel, cannot send msgbox (%s)'+msgboxText);
 						}
 					}
+
 //					showStatus(ringingText,-1);
 					showStatus(lg("ringingText"),-1);
 				}
@@ -2757,41 +2659,30 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 	stopTimer();
 
 	localDescription = null;
-	if(singlebutton) {
-		hangupButton.style.display = "none";
-		hangupButton.innerHTML = "Hang up";
-		hangupButton.style.boxShadow = "";
-		dialButton.style.boxShadow = "";
-		setTimeout(function() {
-			dialButton.innerHTML = "<b>W E B C A L L</b><br>"+singleButtonReadyText;
-			dialButton.style.display = "inline-block";
-		},2500); // till busy tone ends
-	} else {
-		hangupButton.disabled = true;
-		//dialButton.disabled = false;
-		onlineIndicator.src="";
+	hangupButton.disabled = true;
+	//dialButton.disabled = false;
+	onlineIndicator.src="";
 
-		// offer store contact link (only if callerId and calleeID exist)
-		if(callerId!="" && calleeID!="" && callerHost!="" && callerHost!=location.host) {
-			let storeContactElement = document.getElementById("storeContact");
-			if(storeContactElement) {
-				let fullContactId = calleeID+"@@"+location.host;
-				if(calleeID.indexOf("@")>=0) {
-					fullContactId = calleeID+"@"+location.host;
-				}
-				//console.log("contactName (for storeContactLink)=("+contactName+")");
-				let storeContactLink = "https://"+callerHost+"/callee/contacts/store/?id="+callerId+
-					"&contactId="+fullContactId+"&contactName="+contactName+"&callerName="+callerName;
-				storeContactElement.innerHTML = "<a href='"+storeContactLink+"'>Store contact</a>";
-				// button will be removed in dialButtonClick()
+	// offer store contact link (only if callerId and calleeID exist)
+	if(callerId!="" && calleeID!="" && callerHost!="" && callerHost!=location.host) {
+		let storeContactElement = document.getElementById("storeContact");
+		if(storeContactElement) {
+			let fullContactId = calleeID+"@@"+location.host;
+			if(calleeID.indexOf("@")>=0) {
+				fullContactId = calleeID+"@"+location.host;
 			}
+			//console.log("contactName (for storeContactLink)=("+contactName+")");
+			let storeContactLink = "https://"+callerHost+"/callee/contacts/store/?id="+callerId+
+				"&contactId="+fullContactId+"&contactName="+contactName+"&callerName="+callerName;
+			storeContactElement.innerHTML = "<a href='"+storeContactLink+"'>Store contact</a>";
+			// button will be removed in dialButtonClick()
 		}
+	}
 
-		// enable nicknameElement input form
-		let nicknameElement = document.getElementById("nickname");
-		if(nicknameElement) {
-			nicknameElement.disabled = false;
-		}
+	// enable nicknameElement input form
+	let nicknameElement = document.getElementById("nickname");
+	if(nicknameElement) {
+		nicknameElement.disabled = false;
 	}
 
 	if(wsConn && wsConn.readyState==1) {
@@ -2816,9 +2707,7 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 		wsConn=null;
 	}
 
-	if(!singlebutton) {
-		msgbox.value = "";
-	}
+	msgbox.value = "";
 	if(remoteVideoFrame) {
 		gLog('hangup shutdown remoteAV');
 		remoteVideoFrame.pause();
@@ -2960,22 +2849,18 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 			}
 		}
 
-		if(singlebutton) {
+		peerCon.getStats(null).then((results) => { 
+			getStatsPostCall(results);
 			peerConCloseFunc();
-		} else {
-			peerCon.getStats(null).then((results) => { 
-				getStatsPostCall(results);
-				peerConCloseFunc();
-			}, err => {
-				console.log(err); 
-				peerConCloseFunc();
-			});
-		}
+		}, err => {
+			console.log(err); 
+			peerConCloseFunc();
+		});
 	}
 
 	// TODO this is a good place to enable "store contact" button
 
-	if(mustcheckCalleeOnline && !singlebutton) {
+	if(mustcheckCalleeOnline) {
 		// it can take up to 3s for our call to get fully ended and cleared on server and callee side
 		setTimeout(function() {
 			gLog('hangup -> calleeOnlineStatus');

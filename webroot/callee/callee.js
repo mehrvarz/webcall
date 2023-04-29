@@ -29,7 +29,6 @@ const idMappingElement = document.getElementById('idMapping');
 const exclamationElement = document.getElementById('exclamation');
 const ownlinkElement = document.getElementById('ownlink');
 const autoReconnectDelay = 15;
-const singlebutton = false;
 const calleeMode = true;
 
 var ringtoneSound = null;
