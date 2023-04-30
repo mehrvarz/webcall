@@ -62,16 +62,18 @@ func ticker3hours() {
 				d.Decode(&dbEntry)
 				// we now must find out when this user was using the account the last time
 				dbUserKey := fmt.Sprintf("%s_%d", userID, dbEntry.StartTime)
+				deleteKey := false
+				counter++
+
 				var dbUser DbUser
 				err2 := kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 				if err2 != nil {
 					// this occurs with mapping tmpID's - is not an error
-					//fmt.Printf("# ticker3hours %d error read db=%s bucket=%s get key=%v err=%v\n",
-					//	counter, dbMainName, dbUserBucket, dbUserKey, err2)
+					fmt.Printf("# ticker3hours %d error read db=%s bucket=%s get key=%v err=%v\n",
+						counter, dbMainName, dbUserBucket, dbUserKey, err2)
 					// on err delete this key in dbRegisteredIDs?
-					deleteKeyArray = append(deleteKeyArray,dbUserKey)
+					deleteKey = true
 				} else {
-					counter++
 					daysAge := (timeNowUnix - dbEntry.StartTime)/int64(60*60*24)
 					lastActivity := dbUser.LastLogoffTime;
 					if dbUser.LastLoginTime > dbUser.LastLogoffTime {
@@ -85,7 +87,7 @@ func ticker3hours() {
 								fmt.Printf("ticker3hours %d delete id=%s lastActivity==0 (%s) %d\n",
 									counter, k, dbUser.MastodonID, daysAge)
 							}
-							deleteKeyArray = append(deleteKeyArray,dbUserKey)
+							deleteKey = true
 						}
 					} else {
 						sinceLastLoginSecs := timeNowUnix - lastActivity
@@ -96,20 +98,23 @@ func ticker3hours() {
 								fmt.Printf("ticker3hours %d id=%s regist delete sinceLastLogin=%ds days=%d\n",
 									counter, k, sinceLastLoginSecs, sinceLastLoginDays)
 							}
-							err2 = c.Delete()
-							if err2!=nil {
-								// this is bad
-								fmt.Printf("# ticker3hours %d id=%s regist delete err=%v\n", counter, k, err2)
-							} else {
-								counterDeleted++
-								//if logWantedFor("timer") {
-								//	fmt.Printf("ticker3hours %d id=%s regist deleted %d\n",
-								//		counter, k, counterDeleted)
-								//}
-								// we will delete dbUserKey from dbUserBucket after db.Update() is finished
-								deleteKeyArray = append(deleteKeyArray,dbUserKey)
-							}
+							deleteKey = true
 						}
+					}
+				}
+				if deleteKey {
+					err2 = c.Delete()
+					if err2!=nil {
+						// this is bad
+						fmt.Printf("# ticker3hours %d id=%s error read delete err=%v\n", counter, k, err2)
+					} else {
+						counterDeleted++
+						//if logWantedFor("timer") {
+						//	fmt.Printf("ticker3hours %d id=%s regist deleted %d\n",
+						//		counter, k, counterDeleted)
+						//}
+						// we will delete dbUserKey from dbUserBucket after db.Update() is finished
+						deleteKeyArray = append(deleteKeyArray,dbUserKey)
 					}
 				}
 			}
