@@ -149,7 +149,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 
 		if logWantedFor("attach") {
 			fmt.Printf("/login (%s) attach +1 %d/%d rip=%s v=%s\n",
-				urlID, len(calleeLoginSlice), maxLoginPer30minTmp, remoteAddr, clientVersion)
+				urlID, len(calleeLoginSlice), maxLoginPer30minTmp, remoteAddrWithPort, clientVersion)
 		}
 	}
 
@@ -514,7 +514,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 
 		if logWantedFor("attach") {
 			fmt.Printf("exitfunc (%s) '%s' ws=%d %s\n",
-				globalID, comment, wsClientID, remoteAddr)
+				globalID, comment, wsClientID, remoteAddrWithPort)
 		}
 
 		if dbUserKey!="" {
