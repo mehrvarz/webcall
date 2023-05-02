@@ -426,11 +426,14 @@ input[type=submit]:focus {
 	<div id="timer" class="timer">4:32</div>
 	<div style="opacity:0.7;margin-top:15px;user-select:none;">WebCall by <a id="webcallhome" href="https://timur.mobi/webcall">timur.mobi</a></div>
 </div>
+</body>
 
-<script src="custom.js"></script>
+<script>
+const apiPath = "/rtcsig";
+var gentle = true;
+</script>
 <script src="client.js"></script>
 <script src="callee.js"></script>
 <script src="prefercodec.js"></script>
 <script src="adapter-latest.js"></script>
-</body>
-</html>
+
