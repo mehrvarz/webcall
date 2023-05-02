@@ -95,12 +95,16 @@ func httpSetMapping(w http.ResponseWriter, r *http.Request, urlID string, callee
 	//       must not contain linefeeds, '<' and '>'
 	// /setmapping (98597153158) done data=(93489236986,true,|77728892315,true,|48849331002,true,|94042933561,true,)
 	if strings.HasPrefix(data,"<") {
-		fmt.Printf("# /setmapping (%s) format error '<' data=(%s)\n",calleeID, data)
+		dispData := data
+		if len(data)>20 { dispData = data[:20] }
+		fmt.Printf("# /setmapping (%s) format error '<' data=(%s)\n",calleeID, dispData)
 		fmt.Fprintf(w,"errorFormat")
 		return
 	}
 	if strings.Contains(data,"\n") {
-		fmt.Printf("# /setmapping (%s) format error 'lf' data=(%s)\n",calleeID, data)
+		dispData := data
+		if len(data)>20 { dispData = data[:20] }
+		fmt.Printf("# /setmapping (%s) format error 'lf' data=(%s)\n",calleeID, dispData)
 		fmt.Fprintf(w,"errorFormat")
 		return
 	}
