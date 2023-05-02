@@ -39,9 +39,9 @@ func ticker3hours() {
 
 		// loop all dbRegisteredIDs to delete outdated dbUserBucket entries (not online for 180+ days)
 		if logWantedFor("timer") {
-			fmt.Printf("ticker3hours start looking for outdated IDs...\n")
+			fmt.Printf("ticker3hours start looking for outdated IDs (maxDaysOffline=%d) ...\n",maxDaysOffline)
 		}
-		var maxDaysOffline int64 = 180
+//		var maxDaysOffline int64 = 180
 		var deleteKeyArray []string  // for deleting
 		skv.DbMutex.Lock()
 		counterDeleted := 0
@@ -69,8 +69,8 @@ func ticker3hours() {
 				err2 := kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
 				if err2 != nil {
 					// this occurs with mapping tmpID's - is not an error
-					fmt.Printf("# ticker3hours %d error read db=%s bucket=%s get key=%v err=%v\n",
-						counter, dbMainName, dbUserBucket, dbUserKey, err2)
+					//fmt.Printf("# ticker3hours %d error read bucket=%s get key=%v err=%v\n",
+					//	counter, dbUserBucket, dbUserKey, err2)
 					// on err delete this key in dbRegisteredIDs?
 					deleteKey = true
 				} else {
@@ -80,7 +80,7 @@ func ticker3hours() {
 						lastActivity = dbUser.LastLoginTime
 					}
 					if(lastActivity==0) {
-						if dbUser.MastodonID=="" && daysAge>maxDaysOffline {
+						if dbUser.MastodonID=="" && daysAge>int64(maxDaysOffline) {
 							// delete this key in dbRegisteredIDs + dbUserBucket
 							// if lastActivity==0 && no mastodon-ID && daysAge>maxDaysOffline
 							if logWantedFor("timer") {
@@ -92,7 +92,7 @@ func ticker3hours() {
 					} else {
 						sinceLastLoginSecs := timeNowUnix - lastActivity
 						sinceLastLoginDays := sinceLastLoginSecs/(24*60*60)
-						if sinceLastLoginDays > maxDaysOffline {
+						if sinceLastLoginDays > int64(maxDaysOffline) {
 							// account is outdated, delete this entry
 							if logWantedFor("timer") {
 								fmt.Printf("ticker3hours %d id=%s regist delete sinceLastLogin=%ds days=%d\n",
@@ -312,9 +312,6 @@ func dbHashedPwLoop(w http.ResponseWriter) {
 			c := b.Cursor()
 			for k, v := c.First(); k != nil; k, v = c.Next() {
 				userID := string(k)
-//				if w!=nil {
-//					fmt.Fprintf(w,"dbHashedPwLoop userID=%s ...\n", userID)
-//				}
 				if strings.HasPrefix(userID,"answie") || strings.HasPrefix(userID,"talkback") {
 					continue
 				}
@@ -334,14 +331,10 @@ func dbHashedPwLoop(w http.ResponseWriter) {
 				}
 
 				// do NOT delete none-numeric
+				// NOTE userID ("19308086837&39426508334") is seen as OnlyNumeric
 				if !isOnlyNumericString(userID) {
-//					if w!=nil {
-//						fmt.Fprintf(w,"dbHashedPwLoop !isOnlyNumericString userID=%s\n", userID)
-//					}
 					continue
 				}
-				// NOTE userID ("19308086837&39426508334") is seen as OnlyNumeric
-// TODO %-20s (for pwIdCombo.Pw) does not seem to work
 				if timeNowUnix - pwIdCombo.Expiration >= 0 || pwIdCombo.Pw=="" {
 					fmt.Printf("dbHashedPwLoop del %s %-20s %ds\n",
 						userID, pwIdCombo.Pw, timeNowUnix - pwIdCombo.Expiration)

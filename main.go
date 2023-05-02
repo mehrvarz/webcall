@@ -209,7 +209,7 @@ var adminLogPath1 = ""
 var adminLogPath2 = ""
 var blockrefererSlice []string = nil
 var blockuseragentSlice []string = nil
-
+var maxDaysOffline = 180
 
 func main() {
 	flag.Parse()
@@ -652,6 +652,8 @@ func readConfig(init bool) {
 
 	maxRingSecs = readIniInt(configIni, "maxRingSecs", maxRingSecs, 120, 1)
 	maxTalkSecsIfNoP2p = readIniInt(configIni, "maxTalkSecsIfNoP2p", maxTalkSecsIfNoP2p, 600, 1)
+
+	maxDaysOffline = readIniInt(configIni, "maxDaysOffline", maxDaysOffline, 180, 1)
 
 	turnDebugLevel = readIniInt(configIni, "turnDebugLevel", turnDebugLevel, 3, 1)
 
