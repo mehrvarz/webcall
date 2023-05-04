@@ -2190,6 +2190,10 @@ function signalingCommand(message) {
 
 			// getting stats (p2p or relayed connection)
 			gLog("full mediaConnect, getting stats...");
+			let micStatus = "";
+//			if(muteMicElement && muteMicElement.checked) {
+//				micStatus = "Mic is open";
+//			}
 			peerCon.getStats(null)
 				.then((results) => getStatsCandidateTypes(results,"Connected",micStatus),
 				err => console.log(err));
