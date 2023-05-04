@@ -60,7 +60,7 @@ var textbox = document.getElementById('textbox');
 var	timerElement = document.querySelector('div#timer');
 var	calleeOfflineElement = document.getElementById("calleeOffline");
 var	onlineIndicator = document.querySelector('img#onlineIndicator');
-var microphoneIsNeeded = true;
+//var microphoneIsNeeded = true;
 var fileReceiveBuffer = [];
 var fileReceivedSize = 0;
 var fileName = "";
@@ -151,7 +151,7 @@ window.onload = function() {
 				muteMicElement.checked = true;
 			}
 // TODO tmtmtm ???
-			microphoneIsNeeded = false;
+//			microphoneIsNeeded = false;
 		}
 	}
 
@@ -2145,6 +2145,7 @@ function signalingCommand(message) {
 			gLog('enableRemoteStream stopAllAudioEffects');
 			stopAllAudioEffects();
 
+/*
 			// on peer connect at least an audio stream should arrive
 			let micStatus = "";
 			if(microphoneIsNeeded) {
@@ -2156,6 +2157,7 @@ function signalingCommand(message) {
 				dialButton.style.boxShadow = "";
 				onlineIndicator.src="green-gradient.svg";
 			}
+*/
 
 			if(remoteVideoFrame) {
 				// enable (un-mute) remoteStream
@@ -2628,6 +2630,7 @@ function dataChannelOnmessage(event) {
 			} else if(event.data.startsWith("cmd|")) {
 				let subCmd = event.data.substring(4);
 				//gLog("subCmd="+subCmd);
+/*
 				if(subCmd.startsWith("ledred")) {
 					if(onlineIndicator) {
 						onlineIndicator.src="red-gradient.svg";
@@ -2651,7 +2654,9 @@ function dataChannelOnmessage(event) {
 						const audioTracks = localStream.getAudioTracks();
 						audioTracks[0].enabled = false;
 					}
-				} else {
+				} else
+*/
+				{
 					signalingCommand(subCmd);
 				}
 			} else if(event.data.startsWith("file|")) {

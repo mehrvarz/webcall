@@ -32,6 +32,7 @@ const autoReconnectDelay = 15;
 const calleeMode = true;
 const enterTextElement = document.getElementById('enterText');
 const chatButton = document.querySelector('button#chatButton');
+const muteMicDiv = document.getElementById("muteMicDiv");
 const muteMicElement = document.getElementById("muteMic");
 const muteMiclabelElement = document.getElementById("muteMiclabel");
 
@@ -503,6 +504,7 @@ function showPw() {
 
 function enablePasswordForm() {
 	gLog('enter password for calleeID='+calleeID);
+	muteMicDiv.style.display = "none";
 	showStatus("Login calleeID: "+calleeID,-1);
 	document.getElementById("current-password").value = "";
 	form.style.display = "block";
@@ -538,6 +540,7 @@ function submitFormDone(idx) {
 		onGotStreamGoOnline = true;
 		//console.log("callee submitFormDone: enable goonline");
 		goOnlineButton.disabled = false;
+		muteMicDiv.style.display = "block";
 		start();
 		// -> getStream() -> getUserMedia(constraints) -> gotStream() -> goOnline() -> login()
 	} else if(idx==2) {
@@ -1442,9 +1445,11 @@ function signalingCommand(message, comment) {
 		textmode = payload;
 		gLog("textmode",textmode);
 
-		if(textmode=="true") {
-			if(muteMicElement) {
+		if(muteMicElement) {
+			if(textmode=="true") {
 				muteMicElement.checked = true;
+			} else {
+				muteMicElement.checked = false;
 			}
 		}
 
@@ -1953,6 +1958,7 @@ function hangup(mustDisconnect,dummy2,message) {
 	textbox.style.display = "none";
 	chatButton.style.display = "none";
 	buttonBlinking = false;
+	textmode = "";
 
 	remoteVideoFrame.srcObject = null;
 	remoteVideoHide();
