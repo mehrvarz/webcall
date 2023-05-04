@@ -22,8 +22,6 @@ window.onload = function() {
 	if(!gentle) console.log("calleeID="+calleeID);
 	// XHR to get current settings; server will use the cookie to authenticate us
 	requestSettings();
-
-	//document.getElementById("verstring").innerHTML = serverVersion;
 }
 
 function getUrlParams(param) {
@@ -223,7 +221,7 @@ function prepareSettings(xhrresponse) {
 		displayVersion = "WebCall server: "+serverVersion+"<br>";
 	}
 */
-	displayVersion += "WebCall client: v"+clientVersion;
+	displayVersion += "WebCall version "+clientVersion;
 	document.getElementById("verstring").innerHTML = displayVersion;
 
 	form.style.display = "block";
@@ -476,8 +474,6 @@ function clearForm(idx) {
 		document.getElementById("nickname").value = "";
 //	else if(idx==1)
 //		document.getElementById("twname").value = "";
-//	else if(idx==2)
-//		document.getElementById("twid").value = "";
 	formPw.focus();
 }
 

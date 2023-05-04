@@ -71,6 +71,7 @@ type WsClient struct {
 	callerID string
 	callerName string
 	callerHost string
+	textMode string
 	dialID string
 	clientVersion string
 	callerTextMsg string
@@ -253,6 +254,12 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		auto = url_arg_array[0]
 	}
 
+	textMode := ""
+	url_arg_array, ok = r.URL.Query()["text"]
+	if ok && len(url_arg_array[0]) > 0 {
+		textMode = strings.ToLower(url_arg_array[0])
+	}
+
 	upgrader := websocket.NewUpgrader()
 	//upgrader.EnableCompression = true // TODO
 	upgrader.CheckOrigin = func(r *http.Request) bool {
@@ -310,6 +317,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	client.callerID = callerIdLong
 	client.callerName = callerName
 	client.callerHost = callerHost
+	client.textMode = textMode
 	if tls {
 		client.connType = "serveWss"
 	} else {
@@ -988,9 +996,9 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			return
 		}
 
-		fmt.Printf("%s (%s) CALL🔔 %s <- %s (%s) v=%s ua=%s\n",
+		fmt.Printf("%s (%s) CALL🔔 %s <- %s (%s) %s v=%s ua=%s\n",
 			c.connType, c.calleeID, c.hub.CalleeClient.RemoteAddr,
-				c.RemoteAddr, c.callerID, c.clientVersion, c.userAgent)
+				c.RemoteAddr, c.callerID, c.textMode, c.clientVersion, c.userAgent)
 
 		// forward the callerOffer message to the callee client
 		err := c.hub.CalleeClient.Write(message)
@@ -1066,6 +1074,10 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			c.hub.HubMutex.RUnlock()
 			c.hub.closeCallee("send caller ua to callee: "+err.Error())
 			return
+		}
+		
+		if(c.textMode!="") {
+			c.hub.CalleeClient.Write([]byte("textmode|"+c.textMode))
 		}
 
 		// send callee useragent to caller
@@ -1372,7 +1384,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 	}
 
 	if cmd=="pickup" {
-		// this is sent by the callee client
+		// "pickup" is sent by the callee client only
 		if !c.isConnectedToPeer.Get() {
 			if logWantedFor("login") {
 				fmt.Printf("# %s (%s) pickup ignored no peerConnect %s\n",

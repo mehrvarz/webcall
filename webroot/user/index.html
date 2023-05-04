@@ -159,7 +159,7 @@ a, a:link, a:visited, a:active {
 
 .msgbox {
 	font-size:1.2em;
-	margin-top:0px;
+	margin-top:0;
 	width:95%;
 	max-width:550px;
 	height:3.8em;
@@ -175,6 +175,7 @@ a, a:link, a:visited, a:active {
 textarea::placeholder {
   color: #fff;
 }
+
 .select {
 	margin-top:8px;
 	margin-right:5px;
@@ -309,20 +310,20 @@ input[type=submit]:focus {
 <div id="iframeWindow" style="display:none"></div>
 
 <div id="menuDialog" style="position:relative; max-width:600px; user-select:none; display:none;">
-	<div style="position:absolute; right:0px; top:0px; z-index:110; background:#45dd; color:#fff; padding:10px 0px; line-height:2.6em; border-radius:3px; cursor:pointer;">
+	<div style="position:absolute; right:0px; top:0; z-index:110; background:#45dd; color:#fff; padding:10px 0px; line-height:2.6em; border-radius:3px; cursor:pointer;">
 		<div class="menuButton" id="callstats" onclick="openPostCallStats()">Call Stats</div>
 		<label class="menulabel" id="fileselectlabel" style="display:none;">
 			Send File
 			<input id="fileselect" type="file" style="display:none"></input>
 		</label>
 
-		<input type="checkbox" id="fullscreen" class="checkbox" value="123" />
+		<input type="checkbox" id="fullscreen" class="checkbox" value="123"/>
 		<label class="menulabel" id="fullscreenlabel" for="fullscreen">Full screen</label>
 	</div>
 </div>
 
 <div id="vresDialog" style="position:relative; max-width:520px; user-select:none;">
-	<div style="position:absolute; left:-999em; top:0px; z-index:110; background:#45dd; color:#fff; padding:10px 20px; line-height:2.6em; border-radius:3px; cursor:pointer;">
+	<div style="position:absolute; left:-999em; top:0; z-index:110; background:#45dd; color:#fff; padding:10px 20px; line-height:2.6em; border-radius:3px; cursor:pointer;">
 		<div onclick="setVideoConstraintsLow();history.back();">Low Resolution</div>
 		<div onclick="setVideoConstraintsMid();history.back();">Mid Resolution</div>
 		<div onclick="setVideoConstraintsHigh();history.back();">High Resolution</div>
@@ -383,12 +384,21 @@ input[type=submit]:focus {
 			<select id="idSelect" class="select" onchange="changeId(this)" style="margin-top:12px;"></select>
 		</label>
 
-		<!-- nickname: always visible -->
-		<div id="nicknameDiv" style="margin-top:12px;margin-left:2px;font-size:1.1em;display:none;">
-			<label for="nickname" id="nicknameLabel" style="display:inline-block;margin-right:3px;">Nickname:</label>
-			<input id='nickname' type='text' size='9' maxlength='9' value=''
-				style="background:#04e;border:none;outline:none;padding:0.3em;color:#ddd;font-size:1.0em;">
+		<div>
+			<!-- nickname: always visible -->
+			<span id="nicknameDiv" style="margin-top:12px;margin-left:2px;font-size:1.1em;padding-right:20px;float:left;display:none;">
+				<label for="nickname" id="nicknameLabel" style="display:inline-block;margin-right:3px;">Nickname:</label>
+				<input id='nickname' type='text' size='9' maxlength='9' value=''
+					style="background:#04e;border:none;outline:none;padding:0.3em;color:#ddd;font-size:1.0em;">
+			</span>
+
+			<!-- checkbox "Mute mode" -->
+			<span id="muteMicDiv" style="white-space: nowrap;">
+				<input type="checkbox" id="muteMic" class="checkbox" style="margin-top:22px;margin-left:0;" _value="123" />
+				<label class="menulabel" id="muteMiclabel" for="muteMic">Mic muted</label>
+			</span>
 		</div>
+		<div style="clear:both"></div>
 	</div>
 	<div id="calleeOffline" style="display:none">
 	</div>
@@ -396,6 +406,13 @@ input[type=submit]:focus {
 	<div id="status" class="status"></div>
 
 	<textarea id="msgbox" class="msgbox" placeholder="(your message)" maxlength="137" style="display:none"></textarea>
+	<button id="chatButton" _class="callbutton" style="display:none; margin-top:4px; padding-top:4px; padding-bottom:3px;">TextChat</button>
+	<div id="textbox" style="display:none;">
+		<form action="javascript:;" style="margin-top:4px;" onsubmit="submitForm(2)" id="textboxid">
+			<input name="enterText" id="enterText" type="text" class="formtext" style="width:100%; max-width:550px; font-size:1.1em;">
+			<input type="submit" name="Submit" id="submitText" value="" style="display:none">
+		</form>
+	</div>
 
 	<div id="progressSend" style="width:100%;max-width:360px;display:none;">
 		<div id="progressSendLabel">sending:</div>
@@ -416,7 +433,7 @@ input[type=submit]:focus {
 <!-- dial-id -->
 <div id="enterId" style="display:none">
 	<h1>WebCall Dial ID</h1>
-	<form action="javascript:;" style="margin-top:6px;" onsubmit="submitForm()" id="mnumber">
+	<form action="javascript:;" style="margin-top:6px;" onsubmit="submitForm(1)" id="mnumber">
 		<label class="formlabel" for="enterDomain">Server address:</label><br>
 		<input name="enterDomain" id="enterDomainVal" type="text" class="formtext" required>
 		<span class="lbutton" id="enterDomainClear" onclick="clearForm(4)">clr</span><br>
@@ -425,6 +442,7 @@ input[type=submit]:focus {
 		<label class="formlabel" for="enterId">User ID:</label><br>
 		<input name="enterId" id="enterIdVal" type="text" class="formtext" required>
 		<span class="lbutton" id="enterIdClear" onclick="clearForm(3)">clr</span>
+
 		<br>
 		<!-- checkbox numericId for smartpones only! can switch input-type from text to number
 		     using width:100px to prevent the checkbox being accessible over the whole width of screen -->
@@ -452,7 +470,7 @@ input[type=submit]:focus {
 		</div>
 
 		<div id="dialIdAutoStore"
-			style="font-size:0.9em;opacity:0;margin-top:12px;display:none;">ID will be added to contacts</div>
+			style="font-size:0.9em;opacity:0;margin-top:12px;margin-bottom:10px;display:none;">ID will be added to contacts</div>
 	</form>
 </div>
 </body>

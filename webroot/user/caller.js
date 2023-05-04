@@ -13,6 +13,10 @@ const numericIdLabel = document.querySelector('label#numericIdLabel');
 const numericIdCheckbox = document.querySelector('input#numericId');
 const calleeMode = false;
 const msgBoxMaxLen = 137;
+const enterTextElement = document.getElementById('enterText');
+const chatButton = document.querySelector('button#chatButton');
+const muteMicElement = document.getElementById("muteMic");
+const muteMiclabelElement = document.getElementById("muteMiclabel");
 
 var connectingText = "Connecting P2P...";
 //var ringingText = "Ringing...";
@@ -23,8 +27,6 @@ var busySignalSound = null;
 var wsConn = null;
 var peerCon = null;
 var localDescription = null;
-var localStream = null;
-var remoteStream = null;
 var rtcConnect = false;
 var rtcConnectStartDate = 0;
 var mediaConnectStartDate = 0;
@@ -50,20 +52,14 @@ var sessionDuration = 0;
 var dataChannelSendMsg = "";
 var iframeParent;
 var iframeParentArg="";
-var codecPreferences;
-var titleElement;
-var statusLine;
-var msgbox;
-var timerElement;
-var calleeOfflineElement;
-var onlineIndicator;
-	codecPreferences = document.querySelector('#codecPreferences');
-	titleElement = document.getElementById('title');
-	statusLine = document.getElementById('status');
-	msgbox = document.querySelector('textarea#msgbox');
-	timerElement = document.querySelector('div#timer');
-	calleeOfflineElement = document.getElementById("calleeOffline");
-	onlineIndicator = document.querySelector('img#onlineIndicator');
+var	codecPreferences = document.querySelector('#codecPreferences');
+var	titleElement = document.getElementById('title');
+var	statusLine = document.getElementById('status');
+var msgbox = document.querySelector('textarea#msgbox');
+var textbox = document.getElementById('textbox');
+var	timerElement = document.querySelector('div#timer');
+var	calleeOfflineElement = document.getElementById("calleeOffline");
+var	onlineIndicator = document.querySelector('img#onlineIndicator');
 var microphoneIsNeeded = true;
 var fileReceiveBuffer = [];
 var fileReceivedSize = 0;
@@ -84,6 +80,7 @@ var altIdCount = 0;
 var idSelectElement = null;
 //var greetingMessage = "Greeting message (optional):";
 //var digAnswMachine = "About to call a digital answering machine";
+var newline = String.fromCharCode(13, 10);
 
 var extMessage = function(e) {
 	// prevent an error on split() below when extensions emit unrelated, non-string 'message' events to the window
@@ -126,26 +123,43 @@ window.onload = function() {
 	goodbyMissedCall = "";
 	goodbyTextMsg = "";
 
-	let dbg = getUrlParams("dbg");
-	if(typeof dbg!=="undefined" && dbg!="" && dbg!="undefined") {
-		gentle = false;
-	}
-
-	let id = getUrlParams("id");
-	if(typeof id!=="undefined" && id!="" && id!="undefined") {
-		calleeID = cleanStringParameter(id,true);
-	}
 	// if on start there is a fragment/hash ('#') in the URL, remove it
 	if(location.hash.length > 0) {
 		gLog("location.hash.length=%d",location.hash.length);
 		window.location.replace("/user/"+calleeID);
 		return;
 	}
+
+	let dbg = getUrlParams("dbg");
+	if(typeof dbg!=="undefined" && dbg!="" && dbg!="undefined") {
+		gentle = false;
+		console.log("dbgmode on");
+	}
+
+	let id = getUrlParams("id");
+	if(typeof id!=="undefined" && id!="" && id!="undefined") {
+		calleeID = cleanStringParameter(id,true);
+	}
+
+	let text = getUrlParams("text");
+	if(typeof text!=="undefined" && text!="" && text!="undefined") {
+		let textArg = cleanStringParameter(text,true);
+		console.log("textmode "+textArg);
+		if(textArg=="true") {
+			// check on: muteMic
+			if(muteMicElement) {
+				muteMicElement.checked = true;
+			}
+// TODO tmtmtm ???
+			microphoneIsNeeded = false;
+		}
+	}
+
 	// dialsounds
 	playDialSounds = true;
-	let text = getUrlParams("ds");
-	if(typeof text!=="undefined" && text!="" && text!="undefined") {
-		if(text=="false") {
+	let ds = getUrlParams("ds");
+	if(typeof ds!=="undefined" && ds!="" && ds!="undefined") {
+		if(ds=="false") {
 			playDialSounds = false;
 		}
 		gLog("dialsounds="+playDialSounds);
@@ -409,6 +423,7 @@ window.onload = function() {
 		if(typeof str!=="undefined" && str!="" && str!="undefined") {
 			targetHost = str;
 		}
+		console.log("a1");
 		enterDomainValElement.value = targetHost;
 		enterDomainValElement.onblur = function() {
 			// catch enterDomainValElement.value change to invoke /getcontact
@@ -510,7 +525,7 @@ window.onload = function() {
 		}
 */
 
-		// [Dial] button -> will continue in submitForm()
+		// [Dial] button -> will resume in submitForm()
 		return;
 	}
 
@@ -520,6 +535,7 @@ window.onload = function() {
 function getContactFromForm() {
 	let contactID = cleanStringParameter(enterIdValElement.value,true);
 	if(contactID!="") {
+		console.log("a2");
 		let contactHost = cleanStringParameter(enterDomainValElement.value,true);
 		if(contactHost!="" && contactHost!=location.host) {
 			contactID += "@"+contactHost;
@@ -838,7 +854,6 @@ function fetchMapping(contFunc,idSelectElement,idSelectLabelElement) {
 function onload3(comment) {
 	gLog('onload3 '+comment);
 
-//	var calleeIdTitle = calleeID.charAt(0).toUpperCase() + calleeID.slice(1);
 	var calleeIdTitle = calleeID;
 	document.title = "WebCall "+calleeIdTitle;
 	if(titleElement) {
@@ -882,7 +897,6 @@ function onload3(comment) {
 		hangupButton.onclick = function() {
 			dialButton.style.backgroundColor = "";
 			hangupButton.style.backgroundColor = "";
-//			let msg = hangingUpText;
 			let msg = lg("hangingUpText");
 			//console.log(msg);
 			if(mediaConnect) {
@@ -901,6 +915,11 @@ function onload3(comment) {
 			hangupButton.blur();
 		};
 	}
+	if(chatButton) {
+		chatButton.onclick = function() {
+			enableTextChat();
+		}
+	}
 
 	calleeID = calleeID.toLowerCase();
 
@@ -911,6 +930,24 @@ function onload3(comment) {
 		// and also set contactName and callerName
 		getContact(calleeID);
 	}
+}
+
+function enableTextChat() {
+	console.log("enable textchat");
+	// hide chat-button
+	chatButton.style.display = "none";
+	// msgbox NOT editable
+	msgbox.readOnly = true;
+	// msgbox no placeholder
+	msgbox.placeholder = "";
+	// show msgbox and textbox
+	msgbox.style.display = "block";
+	textbox.style.display = "block"; // -> submitForm()
+
+	setTimeout(function() {
+		console.log("focus enterTextElement");
+		enterTextElement.focus();
+	},500);
 }
 
 function dialButtonClick() {
@@ -1267,7 +1304,6 @@ function calleeOnlineAction(comment) {
 			// so we display a message to prepare the caller hitting the call button manually
 			if(calleeID.startsWith("answie"))  {
 				msgbox.style.display = "none";
-//				showStatus(digAnswMachine,-1);
 				showStatus(lg("digAnswMachine"),-1);
 			} else if(calleeID.startsWith("talkback")) {
 				msgbox.style.display = "none";
@@ -1275,7 +1311,6 @@ function calleeOnlineAction(comment) {
 							"The first six seconds of the call will be recorded (red led) "+
 							"and then immediately played back to you (green led).",-1);
 			} else {
-//				showStatus(greetingMessage,-1);
 				showStatus(lg("greetingMessage"),-1);
 				msgbox.style.display = "block";
 				gLog('callerName='+callerName);
@@ -1496,7 +1531,8 @@ function calleeNotificationAction() {
 			return;
 		}
 		// calleeID can NOT be notified
-		showStatus(calleeID+" is not available at this time. Please try again a little later.",-1);
+		showStatus(calleeID+" is not available at this time. "+
+			"<a href='javascript:window.location.href=window.location.href'>"+lg("PleaseTryAgainALittle")+"</a>",-1);
 	}, // xhr error
 		errorAction
 		// TODO errorAction will switch back
@@ -1552,71 +1588,93 @@ function confirmNotifyConnect() {
 	notifyConnect(callerName,callerId,location.host);
 }
 
-function submitForm(theForm) {
-	// DialID: switch back to default container
-	calleeID = cleanStringParameter(enterIdValElement.value,true); // remove all white spaces
-//	if(!calleeID.startsWith("#")) {
-//		if(calleeID.length>11) calleeID = calleeID.substring(0,11);
-//	}
-	gLog("submitForm calleeID="+calleeID);
-	// TODO ACHTUNG .host may have :443 set, while DomainVal may not
-	gLog("submitForm targetDomain="+enterDomainValElement.value+" location.host="+location.host);
-	if(cleanStringParameter(enterDomainValElement.value,true) != location.host) {
-		// calling a remote server callee
-		// if we are running on Android, callUrl will be handled by onNewIntent() in the activity
-		//   which will forward callUrl via iframeWindowOpen() to the remote host
+function submitForm(idx) {
+	console.log("submitForm() idx="+idx);
+	if(idx==1) {
+		// DialID: switch back to default container
+		calleeID = cleanStringParameter(enterIdValElement.value,true); // remove all white spaces
+	//	if(!calleeID.startsWith("#")) {
+	//		if(calleeID.length>11) calleeID = calleeID.substring(0,11);
+	//	}
+		gLog("submitForm calleeID="+calleeID);
+		// TODO ACHTUNG .host may have :443 set, while DomainVal may not
+		gLog("submitForm targetDomain="+enterDomainValElement.value+" location.host="+location.host);
+		if(cleanStringParameter(enterDomainValElement.value,true) != location.host) {
+			// calling a remote server callee
+			// if we are running on Android, callUrl will be handled by onNewIntent() in the activity
+			//   which will forward callUrl via iframeWindowOpen() to the remote host
 
-		// if location.host is an internal ip-addr:port, which cannot be adressed over he internet
-		// then sending callerHost=location.host is futile
+			// if location.host is an internal ip-addr:port, which cannot be adressed over he internet
+			// then sending callerHost=location.host is futile
 
-		// below code tries to catch an window.open() error ("host not found")
-		// and throw an alert() instead of relying on an ugly browser err-msg
-		let randId = ""+Math.floor(Math.random()*1000000);
-		if(callerId=="") {
-			// if user has deliberately selected incognito, this is set to 'none'
-			callerId = cookieName;
-		}
-		let callUrl = "https://"+cleanStringParameter(enterDomainValElement.value,true)+"/user/"+calleeID+
-			"?callerId="+callerId + "&callerName="+callerName + "&callerHost="+callerHost +
-			"&contactName="+contactName+"&i="+randId;
-		if(playDialSounds==false) {
-			callUrl += "&ds=false";
-		}
-		var openOK = false;
-		try {
-			//console.log("submitForm window.open "+callUrl);
-			// in WebCallAndroid: callUrl being opened will trigger onNewIntent()
-			openOK = window.open(callUrl, "");
-		} catch(e) {
-			// if we end here, the domain cannot be reached, so we don't do window.open()
-			console.log("# submitForm window.open("+callUrl+") ex="+e);
-			alert("Connection failed. Please check the server address.");
-			//de-focus submit button
-			document.activeElement.blur();
-		} finally {
-			if(!openOK) {
+			// below code tries to catch an window.open() error ("host not found")
+			// and throw an alert() instead of relying on an ugly browser err-msg
+			let randId = ""+Math.floor(Math.random()*1000000);
+			if(callerId=="") {
+				// if user has deliberately selected incognito, this is set to 'none'
+				callerId = cookieName;
+			}
+			let callUrl = "https://"+cleanStringParameter(enterDomainValElement.value,true)+"/user/"+calleeID+
+				"?callerId="+callerId + "&callerName="+callerName + "&callerHost="+callerHost +
+				"&contactName="+contactName+"&i="+randId;
+			if(playDialSounds==false) {
+				callUrl += "&ds=false";
+			}
+			var openOK = false;
+			try {
+				//console.log("submitForm window.open "+callUrl);
+				// in WebCallAndroid: callUrl being opened will trigger onNewIntent()
+				openOK = window.open(callUrl, "");
+			} catch(e) {
 				// if we end here, the domain cannot be reached, so we don't do window.open()
-				console.log("# submitForm !openOK window.open("+callUrl+")");
+				console.log("# submitForm window.open("+callUrl+") ex="+e);
 				alert("Connection failed. Please check the server address.");
 				//de-focus submit button
 				document.activeElement.blur();
-			} else {
-				// everything OK
-				// on android the window.open() may be handled by dialId() or by an ext browser
-				//console.log("submitForm window.open("+callUrl+") no err");
-				enterIdElement.style.display = "none";
-				containerElement.style.display = "block";
-				history.back();
-				return;
+			} finally {
+				if(!openOK) {
+					// if we end here, the domain cannot be reached, so we don't do window.open()
+					console.log("# submitForm !openOK window.open("+callUrl+")");
+					alert("Connection failed. Please check the server address.");
+					//de-focus submit button
+					document.activeElement.blur();
+				} else {
+					// everything OK
+					// on android the window.open() may be handled by dialId() or by an ext browser
+					//console.log("submitForm window.open("+callUrl+") no err");
+					enterIdElement.style.display = "none";
+					containerElement.style.display = "block";
+					history.back();
+					return;
+				}
 			}
+		} else {
+			// the callee to call is hosted on the same server
+			enterIdElement.style.display = "none";
+			containerElement.style.display = "block";
+			onload2();
 		}
-	} else {
-		// the callee to call is hosted on the same server
-		enterIdElement.style.display = "none";
-		containerElement.style.display = "block";
-		onload2();
+	} else if(idx==2) {
+		let text = cleanStringParameter(enterTextElement.value,false);
+		console.log("submitText text="+text);
+		dataChannel.send("msg|"+text);
+		// add text to msgbox
+		let msg = "> " + text;
+		if(msgbox.value!="") { msg = newline + msg; }
+		msgbox.value += msg;
+		//console.log("msgbox "+msgbox.scrollTop+" "+msgbox.scrollHeight);
+		msgbox.scrollTop = msgbox.scrollHeight-1;
+		enterTextElement.value = "";
 	}
 }
+
+/*
+function submitText(theForm) {
+	console.log("submitText");
+	let text = cleanStringParameter(enterTextElement.value,true); // remove all white spaces
+	console.log("submitText text="+text);
+}
+*/
 
 function errorAction2(errString,err) {
 	console.log("# xhr error "+errString+" "+err);
@@ -1664,7 +1722,9 @@ function notifyConnect(callerName,callerId,callerHost) {
 		if(contactName!="" && contactName!="unknown") {
 			name = contactName+" ("+calleeID+")";
 		}
-		showStatus(lg("sorryUnableToReach")+" "+name+"<br>"+lg("PleaseTryAgainALittle"),-1);
+		showStatus(lg("sorryUnableToReach")+" "+name+"<br>"+
+//			lg("PleaseTryAgainALittle"),-1);
+			"<a href='javascript:window.location.href=window.location.href'>"+lg("PleaseTryAgainALittle")+"</a>",-1);
 	}, function(errString,errcode) {
 		if(divspinnerframe) {
 			divspinnerframe.style.display = "none";
@@ -1676,7 +1736,9 @@ function notifyConnect(callerName,callerId,callerHost) {
 		if(contactName!="" && contactName!="unknown") {
 			name = contactName+" ("+calleeID+")";
 		}
-		showStatus(lg("sorryUnableToReach")+" "+name+"<br>"+lg("PleaseTryAgainALittle"),-1);
+		showStatus(lg("sorryUnableToReach")+" "+name+"<br>"+
+//			lg("PleaseTryAgainALittle"),-1);
+			"<a href='javascript:window.location.href=window.location.href'>"+lg("PleaseTryAgainALittle")+"</a>",-1);
 	});
 }
 
@@ -1766,7 +1828,19 @@ function connectSignaling(message,openedFunc) {
 	gLog('connectSignaling: open ws connection '+calleeID+' '+wsAddr);
 	let tryingToOpenWebSocket = true;
     var wsUrl = wsAddr;
-	wsUrl += "&callerId="+callerId + "&callerName="+callerName + "&callerHost="+callerHost;
+	if(callerId!="") {
+		wsUrl += "&callerId="+callerId;
+	}
+	if(callerName!="") {
+		wsUrl += "&callerName="+callerName;
+	}
+	if(callerHost!="") {
+		wsUrl += "&callerHost="+callerHost;
+	}
+	if(muteMicElement && muteMicElement.checked) {
+		wsUrl += "&text=true";
+	}
+
 	if(typeof Android !== "undefined" && Android !== null) {
 		if(typeof Android.getVersionName !== "undefined" && Android.getVersionName !== null) {
 			wsUrl = wsUrl + "&ver="+Android.getVersionName();
@@ -1842,7 +1916,7 @@ function signalingCommand(message) {
 	if(tok.length>=2) {
 		payload = tok[1];
 	}
-	console.log('signaling cmd',cmd);
+	//console.log('signaling cmd',cmd);
 
 	if(cmd=="calleeAnswer") {
 		// callee.js has responded to our callerOffer
@@ -2010,6 +2084,7 @@ function signalingCommand(message) {
 		addIceCalleeCandidate(calleeCandidate);
 
 	} else if(cmd=="pickup") {
+		// callee has picked up the call
 		if(!rtcConnect) {
 			if(!gentle) console.warn('cmd pickup without rtcConnect; ignored');
 			return
@@ -2017,6 +2092,7 @@ function signalingCommand(message) {
 
 		gLog("callee is answering call");
 		if(!localStream) {
+// TODO tmtmtm: no localStream OK in textmode (if muteMicElement && muteMicElement.checked)?
 			console.warn("cmd pickup no localStream");
 			// I see this when I quickly re-dial while busy signal of last call is still playing
 			// TODO button may now continue to show "Connecting..."
@@ -2027,6 +2103,36 @@ function signalingCommand(message) {
 
 		// hide msgbox
 		msgbox.style.display = "none";
+
+		// start textChat or enable chatButton
+		if(muteMicElement && muteMicElement.checked) {
+			// textChat wanted
+			enableTextChat();
+		} else if(chatButton) {
+			chatButton.style.display = "block";
+		}
+
+		// mute mode handler
+		if(muteMicElement) {
+			muteMicElement.addEventListener('change', function() {
+				if(!localStream) {
+					console.log("# no localStream on muteMic state change "+this.checked);
+				} else {
+					const audioTracks = localStream.getAudioTracks();
+					if(!audioTracks[0]) {
+						console.log("# no audioTracks on muteMic state change "+this.checked);
+					} else {
+						if(this.checked) {
+							console.log("muteMic state change "+this.checked+" mic disable");
+							audioTracks[0].enabled = false;
+						} else {
+							console.log("muteMic state change "+this.checked+" mic enable");
+							audioTracks[0].enabled = true;
+						}
+					}
+				}
+			});
+		}
 
 		if(typeof Android !== "undefined" && Android !== null) {
 			// on smartphones this is supposed to disable speakerphone
@@ -2046,6 +2152,7 @@ function signalingCommand(message) {
 				micStatus = "Mic is open";
 			} else {
 				// mic NOT open
+// TODO tmtmtm: should also be red?
 				dialButton.style.boxShadow = "";
 				onlineIndicator.src="green-gradient.svg";
 			}
@@ -2428,7 +2535,6 @@ function dial2() {
 						}
 					}
 
-//					showStatus(ringingText,-1);
 					showStatus(lg("ringingText"),-1);
 				}
 				dialing = false;
@@ -2492,13 +2598,33 @@ function dataChannelOnmessage(event) {
 		return;
 	}
 	if(typeof event.data === "string") {
-		gLog("dataChannel.onmessage "+event.data);
+		//gLog("dataChannel.onmessage "+event.data);
 		if(event.data) {
 			if(event.data.startsWith("disconnect")) {
 				gLog("dataChannel.close on 'disconnect'");
 				dataChannel.close();
 				dataChannel = null;
 				hangupWithBusySound(false,"disconnect by peer via datachl");
+			} else if(event.data.startsWith("msg|")) {
+				// sanitize incoming data
+				//let cleanString = event.data.substring(4).replace(/<(?:.|\n)*?>/gm, "...");
+				let cleanString = cleanStringParameter(event.data.substring(4),false);
+				if(cleanString!="") {
+					//gLog("dataChannel.onmessage msg",cleanString);
+					if(msgbox) {
+						chatButton.style.display = "none";
+						msgbox.readOnly = true;
+						msgbox.placeholder = "";
+						msgbox.style.display = "block";
+						textbox.style.display = "block"; // -> submitForm()
+						let msg = "< " + cleanString;
+						if(msgbox.value!="") { msg = newline + msg; }
+						msgbox.value += msg;
+						//console.log("msgbox "+msgbox.scrollTop+" "+msgbox.scrollHeight);
+						msgbox.scrollTop = msgbox.scrollHeight-1;
+						beep();
+					}
+				}
 			} else if(event.data.startsWith("cmd|")) {
 				let subCmd = event.data.substring(4);
 				//gLog("subCmd="+subCmd);
@@ -2638,6 +2764,9 @@ function stopAllAudioEffects() {
 function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 	console.log('hangup: '+message);
 	dialing = false;
+	msgbox.style.display = "none";
+	textbox.style.display = "none";
+	chatButton.style.display = "none";
 	connectLocalVideo(true); // forceOff
 	if(fileselectLabel) {
 		fileselectLabel.style.display = "none";
@@ -2875,6 +3004,7 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 }
 
 function clearForm(idx) {
+	console.log("clearForm "+idx);
 	if(idx==3) {
 		enterIdValElement.value = "";
 		setTimeout(function() {

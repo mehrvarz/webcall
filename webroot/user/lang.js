@@ -19,7 +19,7 @@ var langMap = {
 	"digAnswMachine"		: "About to call a digital answering machine",
 
 	"tryingToFind"			: "Trying to find",
-	"thisCanTakeSomeTime"	: "This can take a moment. Please wait...",
+	"thisCanTakeSomeTime"	: "This may take a while. Please wait...",
 	"isCurrentlyNot"		: "is currently not available.",
 	"canYouWaitSomeTime"	: "Can you wait some time while we try to establish a connection?",
 	"yesPleaseTry"			: "Yes, please try",
@@ -27,7 +27,7 @@ var langMap = {
 	"TryingToGet"			: "Trying to get",
 	"onThePhonePleaseWait"	: "on the phone. Please wait...",
 	"sorryUnableToReach"	: "Unable to contact",
-	"PleaseTryAgainALittle"	: "Please try again a little later.",
+	"PleaseTryAgainALittle"	: "Please try again a little later",
 },
 "de": {
 	"dialButton"			: "Anwählen",

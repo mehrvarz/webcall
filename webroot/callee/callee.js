@@ -30,6 +30,10 @@ const exclamationElement = document.getElementById('exclamation');
 const ownlinkElement = document.getElementById('ownlink');
 const autoReconnectDelay = 15;
 const calleeMode = true;
+const enterTextElement = document.getElementById('enterText');
+const chatButton = document.querySelector('button#chatButton');
+const muteMicElement = document.getElementById("muteMic");
+const muteMiclabelElement = document.getElementById("muteMiclabel");
 
 var ringtoneSound = null;
 var ringtoneIsPlaying = false;
@@ -46,8 +50,6 @@ var lastWsConn = null;
 var localDescription = null;
 var callerDescription = null;
 var peerCon = null;
-var localStream = null;
-var remoteStream = null;
 var dataChannel = null;
 var rtcConnect = false
 var rtcConnectStartDate = 0;
@@ -84,6 +86,8 @@ var fileReceiveAbort=false;
 var minNewsDate=0;
 var mid = "";
 var altIdArray = [];
+var newline = String.fromCharCode(13, 10);
+var textmode="";
 
 window.onload = function() {
 	console.log("callee.js onload...");
@@ -224,6 +228,30 @@ window.onload = function() {
 		wsSend("dialsoundsmuted|"+!this.checked);
 		setTimeout(function(){history.back();},150);
 	});
+
+	// mute mode handler
+	if(!muteMicElement) {
+		console.log("# no muteMicElement");
+	} else {
+		muteMicElement.addEventListener('change', function() {
+			if(!localStream) {
+				console.log("# no localStream on muteMic state change "+this.checked);
+			} else {
+				const audioTracks = localStream.getAudioTracks();
+				if(!audioTracks[0]) {
+					console.log("# no audioTracks on muteMic state change "+this.checked);
+				} else {
+					if(this.checked) {
+						console.log("muteMic state change "+this.checked+" mic disable");
+						audioTracks[0].enabled = false;
+					} else {
+						console.log("muteMic state change "+this.checked+" mic enable");
+						audioTracks[0].enabled = true;
+					}
+				}
+			}
+		});
+	}
 
 	// requestFullscreen and exitFullscreen are not supported in iOS (will abort JS without err-msg)
 	if(fullscreenCheckbox && fullscreenLabel.style.display!="none") {
@@ -497,19 +525,33 @@ function clearForm() {
 	formPw.focus();
 }
 
-function submitFormDone(theForm) {
-	var valuePw = cleanStringParameter(document.getElementById("current-password").value,true,"pw");
-	if(valuePw.length < 6) {
-		formPw.focus();
-		showStatus("Password needs to be at least six characters long",-1);
-		return;
+function submitFormDone(idx) {
+	console.log("submitFormDone() idx="+idx);
+	if(idx==1) {
+		var valuePw = cleanStringParameter(document.getElementById("current-password").value,true,"pw");
+		if(valuePw.length < 6) {
+			formPw.focus();
+			showStatus("Password needs to be at least six characters long",-1);
+			return;
+		}
+		wsSecret = valuePw;
+		onGotStreamGoOnline = true;
+		//console.log("callee submitFormDone: enable goonline");
+		goOnlineButton.disabled = false;
+		start();
+		// -> getStream() -> getUserMedia(constraints) -> gotStream() -> goOnline() -> login()
+	} else if(idx==2) {
+		let text = cleanStringParameter(enterTextElement.value,false);
+		console.log("submitText text="+text);
+		dataChannel.send("msg|"+text);
+		// add text to msgbox
+		let msg = "> " + text;
+		if(msgbox.value!="") { msg = newline + msg; }
+		msgbox.value += msg;
+		//console.log("msgbox "+msgbox.scrollTop+" "+msgbox.scrollHeight);
+		msgbox.scrollTop = msgbox.scrollHeight-1;
+		enterTextElement.value = "";
 	}
-	wsSecret = valuePw;
-	onGotStreamGoOnline = true;
-	//console.log("callee submitFormDone: enable goonline");
-	goOnlineButton.disabled = false;
-	start();
-	// -> getStream() -> getUserMedia(constraints) -> gotStream() -> goOnline() -> login()
 }
 
 function start() {
@@ -677,7 +719,7 @@ function login(retryFlag) {
 			goOfflineButton.disabled = true;
 			form.style.display = "none";
 		} else if(parts[0]=="wrongcookie") {
-			window.location.reload(false);
+			window.location.reload();
 		} else if(parts[0]=="fatal") {
 			// loginStatus "fatal" = "already logged in" or "db.GetX err"
 			// no use offering pw entry again at this point
@@ -811,10 +853,10 @@ function getSettingDone() {
 		// "You receive calls made by this link"
 		let calleeLink = window.location.href;
 		let userLink = "";
-		//console.log("showOnlineReadyMsg calleeLink="+calleeLink);
+		//console.log("getSettingDone calleeLink="+calleeLink);
 		if(calleeLink.indexOf("callee/")>0) {
 			userLink = calleeLink.replace("callee/","user/");
-			//console.log("showOnlineReadyMsg a userLink="+userLink);
+			//console.log("getSettingDone a userLink="+userLink);
 		}
 		let idxParameter = userLink.indexOf("?");
 		if(idxParameter>=0) {
@@ -838,7 +880,7 @@ function getSettingDone() {
 		}
 
 		// add active mapping entries
-		console.log("showOnlineReadyMsg altIdArray.length",altIdArray.length);
+		console.log("getSettingDone altIdArray.length",altIdArray.length);
 		if(altIdArray.length>0) {
 			for(let i = 0; i < altIdArray.length; i++) {
 				let userLinkMap = userLink.replace("/user/"+calleeID,"/user/"+altIdArray[i]);
@@ -971,6 +1013,7 @@ function showOnlineReadyMsg() {
 		return;
 	}
 
+	console.log("showOnlineReadyMsg");
 	if(typeof Android !== "undefined" && Android !== null) {
 		if(typeof Android.calleeConnected !== "undefined" && Android.calleeConnected !== null) {
 			Android.calleeConnected();
@@ -982,7 +1025,8 @@ function showOnlineReadyMsg() {
 		}
 	}
 
-	msgbox.style.display = "none";
+	// in textmode: video open triggers showOnlineReadyMsg(), causing msgbox to close
+	//msgbox.style.display = "none";
 
 	if(isHiddenCheckbox.checked) {
 		showStatus("Your online status is hidden.<br>",2500);
@@ -1389,9 +1433,20 @@ function signalingCommand(message, comment) {
 			missedCallsSlice = JSON.parse(payload);
 		}
 		showMissedCalls();
+
 	} else if(cmd=="ua") {
 		otherUA = payload;
 		gLog("otherUA",otherUA);
+
+	} else if(cmd=="textmode") {
+		textmode = payload;
+		gLog("textmode",textmode);
+
+		if(textmode=="true") {
+			if(muteMicElement) {
+				muteMicElement.checked = true;
+			}
+		}
 
 	} else if(cmd=="rtcNegotiate") {
 		// remote video track added by caller
@@ -1821,9 +1876,15 @@ function pickup2() {
 			vsendButton.style.display = "inline-block";
 		}
 		if(localStream) {
-			const audioTracks = localStream.getAudioTracks();
-			audioTracks[0].enabled = true;
+			if(!muteMicElement || muteMicElement.checked==false) {
+				console.log("mute off: audioTracks[0].enabled");
+				const audioTracks = localStream.getAudioTracks();
+				audioTracks[0].enabled = true;
+			} else {
+				console.log("mute on: no audioTracks[0].enabled");
+			}
 		}
+
 		mediaConnectStartDate = Date.now();
 		if(typeof Android !== "undefined" && Android !== null) {
 			Android.peerConnect();
@@ -1850,6 +1911,34 @@ function pickup2() {
 				peerCon.getStats(null)
 				.then((results) => getStatsCandidateTypes(results,"Connected","Mic is open"),
 					err => console.log(err.message));
+
+				let enableTextchat = function() {
+					console.log("enable textchat");
+					// hide chat-button
+					chatButton.style.display = "none";
+					// msgbox NOT editable
+					msgbox.readOnly = true;
+					// msgbox no placeholder
+					msgbox.placeholder = "";
+					// show msgbox and textbox
+					msgbox.style.display = "block";
+					textbox.style.display = "block"; // -> submitForm()
+
+					setTimeout(function() {
+						console.log("focus enterTextElement");
+						enterTextElement.focus();
+					},500);
+				};
+
+				if(textmode=="true") {
+					enableTextchat();
+// TODO mute audio (+ mute-checkbox on)
+				} else if(chatButton) {
+					chatButton.style.display = "block";
+					chatButton.onclick = function() {
+						enableTextchat();
+					}
+				}
 			}
 		},200);
 	},400);
@@ -1860,6 +1949,9 @@ function hangup(mustDisconnect,dummy2,message) {
 	showStatus("Hang up ("+message+")",4000);
 	answerButton.style.display = "none";
 	rejectButton.style.display = "none";
+	msgbox.style.display = "none";
+	textbox.style.display = "none";
+	chatButton.style.display = "none";
 	buttonBlinking = false;
 
 	remoteVideoFrame.srcObject = null;
@@ -2214,8 +2306,16 @@ function peerConnected2() {
 }
 
 function getStatsCandidateTypes(results,eventString1,eventString2) {
+	if(muteMicElement && muteMicElement.checked) {
+		eventString2 = ""; // do not show "Mic is open"
+	}
+
 	let msg = getStatsCandidateTypesEx(results,eventString1,eventString2)
 	wsSend("log|callee "+msg); // shows up in server log as: serveWss peer callee Incoming p2p/p2p
+
+	if(textmode=="true") {
+		msg = msg + " Textmode";
+	}
 
 	// we rather show callerID and/or callerName if they are avail, instead of listOfClientIps
 	if(callerName!="" || callerID!="") {
@@ -2235,6 +2335,7 @@ function getStatsCandidateTypes(results,eventString1,eventString2) {
 	if(otherUA!="") {
 		showMsg += "<div style='font-size:0.8em;margin-top:8px;color:#aac;'>"+otherUA+"</div>";
 	}
+
 	showStatus(showMsg,-1);
 }
 
@@ -2253,7 +2354,7 @@ function createDataChannel() {
 
 function dataChannelOnmessage(event) {
 	if(typeof event.data === "string") {
-		gLog("dataChannel.onmessage");
+		//console.log("dataChannel.onmessage "+event.data);
 		if(event.data) {
 			if(event.data.startsWith("disconnect")) {
 				gLog("dataChannel.onmessage '"+event.data+"'");
@@ -2262,20 +2363,22 @@ function dataChannelOnmessage(event) {
 				hangupWithBusySound(true,"disconnect via dataChannel");
 			} else if(event.data.startsWith("msg|")) {
 				// sanitize incoming data
-				let cleanString = event.data.substring(4).replace(/<(?:.|\n)*?>/gm, "...");
+				//let cleanString = event.data.substring(4).replace(/<(?:.|\n)*?>/gm, "...");
+				let cleanString = cleanStringParameter(event.data.substring(4),false);
 				if(cleanString!="") {
 					//gLog("dataChannel.onmessage msg",cleanString);
 					if(msgbox) {
-						/*let curDate = new Date().toString();
-						// cut off trailing "GMT... (Central European Summer Time)"
-						let bracketIdx = curDate.indexOf(" GMT");
-						if(bracketIdx>=0) {
-							curDate = curDate.substring(0,bracketIdx);
-						}
-						let msg = "["+curDate+"]\n" + cleanString + "\n";
-						*/
-						let msg = "Message: " + cleanString + "\n";
-						msgbox.value = msg;
+						chatButton.style.display = "none";
+						msgbox.style.display = "block";
+						msgbox.readOnly = true;
+						msgbox.placeholder = "";
+						textbox.style.display = "block"; // -> submitForm()
+						let msg = "< " + cleanString;
+						if(msgbox.value!="") { msg = newline + msg; }
+						msgbox.value += msg;
+						//console.log("msgbox "+msgbox.scrollTop+" "+msgbox.scrollHeight);
+						msgbox.scrollTop = msgbox.scrollHeight-1;
+						beep();
 					}
 				}
 			} else if(event.data.startsWith("cmd|")) {
@@ -2341,6 +2444,7 @@ function dataChannelOnmessage(event) {
 		let sinceStartSecs = Math.floor((Date.now() - fileReceiveStartDate + 500)/1000);
 		if(sinceStartSecs!=fileReceiveSinceStartSecs && sinceStartSecs!=0) {
 			let kbytesPerSec = Math.floor(fileReceivedSize/1000/sinceStartSecs);
+// TODO progressRcvLabel undefined?
 			progressRcvLabel.innerHTML = "receiving '"+fileName.substring(0,22)+"' "+kbytesPerSec+" KB/s";
 			fileReceiveSinceStartSecs = sinceStartSecs;
 		}
