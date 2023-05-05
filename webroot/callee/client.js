@@ -32,6 +32,10 @@ const downloadList = document.getElementById('download');
 const progressRcvElement = document.getElementById('progressRcv');
 const progressRcvLabel = document.getElementById('progressRcvLabel');
 const progressRcvBar = document.getElementById('fileProgressRcv');
+const chatButton = document.querySelector('button#chatButton');
+const muteMicDiv = document.getElementById("muteMicDiv");
+const muteMicElement = document.getElementById("muteMic");
+const muteMiclabelElement = document.getElementById("muteMiclabel");
 
 var bitrate = 320000;
 var calleeID = "";
@@ -1761,5 +1765,23 @@ function clearcookie() {
 			window.location.reload();
 		}
 	},1000);
+}
+
+function enableTextChat() {
+	console.log("enable textchat");
+	// hide chat-button
+	chatButton.style.display = "none";
+	// msgbox NOT editable
+	msgbox.readOnly = true;
+	// msgbox no placeholder
+	msgbox.placeholder = "";
+	// show msgbox and textbox
+	msgbox.style.display = "block";
+	textbox.style.display = "block"; // -> submitForm()
+
+	setTimeout(function() {
+		console.log("focus enterTextElement");
+		enterTextElement.focus();
+	},500);
 }
 

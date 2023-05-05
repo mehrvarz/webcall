@@ -31,10 +31,6 @@ const ownlinkElement = document.getElementById('ownlink');
 const autoReconnectDelay = 15;
 const calleeMode = true;
 const enterTextElement = document.getElementById('enterText');
-const chatButton = document.querySelector('button#chatButton');
-const muteMicDiv = document.getElementById("muteMicDiv");
-const muteMicElement = document.getElementById("muteMic");
-const muteMiclabelElement = document.getElementById("muteMiclabel");
 
 var ringtoneSound = null;
 var ringtoneIsPlaying = false;
@@ -89,6 +85,7 @@ var mid = "";
 var altIdArray = [];
 var newline = String.fromCharCode(13, 10);
 var textmode="";
+var	muteMicModified = false;
 
 window.onload = function() {
 	console.log("callee.js onload...");
@@ -611,6 +608,9 @@ function login(retryFlag) {
 			// hide the form
 			form.style.display = "none";
 
+			// show muteMic checkbox
+			muteMicDiv.style.display = "block";
+
 			menuClearCookieElement.style.display = "block";
 
 			if(parts.length>=2) {
@@ -1028,9 +1028,6 @@ function showOnlineReadyMsg() {
 		}
 	}
 
-	// in textmode: video open triggers showOnlineReadyMsg(), causing msgbox to close
-	//msgbox.style.display = "none";
-
 	if(isHiddenCheckbox.checked) {
 		showStatus("Your online status is hidden.<br>",2500);
 	}
@@ -1127,7 +1124,7 @@ function wsOnError2(str) {
 
 function wsOnClose(evt) {
 	// called by wsConn.onclose
-	gLog("wsOnClose "+calleeID);
+	gLog("wsOnClose "+calleeID, evt);
 	wsOnClose2();
 	if(tryingToOpenWebSocket) {
 		// onclose occured while trying to establish a ws-connection (before this could be finished)
@@ -1136,6 +1133,8 @@ function wsOnClose(evt) {
 		// onclose occured while being ws-connected
 		gLog('wsOnClose while connected');
 	}
+/*
+// TODO outcommented bc: NOOOO! this is also executed on manual reload
 	if(goOnlineButton.disabled && evt) {
 		// this is not a user-intended offline; we should be online
 		let delay = autoReconnectDelay + Math.floor(Math.random() * 10) - 5;
@@ -1146,6 +1145,7 @@ function wsOnClose(evt) {
 		// if conditions are right after delay secs this will call login()
 		delayedWsAutoReconnect(delay);
 	}
+*/
 }
 
 function wsOnClose2() {
@@ -1445,11 +1445,12 @@ function signalingCommand(message, comment) {
 		textmode = payload;
 		gLog("textmode",textmode);
 
-		if(muteMicElement) {
-			if(textmode=="true") {
+		if(textmode=="true") {
+			if(muteMicElement && muteMicElement.checked==false) {
 				muteMicElement.checked = true;
-			} else {
-				muteMicElement.checked = false;
+				// if we change the state of the muteMic checkbox here, we need to auto-change it back on hangup
+				// only then do we ever auto-change the state of this checkbox
+				muteMicModified = true;
 			}
 		}
 
@@ -1936,9 +1937,10 @@ function pickup2() {
 				};
 
 				if(textmode=="true") {
+					// we open the textbox bc the caller requested textmode
 					enableTextchat();
-// TODO mute audio (+ mute-checkbox on)
 				} else if(chatButton) {
+					// we show the chatButton, so callee can manually open the textbox
 					chatButton.style.display = "block";
 					chatButton.onclick = function() {
 						enableTextchat();
@@ -1958,7 +1960,13 @@ function hangup(mustDisconnect,dummy2,message) {
 	textbox.style.display = "none";
 	chatButton.style.display = "none";
 	buttonBlinking = false;
-	textmode = "";
+	if(textmode!="") {
+		textmode = "";
+	}
+	if(muteMicModified) {
+		muteMicElement.checked = false;
+		muteMicModified = false;
+	}
 
 	remoteVideoFrame.srcObject = null;
 	remoteVideoHide();
@@ -2055,6 +2063,7 @@ function goOnline(sendInitFlag,comment) {
 		console.log('goOnline have wsConn');
 		if(divspinnerframe) divspinnerframe.style.display = "none";
 		menuClearCookieElement.style.display = "block";
+		muteMicDiv.style.display = "block";
 		//nonesense: fileselectLabel.style.display = "block";
 		if(sendInitFlag) {
 			gLog('goOnline have wsConn -> send init');
@@ -2667,6 +2676,7 @@ function goOffline() {
 	ownlinkElement.innerHTML = "";
 	stopAllAudioEffects("goOffline");
 	waitingCallerSlice = null;
+	muteMicDiv.style.display = "none";
 
 	isHiddenlabel.style.display = "none";
 	autoanswerlabel.style.display = "none";

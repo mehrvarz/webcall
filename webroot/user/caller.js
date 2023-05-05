@@ -14,9 +14,6 @@ const numericIdCheckbox = document.querySelector('input#numericId');
 const calleeMode = false;
 const msgBoxMaxLen = 137;
 const enterTextElement = document.getElementById('enterText');
-const chatButton = document.querySelector('button#chatButton');
-const muteMicElement = document.getElementById("muteMic");
-const muteMiclabelElement = document.getElementById("muteMiclabel");
 
 var connectingText = "Connecting P2P...";
 //var ringingText = "Ringing...";
@@ -930,24 +927,6 @@ function onload3(comment) {
 		// and also set contactName and callerName
 		getContact(calleeID);
 	}
-}
-
-function enableTextChat() {
-	console.log("enable textchat");
-	// hide chat-button
-	chatButton.style.display = "none";
-	// msgbox NOT editable
-	msgbox.readOnly = true;
-	// msgbox no placeholder
-	msgbox.placeholder = "";
-	// show msgbox and textbox
-	msgbox.style.display = "block";
-	textbox.style.display = "block"; // -> submitForm()
-
-	setTimeout(function() {
-		console.log("focus enterTextElement");
-		enterTextElement.focus();
-	},500);
 }
 
 function dialButtonClick() {
