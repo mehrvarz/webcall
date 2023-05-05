@@ -147,7 +147,7 @@ function processContacts(xhrresponse) {
 
 		// right column: ID (call)
 		var parts = id.split("@");
-		if(parts.length>=2) {
+		if(parts.length>=3) {
 			// right column: remote user
 			// if we go straight to a new tab for the remote-host caller-widget (as we do here),
 			// the caller will have no chance to select a callerId

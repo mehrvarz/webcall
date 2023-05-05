@@ -1672,11 +1672,14 @@ function showMissedCalls() {
 				let remoteCaller = false;
 				let remoteAddr = "";
 				let callerIdNoHost = callerID;
-				let idxAt = callerID.indexOf("@");
-				if(idxAt>=0) {
+				var parts = callerID.split("@");
+				if(parts.length>=3) {
 					remoteCaller = true;
-					callerIdNoHost = callerID.substring(0,idxAt);
-					remoteAddr = callerID.substring(idxAt+1)
+					callerIdNoHost = parts[0];
+					if(parts[1]!="") {
+						callerIdNoHost += "@"+parts[1];
+					}
+					remoteAddr = parts[2];
 					if(remoteAddr==location.host) {
 						remoteCaller = false;
 						callerID = callerIdNoHost;
