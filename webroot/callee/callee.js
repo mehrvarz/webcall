@@ -86,6 +86,7 @@ var altIdArray = [];
 var newline = String.fromCharCode(13, 10);
 var textmode="";
 var	muteMicModified = false;
+var textchatOKfromOtherSide = false;
 
 window.onload = function() {
 	console.log("callee.js onload...");
@@ -233,17 +234,17 @@ window.onload = function() {
 	} else {
 		muteMicElement.addEventListener('change', function() {
 			if(!localStream) {
-				console.log("# no localStream on muteMic state change "+this.checked);
+				console.log("# no localStream on muteMic state change: "+this.checked);
 			} else {
 				const audioTracks = localStream.getAudioTracks();
 				if(!audioTracks[0]) {
-					console.log("# no audioTracks on muteMic state change "+this.checked);
+					console.log("# no audioTracks on muteMic state change: "+this.checked);
 				} else {
 					if(this.checked) {
-						console.log("muteMic state change "+this.checked+" mic disable");
+						console.log("muteMic state change "+this.checked+": mic disable");
 						audioTracks[0].enabled = false;
 					} else {
-						console.log("muteMic state change "+this.checked+" mic enable");
+						console.log("muteMic state change "+this.checked+": mic enable");
 						audioTracks[0].enabled = true;
 					}
 				}
@@ -1943,7 +1944,12 @@ function pickup2() {
 					// we show the chatButton, so callee can manually open the textbox
 					chatButton.style.display = "block";
 					chatButton.onclick = function() {
-						enableTextchat();
+						if(textchatOKfromOtherSide) {
+							enableTextchat();
+						} else {
+							chatButton.style.display = "none";
+							showStatus("peer does not support textchat",4000);
+						}
 					}
 				}
 			}
@@ -2360,6 +2366,9 @@ function createDataChannel() {
 		dataChannel = event.channel;
 		dataChannel.onopen = event => {
 			gLog("dataChannel.onopen");
+			// tell other side that we support textchat
+			textchatOKfromOtherSide = false;
+			dataChannel.send("textchatOK");
 		};
 		dataChannel.onclose = event => dataChannelOnclose(event);
 		dataChannel.onerror = event => dataChannelOnerror(event);
@@ -2376,6 +2385,8 @@ function dataChannelOnmessage(event) {
 				dataChannel.close();
 				dataChannel = null;
 				hangupWithBusySound(true,"disconnect via dataChannel");
+			} else if(event.data.startsWith("textchatOK")) {
+				textchatOKfromOtherSide = true;
 			} else if(event.data.startsWith("msg|")) {
 				// sanitize incoming data
 				//let cleanString = event.data.substring(4).replace(/<(?:.|\n)*?>/gm, "...");

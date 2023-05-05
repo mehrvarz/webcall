@@ -78,6 +78,7 @@ var idSelectElement = null;
 //var greetingMessage = "Greeting message (optional):";
 //var digAnswMachine = "About to call a digital answering machine";
 var newline = String.fromCharCode(13, 10);
+var textchatOKfromOtherSide = false;
 
 var extMessage = function(e) {
 	// prevent an error on split() below when extensions emit unrelated, non-string 'message' events to the window
@@ -914,7 +915,14 @@ function onload3(comment) {
 	}
 	if(chatButton) {
 		chatButton.onclick = function() {
-			enableTextChat();
+			if(textchatOKfromOtherSide) {
+				enableTextChat();
+			} else {
+				setTimeout(function() {
+					chatButton.style.display = "none";
+					showStatus("peer does not support textchat",4000);
+				},500);
+			}
 		}
 	}
 
@@ -2085,8 +2093,14 @@ function signalingCommand(message) {
 
 		// start textChat or enable chatButton
 		if(muteMicElement && muteMicElement.checked) {
-			// textChat wanted
-			enableTextChat();
+			// give a little time for textchatOKfromOtherSide state
+			setTimeout(function() {
+				if(textchatOKfromOtherSide) {
+					enableTextChat();
+				} else {
+					chatButton.style.display = "none";
+				}
+			},1000);
 		} else if(chatButton) {
 			chatButton.style.display = "block";
 		}
@@ -2095,17 +2109,17 @@ function signalingCommand(message) {
 		if(muteMicElement) {
 			muteMicElement.addEventListener('change', function() {
 				if(!localStream) {
-					console.log("# no localStream on muteMic state change "+this.checked);
+					console.log("# no localStream on muteMic state change: "+this.checked);
 				} else {
 					const audioTracks = localStream.getAudioTracks();
 					if(!audioTracks[0]) {
-						console.log("# no audioTracks on muteMic state change "+this.checked);
+						console.log("# no audioTracks on muteMic state change: "+this.checked);
 					} else {
 						if(this.checked) {
-							console.log("muteMic state change "+this.checked+" mic disable");
+							console.log("muteMic state change "+this.checked+": mic disable");
 							audioTracks[0].enabled = false;
 						} else {
-							console.log("muteMic state change "+this.checked+" mic enable");
+							console.log("muteMic state change "+this.checked+": mic enable");
 							audioTracks[0].enabled = true;
 						}
 					}
@@ -2495,7 +2509,7 @@ function dial2() {
 			} else {
 				console.log('peerCon rtcCon');
 				if(!rtcConnect && !mediaConnect) {
-					// the caller got peer-connected to the callee; callee now starts ringing
+					// the caller got peer-connected to callee; callee now starts ringing
 					rtcConnect = true;
 					rtcConnectStartDate = Date.now();
 					mediaConnectStartDate = 0;
@@ -2571,6 +2585,9 @@ function createDataChannel() {
 			dataChannel.send("msg|"+dataChannelSendMsg);
 			dataChannelSendMsg = "";
 		}
+		// tell other side that we support textchat
+		textchatOKfromOtherSide = false;
+		dataChannel.send("textchatOK");
 	};
 	dataChannel.onclose = event => dataChannelOnclose(event);
 	dataChannel.onerror = event => dataChannelOnerror(event);
@@ -2590,6 +2607,8 @@ function dataChannelOnmessage(event) {
 				dataChannel.close();
 				dataChannel = null;
 				hangupWithBusySound(false,"disconnect by peer via datachl");
+			} else if(event.data.startsWith("textchatOK")) {
+				textchatOKfromOtherSide = true;
 			} else if(event.data.startsWith("msg|")) {
 				// sanitize incoming data
 				//let cleanString = event.data.substring(4).replace(/<(?:.|\n)*?>/gm, "...");
