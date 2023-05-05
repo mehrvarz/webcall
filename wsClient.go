@@ -158,7 +158,11 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	// callerIdLong = callerId @ callerHost
 	callerIdLong := callerID
 	if callerHost!="" && !strings.HasPrefix(callerHost,hostname) {
-		callerIdLong += "@"+callerHost
+		if(strings.Index(callerIdLong,"@")>=0) {
+			callerIdLong += "@"+callerHost
+		} else {
+			callerIdLong += "@@"+callerHost
+		}
 		//fmt.Printf("wsClient (%s) callerID=%s Long=%s callerHost=%s hostname=%s\n",
 		//	wsClientData.calleeID, callerID, callerIdLong, callerHost, hostname)
 	}

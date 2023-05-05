@@ -418,7 +418,7 @@ window.onload = function() {
 		if(typeof str!=="undefined" && str!="" && str!="undefined") {
 			targetHost = str;
 		}
-		console.log("a1");
+//		console.log("a1");
 		enterDomainValElement.value = targetHost;
 		enterDomainValElement.onblur = function() {
 			// catch enterDomainValElement.value change to invoke /getcontact
@@ -530,7 +530,7 @@ window.onload = function() {
 function getContactFromForm() {
 	let contactID = cleanStringParameter(enterIdValElement.value,true);
 	if(contactID!="") {
-		console.log("a2");
+//		console.log("a2");
 		let contactHost = cleanStringParameter(enterDomainValElement.value,true);
 		if(contactHost!="" && contactHost!=location.host) {
 			contactID += "@"+contactHost;

@@ -1,4 +1,4 @@
-// WebCall Copyright 2022 timur.mobi. All rights reserved.
+// WebCall Copyright 2023 timur.mobi. All rights reserved.
 'use strict';
 const databoxElement = document.getElementById('databox');
 const calleeMode = false;
@@ -153,12 +153,15 @@ function processContacts(xhrresponse) {
 			// the caller will have no chance to select a callerId
 			// so instead, we open dial-ID for remote host
 			let callerHost = parts[2];
+			if(typeof callerHost == "undefined") {
+				callerHost = "";
+			}
 			let idOnly = parts[0];
 			if(parts[1]!="") {
 				idOnly = idOnly+"@"+parts[1];
 			}
 			let idDisplay = id;
-			console.log("idDisplay="+idDisplay+" idOnly="+idOnly+" callerHost="+callerHost+
+			console.log("id="+idDisplay+" idOnly="+idOnly+" callerHost="+callerHost+
 						" location.host="+location.host);
 			if(callerHost==location.host) {
 				idDisplay = idOnly;
