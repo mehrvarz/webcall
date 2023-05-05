@@ -57,7 +57,6 @@ var textbox = document.getElementById('textbox');
 var	timerElement = document.querySelector('div#timer');
 var	calleeOfflineElement = document.getElementById("calleeOffline");
 var	onlineIndicator = document.querySelector('img#onlineIndicator');
-//var microphoneIsNeeded = true;
 var fileReceiveBuffer = [];
 var fileReceivedSize = 0;
 var fileName = "";
@@ -148,8 +147,6 @@ window.onload = function() {
 			if(muteMicElement) {
 				muteMicElement.checked = true;
 			}
-// TODO tmtmtm ???
-//			microphoneIsNeeded = false;
 		}
 	}
 
@@ -2184,9 +2181,6 @@ function signalingCommand(message) {
 			// getting stats (p2p or relayed connection)
 			gLog("full mediaConnect, getting stats...");
 			let micStatus = "";
-//			if(muteMicElement && muteMicElement.checked) {
-//				micStatus = "Mic is open";
-//			}
 			peerCon.getStats(null)
 				.then((results) => getStatsCandidateTypes(results,"Connected",micStatus),
 				err => console.log(err));

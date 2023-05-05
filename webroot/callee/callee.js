@@ -502,7 +502,9 @@ function showPw() {
 
 function enablePasswordForm() {
 	gLog('enter password for calleeID='+calleeID);
-	muteMicDiv.style.display = "none";
+	if(muteMicDiv) {
+		muteMicDiv.style.display = "none";
+	}
 	showStatus("Login calleeID: "+calleeID,-1);
 	document.getElementById("current-password").value = "";
 	form.style.display = "block";
@@ -538,7 +540,9 @@ function submitFormDone(idx) {
 		onGotStreamGoOnline = true;
 		//console.log("callee submitFormDone: enable goonline");
 		goOnlineButton.disabled = false;
-		muteMicDiv.style.display = "block";
+		if(muteMicDiv) {
+			muteMicDiv.style.display = "block";
+		}
 		start();
 		// -> getStream() -> getUserMedia(constraints) -> gotStream() -> goOnline() -> login()
 	} else if(idx==2) {
@@ -610,7 +614,9 @@ function login(retryFlag) {
 			form.style.display = "none";
 
 			// show muteMic checkbox
-			muteMicDiv.style.display = "block";
+			if(muteMicDiv) {
+				muteMicDiv.style.display = "block";
+			}
 
 			menuClearCookieElement.style.display = "block";
 
