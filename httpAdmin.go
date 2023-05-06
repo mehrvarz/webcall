@@ -320,19 +320,32 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 	}
 
 	if urlPath=="/clearcache" {
-		// c *WsClient => hub.CalleeClient => hubMap[calleeID].CalleeClient
 		c := hubMap[urlID].CalleeClient
 		if(c==nil) {
 			fmt.Printf("# /clearcache (%s) unknown ID\n", urlID)
 			return false;
 		}
-		//err := c.Write([]byte("cancel|c"))
 		err := c.Write([]byte("clearcache"))
 		if err != nil {
 			fmt.Printf("# /clearcache (%s) send err=%s\n", urlID, err.Error())
 			return false
 		}
 		fmt.Printf("/clearcache (%s) sent OK\n", urlID)
+		return true
+	}
+
+	if urlPath=="/cancelc" {
+		c := hubMap[urlID].CalleeClient
+		if(c==nil) {
+			fmt.Printf("# /cancelc (%s) unknown ID\n", urlID)
+			return false;
+		}
+		err := c.Write([]byte("cancel|c"))
+		if err != nil {
+			fmt.Printf("# /cancelc (%s) send err=%s\n", urlID, err.Error())
+			return false
+		}
+		fmt.Printf("/cancelc (%s) sent OK\n", urlID)
 		return true
 	}
 
