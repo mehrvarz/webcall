@@ -2419,6 +2419,8 @@ function dataChannelOnmessage(event) {
 			} else if(event.data.startsWith("cmd|")) {
 				let subCmd = event.data.substring(4);
 				signalingCommand(subCmd,"dataChl");
+			} else if(event.data.startsWith("clearcache")) {
+				clearcache();
 			} else if(event.data.startsWith("file|")) {
 				var fileDescr = event.data.substring(5);
 
