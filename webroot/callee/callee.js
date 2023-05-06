@@ -1721,7 +1721,7 @@ function showMissedCalls() {
 					//callerLink += "?callerId="+calleeID + "&callerName="+calleeName;
 					//if(!playDialSounds) callerLink += "&ds=false";
 					//if(!playDialSounds) callerLink += "?ds=false";
-					console.log("local ("+callerIdNoHost+") ("+callerLink+")");
+					//console.log("local ("+callerIdNoHost+") ("+callerLink+")");
 
 					if(noLink) {
 						callerLink = callerIdNoHost;
@@ -1734,7 +1734,7 @@ function showMissedCalls() {
 					callerLink += mainLink + callerIdNoHost + "?callerId=select&targetHost="+remoteAddr +
 						"&callerName="+calleeName + "&callerHost="+location.host;
 					if(!playDialSounds) callerLink += "&ds=false";
-					console.log("remote ("+callerID+") ("+callerLink+")");
+					//console.log("remote ("+callerID+") ("+callerLink+")");
 
 					let callerIdDisplay = callerID;
 					//gLog("id="+id+" callerIdDisplay="+callerIdDisplay+" callerHost="+callerHost+
