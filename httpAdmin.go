@@ -326,8 +326,8 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 			fmt.Printf("# /clearcache (%s) unknown ID\n", urlID)
 			return false;
 		}
-		//err := c.Write([]byte("sessionId|"+codetag))
-		err := c.Write([]byte("cancel|c"))
+		//err := c.Write([]byte("cancel|c"))
+		err := c.Write([]byte("clearcache"))
 		if err != nil {
 			fmt.Printf("# /clearcache (%s) send err=%s\n", urlID, err.Error())
 			return false
