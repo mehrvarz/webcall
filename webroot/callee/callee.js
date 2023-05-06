@@ -1238,6 +1238,7 @@ function signalingCommand(message, comment) {
 			console.warn('callerOffer failed to set RemoteDescription',err.message,callerDescription)
 			showStatus("Failed to set RemoteDescription",8000);
 		});
+
 	} else if(cmd=="callerAnswer") {
 		if(!peerCon || peerCon.iceConnectionState=="closed") {
 			console.log("# callerAnswer abort no peerCon");
@@ -1375,10 +1376,14 @@ function signalingCommand(message, comment) {
 			}
 			//stopAllAudioEffects("incoming cancel2");
 			endWebRtcSession(false,true,"incoming cancel"); // -> peerConCloseFunc
+			clearcache();
 		} else {
 			stopAllAudioEffects("ignore cancel");
 			// TODO no endWebRtcSession ? android service will not know that ringing has ended
 		}
+
+	} else if(cmd=="clearcache") {
+// TODO tmtmtm
 
 	} else if(cmd=="status") {
 		// this is currently used to make Android users aware of new releases and Websocket communication issues
@@ -2419,8 +2424,6 @@ function dataChannelOnmessage(event) {
 			} else if(event.data.startsWith("cmd|")) {
 				let subCmd = event.data.substring(4);
 				signalingCommand(subCmd,"dataChl");
-			} else if(event.data.startsWith("clearcache")) {
-				clearcache();
 			} else if(event.data.startsWith("file|")) {
 				var fileDescr = event.data.substring(5);
 

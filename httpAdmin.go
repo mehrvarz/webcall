@@ -319,6 +319,19 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		return true
 	}
 
+	if urlPath=="/clearcache" {
+/* TODO
+		err := c.Write([]byte("sessionId|"+codetag))
+		if err != nil {
+			fmt.Printf("# %s (%s) init send sessionId %s  <- to callee err=%v\n",
+				c.connType, c.calleeID, c.RemoteAddr, err)
+			c.hub.closeCallee("init, send sessionId to callee: "+err.Error())
+			return
+		}
+*/
+		return true
+	}
+
 	/* developer tools below
 	if urlPath=="/deluserid" {
 		// get time from url-arg
