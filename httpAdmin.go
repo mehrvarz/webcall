@@ -320,15 +320,19 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 	}
 
 	if urlPath=="/clearcache" {
-/* TODO
-		err := c.Write([]byte("sessionId|"+codetag))
-		if err != nil {
-			fmt.Printf("# %s (%s) init send sessionId %s  <- to callee err=%v\n",
-				c.connType, c.calleeID, c.RemoteAddr, err)
-			c.hub.closeCallee("init, send sessionId to callee: "+err.Error())
-			return
+		// c *WsClient => hub.CalleeClient => hubMap[calleeID].CalleeClient
+		c := hubMap[urlID].CalleeClient
+		if(c==nil) {
+			fmt.Printf("# /clearcache (%s) unknown ID\n", urlID)
+			return false;
 		}
-*/
+		//err := c.Write([]byte("sessionId|"+codetag))
+		err := c.Write([]byte("cancel|c"))
+		if err != nil {
+			fmt.Printf("# /clearcache (%s) send err=%s\n", urlID, err.Error())
+			return false
+		}
+		fmt.Printf("/clearcache (%s) sent OK\n", urlID)
 		return true
 	}
 
