@@ -1382,10 +1382,6 @@ function signalingCommand(message, comment) {
 			// TODO no endWebRtcSession ? android service will not know that ringing has ended
 		}
 
-// TODO tmtmtm
-//	} else if(cmd=="clearcache") {
-//		clearcache();
-
 	} else if(cmd=="status") {
 		// this is currently used to make Android users aware of new releases and Websocket communication issues
 		//gLog('status='+payload);
@@ -2839,8 +2835,8 @@ function clearcache() {
 			console.log("clearcache android reload undefined");
 		}
 	}
-	console.log("clearcache history.back()");
-	history.back();
+	//console.log("clearcache history.back()");
+	//history.back();
 }
 
 function exit() {
