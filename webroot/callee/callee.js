@@ -1356,7 +1356,7 @@ function signalingCommand(message, comment) {
 	} else if(cmd=="cancel") {
 		if(payload=="c") {
 			// this is a remote cancel
-			gLog('cmd cancel');
+			console.log('cmd cancel');
 			answerButton.style.display = "none";
 			rejectButton.style.display = "none";
 			stopAllAudioEffects("incoming cancel");
@@ -1375,10 +1375,12 @@ function signalingCommand(message, comment) {
 				//showStatus("Canceled");
 			}
 			//stopAllAudioEffects("incoming cancel2");
+			console.log('cmd cancel -> endWebRtcSession');
 			endWebRtcSession(false,true,"incoming cancel"); // -> peerConCloseFunc
+			console.log('cmd cancel -> clearcache(');
 			clearcache();
 		} else {
-			stopAllAudioEffects("ignore cancel");
+			stopAllAudioEffects("ignore cmd cancel");
 			// TODO no endWebRtcSession ? android service will not know that ringing has ended
 		}
 
