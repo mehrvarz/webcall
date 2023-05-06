@@ -2833,10 +2833,13 @@ function clearcache() {
 		if(typeof Android.reload !== "undefined" && Android.reload !== null) {
 			let wasConnected = wsConn!=null;
 			Android.wsClose();
-			console.log("----- wsClearCache(true,"+wasConnected+") -----");
+			console.log("clearcache android wsClearCache(true,"+wasConnected+")");
 			Android.wsClearCache(true, wasConnected); // autoreload, autoreconnect
+		} else {
+			console.log("clearcache android reload undefined");
 		}
 	}
+	console.log("clearcache history.back()");
 	history.back();
 }
 
