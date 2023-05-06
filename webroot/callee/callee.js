@@ -1377,7 +1377,7 @@ function signalingCommand(message, comment) {
 			//stopAllAudioEffects("incoming cancel2");
 			console.log('cmd cancel -> endWebRtcSession');
 			endWebRtcSession(false,true,"incoming cancel"); // -> peerConCloseFunc
-			console.log('cmd cancel -> clearcache(');
+			console.log('cmd cancel -> clearcache()');
 			clearcache();
 		} else {
 			stopAllAudioEffects("ignore cmd cancel");
