@@ -1127,6 +1127,8 @@ function wsOnError2(str) {
 	}
 	onlineIndicator.src="";
 	wsConn=null;
+// TODO must also call goOffline() ?
+	goOffline();
 }
 
 function wsOnClose(evt) {
