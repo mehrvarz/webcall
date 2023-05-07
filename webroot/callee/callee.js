@@ -1125,15 +1125,16 @@ function wsOnError2(str) {
 	if(str!="") {
 		showStatus(str,-1);
 	}
+
+// TODO are we really disconnected in all cases?
 	onlineIndicator.src="";
 	wsConn=null;
-// TODO must also call goOffline() ?
 	goOffline();
 }
 
 function wsOnClose(evt) {
 	// called by wsConn.onclose
-	gLog("wsOnClose "+calleeID, evt);
+	console.log("wsOnClose "+calleeID, evt);
 	wsOnClose2();
 	if(tryingToOpenWebSocket) {
 		// onclose occured while trying to establish a ws-connection (before this could be finished)
@@ -1144,6 +1145,7 @@ function wsOnClose(evt) {
 	}
 /*
 // TODO outcommented bc: NOOOO! this is also executed on manual reload
+// however, this is also called by FF after wake-from-sleep
 	if(goOnlineButton.disabled && evt) {
 		// this is not a user-intended offline; we should be online
 		let delay = autoReconnectDelay + Math.floor(Math.random() * 10) - 5;
