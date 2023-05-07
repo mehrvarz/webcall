@@ -1117,24 +1117,36 @@ console.log("callee beforeunload: enable goonline");
 }
 
 function wsOnError(evt) {
-	wsOnError2(evt.data);
+	console.log("# wsOnError ",evt);
+	wsOnError2(evt.data,evt.code);
 }
 
-function wsOnError2(str) {
-	console.log("# wsOnError2 "+str);
-	if(str!="") {
-		showStatus(str,-1);
+function wsOnError2(str,code) {
+	console.log("# wsOnError2 "+str+" code="+code);
+	if(typeof str!=="undefined" && str!="" && str!="undefined") {
+		showStatus("wsError "+str+" "+code,-1);
+	} else if(typeof code!=="undefined" && code!=0) {
+		showStatus("wsError code="+code,-1);
+	} else {
+		showStatus("wsError unknown",-1);
 	}
 
-// TODO are we really disconnected in all cases?
+// note: for ff wake-from-sleep error (wss interrupted), code is not given here (but in wsOnClose())
+// TODO explain why the following is needed (and whether it is always true to assume wsConn=null on wsOnError() !!!
 	onlineIndicator.src="";
 	wsConn=null;
-	goOffline();
+// note: if wsOnClose() does not come, the state of the online/offline buttons may now be false (if we are disconnected)
 }
 
 function wsOnClose(evt) {
 	// called by wsConn.onclose
-	console.log("wsOnClose "+calleeID, evt);
+	// evt.code = 1001 (manual reload)
+	// evt.code = 1006 (unusual clientside error)
+	let errCode = 0;
+	if(typeof evt!=="undefined" && evt!=null && evt!="undefined") {
+		errCode = evt.code;
+	}
+	console.log("wsOnClose ID="+calleeID+" code="+errCode,evt);
 	wsOnClose2();
 	if(tryingToOpenWebSocket) {
 		// onclose occured while trying to establish a ws-connection (before this could be finished)
@@ -1143,10 +1155,9 @@ function wsOnClose(evt) {
 		// onclose occured while being ws-connected
 		gLog('wsOnClose while connected');
 	}
-/*
-// TODO outcommented bc: NOOOO! this is also executed on manual reload
-// however, this is also called by FF after wake-from-sleep
-	if(goOnlineButton.disabled && evt) {
+
+	if(goOnlineButton.disabled && errCode==1006 && !tryingToOpenWebSocket) {
+		// callee on chrome needs this for reconnect after wake-from-sleep
 		// this is not a user-intended offline; we should be online
 		let delay = autoReconnectDelay + Math.floor(Math.random() * 10) - 5;
 		gLog('reconnecting to signaling server in sec '+delay);
@@ -1156,7 +1167,6 @@ function wsOnClose(evt) {
 		// if conditions are right after delay secs this will call login()
 		delayedWsAutoReconnect(delay);
 	}
-*/
 }
 
 function wsOnClose2() {
