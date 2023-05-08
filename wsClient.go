@@ -1000,7 +1000,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			return
 		}
 
-		fmt.Printf("%s (%s) CALL🔔 %s <- %s (%s) %s v=%s ua=%s\n",
+		fmt.Printf("%s (%s) CALL🔔 %s <- %s (%s) T=%s v=%s ua=%s\n",
 			c.connType, c.calleeID, c.hub.CalleeClient.RemoteAddr,
 				c.RemoteAddr, c.callerID, c.textMode, c.clientVersion, c.userAgent)
 

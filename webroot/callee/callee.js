@@ -2365,7 +2365,7 @@ function getStatsCandidateTypes(results,eventString1,eventString2) {
 	wsSend("log|callee "+msg); // shows up in server log as: serveWss peer callee Incoming p2p/p2p
 
 	if(textmode=="true") {
-		msg = msg + " Textmode";
+		msg = msg + " TextMode";
 	}
 
 	// we rather show callerID and/or callerName if they are avail, instead of listOfClientIps
