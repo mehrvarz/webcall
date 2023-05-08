@@ -46,7 +46,7 @@ var callerName = "";  // this is the callers nickname
 var contactName = ""; // this is the callees nickname (from caller contacts or from dial-id form)
 var otherUA="";
 var sessionDuration = 0;
-var dataChannelSendMsg = "";
+//var dataChannelSendMsg = "";
 var iframeParent;
 var iframeParentArg="";
 var	codecPreferences = document.querySelector('#codecPreferences');
@@ -78,6 +78,7 @@ var idSelectElement = null;
 //var digAnswMachine = "About to call a digital answering machine";
 var newline = String.fromCharCode(13, 10);
 var textchatOKfromOtherSide = false;
+var placeholderText = "";
 
 var extMessage = function(e) {
 	// prevent an error on split() below when extensions emit unrelated, non-string 'message' events to the window
@@ -1298,8 +1299,11 @@ function calleeOnlineAction(comment) {
 				showStatus(lg("greetingMessage"),-1);
 				msgbox.style.display = "block";
 				msgbox.readOnly = false;
+				if(placeholderText!="") {
+					msgbox.placeholder = placeholderText;
+					placeholderText = "";
+				}
 				gLog('callerName='+callerName);
-				let placeholderText = "";
 				msgbox.onfocus = function() {
 					placeholderText = msgbox.placeholder;
 					msgbox.placeholder = "";
@@ -1308,6 +1312,7 @@ function calleeOnlineAction(comment) {
 					// caller leaving the msgbox
 					if(placeholderText!="") {
 						msgbox.placeholder = placeholderText;
+						placeholderText = "";
 					}
 				};
 			}
@@ -1403,6 +1408,10 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 						showStatus("Enter text message before the call (optional):",-1);
 						msgbox.style.display = "block";
 						msgbox.readOnly = false;
+						if(placeholderText!="") {
+							msgbox.placeholder = placeholderText;
+							placeholderText = "";
+						}
 						haveBeenWaitingForCalleeOnline=true; // will cause notificationSound to play
 
 						if(notificationSound) {
@@ -1641,26 +1650,21 @@ function submitForm(idx) {
 			onload2();
 		}
 	} else if(idx==2) {
+		// get TextChat-msg from enterTextElement and send it via dataChannel
 		let text = cleanStringParameter(enterTextElement.value,false);
 		console.log("submitText text="+text);
-		dataChannel.send("msg|"+text);
-		// add text to msgbox
-		let msg = "> " + text;
-		if(msgbox.value!="") { msg = newline + msg; }
-		msgbox.value += msg;
-		//console.log("msgbox "+msgbox.scrollTop+" "+msgbox.scrollHeight);
-		msgbox.scrollTop = msgbox.scrollHeight-1;
-		enterTextElement.value = "";
+		if(dataChannel) {
+			dataChannel.send("msg|"+text);
+			// add text to msgbox
+			let msg = "> " + text;
+			if(msgbox.value!="") { msg = newline + msg; }
+			msgbox.value += msg;
+			//console.log("msgbox "+msgbox.scrollTop+" "+msgbox.scrollHeight);
+			msgbox.scrollTop = msgbox.scrollHeight-1;
+			enterTextElement.value = "";
+		}
 	}
 }
-
-/*
-function submitText(theForm) {
-	console.log("submitText");
-	let text = cleanStringParameter(enterTextElement.value,true); // remove all white spaces
-	console.log("submitText text="+text);
-}
-*/
 
 function errorAction2(errString,err) {
 	console.log("# xhr error "+errString+" "+err);
@@ -2505,7 +2509,7 @@ function dial2() {
 			} else {
 				console.log('peerCon rtcCon');
 				if(!rtcConnect && !mediaConnect) {
-					// the caller got peer-connected to callee; callee now starts ringing
+					// caller just now got peer-connected to callee; callee starts ringing now
 					rtcConnect = true;
 					rtcConnectStartDate = Date.now();
 					mediaConnectStartDate = 0;
@@ -2516,6 +2520,7 @@ function dial2() {
 					goodbyTextMsg = cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen)
 					gLog('set goodbyTextMsg='+goodbyTextMsg);
 
+/*
 					let msgboxText = cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen);
 					if(msgboxText!="") {
 						if(dataChannel) {
@@ -2529,7 +2534,7 @@ function dial2() {
 							console.warn('no dataChannel, cannot send msgbox (%s)'+msgboxText);
 						}
 					}
-
+*/
 					showStatus(lg("ringingText"),-1);
 				}
 				dialing = false;
@@ -2577,10 +2582,12 @@ function createDataChannel() {
 	dataChannel = peerCon.createDataChannel("datachannel");
 	dataChannel.onopen = event => {
 		gLog("dataChannel.onopen");
+/*
 		if(dataChannelSendMsg!="") {
 			dataChannel.send("msg|"+dataChannelSendMsg);
 			dataChannelSendMsg = "";
 		}
+*/
 		// tell other side that we support textchat
 		textchatOKfromOtherSide = false;
 		dataChannel.send("textchatOK");
@@ -2614,6 +2621,7 @@ function dataChannelOnmessage(event) {
 					if(msgbox) {
 						chatButton.style.display = "none";
 						msgbox.readOnly = true;
+						placeholderText = msgbox.placeholder;
 						msgbox.placeholder = "";
 						msgbox.style.display = "block";
 						textbox.style.display = "block"; // -> submitForm()

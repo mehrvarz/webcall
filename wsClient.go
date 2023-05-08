@@ -918,7 +918,6 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 
 	if cmd=="msg" {
 		// sent by caller on hangup without mediaconnect
-		//logTxtMsg := cleanMsg
 		logTxtMsg := "(hidden)" // don't log actual cleanMsg
 		if c.hub==nil {
 			// don't log actual cleanMsg
@@ -949,7 +948,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			c.connType, c.calleeID, logTxtMsg, c.isCallee, c.RemoteAddr, c.userAgent)
 		c.hub.CalleeClient.callerTextMsg = cleanMsg;
 		c.hub.HubMutex.Unlock()
-		//return	// let msg fall thru so it will be fw to other side
+		return	// do NOT let msg fall thru; so it will NOT be fw to other side
 	}
 
 	if cmd=="missedcall" {
@@ -1027,6 +1026,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			if c.hub.CalleeClient.callerTextMsg!="" {
 				sendCmd += "\t"+c.hub.CalleeClient.callerTextMsg
 			}
+			//fmt.Printf("%s (%s) CALL sendCmd=%s\n", c.connType, c.calleeID, sendCmd)
 			err = c.hub.CalleeClient.Write([]byte(sendCmd))
 			if err != nil {
 				// callee is gone

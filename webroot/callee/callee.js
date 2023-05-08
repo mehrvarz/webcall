@@ -54,6 +54,7 @@ var mediaConnectStartDate = 0;
 var listOfClientIps = "";
 var callerID = "";
 var callerName = "";
+var callerMsg = ""; // greeting msg
 var lastResult;
 var lastUserActionDate = 0;
 var calleeName = "";
@@ -546,6 +547,7 @@ function submitFormDone(idx) {
 		start();
 		// -> getStream() -> getUserMedia(constraints) -> gotStream() -> goOnline() -> login()
 	} else if(idx==2) {
+		// textchat msg to send to caller via dataChannel
 		let text = cleanStringParameter(enterTextElement.value,false);
 		console.log("submitText text="+text);
 		dataChannel.send("msg|"+text);
@@ -1276,6 +1278,7 @@ function signalingCommand(message, comment) {
 
 	} else if(cmd=="callerInfo") {
 		//gLog('cmd callerInfo payload=(%s)',payload);
+		callerMsg = "";
 		let idxSeparator = payload.indexOf("\t");
 		if(idxSeparator<0) {
 			// for backward compatibility only
@@ -1286,7 +1289,12 @@ function signalingCommand(message, comment) {
 			// callerID may have host attached: callerID@host
 			// callerID apparently only used for getStatsCandidateTypes()
 			callerName = payload.substring(idxSeparator+1);
-			gLog('cmd callerInfo ('+callerID+') ('+callerName+') ('+payload+')');
+			idxSeparator = callerName.indexOf("\t");
+			if(idxSeparator>=0) {
+				callerMsg = callerName.substring(idxSeparator+1);
+				callerName = callerName.substring(0,idxSeparator);
+			}
+			gLog('cmd callerInfo ('+callerID+') ('+callerName+') ('+callerMsg+')');
 			// callerID + callerName will be displayed via getStatsCandidateTypes()
 		} else {
 			gLog('cmd callerInfo payload=(%s)',payload);
@@ -1542,7 +1550,7 @@ function signalingCommand(message, comment) {
 		}
 
 	} else {
-		console.log('# ignore incom cmd',cmd);
+		console.log('# ignore incoming cmd='+cmd+' payload='+payload);
 	}
 }
 
@@ -2362,6 +2370,7 @@ function getStatsCandidateTypes(results,eventString1,eventString2) {
 	}
 
 	let msg = getStatsCandidateTypesEx(results,eventString1,eventString2)
+	//console.log("!!!! msg=("+msg+") callerName=("+callerName+") callerID=("+callerID+") callerMsg=("+callerMsg+")");
 	wsSend("log|callee "+msg); // shows up in server log as: serveWss peer callee Incoming p2p/p2p
 
 	if(textmode=="true") {
@@ -2388,6 +2397,11 @@ function getStatsCandidateTypes(results,eventString1,eventString2) {
 	}
 
 	showStatus(showMsg,-1);
+
+	if(callerMsg!="") {
+		msgbox.value = callerMsg;
+		msgbox.style.display = "block";
+	}
 }
 
 function createDataChannel() {
@@ -2418,6 +2432,7 @@ function dataChannelOnmessage(event) {
 			} else if(event.data.startsWith("textchatOK")) {
 				textchatOKfromOtherSide = true;
 			} else if(event.data.startsWith("msg|")) {
+				// textchat msg from caller via dataChannel
 				// sanitize incoming data
 				//let cleanString = event.data.substring(4).replace(/<(?:.|\n)*?>/gm, "...");
 				let cleanString = cleanStringParameter(event.data.substring(4),false);
