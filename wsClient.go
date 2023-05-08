@@ -1016,6 +1016,8 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 		}
 		c.callerOfferForwarded.Set(true)
 
+		c.hub.CalleeClient.Write([]byte("textmode|"+c.textMode))
+
 		// send callerInfo to callee (see callee.js if(cmd=="callerInfo"))
 		if c.callerID!="" || c.callerName!="" {
 			// this data is used to display caller-info in the callee-client
@@ -1080,10 +1082,6 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			return
 		}
 		
-		if(c.textMode!="") {
-			c.hub.CalleeClient.Write([]byte("textmode|"+c.textMode))
-		}
-
 		// send callee useragent to caller
 		err = c.Write([]byte("ua|"+c.hub.CalleeClient.userAgent))
 		c.hub.HubMutex.RUnlock()
