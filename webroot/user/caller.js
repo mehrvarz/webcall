@@ -1297,6 +1297,7 @@ function calleeOnlineAction(comment) {
 			} else {
 				showStatus(lg("greetingMessage"),-1);
 				msgbox.style.display = "block";
+				msgbox.readOnly = false;
 				gLog('callerName='+callerName);
 				let placeholderText = "";
 				msgbox.onfocus = function() {
@@ -1401,6 +1402,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 
 						showStatus("Enter text message before the call (optional):",-1);
 						msgbox.style.display = "block";
+						msgbox.readOnly = false;
 						haveBeenWaitingForCalleeOnline=true; // will cause notificationSound to play
 
 						if(notificationSound) {
