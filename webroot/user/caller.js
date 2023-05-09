@@ -2141,20 +2141,6 @@ function signalingCommand(message) {
 			gLog('enableRemoteStream stopAllAudioEffects');
 			stopAllAudioEffects();
 
-/*
-			// on peer connect at least an audio stream should arrive
-			let micStatus = "";
-			if(microphoneIsNeeded) {
-				onlineIndicator.src="red-gradient.svg";
-				micStatus = "Mic is open";
-			} else {
-				// mic NOT open
-// TODO tmtmtm: should also be red?
-				dialButton.style.boxShadow = "";
-				onlineIndicator.src="green-gradient.svg";
-			}
-*/
-
 			if(remoteVideoFrame) {
 				// enable (un-mute) remoteStream
 				gLog('set remoteVideoFrame '+remoteStream);
@@ -2638,35 +2624,7 @@ function dataChannelOnmessage(event) {
 			} else if(event.data.startsWith("cmd|")) {
 				let subCmd = event.data.substring(4);
 				//gLog("subCmd="+subCmd);
-/*
-				if(subCmd.startsWith("ledred")) {
-					if(onlineIndicator) {
-						onlineIndicator.src="red-gradient.svg";
-					}
-					microphoneIsNeeded = true;
-
-					// unmute micro
-					if(localStream) {
-						const audioTracks = localStream.getAudioTracks();
-						audioTracks[0].enabled = true;
-						// localStream.getTracks().forEach(track => { ??? });
-					}
-				} else if(subCmd.startsWith("ledgreen")) {
-					if(onlineIndicator) {
-						onlineIndicator.src="green-gradient.svg";
-					}
-					microphoneIsNeeded = false;
-
-					// mute mic
-					if(localStream) {
-						const audioTracks = localStream.getAudioTracks();
-						audioTracks[0].enabled = false;
-					}
-				} else
-*/
-				{
-					signalingCommand(subCmd);
-				}
+				signalingCommand(subCmd);
 			} else if(event.data.startsWith("file|")) {
 				var fileDescr = event.data.substring(5);
 

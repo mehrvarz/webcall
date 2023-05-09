@@ -1996,13 +1996,14 @@ function pickup2() {
 }
 
 function hangup(mustDisconnect,dummy2,message) {
-// TODO not sure we want to attach the message to showStatus()
 	showStatus("Hang up ("+message+")",4000);
 	answerButton.style.display = "none";
 	rejectButton.style.display = "none";
 
 	msgbox.style.display = "none";
+	msgbox.value = "";
 	textbox.style.display = "none";
+	textbox.value = "";
 	chatButton.style.display = "none";
 
 	buttonBlinking = false;
@@ -2596,11 +2597,10 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter,comment) {
 	}
 	buttonBlinking = false;
 
-	if(msgbox) {
-		msgbox.style.display = "none";
-		msgbox.value = "";
-	}
+	msgbox.style.display = "none";
+	msgbox.value = "";
 	textbox.style.display = "none";
+	textbox.value = "";
 	chatButton.style.display = "none";
 
 	stopTimer();
@@ -2929,5 +2929,4 @@ function clearcookie2() {
 
 	clearcookie();
 }
-
 
