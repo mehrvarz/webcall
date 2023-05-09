@@ -2000,9 +2000,11 @@ function hangup(mustDisconnect,dummy2,message) {
 	showStatus("Hang up ("+message+")",4000);
 	answerButton.style.display = "none";
 	rejectButton.style.display = "none";
+
 	msgbox.style.display = "none";
 	textbox.style.display = "none";
 	chatButton.style.display = "none";
+
 	buttonBlinking = false;
 	if(textmode!="") {
 		textmode = "";
@@ -2195,6 +2197,7 @@ function newPeerCon() {
 			console.log("# peerCon disconnected "+rtcConnect+" "+mediaConnect);
 			stopAllAudioEffects();
 			endWebRtcSession(true,true,"peerCon disconnected"); // -> peerConCloseFunc
+
 		} else if(peerCon.connectionState=="failed") {
 			// "failed" could be an early caller hangup
 			// this may come with a red "WebRTC: ICE failed, see about:webrtc for more details"
@@ -2388,6 +2391,10 @@ function getStatsCandidateTypes(results,eventString1,eventString2) {
 		msg += " "+listOfClientIps;
 	}
 
+	if(callerMsg!="") {
+		msg += "<br>\""+callerMsg+"\""; // greeting msg
+	}
+
 	let showMsg = msg;
 	if(eventString2!="") {
 		showMsg += ". "+eventString2+".";
@@ -2397,11 +2404,6 @@ function getStatsCandidateTypes(results,eventString1,eventString2) {
 	}
 
 	showStatus(showMsg,-1);
-
-	if(callerMsg!="") {
-		msgbox.value = callerMsg;
-		msgbox.style.display = "block";
-	}
 }
 
 function createDataChannel() {
@@ -2593,9 +2595,14 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter,comment) {
 		remoteStream = null;
 	}
 	buttonBlinking = false;
+
 	if(msgbox) {
+		msgbox.style.display = "none";
 		msgbox.value = "";
 	}
+	textbox.style.display = "none";
+	chatButton.style.display = "none";
+
 	stopTimer();
 	if(autoPlaybackAudioSource) {
 		autoPlaybackAudioSource.disconnect();

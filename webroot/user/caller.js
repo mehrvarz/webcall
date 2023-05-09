@@ -2172,6 +2172,8 @@ function signalingCommand(message) {
 			}
 			mediaConnectStartDate = Date.now();
 			goodbyMissedCall = "";
+			// clear own greeting-msg
+			msgbox.value = "";
 
 			if(fileselectLabel && isDataChlOpen()) {
 				if(isP2pCon()) {
