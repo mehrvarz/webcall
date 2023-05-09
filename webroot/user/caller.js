@@ -1896,6 +1896,7 @@ function connectSignaling(message,openedFunc) {
 			gLog('wsConn.onclose');
 		}
 		wsConn = null;
+		onlineIndicator.src="";
 	};
 }
 
@@ -2093,6 +2094,7 @@ function signalingCommand(message) {
 
 		// hide msgbox
 		msgbox.style.display = "none";
+		onlineIndicator.src="red-gradient.svg";
 
 		// start textChat or enable chatButton
 		if(muteMicElement && muteMicElement.checked) {
@@ -2524,6 +2526,7 @@ function dial2() {
 					}
 */
 					showStatus(lg("ringingText"),-1);
+					onlineIndicator.src="green-gradient.svg";
 				}
 				dialing = false;
 			}
