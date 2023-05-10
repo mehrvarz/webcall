@@ -14,7 +14,6 @@ require (
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 	golang.org/x/net v0.4.0 // indirect
 	gopkg.in/ini.v1 v1.63.0
-	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 )
 
 //replace github.com/mattn/go-mastodon => ../go-mastodon
