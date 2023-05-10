@@ -75,6 +75,12 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		callerIdLong += "@"+callerHost
 	}
 
+	textmode := false
+	url_arg_array, ok = r.URL.Query()["text"]
+	if ok && url_arg_array[0]=="true" {
+		textmode = true
+	}
+
 	var dbEntry DbEntry
 	err := kvMain.Get(dbRegisteredIDs, urlID, &dbEntry)
 	if err != nil {
@@ -133,8 +139,13 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		} else if callerIdLong!="" {
 			msg = callerIdLong
 		}
+
 		// space as 1st char is required
-		msg += " incoming. Answer: "
+		msg += " incoming."
+		if textmode {
+			msg += " TextMode."
+		}
+		msg += " Answer: "
 
 		// adding /callee link
 		hostUrl := "https://"+hostname

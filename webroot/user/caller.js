@@ -1688,8 +1688,12 @@ function notifyConnect(callerName,callerId,callerHost) {
 	goodbyMissedCall = "";
 	// notify calleeID (on behalf of callerId)
 	// NOTE this may take a while bc the server will have to post a direct msg
+	textModeArg := ""
+	if(muteMicElement && muteMicElement.checked) {
+		textModeArg := "&text=true";
+	}
 	let api = apiPath+"/notifyCallee?id="+calleeID +
-		"&callerId="+callerId + "&callerName="+callerName + "&callerHost="+callerHost +
+		"&callerId="+callerId + "&callerName="+callerName + "&callerHost="+callerHost + textModeArg +
 		"&msg="+cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen);
 	xhrTimeout = 600*1000; // 10 min extended xhr timeout
 	gLog("notifyCallee api="+api+" timeout="+xhrTimeout);
