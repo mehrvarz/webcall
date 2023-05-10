@@ -9,7 +9,7 @@ import (
 	"time"
 	"sync"
 	"strconv"
-	"github.com/mehrvarz/webcall/atombool"
+	"sync/atomic"
 )
 
 type Hub struct {
@@ -26,7 +26,7 @@ type Hub struct {
 	WssUrl string
 	calleeUserAgent string // http UA
 	HubMutex sync.RWMutex
-	CalleeLogin atombool.AtomBool // CalleeClient is connected to signaling server and has sent "init"
+	CalleeLogin atomic.Bool // CalleeClient is connected to signaling server and has sent "init"
 	WsClientID uint64 // set by the callee; will be handed over to the caller via /online
 	registrationStartTime int64 // this is the callees registration starttime; may be 0 for testuser
 	lastCallStartTime int64
@@ -76,7 +76,7 @@ func (h *Hub) setDeadline(secs int, comment string) {
 			case <-h.timer.C:
 				// timer event: we need to disconnect the (relayed) clients (if still connected)
 				h.timer = nil
-				if h.CalleeClient!=nil && h.CalleeClient.isConnectedToPeer.Get() {
+				if h.CalleeClient!=nil && h.CalleeClient.isConnectedToPeer.Load() {
 					fmt.Printf("! setDeadline (%s) reached; quit session now (secs=%d %v)\n",
 						h.CalleeClient.calleeID, secs, timeStart.Format("2006-01-02 15:04:05"))
 					calleeID := ""
@@ -94,7 +94,7 @@ func (h *Hub) setDeadline(secs int, comment string) {
 					// we wait for msg|... (to set callerTextMsg)
 					time.Sleep(1 * time.Second)
 					h.HubMutex.RLock()
-					if h.CalleeClient!=nil && h.CalleeClient.isConnectedToPeer.Get() {
+					if h.CalleeClient!=nil && h.CalleeClient.isConnectedToPeer.Load() {
 						var message = []byte("cancel|c")
 						// only cancel callee if canceling caller wasn't possible
 						fmt.Printf("setDeadline (%s) send to callee (%s) %s\n",
@@ -175,7 +175,7 @@ func (h *Hub) peerConHasEnded(cause string) {
 	if logWantedFor("wsclose") {
 		fmt.Printf("%s (%s) peerConHasEnded peercon=%v media=%v (%s)\n",
 			h.CalleeClient.connType, h.CalleeClient.calleeID,
-			h.CalleeClient.isConnectedToPeer.Get(), h.CalleeClient.isMediaConnectedToPeer.Get(), cause)
+			h.CalleeClient.isConnectedToPeer.Load(), h.CalleeClient.isMediaConnectedToPeer.Load(), cause)
 	}
 
 	if h.lastCallStartTime>0 {
@@ -196,7 +196,7 @@ func (h *Hub) peerConHasEnded(cause string) {
 	delete(recentTurnCalleeIps,h.CallerIpNoPort)
 	recentTurnCalleeIpMutex.Unlock()
 
-	if h.CalleeClient.isConnectedToPeer.Get() {
+	if h.CalleeClient.isConnectedToPeer.Load() {
 		// we are disconnecting a peer connect
 		localPeerCon := "?"
 		remotePeerCon := "?"
@@ -205,12 +205,12 @@ func (h *Hub) peerConHasEnded(cause string) {
 		remotePeerCon = "p2p"
 		if !h.RemoteP2p { remotePeerCon = "relay" }
 
-		h.CalleeClient.isConnectedToPeer.Set(false)
-		h.CalleeClient.isMediaConnectedToPeer.Set(false)
+		h.CalleeClient.isConnectedToPeer.Store(false)
+		h.CalleeClient.isMediaConnectedToPeer.Store(false)
 		// now clear these two flags also on the other side
 		if h.CallerClient!=nil {
-			h.CallerClient.isConnectedToPeer.Set(false)
-			h.CallerClient.isMediaConnectedToPeer.Set(false)
+			h.CallerClient.isConnectedToPeer.Store(false)
+			h.CallerClient.isMediaConnectedToPeer.Store(false)
 		}
 
 		title := "PEER DISCON";
@@ -242,7 +242,7 @@ func (h *Hub) peerConHasEnded(cause string) {
 		}
 	}
 
-	h.CalleeClient.calleeInitReceived.Set(false) // accepting new init from callee now
+	h.CalleeClient.calleeInitReceived.Store(false) // accepting new init from callee now
 
 	err := StoreCallerIpInHubMap(h.CalleeClient.globalCalleeID, "", false)
 	if err!=nil {
@@ -282,7 +282,7 @@ func (h *Hub) closeCallee(cause string) {
 		if logWantedFor("wsclose") {
 			fmt.Printf("%s (%s) closeCallee peercon=%v (%s)\n",
 				h.CalleeClient.connType, h.CalleeClient.calleeID,
-				h.CalleeClient.isConnectedToPeer.Get(), cause)
+				h.CalleeClient.isConnectedToPeer.Load(), cause)
 		}
 
 		// NOTE: delete(hubMap,id) might have been executed, caused by timeout22s
@@ -292,7 +292,7 @@ func (h *Hub) closeCallee(cause string) {
 			h.lastCallStartTime = 0
 		}
 
-		if h.CalleeClient.isConnectedToPeer.Get() {
+		if h.CalleeClient.isConnectedToPeer.Load() {
 			h.peerConHasEnded(comment) // will set h.CallerClient=nil
 		}
 		h.LocalP2p = false
@@ -304,9 +304,9 @@ func (h *Hub) closeCallee(cause string) {
 		keepAliveMgr.Delete(h.CalleeClient.wsConn)
 		h.CalleeClient.wsConn.SetReadDeadline(time.Time{})
 
-		h.CalleeClient.isConnectedToPeer.Set(false)
-		h.CalleeClient.isMediaConnectedToPeer.Set(false)
-		h.CalleeClient.pickupSent.Set(false)
+		h.CalleeClient.isConnectedToPeer.Store(false)
+		h.CalleeClient.isMediaConnectedToPeer.Store(false)
+		h.CalleeClient.pickupSent.Store(false)
 
 		h.CalleeClient = nil
 		h.HubMutex.Unlock()

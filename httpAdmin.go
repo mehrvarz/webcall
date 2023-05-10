@@ -10,11 +10,11 @@ import (
 	"strings"
 	"io"
 	"os"
+	"sync/atomic"
 	"encoding/gob"
 	bolt "go.etcd.io/bbolt"
 	"github.com/nxadm/tail" // https://pkg.go.dev/github.com/nxadm/tail
 	"github.com/mehrvarz/webcall/skv"
-	"github.com/mehrvarz/webcall/atombool"
 )
 
 func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath string, urlID string, remoteAddr string) bool {
@@ -509,16 +509,16 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 }
 
 // see adminLogPath1 + adminLogPath2 in httpServer.go
-var	adminlogBusy atombool.AtomBool
+var	adminlogBusy atomic.Bool
 var t *tail.Tail
 
 func adminlog(w http.ResponseWriter, r *http.Request, logfile string, filter string) {
 	// logfile like: "/var/log/syslog"
-	if adminlogBusy.Get() {
+	if adminlogBusy.Load() {
 		t.Stop()
 		t.Cleanup()
 		fmt.Printf("/adminlog force end\n")
-		adminlogBusy.Set(false)
+		adminlogBusy.Store(false)
 	}
 
 	file, err := os.Open(logfile)
@@ -549,7 +549,7 @@ func adminlog(w http.ResponseWriter, r *http.Request, logfile string, filter str
 		fmt.Printf("# /adminlog tail err=%v\n",err)
 		return
 	}
-	adminlogBusy.Set(true)
+	adminlogBusy.Store(true)
 	linesTotal := 0
 	lines := 0
 	flush := 0
@@ -563,7 +563,7 @@ func adminlog(w http.ResponseWriter, r *http.Request, logfile string, filter str
 		case notifChan := <-t.Lines:
 			if notifChan==nil {
 				// this happens when we force-stop via reload/newstart
-				//adminlogBusy.Set(false)
+				//adminlogBusy.Store(false)
 				return
 			}
 			linesTotal++
@@ -613,7 +613,7 @@ func adminlog(w http.ResponseWriter, r *http.Request, logfile string, filter str
 			t.Stop()
 			t.Cleanup()
 			fmt.Printf("/adminlog end %d/%d %d/%d\n",lines,linesTotal,flush,noflush)
-			adminlogBusy.Set(false)
+			adminlogBusy.Store(false)
 			return
 		}
 	}

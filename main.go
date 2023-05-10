@@ -45,7 +45,6 @@ import (
 	"gopkg.in/ini.v1"
 	"golang.org/x/crypto/bcrypt"
 	bolt "go.etcd.io/bbolt"
-	"github.com/mehrvarz/webcall/atombool"
 	"github.com/mehrvarz/webcall/iptools"
 	"github.com/mehrvarz/webcall/skv"
 	"github.com/lesismal/nbio/nbhttp"
@@ -93,7 +92,7 @@ var	codetag string
 const configFileName = "config.ini"
 const statsFileName = "stats.ini"
 var readConfigLock sync.RWMutex
-var	shutdownStarted atombool.AtomBool
+var	shutdownStarted atomic.Bool
 
 var hubMap map[string]*Hub
 var hubMapMutex sync.RWMutex
@@ -466,7 +465,7 @@ func main() {
 		mastodonMgr = nil
 	}
 
-	shutdownStarted.Set(true)
+	shutdownStarted.Store(true)
 	writeStatsFile()
 	time.Sleep(2 * time.Second)
 

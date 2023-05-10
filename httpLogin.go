@@ -206,7 +206,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 					offlineReason = 2 // CalleeClient is gone
 				} else {
 					calleeIP = hub.CalleeClient.RemoteAddr
-					if !hub.CalleeClient.isOnline.Get() {
+					if !hub.CalleeClient.isOnline.Load() {
 						offlineReason = 3 // CalleeClient is not online anymore
 					} else {
 						// hub.CalleeClient seems to (still) be online; let's see if this holds if we ping it
@@ -222,7 +222,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 						for i := 0; i < 30; i++ {
 							time.Sleep(100 * time.Millisecond)
 							// is hub.CalleeClient still online now?
-							if hub==nil || hub.CalleeClient==nil || !hub.CalleeClient.isOnline.Get() {
+							if hub==nil || hub.CalleeClient==nil || !hub.CalleeClient.isOnline.Load() {
 								// CalleeClient is not online anymore (we can accept the new login)
 								offlineReason = 4
 								if logWantedFor("login") {
@@ -632,7 +632,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 					myHubMutex.RUnlock()
 					break
 				}
-				if hub.CalleeLogin.Get() {
+				if hub.CalleeLogin.Load() {
 					// this is set when callee has send 'init'
 					myHubMutex.RUnlock()
 					break
@@ -671,12 +671,12 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 				if logWantedFor("login") {
 					fmt.Printf("/login (%s) has hub\n", urlID)
 				}
-				if hub.CalleeLogin.Get() {
+				if hub.CalleeLogin.Load() {
 					// this is perfect: ws-connect / init did occur (callee fully logged in)
 					myHubMutex.RUnlock()
 
 					if logWantedFor("login") {
-						fmt.Printf("/login (%s) has CalleeLogin.Get (is online, did init)\n", urlID)
+						fmt.Printf("/login (%s) has CalleeLogin.Load (is online, did init)\n", urlID)
 					}
 
 					if mastodonMgr!=nil {
@@ -715,7 +715,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 					hub.HubMutex.RLock()
 
 					if logWantedFor("login") {
-						fmt.Printf("/login (%s) has no CalleeLogin.Get\n", urlID)
+						fmt.Printf("/login (%s) has no CalleeLogin.Load\n", urlID)
 					}
 
 					disconnectNeeded := false

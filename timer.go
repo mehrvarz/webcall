@@ -287,7 +287,8 @@ func ticker3hours() {
 		dbHashedPwLoop(nil)
 
 		<-threeHoursTicker.C
-		if shutdownStarted.Get() {
+//		if shutdownStarted.Get() {
+		if shutdownStarted.Load() {
 			break
 		}
 	}
@@ -462,7 +463,7 @@ func ticker20min() {
 	twentyMinTicker := time.NewTicker(20*60*time.Second)
 	defer twentyMinTicker.Stop()
 	for {
-		if shutdownStarted.Get() {
+		if shutdownStarted.Load() {
 			break
 		}
 
@@ -678,7 +679,7 @@ func ticker3min() {
 	lastBackupTime := time.Now()
 	for {
 		<-threeMinTicker.C
-		if shutdownStarted.Get() {
+		if shutdownStarted.Load() {
 			break
 		}
 
@@ -790,7 +791,7 @@ func ticker30sec() {
 	defer thirtySecTicker.Stop()
 	for {
 		<-thirtySecTicker.C
-		if shutdownStarted.Get() {
+		if shutdownStarted.Load() {
 			break
 		}
 
@@ -858,7 +859,7 @@ func ticker10sec() {
 	tenSecTicker := time.NewTicker(10*time.Second)
 	defer tenSecTicker.Stop()
 	for ; true; <-tenSecTicker.C {
-		if shutdownStarted.Get() {
+		if shutdownStarted.Load() {
 			break
 		}
 		readConfig(false)
@@ -869,7 +870,7 @@ func ticker2sec() {
 	twoSecTicker := time.NewTicker(2*time.Second)
 	defer twoSecTicker.Stop()
 	for ; true; <-twoSecTicker.C {
-		if shutdownStarted.Get() {
+		if shutdownStarted.Load() {
 			break
 		}
 

@@ -17,7 +17,6 @@ import (
 	"net/http"
 	"sync/atomic"
 	"sync"
-	"github.com/mehrvarz/webcall/atombool"
 	"github.com/lesismal/nbio/nbhttp/websocket"
 )
 
@@ -54,14 +53,14 @@ type WsClient struct {
 	mastodonID string
 	mastodonSendTootOnCall bool
 	askCallerBeforeNotify bool
-	isOnline atombool.AtomBool	// connected to signaling server
-	isConnectedToPeer atombool.AtomBool // before pickup
-	isMediaConnectedToPeer atombool.AtomBool // after pickup
-	pickupSent atombool.AtomBool
-	calleeInitReceived atombool.AtomBool
-	callerOfferForwarded atombool.AtomBool
+	isOnline atomic.Bool	// connected to signaling server
+	isConnectedToPeer atomic.Bool // before pickup
+	isMediaConnectedToPeer atomic.Bool // after pickup
+	pickupSent atomic.Bool
+	calleeInitReceived atomic.Bool
+	callerOfferForwarded atomic.Bool
+	reached14s atomic.Bool
 	calleeAnswerReceived chan struct{}
-	reached14s atombool.AtomBool
 	RemoteAddr string // with port
 	RemoteAddrNoPort string // no port
 	userAgent string // ws UA
@@ -333,7 +332,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	// set the time for sending the next ping
 	keepAliveMgr.SetPingDeadline(wsConn, pingPeriod, client) // now + pingPeriod secs
 */
-	client.isOnline.Set(true)
+	client.isOnline.Store(true)
 	client.RemoteAddr = remoteAddr
 	client.RemoteAddrNoPort = remoteAddrNoPort
 	client.userAgent = r.UserAgent()
@@ -416,7 +415,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	})
 
 	wsConn.OnClose(func(c *websocket.Conn, err error) {
-		client.isOnline.Set(false) // prevent Close() from trying to close this already closed connection
+		client.isOnline.Store(false) // prevent Close() from trying to close this already closed connection
 		if client.isCallee {
 			// callee has closed ws-con to server
 			keepAliveMgr.Delete(c)
@@ -466,7 +465,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				}
 				client.hub.HubMutex.RUnlock()
 
-				if !client.reached14s.Get() {
+				if !client.reached14s.Load() {
 					// a caller disconnect before reached14s is definitely a manual discon by the caller
 					// -> force closePeerCon
 					if err!=nil {
@@ -497,7 +496,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				client.calleeID, wsClientID64, client.RemoteAddr)
 		}
 		client.isCallee = true
-		client.calleeInitReceived.Set(false)
+		client.calleeInitReceived.Store(false)
 		client.mastodonID = wsClientData.dbUser.MastodonID
 		client.mastodonSendTootOnCall = wsClientData.dbUser.MastodonSendTootOnCall
 		client.askCallerBeforeNotify = wsClientData.dbUser.AskCallerBeforeNotify
@@ -532,8 +531,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		}
 
 		client.isCallee = false
-		client.callerOfferForwarded.Set(false)
-		client.reached14s.Set(false)
+		client.callerOfferForwarded.Store(false)
+		client.reached14s.Store(false)
 		hub.CallDurationSecs = 0
 		hub.CallerClient = client
 		hub.CallerIpNoPort = client.RemoteAddrNoPort
@@ -635,7 +634,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				hub.HubMutex.RUnlock()
 				return
 			}
-			if !hub.CallerClient.isOnline.Get() {
+			if !hub.CallerClient.isOnline.Load() {
 				// this helps us to NOT throw a false NO PEERCON when the caller hanged up early
 				// we don't ws-disconnect the caller on peercon, so we can detect a hangup shortly after
 				//fmt.Printf("%s (%s) no peercon check: !CallerClient.isOnline\n",
@@ -643,7 +642,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				hub.HubMutex.RUnlock()
 				return
 			}
-			if !hub.CallerClient.callerOfferForwarded.Get() {
+			if !hub.CallerClient.callerOfferForwarded.Load() {
 				// caller has not sent a calleroffer yet -> it has hanged up early
 				//fmt.Printf("%s (%s) no peercon check: !CallerClient.callerOfferForwarded\n",
 				//	client.connType, client.calleeID)
@@ -651,11 +650,11 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				return
 			}
 
-			client.reached14s.Set(true)
+			client.reached14s.Store(true)
 			// if isConnectedToPeer and disconCallerOnPeerConnected -> force discon caller (but not peercon) now!
 			// caller onClose will from now on not anymore disconnect peercon on caller gone
 
-			if hub.CalleeClient.isConnectedToPeer.Get() {
+			if hub.CalleeClient.isConnectedToPeer.Load() {
 				// peercon steht; no peercon meldung nicht nötig; force caller ws-disconnect
 				// we know this is the caller, shall it be ws-disconnected?
 				readConfigLock.RLock()
@@ -692,7 +691,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			// let's assume both sides are still ws-connected. let's send a status msg to both
 			fmt.Printf("%s (%s) reached14s NO PEERCON📵 %ds %s <- %s (%s) %v ua=%s\n",
 				client.connType, client.calleeID, delaySecs, hub.CalleeClient.RemoteAddr,
-				client.RemoteAddr, client.callerID, client.isOnline.Get(), client.userAgent)
+				client.RemoteAddr, client.callerID, client.isOnline.Load(), client.userAgent)
 
 /* this is done by closePeerCon() below
 			// add missed call if dbUser.StoreMissedCalls is set
@@ -793,16 +792,16 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			return
 		}
 
-		if !c.calleeInitReceived.Get() {
+		if !c.calleeInitReceived.Load() {
 			// on first init only
 			//fmt.Printf("%s (%s) init %s\n", c.connType, c.calleeID, c.RemoteAddr)
 			c.hub.HubMutex.Lock()
 			c.hub.CallerClient = nil
 			c.hub.HubMutex.Unlock()
 
-			c.calleeInitReceived.Set(true)
-			c.hub.CalleeLogin.Set(true)
-			c.pickupSent.Set(false)
+			c.calleeInitReceived.Store(true)
+			c.hub.CalleeLogin.Store(true)
+			c.pickupSent.Store(false)
 
 			// closeCallee() will call setDeadline(0) and processTimeValues() if this is false; then set it true
 			c.callerTextMsg = ""
@@ -963,7 +962,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 	if cmd=="callerOffer" {
 		// caller starting a call - payload is JSON.stringify(localDescription)
 		// note: c == c.hub.CallerClient
-		if c.callerOfferForwarded.Get() {
+		if c.callerOfferForwarded.Load() {
 			// prevent double callerOffer
 			//fmt.Printf("# %s (%s) CALL from %s was already forwarded\n",
 			//	c.connType, c.calleeID, c.RemoteAddr)
@@ -1013,7 +1012,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			c.hub.closeCallee("send callerOffer to callee: "+err.Error())
 			return
 		}
-		c.callerOfferForwarded.Set(true)
+		c.callerOfferForwarded.Store(true)
 
 		c.hub.CalleeClient.Write([]byte("textmode|"+c.textMode))
 
@@ -1148,7 +1147,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			return
 		}
 
-		if c.hub.CalleeClient.isConnectedToPeer.Get() {
+		if c.hub.CalleeClient.isConnectedToPeer.Load() {
 			//fmt.Printf("%s (%s) cmd=cancel CalleeClient.isConnectedToPeer c.isCallee=%v\n",
 			//	c.connType,c.calleeID,c.isCallee)
 			if c.isCallee && payload!="disconnectByCaller" {
@@ -1181,7 +1180,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 					c.hub.CallerClient.Write([]byte(message)) // ignore any error
 
 					//timer.Stop()
-					c.hub.CallerClient.isOnline.Set(false)	// ???
+					c.hub.CallerClient.isOnline.Store(false)	// ???
 					c.hub.CallerClient.calleeAnswerReceived <- struct{}{}
 					c.hub.HubMutex.RUnlock()
 
@@ -1196,7 +1195,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 						c.connType, c.calleeID, c.RemoteAddr, payload)
 					if c.hub.CallerClient!=nil {
 						// timer.Stop()
-						c.isOnline.Set(false)	// ???
+						c.isOnline.Store(false)	// ???
 						c.calleeAnswerReceived <- struct{}{}
 					}
 					err := c.hub.CalleeClient.Write([]byte(message))
@@ -1387,14 +1386,14 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 
 	if cmd=="pickup" {
 		// "pickup" is sent by the callee client only
-		if !c.isConnectedToPeer.Get() {
+		if !c.isConnectedToPeer.Load() {
 			if logWantedFor("login") {
 				fmt.Printf("# %s (%s) pickup ignored no peerConnect %s\n",
 					c.connType, c.calleeID, c.RemoteAddr)
 			}
 			return
 		}
-		if c.pickupSent.Get() {
+		if c.pickupSent.Load() {
 			// prevent sending 'pickup' twice
 			//fmt.Printf("# %s (%s) pickup ignored already sent %s\n",
 			//	c.connType, c.calleeID, c.RemoteAddr)
@@ -1406,7 +1405,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 		c.hub.HubMutex.Unlock()
 		if logWantedFor("hub") {
 			fmt.Printf("%s (%s) pickup online=%v peerCon=%v starttime=%d\n",
-				c.connType, c.calleeID, c.isOnline.Get(), c.isConnectedToPeer.Get(), c.hub.lastCallStartTime)
+				c.connType, c.calleeID, c.isOnline.Load(), c.isConnectedToPeer.Load(), c.hub.lastCallStartTime)
 		}
 		c.hub.HubMutex.RLock()
 		if c.hub.CallerClient!=nil {
@@ -1422,7 +1421,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 				c.hub.closePeerCon("forward pickup to caller "+err.Error())
 				return
 			}
-			c.pickupSent.Set(true)
+			c.pickupSent.Store(true)
 		}
 		c.hub.HubMutex.RUnlock()
 		c.hub.setDeadline(0,"pickup")
@@ -1485,7 +1484,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			if constate=="ConForce"  { constateShort = "CONF" }
 		}
 		if tok[0]=="callee" {
-//			if strings.HasPrefix(constate,"Con") && !c.isConnectedToPeer.Get() {
+//			if strings.HasPrefix(constate,"Con") && !c.isConnectedToPeer.Load() {
 //				fmt.Printf("%s (%s) PEER %s %s☎️ %s %s <- %s (%s)\n",
 //					c.connType, c.calleeID, tok[0], constateShort, tok[2], c.hub.CalleeClient.RemoteAddrNoPort,
 //					c.hub.CallerIpNoPort, c.hub.CallerID)
@@ -1495,7 +1494,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 					c.hub.CallerIpNoPort, c.hub.CallerID)
 //			}
 		} else {
-			if strings.HasPrefix(constate,"Con") && !c.isConnectedToPeer.Get() {
+			if strings.HasPrefix(constate,"Con") && !c.isConnectedToPeer.Load() {
 				fmt.Printf("%s (%s) PEER %s %s☎️ %s %s <- %s (%s)\n",
 					c.connType, c.calleeID, tok[0], constateShort, tok[2], c.hub.CalleeClient.RemoteAddrNoPort,
 					c.hub.CallerIpNoPort, c.hub.CallerID)
@@ -1517,10 +1516,10 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			//fmt.Printf("%s (%s) set ConnectedToPeer\n", c.connType, c.calleeID)
 			// note: we only make sure that callee has this always set
 			// if we only get "Incoming" for callee, then isConnectedToPeer will not be set for CallerClient
-			c.isConnectedToPeer.Set(true) // this is peer-connect, not full media-connect
+			c.isConnectedToPeer.Store(true) // this is peer-connect, not full media-connect
 			if !c.isCallee {
 				// when the caller sends "log", the callee also becomes peerConnected
-				c.hub.CalleeClient.isConnectedToPeer.Set(true)
+				c.hub.CalleeClient.isConnectedToPeer.Store(true)
 			}
 
 			c.hub.LocalP2p = false
@@ -1546,10 +1545,10 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			if constate=="Connected" || constate=="ConForce" {
 				if c.isCallee {
 					// callee reports: peer connected (this may happen multiple times)
-					if !c.isMediaConnectedToPeer.Get() {
+					if !c.isMediaConnectedToPeer.Load() {
 						// only on 1st callee peer connect: set peer media connect for both sides
-						c.isMediaConnectedToPeer.Set(true)
-						c.hub.CallerClient.isMediaConnectedToPeer.Set(true)
+						c.isMediaConnectedToPeer.Store(true)
+						c.hub.CallerClient.isMediaConnectedToPeer.Store(true)
 
 						if maxClientRequestsPer30min>0 {
 							clientRequestsMutex.Lock()
@@ -1609,7 +1608,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 						// now force ws-disconnect caller
 						// but only if 14s has passed
 
-						if !c.hub.CallerClient.reached14s.Get() {
+						if !c.hub.CallerClient.reached14s.Load() {
 							if logWantedFor("wsclose") {
 								fmt.Printf("%s (%s) peercon before reached14s, no force caller ws-disconnect\n",
 									c.connType, c.calleeID)
@@ -1687,14 +1686,14 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 
 func (c *WsClient) Write(b []byte) error {
 	max := len(b); if max>22 { max = 22 }
-	if !c.isOnline.Get() {
+	if !c.isOnline.Load() {
 		//fmt.Printf("# %s Write (%s) to %s callee=%v peerCon=%v NOT ONLINE\n",
-		//	c.connType, b[:max], c.calleeID, c.isCallee, c.isConnectedToPeer.Get())
+		//	c.connType, b[:max], c.calleeID, c.isCallee, c.isConnectedToPeer.Load())
 		return ErrWriteNotConnected
 	}
 	if logWantedFor("wswrite") {
 		fmt.Printf("%s Write (%s) to %s callee=%v peerCon=%v\n",
-			c.connType, b[:max], c.calleeID, c.isCallee, c.isConnectedToPeer.Get())
+			c.connType, b[:max], c.calleeID, c.isCallee, c.isConnectedToPeer.Load())
 	}
 
 	return c.wsConn.WriteMessage(websocket.TextMessage, b)
@@ -1704,10 +1703,10 @@ func (c *WsClient) Close(reason string) {
 	// Close() is only called by hub.closeCaller() and hub.closeCallee()
 	if logWantedFor("wsclose") {
 		fmt.Printf("%s (%s) Close callee=%v online=%v '%s'\n",
-			c.connType, c.calleeID, c.isCallee, c.isOnline.Get(), reason)
+			c.connType, c.calleeID, c.isCallee, c.isOnline.Load(), reason)
 	}
 
-	if c.isOnline.Get() {
+	if c.isOnline.Load() {
 		// this client is still ws-connected to server
 		fmt.Printf("%s (%s) Close: force disconnect callee=%v '%s'\n",
 			c.connType, c.calleeID, c.isCallee, reason)
@@ -1743,7 +1742,7 @@ func (c *WsClient) SendPing(maxWaitMS int) {
 	err := c.wsConn.WriteMessage(websocket.PingMessage, nil)
 	if err != nil {
 		fmt.Printf("# sendPing (%s) %s err=%v\n", c.calleeID, c.wsConn.RemoteAddr().String(), err)
-		c.isOnline.Set(false) // ??? prevent Close() from trying to close this already closed connection
+		c.isOnline.Store(false) // ??? prevent Close() from trying to close this already closed connection
 		if c.hub!=nil {
 			comment := "sendPing error: "+err.Error()
 			c.hub.closeCallee(comment)
@@ -1757,9 +1756,9 @@ func (c *WsClient) SendPing(maxWaitMS int) {
 				fmt.Printf("# sendPing (%s) %s keepAliveMgr.Delete\n", c.calleeID, c.wsConn.RemoteAddr().String())
 				keepAliveMgr.Delete(c.hub.CalleeClient.wsConn)
 				c.hub.CalleeClient.wsConn.SetReadDeadline(time.Time{})
-				c.hub.CalleeClient.isConnectedToPeer.Set(false)
-				c.hub.CalleeClient.isMediaConnectedToPeer.Set(false)
-				c.hub.CalleeClient.pickupSent.Set(false)
+				c.hub.CalleeClient.isConnectedToPeer.Store(false)
+				c.hub.CalleeClient.isMediaConnectedToPeer.Store(false)
+				c.hub.CalleeClient.pickupSent.Store(false)
 			}
 */
 		}
@@ -1818,7 +1817,8 @@ func (kaMgr *KeepAliveMgr) Run() {
 	defer ticker.Stop()
 	for {
 		<-ticker.C
-		if shutdownStarted.Get() {
+//		if shutdownStarted.Get() {
+		if shutdownStarted.Load() {
 			break
 		}
 		kaMgr.mux.RLock()
