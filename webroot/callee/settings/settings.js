@@ -221,7 +221,7 @@ function prepareSettings(xhrresponse) {
 		displayVersion = "WebCall server: "+serverVersion+"<br>";
 	}
 */
-	displayVersion += "WebCall version "+clientVersion;
+	displayVersion += "WebCall Server v"+clientVersion;
 	document.getElementById("verstring").innerHTML = displayVersion;
 
 	form.style.display = "block";
