@@ -12,12 +12,17 @@ var calleeID = "";
 var calleeLink = "";
 var vapidPublicKey = ""
 var xhrTwidActive = false;
-var serverVersion = "";
+//var serverVersion = "";
+var calleeVersion = "";
 
 window.onload = function() {
 	let id = getUrlParams("id");
 	if(typeof id!=="undefined" && id!="") {
 		calleeID = id;
+	}
+	let ver = getUrlParams("ver");
+	if(typeof ver!=="undefined" && ver!="") {
+		calleeVersion = ver;
 	}
 	if(!gentle) console.log("calleeID="+calleeID);
 	// XHR to get current settings; server will use the cookie to authenticate us
@@ -222,6 +227,11 @@ function prepareSettings(xhrresponse) {
 	}
 */
 	displayVersion += "WebCall Server v"+clientVersion;
+	if(calleeVersion=="") {
+		displayVersion += "<br>Local Callee old. Clear cache + reload advised.";
+	} else if(calleeVersion<clientVersion) {
+		displayVersion += "<br>Local Callee v"+calleeVersion+". Clear cache + reload advised.";
+	}
 	document.getElementById("verstring").innerHTML = displayVersion;
 
 	form.style.display = "block";
