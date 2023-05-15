@@ -227,7 +227,11 @@ function prepareSettings(xhrresponse) {
 		displayVersion = "WebCall server: "+serverVersion+"<br>";
 	}
 */
-	if(calleeVersion!=clientVersion) {
+	if(calleeVersion=="") {
+		displayVersion = "Current version: 3.4.x<br>"+
+		                 "Online version: "+clientVersion+"<br>"+
+		                 "To update: <a href='/webcall/more/#updatecallee' target='_blank'>Clear cache + reload</a>";
+	} else if(calleeVersion!=clientVersion) {
 		displayVersion = "Current version: "+calleeVersion+"<br>"+
 		                 "Online version: "+clientVersion+"<br>"+
 		                 "To update: <a href='/webcall/more/#updatecallee' target='_blank'>Clear cache + reload</a>";
