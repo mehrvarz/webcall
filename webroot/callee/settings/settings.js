@@ -217,6 +217,7 @@ function prepareSettings(xhrresponse) {
 	}
 */
 
+	console.log("clientVer="+clientVersion+" calleeVer="+calleeVersion);
 	let displayVersion = "";
 /*
 	if(typeof serverSettings.serverVersion!=="undefined") {
@@ -226,11 +227,12 @@ function prepareSettings(xhrresponse) {
 		displayVersion = "WebCall server: "+serverVersion+"<br>";
 	}
 */
-	displayVersion += "WebCall Server v"+clientVersion;
-	if(calleeVersion=="") {
-		displayVersion += "<br>Local Callee old. Clear cache + reload advised.";
-	} else if(calleeVersion<clientVersion) {
-		displayVersion += "<br>Local Callee v"+calleeVersion+". Clear cache + reload advised.";
+	if(calleeVersion!=clientVersion) {
+		displayVersion = "Current version: "+calleeVersion+"<br>"+
+		                 "Online version: "+clientVersion+"<br>"+
+		                 "To update: <a href='/webcall/more/#updatecallee' target='_blank'>Clear cache + reload</a>";
+	} else {
+		displayVersion = "WebCall v"+clientVersion;
 	}
 	document.getElementById("verstring").innerHTML = displayVersion;
 

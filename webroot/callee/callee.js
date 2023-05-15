@@ -92,8 +92,8 @@ var textchatOKfromOtherSide = false;
 window.onload = function() {
 	console.log("callee.js onload...");
 	
-	let versionElement = document.getElementById("version");
-	if(versionElement) versionElement.innerHTML = " - Callee v"+clientVersion;
+	//let versionElement = document.getElementById("version");
+	//if(versionElement) versionElement.innerHTML = " - Callee v"+clientVersion;
 
 	if(!navigator.mediaDevices) {
 		console.warn("navigator.mediaDevices not available");
