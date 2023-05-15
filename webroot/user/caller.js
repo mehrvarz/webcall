@@ -1688,9 +1688,9 @@ function notifyConnect(callerName,callerId,callerHost) {
 	goodbyMissedCall = "";
 	// notify calleeID (on behalf of callerId)
 	// NOTE this may take a while bc the server will have to post a direct msg
-	textModeArg := ""
+	var textModeArg = ""
 	if(muteMicElement && muteMicElement.checked) {
-		textModeArg := "&text=true";
+		textModeArg = "&text=true";
 	}
 	let api = apiPath+"/notifyCallee?id="+calleeID +
 		"&callerId="+callerId + "&callerName="+callerName + "&callerHost="+callerHost + textModeArg +
