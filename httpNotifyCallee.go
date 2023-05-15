@@ -145,18 +145,18 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		if textmode {
 			msg += " TextMode."
 		}
-		msg += " Answer: "
+
+		if callerMsg!="" {
+			msg += " '"+callerMsg+"'"
+		}
 
 		// adding /callee link
 		hostUrl := "https://"+hostname
 		if httpsPort>0 {
 			hostUrl += ":"+strconv.FormatInt(int64(httpsPort),10)
 		}
-		msg += " "+hostUrl+"/callee/"
+		msg += " Answer: "+hostUrl+"/callee/"
 
-		if callerMsg!="" {
-			msg += " '"+callerMsg+"'"
-		}
 /*
 		if dbUser.Str2 != "" {
 			// web push device 1 subscription is specified
