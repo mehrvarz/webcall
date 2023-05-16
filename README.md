@@ -12,16 +12,19 @@ WebCall offers super high audio quality. With a 20-280 bps adaptive bitrate (Opu
 
 WebCall links are always end-to-end encrypted. This prevents others from listening in on your calls. It also guarantees that your data can not be altered on the fly.
 
-WebCall server operates fully self-contained. It does not depend on 3rd party services (say, for STUN or TURN). This means that no big internet company will be able to track what you do. This is true when you use my server at timur.mobi. This server exists only to showcase WebCall in the best possible way. It is also true if you run your own WebCall server.
+WebCall server operates fully self-contained. It does not depend on 3rd party services (say, for STUN, TURN, etc.). This means that no big internet company will be able to track what WebCall users do.
 
-WebCall works on iPhone, Android, Linux, Mac and Windows. All you need is a 2020+ web browser.
+WebCall web client can be used on iPhone, Android, Linux, macOS and Windows with a 2020+ web browser.
 
-[https://timur.mobi/webcall](https://timur.mobi/webcall)
+[timur.mobi/webcall](https://timur.mobi/webcall)
 
-A dedicated WebCall for Android client is available:
+Native WebCall client for Android:
 
-[WebCall for Android](https://github.com/mehrvarz/webcall-android)
+[github.com/mehrvarz/webcall-android](https://github.com/mehrvarz/webcall-android)
 
+Native WebCall clients for Linux, FreeBSD, macOS, Windows:
+
+[github.com/mehrvarz/webcall-apps](https://github.com/mehrvarz/webcall-apps)
 
 
 # Installation
@@ -35,18 +38,6 @@ you will see practically no additional CPU load.
 [https://timur.mobi/webcall/install](https://timur.mobi/webcall/install)
 
 
-# Decentral WebCall
-
-We can build a network of telephony servers, offering free and boundless audio and video 
-telephony for everyone. This is possible because anyone can run a WebCall server. And 
-because, as a user, you can connect to any other WebCall user, regardless of who is doing 
-the hosting. 
-All of this is possible with no central coordination and without any server-to-server
-communication.
-
-[https://timur.mobi/webcall/info/server](https://timur.mobi/webcall/info/server)
-
-
 # License
 
 AGPL3.0 - see: [LICENSE](LICENSE)
@@ -58,9 +49,8 @@ AGPL3.0 - see: [LICENSE](LICENSE)
 - go.etcd.io/bbolt
 - github.com/pion/turn
 - github.com/webrtcHacks/adapter.js
-- gopkg.in/ini
 
-## 3rd party code (embedded/modified)
+## 3rd party code (embedded)
 
 - github.com/RapidLoop: skv
 - AppRTC's sdputils.js: prefercodec.js
