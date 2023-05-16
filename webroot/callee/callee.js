@@ -2046,17 +2046,6 @@ function hangup(mustDisconnect,dummy2,message) {
 	connectLocalVideo(true); // force disconnect
 	endWebRtcSession(mustDisconnect,true,"hangup "+message);
 	vsendButton.classList.remove('blink_me')
-
-/* moved to endWebRtcSession
-	if(localStream && !videoEnabled) {
-		gLog('hangup clear localStream');
-		const audioTracks = localStream.getAudioTracks();
-		audioTracks[0].enabled = false; // mute mic
-		localStream.getTracks().forEach(track => { track.stop(); });
-		localStream.removeTrack(audioTracks[0]);
-		localStream = null;
-	}
-*/
 }
 
 function goOnline(sendInitFlag,comment) {
@@ -2522,11 +2511,9 @@ function dataChannelOnmessage(event) {
 		let sinceStartSecs = Math.floor((Date.now() - fileReceiveStartDate + 500)/1000);
 		if(sinceStartSecs!=fileReceiveSinceStartSecs && sinceStartSecs!=0) {
 			let kbytesPerSec = Math.floor(fileReceivedSize/1000/sinceStartSecs);
-// TODO progressRcvLabel undefined?
 			progressRcvLabel.innerHTML = "receiving '"+fileName.substring(0,22)+"' "+kbytesPerSec+" KB/s";
 			fileReceiveSinceStartSecs = sinceStartSecs;
 		}
-		//gLog("binary chunk", chunkSize, fileReceivedSize, fileSize);
 		if(fileReceivedSize === fileSize) {
 			gLog("file receive complete");
 			const receivedBlob = new Blob(fileReceiveBuffer);
@@ -2565,7 +2552,6 @@ function stopAllAudioEffects(comment) {
 	allAudioEffectsStopped = true;
 	if(typeof Android !== "undefined" && Android !== null &&
 	   typeof Android.ringStop !== "undefined" && Android.ringStop !== null) {
-		//console.log('stopAllAudioEffects Android.ringStop()');
 		if(Android.ringStop())
 			return;
 	}
@@ -2574,9 +2560,6 @@ function stopAllAudioEffects(comment) {
 			gLog('stopAllAudioEffects ringtoneSound.pause');
 			ringtoneSound.pause();
 			ringtoneSound.currentTime = 0;
-		} else {
-			//gLog('stopAllAudioEffects NO ringtoneSound.pause',
-			//	ringtoneSound.paused, ringtoneIsPlaying);
 		}
 
 		if(playDialSounds && busySignalSound) {
@@ -2720,7 +2703,7 @@ function endWebRtcSession(disconnectCaller,goOnlineAfter,comment) {
 		// goOnlinePending flag prevents secondary calls to goOnline
 		goOnlinePending = true;
 		gLog('endWebRtcSession delayed auto goOnline()...');
-// TODO why exactly is this delay needed in goOnlineAfter?
+		// TODO why exactly is this delay needed in goOnlineAfter?
 		setTimeout(function() {
 			gLog('endWebRtcSession auto goOnline()');
 			goOnlinePending = false;
@@ -2775,7 +2758,6 @@ function goOffline() {
 		if(!mediaConnect) {
 			onlineIndicator.src="";
 		}
-		//console.log("callee goOffline: enable goonline");
 		goOnlineButton.disabled = false;
 	} else {
 		if(typeof Android !== "undefined" && Android !== null) {
@@ -2785,7 +2767,6 @@ function goOffline() {
 		if(!mediaConnect) {
 			onlineIndicator.src="";
 		}
-		//console.log("callee goOffline2: enable goonline");
 		goOnlineButton.disabled = false;
 	}
 
@@ -2808,7 +2789,6 @@ function getCookieSupport() {
 
 function openNews(newsUrl) {
 	// also called directly from WebCall for Android service
-//	if(divspinnerframe) divspinnerframe.style.display = "block";
 	// here we set horiCenterBound=true
 	// we also set dontIframeOnload=true so that height:100% determines the iframe height
 	// also: dontIframeOnload=true may be required if newsUrl points to a different domain
@@ -2925,7 +2905,6 @@ function clearcookie2() {
 	containerElement.style.filter = "blur(0.8px) brightness(60%)";
 	goOffline();
 
-//	if(iframeWindowOpenFlag || menuDialogOpenElement) {
 	if(iframeWindowOpenFlag) {
 		gLog("clearcookie2 history.back");
 		history.back();

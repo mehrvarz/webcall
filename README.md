@@ -53,19 +53,17 @@ AGPL3.0 - see: [LICENSE](LICENSE)
 
 ## 3rd party code (external)
 
+- github.com/mattn: go-mastodon
 - github.com/lesismal/nbio
 - go.etcd.io/bbolt
 - github.com/pion/turn
-- github.com/mrjones/oauth
-- gopkg.in/ini
 - github.com/webrtcHacks/adapter.js
+- gopkg.in/ini
 
 ## 3rd party code (embedded/modified)
 
 - github.com/RapidLoop: skv
-- github.com/ChimeraCoder: Twitter
 - AppRTC's sdputils.js: prefercodec.js
 - mr-wang-from-next-door: GetOutboundIP()
-- github.com/mahan: AtomBool
 
 
