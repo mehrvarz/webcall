@@ -12,10 +12,6 @@ webcall.prev*
 news.ini
 dumponline.sh
 backupdb.sh
-webroot/button/adapter-latest.js
-webroot/button/caller.js
-webroot/button/client.js
-webroot/button/prefercodec.js
 webroot/callee/adapter-latest.js
 webroot/callee/service-worker.js
 webroot/user/adapter-latest.js
