@@ -319,36 +319,6 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		return true
 	}
 
-	if urlPath=="/clearcache" {
-		c := hubMap[urlID].CalleeClient
-		if(c==nil) {
-			fmt.Printf("# /clearcache (%s) unknown ID\n", urlID)
-			return false;
-		}
-		err := c.Write([]byte("clearcache"))
-		if err != nil {
-			fmt.Printf("# /clearcache (%s) send err=%s\n", urlID, err.Error())
-			return false
-		}
-		fmt.Printf("/clearcache (%s) sent OK\n", urlID)
-		return true
-	}
-
-	if urlPath=="/cancelc" {
-		c := hubMap[urlID].CalleeClient
-		if(c==nil) {
-			fmt.Printf("# /cancelc (%s) unknown ID\n", urlID)
-			return false;
-		}
-		err := c.Write([]byte("cancel|c"))
-		if err != nil {
-			fmt.Printf("# /cancelc (%s) send err=%s\n", urlID, err.Error())
-			return false
-		}
-		fmt.Printf("/cancelc (%s) sent OK\n", urlID)
-		return true
-	}
-
 	/* developer tools below
 	if urlPath=="/deluserid" {
 		// get time from url-arg
@@ -501,6 +471,36 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 				}
 			})
 		}
+		return true
+	}
+
+	if urlPath=="/cancelc" {
+		c := hubMap[urlID].CalleeClient
+		if(c==nil) {
+			fmt.Printf("# /cancelc (%s) unknown ID\n", urlID)
+			return false;
+		}
+		err := c.Write([]byte("cancel|c"))
+		if err != nil {
+			fmt.Printf("# /cancelc (%s) send err=%s\n", urlID, err.Error())
+			return false
+		}
+		fmt.Printf("/cancelc (%s) sent OK\n", urlID)
+		return true
+	}
+
+	if urlPath=="/clearcache" {
+		c := hubMap[urlID].CalleeClient
+		if(c==nil) {
+			fmt.Printf("# /clearcache (%s) unknown ID\n", urlID)
+			return false;
+		}
+		err := c.Write([]byte("clearcache"))
+		if err != nil {
+			fmt.Printf("# /clearcache (%s) send err=%s\n", urlID, err.Error())
+			return false
+		}
+		fmt.Printf("/clearcache (%s) sent OK\n", urlID)
 		return true
 	}
 	*/
