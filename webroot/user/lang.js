@@ -28,6 +28,7 @@ var langMap = {
 	"onThePhonePleaseWait"	: "on the phone. Please wait...",
 	"sorryUnableToReach"	: "Unable to contact",
 	"PleaseTryAgainALittle"	: "Please try again a little later",
+	"micmuted"				: "Mic muted",
 },
 "de": {
 	"dialButton"			: "Anwählen",
@@ -53,6 +54,7 @@ var langMap = {
 	"onThePhonePleaseWait"	: "zu verbinden. Bitte warten...",
 	"sorryUnableToReach"	: "Nutzer nicht erreichbar:",
 	"PleaseTryAgainALittle"	: "Bitte versuchen Sie es etwas später erneut.",
+	"micmuted"				: "Mikrofon stumm",
 },
 "es": {
 	"dialButton"			: "Llame a",
@@ -78,6 +80,7 @@ var langMap = {
 	"onThePhonePleaseWait"	: "Por favor, espere...",
 	"sorryUnableToReach"	: "Usuario no localizable:",
 	"PleaseTryAgainALittle"	: "Por favor, inténtelo de nuevo un poco más tarde.",
+	"micmuted"				: "Micrófono silenciado",
 },
 "it": {
 	"dialButton"			: "Chiamata",
@@ -103,6 +106,7 @@ var langMap = {
 	"onThePhonePleaseWait"	: "Attendere prego...",
 	"sorryUnableToReach"	: "Utente non raggiungibile:",
 	"PleaseTryAgainALittle"	: "Riprovare un po' più tardi.",
+	"micmuted"				: "Microfono muto",
 },
 "fr": {
 	"dialButton"			: "Composer",
@@ -128,6 +132,7 @@ var langMap = {
 	"onThePhonePleaseWait"	: "Veuillez patienter...",
 	"sorryUnableToReach"	: "Utilisateur injoignable:",
 	"PleaseTryAgainALittle"	: "Veuillez réessayer un peu plus tard.",
+	"micmuted"				: "Micro en sourdine",
 },
 "pt-PT": {
 	"dialButton"			: "Chamada",
@@ -153,6 +158,7 @@ var langMap = {
 	"onThePhonePleaseWait"	: "Por favor, aguarde...",
 	"sorryUnableToReach"	: "Incapaz de contactar o",
 	"PleaseTryAgainALittle"	: "Por favor, tente novamente um pouco mais tarde.",
+	"micmuted"				: "Microfone mudo",
 },
 "pt-BR": {
 	"dialButton"			: "Chamar",
@@ -178,6 +184,7 @@ var langMap = {
 	"onThePhonePleaseWait"	: "Por favor, aguarde...",
 	"sorryUnableToReach"	: "Não foi possível se comunicar com",
 	"PleaseTryAgainALittle"	: "Por favor, tente novamente mais tarde.",
+	"micmuted"				: "Microfone mudo",
 },
 "cs-CS": {
 	"dialButton"			: "Vytočit",
@@ -203,6 +210,7 @@ var langMap = {
 	"onThePhonePleaseWait"	: "Prosím čekejte...",
 	"sorryUnableToReach"	: "Nemohu se spojit s",
 	"PleaseTryAgainALittle"	: "Zkuste to prosím později.",
+	"micmuted"				: "Mikrofon ztlumený",
 }};
 
 function switchLanguage(userLang) {
@@ -234,74 +242,6 @@ function switchLanguage(userLang) {
 	}
 
 	console.log("myLang",myLang);
-
-	let str = myLang["dialButton"];
-	if(typeof str !== "undefined" && str!="") {
-		dialButton.innerHTML = str;
-	}
-
-	str = myLang["hangupButton"];
-	if(typeof str !== "undefined" && str!="") {
-		hangupButton.innerHTML = str;
-	}
-
-	str = myLang["connectingText"];
-	if(typeof str !== "undefined" && str!="") {
-		connectingText = str;
-	}
-
-	str = myLang["ringingText"];
-	if(typeof str !== "undefined" && str!="") {
-		ringingText = str;
-	}
-
-	str = myLang["msgbox"];
-	if(typeof str !== "undefined" && str!="") {
-		if(msgbox) msgbox.placeholder = str;
-	}
-
-	str = myLang["nicknameLabel"];
-	if(typeof str !== "undefined" && str!="") {
-		let nicknameLabel = document.getElementById("nicknameLabel");
-		if(nicknameLabel) nicknameLabel.innerHTML = str;
-	}
-
-	str = myLang["callstatsLabel"];
-	if(typeof str !== "undefined" && str!="") {
-		callStatsTitle = str;
-		let callstatsLabel = document.getElementById("callstats");
-		if(callstatsLabel) callstatsLabel.innerHTML = callStatsTitle;
-		// TODO must also change title of opened iframe "Call Statistics" in client.js
-		// as well as 'No call stats available' in client.js
-	}
-
-	str = myLang["fullscreenLabel"];
-	if(typeof str !== "undefined" && str!="") {
-		let fullscreenLabel = document.getElementById("fullscreen");
-		//console.log("fullscreenLabel=",fullscreenLabel.labels[0]);
-		//if(fullscreenLabel) fullscreenLabel.value = str;
-		if(fullscreenLabel) fullscreenLabel.labels[0].innerText = str;
-	}
-
-	str = myLang["notAvailable"]; // client.js
-	if(typeof str !== "undefined" && str!="") {
-		notAvailable = str;
-	}
-
-//	str = myLang["hangingUpText"];
-//	if(typeof str !== "undefined" && str!="") {
-//		hangingUpText = str;
-//	}
-
-//	str = myLang["greetingMessage"];
-//	if(typeof str !== "undefined" && str!="") {
-//		greetingMessage = str;
-//	}
-
-//	str = myLang["digAnswMachine"];
-//	if(typeof str !== "undefined" && str!="") {
-//		digAnswMachine = str;
-//	}
 }
 
 function lg(idStr) {

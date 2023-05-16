@@ -16,8 +16,6 @@ const msgBoxMaxLen = 137;
 const enterTextElement = document.getElementById('enterText');
 
 var connectingText = "Connecting P2P...";
-//var ringingText = "Ringing...";
-//var hangingUpText = "Hanging up...";
 var notificationSound = null;
 var dtmfDialingSound = null;
 var busySignalSound = null;
@@ -46,7 +44,6 @@ var callerName = "";  // this is the callers nickname
 var contactName = ""; // this is the callees nickname (from caller contacts or from dial-id form)
 var otherUA="";
 var sessionDuration = 0;
-//var dataChannelSendMsg = "";
 var iframeParent;
 var iframeParentArg="";
 var	codecPreferences = document.querySelector('#codecPreferences');
@@ -74,8 +71,6 @@ var contactAutoStore = false;
 var counter=0;
 var altIdCount = 0;
 var idSelectElement = null;
-//var greetingMessage = "Greeting message (optional):";
-//var digAnswMachine = "About to call a digital answering machine";
 var newline = String.fromCharCode(13, 10);
 var textchatOKfromOtherSide = false;
 var placeholderText = "";
@@ -104,9 +99,66 @@ var extMessage = function(e) {
 window.addEventListener('message', extMessage, false); 
 gLog("caller now listening for extMessage");
 
+function languageDefaults() {
+	let str = lg("dialButton");
+	if(typeof str !== "undefined" && str!="") {
+		dialButton.innerHTML = str;
+	}
+
+	str = lg("hangupButton");
+	if(typeof str !== "undefined" && str!="") {
+		hangupButton.innerHTML = str;
+	}
+
+	str = lg("connectingText");
+	if(typeof str !== "undefined" && str!="") {
+		connectingText = str;
+	}
+
+	str = lg("msgbox");
+	if(typeof str !== "undefined" && str!="") {
+		if(msgbox) msgbox.placeholder = str;
+	}
+
+	str = lg("nicknameLabel");
+	if(typeof str !== "undefined" && str!="") {
+		let nicknameLabel = document.getElementById("nicknameLabel");
+		if(nicknameLabel) nicknameLabel.innerHTML = str;
+	}
+
+	str = lg("callstatsLabel");
+	if(typeof str !== "undefined" && str!="") {
+		callStatsTitle = str;
+		let callstatsLabel = document.getElementById("callstats");
+		if(callstatsLabel) callstatsLabel.innerHTML = callStatsTitle;
+		// TODO must also change title of opened iframe "Call Statistics" in client.js
+		// as well as 'No call stats available' in client.js
+	}
+
+	str = lg("fullscreenLabel");
+	if(typeof str !== "undefined" && str!="") {
+		let fullscreenLabel = document.getElementById("fullscreen");
+		//console.log("fullscreenLabel=",fullscreenLabel.labels[0]);
+		//if(fullscreenLabel) fullscreenLabel.value = str;
+		if(fullscreenLabel) fullscreenLabel.labels[0].innerText = str;
+	}
+
+	str = lg("notAvailable"); // client.js
+	if(typeof str !== "undefined" && str!="") {
+		notAvailable = str;
+	}
+
+	str = lg("micmuted");
+	if(typeof str !== "undefined" && str!="") {
+		let muteMiclabel = document.getElementById("muteMiclabel");
+		if(muteMiclabel) muteMiclabel.innerHTML = str;
+	}
+}
+
 window.onload = function() {
 	gLog("caller onload");
 	switchLanguage(navigator.language || navigator.userLanguage);
+	languageDefaults();
 
 	if(!navigator.mediaDevices) {
 		console.warn("navigator.mediaDevices not available");
@@ -176,7 +228,11 @@ window.onload = function() {
 	if(ua.indexOf("iPhone")>=0 || ua.indexOf("iPad")>=0) {
 		fullscreenLabel.style.display = "none";
 	}
-
+/*
+	if(muteMiclabelElement) {
+		muteMiclabelElement. = lg("micmuted");	// tmtmtm
+	}
+*/
 	if(fullscreenCheckbox && fullscreenLabel.style.display!="none") {
 		fullscreenCheckbox.addEventListener('change', function() {
 			if(this.checked) {
@@ -2514,21 +2570,6 @@ function dial2() {
 					goodbyTextMsg = cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen)
 					gLog('set goodbyTextMsg='+goodbyTextMsg);
 
-/*
-					let msgboxText = cleanStringParameter(msgbox.value,false).substring(0,msgBoxMaxLen);
-					if(msgboxText!="") {
-						if(dataChannel) {
-							if(dataChannel.readyState=="open") {
-								gLog('send msgbox',msgboxText);
-								dataChannel.send("msg|"+msgboxText);
-							} else {
-								dataChannelSendMsg = msgboxText;
-							}
-						} else {
-							console.warn('no dataChannel, cannot send msgbox (%s)'+msgboxText);
-						}
-					}
-*/
 					showStatus(lg("ringingText"),-1);
 					onlineIndicator.src="green-gradient.svg";
 				}
@@ -2577,12 +2618,6 @@ function createDataChannel() {
 	dataChannel = peerCon.createDataChannel("datachannel");
 	dataChannel.onopen = event => {
 		gLog("dataChannel.onopen");
-/*
-		if(dataChannelSendMsg!="") {
-			dataChannel.send("msg|"+dataChannelSendMsg);
-			dataChannelSendMsg = "";
-		}
-*/
 		// tell other side that we support textchat
 		textchatOKfromOtherSide = false;
 		dataChannel.send("textchatOK");
