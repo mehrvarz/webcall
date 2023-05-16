@@ -680,35 +680,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 					}
 
 					if mastodonMgr!=nil {
-/*
-						if mid=="" {
-							// if we have no mid, search dbInviter for urlID
-							midStr,msgId,err := mastodonMgr.isCallerWaitingForCallee(urlID)
-							if logWantedFor("login") {
-								if err!=nil {
-									fmt.Printf("/login (%s) mastodonMgr.isCallerWaitingForCallee err=%v\n",
-										urlID, err)
-								} else {
-									fmt.Printf("/login (%s) mMgr.isCallerWaitingForCallee midStr=%s msgId=%s\n",
-										urlID, midStr, msgId)
-								}
-							}
-							if err==nil && midStr!="" && msgId!="" {
-								// mid for urlID found!
-								mid = midStr
-							}
-						}
-*/
-/*
-						if mid!="" {
-							// this means that there is an invited caller currently waiting for this callee login
-							if logWantedFor("login") {
-								fmt.Printf("/login (%s) mastodonMgr.sendCallerLink mid=%s\n", urlID, mid)
-							}
-							// tell caller that callee is ready to receive a call (and maybe other related tasks)
-							mastodonMgr.sendCallerLink(mid,urlID,remoteAddr)
-						}
-*/
+						// ???
 					}
 				} else {
 					// hub!=nil but CalleeLogin==false (callee still there but did NOT send 'init' within 26s)

@@ -157,7 +157,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 		}
 		msg += " Answer: "+hostUrl+"/callee/"
 
-/*
+		/*
 		if dbUser.Str2 != "" {
 			// web push device 1 subscription is specified
 			// here we use web push to send a notification
@@ -190,7 +190,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 					urlID, statusCode)
 			}
 		}
-*/
+		*/
 
 		if dbUser.MastodonID != "" {
 			// if mastodon handle exists and MastodonSendTootOnCall==true:
@@ -509,24 +509,20 @@ func missedCall(callerInfo string, remoteAddr string, cause string) {
 	callerName := tok[1]
 	callerID := tok[2]
 	msgtext := ""
-//	callerHost := ""
 	if len(tok) >= 5 {
 		msgtext = tok[4]
 		if len(tok) >= 6 {
-/*
-// TODO callerHost after msgtext is not ideal
-			callerHost = tok[5]
-*/
+			// ???
 		}
 	}
 
-// TODO if callerName=="" get if from contacts via calleeId?
+	// TODO if callerName=="" get if from contacts via calleeId?
 
-// TODO check callerName, callerID, msgtext for size and content
+	// TODO check callerName, callerID, msgtext for size and content
 	// the actual call occured ageSecs64 ago (may be a big number, if caller waits long before aborting the page)
 	//ageSecs64 := time.Now().Unix() - timeOfCall
 	err,missedCallsSlice := addMissedCall(calleeId,
-		CallerInfo{remoteAddr, callerName, timeOfCall, callerID, msgtext, /*callerHost, calleeId*/}, cause)
+		CallerInfo{remoteAddr, callerName, timeOfCall, callerID, msgtext, }, cause)
 	if err==nil {
 		//fmt.Printf("missedCall (%s) caller=%s rip=%s\n", calleeId, callerID, remoteAddr)
 
@@ -771,5 +767,4 @@ func webpushSend(subscription string, msg string, urlID string) (error,int) {
 	return err, httpResponse.StatusCode
 }
 */
-
 

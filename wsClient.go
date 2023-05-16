@@ -211,7 +211,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		}
 	}
 
-/*
+	/*
 	// urlArg dialID is the unmapped id dialed by the caller
 	// if it is a mapped id, we use it to fetch the assigned name
 	url_arg_array, ok = r.URL.Query()["dialID"]
@@ -243,7 +243,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			}
 		}
 	}
-*/
+	*/
 
 	clientVersion := ""
 	url_arg_array, ok = r.URL.Query()["ver"]
@@ -327,11 +327,11 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		client.connType = "serveWs"
 	}
 
-/*
+	/*
 	keepAliveMgr.Add(wsConn)
 	// set the time for sending the next ping
 	keepAliveMgr.SetPingDeadline(wsConn, pingPeriod, client) // now + pingPeriod secs
-*/
+	*/
 	client.isOnline.Store(true)
 	client.RemoteAddr = remoteAddr
 	client.RemoteAddrNoPort = remoteAddrNoPort
@@ -402,7 +402,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			}
 			// caller is gone (this can only happen for as long as the server has not disconnected the caller,
 			// so it is likely a manual (early/pre-14s) disconnect by the caller)
-// TODO so we might want to call closePeerCon() instead
+			// TODO so we might want to call closePeerCon() instead
 			client.hub.closeCaller("sendPong: "+err.Error())
 			return
 		}
@@ -540,8 +540,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		hub.lastCallerContactTime = time.Now().Unix()
 		hub.HubMutex.Unlock()
 
-/* tmtmtm
-// TODO when callee is making a call, it will NOT be in busy state for another caller
+		/* tmtmtm
+		// TODO when callee is making a call, it will NOT be in busy state for other callers
 		if callerID!="" {
 			// so lets set hub.ConnectedCallerIp? doesn't work
 			tmpRemoteIP := "aaa"
@@ -556,7 +556,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				}
 			}
 		}
-*/
+		*/
 
 		// connection watchdog now has two timeouts
 		// 1. from when caller connects (now) to when callee sends calleeAnswer (max 60s)
@@ -680,7 +680,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 
 			if hub!=nil && myCallerContactTime != hub.lastCallerContactTime {
 				// this callee is engaged with a new caller session already (myCallerContactTime is outdated)
-// TODO must investigate this
+				// TODO must investigate this
 				hub.HubMutex.RUnlock()
 				fmt.Printf("%s (%s) reached14s and no peerCon, but outdated %d != %d\n",
 					client.connType, client.calleeID, myCallerContactTime, hub.lastCallerContactTime)
@@ -693,20 +693,6 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				client.connType, client.calleeID, delaySecs, hub.CalleeClient.RemoteAddr,
 				client.RemoteAddr, client.callerID, client.isOnline.Load(), client.userAgent)
 
-/* this is done by closePeerCon() below
-			// add missed call if dbUser.StoreMissedCalls is set
-			userKey := client.calleeID + "_" + strconv.FormatInt(int64(client.hub.registrationStartTime),10)
-			var dbUser DbUser
-			err = kvMain.Get(dbUserBucket, userKey, &dbUser)
-			if err!=nil {
-				fmt.Printf("# %s (%s) reached14s, failed to get dbUser for addMissedCall\n",
-					client.connType, client.calleeID)
-			} else if dbUser.StoreMissedCalls {
-				addMissedCall(hub.CalleeClient.calleeID,
-					CallerInfo{client.RemoteAddr, client.callerName, time.Now().Unix(),
-					client.callerID, client.callerTextMsg }, "NO PEERCON")
-			}
-*/
 			// NOTE: msg MUST NOT contain apostroph (') characters
 			msg := "Unable to establish a direct P2P connection. "+
 			  "This might be a WebRTC related issue with your browser/WebView. "+
@@ -818,10 +804,10 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 					c.connType, c.calleeID, loginCount, c.hub.WsClientID, c.RemoteAddr, c.clientVersion)
 			}
 
-// TODO clear blockMap[c.calleeID] ?
-//blockMapMutex.Lock()
-//delete(blockMap,c.calleeID)
-//blockMapMutex.Unlock()
+			// TODO clear blockMap[c.calleeID] ?
+			//blockMapMutex.Lock()
+			//delete(blockMap,c.calleeID)
+			//blockMapMutex.Unlock()
 		}
 
 		// deliver the webcall codetag version string to callee
@@ -888,8 +874,8 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			var missedCallsSlice []CallerInfo
 			// err can be ignored
 			kvCalls.Get(dbMissedCalls,c.calleeID,&missedCallsSlice)
-// TODO must check if .DialID is still a valid ID for this callee
-// if a DialID is outdated, replace it with the calleeID - or with ""
+			// TODO must check if .DialID is still a valid ID for this callee
+			// if a DialID is outdated, replace it with the calleeID - or with ""
 
 			if len(waitingCallerSlice)>0 || len(missedCallsSlice)>0 {
 				if logWantedFor("waitingCaller") {
@@ -1184,7 +1170,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 					c.hub.CallerClient.calleeAnswerReceived <- struct{}{}
 					c.hub.HubMutex.RUnlock()
 
-// TODO in some cases, when we just did a closePeerCon(), we don't want to call it again
+					// TODO in some cases, when we just did a closePeerCon(), we don't want to call it again
 					c.hub.closePeerCon("caller cancel")
 					return
 				}
@@ -1207,8 +1193,8 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 						return
 					}
 
-// TODO in some cases, when we just did a closePeerCon(), we don't want to call it again
 					// let callee re-init
+					// TODO in some cases, when we just did a closePeerCon(), we don't want to call it again
 					c.hub.closePeerCon("caller sent cancel")
 					return
 				}
@@ -1484,15 +1470,9 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			if constate=="ConForce"  { constateShort = "CONF" }
 		}
 		if tok[0]=="callee" {
-//			if strings.HasPrefix(constate,"Con") && !c.isConnectedToPeer.Load() {
-//				fmt.Printf("%s (%s) PEER %s %s☎️ %s %s <- %s (%s)\n",
-//					c.connType, c.calleeID, tok[0], constateShort, tok[2], c.hub.CalleeClient.RemoteAddrNoPort,
-//					c.hub.CallerIpNoPort, c.hub.CallerID)
-//			} else {
-				fmt.Printf("%s (%s) PEER %s %s %s %s <- %s (%s)\n",
-					c.connType, c.calleeID, tok[0], constateShort, tok[2], c.hub.CalleeClient.RemoteAddrNoPort,
-					c.hub.CallerIpNoPort, c.hub.CallerID)
-//			}
+			fmt.Printf("%s (%s) PEER %s %s %s %s <- %s (%s)\n",
+				c.connType, c.calleeID, tok[0], constateShort, tok[2], c.hub.CalleeClient.RemoteAddrNoPort,
+				c.hub.CallerIpNoPort, c.hub.CallerID)
 		} else {
 			if strings.HasPrefix(constate,"Con") && !c.isConnectedToPeer.Load() {
 				fmt.Printf("%s (%s) PEER %s %s☎️ %s %s <- %s (%s)\n",
@@ -1566,7 +1546,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 						// store the caller (c.hub.CallerID)
 						// into contacts of user being called (c.calleeID)
 						// setContact() checks if dbUser.StoreContacts is set for c.calleeID
-// TODO what if only "@host"
+						// TODO what if only "@host"
 						if c.hub.CallerID != "" {
 							// we don't have callerId + callerName for this contact yet
 							compoundName := c.hub.CallerClient.callerName+"||"
@@ -1746,7 +1726,7 @@ func (c *WsClient) SendPing(maxWaitMS int) {
 		if c.hub!=nil {
 			comment := "sendPing error: "+err.Error()
 			c.hub.closeCallee(comment)
-/*
+			/*
 			// instead:
 			c.hub.LocalP2p = false
 			c.hub.RemoteP2p = false
@@ -1760,7 +1740,7 @@ func (c *WsClient) SendPing(maxWaitMS int) {
 				c.hub.CalleeClient.isMediaConnectedToPeer.Store(false)
 				c.hub.CalleeClient.pickupSent.Store(false)
 			}
-*/
+			*/
 		}
 		fmt.Printf("# sendPing (%s) %s done\n", c.calleeID, c.wsConn.RemoteAddr().String())
 		return
@@ -1817,7 +1797,6 @@ func (kaMgr *KeepAliveMgr) Run() {
 	defer ticker.Stop()
 	for {
 		<-ticker.C
-//		if shutdownStarted.Get() {
 		if shutdownStarted.Load() {
 			break
 		}

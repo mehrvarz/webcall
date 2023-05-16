@@ -41,7 +41,6 @@ func ticker3hours() {
 		if logWantedFor("timer") {
 			fmt.Printf("ticker3hours start looking for outdated IDs (maxDaysOffline=%d) ...\n",maxDaysOffline)
 		}
-//		var maxDaysOffline int64 = 180
 		var deleteKeyArray []string  // for deleting
 		skv.DbMutex.Lock()
 		counterDeleted := 0
@@ -287,7 +286,6 @@ func ticker3hours() {
 		dbHashedPwLoop(nil)
 
 		<-threeHoursTicker.C
-//		if shutdownStarted.Get() {
 		if shutdownStarted.Load() {
 			break
 		}
@@ -428,9 +426,9 @@ func dbHashedPwSearch(name string) (PwIdCombo,error) {
 	})
 	skv.DbMutex.Unlock()
 
-// TODO (in principle):
-// if pwIdComboNewest.CalleeId!="" and if we have found more than 1 entry
-// then all the older entries (all entries other than pwIdComboNewest) can be deleted
+	// TODO (in principle):
+	// if pwIdComboNewest.CalleeId!="" and if we have found more than 1 entry
+	// then all the older entries (all entries other than pwIdComboNewest) can be deleted
 
 	if err!=nil {
 		// this is bad
@@ -471,7 +469,7 @@ func ticker20min() {
 		cleanupClientRequestsMap(os.Stdout, 10, "ticker20min")
 
 		if mastodonMgr != nil {
-// TODO both need to be called more often than 1x per 30min - maybe not
+			// TODO do both need to be called more often than 1x per 30min - maybe not
 			mastodonMgr.cleanupMastodonMidMap(os.Stdout)
 			mastodonMgr.cleanupPostedMsgEvents(os.Stdout)
 		}
@@ -830,7 +828,7 @@ func ticker30sec() {
 
 		// every 10 min
 		ticker30secCounter++
-/*
+		/*
 		if(ticker30secCounter%20==0) {
 			// loop through all hubs
 			fmt.Printf("ticker10min %d\n",ticker30secCounter/20)
@@ -847,7 +845,7 @@ func ticker30sec() {
 			}
 			hubMapMutex.RUnlock()
 		}
-*/
+		*/
 	}
 	if logWantedFor("timer") {
 		fmt.Printf("ticker30sec ending\n")

@@ -130,7 +130,6 @@ var mappingMutex sync.RWMutex
 
 // newsDateMap[calleeID] returns the datestring of the last news.ini delivery
 var newsDateMap map[string]string
-//var newsDateMutex sync.RWMutex
 
 var numberOfCallsToday = 0 // will be incremented by wshub.go processTimeValues()
 var numberOfCallSecondsToday int64 = 0
@@ -190,7 +189,6 @@ var multiCallees = ""
 var logevents = ""
 var logeventMap map[string]bool
 var logeventMutex sync.RWMutex
-//var disconCalleeOnPeerConnected = false
 var disconCallerOnPeerConnected = true
 var maxRingSecs = 0
 var maxTalkSecsIfNoP2p = 0
@@ -510,17 +508,14 @@ func getStats() string {
 	for _,hub := range hubMap {
 		if hub!=nil {
 			numberOfOnlineCallees++
-//			hub.HubMutex.RLock()
 			if hub.lastCallStartTime>0 /*&& hub.CallerClient!=nil*/ {
 				numberOfOnlineCallers++
 				if hub.LocalP2p && hub.RemoteP2p {
 					numberOfActivePureP2pCalls++
 				}
 			}
-//			hub.HubMutex.RUnlock()
 		}
 	}
-	//hubMapMutex.RUnlock()
 
 	numberOfCallsTodayMutex.RLock()
 	retStr := fmt.Sprintf("stats %d/%d/%d calls:%d/%d %d/%d go:%d",
@@ -577,7 +572,7 @@ func readConfig(init bool) {
 
 	readConfigLock.Lock()
 	if init {
-// TODO init type keywords don't need currentVal (like hostname)
+		// TODO init type keywords don't need currentVal (like hostname)
 		hostname = readIniString(configIni, "hostname", hostname, "127.0.0.1")
 		httpPort = readIniInt(configIni, "httpPort", httpPort, 8067, 1)
 		httpsPort = readIniInt(configIni, "httpsPort", httpsPort, 0, 1)
@@ -644,8 +639,6 @@ func readConfig(init bool) {
 	}
 	logeventMutex.Unlock()
 
-//	disconCalleeOnPeerConnected = readIniBoolean(configIni,
-//		"disconCalleeOnPeerConnected", disconCalleeOnPeerConnected, false)
 	disconCallerOnPeerConnected = readIniBoolean(configIni,
 		"disconCallerOnPeerConnected", disconCallerOnPeerConnected, true)
 

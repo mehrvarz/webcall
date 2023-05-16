@@ -333,7 +333,7 @@ func substituteUserNameHandler(w http.ResponseWriter, r *http.Request) {
 		// set content-type
 		mimetype := mime.TypeByExtension(filepath.Ext(fullpath))
 		w.Header().Set("Content-Type", mimetype)
-// TODO err?
+		// TODO err?
 		w.Write(data)
 	}
 }
@@ -551,12 +551,6 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 				// client sent an unknown/invalid/outdated cookie
 				cookie = nil
 				// lets continue; a cookie may not be needed (e.g. /getmiduser)
-
-/* TODO but there are cases where wrongcookie needs to be sent (e.g. /login, /getsettings)
-				time.Sleep(1 * time.Second)
-				fmt.Fprintf(w,"wrongcookie")
-				return
-*/
 			} else {
 				pwIdComboCalleeId := pwIdCombo.CalleeId
 				argIdx := strings.Index(pwIdComboCalleeId,"&")
@@ -657,16 +651,6 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		httpSetAssign(w, r, urlID, calleeID, cookie, remoteAddr)
 		return
 	}
-/*
-	if strings.HasPrefix(urlPath,"/twid") {
-		httpTwId(w, r, urlID, calleeID, cookie, remoteAddr)
-		return
-	}
-	if strings.HasPrefix(urlPath,"/twfollower") {
-		httpTwFollower(w, r, urlID, calleeID, cookie, remoteAddr)
-		return
-	}
-*/
 	if strings.HasPrefix(urlPath,"/register/") {
 		httpRegister(w, r, urlID, urlPath, remoteAddr, startRequestTime)
 		return
@@ -698,51 +682,6 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-
-/* opsolte together with invite code
-	if strings.HasPrefix(urlPath,"/getonline") {
-		if mastodonMgr != nil {
-			mastodonMgr.httpGetOnline(w, r, urlPath, remoteAddr)
-		}
-		return
-	}
-
-	if strings.HasPrefix(urlPath,"/sendCallerLink") {
-		// arg id=... becomes urlID
-		if mastodonMgr != nil {
-			url_arg_array, ok := r.URL.Query()["mid"]
-			fmt.Printf("/sendCallerLink urlID=%s url_arg_array=%v ok=%v\n",urlID, url_arg_array, ok)
-			if ok {
-				if len(url_arg_array[0]) >= 1 {
-					mid := url_arg_array[0]
-					if(mid!="") {
-// TODO what if we have no urlID? do we need it???
-						mastodonMgr.sendCallerLink(mid,urlID,remoteAddr)
-					} else {
-						fmt.Printf("# /sendCallerLink mid=%s\n",mid)
-					}
-				} else {
-					fmt.Printf("# /sendCallerLink len(url_arg_array)=%d\n",len(url_arg_array))
-				}
-			}
-		}
-		return
-	}
-*/
-
-/*
-	if strings.HasPrefix(urlPath,"/midmsg") {
-		if cookie!=nil {
-			if mastodonMgr != nil {
-				// send a msg to tmpkeyMastodonCallerMap[mid]:
-				// "Click to call /user/"+tmpkeyMastodonCalleeMap[mid]
-				mastodonMgr.sendCallerMsgCalleeIsOnline(w, r, calleeID, cookie, remoteAddr)
-			}
-		}
-		return
-	}
-*/
-
 
 	if urlPath=="/mode" {
 		if maintenanceMode {
@@ -987,7 +926,7 @@ func clearCookie(w http.ResponseWriter, r *http.Request, urlID string, remoteAdd
 	if err == nil {
 		fmt.Printf("clrcookie (%s) cookie.Value=%s ip=%s '%s'\n",
 			urlID, cookie.Value, remoteAddr, comment)
-/*
+		/*
 		err = kvHashedPw.Delete(dbHashedPwBucket, cookie.Value)
 		if err==nil {
 			//fmt.Printf("clrcookie (%s) dbHashedPw.Delete OK db=%s bucket=%s key=%s\n",
@@ -999,7 +938,7 @@ func clearCookie(w http.ResponseWriter, r *http.Request, urlID string, remoteAdd
 					urlID, dbHashedPwName, dbHashedPwBucket, cookie.Value, err)
 			}
 		}
-*/
+		*/
 	} else {
 		if strings.Index(err.Error(),"named cookie not present")<0 {
 			fmt.Printf("# clrcookie (%s) ip=%s '%s' err=%s\n",
