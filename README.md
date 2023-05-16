@@ -14,7 +14,7 @@ WebCall sessions are always end-to-end encrypted. This prevents others from list
 
 WebCall server operates fully self-contained. It does not depend on 3rd party services (say, for STUN, TURN, etc.). This means that no other party can track your usage.
 
-The WebCall web client can be used on iPhone, Android, Linux, macOS and Windows with a 2020+ web browser:
+The WebCall web client can be used on iPhone, Android, Linux, macOS and Windows when using a 2020+ web browser:
 
 [timur.mobi/webcall](https://timur.mobi/webcall)
 
@@ -26,20 +26,20 @@ Native WebCall clients for Linux, FreeBSD, macOS, Windows:
 
 [github.com/mehrvarz/webcall-apps](https://github.com/mehrvarz/webcall-apps)
 
-WebCall-Mastodon bridge:
+WebCall-Mastodon Bridge:
 
-[timur.mobi/webcall/mastodon/](https://timur.mobi/webcall/mastodon/)
+[timur.mobi/webcall/mastodon/](https://timur.mobi/webcall/mastodon)
+
+TextChat E2EE Messaging:
+
+[timur.mobi/webcall/more/#textchat](https://timur.mobi/webcall/more/#textchat)
 
 
-# Installation
+# Building
 
-A single WebCall server can provide free and secure telephony for up to 1M concurrent users.
-You can run a small server for up to 1000 concurrent users within 100KB of RAM! 
-In other words, you can run WebCall server as a small daemon along side your web server. 
-And because all data (audio/video/files) is sent directly from client to client, 
-you will see practically no additional CPU load.
+With Go 1.19 installed: go build
 
-[https://timur.mobi/webcall/install](https://timur.mobi/webcall/install)
+[timur.mobi/webcall/install](https://timur.mobi/webcall/install)
 
 
 # License
@@ -48,9 +48,9 @@ AGPL3.0 - see: [LICENSE](LICENSE)
 
 ## 3rd party code (external)
 
-- github.com/mattn: go-mastodon
 - github.com/lesismal/nbio
 - go.etcd.io/bbolt
+- github.com/mattn/go-mastodon
 - github.com/pion/turn
 - github.com/webrtcHacks/adapter.js
 
