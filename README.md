@@ -14,7 +14,7 @@ WebCall sessions are always end-to-end encrypted. This prevents others from list
 
 WebCall server operates fully self-contained. It does not depend on 3rd party services (say, for STUN, TURN, etc.). This means that no other party can track your usage.
 
-The WebCall web client can be used on iPhone, Android, Linux, macOS and Windows with a 2020+ web browser.
+The WebCall web client can be used on iPhone, Android, Linux, macOS and Windows with a 2020+ web browser:
 
 [timur.mobi/webcall](https://timur.mobi/webcall)
 
@@ -25,6 +25,10 @@ Native WebCall client for Android:
 Native WebCall clients for Linux, FreeBSD, macOS, Windows:
 
 [github.com/mehrvarz/webcall-apps](https://github.com/mehrvarz/webcall-apps)
+
+WebCall-Mastodon bridge:
+
+[timur.mobi/webcall/mastodon/](https://timur.mobi/webcall/mastodon/)
 
 
 # Installation
