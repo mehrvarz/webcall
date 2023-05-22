@@ -11,7 +11,6 @@
 <style>
 ::-webkit-scrollbar { display:none; }
 html {
-	/* we want the height to be as tall as the document, but at least 460px */
 	width:100%; height:100%; min-height:460px;
 	background-image:linear-gradient(#039, #004);
 	color:#ddd;
@@ -56,7 +55,6 @@ button[disabled] {
 	}
 	.callbutton:hover {
 		background-color:#097;
-		_color:#000;
 		font-weight:600;
 	}
 }
@@ -81,7 +79,6 @@ button[disabled] {
 	}
 }
 .menulabel {
-	_margin-left:20px;
 	margin-right:20px;
 	cursor:pointer;
 }
@@ -89,7 +86,6 @@ button[disabled] {
 .formlabel {
 	margin-left:2px;
 	font-size:0.9em;
-	_cursor:pointer;
 }
 
 div#container {
@@ -102,7 +98,6 @@ div.outputSelector {
 div#enterId {
 	padding: 0.5em;
 	margin: 0.5em;
-	_max-width:520px;	/* ??? */
 }
 h1 {
 	font-size:1.7em;
@@ -250,7 +245,7 @@ input[type=submit]:focus {
 }
 @media (max-aspect-ratio: 13/10) {
 	.videoframe-remote {
-		width:100%; user-select:none; _padding-bottom:2px;
+		width:100%; user-select:none;
 	}
 	.videoframe-local {
 		width:100%; user-select:none;
@@ -265,18 +260,14 @@ input[type=submit]:focus {
 	}
 }
 .lbutton {
-	_font-size:0.85em;
 	font-size:0.95em;
 	margin-left:8px;
 	user-select:none;
-	_padding:0.25em;
-	_border:solid 0.08em; border-radius:4px; border-color:#888;
 }
 .spinnerframe {
 	width:100%;
 	height:100vh;
 	position:absolute;
-	_background:#a228;
 }
 .spinner {
 	margin: 0 auto;
@@ -385,16 +376,14 @@ input[type=submit]:focus {
 		</label>
 
 		<div>
-			<!-- nickname: always visible -->
 			<span id="nicknameDiv" style="margin-top:12px;margin-left:2px;font-size:1.1em;padding-right:20px;float:left;display:none;">
 				<label for="nickname" id="nicknameLabel" style="display:inline-block;margin-right:3px;">Nickname:</label>
 				<input id='nickname' type='text' size='9' maxlength='9' value=''
 					style="background:#04e;border:none;outline:none;padding:0.3em;color:#ddd;font-size:1.0em;">
 			</span>
 
-			<!-- checkbox "Mute mode" -->
 			<span id="muteMicDiv" style="white-space: nowrap;">
-				<input type="checkbox" id="muteMic" class="checkbox" style="margin-top:22px;margin-left:0;" _value="123" />
+				<input type="checkbox" id="muteMic" class="checkbox" style="margin-top:22px;margin-left:0;" />
 				<label class="menulabel" id="muteMiclabel" for="muteMic">Mic muted</label>
 			</span>
 		</div>
@@ -406,7 +395,7 @@ input[type=submit]:focus {
 	<div id="status" class="status"></div>
 
 	<textarea id="msgbox" class="msgbox" placeholder="(your message)" maxlength="137" style="display:none"></textarea>
-	<button id="chatButton" _class="callbutton" style="display:none; margin-top:4px; padding-top:4px; padding-bottom:3px;">TextChat</button>
+	<button id="chatButton" style="display:none; margin-top:4px; padding-top:4px; padding-bottom:3px;">TextChat</button>
 	<div id="textbox" style="display:none;">
 		<form action="javascript:;" style="margin-top:4px;" onsubmit="submitForm(2)" id="textboxid">
 			<input name="enterText" id="enterText" type="text" class="formtext" style="width:100%; max-width:550px; font-size:1.1em;">
@@ -444,8 +433,7 @@ input[type=submit]:focus {
 		<span class="lbutton" id="enterIdClear" onclick="clearForm(3)">clr</span>
 
 		<br>
-		<!-- checkbox numericId for smartpones only! can switch input-type from text to number
-		     using width:100px to prevent the checkbox being accessible over the whole width of screen -->
+		<!-- checkbox numericId for smartpones only! can switch input-type from text to number -->
 		<label class="formlabel" id="numericIdLabel" for="numericId" style="width:100px;">
 			<input type="checkbox" id="numericId" class="checkbox"> numeric</label>
 		</label>
@@ -464,9 +452,7 @@ input[type=submit]:focus {
 		<br>
 
 		<div style="margin-top:18px;">
-			<input type="submit" name="Submit" id="submit" value="Continue" style="width:120px; _float:left;">
-			<!--a id="storeContactButton"
-			style="font-size:1.0em;opacity:0;margin-left:30px;margin-top:34px;_display:none;">Store contact</div-->
+			<input type="submit" name="Submit" id="submit" value="Continue" style="width:120px;">
 		</div>
 
 		<div id="dialIdAutoStore"
@@ -483,10 +469,4 @@ var gentle = true;
 <script src="../callee/client.js"></script>
 <script src="../callee/prefercodec.js"></script>
 <script src="caller.js"></script>
-<!--
-<script src="lang.js"></script>
-<script src="../callee/client.js?vd=001"></script>
-<script src="../callee/prefercodec.js"></script>
-<script src="caller.js?vd=001"></script>
--->
 

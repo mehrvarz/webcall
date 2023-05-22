@@ -860,7 +860,6 @@ func dbconvertfunc() {
 		if b==nil {
 			fmt.Printf("# dbconvert tx.Bucket==nil\n")
 		} else {
-			//fmt.Printf("dbconvert set Cursor\n")
 			c := b.Cursor()
 			for k, v := c.First(); k != nil; k, v = c.Next() {
 				userID := string(k)
@@ -899,7 +898,6 @@ func dbconvertfunc() {
 	})
 
 	if err!=nil {
-		// this is bad
 		fmt.Printf("# dbconvert done err=%v\n", err)
 	} else {
 		fmt.Printf("dbconvert done no err\n")

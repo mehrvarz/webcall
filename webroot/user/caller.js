@@ -203,7 +203,6 @@ window.onload = function() {
 		}
 	}
 
-	// dialsounds
 	playDialSounds = true;
 	let ds = getUrlParams("ds");
 	if(typeof ds!=="undefined" && ds!="" && ds!="undefined") {
@@ -219,7 +218,6 @@ window.onload = function() {
 		remoteVideoFrame.onresize = showVideoResolutionRemote;
 
 	if(typeof Android !== "undefined" && Android !== null) {
-		// running on Android
 		fullscreenLabel.style.display = "none";
 	}
 
@@ -228,11 +226,7 @@ window.onload = function() {
 	if(ua.indexOf("iPhone")>=0 || ua.indexOf("iPad")>=0) {
 		fullscreenLabel.style.display = "none";
 	}
-/*
-	if(muteMiclabelElement) {
-		muteMiclabelElement. = lg("micmuted");	// tmtmtm
-	}
-*/
+
 	if(fullscreenCheckbox && fullscreenLabel.style.display!="none") {
 		fullscreenCheckbox.addEventListener('change', function() {
 			if(this.checked) {
@@ -305,7 +299,7 @@ window.onload = function() {
 		gLog("onload no onkeydownFunc in iframe mode");
 	}
 
-// TODO do checkServerMode() here
+	// do checkServerMode() here?
 
 	callerId = "";
 	let str = getUrlParams("callerId");
@@ -368,11 +362,10 @@ window.onload = function() {
 		// this req is running on behalf of a local callee (in an iframe, or in a 2nd tab) with a cookie
 		// we overwrite callerId (and maybe callerName) from urlArgs with our own values
 		gLog("onload use cookieName ("+cookieName+") as callerId");
-// TODO not sure we should overwrite callerId this way
-// we should do this only...
-// - if callerId does not exit on this server (also have a look at callerHost)
-// - if it is not one of cookieNames tmpId's
-
+		// TODO not sure we should overwrite callerId this way
+		// we should do this only...
+		// - if callerId does not exit on this server (also have a look at callerHost)
+		// - if it is not one of cookieNames tmpId's
 		if(callerId!="" && callerId!=cookieName) {
 			// if we override the callerId with a different cookieName
 			// we also clear the callerName (alligned with the old callerId)
@@ -475,7 +468,6 @@ window.onload = function() {
 		if(typeof str!=="undefined" && str!="" && str!="undefined") {
 			targetHost = str;
 		}
-//		console.log("a1");
 		enterDomainValElement.value = targetHost;
 		enterDomainValElement.onblur = function() {
 			// catch enterDomainValElement.value change to invoke /getcontact
@@ -545,7 +537,7 @@ window.onload = function() {
 		}
 
 
-/* store contact button moved to call-widget
+		/* store contact button moved to call-widget
 		// enable storeContactButton (like dialIdAutoStore)
 		var storeContactButtonElement = document.getElementById("storeContactButton");
 		if(storeContactButtonElement) {
@@ -575,7 +567,7 @@ window.onload = function() {
 				});
 			}
 		}
-*/
+		*/
 
 		// [Dial] button -> will resume in submitForm()
 		return;
@@ -587,7 +579,6 @@ window.onload = function() {
 function getContactFromForm() {
 	let contactID = cleanStringParameter(enterIdValElement.value,true);
 	if(contactID!="") {
-//		console.log("a2");
 		let contactHost = cleanStringParameter(enterDomainValElement.value,true);
 		if(contactHost!="" && contactHost!=location.host) {
 			contactID += "@"+contactHost;
@@ -647,21 +638,19 @@ function getContact(contactID) {
 				}
 
 				if(tok.length>2 && tok[2]!="") {
-					//if(callerName=="") {
-						// we prefer this over getUrlParams and settings
-						callerName = tok[2]; // nickname of caller
-						//console.log("/getcontact callerName="+callerName);
-						// will be shown (and can be edited) in final call-widget
+					// we prefer this over getUrlParams and settings
+					callerName = tok[2]; // nickname of caller
+					//console.log("/getcontact callerName="+callerName);
+					// will be shown (and can be edited) in final call-widget
 
-						if(!calleeID.startsWith("answie") && !calleeID.startsWith("talkback")) {
-							gLog("set nickname form with callerName="+callerName);
-							let nicknameDivElement = document.getElementById("nicknameDiv");
-							let nicknameElement = document.getElementById("nickname");
-							nicknameElement.value = callerName;
-							nicknameDivElement.style.display = "block";
-							// callername will be fetched from form in checkCalleeOnline()
-						}
-					//}
+					if(!calleeID.startsWith("answie") && !calleeID.startsWith("talkback")) {
+						gLog("set nickname form with callerName="+callerName);
+						let nicknameDivElement = document.getElementById("nicknameDiv");
+						let nicknameElement = document.getElementById("nickname");
+						nicknameElement.value = callerName;
+						nicknameDivElement.style.display = "block";
+						// callername will be fetched from form in checkCalleeOnline()
+					}
 				}
 			}
 		}, errorAction);
@@ -694,8 +683,7 @@ function onload2() {
 		if(mode==0) {
 			// normal mode
 			gLog("onload2 normal mode");
-
-// TODO do /getsettings here to get callerName
+			// TODO do /getsettings here to get callerName?
 
 			// enable nickname form (if not calling answie or talkback)
 			if(!calleeID.startsWith("answie") && !calleeID.startsWith("talkback")) {
@@ -897,7 +885,7 @@ function fetchMapping(contFunc,idSelectElement,idSelectLabelElement) {
 			contFunc("1");
 
 	}, function(errString,errcode) {
-		// /getmapping has failed
+		// /getmapping failed
 		if(contFunc!=null)
 			contFunc("2 "+errString+" "+errcode);
 	});
@@ -939,7 +927,7 @@ function onload3(comment) {
 
 	if(dialButton) {
 		if(calleeID.match(/^[0-9]*$/) != null) {
-			// calleeID is pure numeric - don't show
+			// calleeID is numeric - don't show
 		} else {
 			//dialButton.innerHTML = "Call "+calleeIdTitle;
 		}
@@ -1011,7 +999,7 @@ function dialButtonClick() {
 		notificationSound = new Audio("notification.mp3");
 	}
 	if(!dtmfDialingSound) {
-		// TODO why can I not do this?
+		// TODO why can we not do this?
 		//if(playDialSounds) {
 			gLog('dialButton lazy load dtmfDialingSound');
 			dtmfDialingSound = new Audio('dtmf-dial.mp3');
@@ -1049,12 +1037,7 @@ function dialButtonClick() {
 	gLog("dialButtonClick set dialAfterCalleeOnline");
 	dialAfterCalleeOnline = true;
 
-//	let wsAddrAgeSecs = Math.floor((Date.now()-wsAddrTime)/1000);
-//	if(wsAddr!="" && wsAddrAgeSecs<30) {
-//		calleeOnlineAction("dialButton");
-//	} else {
-		checkCalleeOnline(true,"dialButtonClick");
-//	}
+	checkCalleeOnline(true,"dialButtonClick");
 }
 
 function videoOn() {
@@ -1179,14 +1162,12 @@ function videoOff() {
 			if(optionElements[i].text.startsWith("Audio")) {
 				gLog("videoOff avSelect idx",i);
 				avSelect.selectedIndex = i;
-				// TODO tmtmtm not sure this is really required
-				//getStream(optionElements[i]);
 				break;
 			}
 		}
 		if(rtcConnect) {
 			// if still peer connected, activate the selected audio device
-			// TODO tmtmtm not sure this is really needed
+			// TODO not sure this is needed
 			getStream();
 		}
 	}
@@ -1241,7 +1222,7 @@ function checkCalleeOnline(waitForCallee,comment) {
 
 function calleeOnlineStatus(onlineStatus,waitForCallee) {
 	if(rtcConnect || dialing) {
-		// TODO check if this is still required/meaningful
+		// TODO check if this is still meaningful
 		gLog('calleeOnlineStatus abort',rtcConnect,dialing);
 		return;
 	}
@@ -1422,8 +1403,6 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 			// callee temporarily offline: have caller wait for callee
 			var offlineFor = parseInt(onlineStatus.substring(12),10);
 
-//			showStatus("Trying to find"+" "+calleeID+". "+
-//			"This can take some time. Please wait...",-1);
 			showStatus(lg("tryingToFind")+" "+calleeID+". "+lg("thisCanTakeSomeTime"),-1);
 
 			if(divspinnerframe) {
@@ -1481,11 +1460,11 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 						return;
 					}
 				}
-/*
+				/*
 				if(!goodbyDone) {
 					gLog('online: callee could not be reached (%s)',xhr.responseText);
 					showStatus("Unable to reach "+calleeID+".<br>Please try again later.",-1);
-// TODO we should ask to send a msg
+					// TODO we should ask to send a msg
 					//wsSend("missedcall|"+goodbyMissedCall); // this is not possible here
 
 					let api = apiPath+"/missedCall?id="+goodbyMissedCall;
@@ -1496,7 +1475,7 @@ function calleeOfflineAction(onlineStatus,waitForCallee) {
 						console.log('# /missedCall xhr error: '+errString+' '+err);
 					});
 				}
-*/
+				*/
 				if(goodbyDone) {
 					return;
 				}
@@ -1648,7 +1627,7 @@ function submitForm(idx) {
 	//		if(calleeID.length>11) calleeID = calleeID.substring(0,11);
 	//	}
 		gLog("submitForm calleeID="+calleeID);
-		// TODO ACHTUNG .host may have :443 set, while DomainVal may not
+		// TODO .host may have :443 set, while DomainVal may not
 		gLog("submitForm targetDomain="+enterDomainValElement.value+" location.host="+location.host);
 		if(cleanStringParameter(enterDomainValElement.value,true) != location.host) {
 			// calling a remote server callee
@@ -1773,7 +1752,6 @@ function notifyConnect(callerName,callerId,callerHost) {
 			name = contactName+" ("+calleeID+")";
 		}
 		showStatus(lg("sorryUnableToReach")+" "+name+"<br>"+
-//			lg("PleaseTryAgainALittle"),-1);
 			"<a href='javascript:window.location.href=window.location.href'>"+lg("PleaseTryAgainALittle")+"</a>",-1);
 	}, function(errString,errcode) {
 		if(divspinnerframe) {
@@ -1787,7 +1765,6 @@ function notifyConnect(callerName,callerId,callerHost) {
 			name = contactName+" ("+calleeID+")";
 		}
 		showStatus(lg("sorryUnableToReach")+" "+name+"<br>"+
-//			lg("PleaseTryAgainALittle"),-1);
 			"<a href='javascript:window.location.href=window.location.href'>"+lg("PleaseTryAgainALittle")+"</a>",-1);
 	});
 }
@@ -1994,35 +1971,6 @@ function signalingCommand(message) {
 			console.warn('calleeAnswer abort no peerCon');
 			return;
 		}
-		/*
-		setTimeout(function() {
-			// rtcConnect timeout check
-			if(!doneHangup) {
-				let warning = "";
-				if(onIceCandidates<1 && connectionstatechangeCounter<1) {
-					console.warn('no ice candidates, no connection state changes');
-					warning = "WARNING: no ICE candidates, no connection state changes";
-				} else if(onIceCandidates<1) {
-					console.warn('no ice candidates');
-					warning = "WARNING: no ICE candidates";
-				} else if(connectionstatechangeCounter<1) {
-					console.warn('no connection state changes');
-					warning = "WARNING: no connection state changes";
-				}
-				if(warning!="") {
-					stopAllAudioEffects();
-					notificationSound.play().catch(function(error) { });
-					showStatus(warning,-1);
-				}
-				if(!rtcConnect) {
-					// check for no-webrtc patch
-					// we could also check for no "peerCon connected" aka rtcConnect==false
-					console.log('no rtcConnect timeout');
-					hangup(true,false,"rtcConnect timeout "+warning); // will call checkCalleeOnline()
-				}
-			}
-		},9000);
-		*/
 		let hostDescription = JSON.parse(payload);
 		gLog("calleeAnswer setLocalDescription (onIceCandidates="+onIceCandidates+")");
 		// setLocalDescription will cause "onsignalingstate have-local-offer"
@@ -2143,7 +2091,7 @@ function signalingCommand(message) {
 
 		gLog("callee is answering call");
 		if(!localStream) {
-// TODO tmtmtm: no localStream OK in textmode (if muteMicElement && muteMicElement.checked)?
+			// TODO no localStream OK in textmode (if muteMicElement && muteMicElement.checked)?
 			console.warn("cmd pickup no localStream");
 			// I see this when I quickly re-dial while busy signal of last call is still playing
 			// TODO button may now continue to show "Connecting..."
@@ -2266,10 +2214,10 @@ function signalingCommand(message) {
 		}
 		waitForRemoteStreamFunc();
 
-/*
+		/*
 		// offer store contact link (only if callerId and calleeID exist)
-// TODO: if "store contact" is clicked while in call, the call gets disconnected
-// enable button at the end of hangup()
+		// TODO: if "store contact" is clicked while in call, the call gets disconnected
+		// enable button at the end of hangup()
 		if(callerId!="" && calleeID!="" && callerHost!="" && callerHost!=location.host) {
 			let storeContactElement = document.getElementById("storeContact");
 			if(storeContactElement) {
@@ -2280,7 +2228,7 @@ function signalingCommand(message) {
 				storeContactElement.innerHTML = "<a href='"+storeContactLink+"'>Store contact</a>";
 			}
 		}
-*/
+		*/
 	} else if(cmd=="cancel") {
 		if(payload!="c") {
 			//console.log("peer disconnect");
@@ -2539,7 +2487,7 @@ function dial2() {
 			return;
 		}
 		if(peerCon.connectionState=="failed") {
-// TODO in some situation this strikes multiple times; but there is no point playing busySound multpl times
+			// TODO in some situations this strikes multiple times; but there is no point playing busySound multpl times
 			if(typeof Android !== "undefined" && Android !== null) {
 				Android.peerDisConnect();
 			}

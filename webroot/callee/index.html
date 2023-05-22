@@ -64,16 +64,13 @@ button[disabled] {
 	outline:none;
 }
 .menuButton[disabled] {
-	_color:#aaa;
 }
 @media (hover: hover) {
 	.menuButton:hover {
 		color:#ff0;
-		_background-color: #b82a68;
 		outline:none;
 	}
 	.menuButton[disabled]:hover {
-		_background-color:#04c;
 	}
 }
 .menulabel {
@@ -262,7 +259,6 @@ input[type=submit]:focus {
 	width:100%;
 	height:100vh;
 	position:absolute;
-	_background:#a228;
 }
 .spinner {
 	margin: 0 auto;
@@ -403,7 +399,6 @@ input[type=submit]:focus {
 		<input type="submit" name="Submit" id="submit" value="OK" style="width:120px; margin-top:12px;">
 	</form>
 
-	<!-- "Mic muted" checkbox -->
 	<span id="muteMicDiv" style="white-space:nowrap;display:none;">
 		<input type="checkbox" id="muteMic" class="checkbox" style="margin-top:8px;margin-left:2px;" />
 		<label class="menulabel" id="muteMiclabel" for="muteMic" style="margin-left:0;">Mic muted</label>
@@ -412,7 +407,7 @@ input[type=submit]:focus {
 	<div id="status" class="status"></div>
 
 	<textarea id="msgbox" class="msgbox" spellcheck="false" style="display:none"></textarea>
-	<button id="chatButton" _class="callbutton" style="display:none; margin-top:4px; padding-top:4px; padding-bottom:3px;">TextChat</button>
+	<button id="chatButton" style="display:none; margin-top:4px; padding-top:4px; padding-bottom:3px;">TextChat</button>
 	<div id="textbox" style="display:none;">
 		<form action="javascript:;" onsubmit="submitFormDone(2)" style="margin-top:4px;">
 			<input name="enterText" id="enterText" type="text" class="formtext" style="width:98%; max-width:550px; font-size:1.1em;">

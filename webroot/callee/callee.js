@@ -80,7 +80,6 @@ var fileReceiveStartDate=0;
 var fileReceiveSinceStartSecs=0;
 var fileSendAbort=false;
 var fileReceiveAbort=false;
-//var loginResponse=false;
 var minNewsDate=0;
 var mid = "";
 var altIdArray = [];
@@ -92,9 +91,6 @@ var textchatOKfromOtherSide = false;
 window.onload = function() {
 	console.log("callee.js onload...");
 	
-	//let versionElement = document.getElementById("version");
-	//if(versionElement) versionElement.innerHTML = " - Callee v"+clientVersion;
-
 	if(!navigator.mediaDevices) {
 		console.warn("navigator.mediaDevices not available");
 		goOnlineButton.disabled = true;
@@ -119,13 +115,12 @@ window.onload = function() {
 	id = getUrlParams("mid");
 	if(typeof id!=="undefined" && id!="" && id!="undefined") {
 		mid = cleanStringParameter(id,true,"mid");
-		// TODO if given, send msg to caller (mastodon user) when this callee has logged in (see "login success")
+		// if given, send msg to caller (mastodon user) when this callee has logged in (see "login success")
 	}
 	gLog("onload calleeID="+calleeID+" mid="+mid);
 
 	if(calleeID=="") {
 		// if callee was started without a calleeID, reload with calleeID from cookie
-// TODO this sometimes does not work
 		if(document.cookie!="" && document.cookie.startsWith("webcallid=")) {
 			let cookieName = document.cookie.substring(10);
 			let idxAmpasent = cookieName.indexOf("&");
@@ -164,7 +159,6 @@ window.onload = function() {
 	}
 
 	if(typeof Android !== "undefined" && Android !== null) {
-		// running on Android
 		fullscreenLabel.style.display = "none";
 		menuExitElement.style.display = "block";
 
@@ -795,15 +789,14 @@ function login(retryFlag) {
 
 function sendInit(comment) {
 	console.log("sendInit() from: "+comment);
-//	wsSend("init|!"); // -> connectSignaling()
 	wsSend("init|"+comment); // -> connectSignaling()
 	// server will respond to this with "sessionId|(serverCodetag)"
 	// when we receive "sessionId|", we call showOnlineReadyMsg() -> Android.calleeConnected()
 }
 
 function getSettings() {
-	// main use is to get the calleeName (nickname)
-// TODO why do we add arg id?
+	// main use: get the calleeName (nickname)
+	// TODO why do we add arg id?
 	let api = apiPath+"/getsettings?id="+calleeID;
 	gLog('getsettings api '+api);
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
@@ -856,7 +849,6 @@ function getSettings() {
 			console.log("# getsettings xhr error "+errString);
 			getSettingDone();
 		});
-
 	}, function(errString,errcode) {
 		console.log("# getsettings xhr error "+errString);
 		getSettingDone();
@@ -885,9 +877,7 @@ function getSettingDone() {
 
 		let links = "";
 		links += "<div style='line-height:1.6em'>";
-
 		links += "<div class='callListTitle'>You can receive calls made by these links:</div>";
-
 		links += "<a target='_blank' href='"+userLink+"'>"+userLink+"</a><br>";
 
 		if(mastodonID!="" && mastodonID!=calleeID) {
@@ -905,7 +895,6 @@ function getSettingDone() {
 		}
 
 		links += "</div>";
-
 		ownlinkElement.innerHTML = links;
 	}
 }
@@ -1063,8 +1052,6 @@ function connectSignaling(message,comment) {
 		//  service -> wsCli=connectHost(wsUrl) -> onOpen() -> runJS("wsOnOpen()",null) -> wsSendMessage("init|!")
 		// if service IS already connected:
 		//  service -> if activityWasDiscarded -> wakeGoOnlineNoInit()
-
-		//gLog("connectSig "+wsUrl);
 	} else {
 		if(!window["WebSocket"]) {
 			console.error('connectSig: no WebSocket support');
@@ -1098,16 +1085,16 @@ function wsOnOpen() {
 	}
 
 	if(divspinnerframe) divspinnerframe.style.display = "none";
-/*
+	/*
 	window.addEventListener("beforeunload", function () {
 		// prevent "try reconnect in..." after "wsConn close" on unload
 		// by turning our online-indication off
-console.log("callee beforeunload: enable goonline");
+		console.log("callee beforeunload: enable goonline");
 		goOnlineButton.disabled = false;
 		// NOTE: this occurs when callee starts dialing a remote user from missedcalles
 		// then both buttons are enabled - not good
 	});
-*/
+	*/
 	if(wsSendMessage!="") {
 		gLog("wsOnOpen wsSend("+wsSendMessage+")");
 		wsSend(wsSendMessage);
@@ -1137,11 +1124,10 @@ function wsOnError2(str,code) {
 		showStatus("wsError unknown",-1);
 	}
 
-// note: for ff wake-from-sleep error (wss interrupted), code is not given here (but in wsOnClose())
-// TODO explain why the following is needed (and whether it is always true to assume wsConn=null on wsOnError() !!!
+	// for ff wake-from-sleep error (wss interrupted), code is not given here (but in wsOnClose())
+	// TODO explain why the following is needed (and whether it is always true to assume wsConn=null on wsOnError()
 	onlineIndicator.src="";
 	wsConn=null;
-// note: if wsOnClose() does not come, the state of the online/offline buttons may now be false (if we are disconnected)
 }
 
 function wsOnClose(evt) {
@@ -1183,7 +1169,6 @@ function wsOnClose2() {
 	stopAllAudioEffects("wsOnClose");
 	showStatus("disconnected from signaling server");
 	onlineIndicator.src="";
-	//offlineAction();
 	// clear "You receive calls made by this link"
 	ownlinkElement.innerHTML = "";
 }
@@ -1320,7 +1305,7 @@ function signalingCommand(message, comment) {
 			if(!peerCon || peerCon.iceConnectionState=="closed") {
 				console.log("# cmd callerCandidate abort no peerCon");
 				stopAllAudioEffects();
-// tmtmtm do we really need to call this?
+				// TODO do we really need this?
 				endWebRtcSession(true,true,"callerCandidate no peercon / ice closed"); // -> peerConCloseFunc
 				return;
 			}
@@ -1357,7 +1342,6 @@ function signalingCommand(message, comment) {
 // candidate:1151307505 1 tcp 1518280447 192.168.3.209 9 typ host tcptype active generation 0 ufrag /RrR network-id 1
 // candidate:2337567925 1 udp 1686052607 37.201.195.49 47218 typ srflx raddr 192.168.3.209 rport 19890 generation 0 ufrag /RrR network-id 1 L1451
 // candidate:240334351 1 udp 41885439 66.228.46.43 50178 typ relay raddr 37.201.195.49 rport 47218 generation 0 ufrag /RrR network-id 1
-//			gLog("peerCon.addIceCandidate accept address", address, callerCandidate.candidate);
 			gLog("peerCon.addIceCandidate accept address="+address+" "+callerCandidate.candidate);
 			if(address.indexOf(":")>=0
 					|| address==outboundIP
@@ -1400,10 +1384,9 @@ function signalingCommand(message, comment) {
 				// caller canceled call before connect
 				//showStatus("Canceled");
 			}
-			//stopAllAudioEffects("incoming cancel2");
-			console.log('cmd cancel -> endWebRtcSession');
+			//console.log('cmd cancel -> endWebRtcSession');
 			endWebRtcSession(false,true,"incoming cancel"); // -> peerConCloseFunc
-			console.log('cmd cancel -> clearcache()');
+			//console.log('cmd cancel -> clearcache()');
 			clearcache();
 		} else {
 			stopAllAudioEffects("ignore cmd cancel");
@@ -1450,18 +1433,13 @@ function signalingCommand(message, comment) {
 			}
 		}
 
-//	} else if(cmd=="calleeInfo") {
-//		// this is text-info to be shown (not yet implemented)
-//		// maybe the best way to present this, is to put it on top of the current statusMsg
-//		// or maybe just put a link there, saying "click here to see new info for you!"
-
 	} else if(cmd=="waitingCallers") {
 		waitingCallerSlice = null;
 		if(payload.length>0) {
 			waitingCallerSlice = JSON.parse(payload);
 			//gLog('showWaitingCallers msg',waitingCallerSlice.length);
 			if(waitingCallerSlice && waitingCallerSlice.length>0) {
-				// TODO would be nice to use a different sound here?
+				// would be nice to use a different sound here?
 				if(notificationSound) {
 					notificationSound.play().catch(function(error) { });
 				}
@@ -1532,18 +1510,10 @@ function signalingCommand(message, comment) {
 					minNewsDate = Math.floor(Date.now()/1000);
 					localStorage.setItem('newsdate', minNewsDate);
 
-//					let expireInSecs = 5*60;
-//					gLog("exclamationElement expire in "+expireInSecs);
-//					setTimeout(function(oldMinNewsDate) {
-//						gLog("exclamationElement expire "+oldMinNewsDate+" "+minNewsDate);
-//						if(oldMinNewsDate==minNewsDate) {
-//							// did NOT receive a new news notification
-							exclamationElement.style.opacity = 0;
-							setTimeout(function() {
-								exclamationElement.style.display = "none";
-							},1000);
-//						}
-//					},expireInSecs*1000,minNewsDate);
+					exclamationElement.style.opacity = 0;
+					setTimeout(function() {
+						exclamationElement.style.display = "none";
+					},1000);
 				};
 			} else {
 				gLog("exclamationElement not defined");
@@ -1554,7 +1524,7 @@ function signalingCommand(message, comment) {
 		}
 
 	} else {
-		console.log('# ignore incoming cmd='+cmd+' payload='+payload);
+		console.log('# ignore cmd='+cmd+' payload='+payload);
 	}
 }
 
@@ -1580,11 +1550,6 @@ function showWaitingCallers() {
 			if(waitingSecs>50) {
 				waitingTimeString = ""+Math.floor((waitingSecs+10)/60)+" min"
 			}
-//			let callerIp = waitingCallerSlice[i].AddrPort;
-//			let callerIpIdxPort = callerIp.indexOf(":");
-//			if(callerIpIdxPort>0) {
-//				callerIp = callerIp.substring(0,callerIpIdxPort);
-//			}
 			let callerName = waitingCallerSlice[i].CallerName;
 			let callerNameShow = callerName;
 			//gLog('waitingCallerSlice[i].Msg',waitingCallerSlice[i].Msg);
@@ -1594,7 +1559,6 @@ function showWaitingCallers() {
 			}
 			str += "<td>" + callerNameShow + "</td><td>"+
 			    waitingCallerSlice[i].CallerID + "</td>"+
-//				"<td>"+halfShowIpAddr(callerIp) + "</td>"+
 				"<td style='text-align:right;'>since "+
 				waitingTimeString + "</td><td>"+
 				"<a onclick='pickupWaitingCaller(\""+waitingCallerSlice[i].AddrPort+"\")'>"+
@@ -2815,21 +2779,21 @@ function openDialId(userId) {
 		url = "/user/"+userId;
 	}
 	gLog('openDialId url='+url);
-	// NOTE: 4th parameter 'dontIframeOnload':
+	// 4th parameter 'dontIframeOnload':
 	// iframeOnload() for dial-id takes scrollHeight from caller html min-height
 	iframeWindowOpen(url,false,"height:460px;max-width:480px;",true);
 }
 
 function openDialRemote(url) {
 	gLog('openDialUrl',url);
-	// NOTE: 4th parameter 'dontIframeOnload':
+	// 4th parameter 'dontIframeOnload':
 	// iframeOnload() for dial-id takes scrollHeight from caller html min-height
 	iframeWindowOpen(url,false,"height:460px;max-width:480px;",true);
 }
 
 function openDialUrl(url) {
 	gLog('openDialUrl',url);
-	// NOTE: 4th parameter 'dontIframeOnload':
+	// 4th parameter 'dontIframeOnload':
 	// iframeOnload() for dial-id takes scrollHeight from caller html min-height
 	iframeWindowOpen(url,false);
 }
@@ -2860,12 +2824,10 @@ function clearcache() {
 			console.log("clearcache android reload undefined");
 		}
 	}
-	//console.log("clearcache history.back()");
-	//history.back();
 }
 
 function exit() {
-	gLog("exits");
+	gLog("exit");
 	if(typeof Android !== "undefined" && Android !== null) {
 		history.back();
 		// wait for pulldown menu to close
@@ -2904,12 +2866,10 @@ function clearcookie2() {
 	console.log("clearcookie2 id=("+calleeID+")");
 	containerElement.style.filter = "blur(0.8px) brightness(60%)";
 	goOffline();
-
 	if(iframeWindowOpenFlag) {
 		gLog("clearcookie2 history.back");
 		history.back();
 	}
-
 	clearcookie();
 }
 

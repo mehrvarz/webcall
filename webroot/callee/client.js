@@ -52,7 +52,6 @@ var connectionstatechangeCounter = 0;
 var playDialSounds = true;
 var pickupAfterLocalStream = false; // not used in caller
 var callStatsTitle = "Call Stats";
-var notAvailable = "Not available";
 
 var ICE_config = {
 	"iceServers": [
@@ -482,7 +481,7 @@ function getStatsPostCall(results) {
 function showStatsPostCall() {
 	var myStatsPostCallString = statsPostCallString.replaceAll("\n","<br>");
 	if(myStatsPostCallString=="") {
-		myStatsPostCallString = notAvailable;
+		myStatsPostCallString = "(Will be shown post call)";
 	}
 	if(typeof Android !== "undefined" && Android !== null) {
 		if(typeof Android.keepAwakeMS !== "undefined" && Android.keepAwakeMS !== null) {
@@ -535,7 +534,6 @@ var rtcLink = "";
 var localCandidateType = "";
 var remoteCandidateType = "";
 function getStatsCandidateTypesEx(results,eventString1,eventString2) {
-	//gLog('getStatsCandidateTypes start');
 	rtcLink = "unknown";
 	let localCandidateId = "";
 	let remoteCandidateId = "";
@@ -683,7 +681,7 @@ function menuDialogOpen(menuDialog,atMousePos,inner) {
 		}
 		//console.log('menuDialogOpen up2',posY, menuHeight, pageHeight);
 		menuDialogOpenChildElement.style.top = (posY+window.scrollY)+"px"; // add scrollY-offset to posY
-/*
+		/*
 		let menuWidth = menuDialogOpenChildElement.clientWidth;
 		let pageWidth = mainElement.clientWidth;
 		while(posX>10 && posX + menuWidth > pageWidth) {
@@ -691,7 +689,7 @@ function menuDialogOpen(menuDialog,atMousePos,inner) {
 		}
 		gLog('menuDialogOpen left2',posX, menuWidth, pageWidth);
 		menuDialogOpenChildElement.style.left = (posX+window.scrollX)+"px"; // add scrollX-offset to posX
-*/
+		*/
 	},60);
 }
 
@@ -763,8 +761,6 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString, dontIframeOnload
 
 	gLog('iframeWindowOpen='+url);
 	if(iframeWindowOpenFlag) {
-		//console.log("# iframeWindowOpen fail iframeWindowOpenFlag");
-		//return;
 		iframeWindowClose();
 	}
 	if(menuDialogOpenElement) {
@@ -812,7 +808,6 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString, dontIframeOnload
 		//console.log("iframeWindowOpen addStyleString="+addStyleString);
 		styleString += addStyleString;
 	}
-
 	//console.log("iframeWindowOpen styleString="+styleString);
 
 	iframeWindowElement.style = styleString;
@@ -1448,7 +1443,7 @@ function remoteFullScreen(forceClose) {
 			//gLog('remoteFullScreen aspectRatio 16/9');
 			remoteVideoFrame.style.aspectRatio = "16/9";
 		}
-/*
+		/*
 		// exitFullscreen is not supported in webkit (aborts JS without err-msg if exitFullscreen() is called)
 		let ua = navigator.userAgent;
 		if(ua.indexOf("iPhone")<0 && ua.indexOf("iPad")<0) {
@@ -1457,7 +1452,7 @@ function remoteFullScreen(forceClose) {
 				console.log('remoteFullScreen exitFullscreen err='+err.message);
 			});
 		}
-*/
+		*/
 		// make remotefullscreen label white
 		//gLog('remoteFullScreen remotefullscreenLabel');
 		let remotefullscreenLabel = document.getElementById("remotefullscreen");
@@ -1499,7 +1494,7 @@ function remoteVideoHide() {
 
 function peerConOntrack(track, streams) {
 
-// TODO tmtmtm
+// TODO
 //		track.onunmute = () => {
 //			if(remoteVideoFrame && remoteVideoFrame.srcObject == streams[0]) {
 //				if(!gentle) console.warn('peerCon.ontrack onunmute was already set');
@@ -1513,7 +1508,7 @@ function peerConOntrack(track, streams) {
 		remoteStream = streams[0];
 //		};
 
-/*
+	/*
 	gLog('peerCon.ontrack');
 	track.onunmute = () => {
 		if(remoteVideoFrame && remoteVideoFrame.srcObject == streams[0]) {
@@ -1527,7 +1522,7 @@ function peerConOntrack(track, streams) {
 		}
 		remoteStream = streams[0];
 	};
-*/
+	*/
 	if(remoteVideoFrame) {
 		if(!track.enabled) {
 			gLog('peerCon.ontrack onunmute !track.enabled: not set remoteVideoFrame');
