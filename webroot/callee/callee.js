@@ -1922,7 +1922,7 @@ function pickup2() {
 			if(peerCon) {
 				// send "log|connected" to server
 				peerCon.getStats(null)
-				.then((results) => getStatsCandidateTypes(results,"Connected","Mic is open"),
+				.then((results) => getStatsCandidateTypes(results,"Connected",""), // "Mic is open"
 					err => console.log(err.message));
 
 				let enableTextchat = function() {
@@ -2326,9 +2326,9 @@ function peerConnected2() {
 }
 
 function getStatsCandidateTypes(results,eventString1,eventString2) {
-	if(muteMicElement && muteMicElement.checked) {
-		eventString2 = ""; // do not show "Mic is open"
-	}
+//	if(muteMicElement && muteMicElement.checked) {
+//		eventString2 = ""; // do not show "Mic is open"
+//	}
 
 	let msg = getStatsCandidateTypesEx(results,eventString1,eventString2)
 	//console.log("!!!! msg=("+msg+") callerName=("+callerName+") callerID=("+callerID+") callerMsg=("+callerMsg+")");
