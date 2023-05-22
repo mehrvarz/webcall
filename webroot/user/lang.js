@@ -15,7 +15,7 @@ var langMap = {
 	"nicknameLabel"			: "Nickname:",
 	"callstatsLabel"		: "Call stats",
 	"fullscreenLabel"		: "Fullscreen",
-	"notAvailable"			: "Not available",
+	"willShowPostCall"		: "Available after call",
 	"digAnswMachine"		: "About to call a digital answering machine",
 
 	"tryingToFind"			: "Trying to find",
@@ -41,7 +41,7 @@ var langMap = {
 	"nicknameLabel"			: "Rufname:",
 	"callstatsLabel"		: "Anruf Daten",
 	"fullscreenLabel"		: "Vollschirm",
-	"notAvailable"			: "Nicht verfügbar",
+	"willShowPostCall"		: "Nach Anruf verfügbar",
 	"digAnswMachine"		: "Verbindung mit einem digitalen Anrufbeantworter",
 
 	"tryingToFind"			: "Nutzer wird gesucht:",
@@ -67,7 +67,7 @@ var langMap = {
 	"nicknameLabel"			: "Apodo:",
 	"callstatsLabel"		: "Estadísticas de llamadas",
 	"fullscreenLabel"		: "Pantalla completa",
-	"notAvailable"			: "No disponible",
+	"willShowPostCall"		: "Disponible previa llamada",
 	"digAnswMachine"		: "A punto de llamar a un contestador automático digital",
 
 	"tryingToFind"			: "Se busca usuario:",
@@ -93,7 +93,7 @@ var langMap = {
 	"nicknameLabel"			: "Soprannome:",
 	"callstatsLabel"		: "Statistiche di chiamata",
 	"fullscreenLabel"		: "Schermo intero",
-	"notAvailable"			: "Non disponibile",
+	"willShowPostCall"		: "Disponibile dopo la telefonata",
 	"digAnswMachine"		: "In procinto di chiamare una segreteria telefonica digitale",
 
 	"tryingToFind"			: "L'utente è desiderato:",
@@ -119,7 +119,7 @@ var langMap = {
 	"nicknameLabel"			: "Surnom:",
 	"callstatsLabel"		: "Statistiques d'appels",
 	"fullscreenLabel"		: "Plein écran",
-	"notAvailable"			: "non disponible",
+	"willShowPostCall"		: "Disponible après appel",
 	"digAnswMachine"		: "Vous allez appeler un répondeur numérique",
 
 	"tryingToFind"			: "Utilisateur recherché",
@@ -145,7 +145,7 @@ var langMap = {
 	"nicknameLabel"			: "Apelido:",
 	"callstatsLabel"		: "Estatísticas de chamadas",
 	"fullscreenLabel"		: "Ecrã inteiro",
-	"notAvailable"			: "Não Disponível",
+	"willShowPostCall"		: "Disponível após chamada",
 	"digAnswMachine"		: "Prestes a ligar para um atendedor digital",
 
 	"tryingToFind"			: "A tentar encontrar o",
@@ -171,7 +171,7 @@ var langMap = {
 	"nicknameLabel"			: "Apelido:",
 	"callstatsLabel"		: "Estatísticas de chamada",
 	"fullscreenLabel"		: "Tela cheia",
-	"notAvailable"			: "não Disponível",
+	"willShowPostCall"		: "Disponível após a chamada",
 	"digAnswMachine"		: "Você está prestes a chamar um atendedor de chamadas digital",
 
 	"tryingToFind"			: "Tentando encontrar",
@@ -197,7 +197,7 @@ var langMap = {
 	"nicknameLabel"			: "Jméno:",
 	"callstatsLabel"		: "Přehled hovorů",
 	"fullscreenLabel"		: "Celá obrazovka",
-	"notAvailable"			: "Nedostupný",
+	"willShowPostCall"		: "Dostupné po zavolání",
 	"digAnswMachine"		: "Probíhá připojení k záznamníku",
 
 	"tryingToFind"			: "Hledám",

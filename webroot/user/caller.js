@@ -143,9 +143,9 @@ function languageDefaults() {
 		if(fullscreenLabel) fullscreenLabel.labels[0].innerText = str;
 	}
 
-	str = lg("notAvailable"); // client.js
+	str = lg("willShowPostCall");
 	if(typeof str !== "undefined" && str!="") {
-		notAvailable = str;
+		willShowPostCall = str;
 	}
 
 	str = lg("micmuted");

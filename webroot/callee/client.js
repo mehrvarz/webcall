@@ -52,6 +52,7 @@ var connectionstatechangeCounter = 0;
 var playDialSounds = true;
 var pickupAfterLocalStream = false; // not used in caller
 var callStatsTitle = "Call Stats";
+var willShowPostCall = "Available after call";
 
 var ICE_config = {
 	"iceServers": [
@@ -481,7 +482,7 @@ function getStatsPostCall(results) {
 function showStatsPostCall() {
 	var myStatsPostCallString = statsPostCallString.replaceAll("\n","<br>");
 	if(myStatsPostCallString=="") {
-		myStatsPostCallString = "(Will be shown post call)";
+		myStatsPostCallString = willShowPostCall;
 	}
 	if(typeof Android !== "undefined" && Android !== null) {
 		if(typeof Android.keepAwakeMS !== "undefined" && Android.keepAwakeMS !== null) {
