@@ -18,8 +18,8 @@ This means that you can receive calls from anyone on the internet:
 
 [timur.mobi/webcall](https://timur.mobi/webcall)
 
-WebCall-Mastodon Bridge delivers call notification into your Mastodon inbox.
-These notifications are sent whenever you don't pick up an incoming call.
+WebCall-Mastodon Bridge delivers call notifications into your Mastodon inbox.
+These notifications are sent whenever you do not pick up an incoming call.
 You can answer your calls directly from your inbox:
 
 [timur.mobi/webcall/mastodon](https://timur.mobi/webcall/mastodon)
