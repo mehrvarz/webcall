@@ -24,6 +24,13 @@ You can answer your calls directly from your inbox:
 
 [timur.mobi/webcall/mastodon](https://timur.mobi/webcall/mastodon)
 
+TextChat E2EE Messaging:
+
+[timur.mobi/webcall/more/#textchat](https://timur.mobi/webcall/more/#textchat)
+
+
+# Native Clients
+
 Native WebCall client for Android:
 
 [github.com/mehrvarz/webcall-android](https://github.com/mehrvarz/webcall-android)
@@ -31,10 +38,6 @@ Native WebCall client for Android:
 Native WebCall clients for Linux, FreeBSD, macOS, Windows:
 
 [github.com/mehrvarz/webcall-apps](https://github.com/mehrvarz/webcall-apps)
-
-TextChat E2EE Messaging:
-
-[timur.mobi/webcall/more/#textchat](https://timur.mobi/webcall/more/#textchat)
 
 
 # Building
