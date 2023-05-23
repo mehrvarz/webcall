@@ -25,7 +25,9 @@ Native WebCall clients for Linux, FreeBSD, macOS, Windows:
 
 [github.com/mehrvarz/webcall-apps](https://github.com/mehrvarz/webcall-apps)
 
-WebCall-Mastodon Bridge:
+WebCall-Mastodon Bridge delivers call notification into your Mastodon inbox.
+These notifications are sent whenever you don't pick up an incoming call.
+You can answer your calls directly from your inbox:
 
 [timur.mobi/webcall/mastodon/](https://timur.mobi/webcall/mastodon)
 
@@ -36,7 +38,7 @@ TextChat E2EE Messaging:
 
 # Building
 
-With Go 1.19 installed: go build
+With Go 1.19 run: go build
 
 [timur.mobi/webcall/install](https://timur.mobi/webcall/install)
 
