@@ -10,12 +10,19 @@ WebCall offers very high audio quality. With a 20-320 bps adaptive bitrate (Opus
 
 WebCall sessions are always end-to-end encrypted. This prevents others from listening in on your calls.
 
-WebCall operates fully self-contained. It makes no use of 3rd party services (STUN, TURN, etc.). This means that no external party can track your usage.
+WebCall operates fully self-contained. It makes no use of 3rd party services (STUN, TURN, etc.).
+This means that no external party can track you.
 
-WebCall web client can be used on iPhone, Android, Linux, macOS and Windows with a 2020+ web browser.
+WebCall web client works on iPhone, Android, Linux, macOS and Windows with a 2020+ web browser.
 This means that you can receive calls from anyone on the internet:
 
 [timur.mobi/webcall](https://timur.mobi/webcall)
+
+WebCall-Mastodon Bridge delivers call notification into your Mastodon inbox.
+These notifications are sent whenever you don't pick up an incoming call.
+You can answer your calls directly from your inbox:
+
+[timur.mobi/webcall/mastodon](https://timur.mobi/webcall/mastodon)
 
 Native WebCall client for Android:
 
@@ -24,12 +31,6 @@ Native WebCall client for Android:
 Native WebCall clients for Linux, FreeBSD, macOS, Windows:
 
 [github.com/mehrvarz/webcall-apps](https://github.com/mehrvarz/webcall-apps)
-
-WebCall-Mastodon Bridge delivers call notification into your Mastodon inbox.
-These notifications are sent whenever you don't pick up an incoming call.
-You can answer your calls directly from your inbox:
-
-[timur.mobi/webcall/mastodon/](https://timur.mobi/webcall/mastodon)
 
 TextChat E2EE Messaging:
 
