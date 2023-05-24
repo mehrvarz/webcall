@@ -1,8 +1,7 @@
 // WebCall Copyright 2023 timur.mobi. All rights reserved.
 //
 // These methods enable callees to read and modify their 
-// callee specific settings. As well as read and modify their
-// contacts.
+// callee specific settings and contacts.
 //
 // httpGetSettings() is called via XHR "/rtcsig/getsettings".
 // httpSetSettings() is called via XHR "/rtcsig/setsettings".
@@ -453,7 +452,7 @@ func httpSetContact(w http.ResponseWriter, r *http.Request, urlID string, callee
 	contactName := ""
 
 	if r.Method=="POST" {
-// TODO implement delivery of contactID and contactName via post body
+		// TODO implement delivery of contactID and contactName via post body
 
 	} else {
 		url_arg_array, ok := r.URL.Query()["contactID"]
@@ -477,10 +476,7 @@ func httpSetContact(w http.ResponseWriter, r *http.Request, urlID string, callee
 	//fmt.Printf("/setcontact (%s) -> setcontact()\n", calleeID)
 	if !setContact(calleeID, contactID, contactName, remoteAddr, "http") {
 		// an error has occured
-		return
 	}
-	// no error has occured
-	return
 }
 
 func setContact(calleeID string, contactID string, compoundName string, remoteAddr string, comment string) bool {
