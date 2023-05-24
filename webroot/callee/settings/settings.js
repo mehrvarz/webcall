@@ -12,7 +12,6 @@ var calleeID = "";
 var calleeLink = "";
 var vapidPublicKey = ""
 var xhrTwidActive = false;
-//var serverVersion = "";
 var calleeVersion = "";
 
 window.onload = function() {
@@ -138,7 +137,8 @@ function prepareSettings(xhrresponse) {
 			document.getElementById("storeMissedCalls").checked = false;
 		}
 	}
-/*
+
+	/*
 	if(typeof serverSettings.webPushSubscription1!=="undefined") {
 		//if(!gentle) console.log('serverSettings.webPushSubscription1',serverSettings.webPushSubscription1);
 		if(serverSettings.webPushSubscription1=="") {
@@ -215,23 +215,22 @@ function prepareSettings(xhrresponse) {
 			submitForm(false);
 		}
 	}
-*/
+	*/
 
 	console.log("clientVer="+clientVersion+" calleeVer="+calleeVersion);
 	let displayVersion = "";
-/*
+	/*
 	if(typeof serverSettings.serverVersion!=="undefined") {
 		if(!gentle) console.log('serverSettings.serverVersion',serverSettings.serverVersion);
 		serverVersion = serverSettings.serverVersion;
 		//document.getElementById("verstring").innerHTML = "WebCall Server: "+serverVersion;
 		displayVersion = "WebCall server: "+serverVersion+"<br>";
 	}
-*/
+	*/
 	if(calleeVersion=="") {
-		displayVersion = "Current version: 3.4.x<br>"+
-		                 "Online version: "+clientVersion+"<br>"+
-		                 "To update: <a href='/webcall/more/#updatecallee' target='_blank'>Clear cache + reload</a>";
-	} else if(calleeVersion!=clientVersion) {
+		calleeVersion="?"
+	}
+	if(calleeVersion!=clientVersion) {
 		displayVersion = "Current version: "+calleeVersion+"<br>"+
 		                 "Online version: "+clientVersion+"<br>"+
 		                 "To update: <a href='/webcall/more/#updatecallee' target='_blank'>Clear cache + reload</a>";
@@ -488,8 +487,6 @@ function submitForm(autoclose) {
 function clearForm(idx) {
 	if(idx==0)
 		document.getElementById("nickname").value = "";
-//	else if(idx==1)
-//		document.getElementById("twname").value = "";
 	formPw.focus();
 }
 
