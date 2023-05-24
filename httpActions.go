@@ -1,12 +1,9 @@
-// WebCall Copyright 2022 timur.mobi. All rights reserved.
-
+// WebCall Copyright 2023 timur.mobi. All rights reserved.
 package main
 
 import (
 	"net/http"
 	"fmt"
-	//"strings"
-	//"time"
 	"os"
 	"runtime/pprof"
 )
@@ -24,16 +21,16 @@ func httpActions(w http.ResponseWriter, r *http.Request, actionString string, ca
 	case actionString=="001001":
 		// dump goroutines
 		if calleeID != adminID {
-			fmt.Printf("/action (%s) 001001 dump goroutines not admin (%s)\n", calleeID, remoteAddr)
+			fmt.Printf("! /action (%s) 001001 dump goroutines not admin (%s)\n", calleeID, remoteAddr)
 			return
 		}
 		fmt.Printf("/action (%s) 001001 dump goroutines exec now %s\n", calleeID, remoteAddr)
 		pprof.Lookup("goroutine").WriteTo(os.Stdout, 2)
 		return
+	/*
 	case actionString=="006001":
 		fmt.Fprintf(w,"widget=/callee/mapping/")
 		return
-	/*
 	case actionString=="callback":
 		// schedule callback calleeID
 		fmt.Printf("/action (%s) callback in 10s %s\n", calleeID, remoteAddr)

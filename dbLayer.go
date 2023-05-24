@@ -1,4 +1,4 @@
-// WebCall Copyright 2022 timur.mobi. All rights reserved.
+// WebCall Copyright 2023 timur.mobi. All rights reserved.
 // By default dbLayer.go will forward all calls to skvLayer.go
 // In the future other db-layers may be implemented
 package main
