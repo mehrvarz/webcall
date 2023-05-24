@@ -55,7 +55,6 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, dialID str
 	if logWantedFor("online") {
 		fmt.Printf("/online (%s) %s (%s) wait=%v v=%s\n", urlID, remoteAddr, callerId, wait, clientVersion)
 	}
-	// TODO fmt.Fprintf(w, "clear")
 
 	glUrlID, locHub, globHub, err := GetOnlineCallee(urlID, ejectOn1stFound, reportBusyCallee, 
 		reportHiddenCallee, remoteAddr, "/online")
@@ -343,9 +342,8 @@ func httpNewId(w http.ResponseWriter, r *http.Request, urlID string, calleeID st
 	}
 	// NOTE tmpCalleeID is currently free, but it is NOT reserved
 
-
-	// make it more expensive for an ip-addr to call /newid
-	clientRequestAdd(remoteAddr,3) // one call to /newid increments requestCount by 1+3 = 4
+	// make /newid expensive for remoteAddr
+	clientRequestAdd(remoteAddr,3)
 
 	clientVersion := ""
 	url_arg_array, ok := r.URL.Query()["ver"]
@@ -407,7 +405,6 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 		if strings.HasPrefix(pwData,"pw=") {
 			pw = pwData[3:]
 		}
-		// deny if pw is too short or not valid
 		if len(pw)<6 {
 			fmt.Printf("# /register (%s) fail pw too short\n",registerID)
 			fmt.Fprintf(w, "too short")
@@ -415,8 +412,7 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 		}
 		//fmt.Printf("register pw=%s(%d)\n",pw,len(pw))
 
-		// this can be a fake request
-		// we need to verify if registerID is in use
+		// can be a fake request: need to verify if registerID is in use
 		var dbEntryRegistered DbEntry
 		err := kvMain.Get(dbRegisteredIDs,registerID,&dbEntryRegistered)
 		if err==nil {
@@ -468,21 +464,8 @@ func httpRegister(w http.ResponseWriter, r *http.Request, urlID string, urlPath 
 				idNameMap["answie7"] = "Answie Jazz"
 				err = kvContacts.Put(dbContactsBucket, registerID, idNameMap, false)
 				if err!=nil {
-					// not fatal
 					fmt.Printf("# /register (%s) kvContacts.Put err=%v\n", registerID, err)
-				} else {
-					//fmt.Printf("/register (%s) kvContacts.Put OK\n", registerID)
 				}
-/*
-				if mid!="" && mastodonMgr!=nil {
-					// tell caller that callee is ready to receive a call (and maybe other related tasks)
-
-					if logWantedFor("login") {
-						fmt.Printf("/register (%s) mastodonMgr.calleeLoginSuccess mid=%s\n", urlID, mid)
-					}
-					mastodonMgr.sendCallerLink(mid,registerID,remoteAddr)
-				}
-*/
 				fmt.Fprintf(w, "OK")
 			}
 		}
