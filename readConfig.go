@@ -1,4 +1,4 @@
-// WebCall Copyright 2021 timur.mobi. All rights reserved.
+// WebCall Copyright 2023 timur.mobi. All rights reserved.
 package main
 
 import (
@@ -66,7 +66,7 @@ func readIniString(configIni *ini.File, cfgKeyword string, currentVal string, de
 	if ok && cfgValue != "" {
 		newVal = cfgValue
 	}
-	// don't log entries ending in 'Key' or 'Secret'
+	// do not log special keywords
 	if newVal!=currentVal &&
 			!strings.HasSuffix(cfgKeyword, "Key") && 
 			!strings.HasSuffix(cfgKeyword, "Secret") &&
