@@ -1933,7 +1933,9 @@ function connectSignaling(message,openedFunc) {
 			gLog('wsConn.onclose');
 		}
 		wsConn = null;
-		onlineIndicator.src="";
+		if(!mediaConnect) {
+			onlineIndicator.src="";
+		}
 	};
 }
 
