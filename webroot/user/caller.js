@@ -2577,9 +2577,11 @@ function dataChannelOnmessage(event) {
 		//gLog("dataChannel.onmessage "+event.data);
 		if(event.data) {
 			if(event.data.startsWith("disconnect")) {
-				gLog("dataChannel.close on 'disconnect'");
-				dataChannel.close();
-				dataChannel = null;
+				gLog("disconnect via dataChannel");
+				if(dataChannel) {
+					dataChannel.close();
+					dataChannel = null;
+				}
 				hangupWithBusySound(false,"disconnect by peer via datachl");
 			} else if(event.data.startsWith("textchatOK")) {
 				textchatOKfromOtherSide = true;
