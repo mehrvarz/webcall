@@ -1,6 +1,6 @@
 // WebCall Copyright 2023 timur.mobi. All rights reserved.
 'use strict';
-const clientVersion = '3.5.0';
+const clientVersion = '3.5.1';
 
 const avSelect = document.querySelector("select#avSelect");
 const vresDialogElement = document.getElementById('vresDialog');
@@ -178,6 +178,25 @@ function showVideoResolutionRemote() {
 	if(remoteVideoFrame.videoWidth>10 && remoteVideoFrame.videoHeight>10) {
 		gLog('remoteVideo size', remoteVideoFrame.videoWidth, remoteVideoFrame.videoHeight);
 		showVideoToast(remoteVideoRes, remoteVideoFrame.videoWidth, remoteVideoFrame.videoHeight);
+	}
+}
+
+function muteMic(flag) {
+	if(!localStream) {
+		console.log("# muteMic no localStream on muteMic state change: "+flag);
+	} else {
+		const audioTracks = localStream.getAudioTracks();
+		if(!audioTracks[0]) {
+			console.log("# muteMic no audioTracks on muteMic state change: "+flag);
+		} else {
+			if(flag) {
+				console.log("muteMic state change "+flag+": mic disable");
+				audioTracks[0].enabled = false;
+			} else {
+				console.log("muteMic state change "+flag+": mic enable");
+				audioTracks[0].enabled = true;
+			}
+		}
 	}
 }
 

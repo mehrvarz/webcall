@@ -232,22 +232,7 @@ window.onload = function() {
 		console.log("# no muteMicElement");
 	} else {
 		muteMicElement.addEventListener('change', function() {
-			if(!localStream) {
-				console.log("# no localStream on muteMic state change: "+this.checked);
-			} else {
-				const audioTracks = localStream.getAudioTracks();
-				if(!audioTracks[0]) {
-					console.log("# no audioTracks on muteMic state change: "+this.checked);
-				} else {
-					if(this.checked) {
-						console.log("muteMic state change "+this.checked+": mic disable");
-						audioTracks[0].enabled = false;
-					} else {
-						console.log("muteMic state change "+this.checked+": mic enable");
-						audioTracks[0].enabled = true;
-					}
-				}
-			}
+			muteMic(this.checked);
 		});
 	}
 
@@ -1890,11 +1875,13 @@ function pickup2() {
 		}
 		if(localStream) {
 			if(!muteMicElement || muteMicElement.checked==false) {
-				console.log("mute off: audioTracks[0].enabled");
-				const audioTracks = localStream.getAudioTracks();
-				audioTracks[0].enabled = true;
+//				console.log("mute off: audioTracks[0].enabled");
+//				const audioTracks = localStream.getAudioTracks();
+//				audioTracks[0].enabled = true;
+				muteMic(false);
 			} else {
-				console.log("mute on: no audioTracks[0].enabled");
+//				console.log("mute on: no audioTracks[0].enabled");
+				muteMic(true);
 			}
 		}
 

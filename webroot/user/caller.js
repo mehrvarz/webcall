@@ -196,7 +196,7 @@ window.onload = function() {
 		let textArg = cleanStringParameter(text,true);
 		console.log("textmode "+textArg);
 		if(textArg=="true") {
-			// check on: muteMic
+			// mic-mute by URL arg
 			if(muteMicElement) {
 				muteMicElement.checked = true;
 			}
@@ -2104,8 +2104,9 @@ function signalingCommand(message) {
 		msgbox.style.display = "none";
 		onlineIndicator.src="red-gradient.svg";
 
-		// start textChat or enable chatButton
+		// open textChat or enable chatButton
 		if(muteMicElement && muteMicElement.checked) {
+			muteMic(true);
 			// give a little time for textchatOKfromOtherSide state
 			setTimeout(function() {
 				if(textchatOKfromOtherSide) {
@@ -2115,28 +2116,14 @@ function signalingCommand(message) {
 				}
 			},1000);
 		} else if(chatButton) {
+			muteMic(false);
 			chatButton.style.display = "block";
 		}
 
 		// mute mode handler
 		if(muteMicElement) {
 			muteMicElement.addEventListener('change', function() {
-				if(!localStream) {
-					console.log("# no localStream on muteMic state change: "+this.checked);
-				} else {
-					const audioTracks = localStream.getAudioTracks();
-					if(!audioTracks[0]) {
-						console.log("# no audioTracks on muteMic state change: "+this.checked);
-					} else {
-						if(this.checked) {
-							console.log("muteMic state change "+this.checked+": mic disable");
-							audioTracks[0].enabled = false;
-						} else {
-							console.log("muteMic state change "+this.checked+": mic enable");
-							audioTracks[0].enabled = true;
-						}
-					}
-				}
+				muteMic(this.checked);
 			});
 		}
 
