@@ -531,16 +531,20 @@ function submitFormDone(idx) {
 		// -> getStream() -> getUserMedia(constraints) -> gotStream() -> goOnline() -> login()
 	} else if(idx==2) {
 		// textchat msg to send to caller via dataChannel
-		let text = cleanStringParameter(enterTextElement.value,false);
-		console.log("submitText text="+text);
-		dataChannel.send("msg|"+text);
-		// add text to msgbox
-		let msg = "> " + text;
-		if(msgbox.value!="") { msg = newline + msg; }
-		msgbox.value += msg;
-		//console.log("msgbox "+msgbox.scrollTop+" "+msgbox.scrollHeight);
-		msgbox.scrollTop = msgbox.scrollHeight-1;
-		enterTextElement.value = "";
+		if(dataChannel) {
+			let text = cleanStringParameter(enterTextElement.value,false);
+			console.log("submitText text="+text);
+			dataChannel.send("msg|"+text);
+			// add text to msgbox
+			let msg = "> " + text;
+			if(msgbox.value!="") { msg = newline + msg; }
+			msgbox.value += msg;
+			//console.log("msgbox "+msgbox.scrollTop+" "+msgbox.scrollHeight);
+			msgbox.scrollTop = msgbox.scrollHeight-1;
+			enterTextElement.value = "";
+		} else {
+			console.log("# no datachannel");
+		}
 	}
 }
 
@@ -1936,7 +1940,7 @@ function pickup2() {
 						if(textchatOKfromOtherSide) {
 							enableTextchat();
 						} else {
-							chatButton.style.display = "none";
+							//chatButton.style.display = "none";
 							showStatus("peer does not support textchat",4000);
 						}
 					}

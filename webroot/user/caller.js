@@ -961,8 +961,8 @@ function onload3(comment) {
 				enableTextChat();
 			} else {
 				setTimeout(function() {
-					chatButton.style.display = "none";
-					showStatus("peer does not support textchat",4000);
+					//chatButton.style.display = "none";
+					showStatus(lg("peerNoTextChat"),4000);
 				},500);
 			}
 		}
@@ -1334,6 +1334,7 @@ function calleeOnlineAction(comment) {
 							"and then immediately played back to you (green led).",-1);
 			} else {
 				showStatus(lg("greetingMessage"),-1);
+				msgbox.value = "";
 				msgbox.style.display = "block";
 				msgbox.readOnly = false;
 				if(placeholderText!="") {

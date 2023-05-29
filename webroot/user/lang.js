@@ -29,6 +29,7 @@ var langMap = {
 	"sorryUnableToReach"	: "Unable to contact",
 	"PleaseTryAgainALittle"	: "Please try again a little later",
 	"micmuted"				: "Mic muted",
+	"peerNoTextChat"		: "Peer does not support TextChat",
 },
 "de": {
 	"dialButton"			: "Anwählen",
@@ -55,6 +56,7 @@ var langMap = {
 	"sorryUnableToReach"	: "Nutzer nicht erreichbar:",
 	"PleaseTryAgainALittle"	: "Bitte versuchen Sie es etwas später erneut.",
 	"micmuted"				: "Mikrofon stumm",
+	"peerNoTextChat"		: "Gegenseite unterstütz kein TextChat",
 },
 "es": {
 	"dialButton"			: "Llame a",
@@ -81,6 +83,7 @@ var langMap = {
 	"sorryUnableToReach"	: "Usuario no localizable:",
 	"PleaseTryAgainALittle"	: "Por favor, inténtelo de nuevo un poco más tarde.",
 	"micmuted"				: "Micrófono silenciado",
+	"peerNoTextChat"		: "Peer no soporta TextChat",
 },
 "it": {
 	"dialButton"			: "Chiamata",
@@ -107,6 +110,7 @@ var langMap = {
 	"sorryUnableToReach"	: "Utente non raggiungibile:",
 	"PleaseTryAgainALittle"	: "Riprovare un po' più tardi.",
 	"micmuted"				: "Microfono muto",
+	"peerNoTextChat"		: "Peer non supporta la TextChat",
 },
 "fr": {
 	"dialButton"			: "Composer",
@@ -133,6 +137,7 @@ var langMap = {
 	"sorryUnableToReach"	: "Utilisateur injoignable:",
 	"PleaseTryAgainALittle"	: "Veuillez réessayer un peu plus tard.",
 	"micmuted"				: "Micro en sourdine",
+	"peerNoTextChat"		: "Le pair ne prend pas en charge le TextChat",
 },
 "pt-PT": {
 	"dialButton"			: "Chamada",
@@ -159,6 +164,7 @@ var langMap = {
 	"sorryUnableToReach"	: "Incapaz de contactar o",
 	"PleaseTryAgainALittle"	: "Por favor, tente novamente um pouco mais tarde.",
 	"micmuted"				: "Microfone mudo",
+	"peerNoTextChat"		: "O par não oferece suporte a TextChat",
 },
 "pt-BR": {
 	"dialButton"			: "Chamar",
@@ -185,6 +191,7 @@ var langMap = {
 	"sorryUnableToReach"	: "Não foi possível se comunicar com",
 	"PleaseTryAgainALittle"	: "Por favor, tente novamente mais tarde.",
 	"micmuted"				: "Microfone mudo",
+	"peerNoTextChat"		: "O par não suporta TextChat",
 },
 "cs-CS": {
 	"dialButton"			: "Vytočit",
@@ -211,6 +218,7 @@ var langMap = {
 	"sorryUnableToReach"	: "Nemohu se spojit s",
 	"PleaseTryAgainALittle"	: "Zkuste to prosím později.",
 	"micmuted"				: "Mikrofon ztlumený",
+	"peerNoTextChat"		: "Peer nepodporuje TextChat",
 }};
 
 function switchLanguage(userLang) {
