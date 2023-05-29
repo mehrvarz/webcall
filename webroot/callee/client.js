@@ -1150,7 +1150,7 @@ var addedVideoTrack = null;
 function gotStream(stream) {
 	// add localStream audioTrack and (possibly) localStream videoTrack to peerCon using peerCon.addTrack()
 	// then activate localVideoFrame with localStream
-    gLog("gotStream set localStream");
+    console.log("gotStream set localStream");
 	if(localStream) {
 		// stop all tracks on previous localStream
 		const allTracks = localStream.getTracks();
@@ -1175,8 +1175,10 @@ function gotStream(stream) {
 		gLog('gotStream mute loc audio inp '+audioTracks[0]);
 		audioTracks[0].enabled = false;
 	} else {
-		gLog('gotStream unmute loc audio inp '+audioTracks[0]);
-		audioTracks[0].enabled = true;
+		if(!muteMicElement || !muteMicElement.checked) {
+			gLog('gotStream unmute loc audio inp '+audioTracks[0]);
+			audioTracks[0].enabled = true;
+		}
 	}
 
 	if(!peerCon || peerCon.iceConnectionState=="closed") {

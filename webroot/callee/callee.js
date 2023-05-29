@@ -1875,12 +1875,8 @@ function pickup2() {
 		}
 		if(localStream) {
 			if(!muteMicElement || muteMicElement.checked==false) {
-//				console.log("mute off: audioTracks[0].enabled");
-//				const audioTracks = localStream.getAudioTracks();
-//				audioTracks[0].enabled = true;
 				muteMic(false);
 			} else {
-//				console.log("mute on: no audioTracks[0].enabled");
 				muteMic(true);
 			}
 		}

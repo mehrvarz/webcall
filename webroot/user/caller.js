@@ -2147,8 +2147,10 @@ function signalingCommand(message) {
 
 			mediaConnect = true;
 			if(localStream) {
-				const audioTracks = localStream.getAudioTracks();
-				audioTracks[0].enabled = true;
+				if(!muteMicElement || !muteMicElement.checked) {
+					const audioTracks = localStream.getAudioTracks();
+					audioTracks[0].enabled = true;
+				}
 			}
 			if(vsendButton) {
 				vsendButton.style.display = "inline-block";
@@ -2520,8 +2522,10 @@ function dial2() {
 	const audioTracks = localStream.getAudioTracks();
 	if(audioTracks.length>0) {
 		if(mediaConnect) {
-			audioTracks[0].enabled = true; // unmute
-			gLog('peerCon addTrack local audio input',audioTracks[0]);
+			if(!muteMicElement || !muteMicElement.checked) {
+				audioTracks[0].enabled = true; // unmute
+				gLog('peerCon addTrack local audio input',audioTracks[0]);
+			}
 		} else {
 			audioTracks[0].enabled = false; // mute
 			gLog('peerCon addTrack local mute audio input',audioTracks[0]);
