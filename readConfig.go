@@ -23,7 +23,7 @@ func readIniEntry(configIni *ini.File, keyword string) (string,bool) {
 	return strings.TrimSpace(cfgEntry),true
 }
 
-func readIniBoolean(configIni *ini.File, cfgKeyword string, currentVal bool, defaultValue bool) bool {
+func readIniBoolean(configIni *ini.File, cfgKeyword string, currentVal bool, defaultValue bool, init bool) bool {
 	newVal := defaultValue
 	cfgValue,ok := readIniEntry(configIni, cfgKeyword)
 	if ok && cfgValue!="" {
@@ -33,7 +33,7 @@ func readIniBoolean(configIni *ini.File, cfgKeyword string, currentVal bool, def
 			newVal = false
 		}
 	}
-	if currentVal != newVal {
+	if (init && newVal != defaultValue) || (!init && newVal!=currentVal) {
 		isDefault:=""; if newVal==defaultValue { isDefault="*" }
 		fmt.Printf("%s bool %s=%v%s\n", configFileName, cfgKeyword, newVal, isDefault)
 	}
@@ -41,7 +41,7 @@ func readIniBoolean(configIni *ini.File, cfgKeyword string, currentVal bool, def
 	return currentVal
 }
 
-func readIniInt(configIni *ini.File, cfgKeyword string, currentVal int, defaultValue int, factor int) int {
+func readIniInt(configIni *ini.File, cfgKeyword string, currentVal int, defaultValue int, factor int, init bool) int {
 	newVal := defaultValue
 	cfgValue,ok := readIniEntry(configIni, cfgKeyword)
 	if ok && cfgValue!="" {
@@ -52,7 +52,7 @@ func readIniInt(configIni *ini.File, cfgKeyword string, currentVal int, defaultV
 			newVal = int(i64) * factor
 		}
 	}
-	if newVal != currentVal {
+	if (init && newVal != defaultValue) || (!init && newVal!=currentVal) {
 		isDefault:=""; if newVal==defaultValue { isDefault="*" }
 		fmt.Printf("%s int  %s=%d%s\n", configFileName, cfgKeyword, newVal, isDefault)
 	}
@@ -60,14 +60,14 @@ func readIniInt(configIni *ini.File, cfgKeyword string, currentVal int, defaultV
 	return currentVal
 }
 
-func readIniString(configIni *ini.File, cfgKeyword string, currentVal string, defaultValue string) string {
+func readIniString(configIni *ini.File, cfgKeyword string, currentVal string, defaultValue string, init bool) string {
 	newVal := defaultValue
 	cfgValue,ok := readIniEntry(configIni, cfgKeyword)
 	if ok && cfgValue != "" {
 		newVal = cfgValue
 	}
 	// do not log special keywords
-	if newVal!=currentVal &&
+	if ((init && newVal != defaultValue) || (!init && newVal!=currentVal)) &&
 			!strings.HasSuffix(cfgKeyword, "Key") && 
 			!strings.HasSuffix(cfgKeyword, "Secret") &&
 			!strings.HasSuffix(cfgKeyword, "mastodonhandler") {

@@ -573,39 +573,39 @@ func readConfig(init bool) {
 	readConfigLock.Lock()
 	if init {
 		// TODO init type keywords don't need currentVal (like hostname)
-		hostname = readIniString(configIni, "hostname", hostname, "127.0.0.1")
-		httpPort = readIniInt(configIni, "httpPort", httpPort, 8067, 1)
-		httpsPort = readIniInt(configIni, "httpsPort", httpsPort, 0, 1)
-		httpToHttps = readIniBoolean(configIni, "httpToHttps", httpToHttps, false)
-		wsPort = readIniInt(configIni, "wsPort", wsPort, 8071, 1)
-		wssPort = readIniInt(configIni, "wssPort", wssPort, 0, 1)
-		htmlPath = readIniString(configIni, "htmlPath", htmlPath, "")
-		insecureSkipVerify = readIniBoolean(configIni, "insecureSkipVerify", insecureSkipVerify, false)
-		turnIP = readIniString(configIni, "turnIP", turnIP, "")
-		turnPort = readIniInt(configIni, "turnPort", turnPort, 0, 1) // 3739
-		turnRealm = readIniString(configIni, "turnRealm", turnRealm, "")
-		pprofPort = readIniInt(configIni, "pprofPort", pprofPort, 0, 1) // 8980
-		dbPath = readIniString(configIni, "dbPath", dbPath, "db/")
+		hostname = readIniString(configIni, "hostname", hostname, "127.0.0.1", init)
+		httpPort = readIniInt(configIni, "httpPort", httpPort, 8067, 1, init)
+		httpsPort = readIniInt(configIni, "httpsPort", httpsPort, 0, 1, init)
+		httpToHttps = readIniBoolean(configIni, "httpToHttps", httpToHttps, false, init)
+		wsPort = readIniInt(configIni, "wsPort", wsPort, 8071, 1, init)
+		wssPort = readIniInt(configIni, "wssPort", wssPort, 0, 1, init)
+		htmlPath = readIniString(configIni, "htmlPath", htmlPath, "", init)
+		insecureSkipVerify = readIniBoolean(configIni, "insecureSkipVerify", insecureSkipVerify, false, init)
+		turnIP = readIniString(configIni, "turnIP", turnIP, "", init)
+		turnPort = readIniInt(configIni, "turnPort", turnPort, 0, 1, init) // 3739
+		turnRealm = readIniString(configIni, "turnRealm", turnRealm, "", init)
+		pprofPort = readIniInt(configIni, "pprofPort", pprofPort, 0, 1, init) // 8980
+		dbPath = readIniString(configIni, "dbPath", dbPath, "db/", init)
 		if dbPath!="" && !strings.HasSuffix(dbPath,"/") { dbPath = dbPath+"/" }
-		timeLocationString = readIniString(configIni, "timeLocation", timeLocationString, "")
-		wsUrl = readIniString(configIni, "wsUrl", wsUrl, "")
-		wssUrl = readIniString(configIni, "wssUrl", wssUrl, "")
+		timeLocationString = readIniString(configIni, "timeLocation", timeLocationString, "", init)
+		wsUrl = readIniString(configIni, "wsUrl", wsUrl, "", init)
+		wssUrl = readIniString(configIni, "wssUrl", wssUrl, "", init)
 
 		// currently not used
 		//vapidPublicKey = readIniString(configIni, "vapidPublicKey", vapidPublicKey, "")
 		//vapidPrivateKey = readIniString(configIni, "vapidPrivateKey", vapidPrivateKey, "")
 
-		blockreferer := readIniString(configIni, "blockreferer", "", "")
+		blockreferer := readIniString(configIni, "blockreferer", "", "", init)
 		if blockreferer!="" {
 			blockrefererSlice = strings.Split(blockreferer, "|")
 		}
 
-		blockuseragent := readIniString(configIni, "blockuseragent", "", "")
+		blockuseragent := readIniString(configIni, "blockuseragent", "", "", init)
 		if blockuseragent!="" {
 			blockuseragentSlice = strings.Split(blockuseragent, "|")
 		}
 
-		synonyms := readIniString(configIni, "mappings", "", "")
+		synonyms := readIniString(configIni, "mappings", "", "", init)
 		if synonyms!="" {
 			synonymsSlice := strings.Split(synonyms, ",")
 			mappingMutex.Lock()
@@ -625,12 +625,12 @@ func readConfig(init bool) {
 		}
 	}
 
-	maintenanceMode = readIniBoolean(configIni, "maintenanceMode", maintenanceMode, false)
-	allowNewAccounts = readIniBoolean(configIni, "allowNewAccounts", allowNewAccounts, true)
+	maintenanceMode = readIniBoolean(configIni, "maintenanceMode", maintenanceMode, false, init)
+	allowNewAccounts = readIniBoolean(configIni, "allowNewAccounts", allowNewAccounts, true, init)
 
-	multiCallees = readIniString(configIni, "multiCallees", multiCallees, "")
+	multiCallees = readIniString(configIni, "multiCallees", multiCallees, "", init)
 
-	logevents = readIniString(configIni, "logevents", logevents, "")
+	logevents = readIniString(configIni, "logevents", logevents, "", init)
 	logeventSlice := strings.Split(logevents, ",")
 	logeventMutex.Lock()
 	logeventMap = make(map[string]bool)
@@ -640,36 +640,36 @@ func readConfig(init bool) {
 	logeventMutex.Unlock()
 
 	disconCallerOnPeerConnected = readIniBoolean(configIni,
-		"disconCallerOnPeerConnected", disconCallerOnPeerConnected, true)
+		"disconCallerOnPeerConnected", disconCallerOnPeerConnected, true, init)
 
-	maxRingSecs = readIniInt(configIni, "maxRingSecs", maxRingSecs, 120, 1)
-	maxTalkSecsIfNoP2p = readIniInt(configIni, "maxTalkSecsIfNoP2p", maxTalkSecsIfNoP2p, 600, 1)
+	maxRingSecs = readIniInt(configIni, "maxRingSecs", maxRingSecs, 120, 1, init)
+	maxTalkSecsIfNoP2p = readIniInt(configIni, "maxTalkSecsIfNoP2p", maxTalkSecsIfNoP2p, 600, 1, init)
 
-	maxDaysOffline = readIniInt(configIni, "maxDaysOffline", maxDaysOffline, 180, 1)
+	maxDaysOffline = readIniInt(configIni, "maxDaysOffline", maxDaysOffline, 180, 1, init)
 
-	turnDebugLevel = readIniInt(configIni, "turnDebugLevel", turnDebugLevel, 3, 1)
+	turnDebugLevel = readIniInt(configIni, "turnDebugLevel", turnDebugLevel, 3, 1, init)
 
-	adminID = readIniString(configIni, "adminID", adminID, "")
-	adminEmail = readIniString(configIni, "adminEmail", adminEmail, "")
-	adminLogPath1 = readIniString(configIni, "adminLog1", adminLogPath1, "")
-	adminLogPath2 = readIniString(configIni, "adminLog2", adminLogPath2, "")
+	adminID = readIniString(configIni, "adminID", adminID, "", init)
+	adminEmail = readIniString(configIni, "adminEmail", adminEmail, "", init)
+	adminLogPath1 = readIniString(configIni, "adminLog1", adminLogPath1, "", init)
+	adminLogPath2 = readIniString(configIni, "adminLog2", adminLogPath2, "", init)
 
-	backupScript = readIniString(configIni, "backupScript", backupScript, "")
-	backupPauseMinutes = readIniInt(configIni, "backupPauseMinutes", backupPauseMinutes, 720, 1)
+	backupScript = readIniString(configIni, "backupScript", backupScript, "", init)
+	backupPauseMinutes = readIniInt(configIni, "backupPauseMinutes", backupPauseMinutes, 720, 1, init)
 
-	maxCallees = readIniInt(configIni, "maxCallees", maxCallees, 10000, 1)
+	maxCallees = readIniInt(configIni, "maxCallees", maxCallees, 10000, 1, init)
 
-	cspString = readIniString(configIni, "csp", cspString, "")
+	cspString = readIniString(configIni, "csp", cspString, "", init)
 
-	thirtySecStats = readIniBoolean(configIni, "thirtySecStats", thirtySecStats, false)
+	thirtySecStats = readIniBoolean(configIni, "thirtySecStats", thirtySecStats, false, init)
 
-	clientUpdateBelowVersion = readIniString(configIni, "clientUpdateBelowVersion", clientUpdateBelowVersion, "")
-	clientBlockBelowVersion  = readIniString(configIni, "clientBlockBelowVersion", clientBlockBelowVersion, "")
+	clientUpdateBelowVersion = readIniString(configIni, "clientUpdateBelowVersion", clientUpdateBelowVersion, "", init)
+	clientBlockBelowVersion  = readIniString(configIni, "clientBlockBelowVersion", clientBlockBelowVersion, "", init)
 
-	maxLoginPer30min = readIniInt(configIni, "maxLoginPer30min", maxLoginPer30min, 0, 1)
-	maxClientRequestsPer30min = readIniInt(configIni, "maxRequestsPer30min", maxClientRequestsPer30min, 0, 1)
+	maxLoginPer30min = readIniInt(configIni, "maxLoginPer30min", maxLoginPer30min, 0, 1, init)
+	maxClientRequestsPer30min = readIniInt(configIni, "maxRequestsPer30min", maxClientRequestsPer30min, 0, 1, init)
 
-	mastodonhandlerNew = readIniString(configIni, "mastodonhandler", mastodonhandler, "")
+	mastodonhandlerNew = readIniString(configIni, "mastodonhandler", mastodonhandler, "", init)
 	readConfigLock.Unlock()
 
 	if !init {
