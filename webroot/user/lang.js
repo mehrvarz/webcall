@@ -30,6 +30,7 @@ var langMap = {
 	"PleaseTryAgainALittle"	: "Please try again a little later",
 	"micmuted"				: "Mic muted",
 	"peerNoTextChat"		: "Peer does not support TextChat",
+	"connected"				: "Connected",
 },
 "de": {
 	"dialButton"			: "Anwählen",
@@ -57,6 +58,7 @@ var langMap = {
 	"PleaseTryAgainALittle"	: "Bitte versuchen Sie es etwas später erneut.",
 	"micmuted"				: "Mikrofon stumm",
 	"peerNoTextChat"		: "Gegenseite unterstütz kein TextChat",
+	"connected"				: "Verbunden",
 },
 "es": {
 	"dialButton"			: "Llame a",
@@ -84,6 +86,7 @@ var langMap = {
 	"PleaseTryAgainALittle"	: "Por favor, inténtelo de nuevo un poco más tarde.",
 	"micmuted"				: "Micrófono silenciado",
 	"peerNoTextChat"		: "Peer no soporta TextChat",
+	"connected"				: "Conectado",
 },
 "it": {
 	"dialButton"			: "Chiamata",
@@ -111,6 +114,7 @@ var langMap = {
 	"PleaseTryAgainALittle"	: "Riprovare un po' più tardi.",
 	"micmuted"				: "Microfono muto",
 	"peerNoTextChat"		: "Peer non supporta la TextChat",
+	"connected"				: "Collegato",
 },
 "fr": {
 	"dialButton"			: "Composer",
@@ -138,6 +142,7 @@ var langMap = {
 	"PleaseTryAgainALittle"	: "Veuillez réessayer un peu plus tard.",
 	"micmuted"				: "Micro en sourdine",
 	"peerNoTextChat"		: "Le pair ne prend pas en charge le TextChat",
+	"connected"				: "Connecté",
 },
 "pt-PT": {
 	"dialButton"			: "Chamada",
@@ -165,6 +170,7 @@ var langMap = {
 	"PleaseTryAgainALittle"	: "Por favor, tente novamente um pouco mais tarde.",
 	"micmuted"				: "Microfone mudo",
 	"peerNoTextChat"		: "O par não oferece suporte a TextChat",
+	"connected"				: "Ligado",
 },
 "pt-BR": {
 	"dialButton"			: "Chamar",
@@ -192,6 +198,7 @@ var langMap = {
 	"PleaseTryAgainALittle"	: "Por favor, tente novamente mais tarde.",
 	"micmuted"				: "Microfone mudo",
 	"peerNoTextChat"		: "O par não suporta TextChat",
+	"connected"				: "Conectado",
 },
 "cs-CS": {
 	"dialButton"			: "Vytočit",
@@ -219,6 +226,7 @@ var langMap = {
 	"PleaseTryAgainALittle"	: "Zkuste to prosím později.",
 	"micmuted"				: "Mikrofon ztlumený",
 	"peerNoTextChat"		: "Peer nepodporuje TextChat",
+	"connected"				: "Připojeno",
 }};
 
 function switchLanguage(userLang) {

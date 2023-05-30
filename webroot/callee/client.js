@@ -553,7 +553,7 @@ function stopProgressRcv() {
 var rtcLink = "";
 var localCandidateType = "";
 var remoteCandidateType = "";
-function getStatsCandidateTypesEx(results,eventString1,eventString2) {
+function getStatsCandidateTypesEx(results,eventString1) {
 	rtcLink = "unknown";
 	let localCandidateId = "";
 	let remoteCandidateId = "";

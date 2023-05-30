@@ -1909,7 +1909,7 @@ function pickup2() {
 			if(peerCon) {
 				// send "log|connected" to server
 				peerCon.getStats(null)
-				.then((results) => getStatsCandidateTypes(results,"Connected",""), // "Mic is open"
+				.then((results) => getStatsCandidateTypes(results,"Connected","e2ee"),
 					err => console.log(err.message));
 
 				let enableTextchat = function() {
@@ -2313,12 +2313,8 @@ function peerConnected2() {
 }
 
 function getStatsCandidateTypes(results,eventString1,eventString2) {
-//	if(muteMicElement && muteMicElement.checked) {
-//		eventString2 = ""; // do not show "Mic is open"
-//	}
-
-	let msg = getStatsCandidateTypesEx(results,eventString1,eventString2)
-	//console.log("!!!! msg=("+msg+") callerName=("+callerName+") callerID=("+callerID+") callerMsg=("+callerMsg+")");
+	let msg = getStatsCandidateTypesEx(results,eventString1)
+	//console.log("msg=("+msg+") callerName=("+callerName+") callerID=("+callerID+") callerMsg=("+callerMsg+")");
 	wsSend("log|callee "+msg); // shows up in server log as: serveWss peer callee Incoming p2p/p2p
 
 	if(textmode=="true") {
@@ -2342,7 +2338,7 @@ function getStatsCandidateTypes(results,eventString1,eventString2) {
 
 	let showMsg = msg;
 	if(eventString2!="") {
-		showMsg += ". "+eventString2+".";
+		showMsg += " "+eventString2;
 	}
 	if(otherUA!="") {
 		showMsg += "<div style='font-size:0.8em;margin-top:8px;color:#aac;'>"+otherUA+"</div>";

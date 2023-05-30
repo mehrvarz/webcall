@@ -11,9 +11,17 @@ const enterDomainClearElement = document.getElementById("enterDomainClear");
 const divspinnerframe = document.querySelector('div#spinnerframe');
 const numericIdLabel = document.querySelector('label#numericIdLabel');
 const numericIdCheckbox = document.querySelector('input#numericId');
+const enterTextElement = document.getElementById('enterText');
+const codecPreferences = document.querySelector('#codecPreferences');
+const titleElement = document.getElementById('title');
+const statusLine = document.getElementById('status');
+const msgbox = document.querySelector('textarea#msgbox');
+const textbox = document.getElementById('textbox');
+const timerElement = document.querySelector('div#timer');
+const calleeOfflineElement = document.getElementById("calleeOffline");
+const onlineIndicator = document.querySelector('img#onlineIndicator');
 const calleeMode = false;
 const msgBoxMaxLen = 137;
-const enterTextElement = document.getElementById('enterText');
 
 var connectingText = "Connecting P2P...";
 var notificationSound = null;
@@ -46,14 +54,6 @@ var otherUA="";
 var sessionDuration = 0;
 var iframeParent;
 var iframeParentArg="";
-var	codecPreferences = document.querySelector('#codecPreferences');
-var	titleElement = document.getElementById('title');
-var	statusLine = document.getElementById('status');
-var msgbox = document.querySelector('textarea#msgbox');
-var textbox = document.getElementById('textbox');
-var	timerElement = document.querySelector('div#timer');
-var	calleeOfflineElement = document.getElementById("calleeOffline");
-var	onlineIndicator = document.querySelector('img#onlineIndicator');
 var fileReceiveBuffer = [];
 var fileReceivedSize = 0;
 var fileName = "";
@@ -1830,11 +1830,11 @@ function gotStream2() {
 }
 
 function getStatsCandidateTypes(results,eventString1,eventString2) {
-	let msg = getStatsCandidateTypesEx(results,eventString1,eventString2)
+	let msg = getStatsCandidateTypesEx(results,eventString1)
 	wsSend("log|caller "+msg);
 
 	if(eventString2!="") {
-		msg += ". "+eventString2+".";
+		msg += " "+eventString2;
 	}
 
 	if(otherUA!="") {
@@ -2176,9 +2176,8 @@ function signalingCommand(message) {
 
 			// getting stats (p2p or relayed connection)
 			gLog("full mediaConnect, getting stats...");
-			let micStatus = "";
 			peerCon.getStats(null)
-				.then((results) => getStatsCandidateTypes(results,"Connected",micStatus),
+				.then((results) => getStatsCandidateTypes(results,lg("connected"),"e2ee"),
 				err => console.log(err));
 
 			// in case local video is active, blink vsendButton
