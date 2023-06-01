@@ -522,7 +522,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if calleeID!="" && calleeID != calleeIdFromCookie && !strings.HasPrefix(urlPath,"/logout") {
-				fmt.Printf("# httpApi calleeID=(%s) != calleeIdFromCookie=(%s) (%s) %s\n",
+				fmt.Printf("! httpApi calleeID=(%s) != calleeIdFromCookie=(%s) (%s) %s\n",
 					calleeID, calleeIdFromCookie, urlPath, remoteAddr)
 				// WE NEED TO PREVENT THE LOGIN OF A 2ND CALLEE THAT IS NOT THE SAME AS THE ONE WHO OWNS THE COOKIE
 				// THE OTHER CALLEE IS STOPPED AND IT'S COOKIE CLEARED BEFORE THIS ONE CAN LOGIN
