@@ -992,7 +992,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 		err := c.hub.CalleeClient.Write(message)
 		if err != nil {
 			// callee is gone
-			fmt.Printf("# %s (%s) CALL CalleeClient.Write(calleroffer) fail %v\n",
+			fmt.Printf("! %s (%s) CALL CalleeClient.Write(calleroffer) fail %v\n",
 				c.connType, c.calleeID, err)
 			c.hub.HubMutex.RUnlock()
 			c.hub.closeCallee("send callerOffer to callee: "+err.Error())
@@ -1015,7 +1015,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 			err = c.hub.CalleeClient.Write([]byte(sendCmd))
 			if err != nil {
 				// callee is gone
-				fmt.Printf("# %s (%s) CALL CalleeClient.Write(callerInfo) fail %v\n",
+				fmt.Printf("! %s (%s) CALL CalleeClient.Write(callerInfo) fail %v\n",
 					c.connType, c.calleeID, err)
 				c.hub.HubMutex.RUnlock()
 				c.hub.closeCallee("send callerInfo to callee: "+err.Error())
@@ -1041,7 +1041,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 					err = c.Write([]byte(sendCmd))
 					if err != nil {
 						// caller is gone
-						fmt.Printf("# %s (%s) fail sending calleeInfo to caller %v\n",
+						fmt.Printf("! %s (%s) fail sending calleeInfo to caller %v\n",
 							c.connType, c.hub.CalleeClient.calleeID, err)
 						c.hub.HubMutex.RUnlock()
 						c.hub.closePeerCon("send calleeInfo to caller: "+err.Error())
@@ -1121,14 +1121,14 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 				c.connType, c.calleeID, c.isCallee, payload, c.RemoteAddr)
 		}
 		if c.hub==nil {
-			fmt.Printf("# %s cmd=cancel but c.hub==nil %s (%s)\n",c.connType,c.RemoteAddr,payload)
+			fmt.Printf("! %s cmd=cancel but c.hub==nil %s (%s)\n",c.connType,c.RemoteAddr,payload)
 			return
 		}
 		c.hub.HubMutex.RLock()
 		if c.hub.CalleeClient==nil {
 			c.hub.HubMutex.RUnlock()
 			// we receive a "cmd=cancel|" (from the caller?) but the callee is logged out
-			fmt.Printf("# %s cmd=cancel but c.hub.CalleeClient==nil %s (%s)\n",c.connType,c.RemoteAddr,payload)
+			fmt.Printf("! %s cmd=cancel but c.hub.CalleeClient==nil %s (%s)\n",c.connType,c.RemoteAddr,payload)
 			c.hub.closeCallee("callee already gone")
 			return
 		}
