@@ -13,7 +13,7 @@
 // skv uses BoltDB for storage and the encoding/gob package for encoding and
 // decoding values. There are no other dependencies.
 //
-// tmtmtm: switched to go.etcd.io/bbolt
+// tm: switched to go.etcd.io/bbolt
 package skv
 
 import (

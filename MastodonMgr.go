@@ -1311,7 +1311,6 @@ func (mMgr *MastodonMgr) cleanupMastodonMidMap(w io.Writer) {
 	skv.DbMutex.Unlock()
 
 	if err!=nil {
-		// this is bad
 		fmt.Printf("# cleanupMastodonMidMap delete=%d err=%v\n", len(deleteMidArray), err)
 	} else if len(deleteMidArray)>0 {
 		fmt.Printf("cleanupMastodonMidMap delete=%d (no err)\n", len(deleteMidArray))
@@ -1324,7 +1323,6 @@ func (mMgr *MastodonMgr) cleanupMastodonMidMap(w io.Writer) {
 				fmt.Printf("cleanupMastodonMidMap kv.Delete(dbMid,%s)\n",mid)
 				err = kv.Delete(dbMid, mid)
 				if err!=nil {
-					// this is bad
 					fmt.Printf("# cleanupMastodonMidMap delete dbMid mid=%s err=%v\n", mid, err)
 				}
 			} else {

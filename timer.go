@@ -104,7 +104,6 @@ func ticker3hours() {
 				if deleteKey {
 					err2 = c.Delete()
 					if err2!=nil {
-						// this is bad
 						fmt.Printf("# ticker3hours %d id=%s error read delete err=%v\n", counter, k, err2)
 					} else {
 						counterDeleted++
@@ -121,7 +120,6 @@ func ticker3hours() {
 		})
 		skv.DbMutex.Unlock()
 		if err!=nil {
-			// this is bad
 			fmt.Printf("# ticker3hours delete=%d offline for %d days err=%v\n", counterDeleted,maxDaysOffline,err)
 		} else /*if counterDeleted>0*/ {
 			if logWantedFor("timer") {
@@ -160,7 +158,6 @@ func ticker3hours() {
 			/* already done by c.Delete()
 			err = kv.Delete(dbRegisteredIDs, userID)
 			if err!=nil {
-				// this is bad
 				fmt.Printf("# ticker3hours delete dbRegisteredIDs id=%s err=%v\n", userID, err)
 			}
 			*/
@@ -173,7 +170,6 @@ func ticker3hours() {
 				dbUserKey := fmt.Sprintf("%s_%d",userID, timeNowUnix)
 				err = kvMain.Put(dbBlockedIDs, dbUserKey, DbUser{}, false)
 				if err!=nil {
-					// this is bad
 					fmt.Printf("# ticker3hours error db=%s bucket=%s put key=%s err=%v\n",
 						dbMainName,dbBlockedIDs,dbUserKey,err)
 				}
@@ -195,8 +191,6 @@ func ticker3hours() {
 			if err!=nil {
 				//fmt.Printf("# ticker3hours delete dbHashedPwBucket user-id=%s err=%v\n", userID, err)
 				// can be ignored for now (see above)
-			} else {
-				// all is well
 			}
 		}
 
@@ -255,7 +249,6 @@ func ticker3hours() {
 		})
 		skv.DbMutex.Unlock()
 		if err!=nil {
-			// this is bad
 			fmt.Printf("# ticker3hours delete=%d blocked for %d days err=%v\n",counterDeleted2,blockedForDays,err)
 		} else /*if counterDeleted2>0*/ {
 			if logWantedFor("timer") {
@@ -269,11 +262,7 @@ func ticker3hours() {
 			}
 			err = kv.Delete(dbBlockedIDs, key)
 			if err!=nil {
-				// this is bad
 				fmt.Printf("# ticker3hours delete blocked user-id=%s err=%v\n", key, err)
-			} else {
-				// all is well
-				//fmt.Printf("ticker3hours key=%s user deleted\n", key)
 			}
 		}
 
@@ -354,7 +343,6 @@ func dbHashedPwLoop(w http.ResponseWriter) {
 	skv.DbMutex.Unlock()
 
 	if err!=nil {
-		// this is bad
 		fmt.Printf("# dbHashedPwLoop done err=%v\n", err)
 		if w!=nil {
 			fmt.Fprintf(w,"# dbHashedPwLoop done err=%v\n", err)
@@ -374,7 +362,6 @@ func dbHashedPwLoop(w http.ResponseWriter) {
 	for _,key := range deleteKeyArray {
 		err = kv.Delete(dbHashedPwBucket, key)
 		if err!=nil {
-			// this is bad
 			fmt.Printf("# ticker3hours delete user-id=%s err=%v\n", key, err)
 		} else {
 			deleteCount++
@@ -426,12 +413,10 @@ func dbHashedPwSearch(name string) (PwIdCombo,error) {
 	})
 	skv.DbMutex.Unlock()
 
-	// TODO (in principle):
 	// if pwIdComboNewest.CalleeId!="" and if we have found more than 1 entry
 	// then all the older entries (all entries other than pwIdComboNewest) can be deleted
 
 	if err!=nil {
-		// this is bad
 		fmt.Printf("# dbHashedPwSearch done userID=(%s) err=%v\n", pwIdComboNewest.CalleeId, err)
 		return pwIdComboNewest,err
 	}
@@ -469,7 +454,6 @@ func ticker20min() {
 		cleanupClientRequestsMap(os.Stdout, 10, "ticker20min")
 
 		if mastodonMgr != nil {
-			// TODO do both need to be called more often than 1x per 30min - maybe not
 			mastodonMgr.cleanupMastodonMidMap(os.Stdout)
 			mastodonMgr.cleanupPostedMsgEvents(os.Stdout)
 		}
@@ -484,7 +468,6 @@ func cleanupCalleeLoginMap(w io.Writer, min int, title string) {
 	calleeLoginMutex.Lock()
 	defer calleeLoginMutex.Unlock()
 	for calleeID,calleeLoginSlice := range calleeLoginMap {
-		//fmt.Fprintf(w,"%s calleeLoginMap (%s) A len=%d\n", title, calleeID, len(calleeLoginSlice))
 		for len(calleeLoginSlice)>0 {
 			if time.Now().Sub(calleeLoginSlice[0]) < 30 * time.Minute {
 				break
@@ -706,8 +689,8 @@ func ticker3min() {
 			}
 		}
 
-		// tmtmtm cleanup missedCallAllowedMap
-		var deleteIpArray []string  // for deleting
+		// cleanup missedCallAllowedMap
+		var deleteIpArray []string
 		missedCallAllowedMutex.Lock()
 		for ip,settime := range missedCallAllowedMap {
 			if time.Now().Sub(settime) > 20*time.Minute {
@@ -715,11 +698,6 @@ func ticker3min() {
 			}
 		}
 		for _,ip := range deleteIpArray {
-//			if logWantedFor("timer") {
-//				if logWantedFor("missedcall") {
-//					fmt.Printf("ticker3min delete (%s) from missedCallAllowedMap\n",ip)
-//				}
-//			}
 			delete(missedCallAllowedMap,ip)
 		}
 		missedCallAllowedMutex.Unlock()

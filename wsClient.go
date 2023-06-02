@@ -540,24 +540,6 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		hub.lastCallerContactTime = time.Now().Unix()
 		hub.HubMutex.Unlock()
 
-		/* tmtmtm
-		// TODO when callee is making a call, it will NOT be in busy state for other callers
-		if callerID!="" {
-			// so lets set hub.ConnectedCallerIp? doesn't work
-			tmpRemoteIP := "aaa"
-			err := StoreCallerIpInHubMap(calleeID, tmpRemoteIP, false)
-			if err!=nil {
-				fmt.Printf("# %s (%s) StoreCallerIp %s (%s) err=%v\n",
-					client.connType, calleeID, tmpRemoteIP, callerID, err)
-			} else {
-				if logWantedFor("wscall") {
-					fmt.Printf("%s (%s) callerOffer StoreCallerIp %s\n",
-						client.connType, callerID, tmpRemoteIP)
-				}
-			}
-		}
-		*/
-
 		// connection watchdog now has two timeouts
 		// 1. from when caller connects (now) to when callee sends calleeAnswer (max 60s)
 		// 2. from when callee sends calleeAnswer to when p2p-connect should occur (max 14s)
