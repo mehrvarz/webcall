@@ -609,6 +609,7 @@ func setContact(calleeID string, contactID string, compoundName string, remoteAd
 		return true
 	}
 
+	// we may override the name of a contact edited by callee (oldCompoundName) with the nickname given by caller
 	if logWantedFor("contacts") {
 		fmt.Printf("setcontact (%s) store ID=%s from (%s) to (%s) %s %s\n",
 			calleeID, contactID, oldCompoundName, newCompoundName, remoteAddr, comment)
