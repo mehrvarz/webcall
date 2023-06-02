@@ -274,7 +274,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 	}
 
 	if hashPw == "" && len(formPw) < 6 {
-		fmt.Printf("# /login (%s) formPw too short %d v=%s rip=%s\n",
+		fmt.Printf("! /login (%s) formPw too short %d v=%s rip=%s\n",
 			urlID, len(formPw), clientVersion, remoteAddr)
 		// make pw guessing slow
 		time.Sleep(3000 * time.Millisecond)
@@ -334,7 +334,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 
 					if err!=nil {
 						if strings.Index(err.Error(),"not found")>=0 {
-							fmt.Printf("# /login (%s) ID not found rip=%s\n", urlID, remoteAddr)
+							fmt.Printf("! /login (%s) ID not found rip=%s\n", urlID, remoteAddr)
 							time.Sleep(2000 * time.Millisecond)
 							fmt.Fprintf(w, "notregistered")
 							return
@@ -352,7 +352,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 			// compare form-cleartext-formPw vs. hashPw-dbHashedPw-plus-cookie (if empty: hashPw-dbEntry.Password)
 
 			if hashPw=="" {
-				fmt.Printf("# /login (%s) hashPw is empty rip=%s\n", urlID, remoteAddr)
+				fmt.Printf("! /login (%s) hashPw is empty rip=%s\n", urlID, remoteAddr)
 				// make pw guessing slow
 				time.Sleep(2000 * time.Millisecond)
 				fmt.Fprintf(w, "error")
@@ -360,7 +360,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 			}
 			err := bcrypt.CompareHashAndPassword([]byte(hashPw), []byte(formPw))
 			if err != nil {
-				fmt.Printf("# /login (%s) (%s) bcrypt.CompareHashAndPassword err=%v rip=%s\n",
+				fmt.Printf("! /login (%s) (%s) bcrypt.CompareHashAndPassword err=%v rip=%s\n",
 					urlID, hashPw, err, remoteAddr)
 				// make pw guessing slow
 				time.Sleep(2000 * time.Millisecond)
@@ -496,7 +496,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 
 		if hub == nil {
 			// connection was cut off by the device / or timeout26s
-			fmt.Printf("# exitfunc (%s) hub==nil ws=%d %s rip=%s v=%s\n",
+			fmt.Printf("! exitfunc (%s) hub==nil ws=%d %s rip=%s v=%s\n",
 				globalID, wsClientID, comment, remoteAddrWithPort, clientVersion)
 			return;
 		}
@@ -726,6 +726,7 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 			}
 		}()
 	} else {
+		// both urlID and globalID empty
 		fmt.Printf("# /login (%s/%s) not starting waitForWsConnect\n", urlID, globalID)
 	}
 	return
