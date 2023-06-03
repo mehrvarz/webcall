@@ -3,18 +3,13 @@ webcall*
 tls.*
 *.db
 stats.ini
-accessToken.txt
 *.pdf
 *.txt
-favicon.ico
 showlogs.sh
 webcall.prev*
 news.ini
 dumponline.sh
 backupdb.sh
 webroot/callee/adapter-latest.js
-webroot/callee/service-worker.js
 webroot/user/adapter-latest.js
-webroot/user/client.js
-webroot/user/prefercodec.js
 
