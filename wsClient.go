@@ -211,40 +211,6 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 		}
 	}
 
-	/*
-	// urlArg dialID is the unmapped id dialed by the caller
-	// if it is a mapped id, we use it to fetch the assigned name
-	url_arg_array, ok = r.URL.Query()["dialID"]
-	if ok && len(url_arg_array[0]) > 0 {
-		dialID := url_arg_array[0]
-		if dialID!="" {
-			// check id mapping for dialID (dialed calleeID)
-			mappingMutex.RLock()
-			mappingData,ok := mapping[dialID]
-			mappingMutex.RUnlock()
-
-			if ok {
-				// dialID is mapped (caller is using a temporary (mapped) calleeID)
-				// if a name was assigned for dialID, we attach it to callerName
-				assignedName := mappingData.Assign
-				if assignedName!="" && assignedName!="none" {
-					if callerName=="" {
-						callerName = "("+assignedName+")"
-					} else {
-						callerName += " ("+assignedName+")"
-					}
-				}
-				fmt.Printf("wsClient assignedName=%s for dialID=%s isMappedTo=%s (shouldBeSame=%s)\n",
-					assignedName, dialID, mappingData.CalleeId, wsClientData.calleeID)
-			} else {
-				// dialID is not mapped
-				//fmt.Printf("wsClient dialID=%s notMapped (shouldBeSame=%s)\n",
-				//	dialID, wsClientData.calleeID)
-			}
-		}
-	}
-	*/
-
 	clientVersion := ""
 	url_arg_array, ok = r.URL.Query()["ver"]
 	if ok && len(url_arg_array[0]) > 0 {
@@ -302,9 +268,11 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 				} else {
 					callerName += " ("+assignedName+")"
 				}
+				if callerName!="" {
+					fmt.Printf("wsClient callerName=%s for dialID=%s mappedID=%s(=%s)\n",
+						callerName, dialID, mappingData.CalleeId, wsClientData.calleeID)
+				}
 			}
-			fmt.Printf("wsClient assignedName=%s for dialID=%s isMappedTo=%s(=%s)\n",
-				assignedName, dialID, mappingData.CalleeId, wsClientData.calleeID)
 		}
 	}
 	//fmt.Printf("serve (%s) callerID=%s callerName=%s auto=%s ver=%s\n",

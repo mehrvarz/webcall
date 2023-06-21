@@ -78,13 +78,17 @@ button[disabled] {
 	margin-right:20px; 
 	cursor:pointer;
 }
+.menulabel2 {
+	margin-bottom:4px; 
+	cursor:pointer;
+}
 
 div#container {
 	padding: 0.7em;
 	max-width:600px;
 }
 h1 {
-	font-size:1.7em;
+	font-size:1.3em;
 	font-weight:600;
 	user-select:none;
 	margin-block-start:0;
@@ -127,8 +131,8 @@ label {
 }
 
 .status {
-	margin-top:18px;
-	margin-bottom:18px;
+	margin-top:8px;
+	margin-bottom:8px;
 	padding-left:2px;
 	width:98%;
 	max-width:570px;
@@ -138,12 +142,11 @@ label {
     color:#ddd;
 }
 .callListTitle {
-	margin-top:16px;
 	font-size:0.9em;
 	color:#ff2;
 }
 .callList {
-	margin-top:6px;
+	margin-top:4px;
 	margin-bottom:18px;
 	font-size:1.0em;
 	line-height:1.2em;
@@ -172,8 +175,8 @@ select, select:focus {
 	font-size:1.0em;
 	border:none;
     padding: 0.3em 0.5em 0.2em 0.5em;
-	width:350px;
-	max-width:94%;
+	width:340px;
+	max-width:97%;
 	outline:none;
 	user-select:none;
 	margin: 0 10px 10px 0;
@@ -312,18 +315,16 @@ input[type=submit]:focus {
 			Send File
 			<input id="fileselect" type="file" style="display:none"></input>
 		</label>
+<!--
 		<label class="menulabel" id="isHiddenlabel" style="display:none;">
 			<input type="checkbox" id="isHidden" class="checkbox"> Hide me</label>
-		</label>
 		<label class="menulabel" id="autoanswerlabel" style="display:none;">
 			<input type="checkbox" id="autoanswer" class="checkbox"> Auto-Answer</label>
-		</label>
 		<label class="menulabel" id="fullscreenlabel">
 			<input type="checkbox" id="fullscreen" class="checkbox"> Full screen</label>
-		</label>
 		<label class="menulabel" id="dialsoundslabel" style="display:none;">
 			<input type="checkbox" id="dialsounds" class="checkbox"> Dial sounds</label>
-		</label>
+-->
 		<div class="menuButton" id="nativeMenu" style="display:none"
 			onclick="history.back(); Android.menu()">Device options</div>
 		<!-- enabled by android client -->
@@ -374,6 +375,8 @@ input[type=submit]:focus {
 <div id="container">
 	<img id="menu" onclick="menuDialogOpen(menuDialogElement,false)" src="menu.svg" style="position:relative; float:right; width:25px; margin-top:5px; margin-left:22px; margin-right:10px; z-index:100; user-select:none; cursor:pointer;">
 
+	<img id="checkboxes" src="checkboxes.svg" style="position:relative; float:right; width:25px; margin-top:4px; margin-left:18px; z-index:100; user-select:none; cursor:pointer; transition:opacity 500ms; display:none;" onclick="openSlide()">
+
 	<img id="dialpad" src="dialpad.svg" style="position:relative; float:right; width:30px; margin-top:4px; margin-left:22px; z-index:100; user-select:none; cursor:pointer; transition:opacity 500ms;" onclick="openDialId('')">
 
 	<img id="iconContacts" src="contacts.svg" style="position:relative; float:right; width:23px; margin-top:0; margin-left:22px; z-index:100; user-select:none; cursor:pointer; transition:opacity 500ms; display:none;" onclick="openContacts()">
@@ -384,7 +387,7 @@ input[type=submit]:focus {
 
 
     <h1 id="title">WebCall</h1>
-	<div id="buttons" style="display:grid; grid-template-columns: 1fr 1fr 40px; list-style-type:none; max-width:360px;">
+	<div id="buttons" style="display:grid; grid-template-columns: 1fr 1fr 40px; list-style-type:none; max-width:360px; margin-top:4px;">
         <button id="onlineButton" disabled>Go Online</button>
         <button id="offlineButton" disabled>Go Offline</button>
         <button id="answerButton" style="display:none" disabled>Answer</button>
@@ -392,7 +395,27 @@ input[type=submit]:focus {
 		<img id="onlineIndicator" src="" style="width:28px; margin:0.6em 0.8em 0.8em 0; user-select:none;">
 	</div>
 
-	<select id="avSelect" class="select" onchange="getStream(this)"></select>
+	<div id="slideReveal" style="height:0px; transition:height 400ms; overflow:hidden; cursor:pointer; _background:#222; max-width:340px;">
+		<select id="avSelect" class="select" onchange="getStream(this)"></select>
+		<div style="margin-top:5px;"></div>
+
+		<div style="columns:7rem auto;white-space:nowrap;">
+			<div id="muteMicDiv" style="display:none;">
+				<input type="checkbox" id="muteMic" class="checkbox" />
+				<label class="menulabel2" id="muteMiclabel" for="muteMic">Mic muted</label>
+			</div>
+			<!--label class="menulabel2" id="" _style="display:none;">
+				<input type="checkbox" id="" class="checkbox"> Ring mute</label-->
+			<label class="menulabel2" id="isHiddenlabel" style="display:none;">
+				<input type="checkbox" id="isHidden" class="checkbox"> Hide me</label>
+			<label class="menulabel2" id="autoanswerlabel" style="display:none;">
+				<input type="checkbox" id="autoanswer" class="checkbox"> Auto-Answer</label>
+			<label class="menulabel2" id="dialsoundslabel" style="display:none;">
+				<input type="checkbox" id="dialsounds" class="checkbox"> Dial sounds</label>
+			<label class="menulabel2" id="fullscreenlabel">
+				<input type="checkbox" id="fullscreen" class="checkbox"> Full screen</label>
+		</div>
+	</div>
 
 	<form action="javascript:;" onsubmit="submitFormDone(1)" style="max-width:420px;display:none;" id="password">
 		<input type="text" autocomplete="username" id="username" style="display:none;" required>
@@ -403,11 +426,6 @@ input[type=submit]:focus {
 		<span onclick="clearForm()" style="margin-left:5px; user-select:none; cursor:pointer;">X</span><br>
 		<input type="submit" name="Submit" id="submit" value="OK" style="width:120px; margin-top:12px;">
 	</form>
-
-	<span id="muteMicDiv" style="white-space:nowrap;display:none;">
-		<input type="checkbox" id="muteMic" class="checkbox" style="margin-top:8px;margin-left:2px;" />
-		<label class="menulabel" id="muteMiclabel" for="muteMic" style="margin-left:0;">Mic muted</label>
-	</span>
 
 	<div id="status" class="status"></div>
 
@@ -420,7 +438,7 @@ input[type=submit]:focus {
 		</form>
 	</div>
 
-	<div id="ownlink" style="opacity:0.9;margin-top:10px;"></div>
+	<div id="ownlink" style="opacity:0.9;margin-top:4px;"></div>
 	<div id="progressSend" style="width:100%;max-width:360px;margin-top:10px;display:none;">
 		<div id="progressSendLabel">sending:</div>
 		<progress id="fileProgressSend" max="0" value="0" style="width:100%" onclick="stopProgressSend()"></progress>

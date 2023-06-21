@@ -15,7 +15,7 @@ var langMap = {
 	"nicknameLabel"			: "Nickname:",
 	"callstatsLabel"		: "Call stats",
 	"fullscreenLabel"		: "Fullscreen",
-	"willShowPostCall"		: "Available after call",
+	"willShowPostCall"		: "Available post call",
 	"digAnswMachine"		: "About to call a digital answering machine",
 
 	"tryingToFind"			: "Trying to find",

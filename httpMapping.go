@@ -132,7 +132,32 @@ func httpSetMapping(w http.ResponseWriter, r *http.Request, urlID string, callee
 		fmt.Fprintf(w,"errorSetUser")
 		return
 	}
+
 	// no error
+	// remove any de-activated entries from global mappings
+	if dbUser.AltIDs!="" {
+		//fmt.Printf("initloop %s (%s)->%s\n",k,calleeID,dbUser.AltIDs)
+		toks := strings.Split(dbUser.AltIDs, "|")
+		mappingMutex.Lock()
+		for tok := range toks {
+			toks2 := strings.Split(toks[tok], ",")
+			if toks2[0] != "" {
+				if toks2[1] != "true" {
+					// deactivate mapping
+					fmt.Printf("/setmapping (%s) delete (%s)\n",calleeID, toks2[0])
+					delete(mapping,toks2[0])
+				} else {
+					mappingData := mapping[toks2[0]]
+					if mappingData.CalleeId != calleeID {
+						fmt.Printf("/setmapping (%s) set (%s)=(%s)\n",calleeID, toks2[0], toks2[2])
+						mapping[toks2[0]] = MappingDataType{calleeID,toks2[2]}
+					}
+				}
+			}
+		}
+		mappingMutex.Unlock()
+	}
+
 	fmt.Printf("/setmapping (%s) done data=(%s)\n",calleeID, data)
 	return
 }

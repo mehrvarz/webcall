@@ -250,6 +250,15 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 		return true
 	}
 
+	if urlPath=="/dumpMapping" {
+		mappingMutex.RLock()
+		for key,mappingDataType := range mapping {
+			fmt.Fprintf(w,"mapping %s -> %s (%s)\n", key, mappingDataType.CalleeId, mappingDataType.Assign)
+		}
+		mappingMutex.RUnlock()
+		return true
+	}
+
 	if urlPath=="/m-setup" {
 		// get time from url-arg
 		url_arg_array, ok := r.URL.Query()["id"]
@@ -508,7 +517,7 @@ func httpAdmin(kv skv.SKV, w http.ResponseWriter, r *http.Request, urlPath strin
 	return false
 }
 
-// see adminLogPath1 + adminLogPath2 in httpServer.go
+// see adminLogPath1,adminLogPath2,etc in main.go + httpServer.go
 var	adminlogBusy atomic.Bool
 var t *tail.Tail
 

@@ -204,6 +204,7 @@ var clientBlockBelowVersion = ""
 var serverStartTime time.Time
 var adminLogPath1 = ""
 var adminLogPath2 = ""
+var adminLogPath3 = ""
 var blockrefererSlice []string = nil
 var blockuseragentSlice []string = nil
 var maxDaysOffline = 180
@@ -341,7 +342,7 @@ func main() {
 				for tok := range toks {
 					toks2 := strings.Split(toks[tok], ",")
 					if toks2[0] != "" { // tmpID
-						if toks2[1] == "true" {
+						if toks2[1] == "true" { // active
 							//fmt.Printf("initloop set mapping from AltIDs %s -> %s (%s)\n",
 							//	toks2[0], calleeID, toks2[2])
 							mapping[toks2[0]] = MappingDataType{calleeID,toks2[2]}
@@ -653,6 +654,7 @@ func readConfig(init bool) {
 	adminEmail = readIniString(configIni, "adminEmail", adminEmail, "", init)
 	adminLogPath1 = readIniString(configIni, "adminLog1", adminLogPath1, "", init)
 	adminLogPath2 = readIniString(configIni, "adminLog2", adminLogPath2, "", init)
+	adminLogPath3 = readIniString(configIni, "adminLog3", adminLogPath3, "", init)
 
 	backupScript = readIniString(configIni, "backupScript", backupScript, "", init)
 	backupPauseMinutes = readIniInt(configIni, "backupPauseMinutes", backupPauseMinutes, 720, 1, init)

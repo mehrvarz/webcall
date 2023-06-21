@@ -1,6 +1,6 @@
 // WebCall Copyright 2023 timur.mobi. All rights reserved.
 'use strict';
-const clientVersion = '3.5.5';
+const clientVersion = '3.6.0';
 
 const avSelect = document.querySelector("select#avSelect");
 const vresDialogElement = document.getElementById('vresDialog');
@@ -52,7 +52,7 @@ var connectionstatechangeCounter = 0;
 var playDialSounds = true;
 var pickupAfterLocalStream = false; // not used in caller
 var callStatsTitle = "Call Stats";
-var willShowPostCall = "Available after call";
+var willShowPostCall = "Available post call";
 
 var ICE_config = {
 	"iceServers": [
@@ -183,7 +183,7 @@ function showVideoResolutionRemote() {
 
 function muteMic(flag) {
 	if(!localStream) {
-		console.log("# muteMic no localStream on muteMic state change: "+flag);
+		console.log("! muteMic no localStream on muteMic state change: "+flag);
 	} else {
 		const audioTracks = localStream.getAudioTracks();
 		if(!audioTracks[0]) {
@@ -660,11 +660,13 @@ function menuDialogOpen(menuDialog,atMousePos,inner) {
 			// cookies avail: "Settings" visible
 			if(menuSettingsElement) {
 				menuSettingsElement.style.display = "block";
+				idMappingElement.style.display = "block";
 			}
 		} else {
 			// "Settings" hidden
 			if(menuSettingsElement) {
 				menuSettingsElement.style.display = "none";
+				idMappingElement.style.display = "none";
 			}
 		}
 	}
@@ -1610,7 +1612,7 @@ function showStatus(msg,timeoutMs) {
 		console.log("status: msg undefined");
 		return;
 	}
-	let sleepMs = 5000;
+	let sleepMs = 2500;
 	if(typeof timeoutMs!=="undefined") {
 		sleepMs = timeoutMs;
 	}
@@ -1632,6 +1634,7 @@ function showStatus(msg,timeoutMs) {
 	if(msg!="" && sleepMs>=0) {
 		// msg bleibt für sleepMs stehen
 		// und dann transitioned to opacity für 600ms zu 0
+		//console.log("status sleepMs="+sleepMs);
 		// TODO would be nice to transition also the height
 		setTimeout(function(oldMsg) {
 			if(statusLine.innerHTML==oldMsg) {

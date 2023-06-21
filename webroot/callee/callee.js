@@ -31,6 +31,8 @@ const ownlinkElement = document.getElementById('ownlink');
 const autoReconnectDelay = 15;
 const calleeMode = true;
 const enterTextElement = document.getElementById('enterText');
+const slideRevealElement = document.getElementById("slideReveal");
+const checkboxesElement = document.getElementById("checkboxes");
 
 var ringtoneSound = null;
 var ringtoneIsPlaying = false;
@@ -83,6 +85,8 @@ var fileReceiveAbort=false;
 var minNewsDate=0;
 var mid = "";
 var altIdArray = [];
+var altIdActive = [];
+var altLabel = [];
 var newline = String.fromCharCode(13, 10);
 var textmode="";
 var	muteMicModified = false;
@@ -204,7 +208,6 @@ window.onload = function() {
 			autoanswerCheckbox.checked = false;
 		}
 		wsSend("calleeHidden|"+this.checked);
-		setTimeout(function(){history.back();},150);
 	});
 
 	autoanswerCheckbox.addEventListener('change', function() {
@@ -213,7 +216,6 @@ window.onload = function() {
 			isHiddenCheckbox.checked = false;
 			wsSend("calleeHidden|false");
 		}
-		setTimeout(function(){history.back();},150);
 	});
 
 	dialsoundsCheckbox.addEventListener('change', function() {
@@ -224,7 +226,6 @@ window.onload = function() {
 		}
 		playDialSounds = this.checked;
 		wsSend("dialsoundsmuted|"+!this.checked);
-		setTimeout(function(){history.back();},150);
 	});
 
 	// mute mode handler
@@ -254,7 +255,6 @@ window.onload = function() {
 					console.log('fullscreenCheckbox exitFullscreen err='+err.message);
 				});
 			}
-			setTimeout(function(){history.back();},150);
 		});
 		document.addEventListener('fullscreenchange', (event) => {
 			if(document.fullscreenElement) {
@@ -812,13 +812,16 @@ function getSettings() {
 		if(!gentle) console.log('request getmapping api',api);
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 			let altIDs = xhr.responseText;
+			console.log("getsettings /getmapping altIDs="+altIDs);
 			altIdArray = [];
+			altIdActive = [];
+			altLabel = [];
 
 			// parse altIDs, format: id,true,assign|id,true,assign|...
 			let tok = altIDs.split("|");
 			let count = tok.length;
 			for(var i=0; i<tok.length; i++) {
-				//console.log("tok["+i+"]="+tok[i]);
+				////console.log("tok["+i+"]="+tok[i]);
 				if(tok[i]!="") {
 					let tok2 = tok[i].split(",");
 					let id = tok2[0].trim();
@@ -828,8 +831,12 @@ function getSettings() {
 					if(id.length>11) {
 						id = id.substring(0,11);
 					}
+					let active = tok2[1].trim();
+					//console.log("tok2 id="+id+" active="+active);
 					altIdArray.push(id);
-					//console.log("getsettings altIdArray.length",altIdArray.length);
+					altIdActive.push(active);
+					altLabel.push(tok2[2].trim());
+					//console.log("getsettings altIdArray.length="+altIdArray.length);
 				}
 			}
 			getSettingDone();
@@ -865,27 +872,86 @@ function getSettingDone() {
 		}
 
 		let links = "";
-		links += "<div style='line-height:1.6em'>";
-		links += "<div class='callListTitle'>You can receive calls made by these links:</div>";
+		links += "<div style='line-height:1.6em;margin-top:12px;white-space:nowrap;'>";
+		links += "<div class='callListTitle'>You will receive calls made by these links:</div>";
+
+// TODO need to be able to deactivate main ID?
+		if(false) {
+			links += "<input type='checkbox' id='' class='checkbox' style='margin-top:8px;margin-left:2px;margin-right:10px;' />";
+		} else {
+// TODO state of checkbox must be immediately posted to /setmapping
+			links += "<input type='checkbox' id='' class='checkbox' style='margin-top:8px;margin-left:2px;margin-right:10px;' checked />";
+		}
+// TODO 2nd userLink without leading 'https://'
 		links += "<a target='_blank' href='"+userLink+"'>"+userLink+"</a><br>";
 
 		if(mastodonID!="" && mastodonID!=calleeID) {
+/*
+// TODO need to be able to deactivate mastodonID?
+			if(altIdActive[i]!="true") {
+				links += "_ ";
+			} else {
+// TODO replace with checkbox
+				links += "x ";
+			}
+*/
 			let userLinkAlt = userLink.replace("/user/"+calleeID,"/user/"+mastodonID);
+// TODO 2nd userLink without leading 'https://'
 			links += "<a target='_blank' href='"+userLinkAlt+"'>"+userLinkAlt+"</a><br>";
 		}
 
 		// add active mapping entries
-		console.log("getSettingDone altIdArray.length",altIdArray.length);
+		//console.log("getSettingDone altIdArray.length",altIdArray.length);
 		if(altIdArray.length>0) {
 			for(let i = 0; i < altIdArray.length; i++) {
+				//console.log("i="+i+" altIdActive[i]="+altIdActive[i]+" "+altIdArray[i]);
+				if(altIdActive[i]!="true") {
+					links += "<input type='checkbox' id='"+altIdArray[i]+"' class='checkbox' style='margin-top:8px;margin-left:2px;margin-right:10px;' onclick='checkboxClick(this);' />";
+				} else {
+					links += "<input type='checkbox' id='"+altIdArray[i]+"' class='checkbox' style='margin-top:8px;margin-left:2px;margin-right:10px;' onclick='checkboxClick(this);' checked />";
+				}
 				let userLinkMap = userLink.replace("/user/"+calleeID,"/user/"+altIdArray[i]);
+// TODO 2nd userLink without leading 'https://'
 				links += "<a target='_blank' href='"+userLinkMap+"'>"+userLinkMap+"</a><br>";
 			}
 		}
-
 		links += "</div>";
 		ownlinkElement.innerHTML = links;
 	}
+}
+
+function checkboxClick(cb) {
+	console.log("checkboxClick="+cb.checked+" id="+cb.id);
+
+	// construct altIDs string from: altIdArray, altIdActive, altLabel
+	let altIDs = "";
+	for(var i=0; i<altIdArray.length; i++) {
+		if(altIDs!="") {
+			altIDs += "|";
+		}
+		if(altIdArray[i]==cb.id) {
+			// the clicked checkbox receives a changed active value
+			if(cb.checked) {
+				altIdActive[i]="true";
+			} else {
+				altIdActive[i]="false";
+			}
+		}
+		altIDs += altIdArray[i]+","+altIdActive[i]+","+altLabel[i];
+	}
+
+	let api = apiPath+"/setmapping?id="+calleeID;
+	console.log("/setmapping api="+api+" altIDs="+altIDs);
+	ajaxFetch(new XMLHttpRequest(), "POST", api, function(xhr) {
+		if(xhr.responseText.startsWith("error")) {
+			console.log('# /setmapping err='+xhr.responseText);
+		} else {
+			// all is well
+		}
+	}, function(errString,errcode) {
+		console.log("/setmapping errString="+errString+" errcode="+errcode);
+		// TODO reset checkbox checked value
+	}, altIDs);
 }
 
 function offlineAction() {
@@ -1062,6 +1128,9 @@ function connectSignaling(message,comment) {
 		wsConn.onclose = wsOnClose;
 		wsConn.onmessage = wsOnMessage;
 	}
+
+	iconContactsElement.style.display = "block";
+	checkboxesElement.style.display = "block";
 }
 
 function wsOnOpen() {
@@ -1117,6 +1186,8 @@ function wsOnError2(str,code) {
 	// TODO explain why the following is needed (and whether it is always true to assume wsConn=null on wsOnError()
 	onlineIndicator.src="";
 	wsConn=null;
+	iconContactsElement.style.display = "none";
+	checkboxesElement.style.display = "none";
 }
 
 function wsOnClose(evt) {
@@ -1154,6 +1225,8 @@ function wsOnClose2() {
 	// called by wsOnClose() or from android service
 	gLog("wsOnClose2 "+calleeID);
 	wsConn=null;
+	iconContactsElement.style.display = "none";
+	checkboxesElement.style.display = "none";
 	buttonBlinking=false; // will abort blinkButtonFunc()
 	stopAllAudioEffects("wsOnClose");
 	showStatus("disconnected from signaling server");
@@ -1606,7 +1679,7 @@ function showMissedCalls() {
 			if(idx>0) {
 				mainLink = mainLink.substring(0,idx) + "/user/";
 			}
-			let str = "<table style='width:100%; border-collapse:separate; line-height:1.6em; margin-left:-4px;'>"
+			let str = "<table style='width:100%; border-collapse:separate; line-height:1.4em; margin-left:-4px;'>"
 			for(var i=0; i<missedCallsSlice.length; i++) {
 				str += "<tr>"
 				let waitingSecs = timeNowSecs - missedCallsSlice[i].CallTime;
@@ -1751,10 +1824,12 @@ function showMissedCalls() {
 			// already updating itself
 		} else {
 			showCallsWhileInAbsenceCallingItself = true;
+/*
 			setTimeout(function() {
 				showCallsWhileInAbsenceCallingItself = false;
 				showMissedCalls();
 			},15000);
+*/
 		}
 	}
 }
@@ -2670,6 +2745,10 @@ function goOffline() {
 	offlineAction();
 	gLog("goOffline "+calleeID);
 	showStatus("");
+	if(slideOpen) {
+		// close the slide-menu
+		openSlide();
+	}
 	ownlinkElement.innerHTML = "";
 	stopAllAudioEffects("goOffline");
 	waitingCallerSlice = null;
@@ -2717,6 +2796,9 @@ function goOffline() {
 		goOnlineButton.disabled = false;
 	}
 
+	iconContactsElement.style.display = "none";
+	checkboxesElement.style.display = "none";
+
 	if(divspinnerframe) divspinnerframe.style.display = "none";
 }
 
@@ -2754,6 +2836,42 @@ function openContacts() {
 	let url = "/callee/contacts/?ds="+playDialSounds;
 	gLog("openContacts "+url);
 	iframeWindowOpen(url,false,"height:95vh;",true);
+}
+
+var slideOpen = false;
+function slideTransitioned() {
+	//console.log('slideTransitioned='+slideRevealElement.style.height);
+	if(slideRevealElement.style.height != "0px") {
+		slideRevealElement.style.height = "auto";
+		slideOpen = true;
+	} else {
+		slideOpen = false;
+	}
+	slideRevealElement.removeEventListener('transitionend',slideTransitioned);
+}
+
+function openSlide() {
+	if(!slideOpen) {
+		if(wsConn) {
+			//console.log("openSlide doOpen");
+			// need to set the correct final height, resulting from list of checkboxes
+			slideRevealElement.style.height = "124.4px"; // "182px"; //"210px";
+			slideRevealElement.addEventListener('transitionend', slideTransitioned) // when done: set height=auto
+		} else {
+			//console.log("openSlide doOpen but no wsConn");
+		}
+	} else {
+		//console.log("openSlide doClose");
+		let slideRevealDivHeight = parseFloat(getComputedStyle(slideRevealElement).height);
+		slideRevealElement.style.height = ""+slideRevealDivHeight+"px"; // from auto to fixed height
+
+		slideRevealElement.addEventListener('transitionend', slideTransitioned)
+		setTimeout(function() { // wait for fixed height; then set 0px
+			if(!videoEnabled) {
+				slideRevealElement.style.height = "0";
+			}
+		},100);
+	}
 }
 
 function openDialId(userId) {

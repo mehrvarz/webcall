@@ -358,24 +358,10 @@ window.onload = function() {
 	}
 
 	contactAutoStore = false;
-	if(cookieName!="") {
-		// this req is running on behalf of a local callee (in an iframe, or in a 2nd tab) with a cookie
-		// we overwrite callerId (and maybe callerName) from urlArgs with our own values
-		gLog("onload use cookieName ("+cookieName+") as callerId");
-		// TODO not sure we should overwrite callerId this way
-		// we should do this only...
-		// - if callerId does not exit on this server (also have a look at callerHost)
-		// - if it is not one of cookieNames tmpId's
-		if(callerId!="" && callerId!=cookieName) {
-			// if we override the callerId with a different cookieName
-			// we also clear the callerName (alligned with the old callerId)
-			callerName = "";
-		}
-		callerId = cookieName; // auto-fixing potentially wrong data from a link
-		callerHost = location.host; // auto-fixing potentially wrong data from a link
-
-		// use cookiename to fetch /getsettings
-		let api = apiPath+"/getsettings?id="+cookieName;
+	if(cookieName!="" && (callerId==cookieName || callerId=="" || callerId=="select")) {
+		gLog("onload set callerId = cookieName ("+cookieName+")");
+		callerId = cookieName;
+		let api = apiPath+"/getsettings?id="+callerId;
 		gLog('onload request getsettings api '+api);
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 			var xhrresponse = xhr.responseText

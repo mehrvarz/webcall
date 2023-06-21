@@ -737,6 +737,7 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	readConfigLock.RLock()
 	logPath1 := adminLogPath1
 	logPath2 := adminLogPath2
+	logPath3 := adminLogPath3
 	readConfigLock.RUnlock()
 	if logPath1!="" {
 		tok := strings.Split(logPath1, "|")
@@ -747,6 +748,13 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if logPath2!="" {
 		tok := strings.Split(logPath2, "|")
+		if len(tok)==3 && urlPath == "/"+tok[0] {
+			adminlog(w, r, tok[1], tok[2])
+			return
+		}
+	}
+	if logPath3!="" {
+		tok := strings.Split(logPath3, "|")
 		if len(tok)==3 && urlPath == "/"+tok[0] {
 			adminlog(w, r, tok[1], tok[2])
 			return

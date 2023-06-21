@@ -5,6 +5,8 @@ tls.*
 stats.ini
 *.pdf
 *.txt
+webroot/favicon.ico
+rkv
 showlogs.sh
 webcall.prev*
 news.ini
