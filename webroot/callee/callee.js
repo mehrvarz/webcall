@@ -1859,12 +1859,11 @@ function showMissedCalls() {
 			// already updating itself
 		} else {
 			showCallsWhileInAbsenceCallingItself = true;
-/*
+
 			setTimeout(function() {
 				showCallsWhileInAbsenceCallingItself = false;
 				showMissedCalls();
-			},15000);
-*/
+			},30000);
 		}
 	}
 }
