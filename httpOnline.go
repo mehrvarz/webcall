@@ -298,19 +298,19 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, dialID str
 			return
 		}
 
-/* TODO
-		if dialID==mastodonlink && dbUser.Int2&16==16 {
-			// mastodonlink deactivated
-			locHub.HubMutex.RUnlock()
-			fmt.Printf("/online (%s) mastodonlink deactivated <- %s v=%s\n", dialID, remoteAddr, clientVersion)
-			// remoteAddr is now eligible to send xhr /missedCall
-			missedCallAllowedMutex.Lock()
-			missedCallAllowedMap[remoteAddr] = time.Now()
-			missedCallAllowedMutex.Unlock()
-			fmt.Fprintf(w, "notavail")
-			return
+		if dbUser.MastodonID!="" {
+			if dialID==dbUser.MastodonID && dbUser.Int2&16==16 {
+				// mastodonlink deactivated
+				locHub.HubMutex.RUnlock()
+				fmt.Printf("/online (%s) mastodonlink deactivated <- %s v=%s\n", dialID, remoteAddr, clientVersion)
+				// remoteAddr is now eligible to send xhr /missedCall
+				missedCallAllowedMutex.Lock()
+				missedCallAllowedMap[remoteAddr] = time.Now()
+				missedCallAllowedMutex.Unlock()
+				fmt.Fprintf(w, "notavail")
+				return
+			}
 		}
-*/
 
 		if dialID != urlID {
 			// dialID was mapped
