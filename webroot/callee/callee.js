@@ -2889,7 +2889,7 @@ function openSlide() {
 		if(wsConn) {
 			//console.log("openSlide doOpen");
 			// need to set the correct final height, resulting from list of checkboxes
-			slideRevealElement.style.height = "100px";
+			slideRevealElement.style.height = "95px";
 			slideRevealElement.addEventListener('transitionend', slideTransitioned) // when done: set height=auto
 		} else {
 			//console.log("openSlide doOpen but no wsConn");
