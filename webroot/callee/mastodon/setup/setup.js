@@ -377,7 +377,7 @@ console.log('submitPw valuePw',valuePw);	// TODO remove
 			if(xhr.responseText=="OK") {
 				let dispMsg = "Success! Your Mastodon ID "+mastodonUserID+
 					" is now associated with your WebCall ID "+ID+"<br><br>";
-// TODO tmtmtm list all the benefits
+// TODO list benefits
 				if(window.location !== window.parent.location) {
 // TODO on Android we don't run this in an iframe anymore (therefore this will not be displayed)
 					// runnung in iframe, we don't offer a calleeLink

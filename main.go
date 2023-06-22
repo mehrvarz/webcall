@@ -337,16 +337,18 @@ func main() {
 			d.Decode(&dbUser)
 			if dbUser.AltIDs!="" {
 				//fmt.Printf("initloop %s (%s)->%s\n",k,calleeID,dbUser.AltIDs)
-				// only accept dbUser.AltIDs if it does not contain: garbage (cr lf < >)
+				// only accept dbUser.AltIDs if they do NOT contain garbage: (cr lf < >)
 				if strings.Index(dbUser.AltIDs,"\r")>=0 ||
 				   strings.Index(dbUser.AltIDs,"\n")>=0 ||
 				   strings.Index(dbUser.AltIDs,"<")>=0 ||
 				   strings.Index(dbUser.AltIDs,">")>=0 {
-					fmt.Printf("initloop dbUser.AltIDs contains garbage (name=%s -> %s)\n",dbUser.Name,dbUser.Ip1)
+					fmt.Printf("initloop dbUser.AltIDs contains garbage (name=%s -> %s) [%s]\n",
+						dbUser.Name, dbUser.Ip1, dbUser.AltIDs)
 					continue
 				}
 				if len(dbUser.AltIDs)>=200 {
-					fmt.Printf("initloop dbUser.AltIDs len=%d (name=%s -> %s)\n",len(dbUser.AltIDs),dbUser.Name,dbUser.Ip1)
+					fmt.Printf("initloop dbUser.AltIDs len=%d (name=%s -> %s) [%s]\n",
+						len(dbUser.AltIDs), dbUser.Name, dbUser.Ip1, dbUser.AltIDs)
 					continue
 				}
 				
@@ -377,7 +379,7 @@ func main() {
 	})
 	skv.DbMutex.Unlock()
 
-// TODO outcomment these 2 loops:
+// TODO tmtmtm outcomment both loops:
 	// dump mapping[] (at this point mapping[] contains items from readConfig(true) (answie,etc.) and user mapping)
 	for key,mappingDataType := range mapping {
 		fmt.Printf("mapping %s -> %s %s\n", key, mappingDataType.CalleeId, mappingDataType.Assign)
