@@ -347,6 +347,9 @@ func main() {
 							//fmt.Printf("initloop set mapping from AltIDs %s -> %s (%s)\n",
 							//	toks2[0], calleeID, toks2[2])
 						} else {
+// TODO can toks2[0] be garbage?
+							fmt.Printf("initloop set ringMuted from AltIDs %s -> %s (%s)\n",
+								toks2[0], calleeID, toks2[2])
 							ringMuted[toks2[0]] = struct{}{}
 						}
 					}
