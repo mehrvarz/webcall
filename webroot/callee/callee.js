@@ -259,9 +259,7 @@ window.onload = function() {
 		if(mode==0 || mode==1) {
 			// normal mode
 			gLog("onload load audio files more="+mode);
-			//var calleeIdTitle = calleeID.charAt(0).toUpperCase() + calleeID.slice(1);
 			var calleeIdTitle = calleeID;
-//			var calleeTitle = "WebCall Callee "+calleeIdTitle;
 			var calleeTitle = "Callee "+calleeIdTitle;
 			document.title = calleeTitle;
 			if(titleElement) {
@@ -2891,7 +2889,7 @@ function openSlide() {
 		if(wsConn) {
 			//console.log("openSlide doOpen");
 			// need to set the correct final height, resulting from list of checkboxes
-			slideRevealElement.style.height = "101.6px"; //"124.4px"; // "182px"; //"210px";
+			slideRevealElement.style.height = "100px";
 			slideRevealElement.addEventListener('transitionend', slideTransitioned) // when done: set height=auto
 		} else {
 			//console.log("openSlide doOpen but no wsConn");
