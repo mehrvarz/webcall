@@ -345,6 +345,11 @@ func main() {
 					fmt.Printf("initloop dbUser.AltIDs contains garbage (name=%s -> %s)\n",dbUser.Name,dbUser.Ip1)
 					continue
 				}
+				if len(dbUser.AltIDs)>=100 {
+					fmt.Printf("initloop dbUser.AltIDs len=%d (name=%s -> %s)\n",len(dbUser.AltIDs),dbUser.Name,dbUser.Ip1)
+					continue
+				}
+				
 				toks := strings.Split(dbUser.AltIDs, "|")
 				for tok := range toks {
 					toks2 := strings.Split(toks[tok], ",")
@@ -355,8 +360,8 @@ func main() {
 							//fmt.Printf("initloop set mapping from AltIDs %s -> %s (%s)\n",
 							//	toks2[0], calleeID, toks2[2])
 						} else {
-							fmt.Printf("initloop set ringMuted from AltIDs %s -> %s (%s) AltIDs=[%s]\n",
-								toks2[0], calleeID, toks2[2], dbUser.AltIDs)
+							fmt.Printf("initloop set ringMuted from AltIDs %s -> %s (%s) AltIDs=%d[%s]\n",
+								toks2[0], calleeID, toks2[2], len(dbUser.AltIDs), dbUser.AltIDs)
 							ringMuted[toks2[0]] = struct{}{}
 						}
 					}
