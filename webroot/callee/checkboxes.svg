@@ -4,11 +4,11 @@
   <g fill="#ddd">
 	  <rect y="0"  x="0" width="30" height="30"></rect>
 	  <rect y="5"  x="5" width="20" height="20" fill="#000"></rect>
-	  <rect y="0"  x="44" width="60" height="30" fill="#bbb"></rect>
+	  <rect y="2"  x="44" width="60" height="28" fill="#bbb"></rect>
 
 	  <rect y="50" x="0" width="30" height="30"></rect>
 	  <rect y="55" x="5" width="20" height="20" fill="#000"></rect>
-	  <rect y="50" x="44" width="60" height="30" fill="#bbb"></rect>
+	  <rect y="52" x="44" width="60" height="28" fill="#bbb"></rect>
   </g>
 </svg>
 
