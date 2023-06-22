@@ -18,7 +18,11 @@ type DbUser struct {
 	AltIDs string
 	LastLoginTime int64
 	LastLogoffTime int64
-	Int2 int                // bit 0: hidden callee mode 0/1
+	Int2 int                // bit 0 (&1): hidden callee mode
+	                        // bit 1 (&2): -- not assigned --
+	                        // bit 2 (&4): dialsounds muted
+	                        // bit 3 (&8): main-link deactive
+	                        // bit 4 (&16): mastodon-link deactive
 	StoreContacts bool      // may also be encoded in Int2
 	StoreMissedCalls bool	// may also be encoded in Int2
 	MastodonSendTootOnCall bool

@@ -67,6 +67,9 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		"storeContacts": strconv.FormatBool(dbUser.StoreContacts),
 		"storeMissedCalls": strconv.FormatBool(dbUser.StoreMissedCalls),
 		"dialSoundsMuted": strconv.FormatBool(bool(dbUser.Int2&4==4)),
+		"mainLinkDeactive": strconv.FormatBool(bool(dbUser.Int2&8==8)),
+		"mastodonLinkDeactive": strconv.FormatBool(bool(dbUser.Int2&16==16)),
+
 //		"webPushSubscription1": dbUser.Str2,
 //		"webPushUA1": dbUser.Str2ua,
 //		"webPushSubscription2": dbUser.Str3,
@@ -253,6 +256,28 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 			}
 			fmt.Printf("/setsettings (%s) dialSoundsMuted (%s) %d %s\n",
 				calleeID, val, dbUser.Int2&4, remoteAddr)
+
+		case "mainLinkDeactive":
+			if(val=="true") {
+				// set mainLink off (deactive)
+				dbUser.Int2 |= 8
+			} else {
+				// set mainLink on
+				dbUser.Int2 &= ^8
+			}
+			fmt.Printf("/setsettings (%s) mainLinkDeactive (%s) %d %s\n",
+				calleeID, val, dbUser.Int2&8, remoteAddr)
+
+		case "mastodonLinkDeactive":
+			if(val=="true") {
+				// set mainLink off (deactive)
+				dbUser.Int2 |= 16
+			} else {
+				// set mainLink on
+				dbUser.Int2 &= ^16
+			}
+			fmt.Printf("/setsettings (%s) mainLinkDeactive (%s) %d %s\n",
+				calleeID, val, dbUser.Int2&16, remoteAddr)
 
 /*
 		case "webPushSubscription1":

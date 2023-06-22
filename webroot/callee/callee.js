@@ -59,6 +59,8 @@ var lastResult;
 var lastUserActionDate = 0;
 var calleeName = "";
 var mastodonID = "";
+var mainLinkDeactive = false;
+var mastodonLinkDeactive = false;
 var wsSecret = "";
 var audioContext = null;
 var audioStreamDest = null;
@@ -770,7 +772,9 @@ function sendInit(comment) {
 }
 
 function getSettings() {
-	// main use: get the calleeName (nickname)
+	// xhr /getsettings for calleeName (nickname), mastodonID; /getmapping for altIdArray
+	// then call getSettingDone() to display "You receive calls made by this link"
+
 	// TODO why do we add arg id?
 	let api = apiPath+"/getsettings?id="+calleeID;
 	gLog('getsettings api '+api);
@@ -788,8 +792,31 @@ function getSettings() {
 				if(typeof serverSettings.nickname!=="undefined") {
 					calleeName = serverSettings.nickname;
 					gLog("getsettings calleeName "+calleeName);
-					mastodonID = serverSettings.mastodonID;
 				}
+
+				if(typeof serverSettings.mastodonID!=="undefined") {
+					mastodonID = serverSettings.mastodonID;
+					gLog("getsettings mastodonID "+mastodonID);
+				}
+
+				if(typeof serverSettings.mainLinkDeactive!=="undefined") {
+					console.log('serverSettings.mainLinkDeactive',serverSettings.mainLinkDeactive);
+					if(serverSettings.mainLinkDeactive=="true") {
+						mainLinkDeactive = true;
+					} else {
+						mainLinkDeactive = false;
+					}
+				}
+
+				if(typeof serverSettings.mastodonLinkDeactive!=="undefined") {
+					console.log('serverSettings.mastodonLinkDeactive',serverSettings.mastodonLinkDeactive);
+					if(serverSettings.mastodonLinkDeactive=="true") {
+						mastodonLinkDeactive = true;
+					} else {
+						mastodonLinkDeactive = false;
+					}
+				}
+
 			}
 		}
 
@@ -861,11 +888,10 @@ function getSettingDone() {
 		links += "<div style='line-height:1.6em;margin-top:12px;white-space:nowrap;'>";
 		links += "<div class='callListTitle'>You will receive calls made by these links:</div>";
 
-		if(false) {
-			links += "<input type='checkbox' id='' class='checkbox' style='margin-top:8px;margin-left:2px;margin-right:10px;' />";
+		if(mainLinkDeactive) {
+			links += "<input type='checkbox' id='mainlink' class='checkbox' style='margin-top:8px;margin-left:2px;margin-right:10px;' onclick='mainlinkCheckboxClick(this);' />";
 		} else {
-// TODO state of checkbox must be immediately posted to /setmapping
-			links += "<input type='checkbox' id='' class='checkbox' style='margin-top:8px;margin-left:2px;margin-right:10px;' checked />";
+			links += "<input type='checkbox' id='mainlink' class='checkbox' style='margin-top:8px;margin-left:2px;margin-right:10px;' onclick='mainlinkCheckboxClick(this);' checked />";
 		}
 		let showUserLink = userLink;
 		if(showUserLink.startsWith("https://")) {
@@ -874,15 +900,11 @@ function getSettingDone() {
 		links += "<a target='_blank' href='"+userLink+"'>"+showUserLink+"</a><br>";
 
 		if(mastodonID!="" && mastodonID!=calleeID) {
-/*
-// TODO deactivate mastodonID
-			if(altIdActive[i]!="true") {
-				links += "_ ";
+			if(mastodonLinkDeactive) {
+				links += "<input type='checkbox' id='mastodonlink' class='checkbox' style='margin-top:8px;margin-left:2px;margin-right:10px;' onclick='mainlinkCheckboxClick(this);' />";
 			} else {
-// TODO replace with checkbox
-				links += "x ";
+				links += "<input type='checkbox' id='mastodonlink' class='checkbox' style='margin-top:8px;margin-left:2px;margin-right:10px;' onclick='mainlinkCheckboxClick(this);' checked />";
 			}
-*/
 			let userLinkAlt = userLink.replace("/user/"+calleeID,"/user/"+mastodonID);
 			let showUserLinkAlt = userLinkAlt;
 			if(showUserLinkAlt.startsWith("https://")) {
@@ -947,6 +969,25 @@ function mappingCheckboxClick(cb) {
 		console.log("/setmapping errString="+errString+" errcode="+errcode);
 		// TODO reset checkbox checked value
 	}, altIDs);
+}
+
+function mainlinkCheckboxClick(cb) {
+	// cb.id is "mainlink" or "mastodonlink"
+	// cb.checked==false -> LinkDeactive = true
+	var newSettings = '{"mainLinkDeactive":"'+(!cb.checked)+'"}';
+	if(cb.id=="mastodonLink") {
+		newSettings = '{"mastodonLinkDeactive":"'+(!cb.checked)+'"}';
+	}
+	console.log('mainlinkCheckboxClick newSettings',newSettings);
+
+	let api = apiPath+"/setsettings?id="+calleeID;
+	if(!gentle) console.log('request setsettings api='+api);
+	ajaxFetch(new XMLHttpRequest(), "POST", api, function(xhr) {
+		if(!gentle) console.log('data posted',newSettings);
+	}, function(errString,err) {
+		console.log("mainlinkCheckboxClick errString="+errString+" errcode="+errcode);
+		// TODO reset checkbox checked value
+	}, newSettings);
 }
 
 function offlineAction() {
