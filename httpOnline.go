@@ -256,6 +256,62 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, dialID str
 			return
 		}
 
+		var dbEntry DbEntry
+		err := kvMain.Get(dbRegisteredIDs, urlID, &dbEntry)
+		if err != nil {
+			// callee urlID does not exist
+			locHub.HubMutex.RUnlock()
+			// do not log key not found
+			if strings.Index(err.Error(),"key not found")<0 {
+				fmt.Printf("/online (%s) error (%v) (%s) %s v=%s ua=%s\n",
+					urlID, err, callerId, remoteAddr, clientVersion, r.UserAgent())
+			} else {
+				// key not found: delay brute
+				time.Sleep(1000 * time.Millisecond)
+			}
+			fmt.Fprintf(w, "error")
+			return
+		}
+		//fmt.Printf("/online (%s) avail wsAddr=%s (%s) %s v=%s\n",
+		//	urlID, wsAddr, callerId, remoteAddr, clientVersion)
+
+		dbUserKey := fmt.Sprintf("%s_%d", urlID, dbEntry.StartTime)
+		var dbUser DbUser
+		err = kvMain.Get(dbUserBucket, dbUserKey, &dbUser)
+		if err != nil {
+			locHub.HubMutex.RUnlock()
+			fmt.Printf("# /online (%s) error db=%s bucket=%s get key=%v v=%s err=%v\n",
+				urlID, dbMainName, dbUserBucket, dbUserKey, clientVersion, err)
+			fmt.Fprintf(w, "error")
+			return
+		}
+
+		if dialID==urlID && dbUser.Int2&8==8 {
+			// mainlink deactivated
+			locHub.HubMutex.RUnlock()
+			fmt.Printf("/online (%s) mainlink deactivated <- %s v=%s\n", dialID, remoteAddr, clientVersion)
+			// remoteAddr is now eligible to send xhr /missedCall
+			missedCallAllowedMutex.Lock()
+			missedCallAllowedMap[remoteAddr] = time.Now()
+			missedCallAllowedMutex.Unlock()
+			fmt.Fprintf(w, "notavail")
+			return
+		}
+
+/* TODO
+		if dialID==mastodonlink && dbUser.Int2&16==16 {
+			// mastodonlink deactivated
+			locHub.HubMutex.RUnlock()
+			fmt.Printf("/online (%s) mastodonlink deactivated <- %s v=%s\n", dialID, remoteAddr, clientVersion)
+			// remoteAddr is now eligible to send xhr /missedCall
+			missedCallAllowedMutex.Lock()
+			missedCallAllowedMap[remoteAddr] = time.Now()
+			missedCallAllowedMutex.Unlock()
+			fmt.Fprintf(w, "notavail")
+			return
+		}
+*/
+
 		if dialID != urlID {
 			// dialID was mapped
 			// original dialID is needed by caller in wsClient.go
