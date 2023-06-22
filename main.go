@@ -337,6 +337,14 @@ func main() {
 			d.Decode(&dbUser)
 			if dbUser.AltIDs!="" {
 				//fmt.Printf("initloop %s (%s)->%s\n",k,calleeID,dbUser.AltIDs)
+				// only accept dbUser.AltIDs if it does not contain: garbage (cr lf < >)
+				if strings.Index(dbUser.AltIDs,"\r")>=0 ||
+				   strings.Index(dbUser.AltIDs,"\n")>=0 ||
+				   strings.Index(dbUser.AltIDs,"<")>=0 ||
+				   strings.Index(dbUser.AltIDs,">")>=0 {
+					fmt.Printf("initloop dbUser.AltIDs contains garbage (name=%s -> %s)\n",dbUser.Name,dbUser.Ip1)
+					continue
+				}
 				toks := strings.Split(dbUser.AltIDs, "|")
 				for tok := range toks {
 					toks2 := strings.Split(toks[tok], ",")
@@ -347,7 +355,6 @@ func main() {
 							//fmt.Printf("initloop set mapping from AltIDs %s -> %s (%s)\n",
 							//	toks2[0], calleeID, toks2[2])
 						} else {
-// TODO can toks2[0] be garbage? IT CAN!
 							fmt.Printf("initloop set ringMuted from AltIDs %s -> %s (%s) AltIDs=[%s]\n",
 								toks2[0], calleeID, toks2[2], dbUser.AltIDs)
 							ringMuted[toks2[0]] = struct{}{}
