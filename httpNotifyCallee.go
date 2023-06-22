@@ -72,7 +72,7 @@ func httpNotifyCallee(w http.ResponseWriter, r *http.Request, urlID string, remo
 	// add callerHost to callerId
 	callerIdLong := callerId
 	if callerHost!="" && callerHost!=hostname {
-		callerIdLong += "@"+callerHost
+		callerIdLong += "@@"+callerHost
 	}
 
 	textmode := false
@@ -682,7 +682,7 @@ func addMissedCall(urlID string, caller CallerInfo, cause string) (error, []Call
 	if len(missedCallsSlice) >= maxMissedCalls {
 		missedCallsSlice = missedCallsSlice[len(missedCallsSlice)-(maxMissedCalls-1):]
 	}
-	// TODO: maybe NOT save urlID == caller.CallerID (sending to self)
+	// TODO: maybe DO NOT save urlID == caller.CallerID (sending to self)
 	missedCallsSlice = append(missedCallsSlice, caller)
 	err = kvCalls.Put(dbMissedCalls, urlID, missedCallsSlice, true) // TODO: skipConfirm really?
 	if err!=nil {
