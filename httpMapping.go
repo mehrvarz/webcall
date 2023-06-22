@@ -132,30 +132,37 @@ func httpSetMapping(w http.ResponseWriter, r *http.Request, urlID string, callee
 		fmt.Fprintf(w,"errorSetUser")
 		return
 	}
-
 	// no error
-	// remove any de-activated entries from global mappings
+
+	// update mapping[] and ringMuted[] according to AltIDs
 	if dbUser.AltIDs!="" {
 		//fmt.Printf("initloop %s (%s)->%s\n",k,calleeID,dbUser.AltIDs)
 		toks := strings.Split(dbUser.AltIDs, "|")
-		mappingMutex.Lock()
 		for tok := range toks {
 			toks2 := strings.Split(toks[tok], ",")
 			if toks2[0] != "" {
+				mappedID := toks2[0]
+				ringMutedMutex.Lock()
 				if toks2[1] != "true" {
-					// deactivate mapping
-					fmt.Printf("/setmapping (%s) delete (%s)\n",calleeID, toks2[0])
-					delete(mapping,toks2[0])
+					// this mapping is deactivated: set ringMuted
+					fmt.Printf("/setmapping (%s) set ringMuted for (%s)\n",calleeID, mappedID)
+					ringMuted[mappedID] = struct{}{}
 				} else {
-					mappingData := mapping[toks2[0]]
-					if mappingData.CalleeId != calleeID {
-						fmt.Printf("/setmapping (%s) set (%s)=(%s)\n",calleeID, toks2[0], toks2[2])
-						mapping[toks2[0]] = MappingDataType{calleeID,toks2[2]}
-					}
+					// this mapping is activated: clear ringMuted
+					fmt.Printf("/setmapping (%s) clear ringMuted for (%s)\n",calleeID, mappedID)
+					delete(ringMuted,mappedID)
+				}
+				ringMutedMutex.Unlock()
+
+				mappingData := mapping[mappedID]
+				if mappingData.CalleeId != calleeID {
+					fmt.Printf("/setmapping (%s) set (%s)=(%s)\n",calleeID, mappedID, toks2[2])
+					mappingMutex.Lock()
+					mapping[mappedID] = MappingDataType{calleeID,toks2[2]}
+					mappingMutex.Unlock()
 				}
 			}
 		}
-		mappingMutex.Unlock()
 	}
 
 	fmt.Printf("/setmapping (%s) done data=(%s)\n",calleeID, data)

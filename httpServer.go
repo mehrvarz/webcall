@@ -443,12 +443,16 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 	dialID := urlID
 	// keep in mind: urlID may be total garbage; don't trust it
 
-	// translate urlID
+	// check if dialID is mapped
 	mappingMutex.RLock()
 	mappingData,ok := mapping[urlID]
 	mappingMutex.RUnlock()
 	if ok {
+		// dialID is mapped to mappingData.CalleeId
+//		urlID = mappingData.CalleeId
 		if logWantedFor("mapping") {
+//			fmt.Printf("httpApi dialID=(%s) mapping->(%s) (assign=%s) urlPath=(%s)\n",
+//				dialID, urlID, mappingData.Assign, urlPath)
 			fmt.Printf("httpApi urlID=(%s) mapping->(%s) (assign=%s) urlPath=(%s)\n",
 				urlID, mappingData.CalleeId, mappingData.Assign, urlPath)
 		}

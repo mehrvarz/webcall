@@ -241,8 +241,24 @@ func httpOnline(w http.ResponseWriter, r *http.Request, urlID string, dialID str
 			return
 		}
 
+		// check if the original dialID is ringMuted
+		ringMutedMutex.RLock()
+		_,ok = ringMuted[dialID]
+		ringMutedMutex.RUnlock()
+		if ok {
+			locHub.HubMutex.RUnlock()
+			fmt.Printf("/online (%s) ringMuted <- %s v=%s\n", dialID, remoteAddr, clientVersion)
+			// remoteAddr is now eligible to send xhr /missedCall
+			missedCallAllowedMutex.Lock()
+			missedCallAllowedMap[remoteAddr] = time.Now()
+			missedCallAllowedMutex.Unlock()
+			fmt.Fprintf(w, "notavail")
+			return
+		}
+
 		if dialID != urlID {
-			// dialID was mapped, original dialID is needed by caller in wsClient.go
+			// dialID was mapped
+			// original dialID is needed by caller in wsClient.go
 			wsClientMutex.Lock()
 			wsClientData,ok := wsClientMap[wsClientID]
 			if ok {

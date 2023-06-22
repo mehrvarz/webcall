@@ -72,6 +72,8 @@ function prepareSettings(xhrresponse) {
 
 	// json parse xhrresponse
 	serverSettings = JSON.parse(xhrresponse);
+	console.log('serverSettings=',serverSettings);
+
 	if(typeof serverSettings.vapidPublicKey!=="undefined") {
 		if(!gentle) console.log('serverSettings.vapidPublicKey',serverSettings.vapidPublicKey);
 		vapidPublicKey = serverSettings.vapidPublicKey
@@ -135,6 +137,15 @@ function prepareSettings(xhrresponse) {
 			document.getElementById("storeMissedCalls").checked = true;
 		} else {
 			document.getElementById("storeMissedCalls").checked = false;
+		}
+	}
+
+	if(typeof serverSettings.dialSoundsMuted!=="undefined") {
+		if(!gentle) console.log('serverSettings.dialSoundsMuted',serverSettings.dialSoundsMuted);
+		if(serverSettings.dialSoundsMuted=="true") {
+			document.getElementById("dialSoundsMuted").checked = true;
+		} else {
+			document.getElementById("dialSoundsMuted").checked = false;
 		}
 	}
 
@@ -457,6 +468,7 @@ function submitForm(autoclose) {
 		   '{"nickname":"'+document.getElementById("nickname").value.trim()+'",'+
 			'"storeContacts":"'+document.getElementById("storeContacts").checked+'",'+
 			'"storeMissedCalls":"'+document.getElementById("storeMissedCalls").checked+'",'+
+			'"dialSoundsMuted":"'+document.getElementById("dialSoundsMuted").checked+'",'+
 			'"tootOnCall":"'+document.getElementById("tootOnCall").checked+'",'+
 			'"askCallerBeforeNotify":"'+!(document.getElementById("skipUserSendImmediately").checked)+'"'+
 //			'"webPushSubscription1":"'+encodeURI(serverSettings.webPushSubscription1)+'",'+

@@ -128,6 +128,9 @@ type MappingDataType struct {
 var mapping map[string]MappingDataType
 var mappingMutex sync.RWMutex
 
+var ringMuted map[string]struct{}
+var ringMutedMutex sync.RWMutex
+
 // newsDateMap[calleeID] returns the datestring of the last news.ini delivery
 var newsDateMap map[string]string
 
@@ -233,6 +236,7 @@ func main() {
 	missedCallAllowedMap = make(map[string]time.Time)
 	waitingCallerChanMap = make(map[string]chan int)
 	mapping = make(map[string]MappingDataType)
+	ringMuted = make(map[string]struct{})
 	newsDateMap = make(map[string]string)
 	wsClientMap = make(map[uint64]wsClientDataType) // wsClientID -> wsClientData
 	readConfig(true) // for dbPath
@@ -246,11 +250,6 @@ func main() {
 
 	fmt.Printf("----- webcall %s %s startup -----\n", codetag, builddate)
 	fmt.Printf("outboundIP %s\n",outboundIP)
-
-	// dump mapping[]
-	for key,mappingDataType := range mapping {
-		fmt.Printf("mapping %s -> %s %s\n", key, mappingDataType.CalleeId, mappingDataType.Assign)
-	}
 
 	kvMain,err = skv.DbOpen(dbMainName,dbPath)
 	if err!=nil {
@@ -342,10 +341,13 @@ func main() {
 				for tok := range toks {
 					toks2 := strings.Split(toks[tok], ",")
 					if toks2[0] != "" { // tmpID
+						mapping[toks2[0]] = MappingDataType{calleeID,toks2[2]}
+
 						if toks2[1] == "true" { // active
 							//fmt.Printf("initloop set mapping from AltIDs %s -> %s (%s)\n",
 							//	toks2[0], calleeID, toks2[2])
-							mapping[toks2[0]] = MappingDataType{calleeID,toks2[2]}
+						} else {
+							ringMuted[toks2[0]] = struct{}{}
 						}
 					}
 				}
@@ -359,6 +361,16 @@ func main() {
 		return nil
 	})
 	skv.DbMutex.Unlock()
+
+// TODO outcomment these 2 loops:
+	// dump mapping[] (at this point mapping[] contains items from readConfig(true) (answie,etc.) and user mapping)
+	for key,mappingDataType := range mapping {
+		fmt.Printf("mapping %s -> %s %s\n", key, mappingDataType.CalleeId, mappingDataType.Assign)
+	}
+	// dump ringMuted[]
+	for key := range ringMuted {
+		fmt.Printf("ringMuted %s\n", key)
+	}
 
 	readConfig(false) // if configured start mastodonhandler
 

@@ -494,8 +494,8 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 	if hub.CallerClient==nil {
 		// caller client (2nd client)
 		if logWantedFor("attach") {
-			fmt.Printf("%s (%s) caller conn ws=%d (%s) %s\n", client.connType, client.calleeID,
-				wsClientID64, callerIdLong, client.RemoteAddr)
+			fmt.Printf("%s (%s) caller conn dialID=%s ws=%d (%s) %s\n", client.connType, client.calleeID,
+				client.dialID, wsClientID64, callerIdLong, client.RemoteAddr)
 		}
 
 		client.isCallee = false
@@ -1217,6 +1217,7 @@ func (c *WsClient) handleClientMessage(message []byte, cliWsConn *websocket.Conn
 	}
 
 	if cmd=="dialsoundsmuted" {
+		// only used by clients up to v3.5.5 (we need to keep this for as long as clients<=3.5.5 are in use)
 		dialSoundsMuted := false
 		if(payload=="true") {
 			dialSoundsMuted = true

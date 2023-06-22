@@ -404,7 +404,9 @@ window.onload = function() {
 						//console.log("set nickname form with callerName="+callerName);
 						let nicknameDivElement = document.getElementById("nicknameDiv");
 						let nicknameElement = document.getElementById("nickname");
-						nicknameElement.value = callerName;
+						if(nicknameElement) {
+							nicknameElement.value = callerName;
+						}
 						nicknameDivElement.style.display = "block";
 						// callername will be fetched from form in checkCalleeOnline()
 					}

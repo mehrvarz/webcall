@@ -66,6 +66,7 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		"askCallerBeforeNotify": strconv.FormatBool(dbUser.AskCallerBeforeNotify),
 		"storeContacts": strconv.FormatBool(dbUser.StoreContacts),
 		"storeMissedCalls": strconv.FormatBool(dbUser.StoreMissedCalls),
+		"dialSoundsMuted": strconv.FormatBool(bool(dbUser.Int2&4==4)),
 //		"webPushSubscription1": dbUser.Str2,
 //		"webPushUA1": dbUser.Str2ua,
 //		"webPushSubscription2": dbUser.Str3,
@@ -241,6 +242,18 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 					}
 				}
 			}
+
+		case "dialSoundsMuted":
+			if(val=="true") {
+				// set dialsounds off (muted)
+				dbUser.Int2 |= 4
+			} else {
+				// set dialsounds on (not muted)
+				dbUser.Int2 &= ^4
+			}
+			fmt.Printf("/setsettings (%s) dialSoundsMuted (%s) %d %s\n",
+				calleeID, val, dbUser.Int2&4, remoteAddr)
+
 /*
 		case "webPushSubscription1":
 			newVal,err := url.QueryUnescape(val)

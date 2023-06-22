@@ -9,8 +9,6 @@ const isHiddenCheckbox = document.querySelector('input#isHidden');
 const isHiddenlabel = document.querySelector('label#isHiddenlabel');
 const autoanswerCheckbox = document.querySelector('input#autoanswer');
 const autoanswerlabel = document.querySelector('label#autoanswerlabel');
-const dialsoundsCheckbox = document.querySelector('input#dialsounds');
-const dialsoundslabel = document.querySelector('label#dialsoundslabel');
 const titleElement = document.getElementById('title');
 const statusLine = document.getElementById('status');
 const msgbox = document.querySelector('textarea#msgbox');
@@ -216,16 +214,6 @@ window.onload = function() {
 			isHiddenCheckbox.checked = false;
 			wsSend("calleeHidden|false");
 		}
-	});
-
-	dialsoundsCheckbox.addEventListener('change', function() {
-		if(this.checked) {
-			gLog("dialsoundsCheckbox checked");
-		} else {
-			gLog("dialsoundsCheckbox checked off");
-		}
-		playDialSounds = this.checked;
-		wsSend("dialsoundsmuted|"+!this.checked);
 	});
 
 	// mute mode handler
@@ -648,15 +636,13 @@ function login(retryFlag) {
 				gLog('dialsounds muted parts[5]='+parts[5]);
 				if(parts[5]=="true") {
 					// dialSounds muted
-					dialsoundsCheckbox.checked = false;
 					playDialSounds = false;
 				} else if(parts[5]=="false") {
 					// dialSounds not muted
-					dialsoundsCheckbox.checked = true;
 					playDialSounds = true;
 				}
 			}
-			gLog('dialsoundsCheckbox.checked '+dialsoundsCheckbox.checked);
+			gLog('playDialSounds='+playDialSounds);
 
 			// login success -> send "init|"
 			sendInit("xhr login success");
@@ -875,19 +861,21 @@ function getSettingDone() {
 		links += "<div style='line-height:1.6em;margin-top:12px;white-space:nowrap;'>";
 		links += "<div class='callListTitle'>You will receive calls made by these links:</div>";
 
-// TODO need to be able to deactivate main ID?
 		if(false) {
 			links += "<input type='checkbox' id='' class='checkbox' style='margin-top:8px;margin-left:2px;margin-right:10px;' />";
 		} else {
 // TODO state of checkbox must be immediately posted to /setmapping
 			links += "<input type='checkbox' id='' class='checkbox' style='margin-top:8px;margin-left:2px;margin-right:10px;' checked />";
 		}
-// TODO 2nd userLink without leading 'https://'
-		links += "<a target='_blank' href='"+userLink+"'>"+userLink+"</a><br>";
+		let showUserLink = userLink;
+		if(showUserLink.startsWith("https://")) {
+			showUserLink = showUserLink.substring(8);
+		}
+		links += "<a target='_blank' href='"+userLink+"'>"+showUserLink+"</a><br>";
 
 		if(mastodonID!="" && mastodonID!=calleeID) {
 /*
-// TODO need to be able to deactivate mastodonID?
+// TODO deactivate mastodonID
 			if(altIdActive[i]!="true") {
 				links += "_ ";
 			} else {
@@ -896,8 +884,11 @@ function getSettingDone() {
 			}
 */
 			let userLinkAlt = userLink.replace("/user/"+calleeID,"/user/"+mastodonID);
-// TODO 2nd userLink without leading 'https://'
-			links += "<a target='_blank' href='"+userLinkAlt+"'>"+userLinkAlt+"</a><br>";
+			let showUserLinkAlt = userLinkAlt;
+			if(showUserLinkAlt.startsWith("https://")) {
+				showUserLinkAlt = showUserLinkAlt.substring(8);
+			}
+			links += "<a target='_blank' href='"+userLinkAlt+"'>"+showUserLinkAlt+"</a><br>";
 		}
 
 		// add active mapping entries
@@ -906,13 +897,16 @@ function getSettingDone() {
 			for(let i = 0; i < altIdArray.length; i++) {
 				//console.log("i="+i+" altIdActive[i]="+altIdActive[i]+" "+altIdArray[i]);
 				if(altIdActive[i]!="true") {
-					links += "<input type='checkbox' id='"+altIdArray[i]+"' class='checkbox' style='margin-top:8px;margin-left:2px;margin-right:10px;' onclick='checkboxClick(this);' />";
+					links += "<input type='checkbox' id='"+altIdArray[i]+"' class='checkbox' style='margin-top:8px;margin-left:2px;margin-right:10px;' onclick='mappingCheckboxClick(this);' />";
 				} else {
-					links += "<input type='checkbox' id='"+altIdArray[i]+"' class='checkbox' style='margin-top:8px;margin-left:2px;margin-right:10px;' onclick='checkboxClick(this);' checked />";
+					links += "<input type='checkbox' id='"+altIdArray[i]+"' class='checkbox' style='margin-top:8px;margin-left:2px;margin-right:10px;' onclick='mappingCheckboxClick(this);' checked />";
 				}
 				let userLinkMap = userLink.replace("/user/"+calleeID,"/user/"+altIdArray[i]);
-// TODO 2nd userLink without leading 'https://'
-				links += "<a target='_blank' href='"+userLinkMap+"'>"+userLinkMap+"</a><br>";
+				let showUserLinkMap = userLinkMap;
+				if(showUserLinkMap.startsWith("https://")) {
+					showUserLinkMap = showUserLinkMap.substring(8);
+				}
+				links += "<a target='_blank' href='"+userLinkMap+"'>"+showUserLinkMap+"</a><br>";
 			}
 		}
 		links += "</div>";
@@ -920,7 +914,8 @@ function getSettingDone() {
 	}
 }
 
-function checkboxClick(cb) {
+// checkboxes for mappings
+function mappingCheckboxClick(cb) {
 	console.log("checkboxClick="+cb.checked+" id="+cb.id);
 
 	// construct altIDs string from: altIdArray, altIdActive, altLabel
@@ -1160,7 +1155,6 @@ function wsOnOpen() {
 	}
 	isHiddenlabel.style.display = "block";
 	autoanswerlabel.style.display = "block";
-	dialsoundslabel.style.display = "block";
 	menuSettingsElement.style.display = "block";
 	iconContactsElement.style.display = "block";
 	idMappingElement.style.display = "block";
@@ -2756,7 +2750,6 @@ function goOffline() {
 
 	isHiddenlabel.style.display = "none";
 	autoanswerlabel.style.display = "none";
-	dialsoundslabel.style.display = "none";
 	var waitingCallersLine = document.getElementById('waitingCallers');
 	if(waitingCallersLine) {
 		waitingCallersLine.innerHTML = "";
@@ -2855,7 +2848,7 @@ function openSlide() {
 		if(wsConn) {
 			//console.log("openSlide doOpen");
 			// need to set the correct final height, resulting from list of checkboxes
-			slideRevealElement.style.height = "124.4px"; // "182px"; //"210px";
+			slideRevealElement.style.height = "101.6px"; //"124.4px"; // "182px"; //"210px";
 			slideRevealElement.addEventListener('transitionend', slideTransitioned) // when done: set height=auto
 		} else {
 			//console.log("openSlide doOpen but no wsConn");
