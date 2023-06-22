@@ -261,9 +261,11 @@ window.onload = function() {
 			gLog("onload load audio files more="+mode);
 			//var calleeIdTitle = calleeID.charAt(0).toUpperCase() + calleeID.slice(1);
 			var calleeIdTitle = calleeID;
-			document.title = "WebCall Callee "+calleeIdTitle;
+//			var calleeTitle = "WebCall Callee "+calleeIdTitle;
+			var calleeTitle = "Callee "+calleeIdTitle;
+			document.title = calleeTitle;
 			if(titleElement) {
-				titleElement.innerHTML = "WebCall Callee "+calleeIdTitle;
+				titleElement.innerHTML = calleeTitle;
 			}
 
 			calleeID = calleeID.toLowerCase();

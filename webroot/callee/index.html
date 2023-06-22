@@ -365,8 +365,6 @@ input[type=submit]:focus {
 <div id="container">
 	<img id="menu" onclick="menuDialogOpen(menuDialogElement,false)" src="menu.svg" style="position:relative; float:right; width:25px; margin-top:5px; margin-left:22px; margin-right:10px; z-index:100; user-select:none; cursor:pointer;">
 
-	<img id="checkboxes" src="checkboxes.svg" style="position:relative; float:right; width:25px; margin-top:4px; margin-left:18px; z-index:100; user-select:none; cursor:pointer; transition:opacity 500ms; display:none;" onclick="openSlide()">
-
 	<img id="dialpad" src="dialpad.svg" style="position:relative; float:right; width:30px; margin-top:4px; margin-left:22px; z-index:100; user-select:none; cursor:pointer; transition:opacity 500ms;" onclick="openDialId('')">
 
 	<img id="iconContacts" src="contacts.svg" style="position:relative; float:right; width:23px; margin-top:0; margin-left:22px; z-index:100; user-select:none; cursor:pointer; transition:opacity 500ms; display:none;" onclick="openContacts()">
@@ -377,6 +375,8 @@ input[type=submit]:focus {
 
 
     <h1 id="title">WebCall</h1>
+	<img id="checkboxes" src="checkboxes.svg" style="position:relative; float:right; width:25px; margin-top:11px; margin-left:22px; margin-right:10px; z-index:100; user-select:none; cursor:pointer;" onclick="openSlide()">
+
 	<div id="buttons" style="display:grid; grid-template-columns: 1fr 1fr 40px; list-style-type:none; max-width:360px; margin-top:4px;">
         <button id="onlineButton" disabled>Go Online</button>
         <button id="offlineButton" disabled>Go Offline</button>
