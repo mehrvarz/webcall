@@ -141,7 +141,17 @@ func httpSetMapping(w http.ResponseWriter, r *http.Request, urlID string, callee
 		for tok := range toks {
 			toks2 := strings.Split(toks[tok], ",")
 			if toks2[0] != "" {
+				// ensure mappedID is not overlong and does not contain wrong format data (e.g. HTML)
 				mappedID := toks2[0]
+				mappedID = strings.Replace(mappedID, " ", "", -1)
+				mappedID = strings.Replace(mappedID, "\n", "", -1)
+				mappedID = strings.Replace(mappedID, "<", "", -1)
+				mappedID = strings.Replace(mappedID, ">", "", -1)
+				mappedID = strings.TrimSpace(mappedID)
+				if len(mappedID)>32 {
+					mappedID = mappedID[:32]
+				}
+
 				ringMutedMutex.Lock()
 				if toks2[1] != "true" {
 					// this mapping is deactivated: set ringMuted
@@ -156,16 +166,27 @@ func httpSetMapping(w http.ResponseWriter, r *http.Request, urlID string, callee
 
 				mappingData := mapping[mappedID]
 				if mappingData.CalleeId != calleeID {
-					fmt.Printf("/setmapping (%s) set (%s)=(%s)\n",calleeID, mappedID, toks2[2])
+					assignedName := toks2[2]
+					// ensure assignedName is not overlong and does not contain wrong format data (e.g. HTML)
+					assignedName = strings.Replace(assignedName, " ", "", -1)
+					assignedName = strings.Replace(assignedName, "\n", "", -1)
+					assignedName = strings.Replace(assignedName, "<", "", -1)
+					assignedName = strings.Replace(assignedName, ">", "", -1)
+					assignedName = strings.TrimSpace(assignedName)
+					if len(mappedID)>10 {
+						mappedID = mappedID[:10]
+					}
+
+					fmt.Printf("/setmapping (%s) set (%s)=(%s)\n",calleeID, mappedID, assignedName)
 					mappingMutex.Lock()
-					mapping[mappedID] = MappingDataType{calleeID,toks2[2]}
+					mapping[mappedID] = MappingDataType{calleeID,assignedName}
 					mappingMutex.Unlock()
 				}
 			}
 		}
 	}
 
-	fmt.Printf("/setmapping (%s) done data=(%s)\n",calleeID, data)
+	//fmt.Printf("/setmapping (%s) done data=(%s)\n",calleeID, data)
 	return
 }
 
