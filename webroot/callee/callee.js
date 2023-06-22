@@ -928,7 +928,7 @@ function getSettingDone() {
 				if(showUserLinkMap.startsWith("https://")) {
 					showUserLinkMap = showUserLinkMap.substring(8);
 				}
-				links += "<a target='_blank' href='"+userLinkMap+"'>"+showUserLinkMap+"</a><br>";
+				links += "<a target='_blank' href='"+userLinkMap+"'>"+showUserLinkMap+"</a> ("+altLabel[i]+")<br>";
 			}
 		}
 		links += "</div>";
