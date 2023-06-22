@@ -345,7 +345,7 @@ func main() {
 					fmt.Printf("initloop dbUser.AltIDs contains garbage (name=%s -> %s)\n",dbUser.Name,dbUser.Ip1)
 					continue
 				}
-				if len(dbUser.AltIDs)>=100 {
+				if len(dbUser.AltIDs)>=200 {
 					fmt.Printf("initloop dbUser.AltIDs len=%d (name=%s -> %s)\n",len(dbUser.AltIDs),dbUser.Name,dbUser.Ip1)
 					continue
 				}
