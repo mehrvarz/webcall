@@ -385,11 +385,11 @@ input[type=submit]:focus {
 		<img id="onlineIndicator" src="" style="width:28px; margin:0.6em 0.8em 0.8em 0; user-select:none;">
 	</div>
 
-	<div id="slideReveal" style="height:0px; transition:height 400ms; overflow:hidden; cursor:pointer; _background:#222; max-width:340px;">
+	<div id="slideReveal" style="height:0px; transition:height 400ms; overflow:hidden; cursor:pointer; _background:#222;">
 		<select id="avSelect" class="select" onchange="getStream(this)"></select>
 		<div style="margin-top:5px;"></div>
 
-		<div style="columns:7rem auto;white-space:nowrap;">
+		<div style="columns:7rem auto;white-space:nowrap;max-width:340px;">
 			<div id="muteMicDiv" style="display:none;">
 				<input type="checkbox" id="muteMic" class="checkbox" />
 				<label class="menulabel2" id="muteMiclabel" for="muteMic">Mic muted</label>
@@ -403,6 +403,7 @@ input[type=submit]:focus {
 			<label class="menulabel2" id="fullscreenlabel">
 				<input type="checkbox" id="fullscreen" class="checkbox"> Full screen</label>
 		</div>
+		<!-- div id="ownlink" style="opacity:0.9;margin-top:4px;"></div -->
 	</div>
 
 	<form action="javascript:;" onsubmit="submitFormDone(1)" style="max-width:420px;display:none;" id="password">
