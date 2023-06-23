@@ -154,12 +154,12 @@ func httpSetMapping(w http.ResponseWriter, r *http.Request, urlID string, callee
 
 				ringMutedMutex.Lock()
 				if toks2[1] != "true" {
-					// this mapping is deactivated: set ringMuted
+					// this mapping has been deactivated: set ringMuted
 					fmt.Printf("/setmapping (%s) set ringMuted for (%s)\n",calleeID, mappedID)
 					ringMuted[mappedID] = struct{}{}
 				} else {
 					// this mapping is activated: clear ringMuted
-					fmt.Printf("/setmapping (%s) clear ringMuted for (%s)\n",calleeID, mappedID)
+					//fmt.Printf("/setmapping (%s) clear ringMuted for (%s)\n",calleeID, mappedID)
 					delete(ringMuted,mappedID)
 				}
 				ringMutedMutex.Unlock()
@@ -348,7 +348,7 @@ func deleteMapping(calleeID string, delID string, remoteAddr string) int {
 	// create a dbBlockedIDs entry (will be deleted after 60 days by timer)
 	unixTime := time.Now().Unix()
 	dbUserKey := fmt.Sprintf("%s_%d",delID, unixTime)
-	fmt.Printf("deletemapping (%s) created blockedID key=%s %s\n", calleeID, dbUserKey, remoteAddr)
+	//fmt.Printf("deletemapping (%s) created blockedID key=%s %s\n", calleeID, dbUserKey, remoteAddr)
 	err = kvMain.Put(dbBlockedIDs, dbUserKey, DbUser{}, false)
 	if err!=nil {
 		fmt.Printf("# deletemapping error db=%s bucket=%s put key=%s err=%v\n",
