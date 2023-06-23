@@ -1185,7 +1185,7 @@ function wsOnOpen() {
 		// by turning our online-indication off
 		console.log("callee beforeunload: enable goonline");
 		goOnlineButton.disabled = false;
-		// NOTE: this occurs when callee starts dialing a remote user from missedcalles
+		// NOTE: this occurs when callee starts dialing a remote user from missedcalls
 		// then both buttons are enabled - not good
 	});
 	*/
@@ -1545,10 +1545,11 @@ function signalingCommand(message, comment) {
 		showWaitingCallers();
 
 	} else if(cmd=="missedCalls") {
-		//gLog('show missedCalls msg',payload.length);
+		console.log('cmd missedCalls len='+payload.length);
 		missedCallsSlice = null;
 		if(payload.length>0) {
 			missedCallsSlice = JSON.parse(payload);
+			// TODO beep?
 		}
 		showMissedCalls();
 
