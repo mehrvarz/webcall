@@ -528,7 +528,7 @@ func missedCall(callerInfo string, remoteAddr string, cause string) {
 	err,missedCallsSlice := addMissedCall(calleeId,
 		CallerInfo{remoteAddr, callerName, timeOfCall, callerID, msgtext, }, cause)
 	if err==nil {
-		//fmt.Printf("missedCall (%s) caller=%s rip=%s\n", calleeId, callerID, remoteAddr)
+		//fmt.Printf("missedCall (%s) noerr caller=%s rip=%s\n", calleeId, callerID, remoteAddr)
 
 		// send updated waitingCallerSlice + missedCalls to callee (if (hidden) online)
 		// check if callee is (hidden) online
@@ -670,9 +670,26 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 		urlID, remoteAddr, callerIdLong)
 
 	if(dbUser.StoreMissedCalls) {
-		addMissedCall(urlID,
+		err,missedCallsSlice := addMissedCall(urlID,
 			// TODO: empty msg string (see: caller.js: 'NOTE: this causes a missedCall entry')
 			CallerInfo{remoteAddr, callerName, time.Now().Unix(), callerIdLong, "", }, "/canbenotified-not")
+		if err==nil {
+			var calleeWsClient *WsClient = nil
+			hubMapMutex.RLock()
+			myhub := hubMap[urlID]
+			if myhub!=nil {
+				calleeWsClient = myhub.CalleeClient
+			}
+			hubMapMutex.RUnlock()
+			if calleeWsClient==nil {
+				// callee is offline: don't send waitingCaller update
+				//fmt.Printf("/canbenotified (%s/%s) callee offline (no send waitingCaller)\n", urlID, glUrlID)
+			} else {
+				// send updated waitingCallerSlice + missedCalls
+				fmt.Printf("/canbenotified (%s/%s) callee online, send missedCalls upd\n", urlID, glUrlID)
+				waitingCallerToCallee(urlID, nil, missedCallsSlice, calleeWsClient)
+			}
+		}
 	}
 	return
 }
@@ -704,7 +721,7 @@ func addMissedCall(urlID string, caller CallerInfo, cause string) (error, []Call
 			logTxtMsg = "hidden"
 		}
 		// caller.CallerID may contain @callerHost
-		fmt.Printf("missedCall (%s) <- (%s) name=%s ip=%s msg=(%s) cause=(%s)\n",
+		fmt.Printf("addMissedCall (%s) <- (%s) name=%s ip=%s msg=(%s) cause=(%s)\n",
 			urlID, caller.CallerID, caller.CallerName, caller.AddrPort, logTxtMsg, cause)
 	}
 	return err,missedCallsSlice
