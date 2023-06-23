@@ -617,7 +617,11 @@ func httpCanbenotified(w http.ResponseWriter, r *http.Request, urlID string, rem
 
 	callerIdLong := callerID
 	if callerHost!="" && callerHost!=hostname {
-		callerIdLong += "@"+callerHost
+		if strings.Index(callerIdLong,"@")>=0 {
+			callerIdLong += "@"+callerHost
+		} else {
+			callerIdLong += "@@"+callerHost
+		}
 	}
 
 	// check if callee is hidden online
