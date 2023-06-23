@@ -19,7 +19,7 @@ var langMap = {
 	"digAnswMachine"		: "About to call a digital answering machine",
 
 	"tryingToFind"			: "Trying to find",
-	"thisCanTakeSomeTime"	: "This may take a while. Please wait...",
+	"thisCanTakeSomeTime"	: "This may take a moment. Please wait...",
 	"isCurrentlyNot"		: "is currently not available.",
 	"canYouWaitSomeTime"	: "Can you wait some time while we try to establish a connection?",
 	"yesPleaseTry"			: "Yes, please try",
