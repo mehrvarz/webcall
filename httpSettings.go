@@ -69,7 +69,6 @@ func httpGetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		"dialSoundsMuted": strconv.FormatBool(bool(dbUser.Int2&4==4)),
 		"mainLinkDeactive": strconv.FormatBool(bool(dbUser.Int2&8==8)),
 		"mastodonLinkDeactive": strconv.FormatBool(bool(dbUser.Int2&16==16)),
-
 //		"webPushSubscription1": dbUser.Str2,
 //		"webPushUA1": dbUser.Str2ua,
 //		"webPushSubscription2": dbUser.Str3,
@@ -149,62 +148,80 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		switch(key) {
 		case "nickname":
 			if val != dbUser.Name {
-				//fmt.Printf("/setsettings (%s) new nickname (%s) (old:%s) %s\n",calleeID,val,dbUser.Name,remoteAddr)
+				if logWantedFor("setsettings") {
+					fmt.Printf("/setsettings (%s) new nickname (%s) (old:%s) %s\n",calleeID,val,dbUser.Name,remoteAddr)
+				}
 				dbUser.Name = val
 			}
 		case "mastodonID":
 			if val != dbUser.MastodonID {
-				//fmt.Printf("/setsettings (%s) new mastodonID (%s) (old:%s) %s\n",
-				//	calleeID,val,dbUser.MastodonID,remoteAddr)
+				if logWantedFor("setsettings") {
+					fmt.Printf("/setsettings (%s) new mastodonID (%s) (old:%s) %s\n",
+						calleeID,val,dbUser.MastodonID,remoteAddr)
+				}
 				dbUser.MastodonID = val
 			}
 		case "tootOnCall":
 			if(val=="true") {
 				if dbUser.MastodonSendTootOnCall != true {
-					//fmt.Printf("/setsettings (%s) new tootOnCall (%s) (old:%v) %s\n",
-					//	calleeID, val, dbUser.MastodonSendTootOnCall, remoteAddr)
+					if logWantedFor("setsettings") {
+						fmt.Printf("/setsettings (%s) new tootOnCall (%s) (old:%v) %s\n",
+							calleeID, val, dbUser.MastodonSendTootOnCall, remoteAddr)
+					}
 					dbUser.MastodonSendTootOnCall = true
 				}
 			} else {
 				if dbUser.MastodonSendTootOnCall != false {
-					//fmt.Printf("/setsettings (%s) new tootOnCall (%s) (old:%v) %s\n",
-					//	calleeID, val, dbUser.MastodonSendTootOnCall, remoteAddr)
+					if logWantedFor("setsettings") {
+						fmt.Printf("/setsettings (%s) new tootOnCall (%s) (old:%v) %s\n",
+							calleeID, val, dbUser.MastodonSendTootOnCall, remoteAddr)
+					}
 					dbUser.MastodonSendTootOnCall = false
 				}
 			}
 		case "askCallerBeforeNotify":
 			if(val=="true") {
 				if dbUser.AskCallerBeforeNotify != true {
-					//fmt.Printf("/setsettings (%s) new askCallerBeforeNotify (%s) (old:%v) %s\n",
-					//	calleeID, val, dbUser.AskCallerBeforeNotify, remoteAddr)
+					if logWantedFor("setsettings") {
+						fmt.Printf("/setsettings (%s) new askCallerBeforeNotify (%s) (old:%v) %s\n",
+							calleeID, val, dbUser.AskCallerBeforeNotify, remoteAddr)
+					}
 					dbUser.AskCallerBeforeNotify = true
 				}
 			} else {
 				if dbUser.AskCallerBeforeNotify != false {
-					//fmt.Printf("/setsettings (%s) new askCallerBeforeNotify (%s) (old:%v) %s\n",
-					//	calleeID, val, dbUser.AskCallerBeforeNotify, remoteAddr)
+					if logWantedFor("setsettings") {
+						fmt.Printf("/setsettings (%s) new askCallerBeforeNotify (%s) (old:%v) %s\n",
+							calleeID, val, dbUser.AskCallerBeforeNotify, remoteAddr)
+					}
 					dbUser.AskCallerBeforeNotify = false
 				}
 			}
 		case "storeContacts":
 			if(val=="true") {
 				if dbUser.StoreContacts != true {
-					//fmt.Printf("/setsettings (%s) new storeContacts (%s) (old:%v) %s\n",
-					//	calleeID, val, dbUser.StoreContacts, remoteAddr)
+					if logWantedFor("setsettings") {
+						fmt.Printf("/setsettings (%s) new storeContacts (%s) (old:%v) %s\n",
+							calleeID, val, dbUser.StoreContacts, remoteAddr)
+					}
 					dbUser.StoreContacts = true
 				}
 			} else {
 				if dbUser.StoreContacts != false {
-					//fmt.Printf("/setsettings (%s) new storeContacts (%s) (old:%v) %s\n",
-					//	calleeID, val, dbUser.StoreContacts, remoteAddr)
+					if logWantedFor("setsettings") {
+						fmt.Printf("/setsettings (%s) new storeContacts (%s) (old:%v) %s\n",
+							calleeID, val, dbUser.StoreContacts, remoteAddr)
+					}
 					dbUser.StoreContacts = false
 				}
 			}
 		case "storeMissedCalls":
 			if(val=="true") {
 				if !dbUser.StoreMissedCalls {
-					//fmt.Printf("/setsettings (%s) new storeMissedCalls (%s) old:%v\n",
-					//	calleeID,val,dbUser.StoreMissedCalls)
+					if logWantedFor("setsettings") {
+						fmt.Printf("/setsettings (%s) new storeMissedCalls (%s) old:%v\n",
+							calleeID,val,dbUser.StoreMissedCalls)
+					}
 					dbUser.StoreMissedCalls = true
 					// show missedCalls on callee web client (if avail)
 					hubMapMutex.RLock()
@@ -232,8 +249,10 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 				}
 			} else {
 				if dbUser.StoreMissedCalls {
-					//fmt.Printf("/setsettings (%s) new storeMissedCalls (%s) old:%v %s\n",
-					//	calleeID, val, dbUser.StoreMissedCalls, remoteAddr)
+					if logWantedFor("setsettings") {
+						fmt.Printf("/setsettings (%s) new storeMissedCalls (%s) old:%v %s\n",
+							calleeID, val, dbUser.StoreMissedCalls, remoteAddr)
+					}
 					dbUser.StoreMissedCalls = false
 					// hide missedCalls on callee web client
 					hubMapMutex.RLock()
@@ -253,8 +272,10 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 				// set dialsounds on (not muted)
 				dbUser.Int2 &= ^4
 			}
-			//fmt.Printf("/setsettings (%s) dialSoundsMuted (%s) %d %s\n",
-			//	calleeID, val, dbUser.Int2&4, remoteAddr)
+			if logWantedFor("setsettings") {
+				fmt.Printf("/setsettings (%s) dialSoundsMuted (%s) %d %s\n",
+					calleeID, val, dbUser.Int2&4, remoteAddr)
+			}
 
 		case "mainLinkDeactive":
 			if(val=="true") {
@@ -264,8 +285,10 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 				// set mainLink on
 				dbUser.Int2 &= ^8
 			}
-			//fmt.Printf("/setsettings (%s) mainLinkDeactive (%s) %d %s\n",
-			//	calleeID, val, dbUser.Int2&8, remoteAddr)
+			if logWantedFor("setsettings") {
+				fmt.Printf("/setsettings (%s) mainLinkDeactive (%s) %d %s\n",
+					calleeID, val, dbUser.Int2&8, remoteAddr)
+			}
 
 		case "mastodonLinkDeactive":
 			if(val=="true") {
@@ -275,8 +298,10 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 				// set mainLink on
 				dbUser.Int2 &= ^16
 			}
-			//fmt.Printf("/setsettings (%s) mainLinkDeactive (%s) %d %s\n",
-			//	calleeID, val, dbUser.Int2&16, remoteAddr)
+			if logWantedFor("setsettings") {
+				fmt.Printf("/setsettings (%s) mainLinkDeactive (%s) %d %s\n",
+					calleeID, val, dbUser.Int2&16, remoteAddr)
+			}
 
 /*
 		case "webPushSubscription1":
