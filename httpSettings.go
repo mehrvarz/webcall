@@ -100,8 +100,7 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		fmt.Printf("# /setsettings (%s) fail no cookie %s\n", calleeID, remoteAddr)
 		return
 	}
-
-	// if calleeID!=urlID, that's likely someone trying to run more than one callee in the same browser
+	// if calleeID!=urlID, could be a user trying to run more than one callee in the same browser
 	if urlID!="" && calleeID!=urlID {
 		fmt.Printf("# /setsettings fail calleeID(%s) != urlID(%s) %s\n", calleeID, urlID, remoteAddr)
 		return
@@ -145,67 +144,67 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		return
 	}
 
-	fmt.Printf("/setsettings (%s) len=%d rip=%s map=%v\n", calleeID, len(data), remoteAddr, newSettingsMap)
+	fmt.Printf("/setsettings (%s) len=%d rip=%s %v\n", calleeID, len(data), remoteAddr, newSettingsMap)
 	for key,val := range newSettingsMap {
 		switch(key) {
 		case "nickname":
 			if val != dbUser.Name {
-				fmt.Printf("/setsettings (%s) new nickname (%s) (old:%s) %s\n",calleeID,val,dbUser.Name,remoteAddr)
+				//fmt.Printf("/setsettings (%s) new nickname (%s) (old:%s) %s\n",calleeID,val,dbUser.Name,remoteAddr)
 				dbUser.Name = val
 			}
 		case "mastodonID":
 			if val != dbUser.MastodonID {
-				fmt.Printf("/setsettings (%s) new mastodonID (%s) (old:%s) %s\n",
-					calleeID,val,dbUser.MastodonID,remoteAddr)
+				//fmt.Printf("/setsettings (%s) new mastodonID (%s) (old:%s) %s\n",
+				//	calleeID,val,dbUser.MastodonID,remoteAddr)
 				dbUser.MastodonID = val
 			}
 		case "tootOnCall":
 			if(val=="true") {
 				if dbUser.MastodonSendTootOnCall != true {
-					fmt.Printf("/setsettings (%s) new tootOnCall (%s) (old:%v) %s\n",
-						calleeID, val, dbUser.MastodonSendTootOnCall, remoteAddr)
+					//fmt.Printf("/setsettings (%s) new tootOnCall (%s) (old:%v) %s\n",
+					//	calleeID, val, dbUser.MastodonSendTootOnCall, remoteAddr)
 					dbUser.MastodonSendTootOnCall = true
 				}
 			} else {
 				if dbUser.MastodonSendTootOnCall != false {
-					fmt.Printf("/setsettings (%s) new tootOnCall (%s) (old:%v) %s\n",
-						calleeID, val, dbUser.MastodonSendTootOnCall, remoteAddr)
+					//fmt.Printf("/setsettings (%s) new tootOnCall (%s) (old:%v) %s\n",
+					//	calleeID, val, dbUser.MastodonSendTootOnCall, remoteAddr)
 					dbUser.MastodonSendTootOnCall = false
 				}
 			}
 		case "askCallerBeforeNotify":
 			if(val=="true") {
 				if dbUser.AskCallerBeforeNotify != true {
-					fmt.Printf("/setsettings (%s) new askCallerBeforeNotify (%s) (old:%v) %s\n",
-						calleeID, val, dbUser.AskCallerBeforeNotify, remoteAddr)
+					//fmt.Printf("/setsettings (%s) new askCallerBeforeNotify (%s) (old:%v) %s\n",
+					//	calleeID, val, dbUser.AskCallerBeforeNotify, remoteAddr)
 					dbUser.AskCallerBeforeNotify = true
 				}
 			} else {
 				if dbUser.AskCallerBeforeNotify != false {
-					fmt.Printf("/setsettings (%s) new askCallerBeforeNotify (%s) (old:%v) %s\n",
-						calleeID, val, dbUser.AskCallerBeforeNotify, remoteAddr)
+					//fmt.Printf("/setsettings (%s) new askCallerBeforeNotify (%s) (old:%v) %s\n",
+					//	calleeID, val, dbUser.AskCallerBeforeNotify, remoteAddr)
 					dbUser.AskCallerBeforeNotify = false
 				}
 			}
 		case "storeContacts":
 			if(val=="true") {
 				if dbUser.StoreContacts != true {
-					fmt.Printf("/setsettings (%s) new storeContacts (%s) (old:%v) %s\n",
-						calleeID, val, dbUser.StoreContacts, remoteAddr)
+					//fmt.Printf("/setsettings (%s) new storeContacts (%s) (old:%v) %s\n",
+					//	calleeID, val, dbUser.StoreContacts, remoteAddr)
 					dbUser.StoreContacts = true
 				}
 			} else {
 				if dbUser.StoreContacts != false {
-					fmt.Printf("/setsettings (%s) new storeContacts (%s) (old:%v) %s\n",
-						calleeID, val, dbUser.StoreContacts, remoteAddr)
+					//fmt.Printf("/setsettings (%s) new storeContacts (%s) (old:%v) %s\n",
+					//	calleeID, val, dbUser.StoreContacts, remoteAddr)
 					dbUser.StoreContacts = false
 				}
 			}
 		case "storeMissedCalls":
 			if(val=="true") {
 				if !dbUser.StoreMissedCalls {
-					fmt.Printf("/setsettings (%s) new storeMissedCalls (%s) old:%v\n",
-						calleeID,val,dbUser.StoreMissedCalls)
+					//fmt.Printf("/setsettings (%s) new storeMissedCalls (%s) old:%v\n",
+					//	calleeID,val,dbUser.StoreMissedCalls)
 					dbUser.StoreMissedCalls = true
 					// show missedCalls on callee web client (if avail)
 					hubMapMutex.RLock()
@@ -233,15 +232,15 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 				}
 			} else {
 				if dbUser.StoreMissedCalls {
-					fmt.Printf("/setsettings (%s) new storeMissedCalls (%s) old:%v %s\n",
-						calleeID, val, dbUser.StoreMissedCalls, remoteAddr)
+					//fmt.Printf("/setsettings (%s) new storeMissedCalls (%s) old:%v %s\n",
+					//	calleeID, val, dbUser.StoreMissedCalls, remoteAddr)
 					dbUser.StoreMissedCalls = false
 					// hide missedCalls on callee web client
 					hubMapMutex.RLock()
 					hub := hubMap[calleeID]
 					hubMapMutex.RUnlock()
 					if hub!=nil && hub.CalleeClient!=nil {
-						hub.CalleeClient.Write([]byte("missedCalls|")) // need websocket
+						hub.CalleeClient.Write([]byte("missedCalls|")) // websocket required
 					}
 				}
 			}
@@ -254,8 +253,8 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 				// set dialsounds on (not muted)
 				dbUser.Int2 &= ^4
 			}
-			fmt.Printf("/setsettings (%s) dialSoundsMuted (%s) %d %s\n",
-				calleeID, val, dbUser.Int2&4, remoteAddr)
+			//fmt.Printf("/setsettings (%s) dialSoundsMuted (%s) %d %s\n",
+			//	calleeID, val, dbUser.Int2&4, remoteAddr)
 
 		case "mainLinkDeactive":
 			if(val=="true") {
@@ -265,8 +264,8 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 				// set mainLink on
 				dbUser.Int2 &= ^8
 			}
-			fmt.Printf("/setsettings (%s) mainLinkDeactive (%s) %d %s\n",
-				calleeID, val, dbUser.Int2&8, remoteAddr)
+			//fmt.Printf("/setsettings (%s) mainLinkDeactive (%s) %d %s\n",
+			//	calleeID, val, dbUser.Int2&8, remoteAddr)
 
 		case "mastodonLinkDeactive":
 			if(val=="true") {
@@ -276,8 +275,8 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 				// set mainLink on
 				dbUser.Int2 &= ^16
 			}
-			fmt.Printf("/setsettings (%s) mainLinkDeactive (%s) %d %s\n",
-				calleeID, val, dbUser.Int2&16, remoteAddr)
+			//fmt.Printf("/setsettings (%s) mainLinkDeactive (%s) %d %s\n",
+			//	calleeID, val, dbUser.Int2&16, remoteAddr)
 
 /*
 		case "webPushSubscription1":
