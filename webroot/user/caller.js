@@ -359,6 +359,7 @@ window.onload = function() {
 
 	contactAutoStore = false;
 	if(cookieName!="" && (callerId==cookieName || callerId=="" || callerId=="select")) {
+		// using cookieName (bc callerID is same or not set)
 		gLog("onload set callerId = cookieName ("+cookieName+")");
 		callerId = cookieName;
 		let api = apiPath+"/getsettings?id="+callerId;
@@ -418,19 +419,21 @@ window.onload = function() {
 		}, function(errString,err) {
 			console.log("# onload xhr error "+errString+" "+err);
 		});
+	} else {
+		// ignore cookieName
+		cookieName = "";
 	}
 
 	// show dial-id dialog
 	// - if calleeID=="": called by dialpad icon from mainpage
 	// - if callerIdArg=="select": called by android client as a 1st step before calling a remote host user
-	gLog("onload show dial-id? calleeID="+calleeID+" callerIdArg="+callerIdArg);
+	gLog("onload show dial-id calleeID="+calleeID+" callerIdArg="+callerIdArg);
 	if(calleeID=="" || callerIdArg=="select") {
 		containerElement.style.display = "none";
 		enterIdElement.style.display = "block";
 
 		if(callerIdArg=="select") {
-			// callerId must urgently be set, bc it is currently set to "select"
-
+			// callerId MUST be set now, bc it is currently set to "select"
 			if(callerId!="" && callerId!=cookieName) {
 				// if we override the callerId with a different cookieName
 				// we also clear the callerName (alligned with the old callerId)
@@ -444,6 +447,7 @@ window.onload = function() {
 			idSelectElement = document.getElementById("idSelect2");
 			if(idSelectElement!=null) {
 				let idSelect2LabelElement = document.getElementById("idSelect2Label");
+				// fetchMapping() will use "/getmapping?id="+cookieName
 				fetchMapping(null,idSelectElement,idSelect2LabelElement);
 			}
 		}
