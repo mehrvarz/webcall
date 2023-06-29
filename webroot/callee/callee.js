@@ -2170,6 +2170,7 @@ function goOnline(sendInitFlag,comment) {
 			gLog('goOnline have wsConn -> send init');
 			sendInit("goOnline <- "+comment);
 		}
+		getSettings(); // display ID-links
 	}
 }
 
