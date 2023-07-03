@@ -143,7 +143,9 @@ func httpSetSettings(w http.ResponseWriter, r *http.Request, urlID string, calle
 		return
 	}
 
-	fmt.Printf("/setsettings (%s) len=%d rip=%s %v\n", calleeID, len(data), remoteAddr, newSettingsMap)
+	if logWantedFor("setsettings") {
+		fmt.Printf("/setsettings (%s) len=%d rip=%s %v\n", calleeID, len(data), remoteAddr, newSettingsMap)
+	}
 	for key,val := range newSettingsMap {
 		switch(key) {
 		case "nickname":
