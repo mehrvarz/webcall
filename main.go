@@ -379,7 +379,7 @@ func main() {
 	})
 	skv.DbMutex.Unlock()
 
-// TODO tmtmtm outcomment both loops:
+	/*
 	// dump mapping[] (at this point mapping[] contains items from readConfig(true) (answie,etc.) and user mapping)
 	for key,mappingDataType := range mapping {
 		fmt.Printf("mapping %s -> %s %s\n", key, mappingDataType.CalleeId, mappingDataType.Assign)
@@ -388,6 +388,7 @@ func main() {
 	for key := range ringMuted {
 		fmt.Printf("ringMuted %s\n", key)
 	}
+	*/
 
 	readConfig(false) // if configured start mastodonhandler
 
