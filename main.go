@@ -342,8 +342,12 @@ func main() {
 				   strings.Index(dbUser.AltIDs,"\n")>=0 ||
 				   strings.Index(dbUser.AltIDs,"<")>=0 ||
 				   strings.Index(dbUser.AltIDs,">")>=0 {
+					tmpStr := dbUser.AltIDs
+					if len(tmpStr)>40 {
+						tmpStr = tmpStr[0:40]
+					}
 					fmt.Printf("initloop dbUser.AltIDs contains garbage (name=%s -> %s) [%s]\n",
-						dbUser.Name, dbUser.Ip1, dbUser.AltIDs)
+						dbUser.Name, dbUser.Ip1, tmpStr)
 					continue
 				}
 				if len(dbUser.AltIDs)>=200 {
