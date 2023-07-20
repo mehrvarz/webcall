@@ -2302,8 +2302,9 @@ async function peerConCreateOffer() {
 		console.log("peerCon onnegotiationneeded localDescription.sdp");
 		localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
 			'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
-		console.log("peerCon onnegotiationneeded localDescription=",localDescription);
+		console.log("peerCon onnegotiationneeded localDescription=",JSON.stringify(localDescription));
 		peerCon.setLocalDescription(localDescription).then(() => {
+/*
 			if(isDataChlOpen()) {
 				console.log('peerCon onnegotiationneeded localDescription -> signal (dataChl)');
 				dataChannel.send("cmd|calleeOffer|"+JSON.stringify(localDescription));
@@ -2311,6 +2312,8 @@ async function peerConCreateOffer() {
 				console.log('peerCon onnegotiationneeded localDescription -> signal');
 				wsSend("calleeOffer|"+JSON.stringify(localDescription));
 			}
+*/
+			console.log('peerCon onnegotiationneeded done localDescription=',JSON.stringify(localDescription));
 		}, err => console.error(`Failed to set local descr: ${err.toString()}`));
 	} catch(err) {
 		console.error("peerCon onnegotiationneeded err",err.message);
