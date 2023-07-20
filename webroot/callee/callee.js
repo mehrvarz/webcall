@@ -2280,7 +2280,7 @@ function newPeerCon() {
 	}
 }
 
-function peerConCreateOffer() {
+async function peerConCreateOffer() {
 	console.log("peerCon createOffer");
 	if(!peerCon /*|| peerCon.iceConnectionState=="closed"*/) {
 		console.log('# peerCon onnegotiationneeded deny: no peerCon');
@@ -2296,7 +2296,7 @@ function peerConCreateOffer() {
 	try {
 		// this will trigger onIceCandidates and send hostCandidate's to the client
 		console.log("peerCon onnegotiationneeded createOffer");
-		localDescription = peerCon.createOffer();
+		localDescription = await peerCon.createOffer();
 		console.log("peerCon onnegotiationneeded maybePreferCodec");
 		localDescription.sdp = maybePreferCodec(localDescription.sdp, 'audio', 'send', "opus");
 		console.log("peerCon onnegotiationneeded localDescription.sdp");
