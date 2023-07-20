@@ -2175,6 +2175,7 @@ function goOnline(sendInitFlag,comment) {
 }
 
 function newPeerCon() {
+	console.log("newPeerCon()");
 	try {
 		peerCon = new RTCPeerConnection(ICE_config);
 		console.log("new RTCPeerConnection ready");
@@ -2198,7 +2199,7 @@ function newPeerCon() {
 		// don't warn on 701 (chrome "701 STUN allocate request timed out")
 		// 400 = bad request
 		if(e.errorCode==701) {
-			gLog("# peerCon onicecandidateerror " + e.errorCode+" "+e.errorText+" "+e.url,-1);
+			console.log("# peerCon onicecandidateerror " + e.errorCode+" "+e.errorText+" "+e.url,-1);
 		} else {
 			console.log("# peerCon onicecandidateerror " + e.errorCode+" "+e.errorText,-1);
 		}
@@ -2206,35 +2207,39 @@ function newPeerCon() {
 	peerCon.ontrack = ({track, streams}) => peerConOntrack(track, streams);
 	peerCon.onicegatheringstatechange = event => {
 		let connection = event.target;
-		gLog("peerCon onicegatheringstatechange "+connection.iceGatheringState);
+		console.log("peerCon onicegatheringstatechange "+connection.iceGatheringState);
 	}
 	peerCon.onnegotiationneeded = async () => {
+/*
 		if(!peerCon || peerCon.iceConnectionState=="closed") {
 			console.log('# peerCon onnegotiationneeded deny: no peerCon');
 			return;
 		}
 		if(!rtcConnect) {
-			gLog('peerCon onnegotiationneeded deny: no rtcConnect');
+			console.log('peerCon onnegotiationneeded deny: no rtcConnect');
 			return;
 		}
 		try {
-			// this will trigger onIceCandidates and send hostCandidate's to the client
-			gLog("peerCon onnegotiationneeded createOffer");
+			// this will trigger g and send hostCandidate's to the client
+			console.log("peerCon onnegotiationneeded createOffer");
 			localDescription = await peerCon.createOffer();
 			localDescription.sdp = maybePreferCodec(localDescription.sdp, 'audio', 'send', "opus");
 			localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
 				'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
 			peerCon.setLocalDescription(localDescription).then(() => {
-				gLog('peerCon onnegotiationneeded localDescription -> signal');
 				if(isDataChlOpen()) {
+					console.log('peerCon onnegotiationneeded localDescription -> signal (dataChl)');
 					dataChannel.send("cmd|calleeOffer|"+JSON.stringify(localDescription));
 				} else {
+					console.log('peerCon onnegotiationneeded localDescription -> signal');
 					wsSend("calleeOffer|"+JSON.stringify(localDescription));
 				}
 			}, err => console.error(`Failed to set local descr: ${err.toString()}`));
 		} catch(err) {
 			console.error("peerCon onnegotiationneeded err",err.message);
 		}
+*/
+		peerConCreateOffer();
 	};
 	peerCon.onsignalingstatechange = event => {
 		console.log("peerCon signalingstatechange "+peerCon.signalingState);
@@ -2265,7 +2270,7 @@ function newPeerCon() {
 
 			newPeerCon();
 			if(wsConn==null) {
-				gLog('peerCon failed and have no wsConn -> login()');
+				console.log('peerCon failed and have no wsConn -> login()');
 				login(false);
 			} else {
 				// init already sent by endWebRtcSession() above
@@ -2278,11 +2283,42 @@ function newPeerCon() {
 	}
 }
 
+function peerConCreateOffer() {
+	console.log("peerCon createOffer");
+	if(!peerCon /*|| peerCon.iceConnectionState=="closed"*/) {
+		console.log('# peerCon onnegotiationneeded deny: no peerCon');
+		return;
+	}
+	if(!rtcConnect) {
+		console.log('peerCon onnegotiationneeded deny: no rtcConnect');
+		return;
+	}
+	try {
+		// this will trigger onIceCandidates and send hostCandidate's to the client
+		console.log("peerCon onnegotiationneeded createOffer");
+		localDescription = await peerCon.createOffer();
+		localDescription.sdp = maybePreferCodec(localDescription.sdp, 'audio', 'send', "opus");
+		localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
+			'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
+		peerCon.setLocalDescription(localDescription).then(() => {
+			if(isDataChlOpen()) {
+				console.log('peerCon onnegotiationneeded localDescription -> signal (dataChl)');
+				dataChannel.send("cmd|calleeOffer|"+JSON.stringify(localDescription));
+			} else {
+				console.log('peerCon onnegotiationneeded localDescription -> signal');
+				wsSend("calleeOffer|"+JSON.stringify(localDescription));
+			}
+		}, err => console.error(`Failed to set local descr: ${err.toString()}`));
+	} catch(err) {
+		console.error("peerCon onnegotiationneeded err",err.message);
+	}
+}
+
 
 function peerConnected2() {
 	// called when peerCon.connectionState=="connected"
 	if(rtcConnect) {
-		gLog("peerConnected2 already rtcConnect abort");
+		console.log("peerConnected2 already rtcConnect abort");
 		return;
 	}
 	rtcConnect = true;
@@ -2296,7 +2332,7 @@ function peerConnected2() {
 	wsSend("rtcConnect|")
 
 	if(!dataChannel) {
-		gLog('peerConnected2 createDataChannel');
+		console.log('peerConnected2 createDataChannel');
 		createDataChannel();
 	}
 

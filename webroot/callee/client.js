@@ -1307,7 +1307,7 @@ function vmonitor() {
 		setVideoConstraintsGiven();
 
 		getStream(); // -> gotStream() -> gotStream2()
-		return
+		return;
 		// vmonitor will be called again, but then with localStream
 	}
 	if(videoEnabled) {
