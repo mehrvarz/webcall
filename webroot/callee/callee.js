@@ -2210,8 +2210,7 @@ function newPeerCon() {
 		console.log("peerCon onicegatheringstatechange "+connection.iceGatheringState);
 	}
 	peerCon.onnegotiationneeded = async () => {
-/*
-		if(!peerCon || peerCon.iceConnectionState=="closed") {
+		if(!peerCon /*|| peerCon.iceConnectionState=="closed"*/) {
 			console.log('# peerCon onnegotiationneeded deny: no peerCon');
 			return;
 		}
@@ -2238,8 +2237,6 @@ function newPeerCon() {
 		} catch(err) {
 			console.error("peerCon onnegotiationneeded err",err.message);
 		}
-*/
-		peerConCreateOffer();
 	};
 	peerCon.onsignalingstatechange = event => {
 		console.log("peerCon signalingstatechange "+peerCon.signalingState);
@@ -2296,7 +2293,7 @@ function peerConCreateOffer() {
 	try {
 		// this will trigger onIceCandidates and send hostCandidate's to the client
 		console.log("peerCon onnegotiationneeded createOffer");
-		localDescription = await peerCon.createOffer();
+		localDescription = peerCon.createOffer();
 		localDescription.sdp = maybePreferCodec(localDescription.sdp, 'audio', 'send', "opus");
 		localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
 			'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
