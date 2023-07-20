@@ -2286,10 +2286,13 @@ function peerConCreateOffer() {
 		console.log('# peerCon onnegotiationneeded deny: no peerCon');
 		return;
 	}
+/*
 	if(!rtcConnect) {
-		console.log('peerCon onnegotiationneeded deny: no rtcConnect');
+		// not connected to another peer
+		console.log('# peerCon onnegotiationneeded deny: no rtcConnect');
 		return;
 	}
+*/
 	try {
 		// this will trigger onIceCandidates and send hostCandidate's to the client
 		console.log("peerCon onnegotiationneeded createOffer");
