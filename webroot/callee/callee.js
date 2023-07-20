@@ -2297,9 +2297,12 @@ function peerConCreateOffer() {
 		// this will trigger onIceCandidates and send hostCandidate's to the client
 		console.log("peerCon onnegotiationneeded createOffer");
 		localDescription = peerCon.createOffer();
+		console.log("peerCon onnegotiationneeded maybePreferCodec");
 		localDescription.sdp = maybePreferCodec(localDescription.sdp, 'audio', 'send', "opus");
+		console.log("peerCon onnegotiationneeded localDescription.sdp");
 		localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
 			'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
+		console.log("peerCon onnegotiationneeded localDescription=",localDescription);
 		peerCon.setLocalDescription(localDescription).then(() => {
 			if(isDataChlOpen()) {
 				console.log('peerCon onnegotiationneeded localDescription -> signal (dataChl)');
