@@ -2281,18 +2281,20 @@ function newPeerCon() {
 }
 
 async function peerConCreateOffer() {
-	console.log("peerCon createOffer");
+	console.log("peerConCreateOffer ------------------------");
+
 	if(!peerCon /*|| peerCon.iceConnectionState=="closed"*/) {
-		console.log('# peerCon onnegotiationneeded deny: no peerCon');
+		console.log('# peerConCreateOffer deny: no peerCon');
 		return;
 	}
+
+//	if(!rtcConnect) {
+//		// not connected to another peer
+//		console.log('# peerCon onnegotiationneeded deny: no rtcConnect');
+//		return;
+//	}
+
 /*
-	if(!rtcConnect) {
-		// not connected to another peer
-		console.log('# peerCon onnegotiationneeded deny: no rtcConnect');
-		return;
-	}
-*/
 	try {
 		// this will trigger onIceCandidates and send hostCandidate's to the client
 		console.log("peerCon onnegotiationneeded createOffer");
@@ -2304,20 +2306,23 @@ async function peerConCreateOffer() {
 			'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
 		console.log("peerCon onnegotiationneeded localDescription=",JSON.stringify(localDescription));
 		peerCon.setLocalDescription(localDescription).then(() => {
-/*
-			if(isDataChlOpen()) {
-				console.log('peerCon onnegotiationneeded localDescription -> signal (dataChl)');
-				dataChannel.send("cmd|calleeOffer|"+JSON.stringify(localDescription));
-			} else {
-				console.log('peerCon onnegotiationneeded localDescription -> signal');
-				wsSend("calleeOffer|"+JSON.stringify(localDescription));
-			}
-*/
+
+//			if(isDataChlOpen()) {
+//				console.log('peerCon onnegotiationneeded localDescription -> signal (dataChl)');
+//				dataChannel.send("cmd|calleeOffer|"+JSON.stringify(localDescription));
+//			} else {
+//				console.log('peerCon onnegotiationneeded localDescription -> signal');
+//				wsSend("calleeOffer|"+JSON.stringify(localDescription));
+//			}
+
 			console.log('peerCon onnegotiationneeded done localDescription=',JSON.stringify(localDescription));
 		}, err => console.error(`Failed to set local descr: ${err.toString()}`));
 	} catch(err) {
 		console.error("peerCon onnegotiationneeded err",err.message);
 	}
+*/
+	peerCon.setConfiguration();
+	console.log("peerCon peerConCreateOffer done");
 }
 
 
