@@ -2280,7 +2280,7 @@ function newPeerCon() {
 	}
 }
 
-async function peerConCreateOffer() {
+function peerConCreateOffer() {
 	console.log("peerConCreateOffer ------------------------");
 
 	if(!peerCon /*|| peerCon.iceConnectionState=="closed"*/) {
@@ -2321,8 +2321,10 @@ async function peerConCreateOffer() {
 		console.error("peerCon onnegotiationneeded err",err.message);
 	}
 */
-	peerCon.setConfiguration(ICE_config);
-	console.log("peerCon peerConCreateOffer done");
+	(async() => {
+		await peerCon.setConfiguration(ICE_config);
+		console.log("peerCon peerConCreateOffer done");
+	})()
 }
 
 
