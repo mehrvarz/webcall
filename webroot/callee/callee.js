@@ -2296,7 +2296,7 @@ async function peerConCreateOffer() {
 
 /*
 	try {
-		// this will trigger onIceCandidates and send hostCandidate's to the client
+		// this will trigger onIceCandidate calls and send hostCandidate's to the client
 		console.log("peerCon onnegotiationneeded createOffer");
 		localDescription = await peerCon.createOffer();
 		console.log("peerCon onnegotiationneeded maybePreferCodec");

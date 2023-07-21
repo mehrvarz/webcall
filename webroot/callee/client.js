@@ -730,30 +730,29 @@ function menuDialogClose() {
 
 function onIceCandidate(event,myCandidateName) {
 	if(doneHangup) {
-		gLog('onIce ignored after doneHangup');
+		console.log('# onIce ignored after doneHangup');
 		return;
 	}
 	if(event.candidate==null) {
 		// ICE gathering has finished
-		gLog('onIce end of candidates');
+		console.log('onIce end of candidates');
 	} else if(event.candidate.address==null) {
 		//console.warn('onIce skip event.candidate.address==null');
 	} else if(isDataChlOpen()) {
 		onIceCandidates++;
-		gLog("onIce "+myCandidateName+" dataChl doneHangup="+doneHangup);
+		console.log("onIce "+myCandidateName+" dataChl doneHangup="+doneHangup);
 
 		dataChannel.send("cmd|"+myCandidateName+"|"+JSON.stringify(event.candidate));
 	} else if(wsConn==null) {
-		gLog("onIce "+myCandidateName+": wsConn==null "+event.candidate.address+" "+onIceCandidates);
+		console.log("# onIce "+myCandidateName+": wsConn==null "+event.candidate.address+" "+onIceCandidates);
 	} else if(typeof wsConn.readyState !== "undefined" && wsConn.readyState!=1) {
 		// supposed meaning: true = signaling server not connected
-		gLog("onIce "+myCandidateName+" readyS!=1 "+event.candidate.address+" "+wsConn.readyState);
+		console.log("# onIce "+myCandidateName+" readyS!=1 "+event.candidate.address+" "+wsConn.readyState);
 	} else {
 		onIceCandidates++;
-		gLog("onIce "+myCandidateName+" wsSend "+event.candidate.address+" "+onIceCandidates);
+		console.log("onIce "+myCandidateName+" wsSend "+event.candidate.address+" "+onIceCandidates);
 		// 300ms delay to prevent "cmd "+myCandidateName+" no peerCon.remoteDescription" on other side
 		setTimeout(function() {
-			// TODO support dataChannel delivery?
 			if(!doneHangup) {
 				wsSend(myCandidateName+"|"+JSON.stringify(event.candidate));
 			}
