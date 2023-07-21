@@ -2321,7 +2321,7 @@ async function peerConCreateOffer() {
 		console.error("peerCon onnegotiationneeded err",err.message);
 	}
 */
-	peerCon.setConfiguration();
+	peerCon.setConfiguration(ICE_config);
 	console.log("peerCon peerConCreateOffer done");
 }
 
