@@ -2321,9 +2321,29 @@ function peerConCreateOffer() {
 		console.error("peerCon onnegotiationneeded err",err.message);
 	}
 */
+
+// TODO peerCon.setConfiguration() does not trigger onIceCandidate() callbacks
 	(async() => {
-		await peerCon.setConfiguration(ICE_config);
-		console.log("peerCon peerConCreateOffer done");
+//		await peerCon.setConfiguration(ICE_config);
+
+		localDescription = await peerCon.createOffer();
+		localDescription.sdp = maybePreferCodec(localDescription.sdp, 'audio', 'send', "opus");
+		localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
+			'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
+		peerCon.setLocalDescription(localDescription).then(() => {
+/*
+			if(isDataChlOpen()) {
+				console.log('peerCon onnegotiationneeded localDescription -> signal (dataChl)');
+				dataChannel.send("cmd|calleeOffer|"+JSON.stringify(localDescription));
+			} else {
+				console.log('peerCon onnegotiationneeded localDescription -> signal');
+				wsSend("calleeOffer|"+JSON.stringify(localDescription));
+			}
+*/
+			console.log('peerConCreateOffer localDescription -> signal');
+		}, err => console.error(`Failed to set local descr: ${err.toString()}`));
+
+		console.log("peerConCreateOffer done");
 	})()
 }
 
@@ -3030,7 +3050,7 @@ function exit() {
 }
 
 function wakeGoOnline() {
-	gLog("wakeGoOnline start");
+	console.log("wakeGoOnline start");
 	connectSignaling('','wakeGoOnline'); // only get wsConn from service (from Android.wsOpen())
 	wsOnOpen(); // green led
 	goOnlineButton.disabled = false; // prevent goOnline() abort
@@ -3039,7 +3059,8 @@ function wakeGoOnline() {
 }
 
 function wakeGoOnlineNoInit() {
-	gLog("wakeGoOnlineNoInit start");
+// TODO do we need to call Android.calleeConnected() -> calleeIsConnected() ?
+	console.log("wakeGoOnlineNoInit start");
 	connectSignaling('','wakeGoOnlineNoInit'); // only get wsConn from service (from Android.wsOpen())
 	wsOnOpen(); // green led
 	goOnlineButton.disabled = false; // prevent goOnline() abort
