@@ -2281,70 +2281,23 @@ function newPeerCon() {
 }
 
 function peerConCreateOffer() {
-	console.log("peerConCreateOffer ------------------------");
-
 	if(!peerCon /*|| peerCon.iceConnectionState=="closed"*/) {
 		console.log('# peerConCreateOffer deny: no peerCon');
 		return;
 	}
 
-//	if(!rtcConnect) {
-//		// not connected to another peer
-//		console.log('# peerCon onnegotiationneeded deny: no rtcConnect');
-//		return;
-//	}
-
-/*
-	try {
-		// this will trigger onIceCandidate calls and send hostCandidate's to the client
-		console.log("peerCon onnegotiationneeded createOffer");
-		localDescription = await peerCon.createOffer();
-		console.log("peerCon onnegotiationneeded maybePreferCodec");
-		localDescription.sdp = maybePreferCodec(localDescription.sdp, 'audio', 'send', "opus");
-		console.log("peerCon onnegotiationneeded localDescription.sdp");
-		localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
-			'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
-		console.log("peerCon onnegotiationneeded localDescription=",JSON.stringify(localDescription));
-		peerCon.setLocalDescription(localDescription).then(() => {
-
-//			if(isDataChlOpen()) {
-//				console.log('peerCon onnegotiationneeded localDescription -> signal (dataChl)');
-//				dataChannel.send("cmd|calleeOffer|"+JSON.stringify(localDescription));
-//			} else {
-//				console.log('peerCon onnegotiationneeded localDescription -> signal');
-//				wsSend("calleeOffer|"+JSON.stringify(localDescription));
-//			}
-
-			console.log('peerCon onnegotiationneeded done localDescription=',JSON.stringify(localDescription));
-		}, err => console.error(`Failed to set local descr: ${err.toString()}`));
-	} catch(err) {
-		console.error("peerCon onnegotiationneeded err",err.message);
-	}
-*/
-
-// TODO peerCon.setConfiguration() does not trigger onIceCandidate() callbacks
+	console.log("peerConCreateOffer ------------------------");
 	(async() => {
-//		await peerCon.setConfiguration(ICE_config);
-
 		localDescription = await peerCon.createOffer();
 		localDescription.sdp = maybePreferCodec(localDescription.sdp, 'audio', 'send', "opus");
 		localDescription.sdp = localDescription.sdp.replace('useinbandfec=1',
 			'useinbandfec=1;usedtx=1;stereo=1;maxaveragebitrate='+bitrate+';');
 		peerCon.setLocalDescription(localDescription).then(() => {
-/*
-			if(isDataChlOpen()) {
-				console.log('peerCon onnegotiationneeded localDescription -> signal (dataChl)');
-				dataChannel.send("cmd|calleeOffer|"+JSON.stringify(localDescription));
-			} else {
-				console.log('peerCon onnegotiationneeded localDescription -> signal');
-				wsSend("calleeOffer|"+JSON.stringify(localDescription));
-			}
-*/
-			console.log('peerConCreateOffer localDescription -> signal');
+			console.log('peerConCreateOffer localDescription nofw '+JSON.stringify(localDescription));
 		}, err => console.error(`Failed to set local descr: ${err.toString()}`));
 
 		console.log("peerConCreateOffer done");
-	})()
+	})();
 }
 
 

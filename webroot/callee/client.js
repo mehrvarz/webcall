@@ -730,18 +730,17 @@ function menuDialogClose() {
 
 function onIceCandidate(event,myCandidateName) {
 	if(doneHangup) {
-		console.log('# onIce ignored after doneHangup');
+		console.log('# onIce ignored after doneHangup '+JSON.stringify(event.candidate));
 		return;
 	}
 	if(event.candidate==null) {
 		// ICE gathering has finished
 		console.log('onIce end of candidates');
 	} else if(event.candidate.address==null) {
-		//console.warn('onIce skip event.candidate.address==null');
+		console.log('# onIce skip event.candidate.address==null '+JSON.stringify(event.candidate));
 	} else if(isDataChlOpen()) {
 		onIceCandidates++;
 		console.log("onIce "+myCandidateName+" dataChl doneHangup="+doneHangup);
-
 		dataChannel.send("cmd|"+myCandidateName+"|"+JSON.stringify(event.candidate));
 	} else if(wsConn==null) {
 		console.log("# onIce "+myCandidateName+": wsConn==null "+event.candidate.address+" "+onIceCandidates);
