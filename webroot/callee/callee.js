@@ -2210,12 +2210,12 @@ function newPeerCon() {
 		console.log("peerCon onicegatheringstatechange "+connection.iceGatheringState);
 	}
 	peerCon.onnegotiationneeded = async () => {
-		if(!peerCon /*|| peerCon.iceConnectionState=="closed"*/) {
+		if(!peerCon || peerCon.iceConnectionState=="closed") {
 			console.log('# peerCon onnegotiationneeded deny: no peerCon');
 			return;
 		}
 		if(!rtcConnect) {
-			console.log('peerCon onnegotiationneeded deny: no rtcConnect');
+			console.log('# peerCon onnegotiationneeded deny: no rtcConnect');
 			return;
 		}
 		try {
@@ -2280,8 +2280,9 @@ function newPeerCon() {
 	}
 }
 
+/*
 function peerConCreateOffer() {
-	if(!peerCon /*|| peerCon.iceConnectionState=="closed"*/) {
+	if(!peerCon) {
 		console.log('# peerConCreateOffer deny: no peerCon');
 		return;
 	}
@@ -2299,7 +2300,7 @@ function peerConCreateOffer() {
 		console.log("peerConCreateOffer done");
 	})();
 }
-
+*/
 
 function peerConnected2() {
 	// called when peerCon.connectionState=="connected"
