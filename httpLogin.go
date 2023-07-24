@@ -108,48 +108,50 @@ func httpLogin(w http.ResponseWriter, r *http.Request, urlID string, dialID stri
 		blockMapMutex.Unlock()
 	}
 
-	// deny a callee to do more than X logins per 30min (relative to urlID)
 	calleeLoginMutex.RLock()
 	calleeLoginSlice,ok := calleeLoginMap[urlID]
 	calleeLoginMutex.RUnlock()
-	readConfigLock.RLock()
-	maxLoginPer30minTmp := maxLoginPer30min
-	readConfigLock.RUnlock()
-	if maxLoginPer30minTmp>0 && remoteAddr!=outboundIP && remoteAddr!="127.0.0.1" {
-		if ok {
-			// remove all entries (from the beginning) that are 30min or older
-			for len(calleeLoginSlice)>0 {
-				if time.Now().Sub(calleeLoginSlice[0]) < 30 * time.Minute {
-					break
+	// deny a callee to do more than X logins per 30min (relative to urlID)
+	if !strings.HasPrefix(urlID,"answie") {
+		readConfigLock.RLock()
+		maxLoginPer30minTmp := maxLoginPer30min
+		readConfigLock.RUnlock()
+		if maxLoginPer30minTmp>0 && remoteAddr!=outboundIP && remoteAddr!="127.0.0.1" {
+			if ok {
+				// remove all entries (from the beginning) that are 30min or older
+				for len(calleeLoginSlice)>0 {
+					if time.Now().Sub(calleeLoginSlice[0]) < 30 * time.Minute {
+						break
+					}
+					if len(calleeLoginSlice)>1 {
+						calleeLoginSlice = calleeLoginSlice[1:]
+					} else {
+						calleeLoginSlice = calleeLoginSlice[:0]
+					}
 				}
-				if len(calleeLoginSlice)>1 {
-					calleeLoginSlice = calleeLoginSlice[1:]
-				} else {
-					calleeLoginSlice = calleeLoginSlice[:0]
+				if len(calleeLoginSlice) >= maxLoginPer30minTmp {
+					if logWantedFor("overload") {
+						fmt.Printf("! /login (%s) %d >= %d logins/30m rip=%s v=%s\n",
+							urlID, len(calleeLoginSlice), maxLoginPer30minTmp, remoteAddr, clientVersion)
+					}
+					fmt.Fprintf(w,"Too many reconnects / login attempts in short order. "+
+								  "Is your network connection stable? "+
+								  "Please take a pause.")
+					calleeLoginMutex.Lock()
+					calleeLoginMap[urlID] = calleeLoginSlice
+					calleeLoginMutex.Unlock()
+					return
 				}
 			}
-			if len(calleeLoginSlice) >= maxLoginPer30minTmp {
-				if logWantedFor("overload") {
-					fmt.Printf("! /login (%s) %d >= %d logins/30m rip=%s v=%s\n",
-						urlID, len(calleeLoginSlice), maxLoginPer30minTmp, remoteAddr, clientVersion)
-				}
-				fmt.Fprintf(w,"Too many reconnects / login attempts in short order. "+
-							  "Is your network connection stable? "+
-							  "Please take a pause.")
-				calleeLoginMutex.Lock()
-				calleeLoginMap[urlID] = calleeLoginSlice
-				calleeLoginMutex.Unlock()
-				return
-			}
-		}
-		calleeLoginSlice = append(calleeLoginSlice,time.Now())
-		calleeLoginMutex.Lock()
-		calleeLoginMap[urlID] = calleeLoginSlice
-		calleeLoginMutex.Unlock()
+			calleeLoginSlice = append(calleeLoginSlice,time.Now())
+			calleeLoginMutex.Lock()
+			calleeLoginMap[urlID] = calleeLoginSlice
+			calleeLoginMutex.Unlock()
 
-		if logWantedFor("attach") {
-			fmt.Printf("/login (%s) attach +1 %d/%d rip=%s v=%s\n",
-				urlID, len(calleeLoginSlice), maxLoginPer30minTmp, remoteAddrWithPort, clientVersion)
+			if logWantedFor("attach") {
+				fmt.Printf("/login (%s) attach +1 %d/%d rip=%s v=%s\n",
+					urlID, len(calleeLoginSlice), maxLoginPer30minTmp, remoteAddrWithPort, clientVersion)
+			}
 		}
 	}
 

@@ -509,6 +509,9 @@ func cleanupCalleeLoginMap(w io.Writer, min int, title string) {
 					calleeIP = "gone"
 				} else {
 					calleeIP = hub.CalleeClient.RemoteAddrNoPort
+					//if calleeIP=="127.0.0.1" {
+					//	continue
+					//}
 				}
 
 				fmt.Fprintf(w,"%s calleeLoginMap %-11s %d/%d %s\n",
