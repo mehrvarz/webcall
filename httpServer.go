@@ -887,24 +887,27 @@ func httpApiHandler(w http.ResponseWriter, r *http.Request) {
 func clientRequestAdd(remoteAddr string, count int) int {
 	clientRequestsMutex.Lock()
 	defer clientRequestsMutex.Unlock()
-	clientRequestsSlice,ok := clientRequestsMap[remoteAddr]
-	if ok {
-		for len(clientRequestsSlice)>0 {
-			if time.Now().Sub(clientRequestsSlice[0]) < 30 * time.Minute {
-				break
-			}
-			if len(clientRequestsSlice)>1 {
-				clientRequestsSlice = clientRequestsSlice[1:]
-			} else {
-				clientRequestsSlice = clientRequestsSlice[:0]
+	if outboundIP=="" || remoteAddr != outboundIP {
+		clientRequestsSlice,ok := clientRequestsMap[remoteAddr]
+		if ok {
+			for len(clientRequestsSlice)>0 {
+				if time.Now().Sub(clientRequestsSlice[0]) < 30 * time.Minute {
+					break
+				}
+				if len(clientRequestsSlice)>1 {
+					clientRequestsSlice = clientRequestsSlice[1:]
+				} else {
+					clientRequestsSlice = clientRequestsSlice[:0]
+				}
 			}
 		}
+		for i:=0; i<count; i++ {
+			clientRequestsSlice = append(clientRequestsSlice,time.Now())
+		}
+		clientRequestsMap[remoteAddr] = clientRequestsSlice
+		return len(clientRequestsSlice)
 	}
-	for i:=0; i<count; i++ {
-		clientRequestsSlice = append(clientRequestsSlice,time.Now())
-	}
-	clientRequestsMap[remoteAddr] = clientRequestsSlice
-	return len(clientRequestsSlice)
+	return 0
 }
 
 func isBlockedUA(userAgent string) bool {
