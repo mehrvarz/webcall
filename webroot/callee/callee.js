@@ -919,10 +919,13 @@ function getSettingDone() {
 			for(let i = 0; i < altIdArray.length; i++) {
 				//console.log("i="+i+" altIdActive[i]="+altIdActive[i]+" "+altIdArray[i]);
 				if(altIdActive[i]!="true") {
+					// alt-id deactivated
 					links += "<input type='checkbox' id='"+altIdArray[i]+"' class='checkbox' style='margin-top:8px;margin-left:2px;margin-right:10px;' onclick='mappingCheckboxClick(this);' />";
 				} else {
+					// alt-id is active
 					links += "<input type='checkbox' id='"+altIdArray[i]+"' class='checkbox' style='margin-top:8px;margin-left:2px;margin-right:10px;' onclick='mappingCheckboxClick(this);' checked />";
 				}
+// TODO altIdArray[i] sometimes garbage?
 				let userLinkMap = userLink.replace("/user/"+calleeID,"/user/"+altIdArray[i]);
 				let showUserLinkMap = userLinkMap;
 				if(showUserLinkMap.startsWith("https://")) {
@@ -1871,7 +1874,7 @@ function showMissedCalls() {
 
 function showMsg(msg) {
 	document.getElementById("showMsgInner").innerHTML = msg;
-	menuDialogOpen(document.getElementById("showMsg"),true);
+	menuDialogOpen(document.getElementById("showMsg"),1);
 }
 
 function halfShowIpAddr(ipAddr) {
@@ -1893,7 +1896,7 @@ function deleteMissedCall(callerAddrPortPlusCallTime,name,id) {
 	let yesNoInner = "<div style='position:absolute; z-index:110; background:#45dd; color:#fff; padding:20px 20px; line-height:1.6em; border-radius:3px; cursor:pointer;'><div style='font-weight:600'>Delete missed call?</div><br>"+
 	"Name:&nbsp;"+name+"<br>ID:&nbsp;"+id+"<br><br>"+
 	"<a onclick='deleteMissedCallDo();history.back();'>Delete!</a> &nbsp; &nbsp; <a onclick='history.back();'>Cancel</a></div>";
-	menuDialogOpen(dynDialog,true,yesNoInner);
+	menuDialogOpen(dynDialog,1,yesNoInner);
 }
 
 function deleteMissedCallDo() {
@@ -2995,7 +2998,7 @@ function exit() {
 			let yesNoInner = "<div style='position:absolute; z-index:110; background:#45dd; color:#fff; padding:20px 20px; line-height:1.6em; border-radius:3px; cursor:pointer; min-width:240px; top:40px; left:50%; transform:translate(-50%,0%);'><div style='font-weight:600;'>Exit?</div><br>"+
 			"WebCall will shut down. You will need to restart the app to receive calls.<br><br>"+
 			"<a onclick='Android.wsExit();history.back();'>Exit!</a> &nbsp; &nbsp; <a onclick='history.back();'>Cancel</a></div>";
-			menuDialogOpen(dynDialog,false,yesNoInner);
+			menuDialogOpen(dynDialog,0,yesNoInner);
 		},300);
 	} else {
 		// this is not used: exit() is currently only available in Android mode

@@ -628,7 +628,8 @@ function getStatsCandidateTypesEx(results,eventString1) {
 }
 
 var menuDialogOpenElement = null;
-function menuDialogOpen(menuDialog,atMousePos,inner) {
+function menuDialogOpen(menuDialog,position,inner) {
+	// position: 0=?, 1=atMousePos, 2=random
 	if(menuDialogOpenElement) {
 		console.log('# menuDialogOpen menuDialogOpenElement');
 		return;
@@ -646,7 +647,7 @@ function menuDialogOpen(menuDialog,atMousePos,inner) {
 
 	hashcounter++;
 	location.hash = hashcounter;
-	//console.log("menuDialogOpen hashcounter="+hashcounter+" "+location.hash);
+	//gLog("menuDialogOpen hashcounter="+hashcounter+" "+location.hash);
 
 	fullScreenOverlayElement.style.display = "block";
 	fullScreenOverlayElement.onclick = function() {
@@ -672,22 +673,35 @@ function menuDialogOpen(menuDialog,atMousePos,inner) {
 	}
 
 	const menuDialogOpenChildElement = menuDialogOpenElement.firstElementChild;
-	var posY = menuDialogOpenChildElement.style.top;
-	if(atMousePos) {
+	var posX, posY;
+	if(position==1) { // atMousePos
 		// position menuDialog at mouse coordinate
+		posY = menuDialogOpenChildElement.style.top;
 		var e = window.event;
 		if(typeof e !== "undefined" && e !== null) {
-			var posX = e.clientX * 0.70 -60;
+			posX = e.clientX * 0.70 -60;
 			if(posX<0) posX=0;
 			posY = e.clientY;
 			if(posY>50) posY-=50;
-			//gLog('menuDialogOpen x/y',posX,e.clientX,posY,e.clientY);
+			gLog('menuDialogOpen x/y',posX,e.clientX,posY,e.clientY);
 			menuDialogOpenChildElement.style.left = posX+"px";
 			menuDialogOpenChildElement.style.top = (posY+window.scrollY)+"px";
-			//gLog('menuDialogOpen2 x/y',posX,posY+window.scrollY);
+			gLog('menuDialogOpen2 x/y',posX,posY+window.scrollY);
 		} else {
 			// centered?
 		}
+	} else if(position==0) { // centered
+		posX = 30;
+		posY = 30;
+		gLog("menuDialogOpen centered posY="+posY+" posX="+posX);
+		menuDialogOpenChildElement.style.left = posX+"px";
+		menuDialogOpenChildElement.style.top  = posY+"px";
+	} else if(position==2) { // random
+		posX = Math.floor(Math.random()*70)+20;
+		posY = Math.floor(Math.random()*90);
+		gLog("menuDialogOpen random posY="+posY+" posX="+posX);
+		menuDialogOpenChildElement.style.left = posX+"px";
+		menuDialogOpenChildElement.style.top  = posY+"px";
 	}
 
 	menuDialogOpenElement.style.display = "block";

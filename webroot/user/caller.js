@@ -972,14 +972,24 @@ function onload3(comment) {
 }
 
 function dialButtonClick() {
+	if(typeof Android !== "undefined" && Android !== null) {
+		let yesNoInner = "<div style='position:absolute; z-index:110; background:#45dd; color:#fff; padding:20px 20px; line-height:1.6em; border-radius:3px; cursor:pointer;'><div style='font-weight:600'>Make a call?</div><br>"+
+		"<a onclick='dialButtonClick2();history.back();'>Yes</a> &nbsp; &nbsp; <a onclick='history.back();'>No</a></div>";
+		menuDialogOpen(dynDialog,2,yesNoInner);
+	} else {
+		dialButtonClick2();
+	}
+}
+
+function dialButtonClick2() {
 	let nicknameElement = document.getElementById("nickname");
 	if(nicknameElement) {
 		callerName = cleanStringParameter(nicknameElement.value,true);
 	}
 
 	console.log("dialButtonClick calleeID="+calleeID+" callerId="+callerId+" callerName="+callerName);
-	showStatus(connectingText,-1);
 
+	showStatus(connectingText,-1);
 	doneHangup = false;
 	onIceCandidates = 0;
 	rtcConnectStartDate = 0;
