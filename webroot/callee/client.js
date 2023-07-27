@@ -1,6 +1,6 @@
 // WebCall Copyright 2023 timur.mobi. All rights reserved.
 'use strict';
-const clientVersion = '3.6.2';
+const clientVersion = '3.6.3';
 
 const avSelect = document.querySelector("select#avSelect");
 const vresDialogElement = document.getElementById('vresDialog');
@@ -697,8 +697,8 @@ function menuDialogOpen(menuDialog,position,inner) {
 		menuDialogOpenChildElement.style.left = posX+"px";
 		menuDialogOpenChildElement.style.top  = posY+"px";
 	} else if(position==2) { // random
-		posX = Math.floor(Math.random()*70)+20;
-		posY = Math.floor(Math.random()*90);
+		posX = Math.floor(Math.random()*90)+10;
+		posY = Math.floor(Math.random()*120);
 		gLog("menuDialogOpen random posY="+posY+" posX="+posX);
 		menuDialogOpenChildElement.style.left = posX+"px";
 		menuDialogOpenChildElement.style.top  = posY+"px";
