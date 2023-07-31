@@ -1237,6 +1237,7 @@ function wsOnClose(evt) {
 		errCode = evt.code;
 	}
 	console.log("wsOnClose ID="+calleeID+" code="+errCode,evt);
+	showStatus("disconnected from signaling server");
 	wsOnClose2();
 	if(tryingToOpenWebSocket) {
 		// onclose occured while trying to establish a ws-connection (before this could be finished)
@@ -1267,7 +1268,10 @@ function wsOnClose2() {
 	checkboxesElement.style.display = "none";
 	buttonBlinking=false; // will abort blinkButtonFunc()
 	stopAllAudioEffects("wsOnClose");
-	showStatus("disconnected from signaling server");
+
+// tmtmtm TODO don't do this if we are reconnecting already
+//	showStatus("disconnected from signaling server");
+
 	onlineIndicator.src="";
 	// clear "You will receive calls made by this link"
 	ownlinkElement.innerHTML = "";
