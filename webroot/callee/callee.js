@@ -671,7 +671,7 @@ function login(retryFlag) {
 			showStatus( "Unknown callee ID "+calleeID+"<br>"+
 						"<a href='/callee/register'>Register a new ID</a>",-1);
 
-			// clear "You receive calls made by this link"
+			// clear "You will receive calls made by this link"
 			ownlinkElement.innerHTML = "";
 
 			form.style.display = "none";
@@ -1269,8 +1269,10 @@ function wsOnClose2() {
 	stopAllAudioEffects("wsOnClose");
 	showStatus("disconnected from signaling server");
 	onlineIndicator.src="";
-	// clear "You receive calls made by this link"
+	// clear "You will receive calls made by this link"
 	ownlinkElement.innerHTML = "";
+	// hide missedCalls
+	missedCallsElement.style.display = "none";
 }
 
 function wsOnMessage(evt) {
