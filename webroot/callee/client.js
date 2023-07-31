@@ -683,14 +683,15 @@ function menuDialogOpen(menuDialog,position,inner) {
 			if(posX<0) posX=0;
 			posY = e.clientY;
 			if(posY>50) posY-=50;
-			gLog('menuDialogOpen x/y',posX,e.clientX,posY,e.clientY);
+			gLog('menuDialogOpen1 atMousePos x/y',posX,e.clientX,posY,e.clientY);
 			menuDialogOpenChildElement.style.left = posX+"px";
 			menuDialogOpenChildElement.style.top = (posY+window.scrollY)+"px";
-			gLog('menuDialogOpen2 x/y',posX,posY+window.scrollY);
+			gLog('menuDialogOpen2 atMousePos x/y',posX,posY+window.scrollY);
 		} else {
-			// centered?
+			// ?
 		}
 	} else if(position==0) { // centered
+		// TODO
 		posX = 30;
 		posY = 30;
 		gLog("menuDialogOpen centered posY="+posY+" posX="+posX);

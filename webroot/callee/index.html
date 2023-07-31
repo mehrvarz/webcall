@@ -306,7 +306,7 @@ input[type=submit]:focus {
 
 <!-- max-width same as for container -->
 <div id="menuDialog" style="position:relative; max-width:600px; user-select:none; display:none;">
-	<div style="position:absolute; right:0; top:0; z-index:110; background:#45dd; color:#fff; padding:10px 0px; line-height:2.6em; border-radius:3px; cursor:pointer;">
+	<div style="position:absolute; right:10px; top:0; z-index:110; background:#45dd; color:#fff; padding:10px 0px; line-height:2.6em; border-radius:3px; cursor:pointer;">
 		<div id="menuSettings" class="menuButton" style="display:none" onclick="openSettings()">Settings</div>
 		<div id="idMapping" class="menuButton" style="display:none" onclick="openIdMapping()">ID Manager</div>
 		<div class="menuButton" onclick="openPostCallStats()">Call Stats</div>
@@ -350,7 +350,7 @@ input[type=submit]:focus {
 			<span id="localVideoMsg" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50% ); text-align:center; background:#000b; padding:5px 10px; z-index:20; font-size:0.8em; opacity:0;"></span>
 			<span id="localVideoRes" style="position:absolute; bottom:10%; left:50%; transform:translate(-50%,-50% ); text-align:center; background:#000b; padding:5px 10px; z-index:20; font-size:0.7em; visibility:hidden;"></span>
 			<div id="localVideoLabel" style="position:absolute; bottom:0; width:100%; z-index:30; opacity:0.7; text-align:center; background:#000b; transition:opacity 500ms;">
-				<span id="vres" onclick="menuDialogOpen(vresDialogElement,true)">res</span>
+				<span id="vres" onclick="menuDialogOpen(vresDialogElement,1)">res</span>
 				<span id="vmonitor" onclick="vmonitorSwitch()" style="margin-left:3%">monitor</span>
 				<span id="vsend" onclick="connectLocalVideo(false)" style="margin-left:3%;display:none;">send</span>
 				<span id="vclose" onclick="videoSwitch(true)" style="margin-left:3%">close</span>
@@ -363,7 +363,7 @@ input[type=submit]:focus {
 <div id="dynDialog" style="position:relative; user-select:none; display:none;"></div>
 
 <div id="container">
-	<img id="menu" onclick="menuDialogOpen(menuDialogElement,false)" src="menu.svg" style="position:relative; float:right; width:25px; margin-top:5px; margin-left:22px; margin-right:10px; z-index:100; user-select:none; cursor:pointer;">
+	<img id="menu" onclick="menuDialogOpen(menuDialogElement,1)" src="menu.svg" style="position:relative; float:right; width:25px; margin-top:5px; margin-left:22px; margin-right:10px; z-index:100; user-select:none; cursor:pointer;">
 
 	<img id="dialpad" src="dialpad.svg" style="position:relative; float:right; width:30px; margin-top:4px; margin-left:22px; z-index:100; user-select:none; cursor:pointer; transition:opacity 500ms;" onclick="openDialId('')">
 

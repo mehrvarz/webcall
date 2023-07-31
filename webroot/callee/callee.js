@@ -1278,12 +1278,13 @@ function wsOnMessage(evt) {
 }
 
 function wsOnMessage2(str, comment) {
-	// WebCall service uses this to push msgs from WebCall server
+	// WebCall Android service calls this to push msgs from WebCall server
+	console.log("wsOnMessage2( "+str+" comment="+comment);
 	signalingCommand(str, comment);
 }
 
 function signalingCommand(message, comment) {
-	//console.log("signalingCommand "+message+" comment="+comment);
+	console.log("signalingCommand "+message+" comment="+comment);
 	let tok = message.split("|");
 	let cmd = tok[0];
 	let payload = "";

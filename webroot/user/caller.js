@@ -972,13 +972,15 @@ function onload3(comment) {
 }
 
 function dialButtonClick() {
+	/* dial confirm dialog (yes/no) (here only for android)
 	if(typeof Android !== "undefined" && Android !== null) {
 		let yesNoInner = "<div style='position:absolute; z-index:110; background:#45dd; color:#fff; padding:20px 20px; line-height:1.6em; border-radius:3px; cursor:pointer;'><div style='font-weight:600'>Dial now?</div><br>"+
 		"<a onclick='dialButtonClick2();history.back();'>Yes</a> &nbsp; &nbsp; <a onclick='history.back();'>No</a></div>";
 		menuDialogOpen(dynDialog,2,yesNoInner);
-	} else {
-		dialButtonClick2();
+		return;
 	}
+	*/
+	dialButtonClick2();
 }
 
 function dialButtonClick2() {

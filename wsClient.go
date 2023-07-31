@@ -324,11 +324,11 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			//fmt.Println("TextMessage:", messageType, string(data), len(data))
 			n := len(data)
 			if n>0 {
-				if logWantedFor("wsreceive") {
-					max := n; if max>20 { max = 20 }
-					fmt.Printf("%s (%s) received n=%d isCallee=%v (%s)\n",
-						client.connType, client.calleeID, n, client.isCallee, data[:max])
-				}
+				//if logWantedFor("wsreceive") {
+				//	max := n; if max>20 { max = 20 }
+				//	fmt.Printf("%s (%s) received n=%d isCallee=%v (%s)\n",
+				//		client.connType, client.calleeID, n, client.isCallee, data[:max])
+				//}
 				client.handleClientMessage(data, wsConn)
 			}
 		case websocket.BinaryMessage:
