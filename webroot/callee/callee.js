@@ -1272,6 +1272,7 @@ function wsOnClose2() {
 	// clear "You will receive calls made by this link"
 	ownlinkElement.innerHTML = "";
 	// hide missedCalls
+	missedCallsTitleElement.style.display = "none";
 	missedCallsElement.style.display = "none";
 }
 
