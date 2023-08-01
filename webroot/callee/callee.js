@@ -925,7 +925,7 @@ function getSettingDone() {
 					// alt-id is active
 					links += "<input type='checkbox' id='"+altIdArray[i]+"' class='checkbox' style='margin-top:8px;margin-left:2px;margin-right:10px;' onclick='mappingCheckboxClick(this);' checked />";
 				}
-// TODO altIdArray[i] sometimes garbage?
+				// TODO is altIdArray[i] sometimes garbage?
 				let userLinkMap = userLink.replace("/user/"+calleeID,"/user/"+altIdArray[i]);
 				let showUserLinkMap = userLinkMap;
 				if(showUserLinkMap.startsWith("https://")) {
@@ -1268,9 +1268,6 @@ function wsOnClose2() {
 	checkboxesElement.style.display = "none";
 	buttonBlinking=false; // will abort blinkButtonFunc()
 	stopAllAudioEffects("wsOnClose");
-
-// tmtmtm TODO don't do this if we are reconnecting already
-//	showStatus("disconnected from signaling server");
 
 	onlineIndicator.src="";
 	// clear "You will receive calls made by this link"
@@ -3024,7 +3021,7 @@ function wakeGoOnline() {
 }
 
 function wakeGoOnlineNoInit() {
-// TODO do we need to call Android.calleeConnected() -> calleeIsConnected() ?
+	// TODO do we need to call Android.calleeConnected() -> calleeIsConnected() ?
 	console.log("wakeGoOnlineNoInit start");
 	connectSignaling('','wakeGoOnlineNoInit'); // only get wsConn from service (from Android.wsOpen())
 	wsOnOpen(); // green led
