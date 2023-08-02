@@ -2607,7 +2607,9 @@ function dataChannelOnmessage(event) {
 						msgbox.value += msg;
 						//console.log("msgbox "+msgbox.scrollTop+" "+msgbox.scrollHeight);
 						msgbox.scrollTop = msgbox.scrollHeight-1;
-						beep();
+
+						//soundBeep();
+						soundKeyboard();
 					}
 				}
 			} else if(event.data.startsWith("cmd|")) {
