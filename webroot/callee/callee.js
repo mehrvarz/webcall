@@ -1879,7 +1879,7 @@ function showMissedCalls() {
 
 function showMsg(msg) {
 	document.getElementById("showMsgInner").innerHTML = msg;
-	menuDialogOpen(document.getElementById("showMsg"),1);
+	menuDialogOpen(document.getElementById("showMsg"),0);
 }
 
 function halfShowIpAddr(ipAddr) {
@@ -3005,7 +3005,7 @@ function exit() {
 			let yesNoInner = "<div style='position:absolute; z-index:110; background:#45dd; color:#fff; padding:20px 20px; line-height:1.6em; border-radius:3px; cursor:pointer; min-width:240px; top:40px; left:50%; transform:translate(-50%,0%);'><div style='font-weight:600;'>Exit?</div><br>"+
 			"WebCall will shut down. You will need to restart the app to receive calls.<br><br>"+
 			"<a onclick='Android.wsExit();history.back();'>Exit!</a> &nbsp; &nbsp; <a onclick='history.back();'>Cancel</a></div>";
-			menuDialogOpen(dynDialog,1,yesNoInner);
+			menuDialogOpen(dynDialog,0,yesNoInner);
 		},300);
 	} else {
 		// this is not used: exit() is currently only available in Android mode

@@ -692,13 +692,17 @@ function menuDialogOpen(menuDialog,position,inner) {
 		} else {
 			// ?
 		}
+
 	} else if(position==0) { // centered
-		// TODO
-		posX = 30;
-		posY = 30;
-		gLog("menuDialogOpen centered posY="+posY+" posX="+posX);
-		menuDialogOpenChildElement.style.left = posX+"px";
-		menuDialogOpenChildElement.style.top  = posY+"px";
+		menuDialog.style.position = "absolute";
+		menuDialog.style.height = mainElement.clientHeight+"px";
+		menuDialog.style.width = mainElement.clientWidth+"px";
+		menuDialogOpenChildElement.style.margin = "0 auto";
+		menuDialogOpenChildElement.style.top = "50%";
+		menuDialogOpenChildElement.style.left = "50%";
+		menuDialogOpenChildElement.style.right = "";
+		menuDialogOpenChildElement.style.transform = "translate(-50%, -50%)";
+
 	} else if(position==2) { // random
 		posX = Math.floor(Math.random()*90)+10;
 		posY = Math.floor(Math.random()*120);
@@ -712,8 +716,8 @@ function menuDialogOpen(menuDialog,position,inner) {
 	// move menuDialog up to prevent bottom cut-off (if there is room on top)
 	// move menuDialog left to prevent rightside cut-off (if there is room to the left)
 	setTimeout(function() {
-		let menuHeight = menuDialogOpenChildElement.clientHeight;
 		let pageHeight = mainElement.clientHeight;
+		let menuHeight = menuDialogOpenChildElement.clientHeight;
 		//console.log('menuDialogOpen up',posY, menuHeight, pageHeight);
 		while(posY>10 && posY + menuHeight > pageHeight) {
 			posY -= 10;
