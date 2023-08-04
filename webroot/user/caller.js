@@ -2427,10 +2427,11 @@ function dial2() {
 	};
 	peerCon.onicecandidate = e => onIceCandidate(e,"callerCandidate");
 	peerCon.onicecandidateerror = function(e) {
-		// don't warn on 701 (chrome "701 STUN allocate request timed out")
-		// 400 = bad request
+		// don't warn on
+		//  701 (chrome "STUN allocate request timed out" or "address is incompatible")
+		//  400 = bad request
 		if(e.errorCode==701 || e.errorCode==400) {
-			console.log("# peerCon onicecandidateerror", e.errorCode, e.errorText, e.url);
+			//console.log("# peerCon onicecandidateerror", e.errorCode, e.errorText, e.url);
 		} else {
 			if(!gentle) console.warn("peerCon onicecandidateerror", e.errorCode, e.errorText, e.url);
 			showStatus("iceCandidate error "+e.errorCode+" "+e.errorText,-1);
