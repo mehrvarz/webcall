@@ -1316,6 +1316,7 @@ function signalingCommand(message, comment) {
 		if(cmd=="callerOffer") {
 			console.log('callerOffer (incoming call)');
 			connectionstatechangeCounter=0;
+			onIceCandidates = 0;
 		} else {
 			console.log('callerOfferUpd (in-call)');
 		}
@@ -2286,6 +2287,20 @@ function newPeerCon() {
 			peerConnected2();
 		}
 	}
+	dataChannel = null;
+	peerCon.ondatachannel = event => {
+		dataChannel = event.channel;
+		gLog('createDataChannel got channel...');
+		dataChannel.onopen = event => {
+			gLog("dataChannel.onopen");
+			// tell other side that we support textchat
+			textchatOKfromOtherSide = false;
+			dataChannel.send("textchatOK");
+		};
+		dataChannel.onclose = event => dataChannelOnclose(event);
+		dataChannel.onerror = event => dataChannelOnerror(event);
+		dataChannel.onmessage = event => dataChannelOnmessage(event);
+	};
 }
 
 /*
@@ -2316,24 +2331,20 @@ function peerConnected2() {
 		console.log("peerConnected2 already rtcConnect abort");
 		return;
 	}
-	rtcConnect = true;
+
+	console.log("peerConnected2 rtcConnect");
 	goOfflineButton.disabled = true;
 	rtcConnectStartDate = Date.now();
 	mediaConnectStartDate = 0;
-	console.log("peerConnected2 rtcConnect");
+	rtcConnect = true;
+	wsSend("rtcConnect|")
+
 	// scroll to top
 	window.scrollTo({ top: 0, behavior: 'smooth' });
 
-	wsSend("rtcConnect|")
-
-	if(!dataChannel) {
-		console.log('peerConnected2 createDataChannel');
-		createDataChannel();
-	}
-
 	let skipRinging = false;
 	if(typeof Android !== "undefined" && Android !== null) {
-		skipRinging = Android.rtcConnect(); // may auto-call pickup()
+		skipRinging = Android.rtcConnect(); // may call pickup()
 	}
 
 	if(!skipRinging) {
@@ -2392,7 +2403,7 @@ function peerConnected2() {
 					answerButton.style.background = "#04c";
 					return;
 				}
-				gLog("peerConnected2 buttonBlinking...");
+				gLog("peerConnected2 buttonBlinking...",dataChannel);
 				setTimeout(blinkButtonFunc, 500);
 			}
 		}
@@ -2402,14 +2413,25 @@ function peerConnected2() {
 	setTimeout(function() {
 		if(!peerCon || peerCon.iceConnectionState=="closed") {
 			// caller early abort
-			gLog('peerConnected2 caller early abort');
+			console.log('peerConnected2 caller early abort');
+			// TODO showStatus()
 			//hangup(true,true,"caller early abort");
 			stopAllAudioEffects();
 			endWebRtcSession(true,true,"caller early abort"); // -> peerConCloseFunc
 			return;
 		}
+
+		if(dataChannel==null) {
+			// this should never happen
+			console.log("NO DATACHANNEL - ABORT RING");
+			// TODO showStatus()
+			stopAllAudioEffects();
+			endWebRtcSession(true,true,"caller early abort"); // -> peerConCloseFunc
+			return;
+		}
+
 		// instead of listOfClientIps
-		gLog('peerConnected2 accept incoming call?',listOfClientIps);
+		gLog('peerConnected2 accept incoming call?',listOfClientIps,dataChannel);
 		peerCon.getStats(null)
 		.then((results) => getStatsCandidateTypes(results,"Incoming", ""),
 			err => console.log(err.message)); // -> wsSend("log|callee Incoming p2p/p2p")
@@ -2489,30 +2511,16 @@ function getStatsCandidateTypes(results,eventString1,eventString2) {
 	showStatus(showMsg,-1);
 }
 
-function createDataChannel() {
-	gLog('createDataChannel...');
-	peerCon.ondatachannel = event => {
-		dataChannel = event.channel;
-		dataChannel.onopen = event => {
-			gLog("dataChannel.onopen");
-			// tell other side that we support textchat
-			textchatOKfromOtherSide = false;
-			dataChannel.send("textchatOK");
-		};
-		dataChannel.onclose = event => dataChannelOnclose(event);
-		dataChannel.onerror = event => dataChannelOnerror(event);
-		dataChannel.onmessage = event => dataChannelOnmessage(event);
-	};
-}
-
 function dataChannelOnmessage(event) {
 	if(typeof event.data === "string") {
 		//console.log("dataChannel.onmessage "+event.data);
 		if(event.data) {
 			if(event.data.startsWith("disconnect")) {
 				gLog("dataChannel.onmessage '"+event.data+"'");
-				dataChannel.close();
-				dataChannel = null;
+				if(dataChannel!=null) {
+					dataChannel.close();
+					dataChannel = null;
+				}
 				hangupWithBusySound(true,"disconnect via dataChannel");
 			} else if(event.data.startsWith("textchatOK")) {
 				textchatOKfromOtherSide = true;

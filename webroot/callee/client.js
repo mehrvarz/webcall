@@ -1,6 +1,6 @@
 // WebCall Copyright 2023 timur.mobi. All rights reserved.
 'use strict';
-const clientVersion = '3.6.5';
+const clientVersion = '3.6.6';
 
 const avSelect = document.querySelector("select#avSelect");
 const vresDialogElement = document.getElementById('vresDialog');
@@ -756,7 +756,7 @@ function onIceCandidate(event,myCandidateName) {
 	}
 	if(event.candidate==null) {
 		// ICE gathering has finished
-		console.log('onIce end of candidates');
+		gLog('onIce end of candidates');
 	} else if(event.candidate.address==null) {
 		console.log('# onIce skip event.candidate.address==null '+JSON.stringify(event.candidate));
 	} else if(isDataChlOpen()) {
@@ -1507,6 +1507,7 @@ function remoteFullScreen(forceClose) {
 }
 
 function closeRemoteVideo() {
+	gLog('closeRemoteVideo');
 	if(isDataChlOpen()) {
 		// make other side stop their cam delivery
 		dataChannel.send("cmd|stopCamDelivery");
@@ -1515,7 +1516,7 @@ function closeRemoteVideo() {
 }
 
 function remoteVideoHide() {
-	//gLog('remoteVideoHide',remoteVideoShowing);
+	gLog('remoteVideoHide '+remoteVideoShowing);
 	window.requestAnimationFrame(function(){
 		if(remoteVideoShowing) {
 			let remoteVideoDivHeight = parseFloat(getComputedStyle(remoteVideoFrame).width)/16*9;
@@ -1610,11 +1611,22 @@ function hashchange() {
 	hashcounter = newhashcounter;
 }
 
+var showStatusTimeout = null;
+var showStatusMsg = "";
 function showStatus(msg,timeoutMs) {
+	gLog("showStatus msg="+msg,timeoutMs);
 	if(typeof msg=="undefined" || msg==null) {
 		console.log("status: msg undefined");
 		return;
 	}
+	if(showStatusTimeout!=null) {
+		gLog("showStatus clearTimeout of prev");
+		clearTimeout(showStatusTimeout);
+		showStatusTimeout = null;
+	} else {
+		gLog("showStatus no clearTimeout of prev");
+	}
+
 	let sleepMs = 2500;
 	if(typeof timeoutMs!=="undefined") {
 		sleepMs = timeoutMs;
@@ -1627,29 +1639,45 @@ function showStatus(msg,timeoutMs) {
 		} else {
 			console.log("status: "+msg);
 		}
+	} else {
+		gLog("showStatus empty msg");
 	}
 
+	showStatusMsg = msg;
 	statusLine.style.display = "none";
 	statusLine.style.opacity = 0;
 	statusLine.innerHTML = msg;
 	statusLine.style.opacity = 1;
 	statusLine.style.display = "block";
+
 	if(msg!="" && sleepMs>=0) {
 		// msg bleibt für sleepMs stehen
 		// und dann transitioned to opacity für 600ms zu 0
 		//console.log("status sleepMs="+sleepMs);
 		// TODO would be nice to transition also the height
-		setTimeout(function(oldMsg) {
-			if(statusLine.innerHTML==oldMsg) {
+
+		showStatusTimeout = setTimeout(function() {
+			// msg here is the old msg, but showStatusMsg might be different by now
+			if(msg==showStatusMsg) {
+				gLog("showStatus execute old timer msg="+msg);
 				let opacityTransitioned = function() {
-					statusLine.innerHTML = "";
+					// this occurs after the opacity-transition time of 600ms
+					gLog("showStatus opacityTransitioned msg="+msg+" statusMsg="+showStatusMsg);
+					if(msg==showStatusMsg) {
+						// still showing the old msg: clear it
+						statusLine.innerHTML = "";
+					} else {
+						// we are already showing a newer status msg: don't clear it
+					}
 					statusLine.removeEventListener('transitionend',opacityTransitioned);
 				}
-				statusLine.addEventListener('transitionend', opacityTransitioned);
-
+				statusLine.addEventListener('transitionend', opacityTransitioned); // 600ms
 				statusLine.style.opacity = 0;
+			} else {
+				gLog("showStatus execute old timer (but msg!=showStatusMsg)");
 			}
-		},sleepMs,msg);
+			showStatusTimeout = null;
+		},sleepMs);
 	}
 }
 
@@ -1660,7 +1688,7 @@ function isDataChlOpen() {
 			return true;
 		}
 	} else {
-		gLog("isDataChlOpen no dataChannel");
+		//gLog("isDataChlOpen no dataChannel");
 	}
 	return false;
 }
