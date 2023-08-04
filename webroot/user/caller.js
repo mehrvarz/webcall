@@ -2987,7 +2987,7 @@ function hangup(mustDisconnectCallee,mustcheckCalleeOnline,message) {
 			//calleeOnlineStatus(lastOnlineStatus,false);
 			checkCalleeOnline(false,"hangup");
 			dialButton.disabled = false;
-		},3000);
+		},1500);
 	} else {
 		showStatus("");
 	}

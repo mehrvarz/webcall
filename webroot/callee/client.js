@@ -1659,7 +1659,7 @@ function showStatus(msg,timeoutMs) {
 		showStatusTimeout = setTimeout(function() {
 			// msg here is the old msg, but showStatusMsg might be different by now
 			if(msg==showStatusMsg) {
-				gLog("showStatus execute old timer msg="+msg);
+				gLog("showStatus start opacityTransition msg="+msg);
 				let opacityTransitioned = function() {
 					// this occurs after the opacity-transition time of 600ms
 					gLog("showStatus opacityTransitioned msg="+msg+" statusMsg="+showStatusMsg);
