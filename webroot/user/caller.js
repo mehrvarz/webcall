@@ -402,7 +402,7 @@ window.onload = function() {
 					callerName = serverSettings.nickname; // user can modify this in UI
 
 					if(!calleeID.startsWith("answie") && !calleeID.startsWith("talkback")) {
-						//console.log("set nickname form with callerName="+callerName);
+						console.log("set nickname form with callerName="+callerName);
 						let nicknameDivElement = document.getElementById("nicknameDiv");
 						let nicknameElement = document.getElementById("nickname");
 						if(nicknameElement) {
@@ -679,7 +679,7 @@ function onload2() {
 
 			// enable nickname form (if not calling answie or talkback)
 			if(!calleeID.startsWith("answie") && !calleeID.startsWith("talkback")) {
-				//console.log("set nickname form with callerName="+callerName);
+				console.log("set nickname with callerName="+callerName);
 				let nicknameDivElement = document.getElementById("nicknameDiv");
 				let nicknameElement = document.getElementById("nickname");
 				nicknameElement.value = callerName;
