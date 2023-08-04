@@ -1288,7 +1288,7 @@ function wsOnMessage2(str, comment) {
 }
 
 function signalingCommand(message, comment) {
-	console.log("signalingCommand "+message+" comment="+comment);
+	gLog("signalingCommand "+message+" comment="+comment);
 	let tok = message.split("|");
 	let cmd = tok[0];
 	let payload = "";

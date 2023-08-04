@@ -770,7 +770,7 @@ function onIceCandidate(event,myCandidateName) {
 		console.log("# onIce "+myCandidateName+" readyS!=1 "+event.candidate.address+" "+wsConn.readyState);
 	} else {
 		onIceCandidates++;
-		console.log("onIce "+myCandidateName+" wsSend "+event.candidate.address+" "+onIceCandidates);
+		gLog("onIce "+myCandidateName+" wsSend "+event.candidate.address+" "+onIceCandidates);
 		// 300ms delay to prevent "cmd "+myCandidateName+" no peerCon.remoteDescription" on other side
 		setTimeout(function() {
 			if(!doneHangup) {
