@@ -365,10 +365,16 @@ window.onload = function() {
 		let api = apiPath+"/getsettings?id="+callerId;
 		gLog('onload request getsettings api '+api);
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-			var xhrresponse = xhr.responseText
+			var xhrresponse = xhr.responseText;
 			//gLog('xhr.responseText '+xhrresponse);
 			if(xhrresponse=="") {
 				serverSettings = null;
+				return;
+			}
+			// xhrresponse can contain random html
+			if(xhrresponse.indexOf("<html")>=0 || xhrresponse.indexOf("<head")>=0) {
+				console.log("# xhr /getsettings received garbage");
+				showStatus("xhr error",-1);
 				return;
 			}
 			var serverSettings = JSON.parse(xhrresponse);
@@ -586,9 +592,16 @@ function getContact(contactID) {
 		let api = apiPath+"/getcontact?id="+cookieName + "&contactID="+contactID;
 		gLog('request /getcontact api',api);
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-			var xhrresponse = xhr.responseText
+			var xhrresponse = xhr.responseText;
 			//console.log("/getcontact callee="+cookieName+" contactID="+contactID+" xhrresponse="+xhrresponse);
 			if(xhrresponse!="") {
+				// xhrresponse can contain random html
+				if(xhrresponse.indexOf("<html")>=0 || xhrresponse.indexOf("<head")>=0) {
+					console.log("# xhr /getcontacts received garbage");
+					showStatus("xhr error",-1);
+					return;
+				}
+
 				// format: name|prefCallbackID|myNickname
 				let tok = xhrresponse.split("|");
 				if(tok.length>0 && tok[0]!="") {
@@ -822,14 +835,21 @@ function fetchMapping(contFunc,idSelectElement,idSelectLabelElement) {
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
 		gLog('fetchMapping response',xhr.responseText);
 		let preselectIndex = -1;
-		if(xhr.responseText!="") {
+		let xhrresponse = xhr.responseText;
+		if(xhrresponse!="") {
+			// xhrresponse can contain random html
+			if(xhrresponse.indexOf("<html")>=0 || xhrresponse.indexOf("<head")>=0) {
+				console.log("# xhr /getmapping received garbage");
+				showStatus("xhr error",-1);
+				return;
+			}
 			let idOption = document.createElement('option');
 			idOption.text = cookieName + " (main id)";
 			idOption.value = cookieName;
 			idSelectElement.appendChild(idOption);
 			altIdCount++;
 
-			let altIDs = xhr.responseText;
+			let altIDs = xhrresponse;
 			let tok = altIDs.split("|");
 			for(var i=0; i<tok.length; i++) {
 				//console.log("tok["+i+"]="+tok[i]);
@@ -898,10 +918,11 @@ function onload3(comment) {
 		let api = apiPath+"/action?id="+calleeID.substring(1)+"&callerId="+callerId;
 		xhrTimeout = 5*1000;
 		ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-			gLog("xhr.resp="+xhr.responseText);
-			if(xhr.responseText.startsWith("widget=")) {
+			let xhrresponse = xhr.responseText;
+			gLog("xhr.resp="+xhrresponse);
+			if(xhrresponse.startsWith("widget=")) {
 				// switch widget: replace parent iframe src
-				let url = xhr.responseText.substring(7) + "?callerId="+callerId+"&i="+counter;
+				let url = xhrresponse.substring(7) + "?callerId="+callerId+"&i="+counter;
 				counter++;
 				let iframeElement = parent.document.querySelector('iframe#child');
 				gLog("widget("+url+") iframeElement="+iframeElement);
@@ -1181,16 +1202,23 @@ function checkServerMode(callback) {
 	let api = apiPath+"/mode";
 	xhrTimeout = 30*1000;
 	ajaxFetch(new XMLHttpRequest(), "GET", api, function(xhr) {
-		if(xhr.responseText.startsWith("normal")) {
+		let xhrresponse = xhr.responseText;
+		// xhrresponse can contain random html
+		if(xhrresponse.indexOf("<html")>=0 || xhrresponse.indexOf("<head")>=0) {
+			console.log("# xhr /mode received garbage");
+			showStatus("xhr error",-1);
+			return;
+		}
+		if(xhrresponse.startsWith("normal")) {
 			callback(0);
 			return;
 		}
-		if(xhr.responseText.startsWith("maintenance")) {
+		if(xhrresponse.startsWith("maintenance")) {
 			callback(1);
 			return;
 		}
 		// error
-		callback(2,xhr.responseText);
+		callback(2,xhrresponse);
 	}, function(errString,err) {
 		console.log("# xhr error "+errString+" "+err);
 		callback(2,errString);
