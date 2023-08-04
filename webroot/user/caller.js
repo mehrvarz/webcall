@@ -374,7 +374,7 @@ window.onload = function() {
 			// xhrresponse can contain random html
 			if(xhrresponse.indexOf("<html")>=0 || xhrresponse.indexOf("<head")>=0) {
 				console.log("# xhr /getsettings received garbage");
-				showStatus("xhr error",-1);
+				showStatus("error xhr getsettings",-1);
 				return;
 			}
 			var serverSettings = JSON.parse(xhrresponse);
@@ -598,7 +598,7 @@ function getContact(contactID) {
 				// xhrresponse can contain random html
 				if(xhrresponse.indexOf("<html")>=0 || xhrresponse.indexOf("<head")>=0) {
 					console.log("# xhr /getcontacts received garbage");
-					showStatus("xhr error",-1);
+					showStatus("error xhr getcontacts",-1);
 					return;
 				}
 
@@ -840,7 +840,7 @@ function fetchMapping(contFunc,idSelectElement,idSelectLabelElement) {
 			// xhrresponse can contain random html
 			if(xhrresponse.indexOf("<html")>=0 || xhrresponse.indexOf("<head")>=0) {
 				console.log("# xhr /getmapping received garbage");
-				showStatus("xhr error",-1);
+				showStatus("error xhr getmapping",-1);
 				return;
 			}
 			let idOption = document.createElement('option');
@@ -1206,7 +1206,7 @@ function checkServerMode(callback) {
 		// xhrresponse can contain random html
 		if(xhrresponse.indexOf("<html")>=0 || xhrresponse.indexOf("<head")>=0) {
 			console.log("# xhr /mode received garbage");
-			showStatus("xhr error",-1);
+			showStatus("error xhr mode",-1);
 			return;
 		}
 		if(xhrresponse.startsWith("normal")) {
@@ -1807,7 +1807,7 @@ function errorAction(errString,errcode) {
 	if(errString.startsWith("fetch")) {
 		showStatus("No response from signaling server",-1);
 	} else {
-		showStatus("xhr error",-1);
+		showStatus("error xhr "+errString,-1);
 	}
 }
 
