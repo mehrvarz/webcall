@@ -373,7 +373,7 @@ window.onload = function() {
 			}
 			// xhrresponse can contain random html
 			if(xhrresponse.indexOf("<html")>=0 || xhrresponse.indexOf("<head")>=0) {
-				console.log("# xhr /getsettings received garbage");
+				console.log("# xhr /getsettings received garbage "+xhr.status);
 				showStatus("error xhr getsettings",-1);
 				return;
 			}
@@ -597,7 +597,7 @@ function getContact(contactID) {
 			if(xhrresponse!="") {
 				// xhrresponse can contain random html
 				if(xhrresponse.indexOf("<html")>=0 || xhrresponse.indexOf("<head")>=0) {
-					console.log("# xhr /getcontacts received garbage");
+					console.log("# xhr /getcontacts received garbage "+xhr.status);
 					showStatus("error xhr getcontacts",-1);
 					return;
 				}
@@ -839,7 +839,7 @@ function fetchMapping(contFunc,idSelectElement,idSelectLabelElement) {
 		if(xhrresponse!="") {
 			// xhrresponse can contain random html
 			if(xhrresponse.indexOf("<html")>=0 || xhrresponse.indexOf("<head")>=0) {
-				console.log("# xhr /getmapping received garbage");
+				console.log("# xhr /getmapping received garbage "+xhr.status);
 				showStatus("error xhr getmapping",-1);
 				return;
 			}
@@ -1205,7 +1205,7 @@ function checkServerMode(callback) {
 		let xhrresponse = xhr.responseText;
 		// xhrresponse can contain random html
 		if(xhrresponse.indexOf("<html")>=0 || xhrresponse.indexOf("<head")>=0) {
-			console.log("# xhr /mode received garbage");
+			console.log("# xhr /mode received garbage "+xhr.status);
 			showStatus("error xhr mode",-1);
 			return;
 		}
