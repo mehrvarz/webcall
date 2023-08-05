@@ -265,7 +265,7 @@ func serve(w http.ResponseWriter, r *http.Request, tls bool) {
 			if assignedName!="" && assignedName!="none" {
 				if callerName=="" {
 					callerName = "("+assignedName+")"
-				} else {
+				} else if strings.Index(callerName,"(")<0 {
 					callerName += " ("+assignedName+")"
 				}
 				if callerName!="" {

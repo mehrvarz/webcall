@@ -166,6 +166,7 @@ func (h *Hub) peerConHasEnded(cause string) {
 	// the peerConnection has ended, either bc one side has sent "cancel"
 	// or bc callee has unregistered or got ws-disconnected
 	// peerConHasEnded MUST be called with locking in place
+	// cause = "caller c"
 
 	if h.CalleeClient==nil {
 		//fmt.Printf("# peerConHasEnded but h.CalleeClient==nil\n")
