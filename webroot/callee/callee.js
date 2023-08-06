@@ -2926,26 +2926,19 @@ function slideTransitioned() {
 	slideRevealElement.removeEventListener('transitionend',slideTransitioned);
 }
 
+var slideRevealDivHeight = 97;
 function openSlide() {
 	if(!slideOpen) {
 		if(wsConn) {
-			//console.log("openSlide doOpen");
-			// need to set the correct final height, resulting from list of checkboxes
-			slideRevealElement.style.height = "97px";
+			slideRevealElement.style.height = ""+slideRevealDivHeight+"px";
 			slideRevealElement.addEventListener('transitionend', slideTransitioned) // when done: set height=auto
-		} else {
-			//console.log("openSlide doOpen but no wsConn");
 		}
 	} else {
-		//console.log("openSlide doClose");
-		let slideRevealDivHeight = parseFloat(getComputedStyle(slideRevealElement).height);
+		slideRevealDivHeight = parseFloat(getComputedStyle(slideRevealElement).height);
 		slideRevealElement.style.height = ""+slideRevealDivHeight+"px"; // from auto to fixed height
-
 		slideRevealElement.addEventListener('transitionend', slideTransitioned)
-		setTimeout(function() { // wait for fixed height; then set 0px
-			if(!videoEnabled) {
-				slideRevealElement.style.height = "0";
-			}
+		setTimeout(function() { // wait for fixed height; then set 0
+			slideRevealElement.style.height = "0";
 		},100);
 	}
 }
