@@ -241,12 +241,23 @@ function prepareSettings(xhrresponse) {
 	if(calleeVersion=="") {
 		calleeVersion="?"
 	}
-	if(calleeVersion!=clientVersion) {
-		displayVersion = "Current version: "+calleeVersion+"<br>"+
-		                 "Online version: "+clientVersion+"<br>"+
-		                 "To update: <a href='/webcall/more/#updatecallee' target='_blank'>Clear cache + reload</a>";
+	if(typeof Android !== "undefined" && Android !== null) {
+		displayVersion += "WebCall for Android v"+Android.getVersionName()+"<br>";
+		if(calleeVersion!=clientVersion) {
+			displayVersion += "Current version: "+calleeVersion+"<br>"+
+				              "Online version: "+clientVersion+"<br>"+
+				              "To update: Clear cache</a>";
+		} else {
+			displayVersion += "WebCall Core client v"+clientVersion;
+		}
 	} else {
-		displayVersion = "WebCall v"+clientVersion;
+		if(calleeVersion!=clientVersion) {
+			displayVersion = "Current version: "+calleeVersion+"<br>"+
+				             "Online version: "+clientVersion+"<br>"+
+				             "To update: <a href='/webcall/more/#updatecallee' target='_blank'>Clear cache + reload</a>";
+		} else {
+			displayVersion = "WebCall v"+clientVersion;
+		}
 	}
 	document.getElementById("verstring").innerHTML = displayVersion;
 
