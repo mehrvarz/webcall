@@ -710,17 +710,25 @@ function login(retryFlag) {
 		} else if(parts[0]=="fatal") {
 			// loginStatus "fatal" = "already logged in" or "db.GetX err"
 			// no use offering pw entry again at this point
-			goOffline();
-			if(parts.length>=2) {
-				showStatus("Login "+parts[1]+" fail. Logged in from another device?",-1);
-			} else {
-				showStatus("Login fail. Logged in from another device?",-1);
-			}
+			goOffline(); // Android.wsClose() -> disconnectHost(true) -> statusMessage("Offline") -> runJS("showStatus()")
+			// make sure our showStatus() comes after the one ("offline") from disconnectHost()
+			setTimeout(function() {
+				if(parts.length>=2) {
+					showStatus("Login "+parts[1]+" fail. Logged in from another device?",-1);
+				} else {
+					showStatus("Login fail. Logged in from another device?",-1);
+				}
+			},300);
 			form.style.display = "none";
 		} else {
 			goOffline();
 			// loginStatus may be: "java.net.ConnectException: failed to connect to timur.mobi/66.228.46.43 (port 8443) from /:: (port 0): connect failed: ENETUNREACH (Network is unreachable)"
-			showStatus("Status: "+loginStatus,-1);
+			if(loginStatus!="") {
+				// make sure our showStatus() comes after the one ("offline") from disconnectHost()
+				setTimeout(function() {
+					showStatus("Status: "+loginStatus,-1);
+				},300);
+			}
 			form.style.display = "none";
 		}
 
@@ -2853,7 +2861,7 @@ function goOffline() {
 		// callee going offline
 		gLog('wsClose');
 		if(typeof Android !== "undefined" && Android !== null) {
-			Android.wsClose();
+			Android.wsClose(); // -> disconnectHost(true) -> statusMessage("Offline")
 		} else {
 			wsConn.close();
 		}

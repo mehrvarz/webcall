@@ -1614,11 +1614,11 @@ function hashchange() {
 var showStatusTimeout = null;
 var showStatusMsg = "";
 function showStatus(msg,timeoutMs) {
-	gLog("showStatus msg="+msg,timeoutMs);
 	if(typeof msg=="undefined" || msg==null) {
 		console.log("status: msg undefined");
 		return;
 	}
+	//console.log("showStatus msg="+msg,timeoutMs);
 	if(showStatusTimeout!=null) {
 		gLog("showStatus clearTimeout of prev");
 		clearTimeout(showStatusTimeout);
