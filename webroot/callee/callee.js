@@ -886,7 +886,7 @@ function getSettingDone() {
 
 		let links = "";
 		links += "<div style='line-height:1.6em;margin-top:12px;white-space:nowrap;'>";
-		links += "<div class='callListTitle'>You will receive calls made by these links:</div>";
+		links += "<div class='callListTitle'>You can receive calls made by these links:</div>";
 
 		if(mainLinkDeactive) {
 			links += "<input type='checkbox' id='mainlink' class='checkbox' style='margin-top:8px;margin-left:2px;margin-right:10px;' onclick='mainlinkCheckboxClick(this);' />";
