@@ -886,7 +886,11 @@ function getSettingDone() {
 
 		let links = "";
 		links += "<div style='line-height:1.6em;margin-top:12px;white-space:nowrap;'>";
-		links += "<div class='callListTitle'>You can receive calls made by these links:</div>";
+		if(typeof Android !== "undefined" && Android !== null) {
+			links += "<div class='callListTitle'>Your Webcall ID's (long-tap to copy link):</div>";
+		} else {
+			links += "<div class='callListTitle'>Your Webcall ID's (right-click to copy link):</div>";
+		}
 
 		if(mainLinkDeactive) {
 			links += "<input type='checkbox' id='mainlink' class='checkbox' style='margin-top:8px;margin-left:2px;margin-right:10px;' onclick='mainlinkCheckboxClick(this);' />";
@@ -894,10 +898,12 @@ function getSettingDone() {
 			links += "<input type='checkbox' id='mainlink' class='checkbox' style='margin-top:8px;margin-left:2px;margin-right:10px;' onclick='mainlinkCheckboxClick(this);' checked />";
 		}
 		let showUserLink = userLink;
-		if(showUserLink.startsWith("https://")) {
-			showUserLink = showUserLink.substring(8);
+		let idx = showUserLink.indexOf("/user/");
+		if(idx>=0) {
+			showUserLink = showUserLink.substring(idx+6);
 		}
 		links += "<a target='_blank' href='"+userLink+"'>"+showUserLink+"</a><br>";
+
 
 		if(mastodonID!="" && mastodonID!=calleeID) {
 			if(mastodonLinkDeactive) {
@@ -906,12 +912,10 @@ function getSettingDone() {
 				links += "<input type='checkbox' id='mastodonlink' class='checkbox' style='margin-top:8px;margin-left:2px;margin-right:10px;' onclick='mainlinkCheckboxClick(this);' checked />";
 			}
 			let userLinkAlt = userLink.replace("/user/"+calleeID,"/user/"+mastodonID);
-			let showUserLinkAlt = userLinkAlt;
-			if(showUserLinkAlt.startsWith("https://")) {
-				showUserLinkAlt = showUserLinkAlt.substring(8);
-			}
+			let showUserLinkAlt = mastodonID;
 			links += "<a target='_blank' href='"+userLinkAlt+"'>"+showUserLinkAlt+"</a><br>";
 		}
+
 
 		// add active mapping entries
 		//console.log("getSettingDone altIdArray.length",altIdArray.length);
@@ -927,10 +931,7 @@ function getSettingDone() {
 				}
 				// TODO is altIdArray[i] sometimes garbage?
 				let userLinkMap = userLink.replace("/user/"+calleeID,"/user/"+altIdArray[i]);
-				let showUserLinkMap = userLinkMap;
-				if(showUserLinkMap.startsWith("https://")) {
-					showUserLinkMap = showUserLinkMap.substring(8);
-				}
+				let showUserLinkMap = altIdArray[i];
 				links += "<a target='_blank' href='"+userLinkMap+"'>"+showUserLinkMap+"</a> ("+altLabel[i]+")<br>";
 			}
 		}
