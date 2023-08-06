@@ -1880,7 +1880,7 @@ function showMissedCalls() {
 
 function showMsg(msg) {
 	document.getElementById("showMsgInner").innerHTML = msg;
-	menuDialogOpen(document.getElementById("showMsg"),0);
+	menuDialogOpen(document.getElementById("showMsg"),1);
 }
 
 function halfShowIpAddr(ipAddr) {

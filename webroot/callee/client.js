@@ -629,7 +629,7 @@ function getStatsCandidateTypesEx(results,eventString1) {
 
 var menuDialogOpenElement = null;
 function menuDialogOpen(menuDialog,position,inner) {
-	// position: 0=?, 1=atMousePos, 2=random
+	// position: 0=centered, 1=atMousePos, 2=random
 	if(menuDialogOpenElement) {
 		console.log('# menuDialogOpen menuDialogOpenElement');
 		return;
