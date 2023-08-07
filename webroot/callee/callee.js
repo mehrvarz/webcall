@@ -897,7 +897,7 @@ function getSettingDone() {
 		if(typeof Android !== "undefined" && Android !== null) {
 			links += "<div class='callListTitle'>Your Webcall ID's (long-tap to copy/share):</div>";
 		} else {
-			links += "<div class='callListTitle'>Your Webcall ID's (right-click to copy):</div>";
+			links += "<div class='callListTitle'>Your Webcall ID's (right-click to copy/share):</div>";
 		}
 
 		if(mainLinkDeactive) {
@@ -970,7 +970,7 @@ function mappingCheckboxClick(cb) {
 	}
 
 	let api = apiPath+"/setmapping?id="+calleeID;
-	console.log("/setmapping api="+api+" altIDs="+altIDs);
+	gLog("/setmapping api="+api+" altIDs="+altIDs);
 	ajaxFetch(new XMLHttpRequest(), "POST", api, function(xhr) {
 		if(xhr.responseText.startsWith("error")) {
 			console.log('# /setmapping err='+xhr.responseText);
