@@ -52,7 +52,7 @@ var connectionstatechangeCounter = 0;
 var playDialSounds = true;
 var pickupAfterLocalStream = false; // not used in caller
 var callStatsTitle = "Call Stats";
-var willShowPostCall = "Available post call";
+var willShowPostCall = "Data available post call";
 
 var ICE_config = {
 	"iceServers": [
@@ -522,7 +522,7 @@ function showStatsPostCall() {
 function openPostCallStats() {
 	gLog('openPostCallStats');
 	let str = "string:<h2>"+callStatsTitle+"</h2>"+showStatsPostCall();
-	iframeWindowOpen(str,false,"background:#33ad; color:#eee; padding:20px; max-width:400px; left:5.0%; top:3%; font-size:1.1em; line-height:1.4em;");
+	iframeWindowOpen(str,false,"width:auto; max-width:400px; top:3%; left:4%; right:4%; padding:16px; padding-bottom:24px;background:#33ad; color:#eee; _font-size:1.1em; line-height:1.4em;");
 }
 
 function stopProgressSend() {
@@ -839,6 +839,7 @@ function iframeWindowOpen(url, horiCenterBound, addStyleString, dontIframeOnload
 	let styleString = "width:94%; max-width:600px; position:absolute; z-index:200;";
 	if(horiCenterBound) {
 		// center hori
+// TODO does not seem to work
 		styleString += "top:50%; left:50%; transform:translate(-50%,-50%);"
 	} else {
 		// left-bound
