@@ -183,11 +183,11 @@ function showVideoResolutionRemote() {
 
 function muteMic(flag) {
 	if(!localStream) {
-		console.log("! muteMic no localStream on muteMic state change: "+flag);
+		//console.log("muteMic no localStream on mic state change: "+flag);
 	} else {
 		const audioTracks = localStream.getAudioTracks();
 		if(!audioTracks[0]) {
-			console.log("# muteMic no audioTracks on muteMic state change: "+flag);
+			console.log("# muteMic no audioTracks on mic state change: "+flag);
 		} else {
 			if(flag) {
 				console.log("muteMic state change "+flag+": mic disable");
