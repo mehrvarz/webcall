@@ -895,7 +895,7 @@ function getSettingDone() {
 		let links = "";
 		links += "<div style='line-height:1.6em;margin-top:12px;white-space:nowrap;'>";
 		if(typeof Android !== "undefined" && Android !== null) {
-			links += "<div><span class='callListTitle'>Your Webcall ID's:</span> <span style='font-size:0.9em;'>(long-tap to copy/share)</span></div>";
+			links += "<div><span class='callListTitle'>Your Webcall ID's:</span> <span style='font-size:0.9em;'>(long-tap to share)</span></div>";
 		} else {
 			links += "<div><span class='callListTitle'>Your Webcall ID's:</span> <span style='font-size:0.9em;'>(right-click to copy as link)</span></div>";
 		}
