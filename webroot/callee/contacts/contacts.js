@@ -160,9 +160,9 @@ function processContacts(xhrresponse) {
 			if(parts[1]!="") {
 				idOnly = idOnly+"@"+parts[1];
 			}
-			let idDisplay = id;
-			console.log("id="+idDisplay+" idOnly="+idOnly+" callerHost="+callerHost+
+			console.log("id="+id+" idOnly="+idOnly+" callerHost="+callerHost+
 						" location.host="+location.host);
+			let idDisplay = id;
 			if(callerHost==location.host) {
 				idDisplay = idOnly;
 			}
@@ -207,7 +207,7 @@ function processContacts(xhrresponse) {
 		}
 
 		dataBoxContent += "<td><a onclick=\"remove(this,'"+id+"','"+name+"')\""+
-			" style='font-weight:600;'>del</a></td></tr>";
+			" style='font-weight:600;'>x</a></td></tr>";
 	}
 	dataBoxContent += "</table>";
 	databoxElement.innerHTML = dataBoxContent;
