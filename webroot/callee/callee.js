@@ -2960,7 +2960,7 @@ function openDialId(userId) {
 	gLog('openDialId url='+url);
 	// 4th parameter 'dontIframeOnload':
 	// iframeOnload() for dial-id takes scrollHeight from caller html min-height
-	iframeWindowOpen(url,false,"height:460px;max-width:480px;",true);
+	iframeWindowOpen(url,false,"height:95%;max-height:600px;max-width:500px;",true);
 }
 
 function openDialRemote(url) {
